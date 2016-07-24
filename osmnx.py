@@ -616,7 +616,7 @@ def get_nearest_node(G, point, return_dist=False):
     
     Arguments:
     G = a networkx graph
-    point = the point for which we will find the nearest node in the graph
+    point = the (lat, lon) point for which we will find the nearest node in the graph
     return_dist = optionally also return the distance between the point and the nearest node
     
     Returns: networkx node or tuple
@@ -656,10 +656,10 @@ def create_graph(osm_data, name='unnamed', retain_all=True):
     
     # add each osm way (aka, path) to the graph
     for path_id, path in paths.items():
-        name = node['name'] if 'name' in node and not node['name'] is None else ''
-        city = node['city'] if 'city' in node and not node['city'] is None else ''
-        hwy = node['highway'] if 'highway' in node and not node['highway'] is None else ''
-        maxspeed = node['maxspeed'] if 'maxspeed' in node and not node['maxspeed'] is None else ''
+        name = node['name'] if ('name' in node) and (not node['name'] is None) else ''
+        city = node['city'] if ('city' in node) and (not node['city'] is None) else ''
+        hwy = node['highway'] if ('highway' in node) and (not node['highway'] is None) else ''
+        maxspeed = node['maxspeed'] if ('maxspeed' in node) and (not node['maxspeed'] is None) else ''
         G.add_path(path['nodes'], osmid=path_id, name=name, city=city, highway=hwy, maxspeed=maxspeed)
     
     # retain only the largest connected subgraph, if caller did not request retain_all
@@ -769,7 +769,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', return_coor
         return G
         
         
-def graph_from_place(query, retain_all=False, name='unnamed'):
+def graph_from_place(query, retain_all=False, name='unnamed', which_result=1):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some geocodable place(s).
     
@@ -782,7 +782,7 @@ def graph_from_place(query, retain_all=False, name='unnamed'):
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, str):
-        gdf_place = gdf_from_place(query)
+        gdf_place = gdf_from_place(query, which_result=1)
         name = query
     elif isinstance(query, list):
         gdf_place = gdf_from_places(query)
@@ -865,7 +865,7 @@ def save_graph(G, filename='graph', data_folder=_data_folder):
     
     
 def plot_graph(G, bbox=None, x='lon', y='lat', fig_height=6, fig_width=None,
-               save=False, filename='temp.jpg', dpi=300,
+               show=True, save=False, filename='temp.jpg', dpi=300,
                node_color='#66ccff', node_size=15, node_alpha=1, node_edgecolor='none',
                edge_color='#999999', edge_linewidth=1, edge_alpha=1):
     """
@@ -918,9 +918,54 @@ def plot_graph(G, bbox=None, x='lon', y='lat', fig_height=6, fig_width=None,
         fig.savefig(path_filename, dpi=dpi, bbox_inches='tight')
         log('Saved the figure to disk in {:,.2f} seconds'.format(time.time()-start_time))
     
-    start_time = time.time()
-    plt.show()
-    log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
+    if show:
+        start_time = time.time()
+        plt.show()
+        log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
     
     return fig, ax
 
+
+def plot_graph_route(G, route, origin_point=None, destination_point=None, bbox=None, x='lon', y='lat', fig_height=6, fig_width=None,
+                     show=True, save=False, filename='temp.jpg', dpi=300,
+                     node_color='#999999', node_size=15, node_alpha=1, node_edgecolor='none',
+                     edge_color='#999999', edge_linewidth=1, edge_alpha=1,
+                     route_color='r', route_linewidth=4, route_alpha=0.5, orig_dest_node_alpha=0.5,
+                     orig_dest_node_size=100, orig_dest_node_color='r', orig_dest_point_color='b'):
+    
+    # plot the graph but not the route
+    fig, ax = plot_graph(G, bbox=bbox, x=x, y=y, fig_height=fig_height, fig_width=fig_width,
+                         show=False, save=save, filename=filename, dpi=dpi,
+                         node_color=node_color, node_size=node_size, node_alpha=node_alpha, node_edgecolor=node_edgecolor,
+                         edge_color=edge_color, edge_linewidth=edge_linewidth, edge_alpha=edge_alpha)
+    
+    # get the lats and lons of each node along the route
+    path_lats = [float(G.node[node][y]) for node in route]
+    path_lons = [float(G.node[node][x]) for node in route]
+    
+    origin_node = route[0]
+    destination_node = route[-1]
+        
+    if origin_point is None or destination_point is None:
+        # if caller didn't pass points, use the first and last node in route as origin/destination    
+        origin_destination_lats = (G.node[origin_node][y], G.node[destination_node][y])
+        origin_destination_lons = (G.node[origin_node][x], G.node[destination_node][x])
+    else:
+        # otherwise, use the passed points as origin/destination
+        origin_destination_lats = (origin_point[0], destination_point[0])
+        origin_destination_lons = (origin_point[1], destination_point[1])
+        orig_dest_node_color = orig_dest_point_color
+    
+    # scatter the origin and destination points then plot the route lines
+    ax.scatter(origin_destination_lons, origin_destination_lats, s=orig_dest_node_size, 
+               c=orig_dest_node_color, alpha=orig_dest_node_alpha, edgecolor=node_edgecolor)
+    ax.plot(path_lons, path_lats, color=route_color, linewidth=route_linewidth, alpha=route_alpha)
+    
+    if show:
+        start_time = time.time()
+        plt.show()
+        log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
+        
+    return fig, ax
+    
+    
