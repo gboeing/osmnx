@@ -26,18 +26,20 @@
 ###################################################################################################
 
 import json, math, os, re, time, datetime as dt, logging as lg
-import requests, geopandas as gpd, networkx as nx, matplotlib.pyplot as plt
+import requests, numpy as np, pandas as pd, geopandas as gpd, networkx as nx, matplotlib.pyplot as plt, matplotlib.cm as cm
 from matplotlib import collections as mc
-from shapely.geometry import Point
+from shapely.geometry import Point, LineString
 from geopy.distance import great_circle, vincenty
 from geopy.geocoders import Nominatim
 
+# default locations to save data, logs, images, and cache
 _data_folder = 'osmnx_data'
 _logs_folder = 'osmnx_logs'
 _imgs_folder = 'osmnx_images'
 _cache_folder = 'osmnx_cache'
 _cache_filename = 'response_cache.json'
 
+# write log to file and/or to console
 _file_log = False
 _print_log = False
 
@@ -46,7 +48,7 @@ def init(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs_f
          cache_folder=_cache_folder, cache_filename=_cache_filename,
          file_log=_file_log, print_log=_print_log):
     """
-    Initialize the tool.
+    Initialize the tool and set the default global vars to desired values
     
     Arguments:
     data_folder = where to save and load data files
@@ -338,8 +340,8 @@ def save_shapefile(gdf):
     gdf.to_file(file_path_name)
     log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.name, file_path_name))
  
-
-def project_utm(gdf):
+# NEEDS A BETTER FUNCTION FOR GETTING UTM ZONE FROM COORDS
+def project_gdf(gdf):
     """
     Project a GeoDataFrame to the UTM zone appropriate for its geometries' centroid.
     
@@ -387,7 +389,7 @@ def project_utm(gdf):
    
  
  
-def osm_net_download(north, south, east, west, pause_duration=1, timeout=180):
+def osm_net_download(north, south, east, west, network_type='all', pause_duration=1, timeout=180):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
     
@@ -401,16 +403,28 @@ def osm_net_download(north, south, east, west, pause_duration=1, timeout=180):
     Returns: dict
     """
     url = 'http://www.overpass-api.de/api/interpreter'
-    filters='"highway"!~"motor"' # network type is walking, so exclude things like freeways
-    data = '[out:json][timeout:{{timeout}}];( way ["highway"] [{filters}] ({south},{west},{north},{east}); >;);out;'
     
-    # format everything but timeout here. we pass timeout int along to make_request where it adds it 
-    # to the params dict so that make_request can call itself recursively, increasing the timeout interval each
-    # time, if the query is really big and causing this time limit to timeout.
-    data = data.format(filters=filters, south=south, west=west, north=north, east=east) #bbox as 'south,west,north,east'
-    params = {'data':data}
+    # define the query to send the API. put timeout in double brackets so it remains unformatted until it gets to the next function, make_request() (see comments below)
+    # represent bbox as south,west,north,east (and the '>' makes it recurse so we get ways and way nodes)
+    data = '[out:json][timeout:{{timeout}}];( way ["highway"] {filters} ({south},{west},{north},{east}); >;);out;' 
+    
+    # create a filter to exclude certain kinds of routes based on the requested network_type
+    if network_type == 'foot':
+        filters = '["highway"!~"motor"]' #for walking/biking accessible routes, exclude ways that are motor-only
+    elif network_type == 'motor':
+        filters = '["highway"!~"foot|cycle|steps|path|pedestrian|track|service"]' #for car accessible routes, exclude ways that are non-motorized-only
+    elif network_type == 'all':
+        filters = '' #for all routes, filter out nothing
+    else:
+        raise ValueError('unknown network_type "{}"'.format(network_type))
+    
+    # format everything but timeout here. we pass the timeout int along to make_request() where it adds it 
+    # to the params dict so that make_request() can call itself recursively, increasing the timeout interval each
+    # time, if the query is really big and causing the request to timeout.
+    data = data.format(north=north, south=south, east=east, west=west, filters=filters)
     
     # request the URL, return the JSON
+    params = {'data':data}
     response_json = make_request(url, params, timeout=timeout)
     return response_json
     
@@ -427,6 +441,7 @@ def get_node(element):
     node = {}
     node['lat'] = element['lat']
     node['lon'] = element['lon']
+    
     if 'tags' in element:
         node['highway'] = element['tags']['highway'] if 'highway' in element['tags'] else None
     return node
@@ -547,15 +562,26 @@ def truncate_graph_bbox(G, north, south, east, west, retain_all=False):
     """
     start_time = time.time()
     nodes_outside_bbox = []
-    for node_id, node in G.nodes(data=True):
-        if node['lat'] > north or node['lat'] < south or node['lon'] > east or node['lon'] < west:
-            nodes_outside_bbox.append(node_id)
+    for node, data in G.nodes(data=True):
+        if data['lat'] > north or data['lat'] < south or data['lon'] > east or data['lon'] < west:
+            nodes_outside_bbox.append(node)
+    
+    
+    
+    
     G.remove_nodes_from(nodes_outside_bbox)
     log('Truncated graph by bounding box in {:,.2f} seconds'.format(time.time()-start_time))
+    
+    
+    
+    
     
     # remove any orphaned nodes, keep only the largest subgraph (if retain_all is True), and return G
     G = remove_orphan_nodes(G)
     G = get_largest_subgraph(G, retain_all)
+    
+    
+    
     return G
     
 
@@ -602,11 +628,11 @@ def add_edge_lengths(G):
     
     Returns: networkx graph
     """
-    for u, v in G.edges():
+    for u, v, key, data in G.edges(keys=True, data=True):
         u_point = (G.node[u]['lat'], G.node[u]['lon'])
         v_point = (G.node[v]['lat'], G.node[v]['lon'])
         edge_length = great_circle(u_point, v_point).m #geopy points are (lat, lon)
-        G[u][v]['length'] = edge_length
+        data['length'] = edge_length
     return G
     
 
@@ -633,7 +659,7 @@ def get_nearest_node(G, point, return_dist=False):
         return nearest_node[0]
 
         
-def create_graph(osm_data, name='unnamed', retain_all=True):
+def create_graph(osm_data, name='unnamed', retain_all=False):
     """
     Create a networkx graph from OSM data.
     
@@ -646,7 +672,7 @@ def create_graph(osm_data, name='unnamed', retain_all=True):
     """
     log('Creating networkx graph from downloaded OSM data')
     start_time = time.time()
-    G = nx.Graph(name=name)
+    G = nx.MultiGraph(name=name)
     nodes, paths = parse_osm_nodes_paths(osm_data)
     
     # add each osm node to the graph
@@ -662,8 +688,9 @@ def create_graph(osm_data, name='unnamed', retain_all=True):
         maxspeed = node['maxspeed'] if ('maxspeed' in node) and (not node['maxspeed'] is None) else ''
         G.add_path(path['nodes'], osmid=path_id, name=name, city=city, highway=hwy, maxspeed=maxspeed)
     
-    # retain only the largest connected subgraph, if caller did not request retain_all
-    G = get_largest_subgraph(G)
+    # retain only the largest connected subgraph, if caller did not set retain_all=True
+    G = get_largest_subgraph(G, retain_all=retain_all)
+    
     
     # add length (great circle distance between vertices) attribute to each edge to use as weight
     G = add_edge_lengths(G)
@@ -671,7 +698,7 @@ def create_graph(osm_data, name='unnamed', retain_all=True):
     # change the node labels from osm ids to the standard sequential integers
     G = nx.convert_node_labels_to_integers(G)
     log('Created graph with {:,} nodes and {:,} edges in {:,.2f} seconds'.format(len(G.nodes()), len(G.edges()), time.time()-start_time))
-    
+
     return G
     
     
@@ -693,7 +720,7 @@ def bbox_from_point(point, distance=1000):
     return north, south, east, west
     
     
-def graph_from_bbox(north, south, east, west, truncate=True, name='unnamed'):
+def graph_from_bbox(north, south, east, west, network_type='all', simplify=True, retain_all=False, name='unnamed'):
     """
     Create a networkx graph from OSM data within some bounding box.
     
@@ -707,16 +734,20 @@ def graph_from_bbox(north, south, east, west, truncate=True, name='unnamed'):
     
     Returns: networkx graph
     """
-    osm_data = osm_net_download(north, south, east, west)
-    G = create_graph(osm_data, name=name)
-    if truncate:
-        G = truncate_graph_bbox(G, north, south, east, west)
+    osm_data = osm_net_download(north, south, east, west, network_type=network_type)
+    G = create_graph(osm_data, name=name, retain_all=retain_all)
+    G = truncate_graph_bbox(G, north, south, east, west)
+
+    # simplify the graph topology as the last step. don't truncate after simplifying or you may have simplified out to an endpoint
+    # beyond the truncation distance, in which case you will then strip out your entire edge
+    if simplify:
+        G = simplify_graph(G)
     
     log('graph_from_bbox() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
     return  G
     
     
-def graph_from_point(center_point, distance=1000, distance_type='bbox', name='unnamed'):
+def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, name='unnamed'):
     """
     Create a networkx graph from OSM data within some distance of some lat-long point.
     
@@ -731,11 +762,17 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', name='un
     """
     north, south, east, west = bbox_from_point(center_point, distance)
     if distance_type == 'bbox':
-        G = graph_from_bbox(north, south, east, west, truncate=True, name=name)
+        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name)
     elif distance_type == 'network':
-        G = graph_from_bbox(north, south, east, west, truncate=False, name=name)
+        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=retain_all, name=name)
         centermost_node = get_nearest_node(G, center_point)
         G = truncate_graph_dist(G, centermost_node, max_distance=distance)
+        
+        # simplify the graph topology as the last step. don't truncate after simplifying or you may have simplified out to an endpoint
+        # beyond the truncation distance, in which case you will then strip out your entire edge
+        # that's why simplify=False above, so we didn't do it before the truncate_graph_dist() call 2 lines after it
+        if simplify:
+            G = simplify_graph(G)
     else:
         raise ValueError('distance_type must be "bbox" or "network"')
     
@@ -743,7 +780,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', name='un
     return G
         
         
-def graph_from_address(address, distance=1000, distance_type='bbox', return_coords=False, name='unnamed', geocoder_timeout=30):
+def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, return_coords=False, name='unnamed', geocoder_timeout=30):
     """
     Create a networkx graph from OSM data within some distance of some address.
     
@@ -760,7 +797,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', return_coor
     """
     geolocation = Nominatim().geocode(query=address, timeout=geocoder_timeout)
     point = (geolocation.latitude, geolocation.longitude)
-    G = graph_from_point(point, distance, distance_type, name=name)
+    G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name)
     log('graph_from_address() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
     
     if return_coords:
@@ -769,7 +806,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', return_coor
         return G
         
         
-def graph_from_place(query, retain_all=False, name='unnamed', which_result=1):
+def graph_from_place(query, network_type='all', simplify=True, retain_all=False, name='unnamed', which_result=1):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some geocodable place(s).
     
@@ -794,11 +831,20 @@ def graph_from_place(query, retain_all=False, name='unnamed', which_result=1):
     south = gdf_place['bbox_south'].min()
     east = gdf_place['bbox_east'].max()
     west = gdf_place['bbox_west'].min()
-    G = graph_from_bbox(north, south, east, west, truncate=False, name=name)
+    
+    # retain_all is true and truncate is false here because we'll handle that in truncate_graph_polygon() later
+    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=True, name=name)
     
     # truncate the graph to the shape of the place(s) polygon then return it
     polygon = gdf_place['geometry'].unary_union
     G = truncate_graph_polygon(G, polygon, retain_all=retain_all)
+    
+    # simplify the graph topology as the last step. don't truncate after simplifying or you may have simplified out to an endpoint
+    # beyond the truncation distance, in which case you will then strip out your entire edge
+    # that's why simplify=False above, so we didn't do it before the truncate_graph_polygon() call 2 lines after it
+    if simplify:
+        G = simplify_graph(G)
+        
     log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
     
     return G
@@ -816,36 +862,53 @@ def project_graph(G):
     # create a GeoDataFrame of the nodes, name it, convert osmid to str, and create a geometry column
     start_time = time.time()
     nodes = {node_id:data for node_id, data in G.nodes(data=True)}
-    gdf = gpd.GeoDataFrame(nodes).T
-    gdf.name = G.name
-    gdf['osmid'] = gdf['osmid'].astype(str)
-    gdf['geometry'] = gdf.apply(lambda row: Point(row['lon'], row['lat']), axis=1)
+    gdf_nodes = gpd.GeoDataFrame(nodes).T
+    gdf_nodes.name = G.name
+    gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(str)
+    gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['lon'], row['lat']), axis=1)
     log('Created a GeoDataFrame from graph in {:,.2f} seconds'.format(time.time()-start_time))
     
-    # project the GeoDataFrame to UTM
-    gdf_utm = project_utm(gdf)
+    # create a GeoDataFrame of the edges with geometry column as a shapely LineString of geometries of all edges that have geometry attribute
+    edges_with_geom = []
+    for u, v, key, data in G.edges(keys=True, data=True):
+        if 'geometry' in data:
+            edges_with_geom.append({'u':u, 'v':v, 'key':key, 'geometry':data['geometry']})
     
-    # extract projected x and y values from the geometry column
-    start_time = time.time()
-    gdf_utm['x'] = gdf_utm['geometry'].map(lambda point: point.x)
-    gdf_utm['y'] = gdf_utm['geometry'].map(lambda point: point.y)
-    gdf_utm = gdf_utm.drop('geometry', axis=1)
-    log('Extracted projected geometry from GeoDataFrame in {:,.2f} seconds'.format(time.time()-start_time))
+    # project the nodes GeoDataFrame to UTM
+    gdf_nodes_utm = project_gdf(gdf_nodes)
     
-    # clear the graph to make it tabula rasa for the projected data
+    # project the edges GeoDataFrame to UTM, if there were any edges with a geometry attribute (only exists if graph has been simplified)
+    if len(edges_with_geom) > 0:
+        gdf_edges = gpd.GeoDataFrame(edges_with_geom)
+        gdf_edges.name = G.name
+        gdf_edges_utm = project_gdf(gdf_edges)
+    
+    # extract projected x and y values from the nodes' geometry column
     start_time = time.time()
-    edges = G.edges(data=True)
+    gdf_nodes_utm['x'] = gdf_nodes_utm['geometry'].map(lambda point: point.x)
+    gdf_nodes_utm['y'] = gdf_nodes_utm['geometry'].map(lambda point: point.y)
+    gdf_nodes_utm = gdf_nodes_utm.drop('geometry', axis=1)
+    log('Extracted projected node geometries from GeoDataFrame in {:,.2f} seconds'.format(time.time()-start_time))
+    
+    # clear the graph to make it a blank slate for the projected data
+    start_time = time.time()
+    edges = G.edges(keys=True, data=True)
     G.clear()
     
     # add the projected nodes and all their attributes to the graph
-    G.add_nodes_from(gdf_utm.index)
-    attributes = gdf_utm.to_dict()
-    for name in gdf_utm.columns:
+    G.add_nodes_from(gdf_nodes_utm.index)
+    attributes = gdf_nodes_utm.to_dict()
+    for name in gdf_nodes_utm.columns:
         nx.set_node_attributes(G, name, attributes[name])
     
-    # add the edges and all their attributes to the graph
-    for u, v, attributes in edges:
-        G.add_edge(u, v, attributes)
+    # add the edges and all their attributes (including reconstructed geometry, when it exists) to the graph
+    start_time = time.time()
+    for u, v, key, attributes in edges:
+        if 'geometry' in attributes:
+            row = gdf_edges_utm[(gdf_edges_utm['u']==u) & (gdf_edges_utm['v']==v) & (gdf_edges_utm['key']==key)]
+            attributes['geometry'] = row['geometry'].iloc[0]
+        G.add_edge(u, v, key, attributes)
+    log('Extracted projected edge geometries from GeoDataFrame in {:,.2f} seconds'.format(time.time()-start_time))
         
     log('Rebuilt projected graph in {:,.2f} seconds'.format(time.time()-start_time))    
     return G
@@ -857,17 +920,166 @@ def save_graph(G, filename='graph', data_folder=_data_folder):
     Save graph as file to disk
     
     """
-    # convert all the node attribute values to string or it won't save
+    # convert all the node/edge attribute values to string or it won't save
     for node, data in G.nodes(data=True):
-        for key in data:
-            data[key] = str(data[key])
+        for dict_key in data:
+            data[dict_key] = str(data[dict_key])
+    for u, v, key, data in G.edges(keys=True, data=True):
+        for dict_key in data:
+            data[dict_key] = str(data[dict_key])
+    
+    if not os.path.exists(data_folder):
+        os.makedirs(data_folder)
     nx.write_graphml(G, '{}/{}.graphml'.format(data_folder, filename))
     
     
-def plot_graph(G, bbox=None, x='lon', y='lat', fig_height=6, fig_width=None,
+############################################################################
+#
+# Functions for simplification of graph topology
+#
+############################################################################    
+    
+# given a node of degree 2, find the first node in both directions with degree not 2
+def find_end_points(G, node, end_points, nodes_to_remove, previous_node=-1):
+    if G.degree(node) == 2:
+        # if the degree is 2, this is a node we will remove
+        nodes_to_remove.append(node)
+    for neighbor in G.neighbors(node):
+        # look at each neighbor of this node
+        if not neighbor == previous_node:
+            # if this neighbor is the previous node we just looked at, ignore it
+            if G.degree(neighbor) == 2:
+                # otherwise, if this neighbor has degree 2, recursively call this function
+                find_end_points(G, neighbor, end_points, nodes_to_remove, node)
+            else:
+                # otherwise, if the neighbor has a degree other than 2, it is an endpoint
+                end_points.append(neighbor)
+    return end_points, nodes_to_remove
+
+    
+# given an origin and destination node and a list of nodes (unsorted) between them,
+# create a list of those nodes sorted in correct topological order
+def build_path(G, origin, destination, nodes_to_remove, node, path, previous_node=-1):
+    for neighbor in G.neighbors(node):
+        # if this neighbor is the destination 
+        # and we are not on the first iteration 
+        # and this neighbor is not he previous node we just visited
+        if (neighbor == destination) and (not previous_node == -1) and (not neighbor == previous_node):
+            # then this is the final destination
+            # add it to the path and return it
+            path.append(neighbor)
+            return path
+        if not neighbor == previous_node:
+            if neighbor in nodes_to_remove:
+                # if this neighbor is in nodes to remove, add it to the path
+                # then call this function recursively to find the next step in the path
+                path.append(neighbor)
+                path = build_path(G, origin, destination, nodes_to_remove, neighbor, path, node)
+                return path
+    return path
+
+
+# simplify a graph by removing all nodes where degree=2
+# create an edge directly between the nodes outside them where degree != 2
+# but retain the geometry of the original edges, saved as attr in new edge
+def simplify_graph(G, x='lon', y='lat'):
+    
+    start_time = time.time()
+    log('Begin topologically simplifying the graph')
+    
+    initial_node_count = len(G.nodes())
+    initial_edge_count = len(G.edges())
+    
+    for node in G.nodes():
+    # look at each node in the graph
+        
+        if node in G.nodes():
+        # if the node is still in the graph now (as we will be removing some along the way)
+            
+            if G.degree(node)==2:
+            # if this node has degree 2 then it is not an intersection or a dead-end
+            # therefore it is not a network node, just a point to help a street bend around a curve
+                
+                # find the 'end points' on either side of this node
+                # an end point is the first node we find that has degree not equal to 2
+                # nodes_to_remove is all the other nodes of degree 2 between the end_points
+                end_points, nodes_to_remove = find_end_points(G, node, [], [])
+                
+                # build a path of the nodes in sequence between the origin and destination,
+                # making sure each node in the path is in nodes_to_remove so we don't create
+                # a path from some alternate route between these two end point nodes
+                origin, destination = end_points
+                path = build_path(G, origin, destination, nodes_to_remove, node=origin, path=[origin])
+
+                # add the interstitial edges we're removing to a list so we can draw with spatial accuracy later
+                line_segments = []
+                segment_lengths = []
+                for n in range(len(path) - 1):
+                    #point1 = (G.node[path[n]][x], G.node[path[n]][y])
+                    #point2 = (G.node[path[n+1]][x], G.node[path[n+1]][y])
+                    #line_segments.append((point1, point2))
+                    
+                
+                    
+                    # add each segment length to so we can sum them
+                    edges = G.edge[path[n]][path[n+1]]
+                    assert len(edges) == 1 #there should never be multiple edges between these nodes as at least must be degree 2
+                    edge = edges[0]#the only element in this list as long as the above assertion is True (MultiGraphs use keys (the 0 here), indexed with ints from 0 and up)
+                    segment_lengths.append(edge['length']) 
+                
+                points = [Point((G.node[node][x], G.node[node][y])) for node in path]
+                geometry = LineString(points)
+                
+                # create a new edge between the origin and destination and save the line there
+                G.add_edge(origin, destination, attr_dict={'geometry':geometry,
+                                                           'length':sum(segment_lengths)})
+                
+                # finally remove all the interstitial nodes with degree 2 between origin and dest
+                G.remove_nodes_from(nodes_to_remove)
+    
+    msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
+    log(msg.format(initial_node_count, len(G.nodes()), initial_edge_count, len(G.edges()), time.time()-start_time))
+    return G    
+    
+############################################################################
+#
+# Start of plotting functions
+#
+############################################################################
+
+def get_edge_colors_by_attr(G, attr, num_bins=5, use_geom=True, cmap='spectral', start=0.1, stop=0.9):
+    bin_labels = range(num_bins)
+    lengths = pd.Series([data[attr] for u, v, key, data in G.edges(keys=True, data=True)])
+    cats = pd.qcut(x=lengths, q=num_bins, labels=bin_labels)
+    color_list = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, num_bins)]
+    
+    if use_geom:
+        colors = []
+        for (u, v, key, data), cat in zip(G.edges(keys=True, data=True), cats):
+            if 'geometry' in data:
+                count_segments = len(data['geometry'])
+                colors.extend([color_list[cat]] * count_segments)
+            else:
+                colors.append(color_list[cat])
+    else:
+        colors = [color_list[cat] for cat in cats]
+        
+    return colors
+    
+
+def get_edge_colors_by_attr(G, attr, num_bins=5, use_geom=True, cmap='spectral', start=0.1, stop=0.9):
+    bin_labels = range(num_bins)
+    lengths = pd.Series([data[attr] for u, v, key, data in G.edges(keys=True, data=True)])
+    cats = pd.qcut(x=lengths, q=num_bins, labels=bin_labels)
+    color_list = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, num_bins)]
+    colors = [color_list[cat] for cat in cats]
+    return colors
+    
+    
+def plot_graph(G, bbox=None, x='lon', y='lat', fig_height=6, fig_width=None, margin=0.02, axis_off=True,
                show=True, save=False, filename='temp.jpg', dpi=300,
                node_color='#66ccff', node_size=15, node_alpha=1, node_edgecolor='none',
-               edge_color='#999999', edge_linewidth=1, edge_alpha=1):
+               edge_color='#999999', edge_linewidth=1, edge_alpha=1, use_geom=True):
     """
     Plot a networkx graph.
     
@@ -897,17 +1109,39 @@ def plot_graph(G, bbox=None, x='lon', y='lat', fig_height=6, fig_width=None,
     
     # draw the edges as lines from node to node
     start_time = time.time()
-    lines = [((G.node[u][x],G.node[u][y]),(G.node[v][x],G.node[v][y])) for u,v in G.edges()]
+    lines = []
+    for u, v, key, data in G.edges(keys=True, data=True):
+        if 'geometry' in data and use_geom:
+            # if it has a geometry attribute (a list of line segments), add them to the list of lines to plot
+            xs, ys = data['geometry'].xy
+            lines.append(list(zip(xs, ys)))
+        else:
+            # if it doesn't have a geometry attribute, the edge is a straight line from node to node
+            x1 = G.node[u][x]
+            y1 = G.node[u][y]
+            x2 = G.node[v][x]
+            y2 = G.node[v][y]
+            line = [(x1, y1), (x2, y2)]
+            lines.append(line)
+            
     lc = mc.LineCollection(lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha)
     ax.add_collection(lc)
     log('Drew the graph edges in {:,.2f} seconds'.format(time.time()-start_time))
     
     # scatter plot the nodes
-    ax.scatter(node_Xs, node_Ys, s=node_size, c=node_color, alpha=node_alpha, edgecolor=node_edgecolor)
+    ax.scatter(node_Xs, node_Ys, s=node_size, c=node_color, alpha=node_alpha, edgecolor=node_edgecolor, zorder=2)
     
     # set the extent of the figure
-    ax.set_ylim((south, north))
-    ax.set_xlim((west, east))
+    margin_ns = (north - south) * margin
+    margin_ew = (east - west) * margin
+    ax.set_ylim((south - margin_ns, north + margin_ns))
+    ax.set_xlim((west - margin_ew, east + margin_ew))
+    
+    # configure axis appearance
+    ax.get_xaxis().get_major_formatter().set_useOffset(False)
+    ax.get_yaxis().get_major_formatter().set_useOffset(False)
+    if axis_off:
+        ax.axis('off')
     
     # save the figure if specified
     if save:
@@ -922,6 +1156,9 @@ def plot_graph(G, bbox=None, x='lon', y='lat', fig_height=6, fig_width=None,
         start_time = time.time()
         plt.show()
         log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
+    
+    #for node, data in G.nodes(data=True):
+        #ax.annotate(node, xy=(data['lon'], data['lat']))
     
     return fig, ax
 
@@ -958,8 +1195,8 @@ def plot_graph_route(G, route, origin_point=None, destination_point=None, bbox=N
     
     # scatter the origin and destination points then plot the route lines
     ax.scatter(origin_destination_lons, origin_destination_lats, s=orig_dest_node_size, 
-               c=orig_dest_node_color, alpha=orig_dest_node_alpha, edgecolor=node_edgecolor)
-    ax.plot(path_lons, path_lats, color=route_color, linewidth=route_linewidth, alpha=route_alpha)
+               c=orig_dest_node_color, alpha=orig_dest_node_alpha, edgecolor=node_edgecolor, zorder=3)
+    ax.plot(path_lons, path_lats, color=route_color, linewidth=route_linewidth, alpha=route_alpha, zorder=2)
     
     if show:
         start_time = time.time()
