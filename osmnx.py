@@ -25,7 +25,7 @@
 # Description: Retrieve and construct spatial geometries and street networks from OpenStreetMap
 ###################################################################################################
 
-import json, math, os, hashlib, re, time, datetime as dt, logging as lg
+import json, math, os, io, hashlib, re, time, datetime as dt, logging as lg
 from collections import OrderedDict
 import requests, numpy as np, pandas as pd, geopandas as gpd, networkx as nx, matplotlib.pyplot as plt, matplotlib.cm as cm
 from matplotlib import collections as mc
@@ -172,9 +172,16 @@ def save_to_cache(url, response_json):
             filename = hashlib.md5(url.encode('utf-8')).hexdigest()
             cache_path_filename = '{}/{}.json'.format(_cache_folder, filename)
             
+            response_str = json.dumps(response_json)
+            try:
+                # for python 2.x compatibility, cast string to unicode. will throw error in python 3.x which is fine, just move on.
+                response_str = unicode(response_str)
+            except:
+                pass
+            
             # dump to json, and save to file
-            with open(cache_path_filename, 'w', encoding='utf-8') as cache_file:
-                cache_file.write(json.dumps(response_json))
+            with io.open(cache_path_filename, 'w', encoding='utf-8') as cache_file:
+                cache_file.write(response_str)
             log('Saved response from URL "{}" to cache file "{}"'.format(url, cache_path_filename))
         
 
@@ -197,7 +204,7 @@ def get_from_cache(url):
         cache_path_filename = '{}/{}.json'.format(_cache_folder, filename)
         # open the cache file for this url hash if it already exists, otherwise return None
         if os.path.isfile(cache_path_filename):
-            response_json = json.load(open(cache_path_filename, encoding='utf-8'))
+            response_json = json.load(io.open(cache_path_filename, encoding='utf-8'))
             log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_path_filename, url))
             return response_json
         
@@ -1086,7 +1093,12 @@ def save_graph(G, filename='graph'):
             data[dict_key] = str(data[dict_key])
     for u, v, key, data in G_save.edges(keys=True, data=True):
         for dict_key in data:
-            data[dict_key] = str(data[dict_key])
+            try:
+                # python 3.x
+                data[dict_key] = str(data[dict_key])
+            except:
+                # python 2.x
+                data[dict_key] = unicode(data[dict_key])
     
     if not os.path.exists(_data_folder):
         os.makedirs(_data_folder)
@@ -1245,9 +1257,13 @@ def simplify_graph(G):
                     # finally remove all the interstitial nodes with degree 2 between origin and dest
                     G.remove_nodes_from(nodes_to_remove)
                 
-                except RecursionError:
+                except RuntimeError:
                     # recursion errors occur if some subgraph is a self-contained ring in which all nodes have degree 2
                     # handle it by just ignoring that subgraph and letting its topology remain intact (this should be a rare occurrence)
+                    # RuntimeError is what Python 2.x will throw
+                    log('Recursion error: encountered subgraph where all nodes have degree=2', level=lg.WARNING)
+                except RecursionError:
+                    # RecursionError is what Python 3.x will throw
                     log('Recursion error: encountered subgraph where all nodes have degree=2', level=lg.WARNING)
 
     msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
