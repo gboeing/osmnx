@@ -25,7 +25,8 @@
 # Description: Retrieve and construct spatial geometries and street networks from OpenStreetMap
 ###################################################################################################
 
-import json, math, os, re, time, datetime as dt, logging as lg
+import json, math, os, hashlib, re, time, datetime as dt, logging as lg
+from collections import OrderedDict
 import requests, numpy as np, pandas as pd, geopandas as gpd, networkx as nx, matplotlib.pyplot as plt, matplotlib.cm as cm
 from matplotlib import collections as mc
 from shapely.geometry import Point, LineString
@@ -37,16 +38,22 @@ _data_folder = 'osmnx_data'
 _logs_folder = 'osmnx_logs'
 _imgs_folder = 'osmnx_images'
 _cache_folder = 'osmnx_cache'
-_cache_filename = 'response_cache.json'
+
+_use_cache = False
 
 # write log to file and/or to console
 _file_log = False
 _print_log = False
 
+# useful osm tags
+_useful_tags_node = ['ref', 'highway']
+_useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name', 'highway', 'maxspeed']
+
 
 def init(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs_folder, 
-         cache_folder=_cache_folder, cache_filename=_cache_filename,
-         file_log=_file_log, print_log=_print_log):
+         cache_folder=_cache_folder, use_cache=_use_cache,
+         file_log=_file_log, print_log=_print_log,
+         useful_tags_node=_useful_tags_node, useful_tags_path=_useful_tags_path):
     """
     Initialize the tool and set the default global vars to desired values
     
@@ -62,14 +69,16 @@ def init(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs_f
     Returns: None
     """
     
-    global _cache_folder, _cache_filename, _data_folder, _imgs_folder, _logs_folder, _print_log, _file_log
+    global _use_cache, _cache_folder, _data_folder, _imgs_folder, _logs_folder, _print_log, _file_log, _useful_tags_node, _useful_tags_path
+    _use_cache = use_cache
     _cache_folder = cache_folder
-    _cache_filename = cache_filename
     _data_folder = data_folder
     _imgs_folder = imgs_folder
     _logs_folder = logs_folder
     _print_log = print_log
     _file_log = file_log
+    _useful_tags_node = useful_tags_node
+    _useful_tags_path = useful_tags_path
     if _file_log:
         log('Initialized osmnx')
 
@@ -118,56 +127,42 @@ def get_logger(name='osmnx', level=lg.INFO):
     return logger
 
     
-def save_to_cache(url, params, response_json):
+def save_to_cache(url, response_json):
     """
     
     """
-    if response_json is None:
-        log('Saved nothing to cache because response is None')
-    else:        
-        # create the folder on the disk if it doesn't already exist
-        if not os.path.exists(_cache_folder):
-            os.makedirs(_cache_folder)
+    if _use_cache:
+        if response_json is None:
+            log('Saved nothing to cache because response_json is None')
+        else:        
+            # create the folder on the disk if it doesn't already exist
+            if not os.path.exists(_cache_folder):
+                os.makedirs(_cache_folder)
 
-        # open the cache file if it already exists, otherwise create a new dict
-        cache_path_filename = '{}/{}'.format(_cache_folder, _cache_filename)
-        cache = json.load(open(cache_path_filename)) if os.path.isfile(cache_path_filename) else {}
-        
-        # created a sorted list of url params so we don't get multiple cache entries for the same URL just with params in different order
-        param_str = ''.join(['{}={}&'.format(key, params[key]) for key in sorted(list(params.keys()))]).strip('&')
-        url_params = '{}?{}'.format(url, param_str)
-        
-        # strip any timeout data from the url - we don't need multiple copies with different timeouts
-        key = re.sub('(%5Btimeout.*?%5D)', '', url_params)
-
-        # add this url to the cache in memory, with value of response
-        cache[key] = response_json
-
-        # save the cache to disk
-        with open(cache_path_filename, 'w', encoding='utf-8') as cache_file:
-            cache_file.write(json.dumps(cache))
-        log('Saved {:,} cached responses to {}'.format(len(cache.keys()), cache_path_filename))
+            # hash the url (to make filename shorter than long url), dump to json, and save to file
+            filename = hashlib.md5(url.encode('utf-8')).hexdigest()
+            cache_path_filename = '{}/{}.json'.format(_cache_folder, filename)
+            with open(cache_path_filename, 'w', encoding='utf-8') as cache_file:
+                cache_file.write(json.dumps(response_json))
+            log('Saved response from URL "{}" to cache file "{}"'.format(url, cache_path_filename))
         
 
-def get_from_cache(url, params, display_url=''):
+def get_from_cache(url):
     """
     
     """
-    # open the cache file if it already exists, otherwise create a new dict
-    cache_path_filename = '{}/{}'.format(_cache_folder, _cache_filename)
-    cache = json.load(open(cache_path_filename)) if os.path.isfile(cache_path_filename) else {}
-    
-    # cache keys are based on a sorted list of url params (see comment in save_to_cache function)
-    param_str = ''.join(['{}={}&'.format(key, params[key]) for key in sorted(list(params.keys()))]).strip('&')
-    url_params = '{}?{}'.format(url, param_str)
-    
-    if url_params in cache:
-        log('Retrieved response from cache for URL: {}'.format(display_url))
-        return cache[url_params]
+    # open the cache file for this url hash if it already exists, otherwise return None
+    if _use_cache:
+        filename = hashlib.md5(url.encode('utf-8')).hexdigest()
+        cache_path_filename = '{}/{}.json'.format(_cache_folder, filename)
+        if os.path.isfile(cache_path_filename):
+            response_json = json.load(open(cache_path_filename, encoding='utf-8'))
+            log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_path_filename, url))
+            return response_json
         
         
 def make_request(url, params=None, pause_duration=1, timeout=30):
-    
+
     # you have to pass a timeout to the overpass api for longer queries. add this here,
     # making it match the timeout that requests is using (the value passed in the func arg)
     # we recursively pass params_original to make_request each time the request times out 
@@ -178,7 +173,7 @@ def make_request(url, params=None, pause_duration=1, timeout=30):
         params['data'] = params['data'].format(timeout=timeout)
     
     prepared_url = requests.Request('GET', url, params=params).prepare().url
-    cached_response_json = get_from_cache(url, params, prepared_url)
+    cached_response_json = get_from_cache(prepared_url)
     
     if not cached_response_json is None:
         return cached_response_json
@@ -193,7 +188,7 @@ def make_request(url, params=None, pause_duration=1, timeout=30):
             domain = re.findall(r'//(?s)(.*?)/', url)[0]
             log('Downloaded {:,.1f}KB from {} in {:,.2f} seconds'.format(size_kb, domain, time.time()-start_time))
             response_json = response.json()
-            save_to_cache(url, params, response_json)
+            save_to_cache(prepared_url, response_json)
         except requests.exceptions.Timeout:
             log('Request timed out after {:,.2f} seconds. Increasing timeout interval and re-trying.'.format(time.time()-start_time), level=lg.WARNING)
             response = make_request(url=url, params=params_original, pause_duration=pause_duration, timeout=timeout*2)
@@ -216,9 +211,10 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1, pause_duration=1):
     """
     # define the Nominatim API endpoint and parameters
     url = 'https://nominatim.openstreetmap.org/search'
-    params = {'format':'json',
-              'limit':limit,
-              'polygon_geojson':polygon_geojson}
+    params = OrderedDict()
+    params['format'] = 'json'
+    params['limit'] = limit
+    params['polygon_geojson'] = polygon_geojson
     
     # add the structured query dict (if provided) to params, otherwise query with place name string
     if isinstance(query, str):
@@ -272,9 +268,12 @@ def gdf_from_place(query, gdf_name=None, which_result=1):
         if geometry['type'] not in ['Polygon', 'MultiPolygon']:
             log('OSM returned a {} as the geometry.'.format(geometry['type']), level=lg.WARNING)
         
-        # create the GeoDataFrame, name it, and return it
+        # create the GeoDataFrame, name it
         gdf = gpd.GeoDataFrame.from_features(features)
         gdf.name = gdf_name
+        
+        # set the original CRS of the GeoDataFrame to lat-long, and return it
+        gdf.crs = {'init':'epsg:4326'}
         log('Created GeoDataFrame with {} row for query "{}"'.format(len(gdf), query))
         return gdf
     else:
@@ -300,9 +299,12 @@ def gdf_from_places(queries, gdf_name='unnamed'):
     for query in queries:
         gdf = gdf.append(gdf_from_place(query))
         
-    # reset the index, name the GeoDataFrame, then return it
+    # reset the index, name the GeoDataFrame
     gdf = gdf.reset_index().drop(labels='index', axis=1)
     gdf.name = gdf_name
+    
+    # set the original CRS of the GeoDataFrame to lat-long, and return it
+    gdf.crs = {'init':'epsg:4326'}
     log('Finished creating GeoDataFrame with {} rows from {} queries'.format(len(gdf), len(queries)))
     return gdf
 
@@ -368,9 +370,6 @@ def project_gdf(gdf):
                'zone' : utm_zone,
                'units': 'm'}
     
-    # set the original CRS of the GeoDataFrame to lat-long
-    gdf.crs = {'init':'epsg:4326'}
-    
     # project the GeoDataFrame to the UTM CRS
     projected_gdf = gdf.to_crs(utm_crs)
     projected_gdf.name = gdf.name
@@ -419,17 +418,18 @@ def osm_net_download(north, south, east, west, network_type='all', pause_duratio
         raise ValueError('unknown network_type "{}"'.format(network_type))
     
     # format everything but timeout here. we pass the timeout int along to make_request() where it adds it 
-    # to the params dict so that make_request() can call itself recursively, increasing the timeout interval each
+    # to the params OrderedDict so that make_request() can call itself recursively, increasing the timeout interval each
     # time, if the query is really big and causing the request to timeout.
     data = data.format(north=north, south=south, east=east, west=west, filters=filters)
     
     # request the URL, return the JSON
-    params = {'data':data}
+    params = OrderedDict()
+    params['data'] = data
     response_json = make_request(url, params, timeout=timeout)
     return response_json
     
 
-def get_node(element):
+def get_node(element, useful_tags=_useful_tags_node):
     """
     Convert an OSM node element into the format for a networkx node.
     
@@ -439,15 +439,17 @@ def get_node(element):
     Returns: dict
     """
     node = {}
-    node['lat'] = element['lat']
-    node['lon'] = element['lon']
-    
+    node['y'] = element['lat']
+    node['x'] = element['lon']
+    node['osmid'] = element['id']
     if 'tags' in element:
-        node['highway'] = element['tags']['highway'] if 'highway' in element['tags'] else None
+        for useful_tag in useful_tags:
+            if useful_tag in element['tags']:
+                node[useful_tag] = element['tags'][useful_tag]
     return node
     
     
-def get_path(element):
+def get_path(element, useful_tags=_useful_tags_path):
     """
     Convert an OSM way element into the format for a networkx graph path.
     
@@ -457,15 +459,15 @@ def get_path(element):
     Returns: dict
     """
     path = {}
+    path['osmid'] = element['id']
     path['nodes'] = element['nodes']
     if 'tags' in element:
-        path['name'] = element['tags']['name'] if 'name' in element['tags'] else None
-        path['city'] = element['tags']['addr:city'] if 'addr:city' in element['tags'] else None
-        path['highway'] = element['tags']['highway'] if 'highway' in element['tags'] else None
-        path['maxspeed'] = element['tags']['maxspeed'] if 'maxspeed' in element['tags'] else None
+        for useful_tag in useful_tags:
+            if useful_tag in element['tags']:
+                path[useful_tag] = element['tags'][useful_tag] 
     return path
     
-
+    
 def parse_osm_nodes_paths(osm_data):
     """
     Construct dicts of nodes and paths with key=osmid and value=dict of attributes.
@@ -563,7 +565,7 @@ def truncate_graph_bbox(G, north, south, east, west, retain_all=False):
     start_time = time.time()
     nodes_outside_bbox = []
     for node, data in G.nodes(data=True):
-        if data['lat'] > north or data['lat'] < south or data['lon'] > east or data['lon'] < west:
+        if data['y'] > north or data['y'] < south or data['x'] > east or data['x'] < west:
             nodes_outside_bbox.append(node)
     
     
@@ -585,7 +587,7 @@ def truncate_graph_bbox(G, north, south, east, west, retain_all=False):
     return G
     
 
-def truncate_graph_polygon(G, polygon, x='lon', y='lat', retain_all=False):
+def truncate_graph_polygon(G, polygon, retain_all=False):
     """
     Remove every node in graph that falls outside some shapely Polygon or MultiPolygon.
     
@@ -601,14 +603,15 @@ def truncate_graph_polygon(G, polygon, x='lon', y='lat', retain_all=False):
     # find all the nodes in the graph that lie outside the polygon
     start_time = time.time()
     log('Identifying all nodes that lie outside the polygon')
-    geometry = [Point(data[x], data[y]) for _, data in G.nodes(data=True)]
-    gdf_nodes = gpd.GeoDataFrame({'node_id':G.nodes(), 'geometry':geometry})
+    geometry = [Point(data['x'], data['y']) for _, data in G.nodes(data=True)]
+    gdf_nodes = gpd.GeoDataFrame({'node':G.nodes(), 'geometry':geometry})
+    gdf_nodes.crs = G.graph['crs']
     nodes_outside_polygon = gdf_nodes[~gdf_nodes.intersects(polygon)]
     log('Found {:,} nodes outside polygon in {:,.2f} seconds'.format(len(nodes_outside_polygon), time.time()-start_time))
     
     # now remove from the graph all those nodes that lie outside the place polygon
     start_time = time.time()
-    G.remove_nodes_from(nodes_outside_polygon['node_id'])
+    G.remove_nodes_from(nodes_outside_polygon['node'])
     log('Truncated graph by polygon in {:,.2f} seconds'.format(time.time()-start_time))
     
     # remove any orphaned nodes, keep only the largest subgraph (if retain_all is True), and return G
@@ -629,9 +632,10 @@ def add_edge_lengths(G):
     Returns: networkx graph
     """
     for u, v, key, data in G.edges(keys=True, data=True):
-        u_point = (G.node[u]['lat'], G.node[u]['lon'])
-        v_point = (G.node[v]['lat'], G.node[v]['lon'])
-        edge_length = great_circle(u_point, v_point).m #geopy points are (lat, lon)
+        #geopy points are (lat, lon) so that's (y, x)
+        u_point = (G.node[u]['y'], G.node[u]['x'])
+        v_point = (G.node[v]['y'], G.node[v]['x'])
+        edge_length = great_circle(u_point, v_point).m 
         data['length'] = edge_length
     return G
     
@@ -649,11 +653,11 @@ def get_nearest_node(G, point, return_dist=False):
     """
     start_time = time.time()
     nodes = G.nodes(data=True)
-    nearest_node = min(nodes, key=lambda node: great_circle((node[1]['lat'], node[1]['lon']), point).m)
+    nearest_node = min(nodes, key=lambda node: great_circle((node[1]['y'], node[1]['x']), point).m)
     log('Found nearest node ({}) to point {} in {:,.2f} seconds'.format(nearest_node[0], point, time.time()-start_time))
     
     if return_dist:
-        distance = great_circle((nearest_node[1]['lat'], nearest_node[1]['lon']), point).m #geopy points are (lat, lon) not (x, y)
+        distance = great_circle((nearest_node[1]['y'], nearest_node[1]['x']), point).m #geopy points are (lat, lon) so that's (y, x)
         return nearest_node[0], distance
     else:
         return nearest_node[0]
@@ -672,25 +676,23 @@ def create_graph(osm_data, name='unnamed', retain_all=False):
     """
     log('Creating networkx graph from downloaded OSM data')
     start_time = time.time()
-    G = nx.MultiGraph(name=name)
-    nodes, paths = parse_osm_nodes_paths(osm_data)
+    
+    # create the graph as a multigraph and set the original CRS to lat-long
+    G = nx.MultiGraph(name=name, crs={'init':'epsg:4326'})
+    
+    # extract nodes and paths from the downloaded osm data
+    nodes, paths = parse_osm_nodes_paths(osm_data)    
     
     # add each osm node to the graph
-    for node_id, node in nodes.items():
-        hwy = node['highway'] if 'highway' in node and not node['highway'] is None else ''
-        G.add_node(node_id, osmid=node_id, lat=node['lat'], lon=node['lon'], highway=hwy)
+    for node, data in nodes.items():
+        G.add_node(node, attr_dict=data)
     
-    # add each osm way (aka, path) to the graph
-    for path_id, path in paths.items():
-        name = node['name'] if ('name' in node) and (not node['name'] is None) else ''
-        city = node['city'] if ('city' in node) and (not node['city'] is None) else ''
-        hwy = node['highway'] if ('highway' in node) and (not node['highway'] is None) else ''
-        maxspeed = node['maxspeed'] if ('maxspeed' in node) and (not node['maxspeed'] is None) else ''
-        G.add_path(path['nodes'], osmid=path_id, name=name, city=city, highway=hwy, maxspeed=maxspeed)
+    # add each osm way (aka, path) to the graph by unpacking the data dict as keyword args (can't pass attribute dict to this function)
+    for path, data in paths.items():
+        G.add_path(**data)
     
     # retain only the largest connected subgraph, if caller did not set retain_all=True
     G = get_largest_subgraph(G, retain_all=retain_all)
-    
     
     # add length (great circle distance between vertices) attribute to each edge to use as weight
     G = add_edge_lengths(G)
@@ -859,28 +861,35 @@ def project_graph(G):
     
     Returns: networkx graph
     """
-    # create a GeoDataFrame of the nodes, name it, convert osmid to str, and create a geometry column
+    # create a GeoDataFrame of the nodes, name it, convert osmid to str
     start_time = time.time()
-    nodes = {node_id:data for node_id, data in G.nodes(data=True)}
+    nodes = {node:data for node, data in G.nodes(data=True)}
     gdf_nodes = gpd.GeoDataFrame(nodes).T
-    gdf_nodes.name = G.name
+    gdf_nodes.crs = G.graph['crs']
+    gdf_nodes.name = '{}_nodes'.format(G.name)
     gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(str)
-    gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['lon'], row['lat']), axis=1)
+    
+    # create new lat/lon columns just to save that data for later, and create a geometry column from x/y
+    gdf_nodes['lon'] = gdf_nodes['x']
+    gdf_nodes['lat'] = gdf_nodes['y']
+    gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
     log('Created a GeoDataFrame from graph in {:,.2f} seconds'.format(time.time()-start_time))
     
-    # create a GeoDataFrame of the edges with geometry column as a shapely LineString of geometries of all edges that have geometry attribute
+    # project the nodes GeoDataFrame to UTM
+    gdf_nodes_utm = project_gdf(gdf_nodes)
+    
+    # extract data for all edges that have geometry attribute
     edges_with_geom = []
     for u, v, key, data in G.edges(keys=True, data=True):
         if 'geometry' in data:
             edges_with_geom.append({'u':u, 'v':v, 'key':key, 'geometry':data['geometry']})
     
-    # project the nodes GeoDataFrame to UTM
-    gdf_nodes_utm = project_gdf(gdf_nodes)
-    
-    # project the edges GeoDataFrame to UTM, if there were any edges with a geometry attribute (only exists if graph has been simplified)
+    # create an edges GeoDataFrame and project to UTM, if there were any edges with a geometry attribute
+    # geom attr only exists if graph has been simplified, otherwise you don't have to project anything for the edges because the nodes still contain all spatial data
     if len(edges_with_geom) > 0:
         gdf_edges = gpd.GeoDataFrame(edges_with_geom)
-        gdf_edges.name = G.name
+        gdf_edges.crs = G.graph['crs']
+        gdf_edges.name = '{}_edges'.format(G.name)
         gdf_edges_utm = project_gdf(gdf_edges)
     
     # extract projected x and y values from the nodes' geometry column
@@ -912,7 +921,6 @@ def project_graph(G):
         
     log('Rebuilt projected graph in {:,.2f} seconds'.format(time.time()-start_time))    
     return G
-    
 
 
 def save_graph(G, filename='graph', data_folder=_data_folder):
@@ -920,17 +928,18 @@ def save_graph(G, filename='graph', data_folder=_data_folder):
     Save graph as file to disk
     
     """
-    # convert all the node/edge attribute values to string or it won't save
-    for node, data in G.nodes(data=True):
+    # create a copy to convert all the node/edge attribute values to string or it won't save
+    G_save = G.copy()
+    for node, data in G_save.nodes(data=True):
         for dict_key in data:
             data[dict_key] = str(data[dict_key])
-    for u, v, key, data in G.edges(keys=True, data=True):
+    for u, v, key, data in G_save.edges(keys=True, data=True):
         for dict_key in data:
             data[dict_key] = str(data[dict_key])
     
     if not os.path.exists(data_folder):
         os.makedirs(data_folder)
-    nx.write_graphml(G, '{}/{}.graphml'.format(data_folder, filename))
+    nx.write_graphml(G_save, '{}/{}.graphml'.format(data_folder, filename))
     
     
 ############################################################################
@@ -940,7 +949,7 @@ def save_graph(G, filename='graph', data_folder=_data_folder):
 ############################################################################    
     
 # given a node of degree 2, find the first node in both directions with degree not 2
-def find_end_points(G, node, end_points, nodes_to_remove, previous_node=-1):
+def find_end_points(G, node, end_points=[], nodes_to_remove=[], previous_node=-1):
     if G.degree(node) == 2:
         # if the degree is 2, this is a node we will remove
         nodes_to_remove.append(node)
@@ -950,7 +959,7 @@ def find_end_points(G, node, end_points, nodes_to_remove, previous_node=-1):
             # if this neighbor is the previous node we just looked at, ignore it
             if G.degree(neighbor) == 2:
                 # otherwise, if this neighbor has degree 2, recursively call this function
-                find_end_points(G, neighbor, end_points, nodes_to_remove, node)
+                find_end_points(G, neighbor, end_points=end_points, nodes_to_remove=nodes_to_remove, previous_node=node)
             else:
                 # otherwise, if the neighbor has a degree other than 2, it is an endpoint
                 end_points.append(neighbor)
@@ -982,7 +991,7 @@ def build_path(G, origin, destination, nodes_to_remove, node, path, previous_nod
 # simplify a graph by removing all nodes where degree=2
 # create an edge directly between the nodes outside them where degree != 2
 # but retain the geometry of the original edges, saved as attr in new edge
-def simplify_graph(G, x='lon', y='lat'):
+def simplify_graph(G):
     
     start_time = time.time()
     log('Begin topologically simplifying the graph')
@@ -1000,43 +1009,58 @@ def simplify_graph(G, x='lon', y='lat'):
             # if this node has degree 2 then it is not an intersection or a dead-end
             # therefore it is not a network node, just a point to help a street bend around a curve
                 
-                # find the 'end points' on either side of this node
-                # an end point is the first node we find that has degree not equal to 2
-                # nodes_to_remove is all the other nodes of degree 2 between the end_points
-                end_points, nodes_to_remove = find_end_points(G, node, [], [])
-                
-                # build a path of the nodes in sequence between the origin and destination,
-                # making sure each node in the path is in nodes_to_remove so we don't create
-                # a path from some alternate route between these two end point nodes
-                origin, destination = end_points
-                path = build_path(G, origin, destination, nodes_to_remove, node=origin, path=[origin])
+                try:
+                    # find the 'end points' on either side of this node
+                    # an end point is the first node we find that has degree not equal to 2
+                    # nodes_to_remove is all the other nodes of degree 2 between the end_points
+                    end_points, nodes_to_remove = find_end_points(G, node, end_points=[], nodes_to_remove=[])
+                    
+                    # build a path of the nodes in sequence between the origin and destination,
+                    # making sure each node in the path is in nodes_to_remove so we don't create
+                    # a path from some alternate route between these two end point nodes
+                    origin, destination = end_points
+                    path = build_path(G, origin, destination, nodes_to_remove, node=origin, path=[origin])
+                    
+                    # add the interstitial edges we're removing to a list so we can draw with spatial accuracy later
+                    edge_attributes = {}
+                    for n in range(len(path) - 1):
+                        # add each segment length to so we can sum them
+                        edges = G.edge[path[n]][path[n+1]]
+                        assert len(edges) == 1 #there should never be multiple edges between these nodes as at least must be degree 2
+                        edge = edges[0]#the only element in this list as long as the above assertion is True (MultiGraphs use keys (the 0 here), indexed with ints from 0 and up)
+                        for key in edge:
+                            if key in edge_attributes:
+                                # if this key already exists in the dict, append it to the value list
+                                edge_attributes[key].append(edge[key])
+                            else:
+                                # if this key doesn't already exist, set the value to a list containing the one value
+                                edge_attributes[key] = [edge[key]]
+                    
+                    for key in edge_attributes:
+                        # don't touch the length attribute, we'll sum it at the end
+                        if len(set(edge_attributes[key])) == 1 and not key == 'length':
+                            # if there's only 1 unique value in this attribute list, consolidate it to the single value
+                            edge_attributes[key] = edge_attributes[key][0]
+                        elif not key == 'length':
+                            # otherwise, if there are multiple values, keep one of each value
+                            edge_attributes[key] = list(set(edge_attributes[key]))
+                    
+                    # construct the geometry and sum the lengths of the segments
+                    points = [Point((G.node[node]['x'], G.node[node]['y'])) for node in path]
+                    edge_attributes['geometry'] = LineString(points)
+                    edge_attributes['length'] = sum(edge_attributes['length'])
 
-                # add the interstitial edges we're removing to a list so we can draw with spatial accuracy later
-                line_segments = []
-                segment_lengths = []
-                for n in range(len(path) - 1):
-                    #point1 = (G.node[path[n]][x], G.node[path[n]][y])
-                    #point2 = (G.node[path[n+1]][x], G.node[path[n+1]][y])
-                    #line_segments.append((point1, point2))
+                    # create a new edge between the origin and destination
+                    G.add_edge(origin, destination, attr_dict=edge_attributes)
                     
+                    # finally remove all the interstitial nodes with degree 2 between origin and dest
+                    G.remove_nodes_from(nodes_to_remove)
                 
-                    
-                    # add each segment length to so we can sum them
-                    edges = G.edge[path[n]][path[n+1]]
-                    assert len(edges) == 1 #there should never be multiple edges between these nodes as at least must be degree 2
-                    edge = edges[0]#the only element in this list as long as the above assertion is True (MultiGraphs use keys (the 0 here), indexed with ints from 0 and up)
-                    segment_lengths.append(edge['length']) 
-                
-                points = [Point((G.node[node][x], G.node[node][y])) for node in path]
-                geometry = LineString(points)
-                
-                # create a new edge between the origin and destination and save the line there
-                G.add_edge(origin, destination, attr_dict={'geometry':geometry,
-                                                           'length':sum(segment_lengths)})
-                
-                # finally remove all the interstitial nodes with degree 2 between origin and dest
-                G.remove_nodes_from(nodes_to_remove)
-    
+                except RecursionError:
+                    # recursion errors occur if some subgraph is a self-contained ring in which all nodes have degree 2
+                    # handle it by just ignoring that subgraph and letting its topology remain intact (this should be a rare occurrence)
+                    log('Recursion error: encountered subgraph where all nodes have degree=2', level=lg.WARNING)
+
     msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
     log(msg.format(initial_node_count, len(G.nodes()), initial_edge_count, len(G.edges()), time.time()-start_time))
     return G    
@@ -1076,9 +1100,9 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, use_geom=True, cmap='spectral',
     return colors
     
     
-def plot_graph(G, bbox=None, x='lon', y='lat', fig_height=6, fig_width=None, margin=0.02, axis_off=True,
-               show=True, save=False, filename='temp.jpg', dpi=300,
-               node_color='#66ccff', node_size=15, node_alpha=1, node_edgecolor='none',
+def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off=True,
+               show=True, save=False, filename='temp.jpg', dpi=300, annotate=False,
+               node_color='#66ccff', node_size=15, node_alpha=1, node_edgecolor='none', node_zorder=1,
                edge_color='#999999', edge_linewidth=1, edge_alpha=1, use_geom=True):
     """
     Plot a networkx graph.
@@ -1089,12 +1113,14 @@ def plot_graph(G, bbox=None, x='lon', y='lat', fig_height=6, fig_width=None, mar
     x = node attribute to use as x coordinate
     y = node attribute to use as y coordinate
     
+    node_zorder = zorder to plot nodes. edges are always 2, so make node_zorder 1 to plot nodes beneath them or 3 to plot nodes atop them
+    
     Returns: matplotlib figure, axis    
     """
     
     log('Begin plotting the graph')
-    node_Xs = [float(node[x]) for node in G.node.values()]
-    node_Ys = [float(node[y]) for node in G.node.values()]
+    node_Xs = [float(node['x']) for node in G.node.values()]
+    node_Ys = [float(node['y']) for node in G.node.values()]
     
     if bbox is None:
         north = max(node_Ys)
@@ -1117,19 +1143,19 @@ def plot_graph(G, bbox=None, x='lon', y='lat', fig_height=6, fig_width=None, mar
             lines.append(list(zip(xs, ys)))
         else:
             # if it doesn't have a geometry attribute, the edge is a straight line from node to node
-            x1 = G.node[u][x]
-            y1 = G.node[u][y]
-            x2 = G.node[v][x]
-            y2 = G.node[v][y]
+            x1 = G.node[u]['x']
+            y1 = G.node[u]['y']
+            x2 = G.node[v]['x']
+            y2 = G.node[v]['y']
             line = [(x1, y1), (x2, y2)]
             lines.append(line)
             
-    lc = mc.LineCollection(lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha)
+    lc = mc.LineCollection(lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=2)
     ax.add_collection(lc)
     log('Drew the graph edges in {:,.2f} seconds'.format(time.time()-start_time))
     
     # scatter plot the nodes
-    ax.scatter(node_Xs, node_Ys, s=node_size, c=node_color, alpha=node_alpha, edgecolor=node_edgecolor, zorder=2)
+    ax.scatter(node_Xs, node_Ys, s=node_size, c=node_color, alpha=node_alpha, edgecolor=node_edgecolor, zorder=node_zorder)
     
     # set the extent of the figure
     margin_ns = (north - south) * margin
@@ -1143,6 +1169,10 @@ def plot_graph(G, bbox=None, x='lon', y='lat', fig_height=6, fig_width=None, mar
     if axis_off:
         ax.axis('off')
     
+    if annotate:
+        for node, data in G.nodes(data=True):
+            ax.annotate(node, xy=(data['x'], data['y']))
+            
     # save the figure if specified
     if save:
         start_time = time.time()
@@ -1157,13 +1187,12 @@ def plot_graph(G, bbox=None, x='lon', y='lat', fig_height=6, fig_width=None, mar
         plt.show()
         log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
     
-    #for node, data in G.nodes(data=True):
-        #ax.annotate(node, xy=(data['lon'], data['lat']))
+    
     
     return fig, ax
 
 
-def plot_graph_route(G, route, origin_point=None, destination_point=None, bbox=None, x='lon', y='lat', fig_height=6, fig_width=None,
+def plot_graph_route(G, route, origin_point=None, destination_point=None, bbox=None, fig_height=6, fig_width=None,
                      show=True, save=False, filename='temp.jpg', dpi=300,
                      node_color='#999999', node_size=15, node_alpha=1, node_edgecolor='none',
                      edge_color='#999999', edge_linewidth=1, edge_alpha=1,
@@ -1171,22 +1200,22 @@ def plot_graph_route(G, route, origin_point=None, destination_point=None, bbox=N
                      orig_dest_node_size=100, orig_dest_node_color='r', orig_dest_point_color='b'):
     
     # plot the graph but not the route
-    fig, ax = plot_graph(G, bbox=bbox, x=x, y=y, fig_height=fig_height, fig_width=fig_width,
+    fig, ax = plot_graph(G, bbox=bbox, fig_height=fig_height, fig_width=fig_width,
                          show=False, save=save, filename=filename, dpi=dpi,
                          node_color=node_color, node_size=node_size, node_alpha=node_alpha, node_edgecolor=node_edgecolor,
                          edge_color=edge_color, edge_linewidth=edge_linewidth, edge_alpha=edge_alpha)
     
     # get the lats and lons of each node along the route
-    path_lats = [float(G.node[node][y]) for node in route]
-    path_lons = [float(G.node[node][x]) for node in route]
+    path_lats = [float(G.node[node]['y']) for node in route]
+    path_lons = [float(G.node[node]['x']) for node in route]
     
     origin_node = route[0]
     destination_node = route[-1]
         
     if origin_point is None or destination_point is None:
         # if caller didn't pass points, use the first and last node in route as origin/destination    
-        origin_destination_lats = (G.node[origin_node][y], G.node[destination_node][y])
-        origin_destination_lons = (G.node[origin_node][x], G.node[destination_node][x])
+        origin_destination_lats = (G.node[origin_node]['y'], G.node[destination_node]['y'])
+        origin_destination_lons = (G.node[origin_node]['x'], G.node[destination_node]['x'])
     else:
         # otherwise, use the passed points as origin/destination
         origin_destination_lats = (origin_point[0], destination_point[0])
@@ -1195,8 +1224,8 @@ def plot_graph_route(G, route, origin_point=None, destination_point=None, bbox=N
     
     # scatter the origin and destination points then plot the route lines
     ax.scatter(origin_destination_lons, origin_destination_lats, s=orig_dest_node_size, 
-               c=orig_dest_node_color, alpha=orig_dest_node_alpha, edgecolor=node_edgecolor, zorder=3)
-    ax.plot(path_lons, path_lats, color=route_color, linewidth=route_linewidth, alpha=route_alpha, zorder=2)
+               c=orig_dest_node_color, alpha=orig_dest_node_alpha, edgecolor=node_edgecolor, zorder=4)
+    ax.plot(path_lons, path_lats, color=route_color, linewidth=route_linewidth, alpha=route_alpha, zorder=3)
     
     if show:
         start_time = time.time()
