@@ -1133,9 +1133,45 @@ def save_graph(G, filename='graph'):
 # Functions for simplification of graph topology
 #
 ############################################################################    
-    
 
-def find_end_points(G, node, end_points=[], nodes_to_remove=[], previous_node=-1):
+
+def is_endpoint(G, u, strict=True):
+    """
+    Return True if the node is a "real" endpoint of an edge in the network, otherwise False.
+    OSM data includes lots of nodes that exist only as points to help streets bend around curves.
+    An endpoint is a node that either has degree 1 (so it's a dead end), or has degree > 2
+    (so it's the intersection of multiple streets), or has degree = 2 but its two adjacent
+    edges have different OSM IDs, so it is the intersection of different paths.
+    
+    Parameters
+    ----------
+    G : graph
+    u : int, the node to examine
+    strict : bool, if True, only consider intersections or dead-ends (ie, nodes with degree not = 2)
+                   if False, also consider nodes with degree = 2 if its two adjacent edges have different OSM IDs
+    
+    Returns
+    -------
+    bool
+    """
+    if not G.degree(u) == 2:
+        # if it has a degree not equal to 2, it is an intersection or a dead-end
+        return True
+    elif not strict:
+        # else, if we are retaining non-intersections and non-dead-ends, 
+        # then if it has degree 2 but each edge has a different osm id, it is an endpoint
+        osmids = []
+        for v in G.edge[u]:
+            for key in G.edge[u][v]:
+                osmids.append(G.edge[u][v][key]['osmid'])
+        if len(set(osmids)) > 1:
+            return True
+        else:
+            # if it has degree 2 and both edges have the same osm id, it is not an endpoint
+            return False
+            
+
+def find_end_points(G, node, end_points=[], nodes_to_remove=[], previous_node=-1, strict=True):
     """
     Given a node in a graph, if it has degree=2, find the first node in both directions with degree not 2.
     This function works recursively to identify all the nodes of degree 2 between two nodes of degreee not 2.
@@ -1152,21 +1188,21 @@ def find_end_points(G, node, end_points=[], nodes_to_remove=[], previous_node=-1
     -------
     end_points, nodes_to_remove : list, list
     """
-    if G.degree(node) == 2:
-        # if the degree is 2, this is a node we will remove
+    if not is_endpoint(G, node, strict):
+        # if this is not an endpoint/intersection, we will remove this node
         nodes_to_remove.append(node)
     for neighbor in G.neighbors(node):
         # look at each neighbor of this node
         if not neighbor == previous_node:
             # if this neighbor is the previous node we just looked at, ignore it
-            if G.degree(neighbor) == 2:
-                # otherwise, if this neighbor has degree 2, recursively call this function
-                find_end_points(G, neighbor, end_points=end_points, nodes_to_remove=nodes_to_remove, previous_node=node)
+            if not is_endpoint(G, neighbor, strict):
+                # otherwise, if this neighbor is not an endpoint or intersection, recursively call this function
+                find_end_points(G, neighbor, end_points=end_points, nodes_to_remove=nodes_to_remove, previous_node=node, strict=strict)
             else:
-                # otherwise, if the neighbor has a degree other than 2, it is an endpoint
+                # otherwise, the neighbor is an endpoint/intersection
                 end_points.append(neighbor)
     return end_points, nodes_to_remove
-
+    
     
 def build_path(G, origin, destination, nodes_to_remove, node, path, previous_node=-1):
     """
@@ -1205,13 +1241,15 @@ def build_path(G, origin, destination, nodes_to_remove, node, path, previous_nod
     return path
 
 
-def simplify_graph(G):
+def simplify_graph(G_, strict=True):
     """
-    Simplify a graph by removing all nodes where degree=2. Create an edge directly between the nodes outside them where degree != 2, but retain the geometry of the original edges, saved as attr in new edge
+    Simplify a graph by removing all nodes where degree=2. 
+    Create an edge directly between the nodes outside them where degree != 2, 
+    but retain the geometry of the original edges, saved as attr in new edge
     
     Parameters
     ----------
-    G : graph
+    G_ : graph
     
     Returns
     -------
@@ -1220,6 +1258,8 @@ def simplify_graph(G):
     start_time = time.time()
     log('Begin topologically simplifying the graph')
     
+    # make a copy to not alter the original
+    G = G_.copy()
     initial_node_count = len(G.nodes())
     initial_edge_count = len(G.edges())
     
@@ -1229,15 +1269,14 @@ def simplify_graph(G):
         if node in G.nodes():
         # if the node is still in the graph now (as we will be removing some along the way)
             
-            if G.degree(node)==2:
-            # if this node has degree 2 then it is not an intersection or a dead-end
+            if not is_endpoint(G, node, strict):
+            # this node is not an intersection or an endpoint
             # therefore it is not a network node, just a point to help a street bend around a curve
                 
                 try:
                     # find the 'end points' on either side of this node
-                    # an end point is the first node we find that has degree not equal to 2
-                    # nodes_to_remove is all the other nodes of degree 2 between the end_points
-                    end_points, nodes_to_remove = find_end_points(G, node, end_points=[], nodes_to_remove=[])
+                    # nodes_to_remove is all the other nodes (that are neither endpoints nor intersections) between the end_points
+                    end_points, nodes_to_remove = find_end_points(G, node, end_points=[], nodes_to_remove=[], strict=strict)
                     
                     # build a path of the nodes in sequence between the origin and destination,
                     # making sure each node in the path is in nodes_to_remove so we don't create
@@ -1250,7 +1289,7 @@ def simplify_graph(G):
                     for n in range(len(path) - 1):
                         # add each segment length to so we can sum them
                         edges = G.edge[path[n]][path[n+1]]
-                        assert len(edges) == 1 #there should never be multiple edges between these nodes as at least must be degree 2
+                        assert len(edges) == 1 #there should never be multiple edges between these nodes must be degree 2
                         edge = edges[0]#the only element in this list as long as the above assertion is True (MultiGraphs use keys (the 0 here), indexed with ints from 0 and up)
                         for key in edge:
                             if key in edge_attributes:
