@@ -786,7 +786,7 @@ def get_nearest_node(G, point, return_dist=False):
         return nearest_node[0]
 
         
-def create_graph(osm_data, name='unnamed', retain_all=False):
+def create_graph(osm_data, name='unnamed', retain_all=False, directed=False):
     """
     Create a networkx graph from OSM data.
     
@@ -795,6 +795,7 @@ def create_graph(osm_data, name='unnamed', retain_all=False):
     osm_data : dict, JSON response from from the Overpass API
     name : string, the name of the graph
     retain_all : bool, if True, return the entire graph even if it is not connected
+    directed : bool, if True, create a directed graph
     
     Returns
     -------
@@ -802,6 +803,10 @@ def create_graph(osm_data, name='unnamed', retain_all=False):
     """
     log('Creating networkx graph from downloaded OSM data')
     start_time = time.time()
+    
+    if directed:
+        # add directed graph logic here
+        pass
     
     # create the graph as a multigraph and set the original CRS to lat-long
     G = nx.MultiGraph(name=name, crs={'init':'epsg:4326'})
@@ -851,7 +856,7 @@ def bbox_from_point(point, distance=1000):
     return north, south, east, west
     
     
-def graph_from_bbox(north, south, east, west, network_type='all', simplify=True, retain_all=False, name='unnamed'):
+def graph_from_bbox(north, south, east, west, network_type='all', simplify=True, retain_all=False, directed=False, name='unnamed'):
     """
     Create a networkx graph from OSM data within some bounding box.
     
@@ -864,6 +869,7 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
+    directed : bool, if True, create a directed graph
     name : string, the name of the graph
     
     Returns
@@ -873,7 +879,7 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     
     # get the network data from OSM, create the graph, then truncate to the bounding box
     osm_data = osm_net_download(north, south, east, west, network_type=network_type)
-    G = create_graph(osm_data, name=name, retain_all=retain_all)
+    G = create_graph(osm_data, name=name, retain_all=retain_all, directed=directed)
     G = truncate_graph_bbox(G, north, south, east, west)
 
     # simplify the graph topology as the last step. don't truncate after simplifying or you may have simplified out to an endpoint
@@ -885,7 +891,7 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     return  G
     
     
-def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, name='unnamed'):
+def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, directed=False, name='unnamed'):
     """
     Create a networkx graph from OSM data within some distance of some (lat, lon) center point.
     
@@ -898,6 +904,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
+    directed : bool, if True, create a directed graph
     name : string, the name of the graph
     
     Returns
@@ -908,10 +915,10 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     north, south, east, west = bbox_from_point(center_point, distance)
     if distance_type == 'bbox':
         # if the network distance_type is bbox, create a graph from the bounding box
-        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name)
+        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify, retain_all=retain_all, directed=directed, name=name)
     elif distance_type == 'network':
         # if the network distance_type is network, create a graph from the bounding box but do not simplify it yet (only simplify a graph after all truncation is performed! otherwise you get weird artifacts)
-        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=retain_all, name=name)
+        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=retain_all, directed=directed, name=name)
         
         # next find the node in the graph nearest to the center point, and truncate the graph by network distance from this node
         centermost_node = get_nearest_node(G, center_point)
@@ -929,7 +936,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     return G
         
         
-def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, return_coords=False, name='unnamed', geocoder_timeout=30):
+def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, directed=False, return_coords=False, name='unnamed', geocoder_timeout=30):
     """
     Create a networkx graph from OSM data within some distance of some address.
     
@@ -942,6 +949,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
+    directed : bool, if True, create a directed graph
     return_coords : bool, optionally also return the geocoded coordinates of the address
     name : string, the name of the graph
     geocoder_timeout : int, how many seconds to wait for server response before the geocoder times-out
@@ -957,7 +965,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     point = (geolocation.latitude, geolocation.longitude)
     
     # then create a graph from this point
-    G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name)
+    G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all, directed=directed, name=name)
     log('graph_from_address() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
     
     if return_coords:
@@ -966,7 +974,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
         return G
         
         
-def graph_from_place(query, network_type='all', simplify=True, retain_all=False, name='unnamed', which_result=1):
+def graph_from_place(query, network_type='all', simplify=True, retain_all=False, directed=False, name='unnamed', which_result=1):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some geocodable place(s).
     
@@ -976,6 +984,7 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
+    directed : bool, if True, create a directed graph
     name : string, the name of the graph
     which_result : int, max number of results to return and which to process upon receipt
     
@@ -999,7 +1008,7 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
     west = gdf_place['bbox_west'].min()
     
     # retain_all is true and truncate is false here because we'll handle that in truncate_graph_polygon() later
-    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=True, name=name)
+    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=True, directed=directed, name=name)
     
     # truncate the graph to the shape of the place(s) polygon then return it
     polygon = gdf_place['geometry'].unary_union
