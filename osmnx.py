@@ -25,6 +25,7 @@
 # Description: Retrieve and construct spatial geometries and street networks from OpenStreetMap
 ###################################################################################################
 
+from __future__ import unicode_literals
 import json, math, os, io, hashlib, re, time, datetime as dt, logging as lg
 from collections import OrderedDict
 import requests, numpy as np, pandas as pd, geopandas as gpd, networkx as nx, matplotlib.pyplot as plt, matplotlib.cm as cm
@@ -131,7 +132,7 @@ def get_logger(name='osmnx', level=lg.INFO):
     """
     logger = lg.getLogger(name)
     if not getattr(logger, 'handler_set', None):
-        todays_date = dt.datetime.today().strftime('%Y_%m_%d')#_%H_%M_%S')
+        todays_date = dt.datetime.today().strftime('%Y_%m_%d')
         log_filename = '{}/{}_{}.log'.format(_logs_folder, name, todays_date)
         if not os.path.exists(_logs_folder):
             os.makedirs(_logs_folder)
@@ -141,8 +142,28 @@ def get_logger(name='osmnx', level=lg.INFO):
         logger.addHandler(handler)
         logger.setLevel(level)
         logger.handler_set = True
-    return logger
+    return logger    
 
+
+def make_str(value):
+    """
+    Convert a passed-in value to unicode if Python 2, or string if Python 3.
+    
+    Parameters
+    ----------
+    value : any type, the value to convert to unicode/string
+    
+    Returns
+    -------
+    value : unicode or string
+    """
+    try:
+        # for python 2.x compatibility, use unicode
+        return unicode(value)
+    except:
+        # python 3.x has no unicode type, so if error, use str type
+        return str(value)
+    
     
 def save_to_cache(url, response_json):
     """
@@ -172,16 +193,10 @@ def save_to_cache(url, response_json):
             filename = hashlib.md5(url.encode('utf-8')).hexdigest()
             cache_path_filename = '{}/{}.json'.format(_cache_folder, filename)
             
-            response_str = json.dumps(response_json)
-            try:
-                # for python 2.x compatibility, cast string to unicode. will throw error in python 3.x which is fine, just move on.
-                response_str = unicode(response_str)
-            except:
-                pass
-            
             # dump to json, and save to file
+            json_str = make_str(json.dumps(response_json))
             with io.open(cache_path_filename, 'w', encoding='utf-8') as cache_file:
-                cache_file.write(response_str)
+                cache_file.write(json_str)
             log('Saved response from URL "{}" to cache file "{}"'.format(url, cache_path_filename))
         
 
@@ -443,7 +458,7 @@ def project_gdf(gdf):
     avg_longitude = gdf['geometry'].unary_union.centroid.x
     
     # calculate the UTM zone from this avg longitude and define the UTM CRS to project
-    utm_zone = math.floor((avg_longitude + 180) / 6.0) + 1
+    utm_zone = int(math.floor((avg_longitude + 180) / 6.0) + 1)
     utm_crs = {'datum': 'NAD83',
                'ellps': 'GRS80',
                'proj' : 'utm',
@@ -1011,14 +1026,17 @@ def project_graph(G):
     
     Returns
     -------
-    G : graph
+    G_proj : graph
     """
-    # create a GeoDataFrame of the nodes, name it, convert osmid to str
+    
+    G_proj = G.copy()
     start_time = time.time()
-    nodes = {node:data for node, data in G.nodes(data=True)}
+    
+    # create a GeoDataFrame of the nodes, name it, convert osmid to str
+    nodes = {node:data for node, data in G_proj.nodes(data=True)}
     gdf_nodes = gpd.GeoDataFrame(nodes).T
-    gdf_nodes.crs = G.graph['crs']
-    gdf_nodes.name = '{}_nodes'.format(G.name)
+    gdf_nodes.crs = G_proj.graph['crs']
+    gdf_nodes.name = '{}_nodes'.format(G_proj.name)
     gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(str)
     
     # create new lat/lon columns just to save that data for later, and create a geometry column from x/y
@@ -1032,7 +1050,7 @@ def project_graph(G):
     
     # extract data for all edges that have geometry attribute
     edges_with_geom = []
-    for u, v, key, data in G.edges(keys=True, data=True):
+    for u, v, key, data in G_proj.edges(keys=True, data=True):
         if 'geometry' in data:
             edges_with_geom.append({'u':u, 'v':v, 'key':key, 'geometry':data['geometry']})
     
@@ -1040,8 +1058,8 @@ def project_graph(G):
     # geom attr only exists if graph has been simplified, otherwise you don't have to project anything for the edges because the nodes still contain all spatial data
     if len(edges_with_geom) > 0:
         gdf_edges = gpd.GeoDataFrame(edges_with_geom)
-        gdf_edges.crs = G.graph['crs']
-        gdf_edges.name = '{}_edges'.format(G.name)
+        gdf_edges.crs = G_proj.graph['crs']
+        gdf_edges.name = '{}_edges'.format(G_proj.name)
         gdf_edges_utm = project_gdf(gdf_edges)
     
     # extract projected x and y values from the nodes' geometry column
@@ -1053,26 +1071,30 @@ def project_graph(G):
     
     # clear the graph to make it a blank slate for the projected data
     start_time = time.time()
-    edges = G.edges(keys=True, data=True)
-    G.clear()
+    edges = G_proj.edges(keys=True, data=True)
+    graph_name = G_proj.graph['name']
+    G_proj.clear()
     
     # add the projected nodes and all their attributes to the graph
-    G.add_nodes_from(gdf_nodes_utm.index)
+    G_proj.add_nodes_from(gdf_nodes_utm.index)
     attributes = gdf_nodes_utm.to_dict()
     for name in gdf_nodes_utm.columns:
-        nx.set_node_attributes(G, name, attributes[name])
+        nx.set_node_attributes(G_proj, name, attributes[name])
     
     # add the edges and all their attributes (including reconstructed geometry, when it exists) to the graph
     for u, v, key, attributes in edges:
         if 'geometry' in attributes:
             row = gdf_edges_utm[(gdf_edges_utm['u']==u) & (gdf_edges_utm['v']==v) & (gdf_edges_utm['key']==key)]
             attributes['geometry'] = row['geometry'].iloc[0]
-        G.add_edge(u, v, key, attributes)
-        
+        G_proj.add_edge(u, v, key, attributes)
+    
+    # set the graph's CRS attribute to the new, projected CRS and return the projected graph
+    G_proj.graph['crs'] = gdf_nodes_utm.crs
+    G_proj.graph['name'] = '{}_UTM'.format(graph_name)
     log('Rebuilt projected graph in {:,.2f} seconds'.format(time.time()-start_time))
-    return G
+    return G_proj
 
-
+    
 def save_graph(G, filename='graph'):
     """
     Save graph as file to disk.
@@ -1086,22 +1108,23 @@ def save_graph(G, filename='graph'):
     -------
     None
     """
-    # create a copy to convert all the node/edge attribute values to string or it won't save
+    # create a copy and convert all the node/edge attribute values to string or it won't save
     G_save = G.copy()
+    for dict_key in G_save.graph:
+        # convert all the graph attribute values to strings
+        G_save.graph[dict_key] = make_str(G_save.graph[dict_key])
     for node, data in G_save.nodes(data=True):
         for dict_key in data:
-            data[dict_key] = str(data[dict_key])
+            # convert all the node attribute values to strings
+            data[dict_key] = make_str(data[dict_key])
     for u, v, key, data in G_save.edges(keys=True, data=True):
         for dict_key in data:
-            try:
-                # python 3.x
-                data[dict_key] = str(data[dict_key])
-            except:
-                # python 2.x
-                data[dict_key] = unicode(data[dict_key])
-    
+            # convert all the edge attribute values to strings
+            data[dict_key] = make_str(data[dict_key])
+                
     if not os.path.exists(_data_folder):
         os.makedirs(_data_folder)
+    
     nx.write_graphml(G_save, '{}/{}.graphml'.format(_data_folder, filename))
     
     
@@ -1260,59 +1283,20 @@ def simplify_graph(G):
                 except RuntimeError:
                     # recursion errors occur if some subgraph is a self-contained ring in which all nodes have degree 2
                     # handle it by just ignoring that subgraph and letting its topology remain intact (this should be a rare occurrence)
-                    # RuntimeError is what Python 2.x will throw
-                    log('Recursion error: encountered subgraph where all nodes have degree=2', level=lg.WARNING)
-                except RecursionError:
-                    # RecursionError is what Python 3.x will throw
+                    # RuntimeError is what Python <3.5 will throw, Py3.5+ throws RecursionError but it is a subtype of RuntimeError so it still gets handled
                     log('Recursion error: encountered subgraph where all nodes have degree=2', level=lg.WARNING)
 
     msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
     log(msg.format(initial_node_count, len(G.nodes()), initial_edge_count, len(G.edges()), time.time()-start_time))
     return G    
     
+    
 ############################################################################
 #
 # Start of plotting functions
 #
 ############################################################################
-"""
-def get_edge_colors_by_attr(G, attr, num_bins=5, use_geom=True, cmap='spectral', start=0.1, stop=0.9):
-    
-    Get a list of edge colors by binning some continuous-variable attribute into quantiles
-    
-    Parameters
-    ----------
-    G : graph
-    attr : string, the name of the continuous-variable attribute
-    num_bins : int, how many quantiles
-    use_geom : bool, if True, count the line segments in each edge's geometry attribute and add a color for each
-    cmap : string, name of a colormap
-    start : float, where to start in the colorspace
-    stop : float, where to end in the colorspace
-    
-    Returns
-    -------
-    colors : list
-    
-    bin_labels = range(num_bins)
-    lengths = pd.Series([data[attr] for u, v, key, data in G.edges(keys=True, data=True)])
-    cats = pd.qcut(x=lengths, q=num_bins, labels=bin_labels)
-    color_list = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, num_bins)]
-    
-    if use_geom:
-        colors = []
-        for (u, v, key, data), cat in zip(G.edges(keys=True, data=True), cats):
-            if 'geometry' in data:
-                count_segments = len(data['geometry'])
-                colors.extend([color_list[cat]] * count_segments)
-            else:
-                colors.append(color_list[cat])
-    else:
-        colors = [color_list[cat] for cat in cats]
-        
-    return colors
-    """
-    
+
 
 def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='spectral', start=0.1, stop=0.9):
     """
