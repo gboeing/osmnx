@@ -74,8 +74,10 @@ def init(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs_f
     -------
     None
     """
-    
+    # use the global keyword to update global variables from within this function
     global _use_cache, _cache_folder, _data_folder, _imgs_folder, _logs_folder, _print_log, _file_log, _useful_tags_node, _useful_tags_path
+    
+    # set each global variable to the passed-in parameter value
     _use_cache = use_cache
     _cache_folder = cache_folder
     _data_folder = data_folder
@@ -85,7 +87,9 @@ def init(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs_f
     _file_log = file_log
     _useful_tags_node = useful_tags_node
     _useful_tags_path = useful_tags_path
-    if _file_log:
+    
+    # if logging is turned on, log that we are initialized
+    if _file_log or _print_log:
         log('Initialized osmnx')
 
 
@@ -102,7 +106,9 @@ def log(message, level=lg.INFO):
     -------
     None
     """
+    # if logging to file is turned on
     if _file_log:
+        # get the current logger (or create a new one, if none), then log message at requested level
         logger = get_logger()
         if level == lg.DEBUG:
             logger.debug(message)
@@ -112,7 +118,8 @@ def log(message, level=lg.INFO):
             logger.warning(message)
         elif level == lg.ERROR:
             logger.error(message)
-            
+    
+    # if logging to console is turned on, print message to the console
     if _print_log:
         print(message)
 
@@ -131,17 +138,26 @@ def get_logger(name='osmnx', level=lg.INFO):
     logger : logger.logger
     """
     logger = lg.getLogger(name)
+    
+    # if a logger with this name is not already set up
     if not getattr(logger, 'handler_set', None):
+        
+        # get today's date and construct a log filename
         todays_date = dt.datetime.today().strftime('%Y_%m_%d')
         log_filename = '{}/{}_{}.log'.format(_logs_folder, name, todays_date)
+        
+        # if the logs folder does not already exist, create it
         if not os.path.exists(_logs_folder):
             os.makedirs(_logs_folder)
+            
+        # create file handler and log formatter and set them up
         handler = lg.FileHandler(log_filename, encoding='utf-8')
         formatter = lg.Formatter('%(asctime)s %(levelname)s %(name)s %(message)s')
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         logger.setLevel(level)
         logger.handler_set = True
+    
     return logger    
 
 
@@ -167,7 +183,7 @@ def make_str(value):
     
 def save_to_cache(url, response_json):
     """
-    Save a http response json object to the cache. Users should always pass OrderedDicts instead of dicts
+    Save a HTTP response json object to the cache. Users should always pass OrderedDicts instead of dicts
     of parameters in, so that the parameters stay in the same order each time, producing the same URL string,
     and thus the same hash. Otherwise the cache will eventually contain multiple saved responses for the same
     request because the URL's parameters appeared in a different order each time.
@@ -202,7 +218,7 @@ def save_to_cache(url, response_json):
 
 def get_from_cache(url):
     """
-    Retrieve a http response json object from the cache.
+    Retrieve a HTTP response json object from the cache.
     
     Parameters
     ----------
@@ -374,7 +390,7 @@ def gdf_from_places(queries, gdf_name='unnamed'):
     
     Parameters
     ----------
-    query : string or dict, query string or structured query dict to geocode/download
+    queries : list, list of query strings or structured query dicts to geocode/download, one at a time
     gdf_name : string, name attribute metadata for GeoDataFrame (this is used to save shapefile later)
     
     Returns
@@ -460,7 +476,7 @@ def project_gdf(gdf):
     avg_longitude = gdf['geometry'].unary_union.centroid.x
     
     # calculate the UTM zone from this avg longitude and define the UTM CRS to project
-    utm_zone = int(math.floor((avg_longitude + 180) / 6.0) + 1)
+    utm_zone = int(math.floor((avg_longitude + 180) / 6.) + 1)
     utm_crs = {'datum': 'NAD83',
                'ellps': 'GRS80',
                'proj' : 'utm',
@@ -495,7 +511,7 @@ def osm_net_download(north, south, east, west, network_type='all', pause_duratio
     south : float, southern latitude of bounding box
     east : float, eastern longitude of bounding box
     west : float, western longitude of bounding box
-    network_type : string, what type of street network to get
+    network_type : string, {'walk', 'drive', 'all'} what type of street network to get
     pause_duration : int, time to pause in seconds between API requests
     timeout : int, the timeout interval for requests and to pass to API when possible
     
@@ -510,9 +526,9 @@ def osm_net_download(north, south, east, west, network_type='all', pause_duratio
     data = '[out:json][timeout:{{timeout}}];( way ["highway"] {filters} ({south},{west},{north},{east}); >;);out;' 
     
     # create a filter to exclude certain kinds of routes based on the requested network_type
-    if network_type == 'foot':
+    if network_type == 'walk':
         filters = '["highway"!~"motor"]' #for walking/biking accessible routes, exclude ways that are motor-only
-    elif network_type == 'motor':
+    elif network_type == 'drive':
         filters = '["highway"!~"foot|cycle|steps|path|pedestrian|track|service"]' #for car accessible routes, exclude ways that are non-motorized-only
     elif network_type == 'all':
         filters = '' #for all routes, filter out nothing
@@ -622,7 +638,7 @@ def remove_orphan_nodes(G):
    
 def get_largest_subgraph(G, retain_all=False):
     """
-    Return the largest connected subgraph from a graph.
+    Return the largest weakly connected subgraph from a directed graph.
     
     Parameters
     ----------
@@ -778,51 +794,89 @@ def get_nearest_node(G, point, return_dist=False):
     """
     start_time = time.time()
     nodes = G.nodes(data=True)
+    
+    # the nearest node is the one that minimizes great circle distance between its coordinates and the passed-in point
+    # geopy points are (lat, lon) so that's (y, x)
     nearest_node = min(nodes, key=lambda node: great_circle((node[1]['y'], node[1]['x']), point).m)
     log('Found nearest node ({}) to point {} in {:,.2f} seconds'.format(nearest_node[0], point, time.time()-start_time))
     
     if return_dist:
-        distance = great_circle((nearest_node[1]['y'], nearest_node[1]['x']), point).m #geopy points are (lat, lon) so that's (y, x)
+        # if caller requested return_dist, calculate the great circle distance between the point and the nearest node and return it as well
+        distance = great_circle((nearest_node[1]['y'], nearest_node[1]['x']), point).m
         return nearest_node[0], distance
     else:
         return nearest_node[0]
 
         
 def add_path(G, data, one_way):
+    """
+    Add a path to the graph.
+    
+    Parameters
+    ----------
+    G : graph
+    data : dict, the attributes of the path
+    one_way : bool, if this path is one-way or if it is bi-directional
+    
+    Returns
+    -------
+    None
+    """
+    # extract the ordered list of nodes from this path element, then delete it so we don't add it as an attribute to the edge later
     path_nodes = data['nodes']
     del data['nodes']
+    
+    # set the oneway attribute to the passed-in value, to make it consistent True/False values
     data['oneway'] = one_way
     
     # zip together the path nodes so you get tuples like (0,1), (1,2), (2,3) and so on
     path_edges = list(zip(path_nodes[:-1], path_nodes[1:]))
     G.add_edges_from(path_edges, attr_dict=data)
+    
+    # if the path is NOT one-way
     if not one_way:
-        # if it's not one-way, reverse the direction of each edge and add this path going the opposite direction
+        # reverse the direction of each edge and add this path going the opposite direction
         path_edges_opposite_direction = [(v, u) for u, v in path_edges]
         G.add_edges_from(path_edges_opposite_direction, attr_dict=data)
 
-        
-def add_paths(G, paths):
+
+def add_paths(G, paths, network_type):
+    """
+    Add a collection of paths to the graph.
     
+    Parameters
+    ----------
+    G : graph
+    paths : dict, the paths from OSM
+    network_type : string, {'all', 'walk', 'drive'}, what type of network
+    
+    Returns
+    -------
+    None
+    """
+    # the list of values OSM uses in its 'oneway' tag to denote True
     osm_oneway_values = ['yes', 'true', '1', '-1']
     
-    for path, data in paths.items():
+    for data in paths.values():
         
-        if 'oneway' in data and data['oneway'] in osm_oneway_values:
-            # path is one-way
+        # if this path is tagged as one-way and if it is not a walking network, then we'll add the path in one direction only
+        if ('oneway' in data and data['oneway'] in osm_oneway_values) and not network_type=='walk':
             if data['oneway'] == '-1':
-                # this one-way needs to have its nodes' order reversed, see osm wiki documentation
+                # paths with a one-way value of -1 are one-way, but in the reverse direction of the nodes' order, see osm documentation
                 data['nodes'] = list(reversed(data['nodes']))
+            # add this path (in only one direction) to the graph
             add_path(G, data, one_way=True)
         
+        # else, this path is not tagged as one-way or it is a walking network (you can walk both directions on a one-way street)
         else:
-            # path is not one-way
+            # add this path (in both directions) to the graph and set its 'oneway' attribute to False
+            # if this is a walking network, this may very well be a one-way street (as cars/bikes go), but in a walking-only network it is a bi-directional edge
             add_path(G, data, one_way=False)
     
     return G
 
 
-def create_graph(osm_data, name='unnamed', retain_all=False, directed=False):
+def create_graph(osm_data, name='unnamed', retain_all=False, network_type='all'):
     """
     Create a networkx graph from OSM data.
     
@@ -831,7 +885,7 @@ def create_graph(osm_data, name='unnamed', retain_all=False, directed=False):
     osm_data : dict, JSON response from from the Overpass API
     name : string, the name of the graph
     retain_all : bool, if True, return the entire graph even if it is not connected
-    directed : bool, if True, create a directed graph
+    network_type : string, what type of network to create
     
     Returns
     -------
@@ -851,16 +905,13 @@ def create_graph(osm_data, name='unnamed', retain_all=False, directed=False):
         G.add_node(node, attr_dict=data)
     
     # add each osm way (aka, path) to the graph by unpacking the data dict as keyword args (can't pass attribute dict to this function)
-    G = add_paths(G, paths)
+    G = add_paths(G, paths, network_type)
     
     # retain only the largest connected subgraph, if caller did not set retain_all=True
     G = get_largest_subgraph(G, retain_all=retain_all)
     
     # add length (great circle distance between vertices) attribute to each edge to use as weight
     G = add_edge_lengths(G)
-    
-    # change the node labels from osm ids to the standard sequential integers
-    #G = nx.convert_node_labels_to_integers(G)
     log('Created graph with {:,} nodes and {:,} edges in {:,.2f} seconds'.format(len(G.nodes()), len(G.edges()), time.time()-start_time))
 
     return G
@@ -887,7 +938,7 @@ def bbox_from_point(point, distance=1000):
     return north, south, east, west
     
     
-def graph_from_bbox(north, south, east, west, network_type='all', simplify=True, retain_all=False, directed=False, name='unnamed'):
+def graph_from_bbox(north, south, east, west, network_type='all', simplify=True, retain_all=False, name='unnamed'):
     """
     Create a networkx graph from OSM data within some bounding box.
     
@@ -900,7 +951,6 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
-    directed : bool, if True, create a directed graph
     name : string, the name of the graph
     
     Returns
@@ -910,7 +960,7 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     
     # get the network data from OSM, create the graph, then truncate to the bounding box
     osm_data = osm_net_download(north, south, east, west, network_type=network_type)
-    G = create_graph(osm_data, name=name, retain_all=retain_all, directed=directed)
+    G = create_graph(osm_data, name=name, retain_all=retain_all, network_type=network_type)
     G = truncate_graph_bbox(G, north, south, east, west)
 
     # simplify the graph topology as the last step. don't truncate after simplifying or you may have simplified out to an endpoint
@@ -922,7 +972,7 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     return  G
     
     
-def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, directed=False, name='unnamed'):
+def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, name='unnamed'):
     """
     Create a networkx graph from OSM data within some distance of some (lat, lon) center point.
     
@@ -935,7 +985,6 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
-    directed : bool, if True, create a directed graph
     name : string, the name of the graph
     
     Returns
@@ -946,10 +995,10 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     north, south, east, west = bbox_from_point(center_point, distance)
     if distance_type == 'bbox':
         # if the network distance_type is bbox, create a graph from the bounding box
-        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify, retain_all=retain_all, directed=directed, name=name)
+        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name)
     elif distance_type == 'network':
         # if the network distance_type is network, create a graph from the bounding box but do not simplify it yet (only simplify a graph after all truncation is performed! otherwise you get weird artifacts)
-        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=retain_all, directed=directed, name=name)
+        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=retain_all, name=name)
         
         # next find the node in the graph nearest to the center point, and truncate the graph by network distance from this node
         centermost_node = get_nearest_node(G, center_point)
@@ -967,7 +1016,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     return G
         
         
-def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, directed=False, return_coords=False, name='unnamed', geocoder_timeout=30):
+def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, return_coords=False, name='unnamed', geocoder_timeout=30):
     """
     Create a networkx graph from OSM data within some distance of some address.
     
@@ -980,7 +1029,6 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
-    directed : bool, if True, create a directed graph
     return_coords : bool, optionally also return the geocoded coordinates of the address
     name : string, the name of the graph
     geocoder_timeout : int, how many seconds to wait for server response before the geocoder times-out
@@ -996,7 +1044,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     point = (geolocation.latitude, geolocation.longitude)
     
     # then create a graph from this point
-    G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all, directed=directed, name=name)
+    G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name)
     log('graph_from_address() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
     
     if return_coords:
@@ -1005,7 +1053,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
         return G
         
         
-def graph_from_place(query, network_type='all', simplify=True, retain_all=False, directed=False, name='unnamed', which_result=1):
+def graph_from_place(query, network_type='all', simplify=True, retain_all=False, name='unnamed', which_result=1):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some geocodable place(s).
     
@@ -1015,7 +1063,6 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
-    directed : bool, if True, create a directed graph
     name : string, the name of the graph
     which_result : int, max number of results to return and which to process upon receipt
     
@@ -1039,7 +1086,7 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
     west = gdf_place['bbox_west'].min()
     
     # retain_all is true and truncate is false here because we'll handle that in truncate_graph_polygon() later
-    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=True, directed=directed, name=name)
+    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=True, name=name)
     
     # truncate the graph to the shape of the place(s) polygon then return it
     polygon = gdf_place['geometry'].unary_union
@@ -1137,7 +1184,7 @@ def project_graph(G):
     
 def save_graph(G, filename='graph'):
     """
-    Save graph as file to disk.
+    Save graph as GraphML file to disk.
     
     Parameters
     ----------
@@ -1179,16 +1226,17 @@ def is_endpoint(G, node, strict=True):
     """
     Return True if the node is a "real" endpoint of an edge in the network, otherwise False.
     OSM data includes lots of nodes that exist only as points to help streets bend around curves.
-    An endpoint is a node that either has degree 1 (so it's a dead end), or has degree > 2
-    (so it's the intersection of multiple streets), or has degree = 2 but its two adjacent
-    edges have different OSM IDs, so it is the intersection of different paths.
+    An end point is a node that either:
+        1. is its own neighbor, ie, it self-loops
+        2. or, has no incoming edges or no outgoing edges, ie, all its edges point inward or all its edges point outward
+        3. or, it does not have exactly two neighbors and degree of 2 or 4
+        4. or, if strict mode is false, if its edges have different OSM IDs
     
     Parameters
     ----------
     G : graph
     node : int, the node to examine
-    strict : bool, if True, only consider intersections or dead-ends (ie, nodes with degree not = 2)
-                   if False, also consider nodes with degree = 2 if its two adjacent edges have different OSM IDs
+    strict : bool, if False, allow nodes to be end points even if they fail all other rules but have edges with different OSM IDs
     
     Returns
     -------
@@ -1209,8 +1257,8 @@ def is_endpoint(G, node, strict=True):
     elif not (n==2 and (d==2 or d==4)):
         # else, if it does NOT have 2 neighbors AND either 2 or 4 directed edges, it is an endpoint
         # either it has 1 or 3+ neighbors, in which case it is a dead-end or an intersection of multiple streets
-        # or it has 2 neighbors but 3 degrees (indicating a change from oneway to twoway) or more than 4
-        # degrees (indicating a parallel edge) and thus is an endpoint
+        # or it has 2 neighbors but 3 degree (indicating a change from oneway to twoway)
+        # or more than 4 degree (indicating a parallel edge) and thus is an endpoint
         return True
     
     elif not strict:
@@ -1227,7 +1275,7 @@ def is_endpoint(G, node, strict=True):
             for key in G.edge[node][v]:
                 osmids.append(G.edge[node][v][key]['osmid'])
 
-        # if there is more than 1 OSM ID in the list of IDs then it is an endpoint, if not, it isn't
+        # if there is more than 1 OSM ID in the list of edge OSM IDs then it is an endpoint, if not, it isn't
         return len(set(osmids)) > 1
     
     else:
@@ -1237,16 +1285,17 @@ def is_endpoint(G, node, strict=True):
 
 def find_end_points(G, node, end_points=[], nodes_to_remove=[], previous_node=-1, strict=True):
     """
-    Given a node in a graph, if it has degree=2, find the first node in both directions with degree not 2.
-    This function works recursively to identify all the nodes of degree 2 between two nodes of degreee not 2.
+    Given a node in a graph, if it is not an end point, find the first node in both directions that is an end point.
+    This function works recursively to identify all the non-endpoint nodes between two end point nodes
     
     Parameters
     ----------
     G : graph
     node : int, the node to start with
-    end_points : list, a list of the first nodes found in both directions with degree not 2016
-    nodes_to_remove : list, a list of all nodes found with degree=2 before finding an endpoint
+    end_points : list, a list of the first nodes found in both directions that are end points
+    nodes_to_remove : list, a list of all non-endpoint nodes found before finding an end point
     previous_node : int, the last node processed
+    strict : bool, if False, allow nodes to be end points even if they fail all other rules but have edges with different OSM IDs
     
     Returns
     -------
@@ -1272,7 +1321,23 @@ def find_end_points(G, node, end_points=[], nodes_to_remove=[], previous_node=-1
     
     
 def build_path(G, origin, destination, nodes_to_remove, current_node, path=[], previous_node=-1):
-
+    """
+    Build a path of nodes in the correct order between an origin and destination node.
+    
+    Parameters
+    ----------
+    G : graph
+    origin : int, the end point to start at
+    destination : int, the end point to finish at
+    nodes_to_remove : list, the nodes between the two end points that will be removed
+    current_node : int, the node to process in this iteration
+    path : list, the ordered path of the nodes that we are constructing, from origin to destination
+    previous_node : int, the node that was processed in the previous iteration
+    
+    Returns
+    -------
+    paths : list, a list of either one (if one-way) or two (if bi-directional) paths
+    """
     # get all node's successors that appear in nodes_to_remove until you hit the other end points
     for successor in G.successors(current_node):
         
@@ -1293,11 +1358,23 @@ def build_path(G, origin, destination, nodes_to_remove, current_node, path=[], p
         
         
 def build_paths(G, end_points, nodes_to_remove):
+    """
+    Build a path or paths of nodes in the correct order between two end points.
     
+    Parameters
+    ----------
+    G : graph
+    end_points : list, the two end point nodes
+    nodes_to_remove : list, the nodes between the two end points that will be removed
+    
+    Returns
+    -------
+    paths : list, a list of either one (if one-way) or two (if bi-directional) paths
+    """
     # try starting at the first endpoint as the origin
     origin, destination = end_points
     
-    # if none of its successors are in nodes_to_remove, this is a one-way at you've started at the end 
+    # if none of its successors are in nodes_to_remove, this is a one-way and you've started at the end 
     if set(G.successors(origin)).isdisjoint(set(nodes_to_remove)):
         # so, swap origin/destination
         origin, destination = destination, origin
@@ -1306,7 +1383,7 @@ def build_paths(G, end_points, nodes_to_remove):
     path = build_path(G, origin, destination, nodes_to_remove, current_node=origin, path=[origin])
     paths = [path]
     
-    # assert that all edges in path are either all one-way or all two-way
+    # assert that all edges in path are either all one-way or all bi-directional
     oneway_values = []
     for u, v in list(zip(path[:-1], path[1:])):
         edges = G.edge[u][v]
@@ -1323,13 +1400,14 @@ def build_paths(G, end_points, nodes_to_remove):
 
 def simplify_graph(G_, strict=True):
     """
-    Simplify a graph by removing all nodes where degree=2. 
-    Create an edge directly between the nodes outside them where degree != 2, 
-    but retain the geometry of the original edges, saved as attr in new edge
+    Simplify a graph by removing all nodes that are not end points. 
+    Create an edge directly between the end points that encapsulate them,
+    but retain the geometry of the original edges, saved as attribute in new edge
     
     Parameters
     ----------
     G_ : graph
+    strict : bool, if False, allow nodes to be end points even if they fail all other rules but have edges with different OSM IDs
     
     Returns
     -------
@@ -1361,9 +1439,7 @@ def simplify_graph(G_, strict=True):
                     # nodes_to_remove is all the other nodes (that are neither endpoints nor intersections) between the end_points
                     end_points, nodes_to_remove = find_end_points(G, node, end_points=[], nodes_to_remove=[], strict=strict)
                     
-                    # build a path of the nodes in sequence between the origin and destination,
-                    # making sure each node in the path is in nodes_to_remove so we don't create
-                    # a path from some alternate route between these two end point nodes
+                    # build a path of the nodes in sequence between the origin and destination
                     paths = build_paths(G, end_points, nodes_to_remove)
                     
                     # there will be one element in paths if it was one-way, or two if it was two-way
@@ -1408,10 +1484,10 @@ def simplify_graph(G_, strict=True):
                                                  'attr_dict':edge_attributes})
                     
                 except RuntimeError:
-                    # recursion errors occur if some subgraph is a self-contained ring in which all nodes have degree 2
+                    # recursion errors occur if some subgraph is a self-contained ring in which all nodes are not end points
                     # handle it by just ignoring that subgraph and letting its topology remain intact (this should be a rare occurrence)
                     # RuntimeError is what Python <3.5 will throw, Py3.5+ throws RecursionError but it is a subtype of RuntimeError so it still gets handled
-                    log('Recursion error: encountered subgraph where all nodes have degree=2', level=lg.WARNING)
+                    log('Recursion error: encountered subgraph where no nodes are end points', level=lg.WARNING)
     
     # for each edge to add in the list we assembled, create a new edge between the origin and destination
     for edge in all_edges_to_add:
@@ -1496,6 +1572,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     node_Xs = [float(node['x']) for node in G.node.values()]
     node_Ys = [float(node['y']) for node in G.node.values()]
     
+    # get north, south, east, west values either from bbox parameter or from min/max node coordinate values
     if bbox is None:
         north = max(node_Ys)
         south = min(node_Ys)
@@ -1503,9 +1580,14 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
         west = min(node_Xs)
     else:
         north, south, east, west = bbox
-    bbox_aspect_ratio = (north-south)/(east-west)
     
-    fig, ax = plt.subplots(figsize=(fig_height / bbox_aspect_ratio, fig_height))
+    # if caller did not pass in a fig_width, calculate it proportionately from the fig_height and bounding box aspect ratio
+    bbox_aspect_ratio = (north-south)/(east-west)
+    if fig_width is None:
+        fig_width = fig_height / bbox_aspect_ratio
+    
+    # create the figure and axis
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
     
     # draw the edges as lines from node to node
     start_time = time.time()
@@ -1523,7 +1605,8 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
             y2 = G.node[v]['y']
             line = [(x1, y1), (x2, y2)]
             lines.append(line)
-            
+    
+    # add the lines to the axis as a linecollection
     lc = mc.LineCollection(lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=2)
     ax.add_collection(lc)
     log('Drew the graph edges in {:,.2f} seconds'.format(time.time()-start_time))
@@ -1543,6 +1626,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     if axis_off:
         ax.axis('off')
     
+    # annotate the axis with node IDs if annotate=True
     if annotate:
         for node, data in G.nodes(data=True):
             ax.annotate(node, xy=(data['x'], data['y']))
@@ -1556,13 +1640,12 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
         fig.savefig(path_filename, dpi=dpi, bbox_inches='tight')
         log('Saved the figure to disk in {:,.2f} seconds'.format(time.time()-start_time))
     
+    # show the figure if specified
     if show:
         start_time = time.time()
         plt.show()
         log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
-    
-    
-    
+
     return fig, ax
 
 
@@ -1658,10 +1741,12 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
             y2 = G.node[v]['y']
             line = [(x1, y1), (x2, y2)]
             lines.append(line)
-                
+    
+    # add the lines to the axis as a linecollection    
     lc = mc.LineCollection(lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3)
     ax.add_collection(lc)
     
+    # show the figure if specified
     if show:
         start_time = time.time()
         plt.show()
