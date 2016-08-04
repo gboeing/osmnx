@@ -437,7 +437,9 @@ def save_shapefile(gdf):
 
 def project_gdf(gdf):
     """
-    Project a GeoDataFrame to the UTM zone appropriate for its geometries' centroid.
+    Project a GeoDataFrame to the UTM zone appropriate for its geometries' centroid. The simple calculation
+    in this function works well for most latitudes, but won't work for some far northern locations like
+    Svalbard and parts of far northern Norway.
     
     Parameters
     ----------
@@ -632,9 +634,9 @@ def get_largest_subgraph(G, retain_all=False):
     G : graph
     """
     # if the graph is not connected and caller did not request retain_all, retain only the largest connected subgraph
-    if (not retain_all) and (not nx.is_connected(G)):
+    if (not retain_all) and (not nx.is_weakly_connected(G)):
         original_len = len(G.nodes())
-        G = max(nx.connected_component_subgraphs(G), key=len)
+        G = max(nx.weakly_connected_component_subgraphs(G), key=len)
         log('Graph was not connected, retained only the largest connected subgraph ({:,} of {:,} total nodes)'.format(len(G.nodes()), original_len))
     return G
     
@@ -786,6 +788,40 @@ def get_nearest_node(G, point, return_dist=False):
         return nearest_node[0]
 
         
+def add_path(G, data, one_way):
+    path_nodes = data['nodes']
+    del data['nodes']
+    data['oneway'] = one_way
+    
+    # zip together the path nodes so you get tuples like (0,1), (1,2), (2,3) and so on
+    path_edges = list(zip(path_nodes[:-1], path_nodes[1:]))
+    G.add_edges_from(path_edges, attr_dict=data)
+    if not one_way:
+        # if it's not one-way, reverse the direction of each edge and add this path going the opposite direction
+        path_edges_opposite_direction = [(v, u) for u, v in path_edges]
+        G.add_edges_from(path_edges_opposite_direction, attr_dict=data)
+
+        
+def add_paths(G, paths):
+    
+    osm_oneway_values = ['yes', 'true', '1', '-1']
+    
+    for path, data in paths.items():
+        
+        if 'oneway' in data and data['oneway'] in osm_oneway_values:
+            # path is one-way
+            if data['oneway'] == '-1':
+                # this one-way needs to have its nodes' order reversed, see osm wiki documentation
+                data['nodes'] = list(reversed(data['nodes']))
+            add_path(G, data, one_way=True)
+        
+        else:
+            # path is not one-way
+            add_path(G, data, one_way=False)
+    
+    return G
+
+
 def create_graph(osm_data, name='unnamed', retain_all=False, directed=False):
     """
     Create a networkx graph from OSM data.
@@ -804,12 +840,8 @@ def create_graph(osm_data, name='unnamed', retain_all=False, directed=False):
     log('Creating networkx graph from downloaded OSM data')
     start_time = time.time()
     
-    if directed:
-        # add directed graph logic here
-        pass
-    
-    # create the graph as a multigraph and set the original CRS to lat-long
-    G = nx.MultiGraph(name=name, crs={'init':'epsg:4326'})
+    # create the graph as a MultiDiGraph and set the original CRS to lat-long
+    G = nx.MultiDiGraph(name=name, crs={'init':'epsg:4326'})
     
     # extract nodes and paths from the downloaded osm data
     nodes, paths = parse_osm_nodes_paths(osm_data)    
@@ -819,8 +851,7 @@ def create_graph(osm_data, name='unnamed', retain_all=False, directed=False):
         G.add_node(node, attr_dict=data)
     
     # add each osm way (aka, path) to the graph by unpacking the data dict as keyword args (can't pass attribute dict to this function)
-    for path, data in paths.items():
-        G.add_path(**data)
+    G = add_paths(G, paths)
     
     # retain only the largest connected subgraph, if caller did not set retain_all=True
     G = get_largest_subgraph(G, retain_all=retain_all)
@@ -829,7 +860,7 @@ def create_graph(osm_data, name='unnamed', retain_all=False, directed=False):
     G = add_edge_lengths(G)
     
     # change the node labels from osm ids to the standard sequential integers
-    G = nx.convert_node_labels_to_integers(G)
+    #G = nx.convert_node_labels_to_integers(G)
     log('Created graph with {:,} nodes and {:,} edges in {:,.2f} seconds'.format(len(G.nodes()), len(G.edges()), time.time()-start_time))
 
     return G
@@ -1144,7 +1175,7 @@ def save_graph(G, filename='graph'):
 ############################################################################    
 
 
-def is_endpoint(G, u, strict=True):
+def is_endpoint(G, node, strict=True):
     """
     Return True if the node is a "real" endpoint of an edge in the network, otherwise False.
     OSM data includes lots of nodes that exist only as points to help streets bend around curves.
@@ -1155,7 +1186,7 @@ def is_endpoint(G, u, strict=True):
     Parameters
     ----------
     G : graph
-    u : int, the node to examine
+    node : int, the node to examine
     strict : bool, if True, only consider intersections or dead-ends (ie, nodes with degree not = 2)
                    if False, also consider nodes with degree = 2 if its two adjacent edges have different OSM IDs
     
@@ -1163,21 +1194,45 @@ def is_endpoint(G, u, strict=True):
     -------
     bool
     """
-    if not G.degree(u) == 2:
-        # if it has a degree not equal to 2, it is an intersection or a dead-end
+    neighbors = list(set(G.predecessors(node) + G.successors(node)))
+    n = len(neighbors)
+    d = G.degree(node)
+    
+    if node in neighbors:
+        # if the node appears in its list of neighbors, it self-loops. this is always an endpoint.
         return True
+        
+    # if node has no incoming edges or no outgoing edges, it must be an end point
+    elif G.out_degree(node)==0 or G.in_degree(node)==0:
+        return True
+    
+    elif not (n==2 and (d==2 or d==4)):
+        # else, if it does NOT have 2 neighbors AND either 2 or 4 directed edges, it is an endpoint
+        # either it has 1 or 3+ neighbors, in which case it is a dead-end or an intersection of multiple streets
+        # or it has 2 neighbors but 3 degrees (indicating a change from oneway to twoway) or more than 4
+        # degrees (indicating a parallel edge) and thus is an endpoint
+        return True
+    
     elif not strict:
-        # else, if we are retaining non-intersections and non-dead-ends, 
-        # then if it has degree 2 but each edge has a different osm id, it is an endpoint
+        # non-strict mode
         osmids = []
-        for v in G.edge[u]:
-            for key in G.edge[u][v]:
-                osmids.append(G.edge[u][v][key]['osmid'])
-        if len(set(osmids)) > 1:
-            return True
-        else:
-            # if it has degree 2 and both edges have the same osm id, it is not an endpoint
-            return False
+
+        # add all the edge OSM IDs for incoming edges
+        for u in G.predecessors(node):
+            for key in G.edge[u][node]:
+                osmids.append(G.edge[u][node][key]['osmid'])
+
+        # add all the edge OSM IDs for outgoing edges        
+        for v in G.successors(node):
+            for key in G.edge[node][v]:
+                osmids.append(G.edge[node][v][key]['osmid'])
+
+        # if there is more than 1 OSM ID in the list of IDs then it is an endpoint, if not, it isn't
+        return len(set(osmids)) > 1
+    
+    else:
+        # if none of the preceding rules returned true, then it is not an endpoint
+        return False
             
 
 def find_end_points(G, node, end_points=[], nodes_to_remove=[], previous_node=-1, strict=True):
@@ -1200,54 +1255,70 @@ def find_end_points(G, node, end_points=[], nodes_to_remove=[], previous_node=-1
     if not is_endpoint(G, node, strict):
         # if this is not an endpoint/intersection, we will remove this node
         nodes_to_remove.append(node)
-    for neighbor in G.neighbors(node):
+    
+    neighbors = list(set(G.predecessors(node) + G.successors(node)))
+    for neighbor in neighbors:
         # look at each neighbor of this node
         if not neighbor == previous_node:
-            # if this neighbor is the previous node we just looked at, ignore it
-            if not is_endpoint(G, neighbor, strict):
+            # if this neighbor is the previous node we just looked at, just ignore it
+            if is_endpoint(G, neighbor, strict):
+                # the neighbor is an endpoint/intersection, at to the list
+                end_points.append(neighbor)
+            else:
                 # otherwise, if this neighbor is not an endpoint or intersection, recursively call this function
                 find_end_points(G, neighbor, end_points=end_points, nodes_to_remove=nodes_to_remove, previous_node=node, strict=strict)
-            else:
-                # otherwise, the neighbor is an endpoint/intersection
-                end_points.append(neighbor)
+    
     return end_points, nodes_to_remove
     
     
-def build_path(G, origin, destination, nodes_to_remove, node, path, previous_node=-1):
-    """
-    Given an origin and destination node and a list of nodes (unsorted) between them, create a list of those nodes sorted in correct topological order
-    
-    Parameters
-    ----------
-    G : graph
-    origin : int, the node to start at
-    destination : int, the node to end at
-    nodes_to_remove : list, a list of all nodes between origin and destination in this particular path of interest
-    node : int, the current node to examine
-    path : list, the list of nodes in the path sorted in topological order
-    previous_node : int, the last node processed
-    
-    Returns
-    -------
-    path : list
-    """
-    for neighbor in G.neighbors(node):
-        # if this neighbor is the destination 
+def build_path(G, origin, destination, nodes_to_remove, current_node, path=[], previous_node=-1):
+
+    # get all node's successors that appear in nodes_to_remove until you hit the other end points
+    for successor in G.successors(current_node):
+        
+        # if this successor is the destination 
         # and we are not on the first iteration 
-        # and this neighbor is not the previous node we just visited
-        if (neighbor == destination) and (not previous_node == -1) and (not neighbor == previous_node):
-            # then this is the final destination
-            # add it to the path and return it
-            path.append(neighbor)
+        # and this successor is not the previous node we just visited
+        if (successor==destination) and (not previous_node==-1) and (not successor==previous_node):
+            # then this is the final destination, add it to the path and return it
+            path.append(successor)
             return path
-        if not neighbor == previous_node:
-            if neighbor in nodes_to_remove:
-                # if this neighbor is not the node we processed in the previous iteration and it is in nodes to remove, add it to the path
-                # then call this function recursively to find the next step in the path
-                path.append(neighbor)
-                path = build_path(G, origin, destination, nodes_to_remove, neighbor, path, node)
-                return path
-    return path
+        
+        # if this neighbor is not the node we processed in the previous iteration and it is in nodes_to_remove
+        if (not successor==previous_node) and (successor in nodes_to_remove):
+            # add it to the path, then call this function recursively to find the next step in the path
+            path.append(successor)
+            path = build_path(G, origin, destination, nodes_to_remove, successor, path, current_node)
+            return path
+        
+        
+def build_paths(G, end_points, nodes_to_remove):
+    
+    # try starting at the first endpoint as the origin
+    origin, destination = end_points
+    
+    # if none of its successors are in nodes_to_remove, this is a one-way at you've started at the end 
+    if set(G.successors(origin)).isdisjoint(set(nodes_to_remove)):
+        # so, swap origin/destination
+        origin, destination = destination, origin
+
+    # add path as a single element to the list of paths (we might also add its reverse momentarily)
+    path = build_path(G, origin, destination, nodes_to_remove, current_node=origin, path=[origin])
+    paths = [path]
+    
+    # assert that all edges in path are either all one-way or all two-way
+    oneway_values = []
+    for u, v in list(zip(path[:-1], path[1:])):
+        edges = G.edge[u][v]
+        assert len(edges) == 1
+        oneway_values.append(G.edge[u][v][0]['oneway'])
+    assert len(set(oneway_values))==1
+    
+    # if not one-way, reverse the path and add as a second element to list paths
+    if not oneway_values[0]:
+        paths.append(list(reversed(path)))
+        
+    return paths
 
 
 def simplify_graph(G_, strict=True):
@@ -1272,11 +1343,14 @@ def simplify_graph(G_, strict=True):
     initial_node_count = len(G.nodes())
     initial_edge_count = len(G.edges())
     
+    all_nodes_to_remove = []
+    all_edges_to_add = []
+    
     for node in G.nodes():
     # look at each node in the graph
         
-        if node in G.nodes():
-        # if the node is still in the graph now (as we will be removing some along the way)
+        if node not in all_nodes_to_remove:
+        # if this node is in this list, ignore it: it's not an endpoint and we already marked it for removal
             
             if not is_endpoint(G, node, strict):
             # this node is not an intersection or an endpoint
@@ -1290,53 +1364,65 @@ def simplify_graph(G_, strict=True):
                     # build a path of the nodes in sequence between the origin and destination,
                     # making sure each node in the path is in nodes_to_remove so we don't create
                     # a path from some alternate route between these two end point nodes
-                    origin, destination = end_points
-                    path = build_path(G, origin, destination, nodes_to_remove, node=origin, path=[origin])
+                    paths = build_paths(G, end_points, nodes_to_remove)
                     
-                    # add the interstitial edges we're removing to a list so we can draw with spatial accuracy later
-                    edge_attributes = {}
-                    for n in range(len(path) - 1):
-                        # add each segment length to so we can sum them
-                        edges = G.edge[path[n]][path[n+1]]
-                        assert len(edges) == 1 #there should never be multiple edges between these nodes must be degree 2
-                        edge = edges[0]#the only element in this list as long as the above assertion is True (MultiGraphs use keys (the 0 here), indexed with ints from 0 and up)
-                        for key in edge:
-                            if key in edge_attributes:
-                                # if this key already exists in the dict, append it to the value list
-                                edge_attributes[key].append(edge[key])
-                            else:
-                                # if this key doesn't already exist, set the value to a list containing the one value
-                                edge_attributes[key] = [edge[key]]
-                    
-                    for key in edge_attributes:
-                        # don't touch the length attribute, we'll sum it at the end
-                        if len(set(edge_attributes[key])) == 1 and not key == 'length':
-                            # if there's only 1 unique value in this attribute list, consolidate it to the single value (the zero-th)
-                            edge_attributes[key] = edge_attributes[key][0]
-                        elif not key == 'length':
-                            # otherwise, if there are multiple values, keep one of each value
-                            edge_attributes[key] = list(set(edge_attributes[key]))
-                    
-                    # construct the geometry and sum the lengths of the segments
-                    points = [Point((G.node[node]['x'], G.node[node]['y'])) for node in path]
-                    edge_attributes['geometry'] = LineString(points)
-                    edge_attributes['length'] = sum(edge_attributes['length'])
+                    # there will be one element in paths if it was one-way, or two if it was two-way
+                    for path in paths:
+                        
+                        # add the interstitial edges we're removing to a list so we can draw with spatial accuracy later
+                        edge_attributes = {}
+                        for u, v in list(zip(path[:-1], path[1:])):
+                            
+                            # there should never be multiple edges between interstitial nodes
+                            edges = G.edge[u][v]
+                            assert len(edges) == 1 
+                            
+                            # the only element in this list as long as above assertion is True (MultiGraphs use keys (the 0 here), indexed with ints from 0 and up)
+                            edge = edges[0]
+                            for key in edge:
+                                if key in edge_attributes:
+                                    # if this key already exists in the dict, append it to the value list
+                                    edge_attributes[key].append(edge[key])
+                                else:
+                                    # if this key doesn't already exist, set the value to a list containing the one value
+                                    edge_attributes[key] = [edge[key]]
 
-                    # create a new edge between the origin and destination
-                    G.add_edge(origin, destination, attr_dict=edge_attributes)
+                        for key in edge_attributes:
+                            # don't touch the length attribute, we'll sum it at the end
+                            if len(set(edge_attributes[key])) == 1 and not key == 'length':
+                                # if there's only 1 unique value in this attribute list, consolidate it to the single value (the zero-th)
+                                edge_attributes[key] = edge_attributes[key][0]
+                            elif not key == 'length':
+                                # otherwise, if there are multiple values, keep one of each value
+                                edge_attributes[key] = list(set(edge_attributes[key]))
+
+                        # construct the geometry and sum the lengths of the segments
+                        points = [Point((G.node[node]['x'], G.node[node]['y'])) for node in path]
+                        edge_attributes['geometry'] = LineString(points)
+                        edge_attributes['length'] = sum(edge_attributes['length'])
+
+                        # add the nodes and edges to their lists for processing at the end
+                        all_nodes_to_remove.extend(nodes_to_remove)
+                        all_edges_to_add.append({'origin':path[0], 
+                                                 'destination':path[-1], 
+                                                 'attr_dict':edge_attributes})
                     
-                    # finally remove all the interstitial nodes with degree 2 between origin and dest
-                    G.remove_nodes_from(nodes_to_remove)
-                
                 except RuntimeError:
                     # recursion errors occur if some subgraph is a self-contained ring in which all nodes have degree 2
                     # handle it by just ignoring that subgraph and letting its topology remain intact (this should be a rare occurrence)
                     # RuntimeError is what Python <3.5 will throw, Py3.5+ throws RecursionError but it is a subtype of RuntimeError so it still gets handled
                     log('Recursion error: encountered subgraph where all nodes have degree=2', level=lg.WARNING)
+    
+    # for each edge to add in the list we assembled, create a new edge between the origin and destination
+    for edge in all_edges_to_add:
+        G.add_edge(edge['origin'], edge['destination'], attr_dict=edge['attr_dict'])
 
+    # finally remove all the interstitial nodes between the new edges
+    G.remove_nodes_from(list(set(all_nodes_to_remove)))
+    
     msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
     log(msg.format(initial_node_count, len(G.nodes()), initial_edge_count, len(G.edges()), time.time()-start_time))
-    return G    
+    return G
     
     
 ############################################################################
@@ -1534,10 +1620,6 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
                          node_color=node_color, node_size=node_size, node_alpha=node_alpha, node_edgecolor=node_edgecolor, node_zorder=node_zorder,
                          edge_color=edge_color, edge_linewidth=edge_linewidth, edge_alpha=edge_alpha, use_geom=use_geom)
     
-    # get the lats and lons of each node along the route
-    path_lats = [float(G.node[node]['y']) for node in route]
-    path_lons = [float(G.node[node]['x']) for node in route]
-    
     # the origin and destination nodes are the first and last nodes in the route
     origin_node = route[0]
     destination_node = route[-1]
@@ -1552,10 +1634,33 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
         origin_destination_lons = (origin_point[1], destination_point[1])
         orig_dest_node_color = orig_dest_point_color
     
-    # scatter the origin and destination points then plot the route lines
+    # scatter the origin and destination points
     ax.scatter(origin_destination_lons, origin_destination_lats, s=orig_dest_node_size, 
                c=orig_dest_node_color, alpha=orig_dest_node_alpha, edgecolor=node_edgecolor, zorder=4)
-    ax.plot(path_lons, path_lats, color=route_color, linewidth=route_linewidth, alpha=route_alpha, zorder=3)
+    
+    # plot the route lines
+    edge_nodes = list(zip(route[:-1], route[1:]))
+    lines = []
+    for u, v in edge_nodes:
+        # if there are parallel edges, select the shortest in length
+        data = min([data for data in G.edge[u][v].values()], key=lambda x: x['length'])
+        
+        # if it has a geometry attribute (ie, a list of line segments)
+        if 'geometry' in data and use_geom:
+            # add them to the list of lines to plot
+            xs, ys = data['geometry'].xy
+            lines.append(list(zip(xs, ys)))
+        else:
+            # if it doesn't have a geometry attribute, the edge is a straight line from node to node
+            x1 = G.node[u]['x']
+            y1 = G.node[u]['y']
+            x2 = G.node[v]['x']
+            y2 = G.node[v]['y']
+            line = [(x1, y1), (x2, y2)]
+            lines.append(line)
+                
+    lc = mc.LineCollection(lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3)
+    ax.add_collection(lc)
     
     if show:
         start_time = time.time()
