@@ -327,7 +327,7 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1, pause_duration=1):
     return response_json
     
 
-def gdf_from_place(query, gdf_name=None, which_result=1):
+def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
     """
     Create a GeoDataFrame from a single place name query.
     
@@ -368,12 +368,19 @@ def gdf_from_place(query, gdf_name=None, which_result=1):
         if geometry['type'] not in ['Polygon', 'MultiPolygon']:
             log('OSM returned a {} as the geometry.'.format(geometry['type']), level=lg.WARNING)
         
-        # create the GeoDataFrame, name it
+        # create the GeoDataFrame, name it, and set its original CRS to lat-long (EPSG 4326)
         gdf = gpd.GeoDataFrame.from_features(features)
         gdf.name = gdf_name
-        
-        # set the original CRS of the GeoDataFrame to lat-long, and return it
         gdf.crs = {'init':'epsg:4326'}
+        
+        # if buffer_dist was passed in, project the geometry to UTM, buffer it in meters, then project it back to lat-long
+        if not buffer_dist is None:
+            gdf_utm = project_gdf(gdf)
+            gdf_utm['geometry'] = gdf_utm['geometry'].buffer(buffer_dist)
+            gdf = project_gdf(gdf_utm, to_latlong=True)
+            log('Buffered the GeoDataFrame "{}" to {} meters'.format(gdf.name, buffer_dist))
+        
+        # return the gdf
         log('Created GeoDataFrame with {} row for query "{}"'.format(len(gdf), query))
         return gdf
     else:
@@ -383,8 +390,8 @@ def gdf_from_place(query, gdf_name=None, which_result=1):
         gdf.name = gdf_name
         return gdf
         
-
-def gdf_from_places(queries, gdf_name='unnamed'):
+        
+def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None):
     """
     Create a GeoDataFrame from a  list of place names to query.
     
@@ -400,7 +407,7 @@ def gdf_from_places(queries, gdf_name='unnamed'):
     # create an empty GeoDataFrame then append each result as a new row
     gdf = gpd.GeoDataFrame()
     for query in queries:
-        gdf = gdf.append(gdf_from_place(query))
+        gdf = gdf.append(gdf_from_place(query, buffer_dist=buffer_dist))
         
     # reset the index, name the GeoDataFrame
     gdf = gdf.reset_index().drop(labels='index', axis=1)
@@ -451,7 +458,7 @@ def save_shapefile(gdf):
     log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.name, file_path_name))
  
 
-def project_gdf(gdf):
+def project_gdf(gdf, to_latlong=False):
     """
     Project a GeoDataFrame to the UTM zone appropriate for its geometries' centroid. The simple calculation
     in this function works well for most latitudes, but won't work for some far northern locations like
@@ -460,6 +467,7 @@ def project_gdf(gdf):
     Parameters
     ----------
     gdf : GeoDataFrame, the gdf to be projected to UTM
+    to_latlong : bool, if True, projects to latlong instead of to UTM
     
     Returns
     -------
@@ -468,25 +476,33 @@ def project_gdf(gdf):
     assert len(gdf) > 0, 'You cannot project an empty GeoDataFrame.'
     start_time = time.time()
     
-    # if GeoDataFrame is already in UTM, just return it
-    if (not gdf.crs is None) and ('proj' in gdf.crs) and (gdf.crs['proj'] == 'utm'):
-        return gdf
+    if to_latlong:
+        # if to_latlong is True, project the gdf to latlong
+        latlong_crs = {'init':'epsg:4326'}
+        projected_gdf = gdf.to_crs(latlong_crs)
+        log('Projected the GeoDataFrame "{}" to EPSG 4326 in {:,.2f} seconds'.format(gdf.name, time.time()-start_time))
+    else:
+        # else, project the gdf to UTM
+        # if GeoDataFrame is already in UTM, just return it
+        if (not gdf.crs is None) and ('proj' in gdf.crs) and (gdf.crs['proj'] == 'utm'):
+            return gdf
+        
+        # calculate the centroid of the union of all the geometries in the GeoDataFrame
+        avg_longitude = gdf['geometry'].unary_union.centroid.x
+        
+        # calculate the UTM zone from this avg longitude and define the UTM CRS to project
+        utm_zone = int(math.floor((avg_longitude + 180) / 6.) + 1)
+        utm_crs = {'datum': 'NAD83',
+                   'ellps': 'GRS80',
+                   'proj' : 'utm',
+                   'zone' : utm_zone,
+                   'units': 'm'}
+        
+        # project the GeoDataFrame to the UTM CRS
+        projected_gdf = gdf.to_crs(utm_crs)
+        log('Projected the GeoDataFrame "{}" to UTM-{} in {:,.2f} seconds'.format(gdf.name, utm_zone, time.time()-start_time))
     
-    # calculate the centroid of the union of all the geometries in the GeoDataFrame
-    avg_longitude = gdf['geometry'].unary_union.centroid.x
-    
-    # calculate the UTM zone from this avg longitude and define the UTM CRS to project
-    utm_zone = int(math.floor((avg_longitude + 180) / 6.) + 1)
-    utm_crs = {'datum': 'NAD83',
-               'ellps': 'GRS80',
-               'proj' : 'utm',
-               'zone' : utm_zone,
-               'units': 'm'}
-    
-    # project the GeoDataFrame to the UTM CRS
-    projected_gdf = gdf.to_crs(utm_crs)
     projected_gdf.name = gdf.name
-    log('Projected the GeoDataFrame "{}" to UTM {} in {:,.2f} seconds'.format(projected_gdf.name, utm_zone, time.time()-start_time))
     return projected_gdf
 
 
@@ -1053,13 +1069,13 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
         return G
         
         
-def graph_from_place(query, network_type='all', simplify=True, retain_all=False, name='unnamed', which_result=1):
+def graph_from_place(query, network_type='all', simplify=True, retain_all=False, name='unnamed', which_result=1, buffer_dist=None):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some geocodable place(s).
     
     Parameters
     ----------
-    query : string or list, the places to geocode/download data for
+    query : string or dict or list, the place(s) to geocode/download data for
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
@@ -1071,11 +1087,13 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
     G : graph
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
-    if isinstance(query, str):
-        gdf_place = gdf_from_place(query, which_result=1)
+    if isinstance(query, str) or isinstance(query, dict):
+        # if it is a string (place name) or dict (structured place query), then it is a single place
+        gdf_place = gdf_from_place(query, which_result=1, buffer_dist=buffer_dist)
         name = query
     elif isinstance(query, list):
-        gdf_place = gdf_from_places(query)
+        # if it is a list, it contains multiple places to get
+        gdf_place = gdf_from_places(query, buffer_dist=buffer_dist)
     else:
         raise ValueError('query must be a string or a list of query strings')
     
@@ -1213,6 +1231,7 @@ def save_graph(G, filename='graph'):
         os.makedirs(_data_folder)
     
     nx.write_graphml(G_save, '{}/{}.graphml'.format(_data_folder, filename))
+    log('Saved graph "{}" to disk at "{}/{}.graphml"'.format(G_save.name, _data_folder, filename))
     
     
 ############################################################################
