@@ -434,7 +434,7 @@ def make_shp_filename(place_name):
     name_pieces = list(reversed(place_name.split(', ')))
     filename = '-'.join(name_pieces).lower().replace(' ','_')
     filename = re.sub('[^0-9a-zA-Z_-]+', '', filename)
-    return '{}.shp'.format(filename)
+    return filename
 
 
 def save_shapefile(gdf):
@@ -1142,7 +1142,7 @@ def project_graph(G):
     gdf_nodes = gpd.GeoDataFrame(nodes).T
     gdf_nodes.crs = G_proj.graph['crs']
     gdf_nodes.name = '{}_nodes'.format(G_proj.name)
-    gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(str)
+    gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64).astype(str)
     
     # create new lat/lon columns just to save that data for later, and create a geometry column from x/y
     gdf_nodes['lon'] = gdf_nodes['x']
@@ -1198,6 +1198,80 @@ def project_graph(G):
     G_proj.graph['name'] = '{}_UTM'.format(graph_name)
     log('Rebuilt projected graph in {:,.2f} seconds'.format(time.time()-start_time))
     return G_proj
+
+
+def save_graph_shapefile(G, filename='graph'):
+    """
+    Save graph nodes and edges as ESRI shapefiles to disk.
+    
+    Parameters
+    ----------
+    G : graph
+    filename : string
+    
+    Returns
+    -------
+    None
+    """
+    # set from/to nodes and then make undirected
+    G_save = G.copy()
+    for u, v, key in G_save.edges(keys=True):
+        G_save.edge[u][v][key]['from'] = u
+        G_save.edge[u][v][key]['to'] = v
+        
+    # if edges in both directions (u,v) and (v,u) exist in the graph, 
+    # attributes for the new undirected edge will be a combination of the attributes of the directed edges.
+    # if both edges exist in digraph and their edge data is different, 
+    # only one edge is created with an arbitrary choice of which edge data to use.
+    G_save = G_save.to_undirected(reciprocal=False)
+    
+    # create a GeoDataFrame of the nodes and set CRS
+    nodes = {node:data for node, data in G_save.nodes(data=True)}
+    gdf_nodes = gpd.GeoDataFrame(nodes).T
+    gdf_nodes.crs = G_save.graph['crs']
+    
+    # create a geometry column then drop the x and y columns
+    gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
+    gdf_nodes = gdf_nodes.drop(['x', 'y'], axis=1)
+
+    # make everything but geometry column a string
+    gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64)
+    for col in [c for c in gdf_nodes.columns if not c == 'geometry']:
+        gdf_nodes[col] = gdf_nodes[col].fillna('').astype(str)
+        
+    # create a list to hold our edges, then loop through each edge in the graph
+    edges = []
+    for u, v, key, data in G_save.edges(keys=True, data=True):
+
+        # for each edge, add key and all attributes in data dict to the edge_details
+        edge_details = {'key':key}
+        for attr_key in data:
+            edge_details[attr_key] = data[attr_key]
+
+        # if edge doesn't already have a geometry attribute, create one now
+        if not 'geometry' in data:
+            point_u = Point((G_save.node[u]['x'], G_save.node[u]['y']))
+            point_v = Point((G_save.node[v]['x'], G_save.node[v]['y']))
+            edge_details['geometry'] = LineString([point_u, point_v])
+        
+        edges.append(edge_details)
+    
+    # create a geodataframe from the list of edges and set the CRS
+    gdf_edges = gpd.GeoDataFrame(edges)
+    gdf_edges.crs = G_save.graph['crs']
+
+    # make everything but geometry column a string
+    for col in [c for c in gdf_edges.columns if not c == 'geometry']:
+        gdf_edges[col] = gdf_edges[col].fillna('').astype(str)
+        
+    # if the save folder does not already exist, create it
+    folder = '{}/{}'.format(_data_folder, filename)
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    
+    # save the nodes and edges as separate ESRI shapefiles
+    gdf_nodes.to_file('{}/{}_nodes'.format(folder, filename))
+    gdf_edges.to_file('{}/{}_edges'.format(folder, filename))
 
     
 def save_graph(G, filename='graph'):
@@ -1552,8 +1626,54 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='spectral', start=0.1, sto
     return colors
     
     
+def save_and_show(fig, ax, save, show, filename, file_format, dpi):
+    """
+    Save a figure to disk and show it, as specified.
+    
+    Parameters
+    ----------
+    fig : figure
+    ax : axis
+    save : bool, whether to save the figure to disk or not
+    show : bool, whether to display the figure or not
+    filename : string, the name of the file to save
+    file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
+    dpi : int, the resolution of the image file if saving
+    
+    Returns
+    -------
+    fig, ax : figure, axis
+    """
+    # save the figure if specified
+    if save:
+        start_time = time.time()
+        
+        # create the save folder if it doesn't already exist
+        if not os.path.exists(_imgs_folder):
+            os.makedirs(_imgs_folder)
+        path_filename = '{}/{}.{}'.format(_imgs_folder, filename, file_format)
+        if file_format == 'svg':
+            # if the file_format is svg, prep the fig/ax a bit for saving
+            ax.axis('off')
+            ax.set_position([0, 0, 1, 1])
+            ax.patch.set_alpha(0.)
+            fig.patch.set_alpha(0.)
+            fig.savefig(path_filename, bbox_inches=0, transparent=True, format=file_format)
+        else:
+            fig.savefig(path_filename, dpi=dpi, bbox_inches='tight', format=file_format)
+        log('Saved the figure to disk in {:,.2f} seconds'.format(time.time()-start_time))
+    
+    # show the figure if specified
+    if show:
+        start_time = time.time()
+        plt.show()
+        log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
+        
+    return fig, ax
+    
+    
 def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off=True,
-               show=True, save=False, filename='temp.jpg', dpi=300, annotate=False,
+               show=True, save=False, file_format='jpg', filename='temp', dpi=300, annotate=False,
                node_color='#66ccff', node_size=15, node_alpha=1, node_edgecolor='none', node_zorder=1,
                edge_color='#999999', edge_linewidth=1, edge_alpha=1, use_geom=True):
     """
@@ -1569,6 +1689,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     axis_off : bool, if True turn off the matplotlib axis
     show : bool, if True, show the figure
     save : bool, if True, save the figure as an image file to disk
+    file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
     filename : string, the name of the file if saving
     dpi : int, the resolution of the image file if saving
     annotate : bool, if True, annotate the nodes in the figure
@@ -1650,26 +1771,13 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
         for node, data in G.nodes(data=True):
             ax.annotate(node, xy=(data['x'], data['y']))
             
-    # save the figure if specified
-    if save:
-        start_time = time.time()
-        if not os.path.exists(_imgs_folder):
-            os.makedirs(_imgs_folder)
-        path_filename = '{}/{}'.format(_imgs_folder, filename)
-        fig.savefig(path_filename, dpi=dpi, bbox_inches='tight')
-        log('Saved the figure to disk in {:,.2f} seconds'.format(time.time()-start_time))
-    
-    # show the figure if specified
-    if show:
-        start_time = time.time()
-        plt.show()
-        log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
-
+    # save and show the figure as specified
+    fig, ax = save_and_show(fig, ax, save, show, filename, file_format, dpi)
     return fig, ax
 
 
 def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0.02,
-                     axis_off=True, show=True, save=False, filename='temp.jpg', dpi=300, annotate=False,
+                     axis_off=True, show=True, save=False, file_format='jpg', filename='temp', dpi=300, annotate=False,
                      node_color='#999999', node_size=15, node_alpha=1, node_edgecolor='none', node_zorder=1,
                      edge_color='#999999', edge_linewidth=1, edge_alpha=1, use_geom=True,
                      origin_point=None, destination_point=None,
@@ -1689,6 +1797,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     axis_off : bool, if True turn off the matplotlib axis
     show : bool, if True, show the figure
     save : bool, if True, save the figure as an image file to disk
+    file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
     filename : string, the name of the file if saving
     dpi : int, the resolution of the image file if saving
     annotate : bool, if True, annotate the nodes in the figure
@@ -1718,7 +1827,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     
     # plot the graph but not the route
     fig, ax = plot_graph(G, bbox=bbox, fig_height=fig_height, fig_width=fig_width, margin=margin, axis_off=axis_off,
-                         show=False, save=save, filename=filename, dpi=dpi, annotate=annotate,
+                         show=False, save=False, filename=filename, dpi=dpi, annotate=annotate,
                          node_color=node_color, node_size=node_size, node_alpha=node_alpha, node_edgecolor=node_edgecolor, node_zorder=node_zorder,
                          edge_color=edge_color, edge_linewidth=edge_linewidth, edge_alpha=edge_alpha, use_geom=use_geom)
     
@@ -1765,12 +1874,8 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     lc = mc.LineCollection(lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3)
     ax.add_collection(lc)
     
-    # show the figure if specified
-    if show:
-        start_time = time.time()
-        plt.show()
-        log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
-        
+    # save and show the figure as specified
+    fig, ax = save_and_show(fig, ax, save, show, filename, file_format, dpi)
     return fig, ax
     
     
