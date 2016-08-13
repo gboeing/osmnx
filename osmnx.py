@@ -26,11 +26,12 @@
 ###################################################################################################
 
 from __future__ import unicode_literals
-import json, math, os, io, hashlib, re, time, datetime as dt, logging as lg
+import json, math, os, io, ast, hashlib, re, time, datetime as dt, logging as lg
 from collections import OrderedDict
 import requests, numpy as np, pandas as pd, geopandas as gpd, networkx as nx, matplotlib.pyplot as plt, matplotlib.cm as cm
-from matplotlib import collections as mc
+from matplotlib.collections import LineCollection
 from shapely.geometry import Point, LineString
+from shapely import wkt
 from geopy.distance import great_circle, vincenty
 from geopy.geocoders import Nominatim
 
@@ -46,7 +47,7 @@ _use_cache = False
 _file_log = False
 _print_log = False
 
-# useful osm tags
+# useful osm tags - note that load_graph expects a consistent set of tag names for parsing
 _useful_tags_node = ['ref', 'highway']
 _useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name', 'highway', 'maxspeed']
 
@@ -437,25 +438,34 @@ def make_shp_filename(place_name):
     return filename
 
 
-def save_shapefile(gdf):
+def save_shapefile(gdf, filename=None, folder=None):
     """
     Save GeoDataFrame as an ESRI shapefile.
     
     Parameters
     ----------
     gdf : GeoDataFrame, the gdf to be saved
+    filename : string
+    folder : string
     
     Returns
     -------
     None
     """
-    filename = make_shp_filename(gdf.name)
-    folder_path = '{}/{}'.format(_data_folder, filename)
-    file_path_name = '{}/{}'.format(folder_path, filename)
+    if folder is None:
+        folder = _data_folder
+    
+    if filename is None:
+        filename = make_shp_filename(gdf.name)
+    
+    # give the save folder a filename subfolder to make the full path to the files
+    folder_path = '{}/{}'.format(folder, filename)
+    
+    # if the save folder does not already exist, create it with a filename subfolder
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
-    gdf.to_file(file_path_name)
-    log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.name, file_path_name))
+    gdf.to_file(folder_path)
+    log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.name, folder_path))
  
 
 def project_gdf(gdf, to_latlong=False):
@@ -1200,19 +1210,23 @@ def project_graph(G):
     return G_proj
 
 
-def save_graph_shapefile(G, filename='graph'):
+def save_graph_shapefile(G, filename='graph', folder=None):
     """
     Save graph nodes and edges as ESRI shapefiles to disk.
     
     Parameters
     ----------
     G : graph
-    filename : string
+    filename : string, the name of the shapefiles (not including file extensions)
+    folder : string, the folder to contain the shapefiles, if None, use default data folder
     
     Returns
     -------
     None
     """
+    if folder is None:
+        folder = _data_folder
+        
     # set from/to nodes and then make undirected
     G_save = G.copy()
     for u, v, key in G_save.edges(keys=True):
@@ -1264,29 +1278,33 @@ def save_graph_shapefile(G, filename='graph'):
     for col in [c for c in gdf_edges.columns if not c == 'geometry']:
         gdf_edges[col] = gdf_edges[col].fillna('').astype(str)
         
-    # if the save folder does not already exist, create it
-    folder = '{}/{}'.format(_data_folder, filename)
+    # if the save folder does not already exist, create it with a filename subfolder
+    folder = '{}/{}'.format(folder, filename)
     if not os.path.exists(folder):
         os.makedirs(folder)
     
     # save the nodes and edges as separate ESRI shapefiles
     gdf_nodes.to_file('{}/{}_nodes'.format(folder, filename))
     gdf_edges.to_file('{}/{}_edges'.format(folder, filename))
-
     
-def save_graph(G, filename='graph'):
+    
+def save_graph(G, filename='graph.graphml', folder=None):
     """
     Save graph as GraphML file to disk.
     
     Parameters
     ----------
     G : graph
-    filename : string
+    filename : string, the name of the graphml file (including file extension)
+    folder : string, the folder to contain the file, if None, use default data folder
     
     Returns
     -------
     None
     """
+    if folder is None:
+        folder = _data_folder
+    
     # create a copy and convert all the node/edge attribute values to string or it won't save
     G_save = G.copy()
     for dict_key in G_save.graph:
@@ -1301,11 +1319,71 @@ def save_graph(G, filename='graph'):
             # convert all the edge attribute values to strings
             data[dict_key] = make_str(data[dict_key])
                 
-    if not os.path.exists(_data_folder):
-        os.makedirs(_data_folder)
+    if not os.path.exists(folder):
+        os.makedirs(folder)
     
-    nx.write_graphml(G_save, '{}/{}.graphml'.format(_data_folder, filename))
-    log('Saved graph "{}" to disk at "{}/{}.graphml"'.format(G_save.name, _data_folder, filename))
+    nx.write_graphml(G_save, '{}/{}'.format(folder, filename))
+    log('Saved graph "{}" to disk at "{}/{}"'.format(G_save.name, folder, filename))
+    
+    
+def load_graph(filename, folder=None):
+    """
+    Load a GraphML file from disk and convert the node/edge attributes to correct data types.
+    
+    Parameters
+    ----------
+    filename : string, the name of the graphml file (including file extension)
+    folder : string, the folder containing the file, if None, use default data folder
+    
+    Returns
+    -------
+    G : graph
+    """
+    start_time = time.time()
+    log('Begin loading graph from disk...')
+    
+    # read the graph from disk
+    if folder is None:
+        folder = _data_folder
+    path = '{}/{}'.format(folder, filename)
+    G = nx.read_graphml(path, node_type=int)
+    
+    # convert numeric node tags from string to numeric data types
+    log('Converting node and edge attribute data types')
+    for node, data in G.nodes(data=True):
+        data['osmid'] = int(data['osmid'])
+        data['x'] = float(data['x'])
+        data['y'] = float(data['y'])
+    
+    # convert numeric, bool, and list node tags from string to correct data types
+    for u, v, key, data in G.edges(keys=True, data=True):
+
+        # first parse oneway to bool and length to float - they should always have only 1 value each
+        data['oneway'] = bool(data['oneway'])
+        data['length'] = float(data['length'])
+
+        # these attributes might have a single value, or a list if edge's topology was simplified
+        for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed']:
+            # if this edge has this attribute, and it starts with '[' and ends with ']', then it's a list to be parsed
+            if attr in data and data[attr][0] == '[' and data[attr][-1] == ']':
+                # convert the string list to a list type, else leave as single-value string
+                data[attr] = ast.literal_eval(data[attr])
+
+        # osmid might have a single value or a list, but if single value, then parse int
+        if 'osmid' in data:
+            if data['osmid'][0] == '[' and data['osmid'][-1] == ']':
+                data['osmid'] = ast.literal_eval(data['osmid'])
+            else:
+                data['osmid'] = int(data['osmid'])
+
+        # if geometry attribute exists, load the string as well-known text to shapely LineString
+        if 'geometry' in data:
+            data['geometry'] = wkt.loads(data['geometry'])
+    
+    log('Loaded graph with {:,} nodes and {:,} edges from disk in {:,.2f} seconds'.format(len(G.nodes()),
+                                                                                                len(G.edges()),
+                                                                                                time.time()-start_time))
+    return G
     
     
 ############################################################################
@@ -1507,7 +1585,7 @@ def simplify_graph(G_, strict=True):
     G : graph
     """
     start_time = time.time()
-    log('Begin topologically simplifying the graph')
+    log('Begin topologically simplifying the graph...')
     
     # make a copy to not alter the original
     G = G_.copy()
@@ -1626,7 +1704,7 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='spectral', start=0.1, sto
     return colors
     
     
-def save_and_show(fig, ax, save, show, filename, file_format, dpi):
+def save_and_show(fig, ax, save, show, close, filename, file_format, dpi):
     """
     Save a figure to disk and show it, as specified.
     
@@ -1636,6 +1714,7 @@ def save_and_show(fig, ax, save, show, filename, file_format, dpi):
     ax : axis
     save : bool, whether to save the figure to disk or not
     show : bool, whether to display the figure or not
+    close : 
     filename : string, the name of the file to save
     file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
     dpi : int, the resolution of the image file if saving
@@ -1668,12 +1747,15 @@ def save_and_show(fig, ax, save, show, filename, file_format, dpi):
         start_time = time.time()
         plt.show()
         log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
+    # if show if False, close the figure if close is True to prevent display
+    elif close:
+        plt.close()
         
     return fig, ax
     
     
 def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off=True,
-               show=True, save=False, file_format='jpg', filename='temp', dpi=300, annotate=False,
+               show=True, save=False, close=True, file_format='jpg', filename='temp', dpi=300, annotate=False,
                node_color='#66ccff', node_size=15, node_alpha=1, node_edgecolor='none', node_zorder=1,
                edge_color='#999999', edge_linewidth=1, edge_alpha=1, use_geom=True):
     """
@@ -1689,6 +1771,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     axis_off : bool, if True turn off the matplotlib axis
     show : bool, if True, show the figure
     save : bool, if True, save the figure as an image file to disk
+    close : 
     file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
     filename : string, the name of the file if saving
     dpi : int, the resolution of the image file if saving
@@ -1708,7 +1791,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     fig, ax : figure, axis    
     """
     
-    log('Begin plotting the graph')
+    log('Begin plotting the graph...')
     node_Xs = [float(node['x']) for node in G.node.values()]
     node_Ys = [float(node['y']) for node in G.node.values()]
     
@@ -1747,7 +1830,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
             lines.append(line)
     
     # add the lines to the axis as a linecollection
-    lc = mc.LineCollection(lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=2)
+    lc = LineCollection(lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=2)
     ax.add_collection(lc)
     log('Drew the graph edges in {:,.2f} seconds'.format(time.time()-start_time))
     
@@ -1772,12 +1855,12 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
             ax.annotate(node, xy=(data['x'], data['y']))
             
     # save and show the figure as specified
-    fig, ax = save_and_show(fig, ax, save, show, filename, file_format, dpi)
+    fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi)
     return fig, ax
 
 
 def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0.02,
-                     axis_off=True, show=True, save=False, file_format='jpg', filename='temp', dpi=300, annotate=False,
+                     axis_off=True, show=True, save=False, close=True, file_format='jpg', filename='temp', dpi=300, annotate=False,
                      node_color='#999999', node_size=15, node_alpha=1, node_edgecolor='none', node_zorder=1,
                      edge_color='#999999', edge_linewidth=1, edge_alpha=1, use_geom=True,
                      origin_point=None, destination_point=None,
@@ -1797,6 +1880,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     axis_off : bool, if True turn off the matplotlib axis
     show : bool, if True, show the figure
     save : bool, if True, save the figure as an image file to disk
+    close : 
     file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
     filename : string, the name of the file if saving
     dpi : int, the resolution of the image file if saving
@@ -1827,7 +1911,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     
     # plot the graph but not the route
     fig, ax = plot_graph(G, bbox=bbox, fig_height=fig_height, fig_width=fig_width, margin=margin, axis_off=axis_off,
-                         show=False, save=False, filename=filename, dpi=dpi, annotate=annotate,
+                         show=False, save=False, close=False, filename=filename, dpi=dpi, annotate=annotate,
                          node_color=node_color, node_size=node_size, node_alpha=node_alpha, node_edgecolor=node_edgecolor, node_zorder=node_zorder,
                          edge_color=edge_color, edge_linewidth=edge_linewidth, edge_alpha=edge_alpha, use_geom=use_geom)
     
@@ -1871,11 +1955,11 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
             lines.append(line)
     
     # add the lines to the axis as a linecollection    
-    lc = mc.LineCollection(lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3)
+    lc = LineCollection(lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3)
     ax.add_collection(lc)
     
     # save and show the figure as specified
-    fig, ax = save_and_show(fig, ax, save, show, filename, file_format, dpi)
+    fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi)
     return fig, ax
     
     
