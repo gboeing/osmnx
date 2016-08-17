@@ -35,6 +35,9 @@ from shapely import wkt
 from geopy.distance import great_circle, vincenty
 from geopy.geocoders import Nominatim
 
+
+# global defaults - you can edit any of these by passing the value to the init() function
+
 # default locations to save data, logs, images, and cache
 _data_folder = 'osmnx_data'
 _logs_folder = 'osmnx_logs'
@@ -49,7 +52,7 @@ _print_log = False
 
 # useful osm tags - note that load_graph expects a consistent set of tag names for parsing
 _useful_tags_node = ['ref', 'highway']
-_useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name', 'highway', 'maxspeed']
+_useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name', 'highway', 'maxspeed', 'service', 'access']
 
 
 def init(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs_folder, 
@@ -278,7 +281,7 @@ def make_request(url, params=None, pause_duration=1, timeout=30):
         log('Requesting {} with timeout={}'.format(prepared_url, timeout))
         try:
             response = requests.get(url, params, timeout=timeout)
-            size_kb = len(response.content) / 1000.0
+            size_kb = len(response.content) / 1000.
             domain = re.findall(r'//(?s)(.*?)/', url)[0]
             log('Downloaded {:,.1f}KB from {} in {:,.2f} seconds'.format(size_kb, domain, time.time()-start_time))
             response_json = response.json()
@@ -337,6 +340,7 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
     query : string or dict, query string or structured query dict to geocode/download
     gdf_name : string, name attribute metadata for GeoDataFrame (this is used to save shapefile later)
     which_result : int, max number of results to return and which to process upon receipt
+    buffer_dist : float, distance to buffer around the place geometry, in meters
     
     Returns
     -------
@@ -354,9 +358,10 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
     if len(data) >= which_result:
         
         # extract data elements from the JSON response
-        bbox_south, bbox_north, bbox_west, bbox_east = [float(x) for x in data[which_result - 1]['boundingbox']]
-        geometry = data[which_result - 1]['geojson']
-        place = data[which_result - 1]['display_name']
+        result = data[which_result - 1]
+        bbox_south, bbox_north, bbox_west, bbox_east = [float(x) for x in result['boundingbox']]
+        geometry = result['geojson']
+        place = result['display_name']
         features = [{'type': 'Feature',
                      'geometry': geometry,
                      'properties': {'place_name': place,
@@ -400,6 +405,7 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None):
     ----------
     queries : list, list of query strings or structured query dicts to geocode/download, one at a time
     gdf_name : string, name attribute metadata for GeoDataFrame (this is used to save shapefile later)
+    buffer_dist : float, distance to buffer around the place geometry, in meters
     
     Returns
     -------
@@ -445,8 +451,8 @@ def save_shapefile(gdf, filename=None, folder=None):
     Parameters
     ----------
     gdf : GeoDataFrame, the gdf to be saved
-    filename : string
-    folder : string
+    filename : string, what to call the shapefile (file extensions are added automatically)
+    folder : string, where to save the shapefile, if none, then default folder
     
     Returns
     -------
@@ -527,6 +533,50 @@ def project_gdf(gdf, to_latlong=False):
    
  
  
+def get_osm_filter(network_type):
+    """
+    Create a filter to query OSM for the specified network type.
+    
+    Parameters
+    ----------
+    network_type : string, {'walk', 'bike', 'drive', 'drive_service', 'all'} what type of street network to get
+    
+    Returns
+    -------
+    osm_filter : string
+    """
+    filters = {}
+
+    # driving: filter out un-drivable roads, service roads, private ways, and anything specifying motor=no
+    filters['drive'] = ('["highway"!~"cycleway|footway|path|pedestrian|steps|track|'
+                        'proposed|construction|bridleway|abandoned|platform|raceway|service"]'
+                        '["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private"]')
+
+    # drive+service: allow ways tagged 'service' but filter out certain types of service ways
+    filters['drive_service'] = ('["highway"!~"cycleway|footway|path|pedestrian|steps|track|'
+                                'proposed|construction|bridleway|abandoned|platform|raceway"]'
+                                '["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private"]'
+                                '["service"!~"parking|parking_aisle|driveway|private|emergency_access"]')
+
+    # walking: filter out motor ways, private ways, and anything specifying foot=no
+    filters['walk'] = ('["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
+                       '["foot"!~"no"]["service"!~"private"]["access"!~"private"]')
+
+    # biking: filter out motor ways, private ways, and anything specifying biking=no
+    filters['bike'] = ('["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
+                       '["bicycle"!~"no"]["service"!~"private"]["access"!~"private"]')
+
+    # for all routes, filter out nothing
+    filters['all'] = ''
+    
+    if network_type in filters:
+        osm_filter = filters[network_type]
+    else:
+        raise ValueError('unknown network_type "{}"'.format(network_type))
+
+    return osm_filter
+ 
+ 
 def osm_net_download(north, south, east, west, network_type='all', pause_duration=1, timeout=180):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
@@ -537,7 +587,7 @@ def osm_net_download(north, south, east, west, network_type='all', pause_duratio
     south : float, southern latitude of bounding box
     east : float, eastern longitude of bounding box
     west : float, western longitude of bounding box
-    network_type : string, {'walk', 'drive', 'all'} what type of street network to get
+    network_type : string, {'walk', 'bike', 'drive', 'drive_service', 'all'} what type of street network to get
     pause_duration : int, time to pause in seconds between API requests
     timeout : int, the timeout interval for requests and to pass to API when possible
     
@@ -549,22 +599,15 @@ def osm_net_download(north, south, east, west, network_type='all', pause_duratio
     
     # define the query to send the API. put timeout in double brackets so it remains unformatted until it gets to the next function, make_request() (see comments below)
     # represent bbox as south,west,north,east (and the '>' makes it recurse so we get ways and way nodes)
-    data = '[out:json][timeout:{{timeout}}];( way ["highway"] {filters} ({south},{west},{north},{east}); >;);out;' 
+    data = '[out:json][timeout:{{timeout}}];(way["highway"]{filters}({south},{west},{north},{east});>;);out;' 
     
     # create a filter to exclude certain kinds of routes based on the requested network_type
-    if network_type == 'walk':
-        filters = '["highway"!~"motor"]' #for walking/biking accessible routes, exclude ways that are motor-only
-    elif network_type == 'drive':
-        filters = '["highway"!~"foot|cycle|steps|path|pedestrian|track|service"]' #for car accessible routes, exclude ways that are non-motorized-only
-    elif network_type == 'all':
-        filters = '' #for all routes, filter out nothing
-    else:
-        raise ValueError('unknown network_type "{}"'.format(network_type))
+    osm_filter = get_osm_filter(network_type)
     
     # format everything but timeout here. we pass the timeout int along to make_request() where it adds it 
     # to the params OrderedDict so that make_request() can call itself recursively, increasing the timeout interval each
     # time, if the query is really big and causing the request to timeout.
-    data = data.format(north=north, south=south, east=east, west=west, filters=filters)
+    data = data.format(north=north, south=south, east=east, west=west, filters=osm_filter)
     
     # request the URL, return the JSON
     params = OrderedDict()
@@ -1363,7 +1406,7 @@ def load_graph(filename, folder=None):
         data['length'] = float(data['length'])
 
         # these attributes might have a single value, or a list if edge's topology was simplified
-        for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed']:
+        for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed', 'service', 'access']:
             # if this edge has this attribute, and it starts with '[' and ends with ']', then it's a list to be parsed
             if attr in data and data[attr][0] == '[' and data[attr][-1] == ']':
                 # convert the string list to a list type, else leave as single-value string
@@ -1747,7 +1790,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi):
         start_time = time.time()
         plt.show()
         log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
-    # if show if False, close the figure if close is True to prevent display
+    # if show=False, close the figure if close=True to prevent display
     elif close:
         plt.close()
         
