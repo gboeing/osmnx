@@ -39,10 +39,10 @@ from geopy.geocoders import Nominatim
 # global defaults - you can edit any of these by passing the value to the init() function
 
 # default locations to save data, logs, images, and cache
-_data_folder = 'osmnx_data'
-_logs_folder = 'osmnx_logs'
-_imgs_folder = 'osmnx_images'
-_cache_folder = 'osmnx_cache'
+_data_folder = 'data'
+_logs_folder = 'logs'
+_imgs_folder = 'images'
+_cache_folder = 'cache'
 
 _use_cache = False
 
@@ -539,7 +539,7 @@ def get_osm_filter(network_type):
     
     Parameters
     ----------
-    network_type : string, {'walk', 'bike', 'drive', 'drive_service', 'all'} what type of street network to get
+    network_type : string, {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what type of street network to get
     
     Returns
     -------
@@ -548,17 +548,20 @@ def get_osm_filter(network_type):
     filters = {}
 
     # driving: filter out un-drivable roads, service roads, private ways, and anything specifying motor=no
+    # also filter out any non-service roads that are tagged as providing parking, driveway, private, or emergency-access services
     filters['drive'] = ('["highway"!~"cycleway|footway|path|pedestrian|steps|track|'
                         'proposed|construction|bridleway|abandoned|platform|raceway|service"]'
-                        '["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private"]')
+                        '["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private"]'
+                        '["service"!~"parking|parking_aisle|driveway|private|emergency_access"]')
 
     # drive+service: allow ways tagged 'service' but filter out certain types of service ways
     filters['drive_service'] = ('["highway"!~"cycleway|footway|path|pedestrian|steps|track|'
                                 'proposed|construction|bridleway|abandoned|platform|raceway"]'
                                 '["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private"]'
-                                '["service"!~"parking|parking_aisle|driveway|private|emergency_access"]')
-
+                                '["service"!~"parking|parking_aisle|private|emergency_access"]')
+    
     # walking: filter out motor ways, private ways, and anything specifying foot=no
+    # allow service roads, permitting things like parking lot lanes, alleys, etc that you *can* walk on even if they're not exactly nice walks
     filters['walk'] = ('["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
                        '["foot"!~"no"]["service"!~"private"]["access"!~"private"]')
 
@@ -566,14 +569,18 @@ def get_osm_filter(network_type):
     filters['bike'] = ('["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
                        '["bicycle"!~"no"]["service"!~"private"]["access"!~"private"]')
 
-    # for all routes, filter out nothing
-    filters['all'] = ''
+    # to download all ways, just filter out everything not currently in use or that is private-access only
+    filters['all'] = ('["highway"!~"proposed|construction|abandoned|platform|raceway"]'
+                      '["service"!~"private"]["access"!~"private"]')
+                      
+    # to download all ways, including private-access ones, just filter out everything not currently in use
+    filters['all_private'] = '["highway"!~"proposed|construction|abandoned|platform|raceway"]'
     
     if network_type in filters:
         osm_filter = filters[network_type]
     else:
         raise ValueError('unknown network_type "{}"'.format(network_type))
-
+    
     return osm_filter
  
  
@@ -587,7 +594,7 @@ def osm_net_download(north, south, east, west, network_type='all', pause_duratio
     south : float, southern latitude of bounding box
     east : float, eastern longitude of bounding box
     west : float, western longitude of bounding box
-    network_type : string, {'walk', 'bike', 'drive', 'drive_service', 'all'} what type of street network to get
+    network_type : string, {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what type of street network to get
     pause_duration : int, time to pause in seconds between API requests
     timeout : int, the timeout interval for requests and to pass to API when possible
     
@@ -598,8 +605,9 @@ def osm_net_download(north, south, east, west, network_type='all', pause_duratio
     url = 'http://www.overpass-api.de/api/interpreter'
     
     # define the query to send the API. put timeout in double brackets so it remains unformatted until it gets to the next function, make_request() (see comments below)
-    # represent bbox as south,west,north,east (and the '>' makes it recurse so we get ways and way nodes)
-    data = '[out:json][timeout:{{timeout}}];(way["highway"]{filters}({south},{west},{north},{east});>;);out;' 
+    # represent bbox as south,west,north,east. the '>' makes it recurse so we get ways and way nodes. maxsize is in bytes (this is server ram allocation).
+    # specifying way["highway"] means that all ways returned must have a highway key. the {filters} then remove ways by key/value.
+    data = '[out:json][timeout:{{timeout}}][maxsize:2073741824];(way["highway"]{filters}({south},{west},{north},{east});>;);out;' 
     
     # create a filter to exclude certain kinds of routes based on the requested network_type
     osm_filter = get_osm_filter(network_type)
@@ -705,24 +713,33 @@ def remove_orphan_nodes(G):
     return G
     
    
-def get_largest_subgraph(G, retain_all=False):
+def get_largest_subgraph(G, retain_all=False, strongly=False):
     """
-    Return the largest weakly connected subgraph from a directed graph.
+    Return the largest weakly or strongly connected subgraph from a directed graph.
     
     Parameters
     ----------
     G : graph
     retain_all : bool, if True, return the entire graph even if it is not connected
+    strongly : bool, if True, return the largest strongly instead of weakly connected subgraph
     
     Returns
     -------
     G : graph
     """
-    # if the graph is not connected and caller did not request retain_all, retain only the largest connected subgraph
-    if (not retain_all) and (not nx.is_weakly_connected(G)):
-        original_len = len(G.nodes())
-        G = max(nx.weakly_connected_component_subgraphs(G), key=len)
-        log('Graph was not connected, retained only the largest connected subgraph ({:,} of {:,} total nodes)'.format(len(G.nodes()), original_len))
+    
+    if strongly:
+        # if the graph is not connected and caller did not request retain_all, retain only the largest strongly connected subgraph
+        if (not retain_all) and (not nx.is_strongly_connected(G)):
+            original_len = len(G.nodes())
+            G = max(nx.strongly_connected_component_subgraphs(G), key=len)
+            log('Graph was not connected, retained only the largest strongly connected subgraph ({:,} of {:,} total nodes)'.format(len(G.nodes()), original_len))
+    else:
+        # if the graph is not connected and caller did not request retain_all, retain only the largest weakly connected subgraph
+        if (not retain_all) and (not nx.is_weakly_connected(G)):
+            original_len = len(G.nodes())
+            G = max(nx.weakly_connected_component_subgraphs(G), key=len)
+            log('Graph was not connected, retained only the largest weakly connected subgraph ({:,} of {:,} total nodes)'.format(len(G.nodes()), original_len))
     return G
     
 
@@ -1027,6 +1044,8 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     G : graph
     """
     
+    #log('graph_from_bbox(north="{}", south="{}", east="{}", west="{}", network_type="{}", simplify="{}", retain_all="{}", name="{}")'.format(north, south, east, west, network_type, simplify, retain_all, name), level=lg.DEBUG)
+    
     # get the network data from OSM, create the graph, then truncate to the bounding box
     osm_data = osm_net_download(north, south, east, west, network_type=network_type)
     G = create_graph(osm_data, name=name, retain_all=retain_all, network_type=network_type)
@@ -1060,6 +1079,9 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     -------
     G : graph
     """
+    
+    #log('graph_from_point(center_point="{}", distance="{}", distance_type="{}", network_type="{}", simplify="{}", retain_all="{}", name="{}")'.format(center_point, distance, distance_type, network_type, simplify, retain_all, name), level=lg.DEBUG)
+    
     # create a bounding box from the center point and the distance in each direction
     north, south, east, west = bbox_from_point(center_point, distance)
     if distance_type == 'bbox':
@@ -1108,6 +1130,9 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     point : tuple, optional
     """
     
+    #log('graph_from_address(address="{}", distance="{}", distance_type="{}", network_type="{}", simplify="{}", retain_all="{}", return_coords="{}", name="{}", geocoder_timeout="{}")'
+    #.format(address, distance, distance_type, network_type, simplify, retain_all, return_coords, name, geocoder_timeout), level=lg.DEBUG)
+    
     # geocode the address string to a (lat, lon) point
     geolocation = Nominatim().geocode(query=address, timeout=geocoder_timeout)
     point = (geolocation.latitude, geolocation.longitude)
@@ -1121,6 +1146,29 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     else:
         return G
         
+        
+def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=False, name='unnamed'):
+    """
+    
+    """
+    # get the bounding box containing the polygon then get the graph within that bounding box
+    west, south, east, north = polygon.bounds
+    
+    # retain_all is true and truncate is false here because we'll handle that in truncate_graph_polygon() later
+    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=True, name=name)
+    
+    # truncate the graph to the extent of the polygon
+    G = truncate_graph_polygon(G, polygon, retain_all=retain_all)
+    
+    # simplify the graph topology as the last step. don't truncate after simplifying or you may have simplified out to an endpoint
+    # beyond the truncation distance, in which case you will then strip out your entire edge
+    # that's why simplify=False above, so we didn't do it before the truncate_graph_polygon() call 2 lines after it
+    if simplify:
+        G = simplify_graph(G)
+    
+    log('graph_from_polygon() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
+    return G
+    
         
 def graph_from_place(query, network_type='all', simplify=True, retain_all=False, name='unnamed', which_result=1, buffer_dist=None):
     """
@@ -1139,6 +1187,9 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
     -------
     G : graph
     """
+    
+    #log('graph_from_place(query="{}", network_type="{}", simplify="{}", retain_all="{}", name="{}", which_result="{}", buffer_dist="{}")'.format(query, network_type, simplify, retain_all, name, which_result, buffer_dist), level=lg.DEBUG)
+    
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, str) or isinstance(query, dict):
         # if it is a string (place name) or dict (structured place query), then it is a single place
@@ -1150,27 +1201,10 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
     else:
         raise ValueError('query must be a string or a list of query strings')
     
-    # get the bounding box containing the place(s) then get the graph within that bounding box
-    north = gdf_place['bbox_north'].max()
-    south = gdf_place['bbox_south'].min()
-    east = gdf_place['bbox_east'].max()
-    west = gdf_place['bbox_west'].min()
-    
-    # retain_all is true and truncate is false here because we'll handle that in truncate_graph_polygon() later
-    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=True, name=name)
-    
-    # truncate the graph to the shape of the place(s) polygon then return it
     polygon = gdf_place['geometry'].unary_union
-    G = truncate_graph_polygon(G, polygon, retain_all=retain_all)
+    G = graph_from_polygon(polygon, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name)
     
-    # simplify the graph topology as the last step. don't truncate after simplifying or you may have simplified out to an endpoint
-    # beyond the truncation distance, in which case you will then strip out your entire edge
-    # that's why simplify=False above, so we didn't do it before the truncate_graph_polygon() call 2 lines after it
-    if simplify:
-        G = simplify_graph(G)
-        
     log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
-    
     return G
     
 
@@ -1271,16 +1305,37 @@ def save_graph_shapefile(G, filename='graph', folder=None):
         folder = _data_folder
         
     # set from/to nodes and then make undirected
-    G_save = G.copy()
-    for u, v, key in G_save.edges(keys=True):
-        G_save.edge[u][v][key]['from'] = u
-        G_save.edge[u][v][key]['to'] = v
-        
+    G = G.copy()
+    for u, v, key in G.edges(keys=True):
+        G.edge[u][v][key]['from'] = u
+        G.edge[u][v][key]['to'] = v
+    
+    G_save = G.to_undirected(reciprocal=False)
+    
     # if edges in both directions (u,v) and (v,u) exist in the graph, 
     # attributes for the new undirected edge will be a combination of the attributes of the directed edges.
     # if both edges exist in digraph and their edge data is different, 
     # only one edge is created with an arbitrary choice of which edge data to use.
-    G_save = G_save.to_undirected(reciprocal=False)
+    # you need to manually retain edges in both directions between nodes if their geometries are different
+    # this is necessary to save shapefiles for weird intersections like the one at 41.8958697,-87.6794924
+    # find all edges (u,v) that have a parallel edge going the opposite direction (v,u) with a different osmid
+    for u, v, key, data in G.edges(keys=True, data=True):
+        try:
+            # look at each edge going the opposite direction (from v to u)
+            for key2 in G.edge[v][u]:
+                # if this edge has geometry and its osmid is different from its reverse's
+                if 'geometry' in data and not data['osmid'] == G.edge[v][u][key2]['osmid']:
+                    # turn the geometry of each edge into lists of x's and y's
+                    geom1 = [list(coords) for coords in data['geometry'].xy]
+                    geom2 = [list(coords) for coords in G_save[u][v][key]['geometry'].xy]
+                    # reverse the first edge's list of x's and y's to look for a match in either order
+                    geom1_r = [list(reversed(list(coords))) for coords in data['geometry'].xy]
+                    # if the edge's geometry doesn't match its reverse's geometry in either order
+                    if not (geom1 == geom2 or geom1_r == geom2):
+                        # add it  as a new edge to the graph to be saved
+                        G_save.add_edge(u, v, key + 1, attr_dict=data)
+        except:
+            pass
     
     # create a GeoDataFrame of the nodes and set CRS
     nodes = {node:data for node, data in G_save.nodes(data=True)}
@@ -1601,7 +1656,8 @@ def build_paths(G, end_points, nodes_to_remove):
     oneway_values = []
     for u, v in list(zip(path[:-1], path[1:])):
         edges = G.edge[u][v]
-        assert len(edges) == 1
+        if not len(edges) == 1:
+            log('Multiple edges between "{}" and "{}" found when simplifying'.format(u, v), level=lg.WARNING)
         oneway_values.append(G.edge[u][v][0]['oneway'])
     assert len(set(oneway_values))==1
     
@@ -1665,7 +1721,8 @@ def simplify_graph(G_, strict=True):
                             
                             # there should never be multiple edges between interstitial nodes
                             edges = G.edge[u][v]
-                            assert len(edges) == 1 
+                            if not len(edges) == 1:
+                                log('Multiple edges between "{}" and "{}" found when simplifying'.format(u, v), level=lg.WARNING)
                             
                             # the only element in this list as long as above assertion is True (MultiGraphs use keys (the 0 here), indexed with ints from 0 and up)
                             edge = edges[0]
