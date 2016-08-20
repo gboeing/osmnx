@@ -1,10 +1,10 @@
 .ipynb_checkpoints
 __pycache__
 old/*
-*_cache
-*_data
-*_logs
-*_images
+cache/*
+data/*
+logs/*
+images/*
 
 
 # Compiled source #
