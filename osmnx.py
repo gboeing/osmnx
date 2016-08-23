@@ -399,7 +399,7 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
         
 def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None):
     """
-    Create a GeoDataFrame from a  list of place names to query.
+    Create a GeoDataFrame from a list of place names to query.
     
     Parameters
     ----------
@@ -605,9 +605,9 @@ def osm_net_download(north, south, east, west, network_type='all', pause_duratio
     url = 'http://www.overpass-api.de/api/interpreter'
     
     # define the query to send the API. put timeout in double brackets so it remains unformatted until it gets to the next function, make_request() (see comments below)
-    # represent bbox as south,west,north,east. the '>' makes it recurse so we get ways and way nodes. maxsize is in bytes (this is server ram allocation).
+    # represent bbox as south,west,north,east. the '>' makes it recurse so we get ways and way nodes. maxsize is in bytes (this is server ram allocation). [maxsize:2073741824]
     # specifying way["highway"] means that all ways returned must have a highway key. the {filters} then remove ways by key/value.
-    data = '[out:json][timeout:{{timeout}}][maxsize:2073741824];(way["highway"]{filters}({south},{west},{north},{east});>;);out;' 
+    data = '[out:json][timeout:{{timeout}}];(way["highway"]{filters}({south},{west},{north},{east});>;);out;' 
     
     # create a filter to exclude certain kinds of routes based on the requested network_type
     osm_filter = get_osm_filter(network_type)
@@ -694,9 +694,9 @@ def parse_osm_nodes_paths(osm_data):
     return nodes, paths
     
     
-def remove_orphan_nodes(G):
+def remove_isolated_nodes(G):
     """
-    Remove from a graph all the nodes that have no edges.
+    Remove from a graph all the nodes that have no incident edges (ie, node degree = 0)
     
     Parameters
     ----------
@@ -707,21 +707,21 @@ def remove_orphan_nodes(G):
     G : graph
     """
     degree = G.degree()
-    orphaned_nodes = [node for node in degree.keys() if degree[node] < 1]
-    G.remove_nodes_from(orphaned_nodes)
-    log('Removed {:,} orphaned nodes'.format(len(orphaned_nodes)))
+    isolated_nodes = [node for node in degree.keys() if degree[node] < 1]
+    G.remove_nodes_from(isolated_nodes)
+    log('Removed {:,} isolated nodes'.format(len(isolated_nodes)))
     return G
     
    
-def get_largest_subgraph(G, retain_all=False, strongly=False):
+def get_largest_component(G, retain_all=False, strongly=False):
     """
-    Return the largest weakly or strongly connected subgraph from a directed graph.
+    Return the largest weakly or strongly connected component from a directed graph.
     
     Parameters
     ----------
     G : graph
     retain_all : bool, if True, return the entire graph even if it is not connected
-    strongly : bool, if True, return the largest strongly instead of weakly connected subgraph
+    strongly : bool, if True, return the largest strongly instead of weakly connected component
     
     Returns
     -------
@@ -729,17 +729,17 @@ def get_largest_subgraph(G, retain_all=False, strongly=False):
     """
     
     if strongly:
-        # if the graph is not connected and caller did not request retain_all, retain only the largest strongly connected subgraph
+        # if the graph is not connected and caller did not request retain_all, retain only the largest strongly connected component
         if (not retain_all) and (not nx.is_strongly_connected(G)):
             original_len = len(G.nodes())
             G = max(nx.strongly_connected_component_subgraphs(G), key=len)
-            log('Graph was not connected, retained only the largest strongly connected subgraph ({:,} of {:,} total nodes)'.format(len(G.nodes()), original_len))
+            log('Graph was not connected, retained only the largest strongly connected component ({:,} of {:,} total nodes)'.format(len(G.nodes()), original_len))
     else:
-        # if the graph is not connected and caller did not request retain_all, retain only the largest weakly connected subgraph
+        # if the graph is not connected and caller did not request retain_all, retain only the largest weakly connected component
         if (not retain_all) and (not nx.is_weakly_connected(G)):
             original_len = len(G.nodes())
             G = max(nx.weakly_connected_component_subgraphs(G), key=len)
-            log('Graph was not connected, retained only the largest weakly connected subgraph ({:,} of {:,} total nodes)'.format(len(G.nodes()), original_len))
+            log('Graph was not connected, retained only the largest weakly connected component ({:,} of {:,} total nodes)'.format(len(G.nodes()), original_len))
     return G
     
 
@@ -765,15 +765,15 @@ def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', reta
     G.remove_nodes_from(distant_nodes.keys())
     log('Truncated graph by weighted network distance in {:,.2f} seconds'.format(time.time()-start_time))
     
-    # remove any orphaned nodes, keep only the largest subgraph (if retain_all is True), and return G
-    G = remove_orphan_nodes(G)
-    G = get_largest_subgraph(G, retain_all)
+    # remove any isolated nodes, keep only the largest component (if retain_all is True), and return G
+    G = remove_isolated_nodes(G)
+    G = get_largest_component(G, retain_all)
     return G
     
     
 def truncate_graph_bbox(G, north, south, east, west, retain_all=False):
     """
-    Remove every node in graph that falls outside a bounding box. Needed because osm seems to return entire ways that also 
+    Remove every node in graph that falls outside a bounding box. Needed because overpass returns entire ways that also 
     include nodes outside the bbox if the way (that is, a way with a single OSM ID) has a node inside the bbox at some point.
     
     Parameters
@@ -798,9 +798,9 @@ def truncate_graph_bbox(G, north, south, east, west, retain_all=False):
     G.remove_nodes_from(nodes_outside_bbox)
     log('Truncated graph by bounding box in {:,.2f} seconds'.format(time.time()-start_time))
     
-    # remove any orphaned nodes, keep only the largest subgraph (if retain_all is True), and return G
-    G = remove_orphan_nodes(G)
-    G = get_largest_subgraph(G, retain_all)
+    # remove any isolated nodes, keep only the largest component (if retain_all is True), and return G
+    G = remove_isolated_nodes(G)
+    G = get_largest_component(G, retain_all)
 
     return G
     
@@ -833,11 +833,11 @@ def truncate_graph_polygon(G, polygon, retain_all=False):
     G.remove_nodes_from(nodes_outside_polygon['node'])
     log('Truncated graph by polygon in {:,.2f} seconds'.format(time.time()-start_time))
     
-    # remove any orphaned nodes
-    G = remove_orphan_nodes(G)
+    # remove any isolated nodes
+    G = remove_isolated_nodes(G)
     
-    # keep only the largest subgraph (if retain_all is True), then return G
-    G = get_largest_subgraph(G, retain_all)
+    # keep only the largest component (if retain_all is True), then return G
+    G = get_largest_component(G, retain_all)
     
     return G
     
@@ -993,8 +993,8 @@ def create_graph(osm_data, name='unnamed', retain_all=False, network_type='all')
     # add each osm way (aka, path) to the graph by unpacking the data dict as keyword args (can't pass attribute dict to this function)
     G = add_paths(G, paths, network_type)
     
-    # retain only the largest connected subgraph, if caller did not set retain_all=True
-    G = get_largest_subgraph(G, retain_all=retain_all)
+    # retain only the largest connected component, if caller did not set retain_all=True
+    G = get_largest_component(G, retain_all=retain_all)
     
     # add length (great circle distance between vertices) attribute to each edge to use as weight
     G = add_edge_lengths(G)
@@ -1068,8 +1068,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     ----------
     center_point : tuple, the (lat, lon) central point around which to construct the graph
     distance : int, retain only those nodes within this many meters of the center of the graph
-    distance_type : string, if 'bbox', retain only those nodes within a bounding box of the distance parameter
-                            if 'network', retain only those nodes within some network distance from the center-most node
+    distance_type : string, {'network', 'bbox'} if 'bbox', retain only those nodes within a bounding box of the distance parameter. if 'network', retain only those nodes within some network distance from the center-most node.
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
@@ -1115,8 +1114,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     ----------
     address : string, the address to geocode and use as the central point around which to construct the graph
     distance : int, retain only those nodes within this many meters of the center of the graph
-    distance_type : string, if 'bbox', retain only those nodes within a bounding box of the distance parameter
-                            if 'network', retain only those nodes within some network distance from the center-most node
+    distance_type : string, {'network', 'bbox'} if 'bbox', retain only those nodes within a bounding box of the distance parameter. if 'network', retain only those nodes within some network distance from the center-most node.
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
@@ -1149,7 +1147,19 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
         
 def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=False, name='unnamed'):
     """
+    Create a networkx graph from OSM data within the spatial boundaries of the passed-in shapely polygon.
     
+    Parameters
+    ----------
+    polygon : shapely Polygon, the shape to get network data within
+    network_type : string, what type of street network to get
+    simplify : bool, if true, simplify the graph topology
+    retain_all : bool, if True, return the entire graph even if it is not connected
+    name : string, the name of the graph
+    
+    Returns
+    -------
+    G : graph
     """
     # get the bounding box containing the polygon then get the graph within that bounding box
     west, south, east, north = polygon.bounds
@@ -1182,6 +1192,7 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
     retain_all : bool, if True, return the entire graph even if it is not connected
     name : string, the name of the graph
     which_result : int, max number of results to return and which to process upon receipt
+    buffer_dist : float, distance to buffer around the place geometry, in meters
     
     Returns
     -------
@@ -1287,30 +1298,25 @@ def project_graph(G):
     return G_proj
 
 
-def save_graph_shapefile(G, filename='graph', folder=None):
+def get_undirected(G):
     """
-    Save graph nodes and edges as ESRI shapefiles to disk.
+    Convert a directed graph to an undirected graph that maintains parallel edges in opposite directions if geometries differ.
     
     Parameters
     ----------
     G : graph
-    filename : string, the name of the shapefiles (not including file extensions)
-    folder : string, the folder to contain the shapefiles, if None, use default data folder
     
     Returns
     -------
-    None
+    G_undir : Graph
     """
-    if folder is None:
-        folder = _data_folder
-        
     # set from/to nodes and then make undirected
     G = G.copy()
     for u, v, key in G.edges(keys=True):
         G.edge[u][v][key]['from'] = u
         G.edge[u][v][key]['to'] = v
     
-    G_save = G.to_undirected(reciprocal=False)
+    G_undir = G.to_undirected(reciprocal=False)
     
     # if edges in both directions (u,v) and (v,u) exist in the graph, 
     # attributes for the new undirected edge will be a combination of the attributes of the directed edges.
@@ -1327,15 +1333,40 @@ def save_graph_shapefile(G, filename='graph', folder=None):
                 if 'geometry' in data and not data['osmid'] == G.edge[v][u][key2]['osmid']:
                     # turn the geometry of each edge into lists of x's and y's
                     geom1 = [list(coords) for coords in data['geometry'].xy]
-                    geom2 = [list(coords) for coords in G_save[u][v][key]['geometry'].xy]
+                    geom2 = [list(coords) for coords in G_undir[u][v][key]['geometry'].xy]
                     # reverse the first edge's list of x's and y's to look for a match in either order
                     geom1_r = [list(reversed(list(coords))) for coords in data['geometry'].xy]
                     # if the edge's geometry doesn't match its reverse's geometry in either order
                     if not (geom1 == geom2 or geom1_r == geom2):
-                        # add it  as a new edge to the graph to be saved
-                        G_save.add_edge(u, v, key + 1, attr_dict=data)
+                        # add it as a new edge to the graph to be saved (with key equal to the current largest key plus one)
+                        new_key = max(G.edge[u][v]) + 1
+                        G_undir.add_edge(u, v, new_key, attr_dict=data)
         except:
             pass
+    
+    return G_undir
+    
+    
+def save_graph_shapefile(G, filename='graph', folder=None):
+    """
+    Save graph nodes and edges as ESRI shapefiles to disk.
+    
+    Parameters
+    ----------
+    G : graph
+    filename : string, the name of the shapefiles (not including file extensions)
+    folder : string, the folder to contain the shapefiles, if None, use default data folder
+    
+    Returns
+    -------
+    None
+    """
+    if folder is None:
+        folder = _data_folder
+    
+    # convert directed graph G to an undirected graph for saving as a shapefile
+    G_save = G.copy()
+    G_save = get_undirected(G_save)
     
     # create a GeoDataFrame of the nodes and set CRS
     nodes = {node:data for node, data in G_save.nodes(data=True)}
@@ -1497,7 +1528,7 @@ def is_endpoint(G, node, strict=True):
     OSM data includes lots of nodes that exist only as points to help streets bend around curves.
     An end point is a node that either:
         1. is its own neighbor, ie, it self-loops
-        2. or, has no incoming edges or no outgoing edges, ie, all its edges point inward or all its edges point outward
+        2. or, has no incoming edges or no outgoing edges, ie, all its incident edges point inward or all its incident edges point outward
         3. or, it does not have exactly two neighbors and degree of 2 or 4
         4. or, if strict mode is false, if its edges have different OSM IDs
     
@@ -1755,10 +1786,10 @@ def simplify_graph(G_, strict=True):
                                                  'attr_dict':edge_attributes})
                     
                 except RuntimeError:
-                    # recursion errors occur if some subgraph is a self-contained ring in which all nodes are not end points
-                    # handle it by just ignoring that subgraph and letting its topology remain intact (this should be a rare occurrence)
+                    # recursion errors occur if some connected component is a self-contained ring in which all nodes are not end points
+                    # handle it by just ignoring that component and letting its topology remain intact (this should be a rare occurrence)
                     # RuntimeError is what Python <3.5 will throw, Py3.5+ throws RecursionError but it is a subtype of RuntimeError so it still gets handled
-                    log('Recursion error: encountered subgraph where no nodes are end points', level=lg.WARNING)
+                    log('Recursion error: encountered connected component where no nodes are end points', level=lg.WARNING)
     
     # for each edge to add in the list we assembled, create a new edge between the origin and destination
     for edge in all_edges_to_add:
@@ -1814,7 +1845,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi):
     ax : axis
     save : bool, whether to save the figure to disk or not
     show : bool, whether to display the figure or not
-    close : 
+    close : close the figure (only if show equals False) to prevent display
     filename : string, the name of the file to save
     file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
     dpi : int, the resolution of the image file if saving
@@ -1871,7 +1902,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     axis_off : bool, if True turn off the matplotlib axis
     show : bool, if True, show the figure
     save : bool, if True, save the figure as an image file to disk
-    close : 
+    close : close the figure (only if show equals False) to prevent display
     file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
     filename : string, the name of the file if saving
     dpi : int, the resolution of the image file if saving
@@ -1980,7 +2011,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     axis_off : bool, if True turn off the matplotlib axis
     show : bool, if True, show the figure
     save : bool, if True, save the figure as an image file to disk
-    close : 
+    close : close the figure (only if show equals False) to prevent display
     file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
     filename : string, the name of the file if saving
     dpi : int, the resolution of the image file if saving
