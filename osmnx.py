@@ -36,7 +36,7 @@ from geopy.distance import great_circle, vincenty
 from geopy.geocoders import Nominatim
 
 
-# global defaults - you can edit any of these by passing the value to the init() function
+# global defaults - you can edit any of these by passing the value to the config() function
 
 # default locations to save data, logs, images, and cache
 _data_folder = 'data'
@@ -55,12 +55,12 @@ _useful_tags_node = ['ref', 'highway']
 _useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name', 'highway', 'maxspeed', 'service', 'access']
 
 
-def init(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs_folder, 
-         cache_folder=_cache_folder, use_cache=_use_cache,
-         file_log=_file_log, print_log=_print_log,
-         useful_tags_node=_useful_tags_node, useful_tags_path=_useful_tags_path):
+def config(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs_folder, 
+           cache_folder=_cache_folder, use_cache=_use_cache,
+           file_log=_file_log, print_log=_print_log,
+           useful_tags_node=_useful_tags_node, useful_tags_path=_useful_tags_path):
     """
-    Initialize osmnx and set the default global vars to desired values.
+    Configure osmnx by setting the default global vars to desired values.
     
     Parameters
     ---------
@@ -92,9 +92,9 @@ def init(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs_f
     _useful_tags_node = useful_tags_node
     _useful_tags_path = useful_tags_path
     
-    # if logging is turned on, log that we are initialized
+    # if logging is turned on, log that we are configured
     if _file_log or _print_log:
-        log('Initialized osmnx')
+        log('Configured osmnx')
 
 
 def log(message, level=lg.INFO):
@@ -549,32 +549,32 @@ def get_osm_filter(network_type):
 
     # driving: filter out un-drivable roads, service roads, private ways, and anything specifying motor=no
     # also filter out any non-service roads that are tagged as providing parking, driveway, private, or emergency-access services
-    filters['drive'] = ('["highway"!~"cycleway|footway|path|pedestrian|steps|track|'
+    filters['drive'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|'
                         'proposed|construction|bridleway|abandoned|platform|raceway|service"]'
                         '["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private"]'
                         '["service"!~"parking|parking_aisle|driveway|private|emergency_access"]')
 
     # drive+service: allow ways tagged 'service' but filter out certain types of service ways
-    filters['drive_service'] = ('["highway"!~"cycleway|footway|path|pedestrian|steps|track|'
+    filters['drive_service'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|'
                                 'proposed|construction|bridleway|abandoned|platform|raceway"]'
                                 '["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private"]'
                                 '["service"!~"parking|parking_aisle|private|emergency_access"]')
     
     # walking: filter out motor ways, private ways, and anything specifying foot=no
     # allow service roads, permitting things like parking lot lanes, alleys, etc that you *can* walk on even if they're not exactly nice walks
-    filters['walk'] = ('["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
+    filters['walk'] = ('["area"!~"yes"]["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
                        '["foot"!~"no"]["service"!~"private"]["access"!~"private"]')
 
     # biking: filter out motor ways, private ways, and anything specifying biking=no
-    filters['bike'] = ('["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
+    filters['bike'] = ('["area"!~"yes"]["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
                        '["bicycle"!~"no"]["service"!~"private"]["access"!~"private"]')
 
     # to download all ways, just filter out everything not currently in use or that is private-access only
-    filters['all'] = ('["highway"!~"proposed|construction|abandoned|platform|raceway"]'
+    filters['all'] = ('["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
                       '["service"!~"private"]["access"!~"private"]')
                       
     # to download all ways, including private-access ones, just filter out everything not currently in use
-    filters['all_private'] = '["highway"!~"proposed|construction|abandoned|platform|raceway"]'
+    filters['all_private'] = '["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
     
     if network_type in filters:
         osm_filter = filters[network_type]
@@ -584,7 +584,7 @@ def get_osm_filter(network_type):
     return osm_filter
  
  
-def osm_net_download(north, south, east, west, network_type='all', pause_duration=1, timeout=180):
+def osm_net_download(north, south, east, west, network_type='all', pause_duration=1, timeout=180, memory=None):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
     
@@ -597,6 +597,7 @@ def osm_net_download(north, south, east, west, network_type='all', pause_duratio
     network_type : string, {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what type of street network to get
     pause_duration : int, time to pause in seconds between API requests
     timeout : int, the timeout interval for requests and to pass to API when possible
+    memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size.
     
     Returns
     -------
@@ -605,17 +606,25 @@ def osm_net_download(north, south, east, west, network_type='all', pause_duratio
     url = 'http://www.overpass-api.de/api/interpreter'
     
     # define the query to send the API. put timeout in double brackets so it remains unformatted until it gets to the next function, make_request() (see comments below)
-    # represent bbox as south,west,north,east. the '>' makes it recurse so we get ways and way nodes. maxsize is in bytes (this is server ram allocation). [maxsize:2073741824]
+    # represent bbox as south,west,north,east. the '>' makes it recurse so we get ways and way nodes. maxsize is in bytes (this is server ram allocation).
     # specifying way["highway"] means that all ways returned must have a highway key. the {filters} then remove ways by key/value.
-    data = '[out:json][timeout:{{timeout}}];(way["highway"]{filters}({south},{west},{north},{east});>;);out;' 
+    data = '[out:json][timeout:{{timeout}}]{maxsize};(way["highway"]{filters}({south},{west},{north},{east});>;);out;' 
     
     # create a filter to exclude certain kinds of routes based on the requested network_type
     osm_filter = get_osm_filter(network_type)
     
+    # pass a memory allocation size for the query to the api, in bytes
+    if memory is None:
+        # if none, pass nothing so the server will use its default allocation size
+        maxsize = ''
+    else:
+        # otherwise, specifiy the query's maxsize parameter value
+        maxsize = '[maxsize:{}]'.format(memory)
+    
     # format everything but timeout here. we pass the timeout int along to make_request() where it adds it 
     # to the params OrderedDict so that make_request() can call itself recursively, increasing the timeout interval each
     # time, if the query is really big and causing the request to timeout.
-    data = data.format(north=north, south=south, east=east, west=west, filters=osm_filter)
+    data = data.format(north=north, south=south, east=east, west=west, filters=osm_filter, maxsize=maxsize)
     
     # request the URL, return the JSON
     params = OrderedDict()
@@ -1024,7 +1033,7 @@ def bbox_from_point(point, distance=1000):
     return north, south, east, west
     
     
-def graph_from_bbox(north, south, east, west, network_type='all', simplify=True, retain_all=False, name='unnamed'):
+def graph_from_bbox(north, south, east, west, network_type='all', simplify=True, retain_all=False, name='unnamed', memory=None):
     """
     Create a networkx graph from OSM data within some bounding box.
     
@@ -1038,6 +1047,7 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
     name : string, the name of the graph
+    memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
     
     Returns
     -------
@@ -1046,11 +1056,16 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     
     #log('graph_from_bbox(north="{}", south="{}", east="{}", west="{}", network_type="{}", simplify="{}", retain_all="{}", name="{}")'.format(north, south, east, west, network_type, simplify, retain_all, name), level=lg.DEBUG)
     
-    # get the network data from OSM, create the graph, then truncate to the bounding box
-    osm_data = osm_net_download(north, south, east, west, network_type=network_type)
+    # get the network data from OSM, and throw an error if no data are returned
+    osm_data = osm_net_download(north, south, east, west, network_type=network_type, memory=memory)
+    if len(osm_data['elements']) < 1:
+        remark = '. Server message: "{}"'.format(osm_data['remark']) if 'remark' in osm_data else ''
+        raise Exception('OSM network query returned no data elements{}'.format(remark))
+    
+    # create the graph, then truncate to the bounding box
     G = create_graph(osm_data, name=name, retain_all=retain_all, network_type=network_type)
     G = truncate_graph_bbox(G, north, south, east, west)
-
+    
     # simplify the graph topology as the last step. don't truncate after simplifying or you may have simplified out to an endpoint
     # beyond the truncation distance, in which case you will then strip out your entire edge
     if simplify:
@@ -1060,7 +1075,7 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     return  G
     
     
-def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, name='unnamed'):
+def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, name='unnamed', memory=None):
     """
     Create a networkx graph from OSM data within some distance of some (lat, lon) center point.
     
@@ -1073,6 +1088,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
     name : string, the name of the graph
+    memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
     
     Returns
     -------
@@ -1085,10 +1101,10 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     north, south, east, west = bbox_from_point(center_point, distance)
     if distance_type == 'bbox':
         # if the network distance_type is bbox, create a graph from the bounding box
-        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name)
+        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name, memory=memory)
     elif distance_type == 'network':
         # if the network distance_type is network, create a graph from the bounding box but do not simplify it yet (only simplify a graph after all truncation is performed! otherwise you get weird artifacts)
-        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=retain_all, name=name)
+        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=retain_all, name=name, memory=memory)
         
         # next find the node in the graph nearest to the center point, and truncate the graph by network distance from this node
         centermost_node = get_nearest_node(G, center_point)
@@ -1106,7 +1122,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     return G
         
         
-def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, return_coords=False, name='unnamed', geocoder_timeout=30):
+def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, return_coords=False, name='unnamed', geocoder_timeout=30, memory=None):
     """
     Create a networkx graph from OSM data within some distance of some address.
     
@@ -1121,6 +1137,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     return_coords : bool, optionally also return the geocoded coordinates of the address
     name : string, the name of the graph
     geocoder_timeout : int, how many seconds to wait for server response before the geocoder times-out
+    memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
     
     Returns
     -------
@@ -1136,7 +1153,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     point = (geolocation.latitude, geolocation.longitude)
     
     # then create a graph from this point
-    G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name)
+    G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name, memory=memory)
     log('graph_from_address() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
     
     if return_coords:
@@ -1145,7 +1162,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
         return G
         
         
-def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=False, name='unnamed'):
+def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=False, name='unnamed', memory=None):
     """
     Create a networkx graph from OSM data within the spatial boundaries of the passed-in shapely polygon.
     
@@ -1156,6 +1173,7 @@ def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=Fa
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
     name : string, the name of the graph
+    memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
     
     Returns
     -------
@@ -1165,7 +1183,7 @@ def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=Fa
     west, south, east, north = polygon.bounds
     
     # retain_all is true and truncate is false here because we'll handle that in truncate_graph_polygon() later
-    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=True, name=name)
+    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=True, name=name, memory=memory)
     
     # truncate the graph to the extent of the polygon
     G = truncate_graph_polygon(G, polygon, retain_all=retain_all)
@@ -1180,7 +1198,7 @@ def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=Fa
     return G
     
         
-def graph_from_place(query, network_type='all', simplify=True, retain_all=False, name='unnamed', which_result=1, buffer_dist=None):
+def graph_from_place(query, network_type='all', simplify=True, retain_all=False, name='unnamed', which_result=1, buffer_dist=None, memory=None):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some geocodable place(s).
     
@@ -1193,6 +1211,7 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
     name : string, the name of the graph
     which_result : int, max number of results to return and which to process upon receipt
     buffer_dist : float, distance to buffer around the place geometry, in meters
+    memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
     
     Returns
     -------
@@ -1213,7 +1232,7 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
         raise ValueError('query must be a string or a list of query strings')
     
     polygon = gdf_place['geometry'].unary_union
-    G = graph_from_polygon(polygon, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name)
+    G = graph_from_polygon(polygon, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name, memory=memory)
     
     log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
     return G
@@ -1683,14 +1702,17 @@ def build_paths(G, end_points, nodes_to_remove):
     path = build_path(G, origin, destination, nodes_to_remove, current_node=origin, path=[origin])
     paths = [path]
     
-    # assert that all edges in path are either all one-way or all bi-directional
+    # get a list of all the one-way attribute values in the path
     oneway_values = []
     for u, v in list(zip(path[:-1], path[1:])):
         edges = G.edge[u][v]
         if not len(edges) == 1:
             log('Multiple edges between "{}" and "{}" found when simplifying'.format(u, v), level=lg.WARNING)
         oneway_values.append(G.edge[u][v][0]['oneway'])
-    assert len(set(oneway_values))==1
+    
+    # assert that all edges in path are either all one-way or all bi-directional
+    if not len(set(oneway_values))==1:
+        log('Multiple one-way values between "{}"'.format(end_points), level=lg.WARNING)
     
     # if not one-way, reverse the path and add as a second element to list paths
     if not oneway_values[0]:
