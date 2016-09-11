@@ -1898,7 +1898,7 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='spectral', start=0.1, sto
     return colors
     
     
-def save_and_show(fig, ax, save, show, close, filename, file_format, dpi):
+def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off):
     """
     Save a figure to disk and show it, as specified.
     
@@ -1912,6 +1912,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi):
     filename : string, the name of the file to save
     file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
     dpi : int, the resolution of the image file if saving
+    axis_off : bool, if True matplotlib axis was turned off by plot_graph so constrain the saved figure's extent to the interior of the axis
     
     Returns
     -------
@@ -1925,6 +1926,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi):
         if not os.path.exists(_imgs_folder):
             os.makedirs(_imgs_folder)
         path_filename = '{}/{}.{}'.format(_imgs_folder, filename, file_format)
+        
         if file_format == 'svg':
             # if the file_format is svg, prep the fig/ax a bit for saving
             ax.axis('off')
@@ -1933,7 +1935,12 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi):
             fig.patch.set_alpha(0.)
             fig.savefig(path_filename, bbox_inches=0, format=file_format, facecolor=fig.get_facecolor(), transparent=True)
         else:
-            fig.savefig(path_filename, dpi=dpi, bbox_inches='tight', format=file_format, facecolor=fig.get_facecolor(), transparent=True)
+            if axis_off:
+                # if axis is turned off, constrain the saved figure's extent to the interior of the axis
+                extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+            else:
+                extent = 'tight'
+            fig.savefig(path_filename, dpi=dpi, bbox_inches=extent, format=file_format, facecolor=fig.get_facecolor(), transparent=True)
         log('Saved the figure to disk in {:,.2f} seconds'.format(time.time()-start_time))
     
     # show the figure if specified
@@ -2051,7 +2058,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
             ax.annotate(node, xy=(data['x'], data['y']))
             
     # save and show the figure as specified
-    fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi)
+    fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
     return fig, ax
 
 
@@ -2156,7 +2163,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     ax.add_collection(lc)
     
     # save and show the figure as specified
-    fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi)
+    fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
     return fig, ax
     
     
