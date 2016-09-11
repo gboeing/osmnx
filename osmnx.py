@@ -780,7 +780,7 @@ def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', reta
     return G
     
     
-def truncate_graph_bbox(G, north, south, east, west, retain_all=False):
+def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, retain_all=False):
     """
     Remove every node in graph that falls outside a bounding box. Needed because overpass returns entire ways that also 
     include nodes outside the bbox if the way (that is, a way with a single OSM ID) has a node inside the bbox at some point.
@@ -792,6 +792,7 @@ def truncate_graph_bbox(G, north, south, east, west, retain_all=False):
     south : float, southern latitude of bounding box
     east : float, eastern longitude of bounding box
     west : float, western longitude of bounding box
+    truncate_by_edge : bool, if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
     retain_all : bool, if True, return the entire graph even if it is not connected
     
     Returns
@@ -800,9 +801,26 @@ def truncate_graph_bbox(G, north, south, east, west, retain_all=False):
     """
     start_time = time.time()
     nodes_outside_bbox = []
+    
     for node, data in G.nodes(data=True):
         if data['y'] > north or data['y'] < south or data['x'] > east or data['x'] < west:
-            nodes_outside_bbox.append(node)
+            # this node is outside the bounding box
+            if not truncate_by_edge:
+                # if we're not truncating by edge, add node to list of nodes outside the bounding box
+                nodes_outside_bbox.append(node)
+            else:
+                # if we're truncating by edge, see if any of node's neighbors are within bounding box
+                any_neighbors_in_bbox = False
+                neighbors = G.successors(node) + G.predecessors(node)
+                for neighbor in neighbors:
+                    x = G.node[neighbor]['x']
+                    y = G.node[neighbor]['y']
+                    if y < north and y > south and x < east and x > west:
+                        any_neighbors_in_bbox = True
+
+                # if none of its neighbors are within the bounding box, add node to list of nodes outside the bounding box
+                if not any_neighbors_in_bbox:
+                    nodes_outside_bbox.append(node)
     
     G.remove_nodes_from(nodes_outside_bbox)
     log('Truncated graph by bounding box in {:,.2f} seconds'.format(time.time()-start_time))
@@ -814,7 +832,7 @@ def truncate_graph_bbox(G, north, south, east, west, retain_all=False):
     return G
     
 
-def truncate_graph_polygon(G, polygon, retain_all=False):
+def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False):
     """
     Remove every node in graph that falls outside some shapely Polygon or MultiPolygon.
     
@@ -823,6 +841,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False):
     G : graph
     polygon : Polygon or MultiPolygon, only retain nodes in graph that lie within this geometry
     retain_all : bool, if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool, if True retain node if it's outside polygon but at least one of node's neighbors are within polygon (NOT CURRENTLY IMPLEMENTED)
     
     Returns
     -------
@@ -1012,7 +1031,7 @@ def create_graph(osm_data, name='unnamed', retain_all=False, network_type='all')
     return G
     
     
-def bbox_from_point(point, distance=1000):
+def bbox_from_point(point, distance=1000, project_utm=False, utm_crs=None):
     """
     Create a bounding box some distance in each direction (north, south, east, and west) from some (lat, lon) point.
     
@@ -1029,11 +1048,28 @@ def bbox_from_point(point, distance=1000):
     south = vincenty(meters=distance).destination(point, bearing=180).latitude
     east = vincenty(meters=distance).destination(point, bearing=90).longitude
     west = vincenty(meters=distance).destination(point, bearing=270).longitude
-    log('Created bounding box {} meters in each direction from {}: {},{},{},{}'.format(distance, point, north, south, east, west))
+    
+    if project_utm:
+        # create a gdf with one geometry element: the lat-long bounding box
+        gdf = gpd.GeoDataFrame()
+        gdf['geometry'] = None
+        gdf.loc[0, 'geometry'] = LineString([(west, north), (east, north), (east, south), (west, south), (west, north)])
+        
+        # set the original crs to lat-long and then project it to the specified CRS
+        gdf.crs = {'init':'epsg:4326'}
+        gdf = gdf.to_crs(utm_crs)
+        
+        # extract the projected bounding box from the gdf then extract the max and min extents from it
+        x, y = gdf.loc[0, 'geometry'].xy
+        north, south, east, west = max(y), min(y), max(x), min(x)
+        log('Created bounding box {} meters in each direction from {} and projected it: {},{},{},{}'.format(distance, point, north, south, east, west))
+    else:
+        log('Created bounding box {} meters in each direction from {}: {},{},{},{}'.format(distance, point, north, south, east, west))
+        
     return north, south, east, west
     
     
-def graph_from_bbox(north, south, east, west, network_type='all', simplify=True, retain_all=False, name='unnamed', memory=None):
+def graph_from_bbox(north, south, east, west, network_type='all', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', memory=None):
     """
     Create a networkx graph from OSM data within some bounding box.
     
@@ -1046,6 +1082,7 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool, if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
     name : string, the name of the graph
     memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
     
@@ -1064,7 +1101,7 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     
     # create the graph, then truncate to the bounding box
     G = create_graph(osm_data, name=name, retain_all=retain_all, network_type=network_type)
-    G = truncate_graph_bbox(G, north, south, east, west)
+    G = truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=truncate_by_edge)
     
     # simplify the graph topology as the last step. don't truncate after simplifying or you may have simplified out to an endpoint
     # beyond the truncation distance, in which case you will then strip out your entire edge
@@ -1075,7 +1112,7 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     return  G
     
     
-def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, name='unnamed', memory=None):
+def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', memory=None):
     """
     Create a networkx graph from OSM data within some distance of some (lat, lon) center point.
     
@@ -1087,6 +1124,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool, if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
     name : string, the name of the graph
     memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
     
@@ -1101,10 +1139,10 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     north, south, east, west = bbox_from_point(center_point, distance)
     if distance_type == 'bbox':
         # if the network distance_type is bbox, create a graph from the bounding box
-        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name, memory=memory)
+        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name, memory=memory)
     elif distance_type == 'network':
         # if the network distance_type is network, create a graph from the bounding box but do not simplify it yet (only simplify a graph after all truncation is performed! otherwise you get weird artifacts)
-        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=retain_all, name=name, memory=memory)
+        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name, memory=memory)
         
         # next find the node in the graph nearest to the center point, and truncate the graph by network distance from this node
         centermost_node = get_nearest_node(G, center_point)
@@ -1122,7 +1160,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     return G
         
         
-def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, return_coords=False, name='unnamed', geocoder_timeout=30, memory=None):
+def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, truncate_by_edge=False, return_coords=False, name='unnamed', geocoder_timeout=30, memory=None):
     """
     Create a networkx graph from OSM data within some distance of some address.
     
@@ -1134,6 +1172,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool, if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
     return_coords : bool, optionally also return the geocoded coordinates of the address
     name : string, the name of the graph
     geocoder_timeout : int, how many seconds to wait for server response before the geocoder times-out
@@ -1153,7 +1192,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     point = (geolocation.latitude, geolocation.longitude)
     
     # then create a graph from this point
-    G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name, memory=memory)
+    G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name, memory=memory)
     log('graph_from_address() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
     
     if return_coords:
@@ -1162,7 +1201,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
         return G
         
         
-def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=False, name='unnamed', memory=None):
+def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', memory=None):
     """
     Create a networkx graph from OSM data within the spatial boundaries of the passed-in shapely polygon.
     
@@ -1172,6 +1211,7 @@ def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=Fa
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool, if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
     name : string, the name of the graph
     memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
     
@@ -1183,10 +1223,10 @@ def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=Fa
     west, south, east, north = polygon.bounds
     
     # retain_all is true and truncate is false here because we'll handle that in truncate_graph_polygon() later
-    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=True, name=name, memory=memory)
+    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=True, truncate_by_edge=truncate_by_edge, name=name, memory=memory)
     
     # truncate the graph to the extent of the polygon
-    G = truncate_graph_polygon(G, polygon, retain_all=retain_all)
+    G = truncate_graph_polygon(G, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
     
     # simplify the graph topology as the last step. don't truncate after simplifying or you may have simplified out to an endpoint
     # beyond the truncation distance, in which case you will then strip out your entire edge
@@ -1198,7 +1238,7 @@ def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=Fa
     return G
     
         
-def graph_from_place(query, network_type='all', simplify=True, retain_all=False, name='unnamed', which_result=1, buffer_dist=None, memory=None):
+def graph_from_place(query, network_type='all', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', which_result=1, buffer_dist=None, memory=None):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some geocodable place(s).
     
@@ -1208,6 +1248,7 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool, if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
     name : string, the name of the graph
     which_result : int, max number of results to return and which to process upon receipt
     buffer_dist : float, distance to buffer around the place geometry, in meters
@@ -1232,7 +1273,7 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
         raise ValueError('query must be a string or a list of query strings')
     
     polygon = gdf_place['geometry'].unary_union
-    G = graph_from_polygon(polygon, network_type=network_type, simplify=simplify, retain_all=retain_all, name=name, memory=memory)
+    G = graph_from_polygon(polygon, network_type=network_type, simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name, memory=memory)
     
     log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
     return G
@@ -1890,9 +1931,9 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi):
             ax.set_position([0, 0, 1, 1])
             ax.patch.set_alpha(0.)
             fig.patch.set_alpha(0.)
-            fig.savefig(path_filename, bbox_inches=0, transparent=True, format=file_format)
+            fig.savefig(path_filename, bbox_inches=0, format=file_format, facecolor=fig.get_facecolor(), transparent=True)
         else:
-            fig.savefig(path_filename, dpi=dpi, bbox_inches='tight', format=file_format)
+            fig.savefig(path_filename, dpi=dpi, bbox_inches='tight', format=file_format, facecolor=fig.get_facecolor(), transparent=True)
         log('Saved the figure to disk in {:,.2f} seconds'.format(time.time()-start_time))
     
     # show the figure if specified
@@ -1907,7 +1948,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi):
     return fig, ax
     
     
-def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off=True,
+def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off=True, bgcolor='w',
                show=True, save=False, close=True, file_format='jpg', filename='temp', dpi=300, annotate=False,
                node_color='#66ccff', node_size=15, node_alpha=1, node_edgecolor='none', node_zorder=1,
                edge_color='#999999', edge_linewidth=1, edge_alpha=1, use_geom=True):
@@ -1922,6 +1963,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     fig_width : int, matplotlib figure width in inches
     margin : float, relative margin around the figure
     axis_off : bool, if True turn off the matplotlib axis
+    bgcolor : string, the background color of the figure and axis
     show : bool, if True, show the figure
     save : bool, if True, save the figure as an image file to disk
     close : close the figure (only if show equals False) to prevent display
@@ -1963,7 +2005,8 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
         fig_width = fig_height / bbox_aspect_ratio
     
     # create the figure and axis
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=bgcolor)
+    ax.set_axis_bgcolor(bgcolor)
     
     # draw the edges as lines from node to node
     start_time = time.time()
@@ -2012,7 +2055,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     return fig, ax
 
 
-def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0.02,
+def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0.02, bgcolor='w',
                      axis_off=True, show=True, save=False, close=True, file_format='jpg', filename='temp', dpi=300, annotate=False,
                      node_color='#999999', node_size=15, node_alpha=1, node_edgecolor='none', node_zorder=1,
                      edge_color='#999999', edge_linewidth=1, edge_alpha=1, use_geom=True,
@@ -2031,6 +2074,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     fig_width : int, matplotlib figure width in inches
     margin : float, relative margin around the figure
     axis_off : bool, if True turn off the matplotlib axis
+    bgcolor : string, the background color of the figure and axis
     show : bool, if True, show the figure
     save : bool, if True, save the figure as an image file to disk
     close : close the figure (only if show equals False) to prevent display
@@ -2063,7 +2107,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     """
     
     # plot the graph but not the route
-    fig, ax = plot_graph(G, bbox=bbox, fig_height=fig_height, fig_width=fig_width, margin=margin, axis_off=axis_off,
+    fig, ax = plot_graph(G, bbox=bbox, fig_height=fig_height, fig_width=fig_width, margin=margin, axis_off=axis_off, bgcolor=bgcolor,
                          show=False, save=False, close=False, filename=filename, dpi=dpi, annotate=annotate,
                          node_color=node_color, node_size=node_size, node_alpha=node_alpha, node_edgecolor=node_edgecolor, node_zorder=node_zorder,
                          edge_color=edge_color, edge_linewidth=edge_linewidth, edge_alpha=edge_alpha, use_geom=use_geom)
