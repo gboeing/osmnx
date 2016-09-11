@@ -26,7 +26,7 @@
 ###################################################################################################
 
 from __future__ import unicode_literals
-import json, math, os, io, ast, hashlib, re, time, datetime as dt, logging as lg
+import json, math, sys, os, io, ast, hashlib, re, time, datetime as dt, logging as lg
 from collections import OrderedDict
 import requests, numpy as np, pandas as pd, geopandas as gpd, networkx as nx, matplotlib.pyplot as plt, matplotlib.cm as cm
 from matplotlib.collections import LineCollection
@@ -125,7 +125,12 @@ def log(message, level=lg.INFO):
     
     # if logging to console is turned on, print message to the console
     if _print_log:
+        # capture current stdout, then switch it to the console, print the message, then switch back to what had been the stdout
+        # this prevents logging to notebook - instead, it goes to console
+        standard_out = sys.stdout
+        sys.stdout = sys.__stdout__
         print(message)
+        sys.stdout = standard_out
 
 
 def get_logger(name='osmnx', level=lg.INFO):
