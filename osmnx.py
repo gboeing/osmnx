@@ -47,8 +47,8 @@ _cache_folder = 'cache'
 _use_cache = False
 
 # write log to file and/or to console
-_file_log = False
-_print_log = False
+_log_file = False
+_log_console = False
 
 # useful osm tags - note that load_graph expects a consistent set of tag names for parsing
 _useful_tags_node = ['ref', 'highway']
@@ -57,7 +57,7 @@ _useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name', 'high
 
 def config(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs_folder, 
            cache_folder=_cache_folder, use_cache=_use_cache,
-           file_log=_file_log, print_log=_print_log,
+           log_file=_log_file, log_console=_log_console,
            useful_tags_node=_useful_tags_node, useful_tags_path=_useful_tags_path):
     """
     Configure osmnx by setting the default global vars to desired values.
@@ -69,8 +69,8 @@ def config(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs
     imgs_folder : string, where to save figures
     cache_folder : string, where to save the http response cache
     use_cache : bool, if True, use a local cache to save/retrieve http responses instead of calling API repetitively for the same request URL
-    file_log : bool, if true, save log output to a log file in logs_folder
-    print_log : bool, if true, print log output to the console
+    log_file : bool, if true, save log output to a log file in logs_folder
+    log_console : bool, if true, print log output to the console
     useful_tags_node : list, a list of useful OSM tags to attempt to save from node elements
     useful_tags_path : list, a list of useful OSM tags to attempt to save from path elements
     
@@ -79,7 +79,7 @@ def config(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs
     None
     """
     # use the global keyword to update global variables from within this function
-    global _use_cache, _cache_folder, _data_folder, _imgs_folder, _logs_folder, _print_log, _file_log, _useful_tags_node, _useful_tags_path
+    global _use_cache, _cache_folder, _data_folder, _imgs_folder, _logs_folder, _log_console, _log_file, _useful_tags_node, _useful_tags_path
     
     # set each global variable to the passed-in parameter value
     _use_cache = use_cache
@@ -87,13 +87,13 @@ def config(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs
     _data_folder = data_folder
     _imgs_folder = imgs_folder
     _logs_folder = logs_folder
-    _print_log = print_log
-    _file_log = file_log
+    _log_console = log_console
+    _log_file = log_file
     _useful_tags_node = useful_tags_node
     _useful_tags_path = useful_tags_path
     
     # if logging is turned on, log that we are configured
-    if _file_log or _print_log:
+    if _log_file or _log_console:
         log('Configured osmnx')
 
 
@@ -111,7 +111,7 @@ def log(message, level=lg.INFO):
     None
     """
     # if logging to file is turned on
-    if _file_log:
+    if _log_file:
         # get the current logger (or create a new one, if none), then log message at requested level
         logger = get_logger()
         if level == lg.DEBUG:
@@ -124,7 +124,7 @@ def log(message, level=lg.INFO):
             logger.error(message)
     
     # if logging to console is turned on, print message to the console
-    if _print_log:
+    if _log_console:
         # capture current stdout, then switch it to the console, print the message, then switch back to what had been the stdout
         # this prevents logging to notebook - instead, it goes to console
         standard_out = sys.stdout
