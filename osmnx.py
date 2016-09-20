@@ -26,7 +26,7 @@
 ###################################################################################################
 
 from __future__ import unicode_literals
-import json, math, sys, os, io, ast, hashlib, re, time, datetime as dt, logging as lg
+import json, math, sys, os, io, ast, unicodedata, hashlib, re, time, datetime as dt, logging as lg
 from collections import OrderedDict
 import requests, numpy as np, pandas as pd, geopandas as gpd, networkx as nx, matplotlib.pyplot as plt, matplotlib.cm as cm
 from matplotlib.collections import LineCollection
@@ -123,12 +123,13 @@ def log(message, level=lg.INFO):
         elif level == lg.ERROR:
             logger.error(message)
     
-    # if logging to console is turned on, print message to the console
+    # if logging to console is turned on, convert message to ascii and print to the console
     if _log_console:
         # capture current stdout, then switch it to the console, print the message, then switch back to what had been the stdout
         # this prevents logging to notebook - instead, it goes to console
         standard_out = sys.stdout
         sys.stdout = sys.__stdout__
+        message = unicodedata.normalize('NFKD', message).encode('ascii', errors='replace').decode()
         print(message)
         sys.stdout = standard_out
 
@@ -1269,7 +1270,7 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, str) or isinstance(query, dict):
         # if it is a string (place name) or dict (structured place query), then it is a single place
-        gdf_place = gdf_from_place(query, which_result=1, buffer_dist=buffer_dist)
+        gdf_place = gdf_from_place(query, which_result=which_result, buffer_dist=buffer_dist)
         name = query
     elif isinstance(query, list):
         # if it is a list, it contains multiple places to get
