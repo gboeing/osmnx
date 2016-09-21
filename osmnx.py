@@ -327,7 +327,8 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1, pause_duration=1):
     if isinstance(query, str):
         params['q'] = query
     elif isinstance(query, dict):
-        for key in query:
+        # add the query keys in alphabetical order so the URL is the same string each time, for caching purposes
+        for key in sorted(list(query.keys())):
             params[key] = query[key]
     else:
         raise ValueError('query must be a dict or a string')
@@ -614,7 +615,8 @@ def osm_net_download(north, south, east, west, network_type='all', pause_duratio
     # define the query to send the API. put timeout in double brackets so it remains unformatted until it gets to the next function, make_request() (see comments below)
     # represent bbox as south,west,north,east. the '>' makes it recurse so we get ways and way nodes. maxsize is in bytes (this is server ram allocation).
     # specifying way["highway"] means that all ways returned must have a highway key. the {filters} then remove ways by key/value.
-    data = '[out:json][timeout:{{timeout}}]{maxsize};(way["highway"]{filters}({south},{west},{north},{east});>;);out;' 
+    # round lat-long coordinates to 8 decimal places (ie, within 1 mm) so that URL strings aren't different due to floating point rounding issues (for consistent caching)
+    data = '[out:json][timeout:{{timeout}}]{maxsize};(way["highway"]{filters}({south:.8f},{west:.8f},{north:.8f},{east:.8f});>;);out;'
     
     # create a filter to exclude certain kinds of routes based on the requested network_type
     osm_filter = get_osm_filter(network_type)
