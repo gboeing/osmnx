@@ -1481,8 +1481,8 @@ def save_graph_shapefile(G, filename='graph', folder=None):
         os.makedirs(folder)
     
     # save the nodes and edges as separate ESRI shapefiles
-    gdf_nodes.to_file('{}/{}_nodes'.format(folder, filename))
-    gdf_edges.to_file('{}/{}_edges'.format(folder, filename))
+    gdf_nodes.to_file('{}/nodes'.format(folder))
+    gdf_edges.to_file('{}/edges'.format(folder))
     
     
 def save_graph(G, filename='graph.graphml', folder=None):
