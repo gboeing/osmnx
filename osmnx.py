@@ -321,6 +321,7 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1, pause_duration=1):
     params = OrderedDict()
     params['format'] = 'json'
     params['limit'] = limit
+    params['dedupe'] = 0 #this prevents OSM from de-duping results so we're guaranteed to get precisely 'limit' number of results
     params['polygon_geojson'] = polygon_geojson
     
     # add the structured query dict (if provided) to params, otherwise query with place name string
@@ -1483,6 +1484,7 @@ def save_graph_shapefile(G, filename='graph', folder=None):
     # save the nodes and edges as separate ESRI shapefiles
     gdf_nodes.to_file('{}/nodes'.format(folder))
     gdf_edges.to_file('{}/edges'.format(folder))
+    log('Saved graph "{}" to disk at "{}"'.format(G_save.name, folder))
     
     
 def save_graph(G, filename='graph.graphml', folder=None):
@@ -1817,7 +1819,7 @@ def simplify_graph(G_, strict=True):
                     # there will be one element in paths if it was one-way, or two if it was two-way
                     for path in paths:
                         
-                        # add the interstitial edges we're removing to a list so we can draw with spatial accuracy later
+                        # add the interstitial edges we're removing to a list so we can retain their spatial geometry
                         edge_attributes = {}
                         for u, v in list(zip(path[:-1], path[1:])):
                             
