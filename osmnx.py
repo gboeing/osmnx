@@ -32,6 +32,7 @@ import requests, numpy as np, pandas as pd, geopandas as gpd, networkx as nx, ma
 from matplotlib.collections import LineCollection
 from shapely.geometry import Point, LineString
 from shapely import wkt
+from shapely.ops import unary_union
 from geopy.distance import great_circle, vincenty
 from geopy.geocoders import Nominatim
 
@@ -841,6 +842,61 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
     return G
     
 
+def quadrat_cut_geometry(geometry, size=0.025, min_num=3, dist=1e-14):
+    
+    # create n evenly spaced points between the min and max x and y bounds
+    west, south, east, north = geometry.bounds
+    x_num = (east-west) / size
+    y_num = (north-south) / size
+    x_points = np.linspace(west, east, num=max(x_num, min_num))
+    y_points = np.linspace(south, north, num=max(y_num, min_num))
+
+    # create a quadrat grid of lines at each of the evenly spaced points
+    vertical_lines = [LineString([(x, y_points[0]), (x, y_points[-1])]) for x in x_points]
+    horizont_lines = [LineString([(x_points[0], y), (x_points[-1], y)]) for y in y_points]
+    lines = vertical_lines + horizont_lines
+
+    # buffer each line to distance, take their union, then cut geometry into pieces by these quadrats
+    lines_buffered = [line.buffer(dist) for line in lines]
+    quadrats = unary_union(lines_buffered)
+    multipoly = geometry.difference(quadrats)
+    
+    return multipoly
+    
+    
+def intersect_index_quadrats(gdf, geometry, size=0.025, min_num=3, dist=1e-14):
+    
+    # create an empty dataframe to append matches to
+    points_within_geometry = pd.DataFrame()
+    
+    # cut the geometry into chunks for r-tree spatial index intersecting
+    multipoly = quadrat_cut_geometry(geometry, size=size, dist=dist)
+    
+    # create an r-tree spatial index for the nodes (ie, points)
+    start_time = time.time()
+    sindex = gdf['geometry'].sindex
+    log('Created r-tree spatial index for {:,} points in {:,.2f} seconds'.format(len(gdf), time.time()-start_time))
+    
+    # loop through each chunk of the geometry to find approximate and then precisely intersecting points
+    start_time = time.time()
+    for poly in multipoly:
+        
+        # buffer by the <1 micron dist to account for any space lost in the quadrat cutting, otherwise may miss point(s) that lay directly on quadrat line
+        poly = poly.buffer(dist)
+        
+        # find approximate matches with r-tree, then precise matches from those approximate ones
+        possible_matches_index = list(sindex.intersection(poly.bounds))
+        possible_matches = gdf.iloc[possible_matches_index]
+        precise_matches = possible_matches[possible_matches.intersects(poly)]
+        points_within_geometry = points_within_geometry.append(precise_matches)
+    
+    # drop duplicate points, if buffered poly caused an overlap on point(s) that lay directly on a quadrat line
+    points_within_geometry = points_within_geometry.drop_duplicates(subset='node')
+    
+    log('Identified {:,} nodes inside polygon in {:,.2f} seconds'.format(len(points_within_geometry), time.time()-start_time))
+    return points_within_geometry
+    
+    
 def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False):
     """
     Remove every node in graph that falls outside some shapely Polygon or MultiPolygon.
@@ -856,19 +912,23 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False)
     -------
     G : graph
     """
-    # find all the nodes in the graph that lie outside the polygon
+    
     start_time = time.time()
     log('Identifying all nodes that lie outside the polygon')
-    geometry = [Point(data['x'], data['y']) for _, data in G.nodes(data=True)]
-    gdf_nodes = gpd.GeoDataFrame({'node':G.nodes(), 'geometry':geometry})
+    
+    # get a GeoDataFrame of all the nodes, for spatial analysis
+    node_geom = [Point(data['x'], data['y']) for _, data in G.nodes(data=True)]
+    gdf_nodes = gpd.GeoDataFrame({'node':G.nodes(), 'geometry':node_geom})
     gdf_nodes.crs = G.graph['crs']
-    nodes_outside_polygon = gdf_nodes[~gdf_nodes.intersects(polygon)]
-    log('Found {:,} nodes outside polygon in {:,.2f} seconds'.format(len(nodes_outside_polygon), time.time()-start_time))
+    
+    # find all the nodes in the graph that lie outside the polygon
+    points_within_geometry = intersect_index_quadrats(gdf_nodes, polygon)
+    nodes_outside_polygon = gdf_nodes[~gdf_nodes.index.isin(points_within_geometry.index)]    
     
     # now remove from the graph all those nodes that lie outside the place polygon
     start_time = time.time()
     G.remove_nodes_from(nodes_outside_polygon['node'])
-    log('Truncated graph by polygon in {:,.2f} seconds'.format(time.time()-start_time))
+    log('Removed {:,} nodes outside polygon in {:,.2f} seconds'.format(len(nodes_outside_polygon), time.time()-start_time))
     
     # remove any isolated nodes
     G = remove_isolated_nodes(G)
