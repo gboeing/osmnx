@@ -25,12 +25,11 @@
 # Description: Retrieve and construct spatial geometries and street networks from OpenStreetMap
 ###################################################################################################
 
-from __future__ import unicode_literals
-import json, math, sys, os, io, ast, unicodedata, hashlib, re, time, datetime as dt, logging as lg
+import json, math, sys, os, io, ast, unicodedata, hashlib, re, random, time, datetime as dt, logging as lg
 from collections import OrderedDict
 import requests, numpy as np, pandas as pd, geopandas as gpd, networkx as nx, matplotlib.pyplot as plt, matplotlib.cm as cm
 from matplotlib.collections import LineCollection
-from shapely.geometry import Point, LineString
+from shapely.geometry import Point, LineString, Polygon, MultiPolygon
 from shapely import wkt
 from shapely.ops import unary_union
 from geopy.distance import great_circle, vincenty
@@ -130,7 +129,9 @@ def log(message, level=lg.INFO):
         # this prevents logging to notebook - instead, it goes to console
         standard_out = sys.stdout
         sys.stdout = sys.__stdout__
-        message = unicodedata.normalize('NFKD', message).encode('ascii', errors='replace').decode()
+        
+        # convert message to ascii for console display so it doesn't break windows terminals
+        message = unicodedata.normalize('NFKD', make_str(message)).encode('ascii', errors='replace').decode()
         print(message)
         sys.stdout = standard_out
 
@@ -194,8 +195,9 @@ def make_str(value):
     
 def save_to_cache(url, response_json):
     """
-    Save a HTTP response json object to the cache. Users should always pass OrderedDicts instead of dicts
-    of parameters in, so that the parameters stay in the same order each time, producing the same URL string,
+    Save a HTTP response json object to the cache. If the request was sent to server via POST instead of GET, 
+    then URL should be a GET-style representation of request. Users should always pass OrderedDicts instead of dicts
+    of parameters into request functions, so that the parameters stay in the same order each time, producing the same URL string,
     and thus the same hash. Otherwise the cache will eventually contain multiple saved responses for the same
     request because the URL's parameters appeared in a different order each time.
     
@@ -216,7 +218,7 @@ def save_to_cache(url, response_json):
             if not os.path.exists(_cache_folder):
                 os.makedirs(_cache_folder)
 
-            # hash the url (to make filename shorter than long url) 
+            # hash the url (to make filename shorter than the often extremely long url) 
             filename = hashlib.md5(url.encode('utf-8')).hexdigest()
             cache_path_filename = '{}/{}.json'.format(_cache_folder, filename)
             
@@ -224,7 +226,7 @@ def save_to_cache(url, response_json):
             json_str = make_str(json.dumps(response_json))
             with io.open(cache_path_filename, 'w', encoding='utf-8') as cache_file:
                 cache_file.write(json_str)
-            log('Saved response from URL "{}" to cache file "{}"'.format(url, cache_path_filename))
+            log('Saved response for URL "{}" to cache file "{}"'.format(url, cache_path_filename))
         
 
 def get_from_cache(url):
@@ -251,56 +253,134 @@ def get_from_cache(url):
             return response_json
         
         
-def make_request(url, params=None, pause_duration=1, timeout=30):
+def handle_response(response, method, start_time, url, pause_duration, timeout, data=None, params=None, min_pause=10, max_pause=None):
     """
-    Request a URL and return the JSON response
+    Process an API response object to get the JSON data, or re-try request recursively if error.
+    
+    Parameters
+    ----------
+    response : requests response, the response from the API
+    method : string, {'get', 'post}, determines if it calls get_request or post_request recursively if error
+    start_time : 
+    url : string, the url of the request
+    pause_duration : int, how long to pause before requests, in seconds
+    timeout : int, the timeout interval for the requests library
+    data : dict or OrderedDict, key-value pairs of parameters if called by post_request
+    params : dict or OrderedDict, key-value pairs of parameters if called by get_request
+    
+    Returns
+    -------
+    response_json : dict
+    """
+    
+    if max_pause is None:
+        # if max_pause isn't specified, set it to timeout * 1.5 so we pause at least as long as the max time it takes to fulfill a request
+        max_pause = timeout * 1.5
+    
+    # get the response size and the domain, log result, parse json from response, save to cache, and return
+    size_kb = len(response.content) / 1000.
+    domain = re.findall(r'//(?s)(.*?)/', url)[0]
+    log('Downloaded {:,.1f}KB from {} in {:,.2f} seconds'.format(size_kb, domain, time.time()-start_time))
+    
+    try:
+        response_json = response.json()
+    except:
+        #429 is 'too many requests' and 504 is 'gateway timeout' from server overload - handle these errors by recursively calling get_request or post_request until we get a valid response
+        if response.status_code in [429, 504]:
+            # pause a random number of seconds between min_pause and max_pause before re-trying
+            error_pause_duration = random.random() * (max_pause - min_pause) + min_pause 
+            log('Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(url, response.status_code, error_pause_duration), level=lg.WARNING)
+            time.sleep(error_pause_duration)
+            
+            # recursively call get_request or post_request until we get a valid response
+            if method == 'get':
+                response_json = get_request(url=url, params=params, pause_duration=pause_duration, timeout=timeout)
+            elif method == 'post':
+                response_json = post_request(url=url, data=data, pause_duration=pause_duration, timeout=timeout)
+            else:
+                raise ValueError('method must be "get" or "post"')
+        
+        # else, this was an unhandled status_code, throw an exception
+        else:
+            log('Server returned status code {} and no JSON data'.format(response.status_code), level=lg.ERROR)
+            raise Exception('Server returned no JSON data.\n{} {}\n{}'.format(response, response.reason, response.text))
+    
+    return response_json
+    
+    
+def get_request(url, params=None, pause_duration=1, timeout=30):
+    """
+    Request a URL via HTTP GET and return the JSON response
     
     Parameters
     ----------
     url : string, the url of the request
     params : dict or OrderedDict, key-value pairs of parameters
     pause_duration : int, how long to pause before requests, in seconds
-    timeout : int, the timeout interval for requests and to pass to API when possible
+    timeout : int, the timeout interval for the requests library
     
     Returns
     -------
     response_json : dict
     """
-    # you have to pass a timeout to the overpass api for longer queries. add this here,
-    # making it match the timeout that requests is using (the value passed in the func arg)
-    # we recursively pass params_original to make_request each time the request times out 
-    # so we can increase the timeout interval for both requests and reformat the string for 
-    # the overpass server parameter
-    params_original = params.copy()
-    if isinstance(params, dict) and 'data' in params and '[timeout:{timeout}]' in params['data']:
-        params['data'] = params['data'].format(timeout=timeout)
     
-    # prepare the URL and see if it exists in the cache - if so, just use that response instead of making a new HTTP call
+    # prepare the URL and see if it already exists in the cache
     prepared_url = requests.Request('GET', url, params=params).prepare().url
     cached_response_json = get_from_cache(prepared_url)
+    
     if not cached_response_json is None:
+        # found this request in the cache, just return it instead of making a new HTTP call
         return cached_response_json
+    
     else:
-        # if this URL is not already in the cache, go fetch the response
-        log('Pausing {:,.2f} seconds before making API request'.format(pause_duration))
+        # if this URL is not already in the cache, pause, then request it
+        log('Pausing {:,.2f} seconds before making API GET request'.format(pause_duration))
         time.sleep(pause_duration)
         start_time = time.time()
         log('Requesting {} with timeout={}'.format(prepared_url, timeout))
-        try:
-            response = requests.get(url, params, timeout=timeout)
-            size_kb = len(response.content) / 1000.
-            domain = re.findall(r'//(?s)(.*?)/', url)[0]
-            log('Downloaded {:,.1f}KB from {} in {:,.2f} seconds'.format(size_kb, domain, time.time()-start_time))
-            response_json = response.json()
-            save_to_cache(prepared_url, response_json)
-        except requests.exceptions.Timeout:
-            # if the request timed out, call it again recursively, doubling the timeout interval each time
-            log('Request timed out after {:,.2f} seconds. Increasing timeout interval and re-trying.'.format(time.time()-start_time), level=lg.WARNING)
-            response = make_request(url=url, params=params_original, pause_duration=pause_duration, timeout=timeout*2)
-            response_json = response.json()
+        response = requests.get(url, params, timeout=timeout)
         
+        response_json = handle_response(response=response, method='get', start_time=start_time, url=url, pause_duration=pause_duration, timeout=timeout, params=params)
+        save_to_cache(prepared_url, response_json)
         return response_json
 
+        
+def post_request(url, data=None, pause_duration=0.1, timeout=180):
+    """
+    Request a URL via HTTP POST and return the JSON response
+    
+    Parameters
+    ----------
+    url : string, the url of the request
+    data : dict or OrderedDict, key-value pairs of parameters
+    pause_duration : int, how long to pause before requests, in seconds
+    timeout : int, the timeout interval for the requests library
+    
+    Returns
+    -------
+    response_json : dict
+    """
+    
+    # make a GET-style URL to have a unique string for hashing to look up/save to cache
+    prepared_url = requests.Request('GET', url, params=data).prepare().url
+    cached_response_json = get_from_cache(prepared_url)
+    
+    if not cached_response_json is None:
+        # found this request in the cache, just return it instead of making a new HTTP call
+        return cached_response_json
+    
+    else:
+        # if this URL is not already in the cache, pause, then request it
+        log('Pausing {:,.2f} seconds before making API POST request'.format(pause_duration))
+        time.sleep(pause_duration)
+        start_time = time.time()
+        log('Posting to {} with timeout={}, "{}"'.format(url, timeout, data))
+        response = requests.post(url, data=data, timeout=timeout)
+        
+        response_json = handle_response(response=response, method='post', start_time=start_time, url=url, pause_duration=pause_duration, timeout=timeout, data=data)
+        save_to_cache(prepared_url, response_json)
+        return response_json
+        
 
 def osm_polygon_download(query, limit=1, polygon_geojson=1, pause_duration=1):
     """
@@ -336,7 +416,7 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1, pause_duration=1):
         raise ValueError('query must be a dict or a string')
     
     # request the URL, return the JSON
-    response_json = make_request(url, params)
+    response_json = get_request(url=url, params=params, timeout=30)
     return response_json
     
 
@@ -453,7 +533,7 @@ def make_shp_filename(place_name):
     return filename
 
 
-def save_shapefile(gdf, filename=None, folder=None):
+def save_gdf_shapefile(gdf, filename=None, folder=None):
     """
     Save GeoDataFrame as an ESRI shapefile.
     
@@ -593,32 +673,28 @@ def get_osm_filter(network_type):
     return osm_filter
  
  
-def osm_net_download(north, south, east, west, network_type='all', pause_duration=1, timeout=180, memory=None):
+def osm_net_download(polygon=None, north=None, south=None, east=None, west=None, network_type='all_private', pause_duration=0.1, timeout=180, memory=None):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
     
     Parameters
     ----------
+    polygon : shapely Polygon or MultiPolygon, geographic shape to fetch the street network within
     north : float, northern latitude of bounding box
     south : float, southern latitude of bounding box
     east : float, eastern longitude of bounding box
     west : float, western longitude of bounding box
     network_type : string, {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what type of street network to get
     pause_duration : int, time to pause in seconds between API requests
-    timeout : int, the timeout interval for requests and to pass to API when possible
+    timeout : int, the timeout interval for requests and to pass to API
     memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size.
     
     Returns
     -------
     response_json : dict
     """
-    url = 'http://www.overpass-api.de/api/interpreter'
     
-    # define the query to send the API. put timeout in double brackets so it remains unformatted until it gets to the next function, make_request() (see comments below)
-    # represent bbox as south,west,north,east. the '>' makes it recurse so we get ways and way nodes. maxsize is in bytes (this is server ram allocation).
-    # specifying way["highway"] means that all ways returned must have a highway key. the {filters} then remove ways by key/value.
-    # round lat-long coordinates to 8 decimal places (ie, within 1 mm) so that URL strings aren't different due to floating point rounding issues (for consistent caching)
-    data = '[out:json][timeout:{{timeout}}]{maxsize};(way["highway"]{filters}({south:.8f},{west:.8f},{north:.8f},{east:.8f});>;);out;'
+    url = 'http://www.overpass-api.de/api/interpreter'
     
     # create a filter to exclude certain kinds of routes based on the requested network_type
     osm_filter = get_osm_filter(network_type)
@@ -628,19 +704,109 @@ def osm_net_download(north, south, east, west, network_type='all', pause_duratio
         # if none, pass nothing so the server will use its default allocation size
         maxsize = ''
     else:
-        # otherwise, specifiy the query's maxsize parameter value
+        # otherwise, specify the query's maxsize parameter value
         maxsize = '[maxsize:{}]'.format(memory)
     
-    # format everything but timeout here. we pass the timeout int along to make_request() where it adds it 
-    # to the params OrderedDict so that make_request() can call itself recursively, increasing the timeout interval each
-    # time, if the query is really big and causing the request to timeout.
-    data = data.format(north=north, south=south, east=east, west=west, filters=osm_filter, maxsize=maxsize)
+    # define the query to send the API
+    # specifying way["highway"] means that all ways returned must have a highway key. the {filters} then remove ways by key/value.
+    # the '>' makes it recurse so we get ways and way nodes. maxsize is in bytes (this is server ram allocation).
     
-    # request the URL, return the JSON
-    params = OrderedDict()
-    params['data'] = data
-    response_json = make_request(url, params, timeout=timeout)
-    return response_json
+    # if they passed a bounding box, GET the request from Overpass API
+    if not (north is None or south is None or east is None or west is None):
+        
+        # represent bbox as south,west,north,east and round lat-longs to 8 decimal places (ie, within 1 mm) so URL strings aren't different due to float rounding issues (for consistent caching)
+        query_template = '[out:json][timeout:{timeout}]{maxsize};(way["highway"]{filters}({south:.8f},{west:.8f},{north:.8f},{east:.8f});>;);out;'
+        query_template = query_template.format(north=north, south=south, east=east, west=west, filters=osm_filter, timeout=timeout, maxsize=maxsize)
+        
+        # request the URL, return the JSON
+        params = OrderedDict()
+        params['data'] = query_template
+        response_json = get_request(url=url, params=params, timeout=timeout)
+        return response_json
+    
+    # else, if they passed a polygon, POST the request to Overpass API
+    elif not polygon is None:
+        
+        query_template = '[out:json][timeout:{timeout}]{maxsize};(way["highway"]{filters}(poly:"{polygon}");>;);out;'
+        polygon_coord_strs = get_poly_coords(polygon)
+        response_jsons = []
+        for polygon_coord_str in polygon_coord_strs:
+            query_str = query_template.format(polygon=polygon_coord_str, filters=osm_filter, timeout=timeout, maxsize=maxsize)
+            response_json = post_request(url=url, data={'data':query_str}, pause_duration=pause_duration, timeout=timeout)
+            response_jsons.append(response_json)
+        return response_jsons
+        
+    else:
+        raise ValueError('You must pass a polygon or north, south, east, and west')
+    
+
+def get_poly_coords(polygon):
+    """
+    Extract exterior coordinates from polygon(s) to pass to OSM in a query by polygon.
+    
+    Parameters
+    ----------
+    polygon : shapely Polygon or MultiPolygon, the geometry to extract exterior coordinates from
+    
+    Returns
+    -------
+    polygon_coord_strs : list
+    """
+    
+    # define max size for any part of the geometry, in square degrees: any polygon bigger will get cut up for multiple queries to api
+    max_query_area_size = 0.2
+
+    # let the linear size of the quadrats to cut it up into is square root of max area size
+    size = max_query_area_size**0.5
+    
+    # cut up the geometry into smaller polygons if any constituent part exceeds max_query_area_size
+    if isinstance(polygon, MultiPolygon):
+        # if the geometry is a MultiPolygon, check each constituent part
+        new_geometry_parts = []
+        for part in polygon:
+            if part.area > max_query_area_size:
+                # if this polygon in the multipolygon exceeds max size, cut it into smaller pieces
+                new_geometry_parts.extend(quadrat_cut_geometry(part, size=size))
+            else:
+                # otherwise just add this polygon as-is
+                new_geometry_parts.append(part)
+        query_geometry = MultiPolygon(new_geometry_parts).buffer(0)
+
+    elif isinstance(polygon, Polygon):
+        if polygon.area > max_query_area_size:
+            # if this polygon exceeds max size, cut it into smaller pieces
+            query_geometry = quadrat_cut_geometry(polygon, size=size)
+        else:
+            # otherwise just retain this polygon as-is
+            query_geometry = polygon
+
+    else:
+        raise ValueError('Geometry must be a shapely Polygon or MultiPolygon')
+        
+    # extract the exterior coordinates of the geometry: we'll pass these to the API later    
+    polygons_coords = []
+    if isinstance(query_geometry, Polygon):
+        x, y = query_geometry.exterior.xy
+        polygons_coords.append(list(zip(x, y)))
+        
+    elif isinstance(query_geometry, MultiPolygon):
+        for polygon in query_geometry:
+            x, y = polygon.exterior.xy
+            polygons_coords.append(list(zip(x, y)))
+            
+    else:
+        raise ValueError('Geometry must be a shapely Polygon or MultiPolygon')
+        
+    # convert the exterior coordinates of the polygon(s) to the string format the API expects
+    polygon_coord_strs = []
+    for coords in polygons_coords:
+        s = ''
+        separator = ' '
+        for coord in list(coords):
+            s = '{}{}{}{}{}'.format(s, separator, coord[1], separator, coord[0])
+        polygon_coord_strs.append(s.strip(separator))
+    
+    return polygon_coord_strs
     
 
 def get_node(element):
@@ -732,14 +898,13 @@ def remove_isolated_nodes(G):
     return G
     
    
-def get_largest_component(G, retain_all=False, strongly=False):
+def get_largest_component(G, strongly=False):
     """
     Return the largest weakly or strongly connected component from a directed graph.
     
     Parameters
     ----------
     G : graph
-    retain_all : bool, if True, return the entire graph even if it is not connected
     strongly : bool, if True, return the largest strongly instead of weakly connected component
     
     Returns
@@ -749,16 +914,17 @@ def get_largest_component(G, retain_all=False, strongly=False):
     
     if strongly:
         # if the graph is not connected and caller did not request retain_all, retain only the largest strongly connected component
-        if (not retain_all) and (not nx.is_strongly_connected(G)):
+        if not nx.is_strongly_connected(G):
             original_len = len(G.nodes())
             G = max(nx.strongly_connected_component_subgraphs(G), key=len)
             log('Graph was not connected, retained only the largest strongly connected component ({:,} of {:,} total nodes)'.format(len(G.nodes()), original_len))
     else:
         # if the graph is not connected and caller did not request retain_all, retain only the largest weakly connected component
-        if (not retain_all) and (not nx.is_weakly_connected(G)):
+        if not nx.is_weakly_connected(G):
             original_len = len(G.nodes())
             G = max(nx.weakly_connected_component_subgraphs(G), key=len)
             log('Graph was not connected, retained only the largest weakly connected component ({:,} of {:,} total nodes)'.format(len(G.nodes()), original_len))
+    
     return G
     
 
@@ -778,6 +944,8 @@ def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', reta
     -------
     G : graph
     """
+    
+    # get the shortest distance between the node and every other node, then remove every node further than max_distance away
     start_time = time.time()
     distances = nx.shortest_path_length(G, source=source_node, weight=weight)
     distant_nodes = {key:value for key, value in distances.items() if value > max_distance}
@@ -785,8 +953,10 @@ def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', reta
     log('Truncated graph by weighted network distance in {:,.2f} seconds'.format(time.time()-start_time))
     
     # remove any isolated nodes, keep only the largest component (if retain_all is True), and return G
-    G = remove_isolated_nodes(G)
-    G = get_largest_component(G, retain_all)
+    if not retain_all:
+        G = remove_isolated_nodes(G)
+        G = get_largest_component(G)
+    
     return G
     
     
@@ -836,13 +1006,28 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
     log('Truncated graph by bounding box in {:,.2f} seconds'.format(time.time()-start_time))
     
     # remove any isolated nodes, keep only the largest component (if retain_all is True), and return G
-    G = remove_isolated_nodes(G)
-    G = get_largest_component(G, retain_all)
+    if not retain_all:
+        G = remove_isolated_nodes(G)
+        G = get_largest_component(G)
 
     return G
     
 
 def quadrat_cut_geometry(geometry, size=0.025, min_num=3, dist=1e-14):
+    """
+    Split a Polygon or MultiPolygon up into sub-polygons of a specified size, using quadrats.
+    
+    Parameters
+    ----------
+    geometry : shapely Polygon or MultiPolygon, the geometry to split up into smaller sub-polygons
+    size : the linear length in degrees of the quadrats with which to cut up the geometry
+    min_num : the minimum number of linear quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4 squares)
+    dist : the distance to buffer the quadrat grid in degrees (e.g., 1e-14 degrees is no more than 1 nanometer)
+    
+    Returns
+    -------
+    multipoly : shapely MultiPolygon
+    """
     
     # create n evenly spaced points between the min and max x and y bounds
     west, south, east, north = geometry.bounds
@@ -865,6 +1050,22 @@ def quadrat_cut_geometry(geometry, size=0.025, min_num=3, dist=1e-14):
     
     
 def intersect_index_quadrats(gdf, geometry, size=0.025, min_num=3, dist=1e-14):
+    """
+    Intersect points with a polygon, using an r-tree spatial index and cutting the polygon up into
+    smaller sub-polygons for r-tree acceleration.
+    
+    Parameters
+    ----------
+    gdf : GeoDataFrame, the set of points to intersect
+    geometry : shapely Polygon or MultiPolygon, the geometry to intersect with the points
+    size : the linear length in degrees of the quadrats with which to cut up the geometry
+    min_num : the minimum number of linear quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4 squares)
+    dist : the distance to buffer the quadrat grid in degrees (e.g., 1e-14 degrees is no more than 1 nanometer)
+    
+    Returns
+    -------
+    points_within_geometry : GeoDataFrame
+    """
     
     # create an empty dataframe to append matches to
     points_within_geometry = pd.DataFrame()
@@ -934,14 +1135,15 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False)
     G = remove_isolated_nodes(G)
     
     # keep only the largest component (if retain_all is True), then return G
-    G = get_largest_component(G, retain_all)
+    if not retain_all:
+        G = get_largest_component(G)
     
     return G
     
     
 def add_edge_lengths(G):
     """
-    Add length (meters) attribute to each edge by great circle distance between vertices u and v.
+    Add length (meters) attribute to each edge by great circle distance between nodes u and v.
     
     Parameters
     ----------
@@ -951,12 +1153,18 @@ def add_edge_lengths(G):
     -------
     G : graph
     """
+    
+    start_time = time.time()
+    
     for u, v, key, data in G.edges(keys=True, data=True):
-        #geopy points are (lat, lon) so that's (y, x)
+        
+        #geopy points are (lat, lon) so that's (y, x) for this great_circle calculation
         u_point = (G.node[u]['y'], G.node[u]['x'])
         v_point = (G.node[v]['y'], G.node[v]['x'])
         edge_length = great_circle(u_point, v_point).m 
         data['length'] = edge_length
+    
+    log('Added edge lengths to graph in {:,.2f} seconds'.format(time.time()-start_time))
     return G
     
 
@@ -1031,7 +1239,7 @@ def add_paths(G, paths, network_type):
     ----------
     G : graph
     paths : dict, the paths from OSM
-    network_type : string, {'all', 'walk', 'drive'}, what type of network
+    network_type : string, {'all', 'walk', 'drive', etc}, what type of network
     
     Returns
     -------
@@ -1059,13 +1267,13 @@ def add_paths(G, paths, network_type):
     return G
 
 
-def create_graph(osm_data, name='unnamed', retain_all=False, network_type='all'):
+def create_graph(response_jsons, name='unnamed', retain_all=False, network_type='all_private'):
     """
     Create a networkx graph from OSM data.
     
     Parameters
     ----------
-    osm_data : dict, JSON response from from the Overpass API
+    response_jsons : list, list of dicts of JSON responses from from the Overpass API
     name : string, the name of the graph
     retain_all : bool, if True, return the entire graph even if it is not connected
     network_type : string, what type of network to create
@@ -1081,21 +1289,30 @@ def create_graph(osm_data, name='unnamed', retain_all=False, network_type='all')
     G = nx.MultiDiGraph(name=name, crs={'init':'epsg:4326'})
     
     # extract nodes and paths from the downloaded osm data
-    nodes, paths = parse_osm_nodes_paths(osm_data)    
+    nodes = {}
+    paths = {}
+    for osm_data in response_jsons:
+        nodes_temp, paths_temp = parse_osm_nodes_paths(osm_data)
+        for key, value in nodes_temp.items():
+            nodes[key] = value
+        for key, value in paths_temp.items():
+            paths[key] = value  
     
     # add each osm node to the graph
     for node, data in nodes.items():
         G.add_node(node, attr_dict=data)
     
-    # add each osm way (aka, path) to the graph by unpacking the data dict as keyword args (can't pass attribute dict to this function)
+    # add each osm way (aka, path) to the graph
     G = add_paths(G, paths, network_type)
     
     # retain only the largest connected component, if caller did not set retain_all=True
-    G = get_largest_component(G, retain_all=retain_all)
+    if not retain_all:
+        G = get_largest_component(G)
     
-    # add length (great circle distance between vertices) attribute to each edge to use as weight
-    G = add_edge_lengths(G)
     log('Created graph with {:,} nodes and {:,} edges in {:,.2f} seconds'.format(len(G.nodes()), len(G.edges()), time.time()-start_time))
+    
+    # add length (great circle distance between nodes) attribute to each edge to use as weight
+    G = add_edge_lengths(G)
 
     return G
     
@@ -1108,6 +1325,8 @@ def bbox_from_point(point, distance=1000, project_utm=False, utm_crs=None):
     ----------
     point : tuple, the (lat, lon) point to create the bounding box around
     distance : int, how many meters the north, south, east, and west sides of the box should each be from the point
+    project_utm : bool, if True return bbox as UTM coordinates
+    utm_crs : dict, if project_utm is True, use this CRS to project the bbox to UTM
     
     Returns
     -------
@@ -1138,7 +1357,7 @@ def bbox_from_point(point, distance=1000, project_utm=False, utm_crs=None):
     return north, south, east, west
     
     
-def graph_from_bbox(north, south, east, west, network_type='all', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', memory=None):
+def graph_from_bbox(north, south, east, west, network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', memory=None):
     """
     Create a networkx graph from OSM data within some bounding box.
     
@@ -1160,16 +1379,14 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     G : graph
     """
     
-    #log('graph_from_bbox(north="{}", south="{}", east="{}", west="{}", network_type="{}", simplify="{}", retain_all="{}", name="{}")'.format(north, south, east, west, network_type, simplify, retain_all, name), level=lg.DEBUG)
-    
     # get the network data from OSM, and throw an error if no data are returned
-    osm_data = osm_net_download(north, south, east, west, network_type=network_type, memory=memory)
-    if len(osm_data['elements']) < 1:
-        remark = '. Server message: "{}"'.format(osm_data['remark']) if 'remark' in osm_data else ''
+    response_json = osm_net_download(north=north, south=south, east=east, west=west, network_type=network_type, memory=memory)
+    if len(response_json['elements']) < 1:
+        remark = '. Server message: "{}"'.format(response_json['remark']) if 'remark' in response_json else ''
         raise Exception('OSM network query returned no data elements{}'.format(remark))
     
     # create the graph, then truncate to the bounding box
-    G = create_graph(osm_data, name=name, retain_all=retain_all, network_type=network_type)
+    G = create_graph([response_json], name=name, retain_all=retain_all, network_type=network_type)
     G = truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=truncate_by_edge)
     
     # simplify the graph topology as the last step. don't truncate after simplifying or you may have simplified out to an endpoint
@@ -1181,7 +1398,7 @@ def graph_from_bbox(north, south, east, west, network_type='all', simplify=True,
     return  G
     
     
-def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', memory=None):
+def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', memory=None):
     """
     Create a networkx graph from OSM data within some distance of some (lat, lon) center point.
     
@@ -1229,7 +1446,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     return G
         
         
-def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all', simplify=True, retain_all=False, truncate_by_edge=False, return_coords=False, name='unnamed', geocoder_timeout=30, memory=None):
+def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, return_coords=False, name='unnamed', memory=None):
     """
     Create a networkx graph from OSM data within some distance of some address.
     
@@ -1244,7 +1461,6 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     truncate_by_edge : bool, if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
     return_coords : bool, optionally also return the geocoded coordinates of the address
     name : string, the name of the graph
-    geocoder_timeout : int, how many seconds to wait for server response before the geocoder times-out
     memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
     
     Returns
@@ -1253,11 +1469,8 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     point : tuple, optional
     """
     
-    #log('graph_from_address(address="{}", distance="{}", distance_type="{}", network_type="{}", simplify="{}", retain_all="{}", return_coords="{}", name="{}", geocoder_timeout="{}")'
-    #.format(address, distance, distance_type, network_type, simplify, retain_all, return_coords, name, geocoder_timeout), level=lg.DEBUG)
-    
     # geocode the address string to a (lat, lon) point
-    geolocation = Nominatim().geocode(query=address, timeout=geocoder_timeout)
+    geolocation = Nominatim().geocode(query=address)
     point = (geolocation.latitude, geolocation.longitude)
     
     # then create a graph from this point
@@ -1268,15 +1481,15 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
         return G, point
     else:
         return G
-        
-        
-def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', memory=None):
+
+
+def graph_from_polygon(polygon, network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', memory=None):
     """
     Create a networkx graph from OSM data within the spatial boundaries of the passed-in shapely polygon.
     
     Parameters
     ----------
-    polygon : shapely Polygon, the shape to get network data within
+    polygon : shapely Polygon or MultiPolygon, the shape to get network data within
     network_type : string, what type of street network to get
     simplify : bool, if true, simplify the graph topology
     retain_all : bool, if True, return the entire graph even if it is not connected
@@ -1288,18 +1501,29 @@ def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=Fa
     -------
     G : graph
     """
-    # get the bounding box containing the polygon then get the graph within that bounding box
-    west, south, east, north = polygon.bounds
     
-    # retain_all is true and truncate is false here because we'll handle that in truncate_graph_polygon() later
-    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=True, truncate_by_edge=truncate_by_edge, name=name, memory=memory)
+    # verify that the geometry is valid before proceeding
+    if not polygon.is_valid:
+        raise ValueError('Shape does not have a valid geometry')
+
+    # download a list of API responses for the polygons within the geometry
+    response_jsons = osm_net_download(polygon=polygon, network_type=network_type, memory=memory)
+    
+    # for each response in the list of responses, log a warning if OSM returned no data
+    # this might be just fine, for example if the geometry included a small sub-polygon (island, etc) with no ways/nodes on it
+    for response_json in response_jsons:
+        if len(response_json['elements']) < 1:
+            remark = '. Server message: "{}"'.format(response_json['remark']) if 'remark' in response_json else '.'
+            log('OSM network query returned no data elements for query{}'.format(remark), level=lg.WARNING)
+    
+    # create the graph from the downloaded data
+    G = create_graph(response_jsons, name=name, retain_all=True, network_type=network_type)
     
     # truncate the graph to the extent of the polygon
     G = truncate_graph_polygon(G, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
     
     # simplify the graph topology as the last step. don't truncate after simplifying or you may have simplified out to an endpoint
     # beyond the truncation distance, in which case you will then strip out your entire edge
-    # that's why simplify=False above, so we didn't do it before the truncate_graph_polygon() call 2 lines after it
     if simplify:
         G = simplify_graph(G)
     
@@ -1307,7 +1531,7 @@ def graph_from_polygon(polygon, network_type='all', simplify=True, retain_all=Fa
     return G
     
         
-def graph_from_place(query, network_type='all', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', which_result=1, buffer_dist=None, memory=None):
+def graph_from_place(query, network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', which_result=1, buffer_dist=None, memory=None):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some geocodable place(s).
     
@@ -1328,8 +1552,6 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
     G : graph
     """
     
-    #log('graph_from_place(query="{}", network_type="{}", simplify="{}", retain_all="{}", name="{}", which_result="{}", buffer_dist="{}")'.format(query, network_type, simplify, retain_all, name, which_result, buffer_dist), level=lg.DEBUG)
-    
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, str) or isinstance(query, dict):
         # if it is a string (place name) or dict (structured place query), then it is a single place
@@ -1341,7 +1563,11 @@ def graph_from_place(query, network_type='all', simplify=True, retain_all=False,
     else:
         raise ValueError('query must be a string or a list of query strings')
     
+    # extract the geometry from the GeoDataFrame to use in API query
     polygon = gdf_place['geometry'].unary_union
+    log('Constructed place geometry polygon(s) to query API')
+    
+    # create graph using this polygon(s) geometry
     G = graph_from_polygon(polygon, network_type=network_type, simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name, memory=memory)
     
     log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
@@ -1547,7 +1773,7 @@ def save_graph_shapefile(G, filename='graph', folder=None):
     log('Saved graph "{}" to disk at "{}"'.format(G_save.name, folder))
     
     
-def save_graph(G, filename='graph.graphml', folder=None):
+def save_graphml(G, filename='graph.graphml', folder=None):
     """
     Save graph as GraphML file to disk.
     
@@ -1585,7 +1811,7 @@ def save_graph(G, filename='graph.graphml', folder=None):
     log('Saved graph "{}" to disk at "{}/{}"'.format(G_save.name, folder, filename))
     
     
-def load_graph(filename, folder=None):
+def load_graphml(filename, folder=None):
     """
     Load a GraphML file from disk and convert the node/edge attributes to correct data types.
     
