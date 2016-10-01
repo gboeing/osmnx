@@ -27,6 +27,7 @@
 
 import json, math, sys, os, io, ast, unicodedata, hashlib, re, random, time, datetime as dt, logging as lg
 from collections import OrderedDict
+from dateutil import parser as date_parser
 import requests, numpy as np, pandas as pd, geopandas as gpd, networkx as nx, matplotlib.pyplot as plt, matplotlib.cm as cm
 from matplotlib.collections import LineCollection
 from shapely.geometry import Point, LineString, Polygon, MultiPolygon
@@ -311,6 +312,47 @@ def handle_response(response, method, start_time, url, pause_duration, timeout, 
     return response_json
     
     
+def get_pause_duration(recursive_delay=5):
+    """
+    Check the Overpass API status endpoint to determine when next slot is available.
+    
+    Parameters
+    ----------
+    recursive_delay : int, how long to wait between recursive calls if server is currently running a query
+    
+    Returns
+    -------
+    pause_duration : int
+    """
+    
+    response = requests.get('http://overpass-api.de/api/status')
+    status = response.text.split('\n')[2]
+    status_first_token = status.split(' ')[0]
+
+    try:
+        # if first token is numeric, it's how many slots you have available - no wait required
+        available_slots = int(status_first_token)
+        pause_duration = 0
+    except:
+        # if first token is 'Slot', it tells you when your slot will be free
+        if status_first_token == 'Slot':
+            utc_time_str = status.split(' ')[3]
+            utc_time = date_parser.parse(utc_time_str)
+            now = dt.datetime.now(dt.timezone.utc)
+            pause_duration = math.ceil((utc_time - now).total_seconds())
+            pause_duration = max(pause_duration, 1)
+        
+        # if first token is 'Currently', it is currently running a query so check back in recursive_delay seconds
+        elif status_first_token == 'Currently':
+            time.sleep(recursive_delay)
+            pause_duration = get_pause_duration()
+            
+        else:
+            raise ValueError('Unrecognized server status: "{}"'.format(status))
+    
+    return pause_duration
+
+
 def get_request(url, params=None, pause_duration=1, timeout=30):
     """
     Request a URL via HTTP GET and return the JSON response
@@ -373,6 +415,7 @@ def post_request(url, data=None, pause_duration=1, timeout=180):
     
     else:
         # if this URL is not already in the cache, pause, then request it
+        pause_duration = get_pause_duration()
         log('Pausing {:,.2f} seconds before making API POST request'.format(pause_duration))
         time.sleep(pause_duration)
         start_time = time.time()
@@ -674,7 +717,7 @@ def get_osm_filter(network_type):
     return osm_filter
  
  
-def osm_net_download(polygon=None, north=None, south=None, east=None, west=None, network_type='all_private', pause_duration=1, timeout=180, memory=None):
+def osm_net_download(polygon=None, north=None, south=None, east=None, west=None, network_type='all_private', pause_duration=10, timeout=180, memory=None):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
     
@@ -748,58 +791,60 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         raise ValueError('You must pass a polygon or north, south, east, and west')
     
 
-def get_poly_coords(polygon, max_query_area_size=0.5):
+def consolidate_subdivide_geometry(geometry, max_query_area_size=0.7):
+    """
+    Consolidate a geometry into a convex hull, then subdivide it into smaller sub-polygons
+    
+    Parameters
+    ----------
+    geometry : shapely Polygon or MultiPolygon, the geometry to consolidate and subdivide
+    max_query_area_size : float, max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
+    
+    Returns
+    -------
+    geometry : Polygon or MultiPolygon
+    """
+    
+    # let the linear length of the quadrats (with which to subdivide the geometry) be the square root of max area size
+    quadrat_length = math.sqrt(max_query_area_size)
+    
+    if not isinstance(geometry, (Polygon, MultiPolygon)):
+        raise ValueError('Geometry must be a shapely Polygon or MultiPolygon')
+    
+    # if geometry is a MultiPolygon OR a single Polygon whose area exceeds the max size, get the convex hull around the geometry
+    if isinstance(geometry, MultiPolygon) or (isinstance(geometry, Polygon) and geometry.area > max_query_area_size):
+        geometry = geometry.convex_hull
+        
+    # if geometry area exceeds max size, subdivide it into smaller sub-polygons
+    if geometry.area > max_query_area_size:
+        geometry = quadrat_cut_geometry(geometry, quadrat_length=quadrat_length)
+    
+    return geometry
+    
+    
+def get_poly_coords(geometry):
     """
     Extract exterior coordinates from polygon(s) to pass to OSM in a query by polygon.
     
     Parameters
     ----------
-    polygon : shapely Polygon or MultiPolygon, the geometry to extract exterior coordinates from
+    geometry : shapely Polygon or MultiPolygon, the geometry to extract exterior coordinates from
     max_query_area_size : float, max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
     
     Returns
     -------
     polygon_coord_strs : list
     """
-    
-    # let the linear size of the quadrats to cut it up into is square root of max area size
-    size = max_query_area_size**0.5
-    
-    # cut up the geometry into smaller polygons if any constituent part exceeds max_query_area_size
-    if isinstance(polygon, MultiPolygon):
-        # if the geometry is a MultiPolygon, check each constituent part
-        new_geometry_parts = []
-        for part in polygon:
-            if part.area > max_query_area_size:
-                # if this polygon in the multipolygon exceeds max size, cut it into smaller pieces
-                new_geometry_parts.extend(quadrat_cut_geometry(part, size=size))
-            else:
-                # otherwise just add this polygon as-is
-                new_geometry_parts.append(part)
-        query_geometry = MultiPolygon(new_geometry_parts).buffer(0)
-
-    elif isinstance(polygon, Polygon):
-        if polygon.area > max_query_area_size:
-            # if this polygon exceeds max size, cut it into smaller pieces
-            query_geometry = quadrat_cut_geometry(polygon, size=size)
-        else:
-            # otherwise just retain this polygon as-is
-            query_geometry = polygon
-
-    else:
-        raise ValueError('Geometry must be a shapely Polygon or MultiPolygon')
-        
-    # extract the exterior coordinates of the geometry: we'll pass these to the API later    
+     
+    # extract the exterior coordinates of the geometry to pass to the API later    
     polygons_coords = []
-    if isinstance(query_geometry, Polygon):
-        x, y = query_geometry.exterior.xy
+    if isinstance(geometry, Polygon):
+        x, y = geometry.exterior.xy
         polygons_coords.append(list(zip(x, y)))
-        
-    elif isinstance(query_geometry, MultiPolygon):
-        for polygon in query_geometry:
+    elif isinstance(geometry, MultiPolygon):
+        for polygon in geometry:
             x, y = polygon.exterior.xy
             polygons_coords.append(list(zip(x, y)))
-            
     else:
         raise ValueError('Geometry must be a shapely Polygon or MultiPolygon')
         
@@ -1020,14 +1065,14 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
     return G
     
 
-def quadrat_cut_geometry(geometry, size=0.025, min_num=3, dist=1e-14):
+def quadrat_cut_geometry(geometry, quadrat_length=0.025, min_num=3, dist=1e-14):
     """
     Split a Polygon or MultiPolygon up into sub-polygons of a specified size, using quadrats.
     
     Parameters
     ----------
     geometry : shapely Polygon or MultiPolygon, the geometry to split up into smaller sub-polygons
-    size : the linear length in degrees of the quadrats with which to cut up the geometry
+    quadrat_length : the linear length in degrees of the quadrats with which to cut up the geometry
     min_num : the minimum number of linear quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4 squares)
     dist : the distance to buffer the quadrat grid in degrees (e.g., 1e-14 degrees is no more than 1 nanometer)
     
@@ -1038,8 +1083,8 @@ def quadrat_cut_geometry(geometry, size=0.025, min_num=3, dist=1e-14):
     
     # create n evenly spaced points between the min and max x and y bounds
     west, south, east, north = geometry.bounds
-    x_num = (east-west) / size
-    y_num = (north-south) / size
+    x_num = math.ceil((east-west) / quadrat_length) + 1
+    y_num = math.ceil((north-south) / quadrat_length) + 1
     x_points = np.linspace(west, east, num=max(x_num, min_num))
     y_points = np.linspace(south, north, num=max(y_num, min_num))
 
@@ -1056,7 +1101,7 @@ def quadrat_cut_geometry(geometry, size=0.025, min_num=3, dist=1e-14):
     return multipoly
     
     
-def intersect_index_quadrats(gdf, geometry, size=0.025, min_num=3, dist=1e-14):
+def intersect_index_quadrats(gdf, geometry, quadrat_length=0.025, min_num=3, dist=1e-14):
     """
     Intersect points with a polygon, using an r-tree spatial index and cutting the polygon up into
     smaller sub-polygons for r-tree acceleration.
@@ -1065,7 +1110,7 @@ def intersect_index_quadrats(gdf, geometry, size=0.025, min_num=3, dist=1e-14):
     ----------
     gdf : GeoDataFrame, the set of points to intersect
     geometry : shapely Polygon or MultiPolygon, the geometry to intersect with the points
-    size : the linear length in degrees of the quadrats with which to cut up the geometry
+    quadrat_length : the linear length in degrees of the quadrats with which to cut up the geometry
     min_num : the minimum number of linear quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4 squares)
     dist : the distance to buffer the quadrat grid in degrees (e.g., 1e-14 degrees is no more than 1 nanometer)
     
@@ -1078,7 +1123,7 @@ def intersect_index_quadrats(gdf, geometry, size=0.025, min_num=3, dist=1e-14):
     points_within_geometry = pd.DataFrame()
     
     # cut the geometry into chunks for r-tree spatial index intersecting
-    multipoly = quadrat_cut_geometry(geometry, size=size, dist=dist)
+    multipoly = quadrat_cut_geometry(geometry, quadrat_length=quadrat_length, dist=dist)
     
     # create an r-tree spatial index for the nodes (ie, points)
     start_time = time.time()
@@ -1122,7 +1167,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False)
     """
     
     start_time = time.time()
-    log('Identifying all nodes that lie outside the polygon')
+    log('Identifying all nodes that lie outside the polygon...')
     
     # get a GeoDataFrame of all the nodes, for spatial analysis
     node_geom = [Point(data['x'], data['y']) for _, data in G.nodes(data=True)]
@@ -1516,9 +1561,12 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
     if not polygon.is_valid:
         raise ValueError('Shape does not have a valid geometry')
 
-    # download a list of API responses for the polygons within the geometry
-    response_jsons = osm_net_download(polygon=polygon, network_type=network_type, memory=memory)
-        
+    # prepare the polygon for querying the API
+    query_geometry = consolidate_subdivide_geometry(polygon)
+    
+    # download a list of API responses for the polygon(s) within the geometry
+    response_jsons = osm_net_download(polygon=query_geometry, network_type=network_type, memory=memory)
+    
     # create the graph from the downloaded data
     G = create_graph(response_jsons, name=name, retain_all=True, network_type=network_type)
     
