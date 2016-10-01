@@ -226,7 +226,8 @@ def save_to_cache(url, response_json):
             json_str = make_str(json.dumps(response_json))
             with io.open(cache_path_filename, 'w', encoding='utf-8') as cache_file:
                 cache_file.write(json_str)
-            log('Saved response for URL "{}" to cache file "{}"'.format(url, cache_path_filename))
+            
+            log('Saved response to cache file "{}"'.format(cache_path_filename))
         
 
 def get_from_cache(url):
@@ -253,7 +254,7 @@ def get_from_cache(url):
             return response_json
         
         
-def handle_response(response, method, start_time, url, pause_duration, timeout, data=None, params=None, min_pause=10, max_pause=None):
+def handle_response(response, method, start_time, url, pause_duration, timeout, prepared_url, data=None, params=None, min_pause=10, max_pause=None):
     """
     Process an API response object to get the JSON data, or re-try request recursively if error.
     
@@ -265,6 +266,7 @@ def handle_response(response, method, start_time, url, pause_duration, timeout, 
     url : string, the url of the request
     pause_duration : int, how long to pause before requests, in seconds
     timeout : int, the timeout interval for the requests library
+    prepared_url : 
     data : dict or OrderedDict, key-value pairs of parameters if called by post_request
     params : dict or OrderedDict, key-value pairs of parameters if called by get_request
     
@@ -284,6 +286,7 @@ def handle_response(response, method, start_time, url, pause_duration, timeout, 
     
     try:
         response_json = response.json()
+        save_to_cache(prepared_url, response_json)
     except:
         #429 is 'too many requests' and 504 is 'gateway timeout' from server overload - handle these errors by recursively calling get_request or post_request until we get a valid response
         if response.status_code in [429, 504]:
@@ -340,12 +343,11 @@ def get_request(url, params=None, pause_duration=1, timeout=30):
         log('Requesting {} with timeout={}'.format(prepared_url, timeout))
         response = requests.get(url, params, timeout=timeout)
         
-        response_json = handle_response(response=response, method='get', start_time=start_time, url=url, pause_duration=pause_duration, timeout=timeout, params=params)
-        save_to_cache(prepared_url, response_json)
+        response_json = handle_response(response=response, method='get', start_time=start_time, url=url, pause_duration=pause_duration, timeout=timeout, prepared_url=prepared_url, params=params)
         return response_json
 
         
-def post_request(url, data=None, pause_duration=0.1, timeout=180):
+def post_request(url, data=None, pause_duration=1, timeout=180):
     """
     Request a URL via HTTP POST and return the JSON response
     
@@ -377,8 +379,7 @@ def post_request(url, data=None, pause_duration=0.1, timeout=180):
         log('Posting to {} with timeout={}, "{}"'.format(url, timeout, data))
         response = requests.post(url, data=data, timeout=timeout)
         
-        response_json = handle_response(response=response, method='post', start_time=start_time, url=url, pause_duration=pause_duration, timeout=timeout, data=data)
-        save_to_cache(prepared_url, response_json)
+        response_json = handle_response(response=response, method='post', start_time=start_time, url=url, pause_duration=pause_duration, timeout=timeout, prepared_url=prepared_url, data=data)
         return response_json
         
 
@@ -673,7 +674,7 @@ def get_osm_filter(network_type):
     return osm_filter
  
  
-def osm_net_download(polygon=None, north=None, south=None, east=None, west=None, network_type='all_private', pause_duration=0.1, timeout=180, memory=None):
+def osm_net_download(polygon=None, north=None, south=None, east=None, west=None, network_type='all_private', pause_duration=1, timeout=180, memory=None):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
     
@@ -728,34 +729,39 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     elif not polygon is None:
         
         query_template = '[out:json][timeout:{timeout}]{maxsize};(way["highway"]{filters}(poly:"{polygon}");>;);out;'
-        polygon_coord_strs = get_poly_coords(polygon)
         response_jsons = []
+        
+        # get a list of polygon exterior coordinates, breaking them up into sub-polygons if area exceeds a max size
+        polygon_coord_strs = get_poly_coords(polygon)
+        
+        # pass each polygon exterior coordinates in the list to the API, one at a time
+        log('Request network data by polygons from API in {:,} requests'.format(len(polygon_coord_strs)))
+        start_time = time.time()
         for polygon_coord_str in polygon_coord_strs:
             query_str = query_template.format(polygon=polygon_coord_str, filters=osm_filter, timeout=timeout, maxsize=maxsize)
             response_json = post_request(url=url, data={'data':query_str}, pause_duration=pause_duration, timeout=timeout)
             response_jsons.append(response_json)
+        log('Got all network data by polygons from API in {:,} requests and {:,.2f} seconds'.format(len(polygon_coord_strs), time.time()-start_time))
         return response_jsons
         
     else:
         raise ValueError('You must pass a polygon or north, south, east, and west')
     
 
-def get_poly_coords(polygon):
+def get_poly_coords(polygon, max_query_area_size=0.5):
     """
     Extract exterior coordinates from polygon(s) to pass to OSM in a query by polygon.
     
     Parameters
     ----------
     polygon : shapely Polygon or MultiPolygon, the geometry to extract exterior coordinates from
+    max_query_area_size : float, max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
     
     Returns
     -------
     polygon_coord_strs : list
     """
     
-    # define max size for any part of the geometry, in square degrees: any polygon bigger will get cut up for multiple queries to api
-    max_query_area_size = 0.2
-
     # let the linear size of the quadrats to cut it up into is square root of max area size
     size = max_query_area_size**0.5
     
@@ -912,19 +918,20 @@ def get_largest_component(G, strongly=False):
     G : graph
     """
     
+    start_time = time.time()
+    original_len = len(G.nodes())
+    
     if strongly:
         # if the graph is not connected and caller did not request retain_all, retain only the largest strongly connected component
         if not nx.is_strongly_connected(G):
-            original_len = len(G.nodes())
             G = max(nx.strongly_connected_component_subgraphs(G), key=len)
-            log('Graph was not connected, retained only the largest strongly connected component ({:,} of {:,} total nodes)'.format(len(G.nodes()), original_len))
+            log('Graph was not connected, retained only the largest strongly connected component ({:,} of {:,} total nodes) in {:.2f} seconds'.format(len(G.nodes()), original_len, time.time()-start_time))
     else:
         # if the graph is not connected and caller did not request retain_all, retain only the largest weakly connected component
         if not nx.is_weakly_connected(G):
-            original_len = len(G.nodes())
             G = max(nx.weakly_connected_component_subgraphs(G), key=len)
-            log('Graph was not connected, retained only the largest weakly connected component ({:,} of {:,} total nodes)'.format(len(G.nodes()), original_len))
-    
+            log('Graph was not connected, retained only the largest weakly connected component ({:,} of {:,} total nodes) in {:.2f} seconds'.format(len(G.nodes()), original_len, time.time()-start_time))
+
     return G
     
 
@@ -1083,7 +1090,7 @@ def intersect_index_quadrats(gdf, geometry, size=0.025, min_num=3, dist=1e-14):
     for poly in multipoly:
         
         # buffer by the <1 micron dist to account for any space lost in the quadrat cutting, otherwise may miss point(s) that lay directly on quadrat line
-        poly = poly.buffer(dist)
+        poly = poly.buffer(dist).buffer(0)
         
         # find approximate matches with r-tree, then precise matches from those approximate ones
         possible_matches_index = list(sindex.intersection(poly.bounds))
@@ -1471,7 +1478,10 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     
     # geocode the address string to a (lat, lon) point
     geolocation = Nominatim().geocode(query=address)
-    point = (geolocation.latitude, geolocation.longitude)
+    try:
+        point = (geolocation.latitude, geolocation.longitude)
+    except:
+        raise Exception('Geocoding failed for address "{}"'.format(address))
     
     # then create a graph from this point
     G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name, memory=memory)
@@ -1508,14 +1518,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
 
     # download a list of API responses for the polygons within the geometry
     response_jsons = osm_net_download(polygon=polygon, network_type=network_type, memory=memory)
-    
-    # for each response in the list of responses, log a warning if OSM returned no data
-    # this might be just fine, for example if the geometry included a small sub-polygon (island, etc) with no ways/nodes on it
-    for response_json in response_jsons:
-        if len(response_json['elements']) < 1:
-            remark = '. Server message: "{}"'.format(response_json['remark']) if 'remark' in response_json else '.'
-            log('OSM network query returned no data elements for query{}'.format(remark), level=lg.WARNING)
-    
+        
     # create the graph from the downloaded data
     G = create_graph(response_jsons, name=name, retain_all=True, network_type=network_type)
     
@@ -1898,7 +1901,7 @@ def is_endpoint(G, node, strict=True):
     -------
     bool
     """
-    neighbors = list(set(G.predecessors(node) + G.successors(node)))
+    neighbors = set(G.predecessors(node) + G.successors(node))
     n = len(neighbors)
     d = G.degree(node)
     
@@ -1939,125 +1942,76 @@ def is_endpoint(G, node, strict=True):
         return False
             
 
-def find_end_points(G, node, end_points=[], nodes_to_remove=[], previous_node=-1, strict=True):
+def build_path(G, node, endpoints, path):
     """
-    Given a node in a graph, if it is not an end point, find the first node in both directions that is an end point.
-    This function works recursively to identify all the non-endpoint nodes between two end point nodes
+    Recursively build a path of nodes until you hit an endpoint node.
     
     Parameters
     ----------
     G : graph
-    node : int, the node to start with
-    end_points : list, a list of the first nodes found in both directions that are end points
-    nodes_to_remove : list, a list of all non-endpoint nodes found before finding an end point
-    previous_node : int, the last node processed
+    node : int, the current node to start from
+    endpoints : set, the set of all nodes in the graph that are endpoints
+    path : list, the list of nodes in order in the path so far
+    
+    Returns
+    -------
+    paths_to_simplify : list
+    """
+    # for each successor in the passed-in node
+    for successor in G.successors(node):
+        if not successor in path:
+            # if this successor is already in the path, ignore it, otherwise add it to the path
+            path.append(successor)
+            if not successor in endpoints:
+                # if this successor is not an endpoint, recursively call build_path until you find an endpoint
+                path = build_path(G, successor, endpoints, path)
+            else:
+                # if this successor is an endpoint, we've completed the path, so return it
+                return path
+    
+    if (not path[-1] in endpoints) and (path[0] in G.successors(path[-1])):
+        # if the end of the path is not actually an endpoint and the path's first node is a successor of the 
+        # path's final node, then this is actually a self loop, so add path's first node to end of path to close it
+        path.append(path[0])
+    
+    return path
+    
+    
+def get_paths_to_simplify(G, strict=True):
+    """
+    Create a list of all the paths to be simplified between endpoint nodes.
+    The path is ordered from the first endpoint, through the interstitial nodes, to the second endpoint.
+    
+    Parameters
+    ----------
+    G : graph
     strict : bool, if False, allow nodes to be end points even if they fail all other rules but have edges with different OSM IDs
     
     Returns
     -------
-    end_points, nodes_to_remove : list, list
+    paths_to_simplify : list
     """
-    if not is_endpoint(G, node, strict):
-        # if this is not an endpoint/intersection, we will remove this node
-        nodes_to_remove.append(node)
     
-    neighbors = list(set(G.predecessors(node) + G.successors(node)))
-    for neighbor in neighbors:
-        # look at each neighbor of this node
-        if not neighbor == previous_node:
-            # if this neighbor is the previous node we just looked at, just ignore it
-            if is_endpoint(G, neighbor, strict):
-                # the neighbor is an endpoint/intersection, at to the list
-                end_points.append(neighbor)
-            else:
-                # otherwise, if this neighbor is not an endpoint or intersection, recursively call this function
-                find_end_points(G, neighbor, end_points=end_points, nodes_to_remove=nodes_to_remove, previous_node=node, strict=strict)
+    # first identify all the nodes that are endpoints
+    start_time = time.time()
+    endpoints = set([node for node in G.nodes() if is_endpoint(G, node, strict=strict)])
+    log('Identified {:,} edge endpoints in {:,.2f} seconds'.format(len(endpoints), time.time()-start_time))
     
-    return end_points, nodes_to_remove
+    start_time = time.time()
+    paths_to_simplify = []
+    
+    # for each endpoint node, look at each of its successor nodes
+    for node in endpoints:
+        for successor in G.successors(node):
+            if not successor in endpoints:
+                # if the successor is not an endpoint, build a path from the endpoint node to the next endpoint node
+                path = build_path(G, successor, endpoints, path=[node, successor])
+                paths_to_simplify.append(path)
+    
+    log('Constructed all paths to simplify in {:,.2f} seconds'.format(time.time()-start_time))
+    return paths_to_simplify
     
     
-def build_path(G, origin, destination, nodes_to_remove, current_node, path=[], previous_node=-1):
-    """
-    Build a path of nodes in the correct order between an origin and destination node.
-    
-    Parameters
-    ----------
-    G : graph
-    origin : int, the end point to start at
-    destination : int, the end point to finish at
-    nodes_to_remove : list, the nodes between the two end points that will be removed
-    current_node : int, the node to process in this iteration
-    path : list, the ordered path of the nodes that we are constructing, from origin to destination
-    previous_node : int, the node that was processed in the previous iteration
-    
-    Returns
-    -------
-    paths : list, a list of either one (if one-way) or two (if bi-directional) paths
-    """
-    # get all node's successors that appear in nodes_to_remove until you hit the other end points
-    for successor in G.successors(current_node):
-        
-        # if this successor is the destination 
-        # and we are not on the first iteration 
-        # and this successor is not the previous node we just visited
-        if (successor==destination) and (not previous_node==-1) and (not successor==previous_node):
-            # then this is the final destination, add it to the path and return it
-            path.append(successor)
-            return path
-        
-        # if this neighbor is not the node we processed in the previous iteration and it is in nodes_to_remove
-        if (not successor==previous_node) and (successor in nodes_to_remove):
-            # add it to the path, then call this function recursively to find the next step in the path
-            path.append(successor)
-            path = build_path(G, origin, destination, nodes_to_remove, successor, path, current_node)
-            return path
-        
-        
-def build_paths(G, end_points, nodes_to_remove):
-    """
-    Build a path or paths of nodes in the correct order between two end points.
-    
-    Parameters
-    ----------
-    G : graph
-    end_points : list, the two end point nodes
-    nodes_to_remove : list, the nodes between the two end points that will be removed
-    
-    Returns
-    -------
-    paths : list, a list of either one (if one-way) or two (if bi-directional) paths
-    """
-    # try starting at the first endpoint as the origin
-    origin, destination = end_points
-    
-    # if none of its successors are in nodes_to_remove, this is a one-way and you've started at the end 
-    if set(G.successors(origin)).isdisjoint(set(nodes_to_remove)):
-        # so, swap origin/destination
-        origin, destination = destination, origin
-
-    # add path as a single element to the list of paths (we might also add its reverse momentarily)
-    path = build_path(G, origin, destination, nodes_to_remove, current_node=origin, path=[origin])
-    paths = [path]
-    
-    # get a list of all the one-way attribute values in the path
-    oneway_values = []
-    for u, v in list(zip(path[:-1], path[1:])):
-        edges = G.edge[u][v]
-        if not len(edges) == 1:
-            log('Multiple edges between "{}" and "{}" found when simplifying'.format(u, v), level=lg.WARNING)
-        oneway_values.append(G.edge[u][v][0]['oneway'])
-    
-    # assert that all edges in path are either all one-way or all bi-directional
-    if not len(set(oneway_values))==1:
-        log('Multiple one-way values between "{}"'.format(end_points), level=lg.WARNING)
-    
-    # if not one-way, reverse the path and add as a second element to list paths
-    if not oneway_values[0]:
-        paths.append(list(reversed(path)))
-        
-    return paths
-
-
 def simplify_graph(G_, strict=True):
     """
     Simplify a graph by removing all nodes that are not end points. 
@@ -2073,89 +2027,64 @@ def simplify_graph(G_, strict=True):
     -------
     G : graph
     """
-    start_time = time.time()
-    log('Begin topologically simplifying the graph...')
     
-    # make a copy to not alter the original
+    log('Begin topologically simplifying the graph...')
     G = G_.copy()
     initial_node_count = len(G.nodes())
     initial_edge_count = len(G.edges())
-    
     all_nodes_to_remove = []
     all_edges_to_add = []
     
-    for node in G.nodes():
-    # look at each node in the graph
+    # construct a list of all the paths that need to be simplified
+    paths = get_paths_to_simplify(G, strict=strict)
         
-        if node not in all_nodes_to_remove:
-        # if this node is in this list, ignore it: it's not an endpoint and we already marked it for removal
-            
-            if not is_endpoint(G, node, strict):
-            # this node is not an intersection or an endpoint
-            # therefore it is not a network node, just a point to help a street bend around a curve
-                
-                try:
-                    # find the 'end points' on either side of this node
-                    # nodes_to_remove is all the other nodes (that are neither endpoints nor intersections) between the end_points
-                    end_points, nodes_to_remove = find_end_points(G, node, end_points=[], nodes_to_remove=[], strict=strict)
-                    
-                    # build a path of the nodes in sequence between the origin and destination
-                    paths = build_paths(G, end_points, nodes_to_remove)
-                    
-                    # there will be one element in paths if it was one-way, or two if it was two-way
-                    for path in paths:
-                        
-                        # add the interstitial edges we're removing to a list so we can retain their spatial geometry
-                        edge_attributes = {}
-                        for u, v in list(zip(path[:-1], path[1:])):
-                            
-                            # there should never be multiple edges between interstitial nodes
-                            edges = G.edge[u][v]
-                            if not len(edges) == 1:
-                                log('Multiple edges between "{}" and "{}" found when simplifying'.format(u, v), level=lg.WARNING)
-                            
-                            # the only element in this list as long as above assertion is True (MultiGraphs use keys (the 0 here), indexed with ints from 0 and up)
-                            edge = edges[0]
-                            for key in edge:
-                                if key in edge_attributes:
-                                    # if this key already exists in the dict, append it to the value list
-                                    edge_attributes[key].append(edge[key])
-                                else:
-                                    # if this key doesn't already exist, set the value to a list containing the one value
-                                    edge_attributes[key] = [edge[key]]
+    start_time = time.time()
+    for path in paths:
+    
+        # add the interstitial edges we're removing to a list so we can retain their spatial geometry
+        edge_attributes = {}
+        for u, v in zip(path[:-1], path[1:]):
 
-                        for key in edge_attributes:
-                            # don't touch the length attribute, we'll sum it at the end
-                            if len(set(edge_attributes[key])) == 1 and not key == 'length':
-                                # if there's only 1 unique value in this attribute list, consolidate it to the single value (the zero-th)
-                                edge_attributes[key] = edge_attributes[key][0]
-                            elif not key == 'length':
-                                # otherwise, if there are multiple values, keep one of each value
-                                edge_attributes[key] = list(set(edge_attributes[key]))
+            # there shouldn't be multiple edges between interstitial nodes
+            edges = G.edge[u][v]
+            if not len(edges) == 1:
+                log('Multiple edges between "{}" and "{}" found when simplifying'.format(u, v), level=lg.WARNING)
 
-                        # construct the geometry and sum the lengths of the segments
-                        points = [Point((G.node[node]['x'], G.node[node]['y'])) for node in path]
-                        edge_attributes['geometry'] = LineString(points)
-                        edge_attributes['length'] = sum(edge_attributes['length'])
+            # the only element in this list as long as above assertion is True (MultiGraphs use keys (the 0 here), indexed with ints from 0 and up)
+            edge = edges[0]
+            for key in edge:
+                if key in edge_attributes:
+                    # if this key already exists in the dict, append it to the value list
+                    edge_attributes[key].append(edge[key])
+                else:
+                    # if this key doesn't already exist, set the value to a list containing the one value
+                    edge_attributes[key] = [edge[key]]
 
-                        # add the nodes and edges to their lists for processing at the end
-                        all_nodes_to_remove.extend(nodes_to_remove)
-                        all_edges_to_add.append({'origin':path[0], 
-                                                 'destination':path[-1], 
-                                                 'attr_dict':edge_attributes})
-                    
-                except RuntimeError:
-                    # recursion errors occur if some connected component is a self-contained ring in which all nodes are not end points
-                    # handle it by just ignoring that component and letting its topology remain intact (this should be a rare occurrence)
-                    # RuntimeError is what Python <3.5 will throw, Py3.5+ throws RecursionError but it is a subtype of RuntimeError so it still gets handled
-                    log('Recursion error: encountered connected component where no nodes are end points', level=lg.WARNING)
+        for key in edge_attributes:
+            # don't touch the length attribute, we'll sum it at the end
+            if len(set(edge_attributes[key])) == 1 and not key == 'length':
+                # if there's only 1 unique value in this attribute list, consolidate it to the single value (the zero-th)
+                edge_attributes[key] = edge_attributes[key][0]
+            elif not key == 'length':
+                # otherwise, if there are multiple values, keep one of each value
+                edge_attributes[key] = list(set(edge_attributes[key]))
+
+        # construct the geometry and sum the lengths of the segments
+        edge_attributes['geometry'] = LineString([Point((G.node[node]['x'], G.node[node]['y'])) for node in path])
+        edge_attributes['length'] = sum(edge_attributes['length'])
+
+        # add the nodes and edges to their lists for processing at the end
+        all_nodes_to_remove.extend(path[1:-1])
+        all_edges_to_add.append({'origin':path[0], 
+                                 'destination':path[-1], 
+                                 'attr_dict':edge_attributes})
     
     # for each edge to add in the list we assembled, create a new edge between the origin and destination
     for edge in all_edges_to_add:
         G.add_edge(edge['origin'], edge['destination'], attr_dict=edge['attr_dict'])
 
     # finally remove all the interstitial nodes between the new edges
-    G.remove_nodes_from(list(set(all_nodes_to_remove)))
+    G.remove_nodes_from(set(all_nodes_to_remove))
     
     msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
     log(msg.format(initial_node_count, len(G.nodes()), initial_edge_count, len(G.edges()), time.time()-start_time))
