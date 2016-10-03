@@ -37,7 +37,11 @@ from geopy.distance import great_circle, vincenty
 from geopy.geocoders import Nominatim
 
 
-# global defaults - you can edit any of these by passing the value to the config() function
+###################################################################################################
+# global defaults
+# you can edit any of these by passing the value to the config() function
+###################################################################################################
+
 
 # default locations to save data, logs, images, and cache
 _data_folder = 'data'
@@ -50,15 +54,23 @@ _use_cache = False
 # write log to file and/or to console
 _log_file = False
 _log_console = False
+_log_level = lg.INFO
+_log_name = 'osmnx'
+_log_filename = 'osmnx'
 
 # useful osm tags - note that load_graph expects a consistent set of tag names for parsing
 _useful_tags_node = ['ref', 'highway']
 _useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name', 'highway', 'maxspeed', 'service', 'access']
 
 
+###################################################################################################
+# define functions
+###################################################################################################
+
+
 def config(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs_folder, 
            cache_folder=_cache_folder, use_cache=_use_cache,
-           log_file=_log_file, log_console=_log_console,
+           log_file=_log_file, log_console=_log_console, log_level=_log_level, log_name=_log_name, log_filename=_log_filename,
            useful_tags_node=_useful_tags_node, useful_tags_path=_useful_tags_path):
     """
     Configure osmnx by setting the default global vars to desired values.
@@ -72,6 +84,8 @@ def config(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs
     use_cache : bool, if True, use a local cache to save/retrieve http responses instead of calling API repetitively for the same request URL
     log_file : bool, if true, save log output to a log file in logs_folder
     log_console : bool, if true, print log output to the console
+    log_level : int, one of the logger.level constants
+    log_name : string, name of the logger
     useful_tags_node : list, a list of useful OSM tags to attempt to save from node elements
     useful_tags_path : list, a list of useful OSM tags to attempt to save from path elements
     
@@ -80,7 +94,7 @@ def config(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs
     None
     """
     # use the global keyword to update global variables from within this function
-    global _use_cache, _cache_folder, _data_folder, _imgs_folder, _logs_folder, _log_console, _log_file, _useful_tags_node, _useful_tags_path
+    global _use_cache, _cache_folder, _data_folder, _imgs_folder, _logs_folder, _log_console, _log_file, _log_level, _log_name, _log_filename, _useful_tags_node, _useful_tags_path
     
     # set each global variable to the passed-in parameter value
     _use_cache = use_cache
@@ -90,6 +104,9 @@ def config(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs
     _logs_folder = logs_folder
     _log_console = log_console
     _log_file = log_file
+    _log_level = log_level
+    _log_name = log_name
+    _log_filename = log_filename
     _useful_tags_node = useful_tags_node
     _useful_tags_path = useful_tags_path
     
@@ -98,7 +115,7 @@ def config(data_folder=_data_folder, logs_folder=_logs_folder, imgs_folder=_imgs
         log('Configured osmnx')
 
 
-def log(message, level=lg.INFO):
+def log(message, level=None, name=None, filename=None):
     """
     Write a message to the log file and/or print to the the console.
     
@@ -106,15 +123,25 @@ def log(message, level=lg.INFO):
     ----------
     message : string, the content of the message to log
     level : int, one of the logger.level constants
+    name : string, name of the logger
+    filename : string, name of the log file
     
     Returns
     -------
     None
     """
+    
+    if level is None:
+        level = _log_level
+    if name is None:
+        name = _log_name
+    if filename is None:
+        filename = _log_filename
+    
     # if logging to file is turned on
     if _log_file:
         # get the current logger (or create a new one, if none), then log message at requested level
-        logger = get_logger()
+        logger = get_logger(level=level, name=name, filename=filename)
         if level == lg.DEBUG:
             logger.debug(message)
         elif level == lg.INFO:
@@ -137,19 +164,28 @@ def log(message, level=lg.INFO):
         sys.stdout = standard_out
 
 
-def get_logger(name='osmnx', level=lg.INFO):
+def get_logger(level=None, name=None, filename=None):
     """
     Create a logger or return the current one if already instantiated.
     
     Parameters
     ----------
-    name : string, name of the logger
     level : int, one of the logger.level constants
+    name : string, name of the logger
+    filename : string, name of the log file
     
     Returns
     -------
     logger : logger.logger
     """
+    
+    if level is None:
+        level = _log_level
+    if name is None:
+        name = _log_name
+    if filename is None:
+        filename = _log_filename
+    
     logger = lg.getLogger(name)
     
     # if a logger with this name is not already set up
@@ -157,7 +193,7 @@ def get_logger(name='osmnx', level=lg.INFO):
         
         # get today's date and construct a log filename
         todays_date = dt.datetime.today().strftime('%Y_%m_%d')
-        log_filename = '{}/{}_{}.log'.format(_logs_folder, name, todays_date)
+        log_filename = '{}/{}_{}.log'.format(_logs_folder, filename, todays_date)
         
         # if the logs folder does not already exist, create it
         if not os.path.exists(_logs_folder):
@@ -280,9 +316,8 @@ def get_pause_duration(recursive_delay=5):
         # if first token is 'Slot', it tells you when your slot will be free
         if status_first_token == 'Slot':
             utc_time_str = status.split(' ')[3]
-            utc_time = date_parser.parse(utc_time_str)
-            now = dt.datetime.now(dt.timezone.utc)
-            pause_duration = math.ceil((utc_time - now).total_seconds())
+            utc_time = date_parser.parse(utc_time_str).replace(tzinfo=None)
+            pause_duration = math.ceil((utc_time - dt.datetime.utcnow()).total_seconds())
             pause_duration = max(pause_duration, 1)
         
         # if first token is 'Currently', it is currently running a query so check back in recursive_delay seconds
@@ -750,8 +785,6 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         # turn bbox into a polygon then subdivide it if it exceeds the max area size
         polygon = Polygon([(west, south), (east, south), (east, north), (west, north)])
         geometry = consolidate_subdivide_geometry(polygon, max_query_area_size=max_query_area_size)
-        if isinstance(geometry, Polygon):
-            geometry = MultiPolygon([geometry])
         log('Requesting network data within bounding box from API in {:,} request(s)'.format(len(geometry)))
         start_time = time.time()
         
@@ -768,7 +801,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     elif by_poly:
         # divide polygon up into sub-polygons if area exceeds a max size, then get a list of polygon(s) exterior coordinates
         geometry = consolidate_subdivide_geometry(polygon, max_query_area_size=max_query_area_size)
-        polygon_coord_strs = get_poly_coords(geometry)
+        polygon_coord_strs = get_polygons_coordinates(geometry)
         log('Requesting network data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
         start_time = time.time()
         
@@ -811,10 +844,13 @@ def consolidate_subdivide_geometry(geometry, max_query_area_size=0.7):
     if geometry.area > max_query_area_size:
         geometry = quadrat_cut_geometry(geometry, quadrat_length=quadrat_length)
     
+    if isinstance(geometry, Polygon):
+        geometry = MultiPolygon([geometry])
+        
     return geometry
     
     
-def get_poly_coords(geometry):
+def get_polygons_coordinates(geometry):
     """
     Extract exterior coordinates from polygon(s) to pass to OSM in a query by polygon.
     
@@ -846,7 +882,8 @@ def get_poly_coords(geometry):
         s = ''
         separator = ' '
         for coord in list(coords):
-            s = '{}{}{}{}{}'.format(s, separator, coord[1], separator, coord[0])
+            # round floating point lats and longs to ~1 nanometer, so we can hash and cache strings consistently
+            s = '{}{}{:.14f}{}{:.14f}'.format(s, separator, coord[1], separator, coord[0])
         polygon_coord_strs.append(s.strip(separator))
     
     return polygon_coord_strs
@@ -934,8 +971,7 @@ def remove_isolated_nodes(G):
     -------
     G : graph
     """
-    degree = G.degree()
-    isolated_nodes = [node for node in degree.keys() if degree[node] < 1]
+    isolated_nodes = [node for node, degree in G.degree().items() if degree < 1]
     G.remove_nodes_from(isolated_nodes)
     log('Removed {:,} isolated nodes'.format(len(isolated_nodes)))
     return G
@@ -996,7 +1032,7 @@ def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', reta
     G.remove_nodes_from(distant_nodes.keys())
     log('Truncated graph by weighted network distance in {:,.2f} seconds'.format(time.time()-start_time))
     
-    # remove any isolated nodes, keep only the largest component (if retain_all is True), and return G
+    # remove any isolated nodes and retain only the largest component (if retain_all is True)
     if not retain_all:
         G = remove_isolated_nodes(G)
         G = get_largest_component(G)
@@ -1049,7 +1085,7 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
     G.remove_nodes_from(nodes_outside_bbox)
     log('Truncated graph by bounding box in {:,.2f} seconds'.format(time.time()-start_time))
     
-    # remove any isolated nodes, keep only the largest component (if retain_all is True), and return G
+    # remove any isolated nodes and retain only the largest component (if retain_all is True)
     if not retain_all:
         G = remove_isolated_nodes(G)
         G = get_largest_component(G)
@@ -1176,10 +1212,11 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False)
     log('Removed {:,} nodes outside polygon in {:,.2f} seconds'.format(len(nodes_outside_polygon), time.time()-start_time))
     
     # remove any isolated nodes
-    G = remove_isolated_nodes(G)
     
-    # keep only the largest component (if retain_all is True), then return G
+    
+    # remove any isolated nodes and retain only the largest component (if retain_all is True)
     if not retain_all:
+        G = remove_isolated_nodes(G)
         G = get_largest_component(G)
     
     return G
