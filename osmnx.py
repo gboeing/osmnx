@@ -21,7 +21,7 @@
 # SOFTWARE.
 #
 ###################################################################################################
-# Module: osmnx.py
+# Module: OSMnx.py
 # Description: Retrieve and construct spatial geometries and street networks from OpenStreetMap
 ###################################################################################################
 
@@ -58,7 +58,7 @@ _log_level = lg.INFO
 _log_name = 'osmnx'
 _log_filename = 'osmnx'
 
-# useful osm tags - note that load_graph expects a consistent set of tag names for parsing
+# useful osm tags - note that load_graphml expects a consistent set of tag names for parsing
 _useful_tags_node = ['ref', 'highway']
 _useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name', 'highway', 'maxspeed', 'service', 'access']
 
@@ -430,6 +430,8 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
         
         try:
             response_json = response.json()
+            if 'remark' in response_json:
+                log('Server remark: "{}"'.format(response_json['remark'], level=lg.WARNING))
             save_to_cache(prepared_url, response_json)
         except:
             #429 is 'too many requests' and 504 is 'gateway timeout' from server overload - handle these errors by recursively calling overpass_request until we get a valid response
@@ -447,8 +449,8 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
                 raise Exception('Server returned no JSON data.\n{} {}\n{}'.format(response, response.reason, response.text))
         
         return response_json
-        
-
+    
+    
 def osm_polygon_download(query, limit=1, polygon_geojson=1, pause_duration=1):
     """
     Geocode a place and download its boundary geometry from OSM's Nominatim API.
@@ -739,7 +741,7 @@ def get_osm_filter(network_type):
     return osm_filter
  
  
-def osm_net_download(polygon=None, north=None, south=None, east=None, west=None, network_type='all_private', timeout=180, memory=None, max_query_area_size=0.7):
+def osm_net_download(polygon=None, north=None, south=None, east=None, west=None, network_type='all_private', timeout=180, memory=None, max_query_area_size=0.5):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
     
@@ -816,7 +818,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     return response_jsons
 
 
-def consolidate_subdivide_geometry(geometry, max_query_area_size=0.7):
+def consolidate_subdivide_geometry(geometry, max_query_area_size=0.5):
     """
     Consolidate a geometry into a convex hull, then subdivide it into smaller sub-polygons if its area exceeds max size.
     
@@ -857,7 +859,6 @@ def get_polygons_coordinates(geometry):
     Parameters
     ----------
     geometry : shapely Polygon or MultiPolygon, the geometry to extract exterior coordinates from
-    max_query_area_size : float, max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
     
     Returns
     -------
@@ -1363,8 +1364,15 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     -------
     G : graph
     """
-    log('Creating networkx graph from downloaded OSM data')
+    log('Creating networkx graph from downloaded OSM data...')
     start_time = time.time()
+    
+    # make sure we got data back from the server requests
+    elements = []
+    for response_json in response_jsons:
+        elements.extend(response_json['elements'])
+    if len(elements) < 1:
+        raise ValueError('There are no data elements in the response JSON objects')
     
     # create the graph as a MultiDiGraph and set the original CRS to lat-long
     G = nx.MultiDiGraph(name=name, crs={'init':'epsg:4326'})
@@ -1438,7 +1446,7 @@ def bbox_from_point(point, distance=1000, project_utm=False, utm_crs=None):
     return north, south, east, west
     
     
-def graph_from_bbox(north, south, east, west, network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=0.7):
+def graph_from_bbox(north, south, east, west, network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=0.5):
     """
     Create a networkx graph from OSM data within some bounding box.
     
@@ -1478,7 +1486,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private', simpli
     return  G
     
     
-def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=0.7):
+def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=0.5):
     """
     Create a networkx graph from OSM data within some distance of some (lat, lon) center point.
     
@@ -1526,7 +1534,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     return G
         
         
-def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, return_coords=False, name='unnamed', timeout=180, memory=None, max_query_area_size=0.7):
+def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, return_coords=False, name='unnamed', timeout=180, memory=None, max_query_area_size=0.5):
     """
     Create a networkx graph from OSM data within some distance of some address.
     
@@ -1568,7 +1576,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
         return G
 
 
-def graph_from_polygon(polygon, network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=0.7):
+def graph_from_polygon(polygon, network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=0.5):
     """
     Create a networkx graph from OSM data within the spatial boundaries of the passed-in shapely polygon.
     
@@ -1611,7 +1619,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
     return G
     
         
-def graph_from_place(query, network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', which_result=1, buffer_dist=None, timeout=180, memory=None, max_query_area_size=0.7):
+def graph_from_place(query, network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, name='unnamed', which_result=1, buffer_dist=None, timeout=180, memory=None, max_query_area_size=0.5):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some geocodable place(s).
     
@@ -1798,6 +1806,8 @@ def save_graph_shapefile(G, filename='graph', folder=None):
     -------
     None
     """
+    
+    start_time = time.time()
     if folder is None:
         folder = _data_folder
     
@@ -1852,7 +1862,7 @@ def save_graph_shapefile(G, filename='graph', folder=None):
     # save the nodes and edges as separate ESRI shapefiles
     gdf_nodes.to_file('{}/nodes'.format(folder))
     gdf_edges.to_file('{}/edges'.format(folder))
-    log('Saved graph "{}" to disk at "{}"'.format(G_save.name, folder))
+    log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, folder, time.time()-start_time))
     
     
 def save_graphml(G, filename='graph.graphml', folder=None):
@@ -1869,6 +1879,8 @@ def save_graphml(G, filename='graph.graphml', folder=None):
     -------
     None
     """
+    
+    start_time = time.time()
     if folder is None:
         folder = _data_folder
     
@@ -1890,7 +1902,7 @@ def save_graphml(G, filename='graph.graphml', folder=None):
         os.makedirs(folder)
     
     nx.write_graphml(G_save, '{}/{}'.format(folder, filename))
-    log('Saved graph "{}" to disk at "{}/{}"'.format(G_save.name, folder, filename))
+    log('Saved graph "{}" to disk as GraphML at "{}/{}" in {:,.2f} seconds'.format(G_save.name, folder, filename, time.time()-start_time))
     
     
 def load_graphml(filename, folder=None):
@@ -1907,13 +1919,15 @@ def load_graphml(filename, folder=None):
     G : graph
     """
     start_time = time.time()
-    log('Begin loading graph from disk...')
     
     # read the graph from disk
     if folder is None:
         folder = _data_folder
     path = '{}/{}'.format(folder, filename)
     G = nx.read_graphml(path, node_type=int)
+    
+    # convert graph crs attribute from saved string to correct dict data type
+    G.graph['crs'] = ast.literal_eval(G.graph['crs'])
     
     # convert numeric node tags from string to numeric data types
     log('Converting node and edge attribute data types')
