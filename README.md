@@ -6,6 +6,12 @@ OSMnx is a Python library that lets you download spatial geometries and construc
 and analyze street networks from OpenStreetMap's API. Users can construct walkable, drivable, or bikable 
 urban networks with a single line of Python code. [Overview demo](examples/01-overview-osmnx.ipynb).
 
+### Install
+
+`pip install osmnx`
+
+If you are on Windows, install (geopandas and its dependencies)[http://geoffboeing.com/2014/09/using-geopandas-windows/] before pip installing OSMnx.
+
 ### Use OSMnx to create place boundary shapefiles from OpenStreetMap
 
 OSMnx lets you download spatial "place boundary" geometries from OpenStreetMap, save them to shapefiles, 
