@@ -1,10 +1,10 @@
 .ipynb_checkpoints
 __pycache__
-old/*
-cache/*
-data/*
-logs/*
-images/*
+backup/*
+osmnx/cache/*
+osmnx/data/*
+osmnx/logs/*
+osmnx/images/*
 
 
 # Compiled source #

@@ -23,6 +23,7 @@
 ###################################################################################################
 # Module: OSMnx.py
 # Description: Retrieve and construct spatial geometries and street networks from OpenStreetMap
+# Web: https://github.com/gboeing/osmnx
 ###################################################################################################
 
 import json, math, sys, os, io, ast, unicodedata, hashlib, re, random, time, datetime as dt, logging as lg
