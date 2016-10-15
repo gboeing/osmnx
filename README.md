@@ -10,7 +10,7 @@ urban networks with a single line of Python code. [Overview demo](examples/01-ov
 
 `pip install osmnx`
 
-If you are on Windows, install (geopandas and its dependencies)[http://geoffboeing.com/2014/09/using-geopandas-windows/] before pip installing OSMnx.
+If you are on Windows, install [geopandas and its dependencies](http://geoffboeing.com/2014/09/using-geopandas-windows/) before pip installing OSMnx.
 
 ### Use OSMnx to create place boundary shapefiles from OpenStreetMap
 
