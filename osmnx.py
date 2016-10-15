@@ -33,6 +33,7 @@ from matplotlib.collections import LineCollection
 from shapely.geometry import Point, LineString, Polygon, MultiPolygon
 from shapely import wkt
 from shapely.ops import unary_union
+from descartes import PolygonPatch
 from geopy.distance import great_circle, vincenty
 from geopy.geocoders import Nominatim
 
@@ -678,6 +679,50 @@ def project_gdf(gdf, to_latlong=False):
     projected_gdf.name = gdf.name
     return projected_gdf
 
+    
+def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6,6), margin=0.02, axis_off=True):
+    """
+    Plot a GeoDataFrame of place boundary geometries.
+    
+    Parameters
+    ----------
+    gdf : GeoDataFrame, the gdf containing the geometries to plot
+    fc : string, the facecolor for the polygons
+    ec : string, the edgecolor for the polygons
+    linewidth : numeric, the width of the polygon edge lines
+    alpha : numeric, the opacity
+    figsize : tuple, the size of the plotting figure
+    margin : numeric, the size of the figure margins
+    axis_off : bool, if True, disable the matplotlib axes display
+    
+    Returns
+    -------
+    fig, ax : tuple
+    """
+    # plot the geometries one at a time
+    fig, ax = plt.subplots(figsize=figsize)
+    for geometry in gdf['geometry'].tolist():
+        if isinstance(geometry, (Polygon, MultiPolygon)):
+            if isinstance(geometry, Polygon):
+                geometry = MultiPolygon([geometry])
+            for polygon in geometry:
+                patch = PolygonPatch(polygon, fc=fc, ec=ec, linewidth=linewidth, alpha=alpha)
+                ax.add_patch(patch)
+        else:
+            raise ValueError('All geometries in GeoDataFrame must be shapely Polygons or MultiPolygons')
+
+    # adjust the axis margins and limits around the image and make axes equal-aspect
+    west, south, east, north = gdf.unary_union.bounds
+    margin_ns = (north - south) * margin
+    margin_ew = (east - west) * margin
+    ax.set_ylim((south - margin_ns, north + margin_ns))
+    ax.set_xlim((west - margin_ew, east + margin_ew))
+    ax.set_aspect(aspect='equal', adjustable='box')
+    if axis_off:
+        ax.axis('off')
+    
+    plt.show()
+    return fig, ax
 
     
 ##########################################################################################################        
@@ -2581,4 +2626,98 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
     return fig, ax
     
+
+############################################################################
+#
+# Start of graph metrics calculation functions
+#
+############################################################################
+
+
+def basic_stats(G, area=None):
+    """
+    Calculate basic descriptive stats and metrics for a graph.
     
+    Parameters
+    ----------
+    G : graph
+    area : numeric, the area covered by the street network, in square meters; if none, will skip density-based metrics
+    
+    Returns
+    -------
+    stats : dict
+    """
+    
+    sq_km_converter = 1000000 #there are 1 million sq meters in 1 sq km
+    G_undirected = None
+    
+    node_count = len(G.nodes())
+    edge_count = len(G.edges()) 
+    
+    if 'degree_undirected_buffered' in G.graph:
+        # get the degrees saved as a graph attribute (from an undirected representation of the graph)
+        k = G.graph['degree_undirected_buffered']
+    else:
+        # use an undirected graph to get the degrees
+        G_undirected = G.to_undirected(reciprocal=False)
+        k = G_undirected.degree()
+    
+    # calculate the average degree of the nodes
+    k_avg = sum(k.values()) / node_count
+    
+    # degree counts: dict where key = each degree and value = how many nodes are of this degree in the graph
+    k_counts = {n:list(k.values()).count(n) for n in range(max(k.values()) + 1)}
+    
+    # degree proportions: dict where key = each degree and value = what proportion of nodes are of this degree in the graph
+    k_proportion = {n:count/node_count for n, count in k_counts.items()}
+    
+    # calculate the total and average edge lengths
+    total_edge_length = sum([d['length'] for u, v, d in G.edges(data=True)])
+    avg_edge_length = total_edge_length / edge_count
+    
+    # calculate the total and average street segment lengths (so, edges without double-counting two-way streets)
+    if G_undirected is None:
+        G_undirected = G.to_undirected(reciprocal=False)
+    total_street_length = sum([d['length'] for u, v, d in G_undirected.edges(data=True)])
+    avg_street_length = total_edge_length / edge_count
+    
+    # we can calculate density metrics only if area is not null
+    if not area is None:
+        # calculate node density as nodes per sq km
+        node_density_km = node_count * sq_km_converter / area
+
+        # calculate edge density as linear meters per sq km
+        edge_density_km = total_edge_length * sq_km_converter / area
+    else:
+        # if area is None, then we cannot calculate density
+        node_density_km = None
+        edge_density_km = None
+
+    # average circuity: sum of edge lengths divided by sum of great circle distance between edge endpoints
+    points = [((G.node[u]['y'], G.node[u]['x']), (G.node[v]['y'], G.node[v]['x'])) for u, v in G.edges()]
+    great_circle_distances = [great_circle(p1, p2).m for p1, p2 in points]
+    avg_circuity = total_edge_length / sum(great_circle_distances)
+
+    # percent of edges that are self-loops, ie both endpoints are the same node
+    self_loops = [True for u, v, k in G.edges(keys=True) if u == v]
+    self_loops_count = len(self_loops)
+    self_loop_proportion = self_loops_count / edge_count
+
+    # assemble the results
+    stats = {'node_count':node_count,
+             'edge_count':edge_count,
+             'k_avg':k_avg,
+             'k_counts':k_counts,
+             'k_proportion':k_proportion,
+             'total_edge_length':total_edge_length,
+             'avg_edge_length':avg_edge_length,
+             'total_street_length':total_street_length,
+             'avg_street_length':avg_street_length,
+             'node_density_km':node_density_km, 
+             'edge_density_km':edge_density_km,
+             'avg_circuity':avg_circuity,
+             'self_loop_proportion':self_loop_proportion}
+
+    # return the results
+    return stats
+
