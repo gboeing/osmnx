@@ -1819,7 +1819,7 @@ def project_graph(G):
     gdf_nodes = gpd.GeoDataFrame(nodes).T
     gdf_nodes.crs = G_proj.graph['crs']
     gdf_nodes.name = '{}_nodes'.format(G_proj.name)
-    gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64).astype(str)
+    gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64).map(make_str)
     
     # create new lat/lon columns just to save that data for later, and create a geometry column from x/y
     gdf_nodes['lon'] = gdf_nodes['x']
@@ -1961,7 +1961,7 @@ def save_graph_shapefile(G, filename='graph', folder=None):
     # make everything but geometry column a string
     gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64)
     for col in [c for c in gdf_nodes.columns if not c == 'geometry']:
-        gdf_nodes[col] = gdf_nodes[col].fillna('').astype(str)
+        gdf_nodes[col] = gdf_nodes[col].fillna('').map(make_str)
         
     # create a list to hold our edges, then loop through each edge in the graph
     edges = []
@@ -1986,7 +1986,7 @@ def save_graph_shapefile(G, filename='graph', folder=None):
 
     # make everything but geometry column a string
     for col in [c for c in gdf_edges.columns if not c == 'geometry']:
-        gdf_edges[col] = gdf_edges[col].fillna('').astype(str)
+        gdf_edges[col] = gdf_edges[col].fillna('').map(make_str)
         
     # if the save folder does not already exist, create it with a filename subfolder
     folder = '{}/{}'.format(folder, filename)
