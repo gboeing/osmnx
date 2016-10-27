@@ -1873,6 +1873,7 @@ def project_graph(G):
     # set the graph's CRS attribute to the new, projected CRS and return the projected graph
     G_proj.graph['crs'] = gdf_nodes_utm.crs
     G_proj.graph['name'] = '{}_UTM'.format(graph_name)
+    G_proj.graph['degree_undirected_buffered'] = G.graph['degree_undirected_buffered']
     log('Rebuilt projected graph in {:,.2f} seconds'.format(time.time()-start_time))
     return G_proj
 
