@@ -3,26 +3,45 @@
 Retrieve and construct spatial geometries and street networks from OpenStreetMap
 
 OSMnx is a Python library that lets you download spatial geometries and construct, project, visualize, 
-and analyze street networks from OpenStreetMap's API. Users can construct walkable, drivable, or bikable 
-urban networks with a single line of Python code. [Overview demo](examples/01-overview-osmnx.ipynb).
+and analyze street networks from OpenStreetMap's APIs. Users can construct walkable, drivable, or bikable 
+urban networks with a single line of Python code, and then analyze and visualize it:
 
-### Install
+```
+G = ox.graph_from_place('Berkeley, California', network_type='drive')
+stats = ox.basic_stats(G)
+ox.plot_graph(G)
+```
+
+For an overview of OSMnx, see this [demo notebook](examples/01-overview-osmnx.ipynb).
+
+## Installation
 
 `pip install osmnx`
 
 If you are on Windows, install [geopandas and its dependencies](http://geoffboeing.com/2014/09/using-geopandas-windows/) before pip installing OSMnx.
 
-### Use OSMnx to create place boundary shapefiles from OpenStreetMap
+## How to use OSMnx
 
-OSMnx lets you download spatial "place boundary" geometries from OpenStreetMap, save them to shapefiles, 
-project them, and plot them. For a more in-depth demonstration of creating these shapefiles, 
+### Create place boundary shapefiles from OpenStreetMap
+
+OSMnx lets you download spatial "place boundary" geometries from OpenStreetMap (for cities, counties, states, countries, boroughs, etc.), save them to shapefiles, 
+project them, and plot them. For example, to retrieve, construct, and save a shapefile of Berkeley's administrative boundary:
+
+```
+city = ox.gdf_from_place('Berkeley, California')
+ox.save_gdf_shapefile(city)
+```
+
+For a more in-depth demonstration of creating these shapefiles, 
 see [this notebook](examples/02-example-osm-to-shapefile.ipynb).
 
-### Use OSMnx to download and construct street networks
+### Download and construct street networks
 
 OSMnx lets you download street network data and build topologically-corrected street networks, project to UTM and plot the 
 networks, and save the street network as SVGs, GraphML files, or shapefiles for later use. The street networks are 
-directed and preserve one-way directionality. For a more in-depth demonstration of creating street networks, 
+directed and preserve one-way directionality. 
+
+For a more in-depth demonstration of creating street networks, 
 see [this notebook](examples/03-example-osm-place-network.ipynb).
 
 You can download a street network by providing OSMnx any of the following (demonstrated in the examples below):
@@ -40,7 +59,7 @@ You can also specify several different network types:
   - `all` - download all non-private OSM streets and paths (this is the default network type unless you specify a different one)
   - `all_private` - download all OSM streets and paths, including private-access ones
 
-### Use OSMnx to correct and simplify street network topology
+### Correct and simplify street network topology
 
 Simplification is normally done by OSMnx automatically under the hood, but we can break it out to see how it works. 
 OpenStreetMap nodes include intersections, but they also include all the points along a single block where 
@@ -50,14 +69,14 @@ simplification modes, strict and non-strict. The main difference is that unlike 
 simplification to an "expansion graph". For a more in-depth demonstration of topological simplification with OSMnx, 
 see [this notebook](examples/04-example-simplify-network.ipynb).
 
-### Use OSMnx to save street networks to disk
+### Save street networks to disk
 
 OSMnx allows users to save street networks to disk as shapefiles to work with in GIS software, as GraphML files
 to work with in Gephi or NetworkX, and as SVG files to work with in Illustrator. It also allows you to save place
 boundary geometries as shapefiles. For more examples of saving and loading networks to/from disk, 
 see [this notebook](examples/05-example-save-load-networks-shapes.ipynb).
 
-### Use OSMnx to analyze street networks
+### Analyze and visualize street networks
 
 OSMnx allows you to calculate origin-destination routes along the network and quickly visualize them. You can easily
 visualize one-way streets, cul de sacs, high/low connectivity intersections, etc. OSMnx provides built-in capabilities
