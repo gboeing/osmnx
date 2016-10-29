@@ -2651,46 +2651,51 @@ def basic_stats(G, area=None):
     stats : dict
     """
     
-    sq_km_converter = 1000000 #there are 1 million sq meters in 1 sq km
+    sq_m_to_sq_km = 1000000 #there are 1 million sq meters in 1 sq km
     G_undirected = None
     
-    node_count = len(G.nodes())
-    edge_count = len(G.edges()) 
+    # calculate the number of nodes, n, and the number of edges, m, in the graph
+    n = len(G.nodes())
+    m = len(G.edges())
+    
+    # calculate the average degree of the graph: k = 2 * m / n
+    k_avg = 2 * len(G.edges()) / len(G.nodes())
     
     if 'degree_undirected_buffered' in G.graph:
         # get the degrees saved as a graph attribute (from an undirected representation of the graph)
-        k = G.graph['degree_undirected_buffered']
+        # this is not the degree of the nodes in the directed graph, but rather represents the number of streets (unidirected edges) incident to each intersection (node)
+        streets_per_intersection = G.graph['degree_undirected_buffered']
     else:
-        # use an undirected graph to get the degrees
+        # use an undirected graph to get the number of streets (unidirected edges) incident to each intersection (node)
         G_undirected = G.to_undirected(reciprocal=False)
-        k = G_undirected.degree()
+        streets_per_intersection = G_undirected.degree()
     
-    # calculate the average degree of the nodes
-    k_avg = sum(k.values()) / node_count
+    # calculate the average number of streets (unidirected edges) incident to each intersection (node)
+    avg_streets_per_intersection = sum(streets_per_intersection.values()) / n
     
-    # degree counts: dict where key = each degree and value = how many nodes are of this degree in the graph
-    k_counts = {n:list(k.values()).count(n) for n in range(max(k.values()) + 1)}
+    # create a dict where key = number of streets (unidirected edges) incident to each intersection (node), and value = how many intersections are of this number in the graph
+    counts_streets_per_intersection = {num:list(streets_per_intersection.values()).count(num) for num in range(max(streets_per_intersection.values()) + 1)}
     
     # degree proportions: dict where key = each degree and value = what proportion of nodes are of this degree in the graph
-    k_proportion = {n:count/node_count for n, count in k_counts.items()}
+    proportion_streets_per_intersection = {num:count/n for num, count in counts_streets_per_intersection.items()}
     
     # calculate the total and average edge lengths
     total_edge_length = sum([d['length'] for u, v, d in G.edges(data=True)])
-    avg_edge_length = total_edge_length / edge_count
+    avg_edge_length = total_edge_length / m
     
     # calculate the total and average street segment lengths (so, edges without double-counting two-way streets)
     if G_undirected is None:
         G_undirected = G.to_undirected(reciprocal=False)
     total_street_length = sum([d['length'] for u, v, d in G_undirected.edges(data=True)])
-    avg_street_length = total_edge_length / edge_count
+    avg_street_length = total_street_length / m
     
     # we can calculate density metrics only if area is not null
     if not area is None:
         # calculate node density as nodes per sq km
-        node_density_km = node_count * sq_km_converter / area
+        node_density_km = n * sq_m_to_sq_km / area
 
         # calculate edge density as linear meters per sq km
-        edge_density_km = total_edge_length * sq_km_converter / area
+        edge_density_km = total_edge_length * sq_m_to_sq_km / area
     else:
         # if area is None, then we cannot calculate density
         node_density_km = None
@@ -2707,14 +2712,15 @@ def basic_stats(G, area=None):
     # percent of edges that are self-loops, ie both endpoints are the same node
     self_loops = [True for u, v, k in G.edges(keys=True) if u == v]
     self_loops_count = len(self_loops)
-    self_loop_proportion = self_loops_count / edge_count
+    self_loop_proportion = self_loops_count / m
 
     # assemble the results
-    stats = {'node_count':node_count,
-             'edge_count':edge_count,
+    stats = {'n':n,
+             'm':m,
              'k_avg':k_avg,
-             'k_counts':k_counts,
-             'k_proportion':k_proportion,
+             'avg_streets_per_intersection':avg_streets_per_intersection,
+             'counts_streets_per_intersection':counts_streets_per_intersection,
+             'proportion_streets_per_intersection':proportion_streets_per_intersection,
              'total_edge_length':total_edge_length,
              'avg_edge_length':avg_edge_length,
              'total_street_length':total_street_length,
