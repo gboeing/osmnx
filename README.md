@@ -3,10 +3,11 @@
 Retrieve and construct spatial geometries and street networks from OpenStreetMap
 
 OSMnx is a Python library that lets you download spatial geometries and construct, project, visualize, 
-and analyze street networks from OpenStreetMap's APIs. Users can construct walkable, drivable, or bikable 
-urban networks with a single line of Python code, and then analyze and visualize it:
+and analyze street networks from OpenStreetMap's APIs. Users can download and construct walkable, drivable, or bikable 
+urban networks with a single line of Python code, and then analyze and visualize them:
 
 ```
+import osmnx as ox
 G = ox.graph_from_place('Berkeley, California', network_type='drive')
 stats = ox.basic_stats(G)
 ox.plot_graph(G)
