@@ -2099,9 +2099,10 @@ def load_graphml(filename, folder=None):
         if 'geometry' in data:
             data['geometry'] = wkt.loads(data['geometry'])
     
-    log('Loaded graph with {:,} nodes and {:,} edges from disk in {:,.2f} seconds'.format(len(G.nodes()),
-                                                                                                len(G.edges()),
-                                                                                                time.time()-start_time))
+    log('Loaded graph with {:,} nodes and {:,} edges in {:,.2f} seconds from "{}"'.format(len(G.nodes()),
+                                                                                          len(G.edges()),
+                                                                                          time.time()-start_time,
+                                                                                          path))
     return G
     
     
@@ -2698,7 +2699,10 @@ def basic_stats(G, area=None):
     # average circuity: sum of edge lengths divided by sum of great circle distance between edge endpoints
     points = [((G.node[u]['y'], G.node[u]['x']), (G.node[v]['y'], G.node[v]['x'])) for u, v in G.edges()]
     great_circle_distances = [great_circle(p1, p2).m for p1, p2 in points]
-    avg_circuity = total_edge_length / sum(great_circle_distances)
+    try:
+        avg_circuity = total_edge_length / sum(great_circle_distances)
+    except ZeroDivisionError:
+        avg_circuity = np.nan
 
     # percent of edges that are self-loops, ie both endpoints are the same node
     self_loops = [True for u, v, k in G.edges(keys=True) if u == v]
