@@ -1,6 +1,6 @@
 .ipynb_checkpoints
 __pycache__
-backup/*
+_backup/*
 examples/cache/*
 examples/data/*
 examples/logs/*

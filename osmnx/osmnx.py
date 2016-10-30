@@ -787,7 +787,7 @@ def get_osm_filter(network_type):
     return osm_filter
  
  
-def osm_net_download(polygon=None, north=None, south=None, east=None, west=None, network_type='all_private', timeout=180, memory=None, max_query_area_size=0.4):
+def osm_net_download(polygon=None, north=None, south=None, east=None, west=None, network_type='all_private', timeout=180, memory=None, max_query_area_size=50*1000*50*1000):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
     
@@ -801,7 +801,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     network_type : string, {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what type of street network to get
     timeout : int, the timeout interval for requests and to pass to API
     memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
-    max_query_area_size : float, max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
+    max_query_area_size : float, max area for any part of the geometry, in the units the geometry is in: any polygon bigger will get divided up for multiple queries to API (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
     
     Returns
     -------
@@ -830,9 +830,13 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     # specifying way["highway"] means that all ways returned must have a highway key. the {filters} then remove ways by key/value.
     # the '>' makes it recurse so we get ways and way nodes. maxsize is in bytes.
     if by_bbox:
-        # turn bbox into a polygon then subdivide it if it exceeds the max area size
+        # turn bbox into a polygon and project to local UTM
         polygon = Polygon([(west, south), (east, south), (east, north), (west, north)])
-        geometry = consolidate_subdivide_geometry(polygon, max_query_area_size=max_query_area_size)
+        geometry_proj, crs_proj = project_geometry(polygon, crs={'init':'epsg:4326'})
+        
+        # subdivide it if it exceeds the max area size (in meters), then project back to lat-long
+        geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        geometry, crs = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         log('Requesting network data within bounding box from API in {:,} request(s)'.format(len(geometry)))
         start_time = time.time()
         
@@ -847,8 +851,10 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         log('Got all network data within bounding box from API in {:,} request(s) and {:,.2f} seconds'.format(len(geometry), time.time()-start_time))
     
     elif by_poly:
-        # divide polygon up into sub-polygons if area exceeds a max size, then get a list of polygon(s) exterior coordinates
-        geometry = consolidate_subdivide_geometry(polygon, max_query_area_size=max_query_area_size)
+        # project to utm, divide polygon up into sub-polygons if area exceeds a max size (in meters), project back to lat-long, then get a list of polygon(s) exterior coordinates
+        geometry_proj, crs_proj = project_geometry(polygon, crs={'init':'epsg:4326'})
+        geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        geometry, crs = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = get_polygons_coordinates(geometry)
         log('Requesting network data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
         start_time = time.time()
@@ -864,14 +870,38 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     return response_jsons
 
 
-def consolidate_subdivide_geometry(geometry, max_query_area_size=0.4):
+def project_geometry(geometry, crs, to_latlong=False):
+    """
+    Project a shapely Polygon or MultiPolygon from lat-long to UTM, or vice-versa
+    
+    Parameters
+    ----------
+    geometry : shapely Polygon or MultiPolygon, the geometry to project
+    crs : the starting coordinate reference system of the passed-in geometry
+    to_latlong : if True, project from crs to lat-long, if False, project from crs to local UTM zone
+    
+    Returns
+    -------
+    geometry_proj, crs : tuple (projected shapely geometry, crs of the projected geometry)
+    """
+    gdf = gpd.GeoDataFrame()
+    gdf.crs = crs
+    gdf.name = ''
+    gdf['geometry'] = None
+    gdf.loc[0, 'geometry'] = geometry
+    gdf_proj = project_gdf(gdf, to_latlong=to_latlong)
+    geometry_proj = gdf_proj['geometry'].iloc[0]
+    return geometry_proj, gdf_proj.crs
+    
+
+def consolidate_subdivide_geometry(geometry, max_query_area_size):
     """
     Consolidate a geometry into a convex hull, then subdivide it into smaller sub-polygons if its area exceeds max size.
     
     Parameters
     ----------
     geometry : shapely Polygon or MultiPolygon, the geometry to consolidate and subdivide
-    max_query_area_size : float, max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
+    max_query_area_size : float, max area for any part of the geometry, in the units the geometry is in: any polygon bigger will get divided up for multiple queries to API (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
     
     Returns
     -------
@@ -879,7 +909,7 @@ def consolidate_subdivide_geometry(geometry, max_query_area_size=0.4):
     """
     
     # let the linear length of the quadrats (with which to subdivide the geometry) be the square root of max area size
-    quadrat_length = math.sqrt(max_query_area_size)
+    quadrat_width = math.sqrt(max_query_area_size)
     
     if not isinstance(geometry, (Polygon, MultiPolygon)):
         raise ValueError('Geometry must be a shapely Polygon or MultiPolygon')
@@ -890,7 +920,7 @@ def consolidate_subdivide_geometry(geometry, max_query_area_size=0.4):
         
     # if geometry area exceeds max size, subdivide it into smaller sub-polygons
     if geometry.area > max_query_area_size:
-        geometry = quadrat_cut_geometry(geometry, quadrat_length=quadrat_length)
+        geometry = quadrat_cut_geometry(geometry, quadrat_width=quadrat_width)
     
     if isinstance(geometry, Polygon):
         geometry = MultiPolygon([geometry])
@@ -1142,16 +1172,16 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
     return G
     
 
-def quadrat_cut_geometry(geometry, quadrat_length=0.025, min_num=3, dist=1e-14):
+def quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9):
     """
     Split a Polygon or MultiPolygon up into sub-polygons of a specified size, using quadrats.
     
     Parameters
     ----------
     geometry : shapely Polygon or MultiPolygon, the geometry to split up into smaller sub-polygons
-    quadrat_length : the linear length in degrees of the quadrats with which to cut up the geometry
+    quadrat_width : the linear width of the quadrats with which to cut up the geometry (in the units the geometry is in)
     min_num : the minimum number of linear quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4 squares)
-    dist : the distance to buffer the quadrat grid in degrees (e.g., 1e-14 degrees is no more than 1 nanometer)
+    buffer_amount : buffer the quadrat grid lines by quadrat_width times buffer_amount
     
     Returns
     -------
@@ -1160,8 +1190,8 @@ def quadrat_cut_geometry(geometry, quadrat_length=0.025, min_num=3, dist=1e-14):
     
     # create n evenly spaced points between the min and max x and y bounds
     west, south, east, north = geometry.bounds
-    x_num = math.ceil((east-west) / quadrat_length) + 1
-    y_num = math.ceil((north-south) / quadrat_length) + 1
+    x_num = math.ceil((east-west) / quadrat_width) + 1
+    y_num = math.ceil((north-south) / quadrat_width) + 1
     x_points = np.linspace(west, east, num=max(x_num, min_num))
     y_points = np.linspace(south, north, num=max(y_num, min_num))
 
@@ -1170,15 +1200,16 @@ def quadrat_cut_geometry(geometry, quadrat_length=0.025, min_num=3, dist=1e-14):
     horizont_lines = [LineString([(x_points[0], y), (x_points[-1], y)]) for y in y_points]
     lines = vertical_lines + horizont_lines
 
-    # buffer each line to distance, take their union, then cut geometry into pieces by these quadrats
-    lines_buffered = [line.buffer(dist) for line in lines]
+    # buffer each line to distance of the quadrat width divided by 1 billion, take their union, then cut geometry into pieces by these quadrats
+    buffer_size = quadrat_width * buffer_amount
+    lines_buffered = [line.buffer(buffer_size) for line in lines]
     quadrats = unary_union(lines_buffered)
     multipoly = geometry.difference(quadrats)
     
     return multipoly
     
     
-def intersect_index_quadrats(gdf, geometry, quadrat_length=0.025, min_num=3, dist=1e-14):
+def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buffer_amount=1e-9):
     """
     Intersect points with a polygon, using an r-tree spatial index and cutting the polygon up into
     smaller sub-polygons for r-tree acceleration.
@@ -1187,9 +1218,9 @@ def intersect_index_quadrats(gdf, geometry, quadrat_length=0.025, min_num=3, dis
     ----------
     gdf : GeoDataFrame, the set of points to intersect
     geometry : shapely Polygon or MultiPolygon, the geometry to intersect with the points
-    quadrat_length : the linear length in degrees of the quadrats with which to cut up the geometry
+    quadrat_width : the linear length in degrees of the quadrats with which to cut up the geometry (default = 0.025, approx 2km at NYC's latitude)
     min_num : the minimum number of linear quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4 squares)
-    dist : the distance to buffer the quadrat grid in degrees (e.g., 1e-14 degrees is no more than 1 nanometer)
+    buffer_amount : buffer the quadrat grid lines by quadrat_width times buffer_amount
     
     Returns
     -------
@@ -1200,7 +1231,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_length=0.025, min_num=3, dis
     points_within_geometry = pd.DataFrame()
     
     # cut the geometry into chunks for r-tree spatial index intersecting
-    multipoly = quadrat_cut_geometry(geometry, quadrat_length=quadrat_length, dist=dist)
+    multipoly = quadrat_cut_geometry(geometry, quadrat_width=quadrat_width, buffer_amount=buffer_amount)
     
     # create an r-tree spatial index for the nodes (ie, points)
     start_time = time.time()
@@ -1211,8 +1242,9 @@ def intersect_index_quadrats(gdf, geometry, quadrat_length=0.025, min_num=3, dis
     start_time = time.time()
     for poly in multipoly:
         
-        # buffer by the <1 micron dist to account for any space lost in the quadrat cutting, otherwise may miss point(s) that lay directly on quadrat line
-        poly = poly.buffer(dist).buffer(0)
+        # buffer by the tiny distance to account for any space lost in the quadrat cutting, otherwise may miss point(s) that lay directly on quadrat line
+        buffer_size = quadrat_width * buffer_amount
+        poly = poly.buffer(buffer_size).buffer(0)
         
         # find approximate matches with r-tree, then precise matches from those approximate ones
         possible_matches_index = list(sindex.intersection(poly.bounds))
@@ -1496,7 +1528,7 @@ def bbox_from_point(point, distance=1000, project_utm=False, utm_crs=None):
     
     
 def graph_from_bbox(north, south, east, west, network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False, 
-                    name='unnamed', timeout=180, memory=None, max_query_area_size=0.4, clean_periphery=True):
+                    name='unnamed', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True):
     """
     Create a networkx graph from OSM data within some bounding box.
     
@@ -1552,8 +1584,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private', simpli
         start_time = time.time()
         k_buffered = G_buffered.to_undirected(reciprocal=False).degree()
         nodes = set(G.nodes())
-        k = {key:value for key, value in k_buffered.items() if key in nodes}
-        G.graph['degree_undirected_buffered'] = k
+        G.graph['degree_undirected_buffered'] = {key:value for key, value in k_buffered.items() if key in nodes}
         log('Got undirected node degrees for graph (before removing peripheral edges) in {:,.2f} seconds'.format(time.time()-start_time))
     
     else:
@@ -1574,7 +1605,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private', simpli
     
     
 def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all_private', simplify=True, retain_all=False, 
-                     truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=0.4, clean_periphery=True):
+                     truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True):
     """
     Create a networkx graph from OSM data within some distance of some (lat, lon) center point.
     
@@ -1626,7 +1657,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
         
         
 def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all_private', simplify=True, retain_all=False, 
-                       truncate_by_edge=False, return_coords=False, name='unnamed', timeout=180, memory=None, max_query_area_size=0.4, clean_periphery=True):
+                       truncate_by_edge=False, return_coords=False, name='unnamed', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True):
     """
     Create a networkx graph from OSM data within some distance of some address.
     
@@ -1671,7 +1702,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
 
 
 def graph_from_polygon(polygon, network_type='all_private', simplify=True, retain_all=False, 
-                       truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=0.4, clean_periphery=True):
+                       truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True):
     """
     Create a networkx graph from OSM data within the spatial boundaries of the passed-in shapely polygon.
     
@@ -1727,8 +1758,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
         start_time = time.time()
         k_buffered = G_buffered.to_undirected(reciprocal=False).degree()
         nodes = set(G.nodes())
-        k = {key:value for key, value in k_buffered.items() if key in nodes}
-        G.graph['degree_undirected_buffered'] = k
+        G.graph['degree_undirected_buffered'] = {key:value for key, value in k_buffered.items() if key in nodes}
         log('Got undirected node degrees for graph (before removing peripheral edges) in {:,.2f} seconds'.format(time.time()-start_time))
     
     else:
@@ -1751,7 +1781,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
     
         
 def graph_from_place(query, network_type='all_private', simplify=True, retain_all=False, 
-                     truncate_by_edge=False, name='unnamed', which_result=1, buffer_dist=None, timeout=180, memory=None, max_query_area_size=0.4, clean_periphery=True):
+                     truncate_by_edge=False, name='unnamed', which_result=1, buffer_dist=None, timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some geocodable place(s).
     
@@ -1873,11 +1903,12 @@ def project_graph(G):
     # set the graph's CRS attribute to the new, projected CRS and return the projected graph
     G_proj.graph['crs'] = gdf_nodes_utm.crs
     G_proj.graph['name'] = '{}_UTM'.format(graph_name)
-    G_proj.graph['degree_undirected_buffered'] = G.graph['degree_undirected_buffered']
+    if 'degree_undirected_buffered' in G.graph:
+        G_proj.graph['degree_undirected_buffered'] = G.graph['degree_undirected_buffered']
     log('Rebuilt projected graph in {:,.2f} seconds'.format(time.time()-start_time))
     return G_proj
-
-
+    
+    
 def get_undirected(G):
     """
     Convert a directed graph to an undirected graph that maintains parallel edges in opposite directions if geometries differ.
@@ -2644,11 +2675,26 @@ def basic_stats(G, area=None):
     Parameters
     ----------
     G : graph
-    area : numeric, the area covered by the street network, in square meters; if none, will skip density-based metrics
+    area : numeric, the area covered by the street network, in square meters (typically land area); if none, will skip all density-based metrics
     
     Returns
     -------
-    stats : dict
+    stats : dict, containing the following elements:
+        n = number of nodes in the graph
+        m = number of edges in the graph
+        k_avg = average node degree of the graph
+        avg_streets_per_intersection = how many streets (edges in the undirected representation of the graph) emanate from each intersection (node) on average (mean)
+        counts_streets_per_intersection = dict, with keys of number of streets emanating from the intersection, and values of number of intersections with this count
+        proportion_streets_per_intersection = dict, same as previous, but as a proportion of the total, rather than counts
+        total_edge_length = sum of all edge lengths in the graph, in meters
+        avg_edge_length = mean edge length in the graph, in meters
+        total_street_length = sum of all edges in the undirected representation of the graph
+        avg_street_length = mean edge length in the undirected representation of the graph, in meters
+        count_street_segments = number of edges in the undirected representation of the graph
+        node_density_km = n divided by area in square kilometers
+        edge_density_km = total_edge_length divided by area in square kilometers
+        avg_circuity = total_edge_length divided by the sum of the great circle distances between the nodes of each edge
+        self_loop_proportion = proportion of edges that have a single node as its two endpoints (ie, the edge links nodes u and v, and u==v)
     """
     
     sq_m_to_sq_km = 1000000 #there are 1 million sq meters in 1 sq km
@@ -2687,7 +2733,8 @@ def basic_stats(G, area=None):
     if G_undirected is None:
         G_undirected = G.to_undirected(reciprocal=False)
     total_street_length = sum([d['length'] for u, v, d in G_undirected.edges(data=True)])
-    avg_street_length = total_street_length / m
+    count_street_segments = len(G_undirected.edges(keys=True))
+    avg_street_length = total_street_length / count_street_segments
     
     # we can calculate density metrics only if area is not null
     if not area is None:
@@ -2700,7 +2747,7 @@ def basic_stats(G, area=None):
         # if area is None, then we cannot calculate density
         node_density_km = None
         edge_density_km = None
-
+    
     # average circuity: sum of edge lengths divided by sum of great circle distance between edge endpoints
     points = [((G.node[u]['y'], G.node[u]['x']), (G.node[v]['y'], G.node[v]['x'])) for u, v in G.edges()]
     great_circle_distances = [great_circle(p1, p2).m for p1, p2 in points]
@@ -2725,6 +2772,7 @@ def basic_stats(G, area=None):
              'avg_edge_length':avg_edge_length,
              'total_street_length':total_street_length,
              'avg_street_length':avg_street_length,
+             'count_street_segments':count_street_segments,
              'node_density_km':node_density_km, 
              'edge_density_km':edge_density_km,
              'avg_circuity':avg_circuity,
