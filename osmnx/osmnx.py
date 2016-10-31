@@ -27,7 +27,8 @@
 ###################################################################################################
 
 import json, math, sys, os, io, ast, unicodedata, hashlib, re, random, time, datetime as dt, logging as lg
-from collections import OrderedDict
+from collections import OrderedDict, Counter
+from itertools import groupby, chain
 from dateutil import parser as date_parser
 import requests, numpy as np, pandas as pd, geopandas as gpd, networkx as nx, matplotlib.pyplot as plt, matplotlib.cm as cm
 from matplotlib.collections import LineCollection
@@ -896,7 +897,7 @@ def project_geometry(geometry, crs, to_latlong=False):
 
 def consolidate_subdivide_geometry(geometry, max_query_area_size):
     """
-    Consolidate a geometry into a convex hull, then subdivide it into smaller sub-polygons if its area exceeds max size.
+    Consolidate a geometry into a convex hull, then subdivide it into smaller sub-polygons if its area exceeds max size (in geometry's units).
     
     Parameters
     ----------
@@ -959,7 +960,7 @@ def get_polygons_coordinates(geometry):
         s = ''
         separator = ' '
         for coord in list(coords):
-            # round floating point lats and longs to ~1 nanometer, so we can hash and cache strings consistently
+            # round floating point lats and longs to 14 places, so we can hash and cache strings consistently
             s = '{}{}{:.14f}{}{:.14f}'.format(s, separator, coord[1], separator, coord[0])
         polygon_coord_strs.append(s.strip(separator))
     
@@ -1003,7 +1004,11 @@ def get_path(element):
     """
     path = {}
     path['osmid'] = element['id']
-    path['nodes'] = element['nodes']
+    
+    # remove any consecutive duplicate elements in the list of nodes
+    grouped_list = groupby(element['nodes'])
+    path['nodes'] = [group[0] for group in grouped_list]
+    
     if 'tags' in element:
         for useful_tag in _useful_tags_path:
             if useful_tag in element['tags']:
@@ -1578,15 +1583,10 @@ def graph_from_bbox(north, south, east, west, network_type='all_private', simpli
         
         # truncate graph by desired bbox to return the graph within the bbox caller wants
         G = truncate_graph_bbox(G_buffered, north, south, east, west, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
+       
+        # count how many street segments in buffered graph emanate from each intersection in un-buffered graph, to retain true counts for each intersection, even if some of its neighbors are outside the bbox
+        G.graph['streets_per_intersection'] = count_streets_per_intersection(G_buffered, nodes=G.nodes())
         
-        # retain the degree of each node in this smaller graph, saved as graph attribute
-        # this retains the true degree of each node, even if some of its neighbors are outside the bbox
-        start_time = time.time()
-        k_buffered = G_buffered.to_undirected(reciprocal=False).degree()
-        nodes = set(G.nodes())
-        G.graph['degree_undirected_buffered'] = {key:value for key, value in k_buffered.items() if key in nodes}
-        log('Got undirected node degrees for graph (before removing peripheral edges) in {:,.2f} seconds'.format(time.time()-start_time))
-    
     else:
         # get the network data from OSM
         response_jsons = osm_net_download(north=north, south=south, east=east, west=west, network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size)
@@ -1750,16 +1750,12 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
         # simplify the graph topology
         G_buffered = simplify_graph(G_buffered)
         
-        # truncate graph by polygon to return the graph within the polygon caller wants
+        # truncate graph by polygon to return the graph within the polygon that caller wants
+        # don't simplify again - this allows us to retain intersections along the street that may now only connect 2 street segments in the network, but in reality also connect to an intersection just outside the polygon
         G = truncate_graph_polygon(G_buffered, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
         
-        # retain the degree of each node in this smaller graph, saved as graph attribute
-        # this retains the true degree of each node, even if some of its neighbors are outside the polygon
-        start_time = time.time()
-        k_buffered = G_buffered.to_undirected(reciprocal=False).degree()
-        nodes = set(G.nodes())
-        G.graph['degree_undirected_buffered'] = {key:value for key, value in k_buffered.items() if key in nodes}
-        log('Got undirected node degrees for graph (before removing peripheral edges) in {:,.2f} seconds'.format(time.time()-start_time))
+        # count how many street segments in buffered graph emanate from each intersection in un-buffered graph, to retain true counts for each intersection, even if some of its neighbors are outside the polygon
+        G.graph['streets_per_intersection'] = count_streets_per_intersection(G_buffered, nodes=G.nodes())
     
     else:
         # download a list of API responses for the polygon/multipolygon
@@ -1828,6 +1824,57 @@ def graph_from_place(query, network_type='all_private', simplify=True, retain_al
     return G
     
 
+def count_streets_per_intersection(G, nodes=None):
+    """
+    Count how many street segments emanate from each intersection in this graph. If nodes
+    is passed, then only count the nodes in the graph with those IDs.
+    
+    Parameters
+    ----------
+    G : graph
+    nodes : iterable, the set of node IDs to get counts for
+    
+    Returns
+    ----------
+    streets_per_intersection : dict, counts of how many streets emanate from each intersection with keys=node id and values=count
+    """
+    
+    start_time = time.time()
+    
+    # to calculate the counts, get undirected representation of the graph. for each node, get the list of the set of unique u,v,key edges, including parallel edges but excluding self-loop parallel edges 
+    # (this is necessary because bi-directional self-loops will appear twice in the undirected graph as you have u,v,key0 and u,v,key1 where u==v when you convert from MultiDiGraph to MultiGraph - BUT,
+    # one-way self-loops will appear only once. to get consistent accurate counts of physical streets, ignoring directionality, we need the list of the set of unique edges...).
+    # then, count how many times the node appears in the u,v tuples in the list. this is the count of how many street segments emanate from this intersection/node.
+    # finally create a dict of node id:count
+    G_undir = G.to_undirected(reciprocal=False)
+    all_edges = G_undir.edges(keys=False)
+    if nodes is None:
+        nodes = G_undir.nodes()
+
+    # get all unique edges - this throws away any parallel edges (including those in self-loops)
+    all_unique_edges = set(all_edges)
+    
+    # get all edges (including parallel edges) that are not self-loops
+    non_self_loop_edges = [e for e in all_edges if not e[0]==e[1]]
+    
+    # get a single copy of each self-loop edge (ie, if it's bi-directional, we ignore the parallel edge going the reverse direction and keep only one copy)
+    set_non_self_loop_edges = set(non_self_loop_edges)
+    self_loop_edges = [e for e in all_unique_edges if e not in set_non_self_loop_edges]
+    
+    # final list contains all unique edges, including each parallel edge, unless the parallel edge is a self-loop
+    # in which case it doesn't double-count the self-loop
+    edges = non_self_loop_edges + self_loop_edges
+    
+    # flatten the list of (u,v) tuples
+    edges_flat = list(chain.from_iterable(edges))
+    
+    # count how often each node appears in the list of flattened edge endpoints
+    counts = Counter(edges_flat)
+    streets_per_intersection = {node:counts[node] for node in nodes}
+    log('Got the counts of undirected street segments incident to each intersection (before removing peripheral edges) in {:,.2f} seconds'.format(time.time()-start_time))
+    return streets_per_intersection   
+
+    
 def project_graph(G):
     """
     Project a graph from lat-long to the UTM zone appropriate for its geographic location.
@@ -1903,8 +1950,8 @@ def project_graph(G):
     # set the graph's CRS attribute to the new, projected CRS and return the projected graph
     G_proj.graph['crs'] = gdf_nodes_utm.crs
     G_proj.graph['name'] = '{}_UTM'.format(graph_name)
-    if 'degree_undirected_buffered' in G.graph:
-        G_proj.graph['degree_undirected_buffered'] = G.graph['degree_undirected_buffered']
+    if 'streets_per_intersection' in G.graph:
+        G_proj.graph['streets_per_intersection'] = G.graph['streets_per_intersection']
     log('Rebuilt projected graph in {:,.2f} seconds'.format(time.time()-start_time))
     return G_proj
     
@@ -2095,8 +2142,8 @@ def load_graphml(filename, folder=None):
     # convert graph crs attribute from saved string to correct dict data type
     G.graph['crs'] = ast.literal_eval(G.graph['crs'])
      
-    if 'degree_undirected_buffered' in G.graph:
-        G.graph['degree_undirected_buffered'] = ast.literal_eval(G.graph['degree_undirected_buffered'])
+    if 'streets_per_intersection' in G.graph:
+        G.graph['streets_per_intersection'] = ast.literal_eval(G.graph['streets_per_intersection'])
         
     # convert numeric node tags from string to numeric data types
     log('Converting node and edge attribute data types')
@@ -2707,10 +2754,10 @@ def basic_stats(G, area=None):
     # calculate the average degree of the graph: k = 2 * m / n
     k_avg = 2 * len(G.edges()) / len(G.nodes())
     
-    if 'degree_undirected_buffered' in G.graph:
+    if 'streets_per_intersection' in G.graph:
         # get the degrees saved as a graph attribute (from an undirected representation of the graph)
         # this is not the degree of the nodes in the directed graph, but rather represents the number of streets (unidirected edges) incident to each intersection (node)
-        streets_per_intersection = G.graph['degree_undirected_buffered']
+        streets_per_intersection = G.graph['streets_per_intersection']
     else:
         # use an undirected graph to get the number of streets (unidirected edges) incident to each intersection (node)
         G_undirected = G.to_undirected(reciprocal=False)
