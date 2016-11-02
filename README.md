@@ -1,6 +1,6 @@
 # OSMnx
 
-Retrieve and construct spatial geometries and street networks from OpenStreetMap
+Retrieve and construct spatial geometries and street networks from OpenStreetMap. [Full overview](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
 
 OSMnx is a Python library that lets you download spatial geometries and construct, project, visualize, 
 and analyze street networks from OpenStreetMap's APIs. Users can download and construct walkable, drivable, or bikable 
@@ -13,7 +13,7 @@ stats = ox.basic_stats(G)
 ox.plot_graph(G)
 ```
 
-For an overview of OSMnx, see this [demo notebook](examples/01-overview-osmnx.ipynb).
+For a quick demo overview of OSMnx, see this [demo notebook](examples/01-overview-osmnx.ipynb).
 
 ## Installation
 
@@ -82,5 +82,7 @@ see [this notebook](examples/05-example-save-load-networks-shapes.ipynb).
 OSMnx allows you to calculate origin-destination routes along the network and quickly visualize them. You can easily
 visualize one-way streets, cul de sacs, high/low connectivity intersections, etc. OSMnx provides built-in capabilities
 to quickly calculate spatial network metrics like intersection density, average intersection degree, edge density, 
-average street segment length, etc. For more examples of analyzing street networks with OSMnx, 
+average street segment length, clustering coefficients, betweenness centrality, etc. For more examples of analyzing street networks with OSMnx, 
 see [this notebook](examples/06-example-osmnx-networkx.ipynb)
+
+For a more complete overview of [OSMnx, read this](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
