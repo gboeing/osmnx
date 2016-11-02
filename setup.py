@@ -4,7 +4,7 @@
 from setuptools import setup
 
 setup(name='OSMnx',
-      version='0.1a1.dev10',
+      version='0.1a1.dev11',
       description='Retrieve and construct spatial geometries and street networks from OpenStreetMap',
       url='https://github.com/gboeing/osmnx',
       author='Geoff Boeing',

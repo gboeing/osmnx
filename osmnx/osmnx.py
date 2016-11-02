@@ -638,6 +638,8 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     gdf.to_file(folder_path)
+    if not hasattr(gdf, 'name'):
+        gdf.name = 'unnamed'
     log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.name, folder_path))
  
 
@@ -663,6 +665,8 @@ def project_gdf(gdf, to_latlong=False):
         # if to_latlong is True, project the gdf to latlong
         latlong_crs = {'init':'epsg:4326'}
         projected_gdf = gdf.to_crs(latlong_crs)
+        if not hasattr(gdf, 'name'):
+            gdf.name = 'unnamed'
         log('Projected the GeoDataFrame "{}" to EPSG 4326 in {:,.2f} seconds'.format(gdf.name, time.time()-start_time))
     else:
         # else, project the gdf to UTM
@@ -683,6 +687,8 @@ def project_gdf(gdf, to_latlong=False):
         
         # project the GeoDataFrame to the UTM CRS
         projected_gdf = gdf.to_crs(utm_crs)
+        if not hasattr(gdf, 'name'):
+            gdf.name = 'unnamed'
         log('Projected the GeoDataFrame "{}" to UTM-{} in {:,.2f} seconds'.format(gdf.name, utm_zone, time.time()-start_time))
     
     projected_gdf.name = gdf.name
@@ -894,7 +900,7 @@ def project_geometry(geometry, crs, to_latlong=False):
     """
     gdf = gpd.GeoDataFrame()
     gdf.crs = crs
-    gdf.name = ''
+    gdf.name = 'geometry to project'
     gdf['geometry'] = None
     gdf.loc[0, 'geometry'] = geometry
     gdf_proj = project_gdf(gdf, to_latlong=to_latlong)
@@ -1569,15 +1575,10 @@ def graph_from_bbox(north, south, east, west, network_type='all_private', simpli
         # create a new buffered bbox 0.5km around the desired one
         buffer_dist = 500
         polygon = Polygon([(west, north), (west, south), (east, south), (east, north)])
-        gdf = gpd.GeoDataFrame(columns=['geometry'], dtype=object)
-        gdf.crs = {'init':'epsg:4326'}
-        gdf.name = ''
-        gdf.loc[0, 'geometry'] = polygon
-        gdf_utm = project_gdf(gdf)
-        gdf_utm['geometry'] = gdf_utm['geometry'].buffer(buffer_dist)
-        gdf = project_gdf(gdf_utm, to_latlong=True)
-        polygon_buffered = gdf['geometry'].iloc[0]
-        west_buffered, south_buffered, east_buffered, north_buffered = polygon_buffered.bounds
+        polygon_utm, crs_utm = project_geometry(geometry=polygon, crs={'init':'epsg:4326'})
+        polygon_proj_buff = polygon_utm.buffer(buffer_dist)
+        polygon_buff, crs = project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
+        west_buffered, south_buffered, east_buffered, north_buffered = polygon_buff.bounds
         
         # get the network data from OSM then create the graph
         response_jsons = osm_net_download(north=north_buffered, south=south_buffered, east=east_buffered, west=west_buffered, 
@@ -1740,14 +1741,9 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
     if clean_periphery and simplify:
         # create a new buffered polygon 0.5km around the desired one
         buffer_dist = 500
-        gdf = gpd.GeoDataFrame(columns=['geometry'], dtype=object)
-        gdf.crs = {'init':'epsg:4326'}
-        gdf.name = ''
-        gdf.loc[0, 'geometry'] = polygon
-        gdf_utm = project_gdf(gdf)
-        gdf_utm['geometry'] = gdf_utm['geometry'].buffer(buffer_dist)
-        gdf = project_gdf(gdf_utm, to_latlong=True)
-        polygon_buffered = gdf['geometry'].iloc[0]
+        polygon_utm, crs_utm = project_geometry(geometry=polygon, crs={'init':'epsg:4326'})
+        polygon_proj_buff = polygon_utm.buffer(buffer_dist)
+        polygon_buffered, crs = project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
         
         # get the network data from OSM,  create the buffered graph, then truncate it to the buffered polygon
         response_jsons = osm_net_download(polygon=polygon_buffered, network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size)
@@ -2737,21 +2733,22 @@ def basic_stats(G, area=None):
         n = number of nodes in the graph
         m = number of edges in the graph
         k_avg = average node degree of the graph
-        avg_streets_per_intersection = how many streets (edges in the undirected representation of the graph) emanate from each intersection (node) on average (mean)
-        counts_streets_per_intersection = dict, with keys of number of streets emanating from the intersection, and values of number of intersections with this count
-        proportion_streets_per_intersection = dict, same as previous, but as a proportion of the total, rather than counts
-        total_edge_length = sum of all edge lengths in the graph, in meters
-        avg_edge_length = mean edge length in the graph, in meters
-        total_street_length = sum of all edges in the undirected representation of the graph
-        avg_street_length = mean edge length in the undirected representation of the graph, in meters
-        count_street_segments = number of edges in the undirected representation of the graph
+        streets_per_intersection_avg = how many streets (edges in the undirected representation of the graph) emanate from each intersection (node) on average (mean)
+        streets_per_intersection_counts = dict, with keys of number of streets emanating from the intersection, and values of number of intersections with this count
+        streets_per_intersection_proportion = dict, same as previous, but as a proportion of the total, rather than counts
+        edge_length_total = sum of all edge lengths in the graph, in meters
+        edge_length_avg = mean edge length in the graph, in meters
+        street_length_total = sum of all edges in the undirected representation of the graph
+        street_length_avg = mean edge length in the undirected representation of the graph, in meters
+        street_segments_count = number of edges in the undirected representation of the graph
         node_density_km = n divided by area in square kilometers
-        edge_density_km = total_edge_length divided by area in square kilometers
-        avg_circuity = total_edge_length divided by the sum of the great circle distances between the nodes of each edge
+        edge_density_km = edge_length_total divided by area in square kilometers
+        street_density_km = street_length_total divided by area in square kilometers
+        circuity_avg = edge_length_total divided by the sum of the great circle distances between the nodes of each edge
         self_loop_proportion = proportion of edges that have a single node as its two endpoints (ie, the edge links nodes u and v, and u==v)
     """
     
-    sq_m_to_sq_km = 1000000 #there are 1 million sq meters in 1 sq km
+    sq_m_in_sq_km = 1e6 #there are 1 million sq meters in 1 sq km
     G_undirected = None
     
     # calculate the number of nodes, n, and the number of edges, m, in the graph
@@ -2771,44 +2768,50 @@ def basic_stats(G, area=None):
         streets_per_intersection = G_undirected.degree()
     
     # calculate the average number of streets (unidirected edges) incident to each intersection (node)
-    avg_streets_per_intersection = sum(streets_per_intersection.values()) / n
+    streets_per_intersection_avg = sum(streets_per_intersection.values()) / n
     
     # create a dict where key = number of streets (unidirected edges) incident to each intersection (node), and value = how many intersections are of this number in the graph
-    counts_streets_per_intersection = {num:list(streets_per_intersection.values()).count(num) for num in range(max(streets_per_intersection.values()) + 1)}
+    streets_per_intersection_counts = {num:list(streets_per_intersection.values()).count(num) for num in range(max(streets_per_intersection.values()) + 1)}
     
     # degree proportions: dict where key = each degree and value = what proportion of nodes are of this degree in the graph
-    proportion_streets_per_intersection = {num:count/n for num, count in counts_streets_per_intersection.items()}
+    streets_per_intersection_proportion = {num:count/n for num, count in streets_per_intersection_counts.items()}
     
     # calculate the total and average edge lengths
-    total_edge_length = sum([d['length'] for u, v, d in G.edges(data=True)])
-    avg_edge_length = total_edge_length / m
+    edge_length_total = sum([d['length'] for u, v, d in G.edges(data=True)])
+    edge_length_avg = edge_length_total / m
     
     # calculate the total and average street segment lengths (so, edges without double-counting two-way streets)
     if G_undirected is None:
         G_undirected = G.to_undirected(reciprocal=False)
-    total_street_length = sum([d['length'] for u, v, d in G_undirected.edges(data=True)])
-    count_street_segments = len(G_undirected.edges(keys=True))
-    avg_street_length = total_street_length / count_street_segments
+    street_length_total = sum([d['length'] for u, v, d in G_undirected.edges(data=True)])
+    street_segments_count = len(G_undirected.edges(keys=True))
+    street_length_avg = street_length_total / street_segments_count
     
     # we can calculate density metrics only if area is not null
     if not area is None:
+        area_km = area / sq_m_in_sq_km
+        
         # calculate node density as nodes per sq km
-        node_density_km = n * sq_m_to_sq_km / area
+        node_density_km = n / area_km
 
         # calculate edge density as linear meters per sq km
-        edge_density_km = total_edge_length * sq_m_to_sq_km / area
+        edge_density_km = edge_length_total / area_km
+        
+        # calculate street density as linear meters per sq km
+        street_density_km = street_length_total / area_km
     else:
         # if area is None, then we cannot calculate density
         node_density_km = None
         edge_density_km = None
+        street_density_km = None
     
     # average circuity: sum of edge lengths divided by sum of great circle distance between edge endpoints
     points = [((G.node[u]['y'], G.node[u]['x']), (G.node[v]['y'], G.node[v]['x'])) for u, v in G.edges()]
     great_circle_distances = [great_circle(p1, p2).m for p1, p2 in points]
     try:
-        avg_circuity = total_edge_length / sum(great_circle_distances)
+        circuity_avg = edge_length_total / sum(great_circle_distances)
     except ZeroDivisionError:
-        avg_circuity = np.nan
+        circuity_avg = np.nan
 
     # percent of edges that are self-loops, ie both endpoints are the same node
     self_loops = [True for u, v, k in G.edges(keys=True) if u == v]
@@ -2819,19 +2822,149 @@ def basic_stats(G, area=None):
     stats = {'n':n,
              'm':m,
              'k_avg':k_avg,
-             'avg_streets_per_intersection':avg_streets_per_intersection,
-             'counts_streets_per_intersection':counts_streets_per_intersection,
-             'proportion_streets_per_intersection':proportion_streets_per_intersection,
-             'total_edge_length':total_edge_length,
-             'avg_edge_length':avg_edge_length,
-             'total_street_length':total_street_length,
-             'avg_street_length':avg_street_length,
-             'count_street_segments':count_street_segments,
+             'streets_per_intersection_avg':streets_per_intersection_avg,
+             'streets_per_intersection_counts':streets_per_intersection_counts,
+             'streets_per_intersection_proportion':streets_per_intersection_proportion,
+             'edge_length_total':edge_length_total,
+             'edge_length_avg':edge_length_avg,
+             'street_length_total':street_length_total,
+             'street_length_avg':street_length_avg,
+             'street_segments_count':street_segments_count,
              'node_density_km':node_density_km, 
              'edge_density_km':edge_density_km,
-             'avg_circuity':avg_circuity,
+             'street_density_km':street_density_km,
+             'circuity_avg':circuity_avg,
              'self_loop_proportion':self_loop_proportion}
 
     # return the results
     return stats
 
+
+def extended_stats(G, connectivity=False, ecc=False, bc=False, cc=False):
+    """
+    Calculate extended topological stats and metrics for a graph. Global topological analysis of large complex networks is extremely 
+    time consuming and may exhaust computer memory. Consider using function arguments to not run metrics that require computation of
+    a full shortest paths matrix if they will not be needed.
+    
+    Parameters
+    ----------
+    G : graph
+    connectivity : bool, if True, calculate node and edge connectivity
+    ecc : bool, if True, calculate shortest paths, eccentricity, and topological metrics that use eccentricity
+    bc : bool, if True, calculate node betweenness centrality
+    cc : bool, if True, calculate node closeness centrality
+    
+    Returns
+    -------
+    stats : dict
+    """
+    
+    stats = {}
+    full_start_time = time.time()
+
+    # create a DiGraph from the MultiDiGraph, for those metrics that require it
+    G_dir = nx.DiGraph(G)
+
+    # create an undirected Graph from the MultiDiGraph, for those metrics that require it
+    G_undir = nx.Graph(G)
+
+    # get the largest strongly connected component, for those metrics that require strongly connected graphs
+    G_strong = get_largest_component(G, strongly=True)
+    
+    # average degree of the neighborhood of each node, and average for the graph
+    avg_neighbor_degree = nx.average_neighbor_degree(G)
+    stats['avg_neighbor_degree'] = avg_neighbor_degree
+    stats['avg_neighbor_degree_avg'] = sum(avg_neighbor_degree.values())/len(avg_neighbor_degree)
+
+    # average weighted degree of the neighborhood of each node, and average for the graph
+    avg_weighted_neighbor_degree = nx.average_neighbor_degree(G, weight='length')
+    stats['avg_weighted_neighbor_degree'] = avg_weighted_neighbor_degree
+    stats['avg_weighted_neighbor_degree_avg'] = sum(avg_weighted_neighbor_degree.values())/len(avg_weighted_neighbor_degree)
+
+    # degree centrality for a node is the fraction of nodes it is connected to
+    degree_centrality = nx.degree_centrality(G)
+    stats['degree_centrality'] = degree_centrality
+    stats['degree_centrality_avg'] = sum(degree_centrality.values())/len(degree_centrality)
+
+    # calculate clustering coefficient for the nodes
+    stats['clustering_coefficient'] = nx.clustering(G_undir)
+
+    # calculate weighted clustering coefficient for the nodes
+    stats['clustering_coefficient_weighted'] = nx.clustering(G_undir, weight='length')
+
+    # average clustering coefficient (weighted) for the graph
+    stats['avg_clustering_coefficient_weighted'] = nx.average_clustering(G_undir, weight='length')
+
+    # pagerank: a ranking of the nodes in the graph based on the structure of the incoming links
+    pagerank = nx.pagerank(G_dir, weight='length')
+    stats['pagerank'] = pagerank
+
+    # node with the highest page rank, and its value
+    pagerank_max_node = max(pagerank, key=lambda x: pagerank[x])
+    stats['pagerank_max_node'] = pagerank_max_node
+    stats['pagerank_max'] = pagerank[pagerank_max_node]
+
+    # node with the lowest page rank, and its value
+    pagerank_min_node = min(pagerank, key=lambda x: pagerank[x])
+    stats['pagerank_min_node'] = pagerank_min_node
+    stats['pagerank_min'] = pagerank[pagerank_min_node]
+    
+    if connectivity:
+        start_time = time.time()
+        
+        # node connectivity is the minimum number of nodes that must be removed to disconnect G or render it trivial
+        stats['node_connectivity'] = nx.node_connectivity(G_strong)
+
+        # edge connectivity is equal to the minimum number of edges that must be removed to disconnect G or render it trivial
+        stats['edge_connectivity'] = nx.edge_connectivity(G_strong)
+        log('Calculated node and edge connectivity in {:,.2f} seconds'.format(time.time() - start_time))
+    
+    if ecc:
+        # precompute shortest paths between all nodes for eccentricity-based stats
+        start_time = time.time()
+        sp = {source:nx.single_source_dijkstra_path_length(G_strong, source, weight='length') for source in G_strong.nodes()}
+        log('Calculated shortest path lengths in {:,.2f} seconds'.format(time.time() - start_time))
+        
+        # eccentricity of a node v is the maximum distance from v to all other nodes in G
+        eccentricity = nx.eccentricity(G_strong, sp=sp)
+        stats['eccentricity'] = eccentricity
+
+        # diameter is the maximum eccentricity
+        diameter = nx.diameter(G_strong, e=eccentricity)
+        stats['diameter'] = diameter
+
+        # radius is the minimum eccentricity
+        radius = nx.radius(G_strong, e=eccentricity)
+        stats['radius'] = radius
+
+        # center is the set of nodes with eccentricity equal to radius
+        center = nx.center(G_strong, e=eccentricity)
+        stats['center'] = center
+
+        # periphery is the set of nodes with eccentricity equal to the diameter
+        periphery = nx.periphery(G_strong, e=eccentricity)
+        stats['periphery'] = periphery
+    
+    if cc:
+        # closeness centrality of a node is the reciprocal of the sum of the shortest path distances from u to all other nodes
+        start_time = time.time()
+        closeness_centrality = nx.closeness_centrality(G, distance='length')
+        stats['closeness_centrality'] = closeness_centrality
+        stats['closeness_centrality_avg'] = sum(closeness_centrality.values())/len(closeness_centrality)
+        log('Calculated closeness centrality in {:,.2f} seconds'.format(time.time() - start_time))
+        
+    if bc:
+        # betweenness centrality of a node is the sum of the fraction of all-pairs shortest paths that pass through node
+        start_time = time.time()
+        betweenness_centrality = nx.betweenness_centrality(G, weight='length')
+        stats['betweenness_centrality'] = betweenness_centrality
+        stats['betweenness_centrality_avg'] = sum(betweenness_centrality.values())/len(betweenness_centrality)
+        log('Calculated betweenness centrality in {:,.2f} seconds'.format(time.time() - start_time))
+    
+    log('Calculated extended stats in {:,.2f} seconds'.format(time.time()-full_start_time))
+    return stats
+    
+    
+    
+    
+ 
