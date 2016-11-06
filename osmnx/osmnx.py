@@ -1593,7 +1593,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private', simpli
         G = truncate_graph_bbox(G_buffered, north, south, east, west, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
        
         # count how many street segments in buffered graph emanate from each intersection in un-buffered graph, to retain true counts for each intersection, even if some of its neighbors are outside the bbox
-        G.graph['streets_per_intersection'] = count_streets_per_intersection(G_buffered, nodes=G.nodes())
+        G.graph['streets_per_node'] = count_streets_per_node(G_buffered, nodes=G.nodes())
         
     else:
         # get the network data from OSM
@@ -1758,7 +1758,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
         G = truncate_graph_polygon(G_buffered, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
         
         # count how many street segments in buffered graph emanate from each intersection in un-buffered graph, to retain true counts for each intersection, even if some of its neighbors are outside the polygon
-        G.graph['streets_per_intersection'] = count_streets_per_intersection(G_buffered, nodes=G.nodes())
+        G.graph['streets_per_node'] = count_streets_per_node(G_buffered, nodes=G.nodes())
     
     else:
         # download a list of API responses for the polygon/multipolygon
@@ -1827,9 +1827,9 @@ def graph_from_place(query, network_type='all_private', simplify=True, retain_al
     return G
     
 
-def count_streets_per_intersection(G, nodes=None):
+def count_streets_per_node(G, nodes=None):
     """
-    Count how many street segments emanate from each intersection in this graph. If nodes
+    Count how many street segments emanate from each node (i.e., intersections and dead-ends) in this graph. If nodes
     is passed, then only count the nodes in the graph with those IDs.
     
     Parameters
@@ -1839,7 +1839,7 @@ def count_streets_per_intersection(G, nodes=None):
     
     Returns
     ----------
-    streets_per_intersection : dict, counts of how many streets emanate from each intersection with keys=node id and values=count
+    streets_per_node : dict, counts of how many streets emanate from each node with keys=node id and values=count
     """
     
     start_time = time.time()
@@ -1847,7 +1847,7 @@ def count_streets_per_intersection(G, nodes=None):
     # to calculate the counts, get undirected representation of the graph. for each node, get the list of the set of unique u,v,key edges, including parallel edges but excluding self-loop parallel edges 
     # (this is necessary because bi-directional self-loops will appear twice in the undirected graph as you have u,v,key0 and u,v,key1 where u==v when you convert from MultiDiGraph to MultiGraph - BUT,
     # one-way self-loops will appear only once. to get consistent accurate counts of physical streets, ignoring directionality, we need the list of the set of unique edges...).
-    # then, count how many times the node appears in the u,v tuples in the list. this is the count of how many street segments emanate from this intersection/node.
+    # then, count how many times the node appears in the u,v tuples in the list. this is the count of how many street segments emanate from this node.
     # finally create a dict of node id:count
     G_undir = G.to_undirected(reciprocal=False)
     all_edges = G_undir.edges(keys=False)
@@ -1873,9 +1873,9 @@ def count_streets_per_intersection(G, nodes=None):
     
     # count how often each node appears in the list of flattened edge endpoints
     counts = Counter(edges_flat)
-    streets_per_intersection = {node:counts[node] for node in nodes}
-    log('Got the counts of undirected street segments incident to each intersection (before removing peripheral edges) in {:,.2f} seconds'.format(time.time()-start_time))
-    return streets_per_intersection   
+    streets_per_node = {node:counts[node] for node in nodes}
+    log('Got the counts of undirected street segments incident to each node (before removing peripheral edges) in {:,.2f} seconds'.format(time.time()-start_time))
+    return streets_per_node   
 
     
 def project_graph(G):
@@ -1953,8 +1953,8 @@ def project_graph(G):
     # set the graph's CRS attribute to the new, projected CRS and return the projected graph
     G_proj.graph['crs'] = gdf_nodes_utm.crs
     G_proj.graph['name'] = '{}_UTM'.format(graph_name)
-    if 'streets_per_intersection' in G.graph:
-        G_proj.graph['streets_per_intersection'] = G.graph['streets_per_intersection']
+    if 'streets_per_node' in G.graph:
+        G_proj.graph['streets_per_node'] = G.graph['streets_per_node']
     log('Rebuilt projected graph in {:,.2f} seconds'.format(time.time()-start_time))
     return G_proj
     
@@ -2145,8 +2145,8 @@ def load_graphml(filename, folder=None):
     # convert graph crs attribute from saved string to correct dict data type
     G.graph['crs'] = ast.literal_eval(G.graph['crs'])
      
-    if 'streets_per_intersection' in G.graph:
-        G.graph['streets_per_intersection'] = ast.literal_eval(G.graph['streets_per_intersection'])
+    if 'streets_per_node' in G.graph:
+        G.graph['streets_per_node'] = ast.literal_eval(G.graph['streets_per_node'])
         
     # convert numeric node tags from string to numeric data types
     log('Converting node and edge attribute data types')
@@ -2733,15 +2733,17 @@ def basic_stats(G, area=None):
         n = number of nodes in the graph
         m = number of edges in the graph
         k_avg = average node degree of the graph
-        streets_per_intersection_avg = how many streets (edges in the undirected representation of the graph) emanate from each intersection (node) on average (mean)
-        streets_per_intersection_counts = dict, with keys of number of streets emanating from the intersection, and values of number of intersections with this count
-        streets_per_intersection_proportion = dict, same as previous, but as a proportion of the total, rather than counts
+        count_intersections = number of intersections in graph, that is, nodes with >1 street emanating from them
+        streets_per_node_avg = how many streets (edges in the undirected representation of the graph) emanate from each node (ie, intersection or dead-end) on average (mean)
+        streets_per_node_counts = dict, with keys of number of streets emanating from the node, and values of number of nodes with this count
+        streets_per_node_proportion = dict, same as previous, but as a proportion of the total, rather than counts
         edge_length_total = sum of all edge lengths in the graph, in meters
         edge_length_avg = mean edge length in the graph, in meters
         street_length_total = sum of all edges in the undirected representation of the graph
         street_length_avg = mean edge length in the undirected representation of the graph, in meters
         street_segments_count = number of edges in the undirected representation of the graph
         node_density_km = n divided by area in square kilometers
+        intersection_density_km = count_intersections divided by area in square kilometers
         edge_density_km = edge_length_total divided by area in square kilometers
         street_density_km = street_length_total divided by area in square kilometers
         circuity_avg = edge_length_total divided by the sum of the great circle distances between the nodes of each edge
@@ -2755,26 +2757,29 @@ def basic_stats(G, area=None):
     n = len(G.nodes())
     m = len(G.edges())
     
-    # calculate the average degree of the graph: k = 2 * m / n
-    k_avg = 2 * len(G.edges()) / len(G.nodes())
+    # calculate the average degree of the graph
+    k_avg = 2 * m / n
     
-    if 'streets_per_intersection' in G.graph:
+    if 'streets_per_node' in G.graph:
         # get the degrees saved as a graph attribute (from an undirected representation of the graph)
-        # this is not the degree of the nodes in the directed graph, but rather represents the number of streets (unidirected edges) incident to each intersection (node)
-        streets_per_intersection = G.graph['streets_per_intersection']
+        # this is not the degree of the nodes in the directed graph, but rather represents the number of streets (unidirected edges) emanating from each node. see count_streets_per_node function.
+        streets_per_node = G.graph['streets_per_node']
     else:
-        # use an undirected graph to get the number of streets (unidirected edges) incident to each intersection (node)
-        G_undirected = G.to_undirected(reciprocal=False)
-        streets_per_intersection = G_undirected.degree()
+        # count how many street segments emanate from each node in this graph
+        streets_per_node = count_streets_per_node(G)
     
-    # calculate the average number of streets (unidirected edges) incident to each intersection (node)
-    streets_per_intersection_avg = sum(streets_per_intersection.values()) / n
+    # count number of intersections in graph, as nodes with >1 street emanating from them
+    node_ids = set(G.nodes())
+    count_intersections = len([True for node, count in streets_per_node.items() if (count > 1) and (node in node_ids)])
     
-    # create a dict where key = number of streets (unidirected edges) incident to each intersection (node), and value = how many intersections are of this number in the graph
-    streets_per_intersection_counts = {num:list(streets_per_intersection.values()).count(num) for num in range(max(streets_per_intersection.values()) + 1)}
+    # calculate the average number of streets (unidirected edges) incident to each node
+    streets_per_node_avg = sum(streets_per_node.values()) / n
+    
+    # create a dict where key = number of streets (unidirected edges) incident to each node, and value = how many nodes are of this number in the graph
+    streets_per_node_counts = {num:list(streets_per_node.values()).count(num) for num in range(max(streets_per_node.values()) + 1)}
     
     # degree proportions: dict where key = each degree and value = what proportion of nodes are of this degree in the graph
-    streets_per_intersection_proportion = {num:count/n for num, count in streets_per_intersection_counts.items()}
+    streets_per_node_proportion = {num:count/n for num, count in streets_per_node_counts.items()}
     
     # calculate the total and average edge lengths
     edge_length_total = sum([d['length'] for u, v, d in G.edges(data=True)])
@@ -2793,7 +2798,10 @@ def basic_stats(G, area=None):
         
         # calculate node density as nodes per sq km
         node_density_km = n / area_km
-
+        
+        # calculate intersection density as nodes with >1 street emanating from them, per sq km
+        intersection_density_km = count_intersections / area_km
+        
         # calculate edge density as linear meters per sq km
         edge_density_km = edge_length_total / area_km
         
@@ -2802,6 +2810,7 @@ def basic_stats(G, area=None):
     else:
         # if area is None, then we cannot calculate density
         node_density_km = None
+        intersection_density_km = None
         edge_density_km = None
         street_density_km = None
     
@@ -2822,15 +2831,17 @@ def basic_stats(G, area=None):
     stats = {'n':n,
              'm':m,
              'k_avg':k_avg,
-             'streets_per_intersection_avg':streets_per_intersection_avg,
-             'streets_per_intersection_counts':streets_per_intersection_counts,
-             'streets_per_intersection_proportion':streets_per_intersection_proportion,
+             'count_intersections':count_intersections,
+             'streets_per_node_avg':streets_per_node_avg,
+             'streets_per_node_counts':streets_per_node_counts,
+             'streets_per_node_proportion':streets_per_node_proportion,
              'edge_length_total':edge_length_total,
              'edge_length_avg':edge_length_avg,
              'street_length_total':street_length_total,
              'street_length_avg':street_length_avg,
              'street_segments_count':street_segments_count,
              'node_density_km':node_density_km, 
+             'intersection_density_km':intersection_density_km,
              'edge_density_km':edge_density_km,
              'street_density_km':street_density_km,
              'circuity_avg':circuity_avg,
@@ -2840,7 +2851,7 @@ def basic_stats(G, area=None):
     return stats
 
 
-def extended_stats(G, connectivity=False, ecc=False, bc=False, cc=False):
+def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=False):
     """
     Calculate extended topological stats and metrics for a graph. Global topological analysis of large complex networks is extremely 
     time consuming and may exhaust computer memory. Consider using function arguments to not run metrics that require computation of
@@ -2850,13 +2861,41 @@ def extended_stats(G, connectivity=False, ecc=False, bc=False, cc=False):
     ----------
     G : graph
     connectivity : bool, if True, calculate node and edge connectivity
+    anc : bool, if True, calculate average node connectivity
     ecc : bool, if True, calculate shortest paths, eccentricity, and topological metrics that use eccentricity
     bc : bool, if True, calculate node betweenness centrality
     cc : bool, if True, calculate node closeness centrality
     
     Returns
     -------
-    stats : dict
+    stats : dict, containing the following elements (some only calculated/returned optionally, based on passed parameters):
+        avg_neighbor_degree
+        avg_neighbor_degree_avg
+        avg_weighted_neighbor_degree
+        avg_weighted_neighbor_degree_avg
+        degree_centrality
+        degree_centrality_avg
+        clustering_coefficient
+        clustering_coefficient_avg
+        clustering_coefficient_weighted
+        clustering_coefficient_weighted_avg
+        pagerank
+        pagerank_max_node
+        pagerank_max
+        pagerank_min_node
+        pagerank_min
+        node_connectivity
+        average_node_connectivity
+        edge_connectivity
+        eccentricity
+        diameter
+        radius
+        center
+        periphery
+        closeness_centrality
+        closeness_centrality_avg
+        betweenness_centrality
+        betweenness_centrality_avg
     """
     
     stats = {}
@@ -2888,12 +2927,15 @@ def extended_stats(G, connectivity=False, ecc=False, bc=False, cc=False):
 
     # calculate clustering coefficient for the nodes
     stats['clustering_coefficient'] = nx.clustering(G_undir)
-
+    
+    # average clustering coefficient for the graph
+    stats['clustering_coefficient_avg'] = nx.average_clustering(G_undir)
+    
     # calculate weighted clustering coefficient for the nodes
     stats['clustering_coefficient_weighted'] = nx.clustering(G_undir, weight='length')
 
     # average clustering coefficient (weighted) for the graph
-    stats['avg_clustering_coefficient_weighted'] = nx.average_clustering(G_undir, weight='length')
+    stats['clustering_coefficient_weighted_avg'] = nx.average_clustering(G_undir, weight='length')
 
     # pagerank: a ranking of the nodes in the graph based on the structure of the incoming links
     pagerank = nx.pagerank(G_dir, weight='length')
@@ -2909,6 +2951,7 @@ def extended_stats(G, connectivity=False, ecc=False, bc=False, cc=False):
     stats['pagerank_min_node'] = pagerank_min_node
     stats['pagerank_min'] = pagerank[pagerank_min_node]
     
+    # if True, calculate node and edge connectivity
     if connectivity:
         start_time = time.time()
         
@@ -2919,6 +2962,13 @@ def extended_stats(G, connectivity=False, ecc=False, bc=False, cc=False):
         stats['edge_connectivity'] = nx.edge_connectivity(G_strong)
         log('Calculated node and edge connectivity in {:,.2f} seconds'.format(time.time() - start_time))
     
+    # if True, calculate average node connectivity    
+    if anc:
+        # mean number of internally node-disjoint paths between each pair of nodes in G
+        # i.e., the expected number of nodes that must be removed to disconnect a randomly selected pair of non-adjacent nodes
+        stats['average_node_connectivity'] = nx.average_node_connectivity(G)
+        
+    # if True, calculate shortest paths, eccentricity, and topological metrics that use eccentricity
     if ecc:
         # precompute shortest paths between all nodes for eccentricity-based stats
         start_time = time.time()
@@ -2945,6 +2995,7 @@ def extended_stats(G, connectivity=False, ecc=False, bc=False, cc=False):
         periphery = nx.periphery(G_strong, e=eccentricity)
         stats['periphery'] = periphery
     
+    # if True, calculate node closeness centrality
     if cc:
         # closeness centrality of a node is the reciprocal of the sum of the shortest path distances from u to all other nodes
         start_time = time.time()
@@ -2953,6 +3004,7 @@ def extended_stats(G, connectivity=False, ecc=False, bc=False, cc=False):
         stats['closeness_centrality_avg'] = sum(closeness_centrality.values())/len(closeness_centrality)
         log('Calculated closeness centrality in {:,.2f} seconds'.format(time.time() - start_time))
         
+    # if True, calculate node betweenness centrality
     if bc:
         # betweenness centrality of a node is the sum of the fraction of all-pairs shortest paths that pass through node
         start_time = time.time()
