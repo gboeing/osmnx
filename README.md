@@ -1,8 +1,10 @@
 # OSMnx
 
+**Python for street networks**
+
 Retrieve and construct spatial geometries and street networks from OpenStreetMap. [Full overview](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
 
-OSMnx is a Python library that lets you download spatial geometries and construct, project, visualize, 
+OSMnx is a Python 2/3 library that lets you download spatial geometries and construct, project, visualize, 
 and analyze street networks from OpenStreetMap's APIs. Users can download and construct walkable, drivable, or bikable 
 urban networks with a single line of Python code, and then analyze and visualize them:
 
@@ -40,7 +42,8 @@ see [this notebook](examples/02-example-osm-to-shapefile.ipynb).
 
 OSMnx lets you download street network data and build topologically-corrected street networks, project to UTM and plot the 
 networks, and save the street network as SVGs, GraphML files, or shapefiles for later use. The street networks are 
-directed and preserve one-way directionality. 
+directed and preserve one-way directionality. API responses are cached locally so OSMnx doesn't have to request the same
+data from the API multiple times, saving bandwidth and increasing speed.
 
 For a more in-depth demonstration of creating street networks, 
 see [this notebook](examples/03-example-osm-place-network.ipynb).
@@ -86,3 +89,5 @@ average street segment length, clustering coefficients, betweenness centrality, 
 see [this notebook](examples/06-example-osmnx-networkx.ipynb)
 
 For a more complete overview of [OSMnx, read this](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
+
+Download/cite the [paper here](http://geoffboeing.com/publications/osmnx-complex-street-networks/).

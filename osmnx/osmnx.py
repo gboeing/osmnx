@@ -1505,7 +1505,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     return G
     
     
-def bbox_from_point(point, distance=1000, project_utm=False, utm_crs=None):
+def bbox_from_point(point, distance=1000, project_utm=False):
     """
     Create a bounding box some distance in each direction (north, south, east, and west) from some (lat, lon) point.
     
@@ -1514,11 +1514,10 @@ def bbox_from_point(point, distance=1000, project_utm=False, utm_crs=None):
     point : tuple, the (lat, lon) point to create the bounding box around
     distance : int, how many meters the north, south, east, and west sides of the box should each be from the point
     project_utm : bool, if True return bbox as UTM coordinates
-    utm_crs : dict, if project_utm is True, use this CRS to project the bbox to UTM
     
     Returns
     -------
-    north, south, east, west : float, float, float, float
+    north, south, east, west : tuple(float, float, float, float)
     """
     north = vincenty(meters=distance).destination(point, bearing=0).latitude
     south = vincenty(meters=distance).destination(point, bearing=180).latitude
@@ -1526,18 +1525,10 @@ def bbox_from_point(point, distance=1000, project_utm=False, utm_crs=None):
     west = vincenty(meters=distance).destination(point, bearing=270).longitude
     
     if project_utm:
-        # create a gdf with one geometry element: the lat-long bounding box
-        gdf = gpd.GeoDataFrame()
-        gdf['geometry'] = None
-        gdf.loc[0, 'geometry'] = LineString([(west, north), (east, north), (east, south), (west, south), (west, north)])
-        
-        # set the original crs to lat-long and then project it to the specified CRS
-        gdf.crs = {'init':'epsg:4326'}
-        gdf = gdf.to_crs(utm_crs)
-        
-        # extract the projected bounding box from the gdf then extract the max and min extents from it
-        x, y = gdf.loc[0, 'geometry'].xy
-        north, south, east, west = max(y), min(y), max(x), min(x)
+        # if user requests UTM coords, create a polygon from these coords, then project to UTM, extract the bounds, and return
+        bbox_utm, crs_utm = project_geometry(geometry=Polygon([(west, north), (west, south), (east, south), (east, north), (west, north)]), 
+                                             crs={'init':'epsg:4326'})
+        west, south, east, north = bbox_utm.bounds
         log('Created bounding box {} meters in each direction from {} and projected it: {},{},{},{}'.format(distance, point, north, south, east, west))
     else:
         log('Created bounding box {} meters in each direction from {}: {},{},{},{}'.format(distance, point, north, south, east, west))
@@ -2855,7 +2846,7 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     """
     Calculate extended topological stats and metrics for a graph. Global topological analysis of large complex networks is extremely 
     time consuming and may exhaust computer memory. Consider using function arguments to not run metrics that require computation of
-    a full shortest paths matrix if they will not be needed.
+    a full matrix of paths if they will not be needed.
     
     Parameters
     ----------
@@ -2885,7 +2876,7 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
         pagerank_min_node
         pagerank_min
         node_connectivity
-        average_node_connectivity
+        node_connectivity_avg
         edge_connectivity
         eccentricity
         diameter
@@ -2966,7 +2957,7 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     if anc:
         # mean number of internally node-disjoint paths between each pair of nodes in G
         # i.e., the expected number of nodes that must be removed to disconnect a randomly selected pair of non-adjacent nodes
-        stats['average_node_connectivity'] = nx.average_node_connectivity(G)
+        stats['node_connectivity_avg'] = nx.average_node_connectivity(G)
         
     # if True, calculate shortest paths, eccentricity, and topological metrics that use eccentricity
     if ecc:
