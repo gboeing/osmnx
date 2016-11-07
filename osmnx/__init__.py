@@ -1,4 +1,4 @@
 # OSMnx
 # See full license in LICENSE.txt
 from .osmnx import *
-__version__ = '0.1a1.dev11'
+__version__ = '0.1a1'
