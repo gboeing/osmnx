@@ -5,7 +5,7 @@ examples/cache/*
 examples/data/*
 examples/logs/*
 examples/images/*
-
+!examples/images/manhattan.jpg
 
 
 # Compiled source #
