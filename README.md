@@ -6,29 +6,43 @@ Retrieve and construct spatial geometries and street networks from OpenStreetMap
 
 OSMnx is a Python 2/3 library that lets you download spatial geometries and construct, project, visualize, 
 and analyze street networks from OpenStreetMap's APIs. Users can download and construct walkable, drivable, or bikable 
-urban networks with a single line of Python code, and then analyze and visualize them:
+urban networks with a single line of Python code, and then easily analyze and visualize them:
 
 ```
 import osmnx as ox
-G = ox.graph_from_place('Berkeley, California', network_type='drive')
-stats = ox.basic_stats(G)
-ox.plot_graph(G)
+G = ox.graph_from_place('Manhattan, New York, USA', network_type='drive')
+ox.plot_graph(ox.project_graph(G))
 ```
+![](examples/images/manhattan.jpg)
 
-For a quick demo overview of OSMnx, see this [demo notebook](examples/01-overview-osmnx.ipynb).
+In a couple lines of code you can examine intersection density, network circuity, average block size, PageRank,
+betweenness centrality, connectivity, spatial distribution of dead-ends or 4-way intersections, etc for anywhere in the world:
+
+```
+basic_stats = ox.basic_stats(G)
+print(basic_stats['circuity_avg'])
+
+extended_stats = ox.extended_stats(G)
+print(extended_stats['pagerank_max_node'])
+```
 
 ## Installation
 
-`pip install osmnx`
+```
+pip install osmnx
+```
 
-If you are on Windows, install [geopandas and its dependencies](http://geoffboeing.com/2014/09/using-geopandas-windows/) before pip installing OSMnx.
+If you are on **Windows**, install [geopandas and its dependencies, including rtree](http://geoffboeing.com/2014/09/using-geopandas-windows/), *before* pip 
+installing OSMnx. If you are on **Mac**, install rtree via the [ioos conda channel](http://anaconda.org/IOOS/rtree), *before* pip installing OSMnx.
 
 ## How to use OSMnx
+
+For a quick demo overview of OSMnx, see this [demo notebook](examples/01-overview-osmnx.ipynb).
 
 ### Create place boundary shapefiles from OpenStreetMap
 
 OSMnx lets you download spatial "place boundary" geometries from OpenStreetMap (for cities, counties, states, countries, boroughs, etc.), save them to shapefiles, 
-project them, and plot them. For example, to retrieve, construct, and save a shapefile of Berkeley's administrative boundary:
+project them, and plot them. For example, to retrieve, construct, and save a shapefile of Berkeley's administrative boundaries:
 
 ```
 city = ox.gdf_from_place('Berkeley, California')

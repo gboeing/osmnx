@@ -1236,7 +1236,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buff
     ----------
     gdf : GeoDataFrame, the set of points to intersect
     geometry : shapely Polygon or MultiPolygon, the geometry to intersect with the points
-    quadrat_width : the linear length in degrees of the quadrats with which to cut up the geometry (default = 0.025, approx 2km at NYC's latitude)
+    quadrat_width : the linear length (in degrees) of the quadrats with which to cut up the geometry (default = 0.025, approx 2km at NYC's latitude)
     min_num : the minimum number of linear quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4 squares)
     buffer_amount : buffer the quadrat grid lines by quadrat_width times buffer_amount
     
@@ -1270,8 +1270,12 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buff
         precise_matches = possible_matches[possible_matches.intersects(poly)]
         points_within_geometry = points_within_geometry.append(precise_matches)
     
-    # drop duplicate points, if buffered poly caused an overlap on point(s) that lay directly on a quadrat line
-    points_within_geometry = points_within_geometry.drop_duplicates(subset='node')
+    if len(points_within_geometry) > 0:
+        # drop duplicate points, if buffered poly caused an overlap on point(s) that lay directly on a quadrat line
+        points_within_geometry = points_within_geometry.drop_duplicates(subset='node')
+    else:
+        # after simplifying the graph, and given the requested network type, there are no nodes inside the polygon - can't create graph from that so throw error
+        raise Exception('There are no nodes within the requested geometry')
     
     log('Identified {:,} nodes inside polygon in {:,.2f} seconds'.format(len(points_within_geometry), time.time()-start_time))
     return points_within_geometry
@@ -1310,9 +1314,6 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False)
     start_time = time.time()
     G.remove_nodes_from(nodes_outside_polygon['node'])
     log('Removed {:,} nodes outside polygon in {:,.2f} seconds'.format(len(nodes_outside_polygon), time.time()-start_time))
-    
-    # remove any isolated nodes
-    
     
     # remove any isolated nodes and retain only the largest component (if retain_all is True)
     if not retain_all:
@@ -2957,7 +2958,9 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     if anc:
         # mean number of internally node-disjoint paths between each pair of nodes in G
         # i.e., the expected number of nodes that must be removed to disconnect a randomly selected pair of non-adjacent nodes
+        start_time = time.time()
         stats['node_connectivity_avg'] = nx.average_node_connectivity(G)
+        log('Calculated average node connectivity in {:,.2f} seconds'.format(time.time() - start_time))
         
     # if True, calculate shortest paths, eccentricity, and topological metrics that use eccentricity
     if ecc:
