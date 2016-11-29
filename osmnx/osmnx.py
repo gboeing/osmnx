@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 # 
-# Copyright (c) 2016 Geoff Boeing http://geoffboeing.com
+# Copyright (c) 2016 Geoff Boeing http://geoffboeing.com/
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
 # SOFTWARE.
 #
 ###################################################################################################
-# Module: OSMnx.py
+# Module: osmnx.py
 # Description: Retrieve and construct spatial geometries and street networks from OpenStreetMap
 # Web: https://github.com/gboeing/osmnx
 ###################################################################################################
@@ -35,7 +35,7 @@ from matplotlib.collections import LineCollection
 from shapely.geometry import Point, LineString, Polygon, MultiPolygon
 from shapely import wkt
 from shapely.ops import unary_union
-from rtree.index import Index
+from rtree.index import Index as RtreeIndex
 from descartes import PolygonPatch
 from geopy.distance import great_circle, vincenty
 from geopy.geocoders import Nominatim
@@ -373,7 +373,7 @@ def nominatim_request(params, pause_duration=1, timeout=30, error_pause_duration
         time.sleep(pause_duration)
         start_time = time.time()
         log('Requesting {} with timeout={}'.format(prepared_url, timeout))
-        response = requests.get(url, params, timeout=timeout)
+        response = requests.get(url, params=params, timeout=timeout)
         
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
@@ -2324,9 +2324,26 @@ def get_paths_to_simplify(G, strict=True):
     return paths_to_simplify
     
     
+def is_simplified(G):
+    """
+    Determine if a graph has already had its topology simplified. If any of its edges have a
+    geometry attribute, we know that it has previously been simplified.
+    
+    Parameters
+    ----------
+    G : graph
+    
+    Returns
+    -------
+    bool
+    """
+    edges_with_geometry = [d for u, v, k, d in G.edges(data=True, keys=True) if 'geometry' in d]
+    return len(edges_with_geometry) > 0
+    
+    
 def simplify_graph(G_, strict=True):
     """
-    Simplify a graph by removing all nodes that are not end points. 
+    Simplify a graph's topology by removing all nodes that are not intersections or dead-ends.
     Create an edge directly between the end points that encapsulate them,
     but retain the geometry of the original edges, saved as attribute in new edge
     
@@ -2339,6 +2356,9 @@ def simplify_graph(G_, strict=True):
     -------
     G : graph
     """
+    
+    if is_simplified(G_):
+        raise Exception('This graph has already been simplified, cannot simplify it again.')
     
     log('Begin topologically simplifying the graph...')
     G = G_.copy()
