@@ -22,7 +22,7 @@
 #
 ###################################################################################################
 # Module: osmnx.py
-# Description: Retrieve and construct spatial geometries and street networks from OpenStreetMap
+# Description: Retrieve, construct, analyze, and visualize street networks from OpenStreetMap
 # Web: https://github.com/gboeing/osmnx
 ###################################################################################################
 
@@ -35,7 +35,6 @@ from matplotlib.collections import LineCollection
 from shapely.geometry import Point, LineString, Polygon, MultiPolygon
 from shapely import wkt
 from shapely.ops import unary_union
-from rtree.index import Index as RtreeIndex
 from descartes import PolygonPatch
 from geopy.distance import great_circle, vincenty
 from geopy.geocoders import Nominatim
