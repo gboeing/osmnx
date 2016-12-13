@@ -3,9 +3,9 @@
 
 from setuptools import setup
 
-setup(name='OSMnx',
-      version='0.1a1',
-      description='Retrieve and construct spatial geometries and street networks from OpenStreetMap',
+setup(name='osmnx',
+      version='0.1b2',
+      description='Retrieve, construct, analyze, and visualize street networks from OpenStreetMap',
       url='https://github.com/gboeing/osmnx',
       author='Geoff Boeing',
       author_email='gboeing@berkeley.edu',
@@ -16,8 +16,9 @@ setup(name='OSMnx',
                         'pandas>=0.19',
                         'geopandas>=0.2',
                         'networkx>=1.11',
+                        'networkx<2',
                         'matplotlib>=1.5',
-                        'shapely>=1.5',
+                        'Shapely>=1.5',
                         'descartes>=1.0',
                         'geopy>=1.11',
-                        'rtree>=0.8'])
+                        'Rtree>=0.8'])

@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 # 
-# Copyright (c) 2016 Geoff Boeing http://geoffboeing.com
+# Copyright (c) 2016 Geoff Boeing http://geoffboeing.com/
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,8 @@
 # SOFTWARE.
 #
 ###################################################################################################
-# Module: OSMnx.py
-# Description: Retrieve and construct spatial geometries and street networks from OpenStreetMap
+# Module: osmnx.py
+# Description: Retrieve, construct, analyze, and visualize street networks from OpenStreetMap
 # Web: https://github.com/gboeing/osmnx
 ###################################################################################################
 
@@ -63,7 +63,7 @@ _log_filename = 'osmnx'
 
 # useful osm tags - note that load_graphml expects a consistent set of tag names for parsing
 _useful_tags_node = ['ref', 'highway']
-_useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name', 'highway', 'maxspeed', 'service', 'access']
+_useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name', 'highway', 'maxspeed', 'service', 'access', 'area', 'landuse']
 
 
 ###################################################################################################
@@ -372,7 +372,7 @@ def nominatim_request(params, pause_duration=1, timeout=30, error_pause_duration
         time.sleep(pause_duration)
         start_time = time.time()
         log('Requesting {} with timeout={}'.format(prepared_url, timeout))
-        response = requests.get(url, params, timeout=timeout)
+        response = requests.get(url, params=params, timeout=timeout)
         
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
@@ -2155,7 +2155,7 @@ def load_graphml(filename, folder=None):
         data['length'] = float(data['length'])
 
         # these attributes might have a single value, or a list if edge's topology was simplified
-        for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed', 'service', 'access']:
+        for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed', 'service', 'access', 'area', 'landuse']:
             # if this edge has this attribute, and it starts with '[' and ends with ']', then it's a list to be parsed
             if attr in data and data[attr][0] == '[' and data[attr][-1] == ']':
                 # convert the string list to a list type, else leave as single-value string
@@ -2323,9 +2323,26 @@ def get_paths_to_simplify(G, strict=True):
     return paths_to_simplify
     
     
+def is_simplified(G):
+    """
+    Determine if a graph has already had its topology simplified. If any of its edges have a
+    geometry attribute, we know that it has previously been simplified.
+    
+    Parameters
+    ----------
+    G : graph
+    
+    Returns
+    -------
+    bool
+    """
+    edges_with_geometry = [d for u, v, k, d in G.edges(data=True, keys=True) if 'geometry' in d]
+    return len(edges_with_geometry) > 0
+    
+    
 def simplify_graph(G_, strict=True):
     """
-    Simplify a graph by removing all nodes that are not end points. 
+    Simplify a graph's topology by removing all nodes that are not intersections or dead-ends.
     Create an edge directly between the end points that encapsulate them,
     but retain the geometry of the original edges, saved as attribute in new edge
     
@@ -2338,6 +2355,9 @@ def simplify_graph(G_, strict=True):
     -------
     G : graph
     """
+    
+    if is_simplified(G_):
+        raise Exception('This graph has already been simplified, cannot simplify it again.')
     
     log('Begin topologically simplifying the graph...')
     G = G_.copy()
