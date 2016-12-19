@@ -63,7 +63,7 @@ _log_filename = 'osmnx'
 
 # useful osm tags - note that load_graphml expects a consistent set of tag names for parsing
 _useful_tags_node = ['ref', 'highway']
-_useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name', 'highway', 'maxspeed', 'service', 'access', 'area', 'landuse']
+_useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name', 'highway', 'maxspeed', 'service', 'access', 'area', 'landuse', 'width', 'est_width']
 
 
 ###################################################################################################
@@ -2155,7 +2155,7 @@ def load_graphml(filename, folder=None):
         data['length'] = float(data['length'])
 
         # these attributes might have a single value, or a list if edge's topology was simplified
-        for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed', 'service', 'access', 'area', 'landuse']:
+        for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed', 'service', 'access', 'area', 'landuse', 'width', 'est_width']:
             # if this edge has this attribute, and it starts with '[' and ends with ']', then it's a list to be parsed
             if attr in data and data[attr][0] == '[' and data[attr][-1] == ']':
                 # convert the string list to a list type, else leave as single-value string

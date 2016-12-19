@@ -4,7 +4,7 @@
 from setuptools import setup
 
 setup(name='osmnx',
-      version='0.1b2',
+      version='0.1',
       description='Retrieve, construct, analyze, and visualize street networks from OpenStreetMap',
       url='https://github.com/gboeing/osmnx',
       author='Geoff Boeing',
@@ -21,4 +21,4 @@ setup(name='osmnx',
                         'Shapely>=1.5',
                         'descartes>=1.0',
                         'geopy>=1.11',
-                        'Rtree>=0.8'])
+                        'Rtree>=0.8.3'])
