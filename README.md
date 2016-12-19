@@ -8,7 +8,7 @@ You can read/cite the journal article manuscript: Boeing, G. 2016. "[OSMnx: New 
 
 ## Overview
 
-**OSMnx** is a Python 2/3 library that lets you download spatial geometries and construct, project, visualize, 
+**OSMnx** is a Python 2+3 package that lets you download spatial geometries and construct, project, visualize, 
 and analyze street networks from OpenStreetMap's APIs. Users can download and construct walkable, drivable, or bikable 
 urban networks with a single line of Python code, and then easily analyze and visualize them:
 
@@ -36,7 +36,7 @@ print(extended_stats['pagerank_max_node'])
 pip install osmnx
 ```
 
-If you are on **Windows**, install [geopandas and its dependencies, including rtree](http://geoffboeing.com/2014/09/using-geopandas-windows/), *before* pip installing OSMnx. 
+If you are on **Windows**, install [geopandas and rtree](http://geoffboeing.com/2014/09/using-geopandas-windows/), *before* pip installing OSMnx. 
 If you are on **Mac**, install rtree via [conda-forge](https://anaconda.org/conda-forge/rtree), *before* pip installing OSMnx.
 If you are on **Linux**, follow the rtree installation [instructions](http://toblerity.org/rtree/install.html#nix), *before* pip installing OSMnx.
 
