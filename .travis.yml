@@ -1,0 +1,27 @@
+language: python
+
+python:
+  - "2.7"
+  - "3.4"
+  - "3.5"
+
+before_install:
+  - pip install --upgrade pip
+  - pip install --upgrade wheel
+  - wget http://bit.ly/miniconda -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes
+  - conda config --add channels conda-forge
+  - conda update --all
+  - conda info -a
+  
+install:
+  - conda create -n TESTENV python=$TRAVIS_PYTHON_VERSION pytest requests numpy matplotlib pandas networkx Shapely Rtree descartes geopy geopandas
+  - source activate TESTENV
+  - pip install .
+  - pip show osmnx
+
+script:
+  - pytest
