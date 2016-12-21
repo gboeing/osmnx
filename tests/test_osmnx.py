@@ -3,9 +3,10 @@ OSMnx tests
 -------
 """
 
-import osmnx as ox
+import osmnx as ox, matplotlib as mpl
 ox.config(log_console=True, log_file=True, use_cache=True, 
           data_folder='.temp/data', logs_folder='.temp/logs', imgs_folder='.temp/imgs', cache_folder='.temp/cache')
+mpl.use('Agg')
           
 def test_imports():
     import json, math, sys, os, io, ast, unicodedata, hashlib, re, random, time, datetime as dt, logging as lg
