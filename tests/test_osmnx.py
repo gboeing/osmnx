@@ -3,10 +3,13 @@ OSMnx tests
 -------
 """
 
-import osmnx as ox, matplotlib as mpl
+import matplotlib as mpl
+mpl.use('Agg') #use agg backend so you don't need a display on travis
+
+import osmnx as ox
 ox.config(log_console=True, log_file=True, use_cache=True, 
           data_folder='.temp/data', logs_folder='.temp/logs', imgs_folder='.temp/imgs', cache_folder='.temp/cache')
-mpl.use('Agg')
+
           
 def test_imports():
     import json, math, sys, os, io, ast, unicodedata, hashlib, re, random, time, datetime as dt, logging as lg
@@ -23,10 +26,12 @@ def test_imports():
     from geopy.geocoders import Nominatim
     from rtree.index import Index as RTreeIndex
     
+    
 def test_gdf_shapefiles():
     city = ox.gdf_from_place('Manhattan, New York City, New York, USA')
     city_projected = ox.project_gdf(city)
     ox.save_gdf_shapefile(city_projected)
+    
     
 def test_network_saving_loading():
     G = ox.graph_from_place('Piedmont, California, USA')
@@ -34,6 +39,7 @@ def test_network_saving_loading():
     ox.save_graph_shapefile(G_projected)
     ox.save_graphml(G_projected)
     G2 = ox.load_graphml('graph.graphml')
+    
     
 def test_get_network_methods():
     
@@ -55,28 +61,31 @@ def test_get_network_methods():
     polygon = mission_district['geometry'].iloc[0]
     G6 = ox.graph_from_polygon(polygon, network_type='walk')
     
+    
 def test_stats():
     location_point = (37.791427, -122.410018)
     G = ox.graph_from_point(location_point, distance=500, distance_type='network')
     stats1 = ox.basic_stats(G)
     stats2 = ox.extended_stats(G, connectivity=True, anc=True, ecc=True, bc=True, cc=True)
     
+    
 def test_plots():
     
     G = ox.graph_from_place('Piedmont, California, USA', network_type='drive', simplify=False)
-    fig, ax = ox.plot_graph(G, show=False, save=True, close=True)
+    fig, ax = ox.plot_graph(G, save=True)
 
     G_simplified = ox.simplify_graph(G)
     fig, ax = ox.plot_graph(G_simplified, show=False, save=True, close=True)
 
     G_projected = ox.project_graph(G_simplified)
-    fig, ax = ox.plot_graph(G_projected, show=False, save=True, close=True)
+    fig, ax = ox.plot_graph(G_projected)
 
     fig, ax = ox.plot_graph(G_projected, fig_height=5, fig_width=5, margin=0.05, axis_off=False, bgcolor='y',
                             file_format='png', filename='x', dpi=180, annotate=True, node_color='k', node_size=5,
                             node_alpha=0.1, node_edgecolor='b', node_zorder=5, edge_color='r', edge_linewidth=2,
                             edge_alpha=0.1, use_geom=False, show=False, save=True, close=True)
-                            
+        
+        
 def test_routing():
     import networkx as nx
     G = ox.graph_from_address('N. Sicily Pl., Chandler, Arizona', distance=800, network_type='drive')
@@ -85,6 +94,6 @@ def test_routing():
     origin_node = ox.get_nearest_node(G, origin)
     destination_node = ox.get_nearest_node(G, destination)
     route = nx.shortest_path(G, origin_node, destination_node)
-    fig, ax = ox.plot_graph_route(G, route, save=True, filename='route', show=False, close=True)
+    fig, ax = ox.plot_graph_route(G, route, save=True, filename='route')
     
     
