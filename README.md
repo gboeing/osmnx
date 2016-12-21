@@ -1,3 +1,5 @@
+[![PyPI version](https://badge.fury.io/py/OSMnx.svg)](https://badge.fury.io/py/OSMnx) [![Build Status](https://travis-ci.org/gboeing/osmnx.svg?branch=master)](https://travis-ci.org/gboeing/osmnx)
+
 # OSMnx
 
 **Python for street networks**

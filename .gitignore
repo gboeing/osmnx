@@ -1,4 +1,5 @@
 .ipynb_checkpoints
+.temp
 __pycache__
 _backup/*
 examples/cache/*
