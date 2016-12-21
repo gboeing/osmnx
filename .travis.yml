@@ -24,4 +24,4 @@ install:
   - pip show osmnx
 
 script:
-  - pytest
+  - pytest --verbose
