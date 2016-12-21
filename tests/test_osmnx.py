@@ -72,10 +72,10 @@ def test_stats():
 def test_plots():
     
     G = ox.graph_from_place('Piedmont, California, USA', network_type='drive', simplify=False)
-    fig, ax = ox.plot_graph(G, save=True)
+    fig, ax = ox.plot_graph(G, save=True, file_format='png')
 
     G_simplified = ox.simplify_graph(G)
-    fig, ax = ox.plot_graph(G_simplified, show=False, save=True, close=True)
+    fig, ax = ox.plot_graph(G_simplified, show=False, save=True, close=True, file_format='png')
 
     G_projected = ox.project_graph(G_simplified)
     fig, ax = ox.plot_graph(G_projected)
@@ -94,6 +94,6 @@ def test_routing():
     origin_node = ox.get_nearest_node(G, origin)
     destination_node = ox.get_nearest_node(G, destination)
     route = nx.shortest_path(G, origin_node, destination_node)
-    fig, ax = ox.plot_graph_route(G, route, save=True, filename='route')
+    fig, ax = ox.plot_graph_route(G, route, save=True, filename='route', file_format='png')
     
     
