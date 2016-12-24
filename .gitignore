@@ -2,6 +2,7 @@
 .temp
 __pycache__
 _backup/*
+tests/run_tests.bat
 examples/cache/*
 examples/data/*
 examples/logs/*
