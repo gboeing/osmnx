@@ -36,13 +36,21 @@ print(extended_stats['pagerank_max_node'])
 
 ## Installation
 
+You can install OSMnx with conda:
+
+```
+conda install -c conda-forge osmnx
+```
+
+Or with pip:
+
 ```
 pip install osmnx
 ```
 
-If you are on **Windows**, install [geopandas and rtree](http://geoffboeing.com/2014/09/using-geopandas-windows/), *before* pip installing OSMnx. 
-If you are on **Mac**, install rtree via [conda-forge](https://anaconda.org/conda-forge/rtree), *before* pip installing OSMnx.
-If you are on **Linux**, follow the rtree installation [instructions](http://toblerity.org/rtree/install.html#nix), *before* pip installing OSMnx.
+If you are pip installing OSMnx, install [geopandas](http://geoffboeing.com/2014/09/using-geopandas-windows/) 
+and [rtree](http://geoffboeing.com/2016/10/r-tree-spatial-index-python/) first. It's easiest to 
+use [conda-forge](https://anaconda.org/conda-forge/geopandas) to get these dependencies installed.
 
 ## How to use OSMnx
 
