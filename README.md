@@ -106,7 +106,7 @@ OpenStreetMap nodes include intersections, but they also include all the points 
 the street curves. The latter are not nodes in the graph theory sense, so we remove them algorithmically and consolidate the 
 set of edges between "true" network nodes into a single edge, but retain the actual spatial geometry. There are two 
 simplification modes, strict and non-strict. The main difference is that unlike strict mode, non-strict mode allows 
-simplification to an "expansion graph". 
+simplification to an *expansion graph*.
 
 For an in-depth demonstration of topological simplification with OSMnx, see [this notebook](examples/04-example-simplify-network.ipynb).
 
@@ -127,6 +127,8 @@ average street segment length, clustering coefficients, betweenness centrality, 
 
 For examples of analyzing street networks with OSMnx, see [this notebook](examples/06-example-osmnx-networkx.ipynb).
 
+## More info
+
 For a more complete overview of [OSMnx, read this](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
 
-Download/cite the [article here](http://geoffboeing.com/publications/osmnx-complex-street-networks/).
+Download/cite the [journal article here](http://geoffboeing.com/publications/osmnx-complex-street-networks/).
