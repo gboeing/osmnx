@@ -2000,7 +2000,7 @@ def get_undirected(G):
     return G_undir
     
     
-def save_graph_shapefile(G, filename='graph', folder=None):
+def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     """
     Save graph nodes and edges as ESRI shapefiles to disk.
     
@@ -2009,6 +2009,7 @@ def save_graph_shapefile(G, filename='graph', folder=None):
     G : graph
     filename : string, the name of the shapefiles (not including file extensions)
     folder : string, the folder to contain the shapefiles, if None, use default data folder
+    encoding : string, the character encoding for the saved shapefiles
     
     Returns
     -------
@@ -2068,8 +2069,8 @@ def save_graph_shapefile(G, filename='graph', folder=None):
         os.makedirs(folder)
     
     # save the nodes and edges as separate ESRI shapefiles
-    gdf_nodes.to_file('{}/nodes'.format(folder))
-    gdf_edges.to_file('{}/edges'.format(folder))
+    gdf_nodes.to_file('{}/nodes'.format(folder), encoding=encoding)
+    gdf_edges.to_file('{}/edges'.format(folder), encoding=encoding)
     log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, folder, time.time()-start_time))
     
     
