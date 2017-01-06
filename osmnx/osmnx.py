@@ -1474,7 +1474,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     if len(elements) < 1:
         raise ValueError('There are no data elements in the response JSON objects')
     
-    # create the graph as a MultiDiGraph and set the original CRS to lat-long
+    # create the graph as a MultiDiGraph and set the original CRS to EPSG 4326
     G = nx.MultiDiGraph(name=name, crs={'init':'epsg:4326'})
     
     # extract nodes and paths from the downloaded osm data
@@ -3032,6 +3032,119 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     return stats
     
     
+def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
+    """
+    Convert a graph into node and/or edge GeoDataFrames
     
+    Parameters
+    ----------
+    G : graph
+    nodes : bool, if True, convert graph nodes to a GeoDataFrame and return it
+    edges : bool, if True, convert graph edges to a GeoDataFrame and return it
+    node_geometry : bool, if True, create a geometry column from node x and y data
+    fill_edge_geometry : bool, if True, fill in missing edge geometry fields using origin and destination nodes
     
- 
+    Returns
+    -------
+    gdf_nodes : GeoDataFrame (optional)
+    gdf_edges : GeoDataFrame (optional)
+    """
+
+    if not (nodes or edges):
+        raise ValueError('You must request nodes or edges, or both.')
+    
+    to_return = []
+
+    if nodes:
+        
+        start_time = time.time()
+        
+        nodes = {node:data for node, data in G.nodes(data=True)}
+        gdf_nodes = gpd.GeoDataFrame(nodes).T
+        if node_geometry:
+            gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
+        gdf_nodes.crs = G.graph['crs']
+        gdf_nodes.gdf_name = '{}_nodes'.format(G.graph['name'])
+        gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64).map(make_str)
+        
+        to_return.append(gdf_nodes)
+        log('Created GeoDataFrame "{}" from graph in {:,.2f} seconds'.format(gdf_nodes.gdf_name, time.time()-start_time))
+
+    if edges:
+        
+        start_time = time.time()
+        
+        # create a list to hold our edges, then loop through each edge in the graph
+        edges = []
+        for u, v, key, data in G.edges(keys=True, data=True):
+
+            # for each edge, add key and all attributes in data dict to the edge_details
+            edge_details = {'u':u, 'v':v, 'key':key}
+            for attr_key in data:
+                edge_details[attr_key] = data[attr_key]
+
+            # if edge doesn't already have a geometry attribute, create one now if fill_edge_geometry==True
+            if not 'geometry' in data:
+                if fill_edge_geometry:
+                    point_u = Point((G.node[u]['x'], G.node[u]['y']))
+                    point_v = Point((G.node[v]['x'], G.node[v]['y']))
+                    edge_details['geometry'] = LineString([point_u, point_v])
+                else:
+                    edge_details['geometry'] = np.nan
+            
+            edges.append(edge_details)
+        
+        # create a GeoDataFrame from the list of edges and set the CRS
+        gdf_edges = gpd.GeoDataFrame(edges)
+        gdf_edges.crs = G.graph['crs']
+        gdf_edges.gdf_name = '{}_edges'.format(G.graph['name'])
+        
+        to_return.append(gdf_edges)
+        log('Created GeoDataFrame "{}" from graph in {:,.2f} seconds'.format(gdf_edges.gdf_name, time.time()-start_time))
+        
+    if len(to_return) > 1:
+        return tuple(to_return)
+    else:
+        return to_return[0]
+    
+
+def gdfs_to_graph(gdf_nodes, gdf_edges):
+    """
+    Convert node and edge GeoDataFrames into a graph
+    
+    Parameters
+    ----------
+    gdf_nodes : GeoDataFrame
+    gdf_edges : GeoDataFrame
+    
+    Returns
+    -------
+    G : graph
+    """
+    
+    G = nx.MultiDiGraph()
+    G.graph['crs'] = gdf_nodes.crs
+    G.graph['name'] = gdf_nodes.gdf_name.rstrip('_nodes')
+    
+    # add the nodes and their attributes to the graph
+    G.add_nodes_from(gdf_nodes.index)
+    attributes = gdf_nodes.to_dict()
+    for attribute_name in gdf_nodes.columns:
+        # only add this attribute to nodes which have a non-null value for it
+        attribute_values = {k:v for k, v in attributes[attribute_name].items() if pd.notnull(v)}
+        nx.set_node_attributes(G, attribute_name, attribute_values)
+    
+    # add the edges and attributes that are not u, v, key (as they're added separately) or null
+    for _, row in gdf_edges.iterrows():
+        attrs = {}
+        for label, value in row.iteritems():
+            if (label not in ['u', 'v', 'key']) and (isinstance(value, list) or pd.notnull(value)):
+                attrs[label] = value
+        G.add_edge(u=row['u'], v=row['v'], key=row['key'], attr_dict=attrs)
+    
+    return G    
+
+        
+        
+        
+        
