@@ -48,6 +48,10 @@ def test_network_saving_loading():
     ox.save_graphml(G_projected)
     G2 = ox.load_graphml('graph.graphml')
     
+    gdf_edges = ox.graph_to_gdfs(G, nodes=False, edges=True, fill_edge_geometry=False)
+    gdf_nodes, gdf_edges = ox.graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True)
+    G3 = ox.gdfs_to_graph(gdf_nodes, gdf_edges)
+    
     
 def test_get_network_methods():
     
