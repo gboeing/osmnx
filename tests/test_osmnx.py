@@ -101,6 +101,9 @@ def test_plots():
                             file_format='png', filename='x', dpi=180, annotate=True, node_color='k', node_size=5,
                             node_alpha=0.1, node_edgecolor='b', node_zorder=5, edge_color='r', edge_linewidth=2,
                             edge_alpha=0.1, use_geom=False, show=False, save=True, close=True)
+                            
+    fig, ax = ox.plot_figure_ground(point=(33.694981, -117.841375))
+    fig, ax = ox.plot_figure_ground(address='Denver, Colorado, USA')
         
         
 def test_routing():
