@@ -1,13 +1,14 @@
+###################################################################################################
+# Module: simplify.py
+# Description: Simplify and correct network topology
+# License: MIT, see full license in LICENSE.txt
+# Web: https://github.com/gboeing/osmnx
+###################################################################################################
+
 import time
 from shapely.geometry import Point, LineString
-from .utils import log
 
-
-############################################################################
-#
-# Functions for simplification of graph topology
-#
-############################################################################    
+from .utils import log   
 
 
 def is_endpoint(G, node, strict=True):
@@ -244,6 +245,5 @@ def simplify_graph(G_, strict=True):
     msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
     log(msg.format(initial_node_count, len(G.nodes()), initial_edge_count, len(G.edges()), time.time()-start_time))
     return G
-    
     
     
