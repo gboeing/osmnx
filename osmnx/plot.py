@@ -362,7 +362,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     
 def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_service',
                        street_widths=None, default_width=4, fig_length=8, edge_color='w', bgcolor='#333333',
-                       filename=None, show=False, save=True, close=True):
+                       filename=None, file_format='jpg', show=False, save=True, close=True):
     """
     Plot a figure-ground diagram of a street network, defaulting to one square mile.
     
@@ -378,6 +378,7 @@ def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_s
     edge_color : string, the color of the streets
     bgcolor : string, the color of the background
     filename : string, filename to save the image as
+    file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
     show : bool, if True, show the figure
     save : bool, if True, save the figure as an image file to disk
     close : close the figure (only if show equals False) to prevent display
@@ -429,7 +430,7 @@ def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_s
     # plot the figure
     fig, ax = plot_graph(G, bbox=bbox_proj, fig_height=fig_length, margin=0, node_size=0, 
                          edge_linewidth=edge_linewidths, edge_color=edge_color, bgcolor=bgcolor, 
-                         show=show, save=save, close=close, filename=filename)
+                         show=show, save=save, close=close, filename=filename, file_format=file_format)
     
     return fig, ax
     
