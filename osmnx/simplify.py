@@ -6,6 +6,7 @@
 ###################################################################################################
 
 import time
+import logging as lg
 from shapely.geometry import Point, LineString
 
 from .utils import log   

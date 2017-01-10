@@ -17,6 +17,8 @@ from shapely.geometry import Polygon, MultiPolygon
 
 from . import globals
 from .utils import log
+from .projection import project_graph
+from .core import graph_from_address, graph_from_point, bbox_from_point
 
 
 def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6,6), margin=0.02, axis_off=True):
@@ -355,6 +357,80 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     
     # save and show the figure as specified
     fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
+    return fig, ax
+    
+    
+def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_service',
+                       street_widths=None, default_width=4, fig_length=8, edge_color='w', bgcolor='#333333',
+                       filename=None, show=False, save=True, close=True):
+    """
+    Plot a figure-ground diagram of a street network, defaulting to one square mile.
+    
+    Parameters
+    ----------
+    address : string, the address to geocode as the center point
+    point : tuple, the center point if address is not passed
+    dist : numeric, how many meters to extend north, south, east, and west from the center point
+    network_type : string, what type of network to get
+    street_widths : dict, where keys are street types and values are widths to plot in pixels
+    default_width : numeric, the default street width in pixels for any street type not found in street_widths dict
+    fig_length : numeric, the height and width of this square diagram
+    edge_color : string, the color of the streets
+    bgcolor : string, the color of the background
+    filename : string, filename to save the image as
+    show : bool, if True, show the figure
+    save : bool, if True, save the figure as an image file to disk
+    close : close the figure (only if show equals False) to prevent display
+    
+    Returns
+    -------
+    fig, ax : figure, axis
+    """
+    
+    # get the network by either address or point, whichever was passed-in
+    if not address is None:
+        G, point = graph_from_address(address, distance=dist, distance_type='bbox', network_type=network_type, 
+                                         truncate_by_edge=True, return_coords=True)
+    elif not point is None:
+        G = graph_from_point(point, distance=dist, distance_type='bbox', network_type=network_type, 
+                                truncate_by_edge=True)
+    else:
+        raise ValueError('You must pass an address or lat-long point.')
+    
+    # project the network to UTM
+    G = project_graph(G)
+    
+    # if user did not pass in custom street widths, create a dict of default values
+    if street_widths is None:
+        street_widths = {'footway' : 1.5,
+                         'steps' : 1.5,
+                         'pedestrian' : 1.5,
+                         'service' : 1.5,
+                         'path' : 1.5,
+                         'track' : 1.5,
+                         'motorway' : 6}
+    
+    # for each network edge, get a linewidth according to street type (the OSM 'highway' value)
+    edge_linewidths = []
+    for u, v, key, data in G.edges(keys=True, data=True):
+        street_type = data['highway'][0] if isinstance(data['highway'], list) else data['highway']
+        if street_type in street_widths:
+            edge_linewidths.append(street_widths[street_type])
+        else:
+            edge_linewidths.append(default_width)
+    
+    # define the spatial extents of the plotting figure to make it square and in projected units
+    bbox_proj = bbox_from_point(point, dist, project_utm=True)
+    
+    # create a filename if one was not passed
+    if filename is None and save:
+        filename = 'figure_ground_{}_{}'.format(point, network_type)
+    
+    # plot the figure
+    fig, ax = plot_graph(G, bbox=bbox_proj, fig_height=fig_length, margin=0, node_size=0, 
+                         edge_linewidth=edge_linewidths, edge_color=edge_color, bgcolor=bgcolor, 
+                         show=show, save=save, close=close, filename=filename)
+    
     return fig, ax
     
     
