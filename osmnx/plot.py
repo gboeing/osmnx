@@ -1,3 +1,10 @@
+###################################################################################################
+# Module: plot.py
+# Description: Plot spatial geometries, street networks, and routes
+# License: MIT, see full license in LICENSE.txt
+# Web: https://github.com/gboeing/osmnx
+###################################################################################################
+
 import time
 import os
 import numpy as np
@@ -7,6 +14,7 @@ import matplotlib.cm as cm
 from matplotlib.collections import LineCollection
 from descartes import PolygonPatch
 from shapely.geometry import Polygon, MultiPolygon
+
 from . import globals
 from .utils import log
 
@@ -106,9 +114,9 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
         start_time = time.time()
         
         # create the save folder if it doesn't already exist
-        if not os.path.exists(globals.global_imgs_folder):
-            os.makedirs(globals.global_imgs_folder)
-        path_filename = '{}/{}.{}'.format(globals.global_imgs_folder, filename, file_format)
+        if not os.path.exists(globals.imgs_folder):
+            os.makedirs(globals.imgs_folder)
+        path_filename = '{}/{}.{}'.format(globals.imgs_folder, filename, file_format)
         
         if file_format == 'svg':
             # if the file_format is svg, prep the fig/ax a bit for saving
@@ -348,3 +356,5 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     # save and show the figure as specified
     fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
     return fig, ax
+    
+    

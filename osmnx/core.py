@@ -1,35 +1,19 @@
-# The MIT License (MIT)
-# 
-# Copyright (c) 2016 Geoff Boeing http://geoffboeing.com/
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
-#
 ###################################################################################################
-# Module: osmnx.py
-# Description: Retrieve, construct, analyze, and visualize street networks from OpenStreetMap
+# Module: core.py
+# Description: Retrieve and construct spatial geometries and street networks from OpenStreetMap
+# License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ###################################################################################################
 
 import math
 import re
 import time
+import json
+import io
+import os
+import hashlib
 import datetime as dt
+import logging as lg
 import requests
 import numpy as np
 import pandas as pd
@@ -45,15 +29,71 @@ from geopy.distance import great_circle, vincenty
 from geopy.geocoders import Nominatim
 
 from . import globals
-from .utils import log, get_from_cache, save_to_cache, get_largest_component
+from .utils import log, make_str, get_largest_component
 from .simplify import simplify_graph
-from .project import project_geometry, project_gdf
+from .projection import project_geometry, project_gdf
 from .stats import count_streets_per_node
 
 
-###################################################################################################
-# define functions
-###################################################################################################
+def save_to_cache(url, response_json):
+    """
+    Save a HTTP response json object to the cache. If the request was sent to server via POST instead of GET, 
+    then URL should be a GET-style representation of request. Users should always pass OrderedDicts instead of dicts
+    of parameters into request functions, so that the parameters stay in the same order each time, producing the same URL string,
+    and thus the same hash. Otherwise the cache will eventually contain multiple saved responses for the same
+    request because the URL's parameters appeared in a different order each time.
+    
+    Parameters
+    ----------
+    url : string, the url of the request
+    response_json : dict, the json response
+    
+    Returns
+    -------
+    None
+    """
+    if globals.use_cache:
+        if response_json is None:
+            log('Saved nothing to cache because response_json is None')
+        else:        
+            # create the folder on the disk if it doesn't already exist
+            if not os.path.exists(globals.cache_folder):
+                os.makedirs(globals.cache_folder)
+
+            # hash the url (to make filename shorter than the often extremely long url) 
+            filename = hashlib.md5(url.encode('utf-8')).hexdigest()
+            cache_path_filename = '{}/{}.json'.format(globals.cache_folder, filename)
+            
+            # dump to json, and save to file
+            json_str = make_str(json.dumps(response_json))
+            with io.open(cache_path_filename, 'w', encoding='utf-8') as cache_file:
+                cache_file.write(json_str)
+            
+            log('Saved response to cache file "{}"'.format(cache_path_filename))
+        
+
+def get_from_cache(url):
+    """
+    Retrieve a HTTP response json object from the cache.
+    
+    Parameters
+    ----------
+    url : string, the url of the request
+    
+    Returns
+    -------
+    response_json : dict
+    """
+    # if the tool is configured to use the cache
+    if globals.use_cache:
+        # determine the filename by hashing the url
+        filename = hashlib.md5(url.encode('utf-8')).hexdigest()
+        cache_path_filename = '{}/{}.json'.format(globals.cache_folder, filename)
+        # open the cache file for this url hash if it already exists, otherwise return None
+        if os.path.isfile(cache_path_filename):
+            response_json = json.load(io.open(cache_path_filename, encoding='utf-8'))
+            log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_path_filename, url))
+            return response_json        
 
 
 def get_pause_duration(recursive_delay=5, default_duration=10):
@@ -352,27 +392,8 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None):
     # set the original CRS of the GeoDataFrame to lat-long, and return it
     gdf.crs = {'init':'epsg:4326'}
     log('Finished creating GeoDataFrame with {} rows from {} queries'.format(len(gdf), len(queries)))
-    return gdf
-
-
-
- 
-
-
-
-    
-
-
-    
-##########################################################################################################        
-#
-# End of functions for getting place boundary geometries.
-#
-# Below are functions for getting and processing street networks.
-#
-#########################################################################################################    
+    return gdf 
    
- 
  
 def get_osm_filter(network_type):
     """
@@ -507,10 +528,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         
     return response_jsons
 
-
-
     
-
 def consolidate_subdivide_geometry(geometry, max_query_area_size):
     """
     Consolidate a geometry into a convex hull, then subdivide it into smaller sub-polygons if its area exceeds max size (in geometry's units).
@@ -600,7 +618,7 @@ def get_node(element):
     node['x'] = element['lon']
     node['osmid'] = element['id']
     if 'tags' in element:
-        for useful_tag in globals.global_useful_tags_node:
+        for useful_tag in globals.useful_tags_node:
             if useful_tag in element['tags']:
                 node[useful_tag] = element['tags'][useful_tag]
     return node
@@ -626,7 +644,7 @@ def get_path(element):
     path['nodes'] = [group[0] for group in grouped_list]
     
     if 'tags' in element:
-        for useful_tag in globals.global_useful_tags_path:
+        for useful_tag in globals.useful_tags_path:
             if useful_tag in element['tags']:
                 path[useful_tag] = element['tags'][useful_tag] 
     return path
@@ -673,9 +691,6 @@ def remove_isolated_nodes(G):
     G.remove_nodes_from(isolated_nodes)
     log('Removed {:,} isolated nodes'.format(len(isolated_nodes)))
     return G
-    
-   
-
     
 
 def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', retain_all=False):
@@ -1392,6 +1407,5 @@ def graph_from_place(query, network_type='all_private', simplify=True, retain_al
     
     log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
     return G
-    
     
     

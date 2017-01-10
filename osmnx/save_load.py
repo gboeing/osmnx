@@ -1,3 +1,10 @@
+###################################################################################################
+# Module: save_load.py
+# Description: Save and load networks to/from disk
+# License: MIT, see full license in LICENSE.txt
+# Web: https://github.com/gboeing/osmnx
+###################################################################################################
+
 import re
 import time
 import os
@@ -8,10 +15,43 @@ import geopandas as gpd
 import networkx as nx
 from shapely.geometry import Point, LineString
 from shapely import wkt
+
 from . import globals
-from .utils import log, make_str, get_undirected
+from .utils import log, make_str
 
 
+def save_gdf_shapefile(gdf, filename=None, folder=None):
+    """
+    Save GeoDataFrame as an ESRI shapefile.
+    
+    Parameters
+    ----------
+    gdf : GeoDataFrame, the gdf to be saved
+    filename : string, what to call the shapefile (file extensions are added automatically)
+    folder : string, where to save the shapefile, if none, then default folder
+    
+    Returns
+    -------
+    None
+    """
+    if folder is None:
+        folder = globals.data_folder
+    
+    if filename is None:
+        filename = make_shp_filename(gdf.name)
+    
+    # give the save folder a filename subfolder to make the full path to the files
+    folder_path = '{}/{}'.format(folder, filename)
+    
+    # if the save folder does not already exist, create it with a filename subfolder
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    gdf.to_file(folder_path)
+    if not hasattr(gdf, 'name'):
+        gdf.name = 'unnamed'
+    log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.name, folder_path)) 
+    
+    
 def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     """
     Save graph nodes and edges as ESRI shapefiles to disk.
@@ -30,7 +70,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     
     start_time = time.time()
     if folder is None:
-        folder = globals.global_data_folder
+        folder = globals.data_folder
     
     # convert directed graph G to an undirected graph for saving as a shapefile
     G_save = G.copy()
@@ -103,7 +143,7 @@ def save_graphml(G, filename='graph.graphml', folder=None):
     
     start_time = time.time()
     if folder is None:
-        folder = globals.global_data_folder
+        folder = globals.data_folder
     
     # create a copy and convert all the node/edge attribute values to string or it won't save
     G_save = G.copy()
@@ -143,7 +183,7 @@ def load_graphml(filename, folder=None):
     
     # read the graph from disk
     if folder is None:
-        folder = globals.global_data_folder
+        folder = globals.data_folder
     path = '{}/{}'.format(folder, filename)
     G = nx.MultiDiGraph(nx.read_graphml(path, node_type=int))
     
@@ -191,15 +231,55 @@ def load_graphml(filename, folder=None):
                                                                                           path))
     return G
     
-    
 
+def get_undirected(G):
+    """
+    Convert a directed graph to an undirected graph that maintains parallel edges in opposite directions if geometries differ.
     
+    Parameters
+    ----------
+    G : graph
     
+    Returns
+    -------
+    G_undir : Graph
+    """
+    # set from/to nodes and then make undirected
+    G = G.copy()
+    for u, v, key in G.edges(keys=True):
+        G.edge[u][v][key]['from'] = u
+        G.edge[u][v][key]['to'] = v
+    
+    G_undir = G.to_undirected(reciprocal=False)
+    
+    # if edges in both directions (u,v) and (v,u) exist in the graph, 
+    # attributes for the new undirected edge will be a combination of the attributes of the directed edges.
+    # if both edges exist in digraph and their edge data is different, 
+    # only one edge is created with an arbitrary choice of which edge data to use.
+    # you need to manually retain edges in both directions between nodes if their geometries are different
+    # this is necessary to save shapefiles for weird intersections like the one at 41.8958697,-87.6794924
+    # find all edges (u,v) that have a parallel edge going the opposite direction (v,u) with a different osmid
+    for u, v, key, data in G.edges(keys=True, data=True):
+        try:
+            # look at each edge going the opposite direction (from v to u)
+            for key2 in G.edge[v][u]:
+                # if this edge has geometry and its osmid is different from its reverse's
+                if 'geometry' in data and not data['osmid'] == G.edge[v][u][key2]['osmid']:
+                    # turn the geometry of each edge into lists of x's and y's
+                    geom1 = [list(coords) for coords in data['geometry'].xy]
+                    geom2 = [list(coords) for coords in G_undir[u][v][key]['geometry'].xy]
+                    # reverse the first edge's list of x's and y's to look for a match in either order
+                    geom1_r = [list(reversed(list(coords))) for coords in data['geometry'].xy]
+                    # if the edge's geometry doesn't match its reverse's geometry in either order
+                    if not (geom1 == geom2 or geom1_r == geom2):
+                        # add it as a new edge to the graph to be saved (with key equal to the current largest key plus one)
+                        new_key = max(G.edge[u][v]) + 1
+                        G_undir.add_edge(u, v, new_key, attr_dict=data)
+        except:
+            pass
+    
+    return G_undir
 
-    
-
-
-    
     
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
     """
@@ -313,9 +393,7 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
     
     return G    
 
-        
-        
-        
+    
 def make_shp_filename(place_name):
     """
     Create a filename string in a consistent format from a place name string.
@@ -333,34 +411,3 @@ def make_shp_filename(place_name):
     filename = re.sub('[^0-9a-zA-Z_-]+', '', filename)
     return filename
 
-
-def save_gdf_shapefile(gdf, filename=None, folder=None):
-    """
-    Save GeoDataFrame as an ESRI shapefile.
-    
-    Parameters
-    ----------
-    gdf : GeoDataFrame, the gdf to be saved
-    filename : string, what to call the shapefile (file extensions are added automatically)
-    folder : string, where to save the shapefile, if none, then default folder
-    
-    Returns
-    -------
-    None
-    """
-    if folder is None:
-        folder = globals.global_data_folder
-    
-    if filename is None:
-        filename = make_shp_filename(gdf.name)
-    
-    # give the save folder a filename subfolder to make the full path to the files
-    folder_path = '{}/{}'.format(folder, filename)
-    
-    # if the save folder does not already exist, create it with a filename subfolder
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    gdf.to_file(folder_path)
-    if not hasattr(gdf, 'name'):
-        gdf.name = 'unnamed'
-    log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.name, folder_path))        

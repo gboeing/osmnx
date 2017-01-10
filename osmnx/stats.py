@@ -1,9 +1,17 @@
+###################################################################################################
+# Module: stats.py
+# Description: Calculate graph-theoretic topological and metric measures for a network
+# License: MIT, see full license in LICENSE.txt
+# Web: https://github.com/gboeing/osmnx
+###################################################################################################
+
 from __future__ import division
 from itertools import chain
 from collections import Counter
 import time
 import networkx as nx
 from geopy.distance import great_circle
+
 from .utils import log, get_largest_component
 
 

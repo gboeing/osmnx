@@ -1,9 +1,17 @@
+###################################################################################################
+# Module: projection.py
+# Description: Project spatial geometries and street networks to/from UTM
+# License: MIT, see full license in LICENSE.txt
+# Web: https://github.com/gboeing/osmnx
+###################################################################################################
+
 import time
 import math
 import numpy as np
 import geopandas as gpd
 import networkx as nx
 from shapely.geometry import Point
+
 from .utils import log, make_str
 
 
@@ -29,7 +37,6 @@ def project_geometry(geometry, crs, to_latlong=False):
     gdf_proj = project_gdf(gdf, to_latlong=to_latlong)
     geometry_proj = gdf_proj['geometry'].iloc[0]
     return geometry_proj, gdf_proj.crs
-    
 
 
 def project_gdf(gdf, to_latlong=False):
@@ -82,9 +89,7 @@ def project_gdf(gdf, to_latlong=False):
     
     projected_gdf.name = gdf.name
     return projected_gdf
-    
-    
-    
+
     
 def project_graph(G):
     """
@@ -164,4 +169,6 @@ def project_graph(G):
     if 'streets_per_node' in G.graph:
         G_proj.graph['streets_per_node'] = G.graph['streets_per_node']
     log('Rebuilt projected graph in {:,.2f} seconds'.format(time.time()-start_time))
-    return G_proj    
+    return G_proj
+
+    
