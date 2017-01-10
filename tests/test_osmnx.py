@@ -102,8 +102,8 @@ def test_plots():
                             node_alpha=0.1, node_edgecolor='b', node_zorder=5, edge_color='r', edge_linewidth=2,
                             edge_alpha=0.1, use_geom=False, show=False, save=True, close=True)
                             
-    fig, ax = ox.plot_figure_ground(point=(33.694981, -117.841375))
-    fig, ax = ox.plot_figure_ground(address='Denver, Colorado, USA')
+    fig, ax = ox.plot_figure_ground(point=(33.694981, -117.841375), file_format='png')
+    fig, ax = ox.plot_figure_ground(address='Denver, Colorado, USA', file_format='png')
         
         
 def test_routing():
