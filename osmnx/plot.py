@@ -388,13 +388,14 @@ def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_s
     fig, ax : figure, axis
     """
     
-    # get the network by either address or point, whichever was passed-in
+    # get the network by either address or point, whichever was passed-in, using a distance multiplier to make sure we get more than enough network
+    multiplier = 1.2
     if not address is None:
-        G, point = graph_from_address(address, distance=dist, distance_type='bbox', network_type=network_type, 
-                                         truncate_by_edge=True, return_coords=True)
+        G, point = graph_from_address(address, distance=dist*multiplier, distance_type='bbox', network_type=network_type, 
+                                      truncate_by_edge=True, return_coords=True)
     elif not point is None:
-        G = graph_from_point(point, distance=dist, distance_type='bbox', network_type=network_type, 
-                                truncate_by_edge=True)
+        G = graph_from_point(point, distance=dist*multiplier, distance_type='bbox', network_type=network_type, 
+                             truncate_by_edge=True)
     else:
         raise ValueError('You must pass an address or lat-long point.')
     
@@ -420,7 +421,7 @@ def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_s
         else:
             edge_linewidths.append(default_width)
     
-    # define the spatial extents of the plotting figure to make it square and in projected units
+    # define the spatial extents of the plotting figure to make it square, in projected units, and cropped to the desired area
     bbox_proj = bbox_from_point(point, dist, project_utm=True)
     
     # create a filename if one was not passed
