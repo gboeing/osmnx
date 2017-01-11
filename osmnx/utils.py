@@ -199,18 +199,18 @@ def get_largest_component(G, strongly=False):
     """
     
     start_time = time.time()
-    original_len = len(G.nodes())
+    original_len = len(list(G.nodes()))
     
     if strongly:
         # if the graph is not connected and caller did not request retain_all, retain only the largest strongly connected component
         if not nx.is_strongly_connected(G):
             G = max(nx.strongly_connected_component_subgraphs(G), key=len)
-            log('Graph was not connected, retained only the largest strongly connected component ({:,} of {:,} total nodes) in {:.2f} seconds'.format(len(G.nodes()), original_len, time.time()-start_time))
+            log('Graph was not connected, retained only the largest strongly connected component ({:,} of {:,} total nodes) in {:.2f} seconds'.format(len(list(G.nodes())), original_len, time.time()-start_time))
     else:
         # if the graph is not connected and caller did not request retain_all, retain only the largest weakly connected component
         if not nx.is_weakly_connected(G):
             G = max(nx.weakly_connected_component_subgraphs(G), key=len)
-            log('Graph was not connected, retained only the largest weakly connected component ({:,} of {:,} total nodes) in {:.2f} seconds'.format(len(G.nodes()), original_len, time.time()-start_time))
+            log('Graph was not connected, retained only the largest weakly connected component ({:,} of {:,} total nodes) in {:.2f} seconds'.format(len(list(G.nodes())), original_len, time.time()-start_time))
 
     return G
     

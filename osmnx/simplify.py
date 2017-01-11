@@ -32,7 +32,7 @@ def is_endpoint(G, node, strict=True):
     -------
     bool
     """
-    neighbors = set(G.predecessors(node) + G.successors(node))
+    neighbors = set(list(G.predecessors(node)) + list(G.successors(node)))
     n = len(neighbors)
     d = G.degree(node)
     
@@ -187,8 +187,8 @@ def simplify_graph(G_, strict=True):
     
     log('Begin topologically simplifying the graph...')
     G = G_.copy()
-    initial_node_count = len(G.nodes())
-    initial_edge_count = len(G.edges())
+    initial_node_count = len(list(G.nodes()))
+    initial_edge_count = len(list(G.edges()))
     all_nodes_to_remove = []
     all_edges_to_add = []
     
@@ -238,13 +238,13 @@ def simplify_graph(G_, strict=True):
     
     # for each edge to add in the list we assembled, create a new edge between the origin and destination
     for edge in all_edges_to_add:
-        G.add_edge(edge['origin'], edge['destination'], attr_dict=edge['attr_dict'])
+        G.add_edge(edge['origin'], edge['destination'], **edge['attr_dict'])
 
     # finally remove all the interstitial nodes between the new edges
     G.remove_nodes_from(set(all_nodes_to_remove))
     
     msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
-    log(msg.format(initial_node_count, len(G.nodes()), initial_edge_count, len(G.edges()), time.time()-start_time))
+    log(msg.format(initial_node_count, len(list(G.nodes())), initial_edge_count, len(list(G.edges())), time.time()-start_time))
     return G
     
     

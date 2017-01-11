@@ -146,7 +146,7 @@ def project_graph(G):
     
     # clear the graph to make it a blank slate for the projected data
     start_time = time.time()
-    edges = G_proj.edges(keys=True, data=True)
+    edges = list(G_proj.edges(keys=True, data=True))
     graph_name = G_proj.graph['name']
     G_proj.clear()
     
@@ -155,13 +155,13 @@ def project_graph(G):
     attributes = gdf_nodes_utm.to_dict()
     for name in gdf_nodes_utm.columns:
         nx.set_node_attributes(G_proj, name, attributes[name])
-    
+
     # add the edges and all their attributes (including reconstructed geometry, when it exists) to the graph
     for u, v, key, attributes in edges:
         if 'geometry' in attributes:
             row = gdf_edges_utm[(gdf_edges_utm['u']==u) & (gdf_edges_utm['v']==v) & (gdf_edges_utm['key']==key)]
             attributes['geometry'] = row['geometry'].iloc[0]
-        G_proj.add_edge(u, v, key, attributes)
+        G_proj.add_edge(u, v, key=key, **attributes)
     
     # set the graph's CRS attribute to the new, projected CRS and return the projected graph
     G_proj.graph['crs'] = gdf_nodes_utm.crs

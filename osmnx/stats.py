@@ -51,8 +51,8 @@ def basic_stats(G, area=None):
     G_undirected = None
     
     # calculate the number of nodes, n, and the number of edges, m, in the graph
-    n = len(G.nodes())
-    m = len(G.edges())
+    n = len(list(G.nodes()))
+    m = len(list(G.edges()))
     
     # calculate the average degree of the graph
     k_avg = 2 * m / n
@@ -86,7 +86,7 @@ def basic_stats(G, area=None):
     if G_undirected is None:
         G_undirected = G.to_undirected(reciprocal=False)
     street_length_total = sum([d['length'] for u, v, d in G_undirected.edges(data=True)])
-    street_segments_count = len(G_undirected.edges(keys=True))
+    street_segments_count = len(list(G_undirected.edges(keys=True)))
     street_length_avg = street_length_total / street_segments_count
     
     # we can calculate density metrics only if area is not null
@@ -271,7 +271,8 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     if ecc:
         # precompute shortest paths between all nodes for eccentricity-based stats
         start_time = time.time()
-        sp = {source:nx.single_source_dijkstra_path_length(G_strong, source, weight='length') for source in G_strong.nodes()}
+        sp = {source:dict(nx.single_source_dijkstra_path_length(G_strong, source, weight='length')) for source in G_strong.nodes()}
+
         log('Calculated shortest path lengths in {:,.2f} seconds'.format(time.time() - start_time))
         
         # eccentricity of a node v is the maximum distance from v to all other nodes in G
