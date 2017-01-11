@@ -67,7 +67,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     -------
     None
     """
-    
+
     start_time = time.time()
     if folder is None:
         folder = globals.data_folder
@@ -75,6 +75,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     # convert directed graph G to an undirected graph for saving as a shapefile
     G_save = G.copy()
     G_save = get_undirected(G_save)
+
     
     # create a GeoDataFrame of the nodes and set CRS
     nodes = {node:data for node, data in G_save.nodes(data=True)}
@@ -89,7 +90,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64)
     for col in [c for c in gdf_nodes.columns if not c == 'geometry']:
         gdf_nodes[col] = gdf_nodes[col].fillna('').map(make_str)
-        
+    
     # create a list to hold our edges, then loop through each edge in the graph
     edges = []
     for u, v, key, data in G_save.edges(keys=True, data=True):
@@ -106,7 +107,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
             edge_details['geometry'] = LineString([point_u, point_v])
         
         edges.append(edge_details)
-    
+
     # create a geodataframe from the list of edges and set the CRS
     gdf_edges = gpd.GeoDataFrame(edges)
     gdf_edges.crs = G_save.graph['crs']
@@ -225,8 +226,8 @@ def load_graphml(filename, folder=None):
         if 'geometry' in data:
             data['geometry'] = wkt.loads(data['geometry'])
     
-    log('Loaded graph with {:,} nodes and {:,} edges in {:,.2f} seconds from "{}"'.format(len(G.nodes()),
-                                                                                          len(G.edges()),
+    log('Loaded graph with {:,} nodes and {:,} edges in {:,.2f} seconds from "{}"'.format(len(list(G.nodes())),
+                                                                                          len(list(G.edges())),
                                                                                           time.time()-start_time,
                                                                                           path))
     return G
@@ -274,7 +275,7 @@ def get_undirected(G):
                     if not (geom1 == geom2 or geom1_r == geom2):
                         # add it as a new edge to the graph to be saved (with key equal to the current largest key plus one)
                         new_key = max(G.edge[u][v]) + 1
-                        G_undir.add_edge(u, v, new_key, attr_dict=data)
+                        G_undir.add_edge(u, v, new_key, **data)
         except:
             pass
     
@@ -389,7 +390,7 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
         for label, value in row.iteritems():
             if (label not in ['u', 'v', 'key']) and (isinstance(value, list) or pd.notnull(value)):
                 attrs[label] = value
-        G.add_edge(u=row['u'], v=row['v'], key=row['key'], attr_dict=attrs)
+        G.add_edge(u=row['u'], v=row['v'], key=row['key'], **attrs)
     
     return G    
 

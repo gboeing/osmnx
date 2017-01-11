@@ -687,7 +687,7 @@ def remove_isolated_nodes(G):
     -------
     G : graph
     """
-    isolated_nodes = [node for node, degree in G.degree().items() if degree < 1]
+    isolated_nodes = [node for node, degree in dict(G.degree()).items() if degree < 1]
     G.remove_nodes_from(isolated_nodes)
     log('Removed {:,} isolated nodes'.format(len(isolated_nodes)))
     return G
@@ -714,7 +714,7 @@ def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', reta
     start_time = time.time()
     G = G.copy()
     distances = nx.shortest_path_length(G, source=source_node, weight=weight)
-    distant_nodes = {key:value for key, value in distances.items() if value > max_distance}
+    distant_nodes = {key:value for key, value in dict(distances).items() if value > max_distance}
     G.remove_nodes_from(distant_nodes.keys())
     log('Truncated graph by weighted network distance in {:,.2f} seconds'.format(time.time()-start_time))
     
@@ -758,7 +758,7 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
             else:
                 # if we're truncating by edge, see if any of node's neighbors are within bounding box
                 any_neighbors_in_bbox = False
-                neighbors = G.successors(node) + G.predecessors(node)
+                neighbors = list(G.successors(node)) + list(G.predecessors(node))
                 for neighbor in neighbors:
                     x = G.node[neighbor]['x']
                     y = G.node[neighbor]['y']
@@ -893,7 +893,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False)
     
     # get a GeoDataFrame of all the nodes, for spatial analysis
     node_geom = [Point(data['x'], data['y']) for _, data in G.nodes(data=True)]
-    gdf_nodes = gpd.GeoDataFrame({'node':G.nodes(), 'geometry':node_geom})
+    gdf_nodes = gpd.GeoDataFrame({'node':pd.Series(G.nodes()), 'geometry':node_geom})
     gdf_nodes.crs = G.graph['crs']
     
     # find all the nodes in the graph that lie outside the polygon
@@ -994,13 +994,13 @@ def add_path(G, data, one_way):
     
     # zip together the path nodes so you get tuples like (0,1), (1,2), (2,3) and so on
     path_edges = list(zip(path_nodes[:-1], path_nodes[1:]))
-    G.add_edges_from(path_edges, attr_dict=data)
+    G.add_edges_from(path_edges, **data)
     
     # if the path is NOT one-way
     if not one_way:
         # reverse the direction of each edge and add this path going the opposite direction
         path_edges_opposite_direction = [(v, u) for u, v in path_edges]
-        G.add_edges_from(path_edges_opposite_direction, attr_dict=data)
+        G.add_edges_from(path_edges_opposite_direction, **data)
 
 
 def add_paths(G, paths, network_type):
@@ -1079,7 +1079,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     
     # add each osm node to the graph
     for node, data in nodes.items():
-        G.add_node(node, attr_dict=data)
+        G.add_node(node, **data)
     
     # add each osm way (aka, path) to the graph
     G = add_paths(G, paths, network_type)
@@ -1088,7 +1088,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     if not retain_all:
         G = get_largest_component(G)
     
-    log('Created graph with {:,} nodes and {:,} edges in {:,.2f} seconds'.format(len(G.nodes()), len(G.edges()), time.time()-start_time))
+    log('Created graph with {:,} nodes and {:,} edges in {:,.2f} seconds'.format(len(list(G.nodes())), len(list(G.edges())), time.time()-start_time))
     
     # add length (great circle distance between nodes) attribute to each edge to use as weight
     G = add_edge_lengths(G)
@@ -1190,7 +1190,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private', simpli
         if simplify:
             G = simplify_graph(G)
     
-    log('graph_from_bbox() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
+    log('graph_from_bbox() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return  G
     
     
@@ -1242,7 +1242,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     else:
         raise ValueError('distance_type must be "bbox" or "network"')
     
-    log('graph_from_point() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
+    log('graph_from_point() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return G
         
         
@@ -1283,7 +1283,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     # then create a graph from this point
     G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all, 
                          truncate_by_edge=truncate_by_edge, name=name, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, clean_periphery=clean_periphery)
-    log('graph_from_address() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
+    log('graph_from_address() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     
     if return_coords:
         return G, point
@@ -1357,7 +1357,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
         if simplify:
             G = simplify_graph(G)
     
-    log('graph_from_polygon() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
+    log('graph_from_polygon() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return G
     
         
@@ -1405,7 +1405,7 @@ def graph_from_place(query, network_type='all_private', simplify=True, retain_al
     G = graph_from_polygon(polygon, network_type=network_type, simplify=simplify, retain_all=retain_all, 
                            truncate_by_edge=truncate_by_edge, name=name, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, clean_periphery=clean_periphery)
     
-    log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(G.nodes()), len(G.edges())))
+    log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return G
     
     
