@@ -36,13 +36,13 @@ print(extended_stats['pagerank_max_node'])
 
 ## Installation
 
-You can install OSMnx with conda:
+You can install OSMnx with [conda](https://anaconda.org/conda-forge/osmnx):
 
 ```
 conda install -c conda-forge osmnx
 ```
 
-Or with pip:
+Or with [pip](https://pypi.python.org/pypi/OSMnx):
 
 ```
 pip install osmnx
