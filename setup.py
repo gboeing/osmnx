@@ -42,7 +42,7 @@ classifiers=['Development Status :: 5 - Production/Stable',
 
 # now call setup
 setup(name='osmnx',
-      version='0.2.1',
+      version='0.2.2',
       description='Retrieve, construct, analyze, and visualize street networks from OpenStreetMap',
       long_description=long_description,
       classifiers=classifiers,
