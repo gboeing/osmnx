@@ -149,7 +149,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
     
     
 def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off=True, bgcolor='w',
-               show=True, save=False, close=True, file_format='jpg', filename='temp', dpi=300, annotate=False,
+               show=True, save=False, close=True, file_format='png', filename='temp', dpi=300, annotate=False,
                node_color='#66ccff', node_size=15, node_alpha=1, node_edgecolor='none', node_zorder=1,
                edge_color='#999999', edge_linewidth=1, edge_alpha=1, use_geom=True):
     """
@@ -256,7 +256,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
 
 
 def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0.02, bgcolor='w',
-                     axis_off=True, show=True, save=False, close=True, file_format='jpg', filename='temp', dpi=300, annotate=False,
+                     axis_off=True, show=True, save=False, close=True, file_format='png', filename='temp', dpi=300, annotate=False,
                      node_color='#999999', node_size=15, node_alpha=1, node_edgecolor='none', node_zorder=1,
                      edge_color='#999999', edge_linewidth=1, edge_alpha=1, use_geom=True,
                      origin_point=None, destination_point=None,
@@ -362,7 +362,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     
 def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_service',
                        street_widths=None, default_width=4, fig_length=8, edge_color='w', bgcolor='#333333',
-                       filename=None, file_format='jpg', show=False, save=True, close=True):
+                       filename=None, file_format='png', show=False, save=True, close=True):
     """
     Plot a figure-ground diagram of a street network, defaulting to one square mile.
     

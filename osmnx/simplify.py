@@ -140,10 +140,10 @@ def get_paths_to_simplify(G, strict=True):
                     path = build_path(G, successor, endpoints, path=[node, successor])
                     paths_to_simplify.append(path)
                 except RuntimeError:
+                    log('Recursion error: exceeded max depth, moving on to next endpoint successor', level=lg.WARNING)
                     # recursion errors occur if some connected component is a self-contained ring in which all nodes are not end points
                     # handle it by just ignoring that component and letting its topology remain intact (this should be a rare occurrence)
                     # RuntimeError is what Python <3.5 will throw, Py3.5+ throws RecursionError but it is a subtype of RuntimeError so it still gets handled
-                    log('Recursion error: exceeded max depth, moving on to next endpoint successor', level=lg.WARNING)
     
     log('Constructed all paths to simplify in {:,.2f} seconds'.format(time.time()-start_time))
     return paths_to_simplify
