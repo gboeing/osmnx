@@ -21,7 +21,7 @@ import osmnx as ox
 G = ox.graph_from_place('Manhattan, New York, USA', network_type='drive')
 ox.plot_graph(ox.project_graph(G))
 ```
-![](examples/images/manhattan.jpg)
+![](examples/images/manhattan.png)
 
 In a couple lines of code you can examine intersection density, network circuity, average block size, PageRank,
 betweenness centrality, connectivity, spatial distribution of dead-ends or 4-way intersections, etc for anywhere in the world:

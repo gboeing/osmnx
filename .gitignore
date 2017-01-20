@@ -1,13 +1,11 @@
-.ipynb_checkpoints
-.temp
-__pycache__
+.temp/*
 _backup/*
 tests/run_tests.bat
 examples/cache/*
 examples/data/*
 examples/logs/*
 examples/images/*
-!examples/images/manhattan.jpg
+!examples/images/manhattan.png
 
 
 # Compiled source #
