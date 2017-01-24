@@ -6,6 +6,10 @@ OSMnx tests
 import matplotlib as mpl
 mpl.use('Agg') #use agg backend so you don't need a display on travis-ci
 
+import os, shutil
+if os.path.exists('.temp'):
+    shutil.rmtree('.temp')
+
 import osmnx as ox, logging as lg
 ox.config(log_console=True, log_file=True, use_cache=True, 
           data_folder='.temp/data', logs_folder='.temp/logs', imgs_folder='.temp/imgs', cache_folder='.temp/cache')
@@ -17,6 +21,7 @@ ox.log('test error', level=lg.ERROR)
 
 
 def test_imports():
+    
     import json, math, sys, os, io, ast, unicodedata, hashlib, re, random, time, datetime as dt, logging as lg
     from collections import OrderedDict, Counter
     from itertools import groupby, chain
@@ -33,6 +38,7 @@ def test_imports():
     
     
 def test_gdf_shapefiles():
+    
     city = ox.gdf_from_place('Manhattan, New York City, New York, USA')
     city_projected = ox.project_gdf(city)
     ox.save_gdf_shapefile(city_projected)
@@ -42,6 +48,7 @@ def test_gdf_shapefiles():
     
     
 def test_network_saving_loading():
+    
     G = ox.graph_from_place('Piedmont, California, USA')
     G_projected = ox.project_graph(G)
     ox.save_graph_shapefile(G_projected)
@@ -77,6 +84,7 @@ def test_get_network_methods():
     
     
 def test_stats():
+    
     location_point = (37.791427, -122.410018)
     G = ox.graph_from_point(location_point, distance=500, distance_type='network')
     stats1 = ox.basic_stats(G)
@@ -107,6 +115,7 @@ def test_plots():
         
         
 def test_routing():
+    
     import networkx as nx
     G = ox.graph_from_address('N. Sicily Pl., Chandler, Arizona', distance=800, network_type='drive')
     origin = (33.307792, -111.894940)
@@ -117,5 +126,12 @@ def test_routing():
     fig, ax = ox.plot_graph_route(G, route, save=True, filename='route', file_format='png')
     fig, ax = ox.plot_graph_route(G, route, origin_point=origin, destination_point=destination,
                                   save=True, filename='route', file_format='png')
+    
+    
+def test_buildings():
+
+    gdf = ox.buildings_from_place(place='Piedmont, California, USA')
+    gdf = ox.buildings_from_address(address='San Francisco, California, USA', distance=300)
+    fig, ax = ox.plot_buildings(gdf)
     
     
