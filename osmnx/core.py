@@ -345,7 +345,7 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
         
         # create the GeoDataFrame, name it, and set its original CRS to lat-long (EPSG 4326)
         gdf = gpd.GeoDataFrame.from_features(features)
-        gdf.name = gdf_name
+        gdf.gdf_name = gdf_name
         gdf.crs = {'init':'epsg:4326'}
         
         # if buffer_dist was passed in, project the geometry to UTM, buffer it in meters, then project it back to lat-long
@@ -353,7 +353,7 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
             gdf_utm = project_gdf(gdf)
             gdf_utm['geometry'] = gdf_utm['geometry'].buffer(buffer_dist)
             gdf = project_gdf(gdf_utm, to_latlong=True)
-            log('Buffered the GeoDataFrame "{}" to {} meters'.format(gdf.name, buffer_dist))
+            log('Buffered the GeoDataFrame "{}" to {} meters'.format(gdf.gdf_name, buffer_dist))
         
         # return the gdf
         log('Created GeoDataFrame with {} row for query "{}"'.format(len(gdf), query))
@@ -362,7 +362,7 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
         # if there was no data returned (or fewer results than which_result specified)
         log('OSM returned no results (or fewer than which_result) for query "{}"'.format(query), level=lg.WARNING)
         gdf = gpd.GeoDataFrame()
-        gdf.name = gdf_name
+        gdf.gdf_name = gdf_name
         return gdf
         
         
@@ -387,7 +387,7 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None):
         
     # reset the index, name the GeoDataFrame
     gdf = gdf.reset_index().drop(labels='index', axis=1)
-    gdf.name = gdf_name
+    gdf.gdf_name = gdf_name
     
     # set the original CRS of the GeoDataFrame to lat-long, and return it
     gdf.crs = {'init':'epsg:4326'}

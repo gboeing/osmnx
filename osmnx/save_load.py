@@ -38,7 +38,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
         folder = globals.data_folder
     
     if filename is None:
-        filename = make_shp_filename(gdf.name)
+        filename = make_shp_filename(gdf.gdf_name)
     
     # give the save folder a filename subfolder to make the full path to the files
     folder_path = '{}/{}'.format(folder, filename)
@@ -47,9 +47,9 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     gdf.to_file(folder_path)
-    if not hasattr(gdf, 'name'):
-        gdf.name = 'unnamed'
-    log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.name, folder_path)) 
+    if not hasattr(gdf, 'gdf_name'):
+        gdf.gdf_name = 'unnamed'
+    log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.gdf_name, folder_path)) 
     
     
 def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):

@@ -31,7 +31,7 @@ def project_geometry(geometry, crs, to_latlong=False):
     """
     gdf = gpd.GeoDataFrame()
     gdf.crs = crs
-    gdf.name = 'geometry to project'
+    gdf.gdf_name = 'geometry to project'
     gdf['geometry'] = None
     gdf.loc[0, 'geometry'] = geometry
     gdf_proj = project_gdf(gdf, to_latlong=to_latlong)
@@ -61,9 +61,9 @@ def project_gdf(gdf, to_latlong=False):
         # if to_latlong is True, project the gdf to latlong
         latlong_crs = {'init':'epsg:4326'}
         projected_gdf = gdf.to_crs(latlong_crs)
-        if not hasattr(gdf, 'name'):
-            gdf.name = 'unnamed'
-        log('Projected the GeoDataFrame "{}" to EPSG 4326 in {:,.2f} seconds'.format(gdf.name, time.time()-start_time))
+        if not hasattr(gdf, 'gdf_name'):
+            gdf.gdf_name = 'unnamed'
+        log('Projected the GeoDataFrame "{}" to EPSG 4326 in {:,.2f} seconds'.format(gdf.gdf_name, time.time()-start_time))
     else:
         # else, project the gdf to UTM
         # if GeoDataFrame is already in UTM, just return it
@@ -83,11 +83,11 @@ def project_gdf(gdf, to_latlong=False):
         
         # project the GeoDataFrame to the UTM CRS
         projected_gdf = gdf.to_crs(utm_crs)
-        if not hasattr(gdf, 'name'):
-            gdf.name = 'unnamed'
-        log('Projected the GeoDataFrame "{}" to UTM-{} in {:,.2f} seconds'.format(gdf.name, utm_zone, time.time()-start_time))
+        if not hasattr(gdf, 'gdf_name'):
+            gdf.gdf_name = 'unnamed'
+        log('Projected the GeoDataFrame "{}" to UTM-{} in {:,.2f} seconds'.format(gdf.gdf_name, utm_zone, time.time()-start_time))
     
-    projected_gdf.name = gdf.name
+    projected_gdf.gdf_name = gdf.gdf_name
     return projected_gdf
 
     
@@ -111,7 +111,7 @@ def project_graph(G):
     nodes = {node:data for node, data in G_proj.nodes(data=True)}
     gdf_nodes = gpd.GeoDataFrame(nodes).T
     gdf_nodes.crs = G_proj.graph['crs']
-    gdf_nodes.name = '{}_nodes'.format(G_proj.name)
+    gdf_nodes.gdf_name = '{}_nodes'.format(G_proj.name)
     gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64).map(make_str)
     
     # create new lat/lon columns just to save that data for later, and create a geometry column from x/y
@@ -134,7 +134,7 @@ def project_graph(G):
     if len(edges_with_geom) > 0:
         gdf_edges = gpd.GeoDataFrame(edges_with_geom)
         gdf_edges.crs = G_proj.graph['crs']
-        gdf_edges.name = '{}_edges'.format(G_proj.name)
+        gdf_edges.gdf_name = '{}_edges'.format(G_proj.name)
         gdf_edges_utm = project_gdf(gdf_edges)
     
     # extract projected x and y values from the nodes' geometry column
