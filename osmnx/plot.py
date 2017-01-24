@@ -66,7 +66,7 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6
     return fig, ax
 
 
-def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='spectral', start=0.1, stop=0.9):
+def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1):
     """
     Get a list of edge colors by binning some continuous-variable attribute into quantiles
     
@@ -206,7 +206,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     
     # create the figure and axis
     fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=bgcolor)
-    ax.set_axis_bgcolor(bgcolor)
+    ax.set_facecolor(bgcolor)
     
     # draw the edges as lines from node to node
     start_time = time.time()
