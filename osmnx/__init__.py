@@ -12,5 +12,6 @@ from .save_load import *
 from .simplify import *
 from .stats import *
 from .utils import *
+from .buildings import *
 
 __version__ = '0.2.2'
