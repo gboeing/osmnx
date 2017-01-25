@@ -18,6 +18,7 @@ from shapely.geometry import Polygon, MultiPolygon
 from . import globals
 from .utils import log
 from .projection import project_graph
+from .save_load import graph_to_gdfs
 from .core import graph_from_address, graph_from_point, bbox_from_point
 
 
@@ -190,12 +191,10 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     node_Xs = [float(node['x']) for node in G.node.values()]
     node_Ys = [float(node['y']) for node in G.node.values()]
     
-    # get north, south, east, west values either from bbox parameter or from min/max node coordinate values
+    # get north, south, east, west values either from bbox parameter or from the spatial extent of the edges' geometries
     if bbox is None:
-        north = max(node_Ys)
-        south = min(node_Ys)
-        east = max(node_Xs)
-        west = min(node_Xs)
+        edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+        west, south, east, north = edges.total_bounds
     else:
         north, south, east, west = bbox
     
@@ -242,8 +241,13 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     # configure axis appearance
     ax.get_xaxis().get_major_formatter().set_useOffset(False)
     ax.get_yaxis().get_major_formatter().set_useOffset(False)
+    
+    # if axis_off, turn off the axis display set the margins to zero and point the ticks in so there's no space around the plot
     if axis_off:
         ax.axis('off')
+        ax.margins(0)
+        ax.tick_params(which='both', direction='in')
+        fig.canvas.draw()
     
     # annotate the axis with node IDs if annotate=True
     if annotate:
@@ -433,6 +437,10 @@ def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_s
     fig, ax = plot_graph(G, bbox=bbox_proj, fig_height=fig_length, margin=0, node_size=0, 
                          edge_linewidth=edge_linewidths, edge_color=edge_color, bgcolor=bgcolor, 
                          show=show, save=save, close=close, filename=filename, file_format=file_format, dpi=dpi)
+    
+    # make everything square
+    ax.set_aspect('equal')
+    fig.canvas.draw()
     
     return fig, ax
     
