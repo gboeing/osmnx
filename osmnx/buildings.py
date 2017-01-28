@@ -225,7 +225,7 @@ def buildings_from_place(place):
     return create_buildings_gdf(polygon)
 
 
-def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', set_bounds=True, bbox=None, axis_off=True,
+def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w', set_bounds=True, bbox=None, axis_off=True,
                    save=False, show=True, close=False, filename='image', file_format='png', dpi=600):
     """
     Plot a GeoDataFrame of building footprints
@@ -237,6 +237,7 @@ def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', set_bo
     ax : axis
     figsize : tuple
     color : string, the color of the building footprints
+    bgcolor : string, the background color of the plot
     set_bounds : if True, set bounds from either passed-in bbox or the spatial extent of the gdf
     bbox : if True and if set_bounds is True, set the display bounds to this bbox
     axis_off : bool, if True matplotlib axis was turned off by plot_graph so constrain the saved figure's extent to the interior of the axis
@@ -253,8 +254,9 @@ def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', set_bo
     """
     
     if fig is None or ax is None:
-        fig, ax = plt.subplots(figsize=figsize)
-
+        fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)
+        ax.set_facecolor(bgcolor)
+    
     # extract each polygon as a descartes patch, and add to a matplotlib patch collection
     patches = []
     for geometry in gdf['geometry']:
@@ -277,6 +279,9 @@ def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', set_bo
 
     if axis_off:
         ax.axis('off')
+        ax.margins(0)
+        ax.tick_params(which='both', direction='in')
+        fig.canvas.draw()
 
     fig, ax = save_and_show(fig=fig, ax=ax, save=save, show=show, close=close, 
                                filename=filename, file_format=file_format, dpi=dpi, axis_off=axis_off)
