@@ -21,6 +21,12 @@ from .projection import project_graph
 from .save_load import graph_to_gdfs
 from .core import graph_from_address, graph_from_point, bbox_from_point
 
+# folium is an optional dependency for the plot_route_folium function
+try:
+    import folium
+except ImportError as e:
+    folium = None
+
 
 def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6,6), margin=0.02, axis_off=True):
     """
@@ -362,6 +368,48 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     # save and show the figure as specified
     fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
     return fig, ax
+    
+    
+def plot_route_folium(G, route, zoom=15, tiles='cartodbpositron', 
+                      route_color='#ff0000', route_width=5):
+    """
+    Plot a route on an interactive folium web map.
+    
+    Parameters
+    ----------
+    G : graph
+    route : list, the route as a list of nodes
+    zoom : int, initial zoom level for the map
+    tiles : string, name of a folium tileset
+    route_color : string, color of the route's line
+    route_width : numeric, width of the route's line
+    
+    Returns
+    -------
+    route_map : folium.folium.Map
+    
+    """
+    
+    # check if we were able to import folium successfully
+    if not folium:
+        raise ImportError('The folium package must be installed to use this optional feature.')
+    
+    # create geojson of the route edges
+    gdf_edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+    route_nodes = list(zip(route[:-1], route[1:]))
+    index = [gdf_edges[(gdf_edges['u']==u) & (gdf_edges['v']==v)].index[0] for u, v in route_nodes]
+    gdf_route_edges = gdf_edges.loc[index]
+    route_geojson = gdf_route_edges.to_json()
+    
+    # get route centroid
+    x, y = gdf_route_edges.unary_union.centroid.xy
+    route_centroid = (y[0], x[0])
+    
+    # get map tiles and draw route
+    route_map = folium.Map(location=route_centroid, zoom_start=zoom, tiles=tiles)
+    route_map.choropleth(geo_str=route_geojson, line_color=route_color, line_weight=route_width)
+        
+    return route_map    
     
     
 def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_service',
