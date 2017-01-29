@@ -126,6 +126,7 @@ def test_routing():
     fig, ax = ox.plot_graph_route(G, route, save=True, filename='route', file_format='png')
     fig, ax = ox.plot_graph_route(G, route, origin_point=origin, destination_point=destination,
                                   save=True, filename='route', file_format='png')
+    route_map = ox.plot_route_folium(G, route)                              
     
     
 def test_buildings():
