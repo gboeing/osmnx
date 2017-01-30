@@ -14,4 +14,4 @@ from .stats import *
 from .utils import *
 from .buildings import *
 
-__version__ = '0.3.dev'
+__version__ = '0.3'

@@ -12,14 +12,10 @@ You can get a city's or neighborhood's walking, driving, or biking network with 
 code. Then you can easily visualize cul-de-sacs or one-way streets, plot shortest-path routes, or 
 calculate stats like intersection density, average node connectivity, betweenness centrality, etc.
 
-See the examples and demos on `GitHub`_.
-
-|ModenaImageLink|_
+See the examples and demos on `GitHub`_ or read more about `OSMnx`_.
 
 .. _GitHub: https://github.com/gboeing/osmnx
-.. _ModenaImageLink: http://geoffboeing.com/2016/11/osmnx-python-street-networks/
-.. |ModenaImageLink| image:: https://i0.wp.com/geoffboeing.com/wp-content/uploads/2016/10/modena-italy-street-network.png?w=400
-                     :alt: OSMnx Modena Italy urban city street network with Python matplotlib networkx geopandas
+.. _OSMnx: http://geoffboeing.com/2016/11/osmnx-python-street-networks/
 """
 
 # list of classifiers from the PyPI classifiers trove
@@ -42,7 +38,7 @@ classifiers=['Development Status :: 5 - Production/Stable',
 
 # now call setup
 setup(name='osmnx',
-      version='0.3.dev',
+      version='0.3',
       description='Retrieve, construct, analyze, and visualize street networks from OpenStreetMap',
       long_description=long_description,
       classifiers=classifiers,
