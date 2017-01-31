@@ -52,6 +52,10 @@ If you are pip installing OSMnx, install [geopandas](http://geoffboeing.com/2014
 and [rtree](http://geoffboeing.com/2016/10/r-tree-spatial-index-python/) first. It's easiest to 
 use [conda-forge](https://anaconda.org/conda-forge/geopandas) to get these dependencies installed.
 
+## Documenation
+
+Available on [readthedocs](https://osmnx.readthedocs.io/en/latest/).
+
 ## How to use OSMnx
 
 For a quick demo overview of OSMnx, see this [demo notebook](examples/01-overview-osmnx.ipynb).
