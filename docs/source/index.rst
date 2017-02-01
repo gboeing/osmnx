@@ -10,30 +10,38 @@ OSMnx documentation
    :maxdepth: 2
    :caption: Contents:
    
-   modules
    osmnx
 
-Retrieve, construct, analyze, and visualize street networks from OpenStreetMap.
-
-OSMnx is a Python package that lets you download spatial geometries and construct, project, visualize, 
+**OSMnx**: retrieve, construct, analyze, and visualize street networks from OpenStreetMap. OSMnx is a Python package that lets you download spatial geometries and construct, project, visualize, 
 and analyze street networks from OpenStreetMap's APIs. Users can download and construct walkable, drivable, or bikable 
 urban networks with a single line of Python code, and then easily analyze and visualize them.
 
-Citation
---------
+Citation info
+-------------
 
-You can read/cite the journal article about OSMnx: Boeing, G. 2017. "`OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks`_." doi:10.2139/ssrn.2865501.
+Boeing, G. 2017. "`OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks`_." doi:10.2139/ssrn.2865501.
 
 Installation
 ------------
 
 Install OSMnx with pip by running:
 
+.. code-block:: shell
+    
     pip install osmnx
     
 or with conda by running:
-
+    
+.. code-block:: shell
+    
     conda install -c conda-forge osmnx
+    
+If you have any trouble with the installation, try installing OSMnx in a new, clean `virtual environment`_:
+
+.. code-block:: shell
+    
+    conda create --yes -c conda-forge -n OSMNX python=3 osmnx
+    source activate OSMNX
     
 Examples
 --------
@@ -59,5 +67,6 @@ Indices and tables
 * :ref:`search`
 
 .. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: http://geoffboeing.com/publications/osmnx-complex-street-networks/
+.. _virtual environment: https://conda.io/docs/using/envs.html
 .. _https://github.com/gboeing/osmnx: https://github.com/gboeing/osmnx
 .. _https://github.com/gboeing/osmnx/issues: https://github.com/gboeing/osmnx/issues

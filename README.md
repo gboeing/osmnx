@@ -8,7 +8,7 @@
 
 Retrieve, construct, analyze, and visualize street networks from OpenStreetMap: [full overview](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
 
-You can read/cite the journal article manuscript: Boeing, G. 2016. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](http://geoffboeing.com/publications/osmnx-complex-street-networks/)." Manuscript under review. doi:10.2139/ssrn.2865501.
+**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](http://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Manuscript under review*. doi:10.2139/ssrn.2865501.
 
 ## Overview
 
@@ -52,7 +52,7 @@ If you are pip installing OSMnx, install [geopandas](http://geoffboeing.com/2014
 and [rtree](http://geoffboeing.com/2016/10/r-tree-spatial-index-python/) first. It's easiest to 
 use [conda-forge](https://anaconda.org/conda-forge/geopandas) to get these dependencies installed.
 
-## Documenation
+## Documentation
 
 Available on [readthedocs](https://osmnx.readthedocs.io/en/latest/).
 
