@@ -34,18 +34,27 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6
     
     Parameters
     ----------
-    gdf : GeoDataFrame, the gdf containing the geometries to plot
-    fc : string, the facecolor for the polygons
-    ec : string, the edgecolor for the polygons
-    linewidth : numeric, the width of the polygon edge lines
-    alpha : numeric, the opacity
-    figsize : tuple, the size of the plotting figure
-    margin : numeric, the size of the figure margins
-    axis_off : bool, if True, disable the matplotlib axes display
+    gdf : GeoDataFrame
+        the gdf containing the geometries to plot
+    fc : string
+        the facecolor for the polygons
+    ec : string
+        the edgecolor for the polygons
+    linewidth : numeric
+        the width of the polygon edge lines
+    alpha : numeric
+        the opacity
+    figsize : tuple
+        the size of the plotting figure
+    margin : numeric
+        the size of the figure margins
+    axis_off : bool
+        if True, disable the matplotlib axes display
     
     Returns
     -------
-    fig, ax : tuple
+    tuple
+        fig, ax
     """
     # plot the geometries one at a time
     fig, ax = plt.subplots(figsize=figsize)
@@ -79,16 +88,21 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1
     
     Parameters
     ----------
-    G : graph
-    attr : string, the name of the continuous-variable attribute
-    num_bins : int, how many quantiles
-    cmap : string, name of a colormap
-    start : float, where to start in the colorspace
-    stop : float, where to end in the colorspace
+    G : networkx multidigraph
+    attr : string
+        the name of the continuous-variable attribute
+    num_bins : int
+        how many quantiles
+    cmap : string
+        name of a colormap
+    start : float
+        where to start in the colorspace
+    stop : float
+        where to end in the colorspace
     
     Returns
     -------
-    colors : list
+    list
     """
     bin_labels = range(num_bins)
     attr_values = pd.Series([data[attr] for u, v, key, data in G.edges(keys=True, data=True)])
@@ -106,17 +120,25 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
     ----------
     fig : figure
     ax : axis
-    save : bool, whether to save the figure to disk or not
-    show : bool, whether to display the figure or not
-    close : close the figure (only if show equals False) to prevent display
-    filename : string, the name of the file to save
-    file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
-    dpi : int, the resolution of the image file if saving
-    axis_off : bool, if True matplotlib axis was turned off by plot_graph so constrain the saved figure's extent to the interior of the axis
+    save : bool
+        whether to save the figure to disk or not
+    show : bool
+        whether to display the figure or not
+    close : bool
+        close the figure (only if show equals False) to prevent display
+    filename : string
+        the name of the file to save
+    file_format : string
+        the format of the file to save (e.g., 'jpg', 'png', 'svg')
+    dpi : int
+        the resolution of the image file if saving
+    axis_off : bool
+        if True matplotlib axis was turned off by plot_graph so constrain the saved figure's extent to the interior of the axis
     
     Returns
     -------
-    fig, ax : figure, axis
+    tuple
+        fig, ax
     """
     # save the figure if specified
     if save:
@@ -164,33 +186,56 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     
     Parameters
     ----------
-    G : graph
-    bbox : tuple, bounding box as north,south,east,west - if None will calculate from spatial extents of data
-    fig_height : int, matplotlib figure height in inches
-    fig_width : int, matplotlib figure width in inches
-    margin : float, relative margin around the figure
-    axis_off : bool, if True turn off the matplotlib axis
-    bgcolor : string, the background color of the figure and axis
-    show : bool, if True, show the figure
-    save : bool, if True, save the figure as an image file to disk
-    close : close the figure (only if show equals False) to prevent display
-    file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
-    filename : string, the name of the file if saving
-    dpi : int, the resolution of the image file if saving
-    annotate : bool, if True, annotate the nodes in the figure
-    node_color : string, the color of the nodes
-    node_size : int, the size of the nodes
-    node_alpha : float, the opacity of the nodes
-    node_edgecolor : string, the color of the node's marker's border
-    node_zorder : int, zorder to plot nodes, edges are always 2, so make node_zorder 1 to plot nodes beneath them or 3 to plot nodes atop them
-    edge_color : string, the color of the edges' lines
-    edge_linewidth : float, the width of the edges' lines
-    edge_alpha : float, the opacity of the edges' lines
-    use_geom : bool, if True, use the spatial geometry attribute of the edges to draw geographically accurate edges, rather than just lines straight from node to node
+    G : networkx multidigraph
+    bbox : tuple
+        bounding box as north,south,east,west - if None will calculate from spatial extents of data
+    fig_height : int
+        matplotlib figure height in inches
+    fig_width : int
+        matplotlib figure width in inches
+    margin : float
+        relative margin around the figure
+    axis_off : bool
+        if True turn off the matplotlib axis
+    bgcolor : string
+        the background color of the figure and axis
+    show : bool
+        if True, show the figure
+    save : bool
+        if True, save the figure as an image file to disk
+    close : bool
+        close the figure (only if show equals False) to prevent display
+    file_format : string
+        the format of the file to save (e.g., 'jpg', 'png', 'svg')
+    filename : string
+        the name of the file if saving
+    dpi : int
+        the resolution of the image file if saving
+    annotate : bool
+        if True, annotate the nodes in the figure
+    node_color : string
+        the color of the nodes
+    node_size : int
+        the size of the nodes
+    node_alpha : float
+        the opacity of the nodes
+    node_edgecolor : string
+        the color of the node's marker's border
+    node_zorder : int
+        zorder to plot nodes, edges are always 2, so make node_zorder 1 to plot nodes beneath them or 3 to plot nodes atop them
+    edge_color : string
+        the color of the edges' lines
+    edge_linewidth : float
+        the width of the edges' lines
+    edge_alpha : float
+        the opacity of the edges' lines
+    use_geom : bool
+        if True, use the spatial geometry attribute of the edges to draw geographically accurate edges, rather than just lines straight from node to node
     
     Returns
     -------
-    fig, ax : figure, axis    
+    tuple
+        fig, ax 
     """
     
     log('Begin plotting the graph...')
@@ -277,43 +322,76 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     
     Parameters
     ----------
-    G : graph
-    route : list, the route as a list of nodes
-    bbox : tuple, bounding box as north,south,east,west - if None will calculate from spatial extents of data
-    fig_height : int, matplotlib figure height in inches
-    fig_width : int, matplotlib figure width in inches
-    margin : float, relative margin around the figure
-    axis_off : bool, if True turn off the matplotlib axis
-    bgcolor : string, the background color of the figure and axis
-    show : bool, if True, show the figure
-    save : bool, if True, save the figure as an image file to disk
-    close : close the figure (only if show equals False) to prevent display
-    file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
-    filename : string, the name of the file if saving
-    dpi : int, the resolution of the image file if saving
-    annotate : bool, if True, annotate the nodes in the figure
-    node_color : string, the color of the nodes
-    node_size : int, the size of the nodes
-    node_alpha : float, the opacity of the nodes
-    node_edgecolor : string, the color of the node's marker's border
-    node_zorder : int, zorder to plot nodes, edges are always 2, so make node_zorder 1 to plot nodes beneath them or 3 to plot nodes atop them
-    edge_color : string, the color of the edges' lines
-    edge_linewidth : float, the width of the edges' lines
-    edge_alpha : float, the opacity of the edges' lines
-    use_geom : bool, if True, use the spatial geometry attribute of the edges to draw geographically accurate edges, rather than just lines straight from node to node
-    origin_point : tuple, optional, an origin (lat, lon) point to plot instead of the origin node
-    destination_point : tuple, optional, a destination (lat, lon) point to plot instead of the destination node
-    route_color : string, the color of the route
-    route_linewidth : int, the width of the route line
-    route_alpha : float, the opacity of the route line
-    orig_dest_node_alpha : float, the opacity of the origin and destination nodes
-    orig_dest_node_size : int, the size of the origin and destination nodes
-    orig_dest_node_color : string, the color of the origin and destination nodes
-    orig_dest_point_color : string, the color of the origin and destination points if being plotted instead of nodes
+    G : networkx multidigraph
+    route : list
+        the route as a list of nodes
+    bbox : tuple
+        bounding box as north,south,east,west - if None will calculate from spatial extents of data
+    fig_height : int
+        matplotlib figure height in inches
+    fig_width : int
+        matplotlib figure width in inches
+    margin : float
+        relative margin around the figure
+    axis_off : bool
+        if True turn off the matplotlib axis
+    bgcolor : string
+        the background color of the figure and axis
+    show : bool
+        if True, show the figure
+    save : bool
+        if True, save the figure as an image file to disk
+    close : bool
+        close the figure (only if show equals False) to prevent display
+    file_format : string
+        the format of the file to save (e.g., 'jpg', 'png', 'svg')
+    filename : string
+        the name of the file if saving
+    dpi : int
+        the resolution of the image file if saving
+    annotate : bool
+        if True, annotate the nodes in the figure
+    node_color : string
+        the color of the nodes
+    node_size : int
+        the size of the nodes
+    node_alpha : float
+        the opacity of the nodes
+    node_edgecolor : string
+        the color of the node's marker's border
+    node_zorder : int
+        zorder to plot nodes, edges are always 2, so make node_zorder 1 to plot nodes beneath them or 3 to plot nodes atop them
+    edge_color : string
+        the color of the edges' lines
+    edge_linewidth : float
+        the width of the edges' lines
+    edge_alpha : float
+        the opacity of the edges' lines
+    use_geom : bool
+        if True, use the spatial geometry attribute of the edges to draw geographically accurate edges, rather than just lines straight from node to node
+    origin_point : tuple
+        optional, an origin (lat, lon) point to plot instead of the origin node
+    destination_point : tuple
+        optional, a destination (lat, lon) point to plot instead of the destination node
+    route_color : string
+        the color of the route
+    route_linewidth : int
+        the width of the route line
+    route_alpha : float
+        the opacity of the route line
+    orig_dest_node_alpha : float
+        the opacity of the origin and destination nodes
+    orig_dest_node_size : int
+        the size of the origin and destination nodes
+    orig_dest_node_color : string
+        the color of the origin and destination nodes
+    orig_dest_point_color : string
+        the color of the origin and destination points if being plotted instead of nodes
     
     Returns
     -------
-    fig, ax : figure, axis    
+    tuple
+        fig, ax   
     """
     
     # plot the graph but not the route
@@ -377,14 +455,21 @@ def plot_route_folium(G, route, tiles='cartodbpositron', zoom=1, fit_bounds=True
     
     Parameters
     ----------
-    G : graph
-    route : list, the route as a list of nodes
-    tiles : string, name of a folium tileset
-    zoom : int, initial zoom level for the map
-    fit_bounds : bool, if True, fit the map to the boundaries of the route's edges
-    route_color : string, color of the route's line
-    route_width : numeric, width of the route's line
-    route_opacity : numeric, opacity of the route lines
+    G : networkx multidigraph
+    route : list
+        the route as a list of nodes
+    tiles : string
+        name of a folium tileset
+    zoom : int
+        initial zoom level for the map
+    fit_bounds : bool
+        if True, fit the map to the boundaries of the route's edges
+    route_color : string
+        color of the route's line
+    route_width : numeric
+        width of the route's line
+    route_opacity : numeric
+        opacity of the route lines
     
     Returns
     -------
@@ -428,25 +513,41 @@ def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_s
     
     Parameters
     ----------
-    address : string, the address to geocode as the center point
-    point : tuple, the center point if address is not passed
-    dist : numeric, how many meters to extend north, south, east, and west from the center point
-    network_type : string, what type of network to get
-    street_widths : dict, where keys are street types and values are widths to plot in pixels
-    default_width : numeric, the default street width in pixels for any street type not found in street_widths dict
-    fig_length : numeric, the height and width of this square diagram
-    edge_color : string, the color of the streets
-    bgcolor : string, the color of the background
-    filename : string, filename to save the image as
-    file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
-    show : bool, if True, show the figure
-    save : bool, if True, save the figure as an image file to disk
-    close : close the figure (only if show equals False) to prevent display
-    dpi : int, the resolution of the image file if saving
+    address : string
+        the address to geocode as the center point
+    point : tuple
+        the center point if address is not passed
+    dist : numeric
+        how many meters to extend north, south, east, and west from the center point
+    network_type : string
+        what type of network to get
+    street_widths : dict
+        where keys are street types and values are widths to plot in pixels
+    default_width : numeric
+        the default street width in pixels for any street type not found in street_widths dict
+    fig_length : numeric
+        the height and width of this square diagram
+    edge_color : string
+        the color of the streets
+    bgcolor : string
+        the color of the background
+    filename : string
+        filename to save the image as
+    file_format : string
+        the format of the file to save (e.g., 'jpg', 'png', 'svg')
+    show : bool
+        if True, show the figure
+    save : bool 
+        if True, save the figure as an image file to disk
+    close : bool
+        close the figure (only if show equals False) to prevent display
+    dpi : int
+        the resolution of the image file if saving
     
     Returns
     -------
-    fig, ax : figure, axis
+    tuple
+        fig, ax
     """
     
     # get the network by either address or point, whichever was passed-in, using a distance multiplier to make sure we get more than enough network

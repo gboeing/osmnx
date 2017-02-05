@@ -21,13 +21,17 @@ def project_geometry(geometry, crs, to_latlong=False):
     
     Parameters
     ----------
-    geometry : shapely Polygon or MultiPolygon, the geometry to project
-    crs : the starting coordinate reference system of the passed-in geometry
-    to_latlong : if True, project from crs to lat-long, if False, project from crs to local UTM zone
+    geometry : shapely Polygon or MultiPolygon
+        the geometry to project
+    crs : dict
+        the starting coordinate reference system of the passed-in geometry
+    to_latlong : if True
+        project from crs to lat-long, if False, project from crs to local UTM zone
     
     Returns
     -------
-    geometry_proj, crs : tuple (projected shapely geometry, crs of the projected geometry)
+    tuple
+        (geometry_proj, crs), the projected shapely geometry and the crs of the projected geometry
     """
     gdf = gpd.GeoDataFrame()
     gdf.crs = crs
@@ -47,12 +51,14 @@ def project_gdf(gdf, to_latlong=False):
     
     Parameters
     ----------
-    gdf : GeoDataFrame, the gdf to be projected to UTM
-    to_latlong : bool, if True, projects to latlong instead of to UTM
+    gdf : GeoDataFrame
+        the gdf to be projected to UTM
+    to_latlong : bool
+        if True, projects to latlong instead of to UTM
     
     Returns
     -------
-    gdf : GeoDataFrame
+    GeoDataFrame
     """
     assert len(gdf) > 0, 'You cannot project an empty GeoDataFrame.'
     start_time = time.time()
@@ -97,11 +103,12 @@ def project_graph(G):
     
     Parameters
     ----------
-    G : graph, the networkx graph to be projected to UTM
+    G : networkx multidigraph
+        the networkx graph to be projected to UTM
     
     Returns
     -------
-    G_proj : graph
+    networkx multidigraph
     """
     
     G_proj = G.copy()

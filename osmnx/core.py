@@ -45,8 +45,10 @@ def save_to_cache(url, response_json):
     
     Parameters
     ----------
-    url : string, the url of the request
-    response_json : dict, the json response
+    url : string
+        the url of the request
+    response_json : dict
+        the json response
     
     Returns
     -------
@@ -78,11 +80,13 @@ def get_from_cache(url):
     
     Parameters
     ----------
-    url : string, the url of the request
+    url : string
+        the url of the request
     
     Returns
     -------
-    response_json : dict
+    dict
+        response_json
     """
     # if the tool is configured to use the cache
     if globals.use_cache:
@@ -102,12 +106,14 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
     
     Parameters
     ----------
-    recursive_delay : int, how long to wait between recursive calls if server is currently running a query
-    default_duration : int, if fatal error, function falls back on returning this value
+    recursive_delay : int
+        how long to wait between recursive calls if server is currently running a query
+    default_duration : int
+        if fatal error, function falls back on returning this value
     
     Returns
     -------
-    pause_duration : int
+    int
     """
     try:
         response = requests.get('http://overpass-api.de/api/status')
@@ -149,14 +155,19 @@ def nominatim_request(params, pause_duration=1, timeout=30, error_pause_duration
     
     Parameters
     ----------
-    params : dict or OrderedDict, key-value pairs of parameters
-    pause_duration : int, how long to pause before requests, in seconds
-    timeout : int, the timeout interval for the requests library
-    error_pause_duration : int, how long to pause in seconds before re-trying requests if error
+    params : dict or OrderedDict
+        key-value pairs of parameters
+    pause_duration : int
+        how long to pause before requests, in seconds
+    timeout : int
+        the timeout interval for the requests library
+    error_pause_duration : int
+        how long to pause in seconds before re-trying requests if error
     
     Returns
     -------
-    response_json : dict
+    dict
+        response_json
     """
     
     # prepare the Nominatim API URL and see if request already exists in the cache
@@ -206,14 +217,18 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
     
     Parameters
     ----------
-    data : dict or OrderedDict, key-value pairs of parameters to post to the API
-    pause_duration : int, how long to pause in seconds before requests, if None, will query API status endpoint to find when next slot is available
-    timeout : int, the timeout interval for the requests library
-    error_pause_duration : int, how long to pause in seconds before re-trying requests if error
+    data : dict or OrderedDict
+        key-value pairs of parameters to post to the API
+    pause_duration : int
+        how long to pause in seconds before requests, if None, will query API status endpoint to find when next slot is available
+    timeout : int
+        the timeout interval for the requests library
+    error_pause_duration : int
+        how long to pause in seconds before re-trying requests if error
     
     Returns
     -------
-    response_json : dict
+    dict
     """
     
     # define the Overpass API URL, then construct a GET-style URL as a string to hash to look up/save to cache
@@ -269,14 +284,18 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1, pause_duration=1):
     
     Parameters
     ----------
-    query : string or dict, query string or structured query dict to geocode/download
-    limit : int, max number of results to return
-    polygon_geojson : int, request the boundary geometry polygon from the API, 0=no, 1=yes
-    pause_duration : int, time in seconds to pause before API requests
+    query : string or dict
+        query string or structured query dict to geocode/download
+    limit : int
+        max number of results to return
+    polygon_geojson : int
+        request the boundary geometry polygon from the API, 0=no, 1=yes
+    pause_duration : int
+        time in seconds to pause before API requests
     
     Returns
     -------
-    response_json : dict
+    dict
     """
     # define the parameters
     params = OrderedDict()
@@ -306,14 +325,18 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
     
     Parameters
     ----------
-    query : string or dict, query string or structured query dict to geocode/download
-    gdf_name : string, name attribute metadata for GeoDataFrame (this is used to save shapefile later)
-    which_result : int, max number of results to return and which to process upon receipt
-    buffer_dist : float, distance to buffer around the place geometry, in meters
+    query : string or dict
+        query string or structured query dict to geocode/download
+    gdf_name : string
+        name attribute metadata for GeoDataFrame (this is used to save shapefile later)
+    which_result : int
+        max number of results to return and which to process upon receipt
+    buffer_dist : float
+        distance to buffer around the place geometry, in meters
     
     Returns
     -------
-    gdf : GeoDataFrame
+    GeoDataFrame
     """
     # if no gdf_name is passed, just use the query
     assert (isinstance(query, dict) or isinstance(query, str)), 'query must be a dict or a string'
@@ -372,13 +395,16 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None):
     
     Parameters
     ----------
-    queries : list, list of query strings or structured query dicts to geocode/download, one at a time
-    gdf_name : string, name attribute metadata for GeoDataFrame (this is used to save shapefile later)
-    buffer_dist : float, distance to buffer around the place geometry, in meters
+    queries : list
+        list of query strings or structured query dicts to geocode/download, one at a time
+    gdf_name : string
+        name attribute metadata for GeoDataFrame (this is used to save shapefile later)
+    buffer_dist : float
+        distance to buffer around the place geometry, in meters
     
     Returns
     -------
-    gdf : GeoDataFrame
+    GeoDataFrame
     """
     # create an empty GeoDataFrame then append each result as a new row
     gdf = gpd.GeoDataFrame()
@@ -401,11 +427,12 @@ def get_osm_filter(network_type):
     
     Parameters
     ----------
-    network_type : string, {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what type of street network to get
+    network_type : string
+        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what type of street network to get
     
     Returns
     -------
-    osm_filter : string
+    string
     """
     filters = {}
 
@@ -452,19 +479,28 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     
     Parameters
     ----------
-    polygon : shapely Polygon or MultiPolygon, geographic shape to fetch the street network within
-    north : float, northern latitude of bounding box
-    south : float, southern latitude of bounding box
-    east : float, eastern longitude of bounding box
-    west : float, western longitude of bounding box
-    network_type : string, {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what type of street network to get
-    timeout : int, the timeout interval for requests and to pass to API
-    memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
-    max_query_area_size : float, max area for any part of the geometry, in the units the geometry is in: any polygon bigger will get divided up for multiple queries to API (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
+    polygon : shapely Polygon or MultiPolygon
+        geographic shape to fetch the street network within
+    north : float
+        northern latitude of bounding box
+    south : float
+        southern latitude of bounding box
+    east : float
+        eastern longitude of bounding box
+    west : float
+        western longitude of bounding box
+    network_type : string
+        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what type of street network to get
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server will use its default allocation size
+    max_query_area_size : float
+        max area for any part of the geometry, in the units the geometry is in: any polygon bigger will get divided up for multiple queries to API (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
     
     Returns
     -------
-    response_json : dict
+    dict
     """
     
     # check if we're querying by polygon or by bounding box based on which argument(s) where passed into this function
@@ -535,12 +571,17 @@ def consolidate_subdivide_geometry(geometry, max_query_area_size):
     
     Parameters
     ----------
-    geometry : shapely Polygon or MultiPolygon, the geometry to consolidate and subdivide
-    max_query_area_size : float, max area for any part of the geometry, in the units the geometry is in: any polygon bigger will get divided up for multiple queries to API (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
+    geometry : shapely Polygon or MultiPolygon
+        the geometry to consolidate and subdivide
+    max_query_area_size : float
+        max area for any part of the geometry, in the units the geometry is in.
+        any polygon bigger will get divided up for multiple queries to API (
+        default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
     
     Returns
     -------
-    geometry : Polygon or MultiPolygon
+    Polygon or MultiPolygon
+        geometry
     """
     
     # let the linear length of the quadrats (with which to subdivide the geometry) be the square root of max area size
@@ -569,11 +610,13 @@ def get_polygons_coordinates(geometry):
     
     Parameters
     ----------
-    geometry : shapely Polygon or MultiPolygon, the geometry to extract exterior coordinates from
+    geometry : shapely Polygon or MultiPolygon
+        the geometry to extract exterior coordinates from
     
     Returns
     -------
-    polygon_coord_strs : list
+    list
+        polygon_coord_strs
     """
      
     # extract the exterior coordinates of the geometry to pass to the API later    
@@ -607,11 +650,12 @@ def get_node(element):
     
     Parameters
     ----------
-    element : dict, an OSM node element
+    element : dict
+        an OSM node element
     
     Returns
     -------
-    node : dict
+    dict
     """
     node = {}
     node['y'] = element['lat']
@@ -630,11 +674,12 @@ def get_path(element):
     
     Parameters
     ----------
-    element : dict, an OSM way element
+    element : dict
+        an OSM way element
     
     Returns
     -------
-    path : dict
+    dict
     """
     path = {}
     path['osmid'] = element['id']
@@ -656,11 +701,13 @@ def parse_osm_nodes_paths(osm_data):
     
     Parameters
     ----------
-    osm_data : dict, JSON response from from the Overpass API
+    osm_data : dict
+        JSON response from from the Overpass API
     
     Returns
     -------
-    nodes, paths : dict, dict
+    tuple
+        (nodes, paths)
     """
     nodes = {}
     paths = {}
@@ -681,11 +728,12 @@ def remove_isolated_nodes(G):
     
     Parameters
     ----------
-    G : graph, the graph from which to remove nodes
+    G : networkx multidigraph
+        the graph from which to remove nodes
     
     Returns
     -------
-    G : graph
+    networkx multidigraph
     """
     isolated_nodes = [node for node, degree in dict(G.degree()).items() if degree < 1]
     G.remove_nodes_from(isolated_nodes)
@@ -699,15 +747,19 @@ def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', reta
     
     Parameters
     ----------
-    G : graph
-    source_node : int, the node in the graph from which to measure network distances to other nodes
-    max_distance : int, remove every node in the graph greater than this distance from the source_node
-    weight : string, how to weight the graph when measuring distance (default 'length' is how many meters long the edge is)
-    retain_all : bool, if True, return the entire graph even if it is not connected
+    G : networkx multidigraph
+    source_node : int
+        the node in the graph from which to measure network distances to other nodes
+    max_distance : int
+        remove every node in the graph greater than this distance from the source_node
+    weight : string
+        how to weight the graph when measuring distance (default 'length' is how many meters long the edge is)
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
     
     Returns
     -------
-    G : graph
+    networkx multidigraph
     """
     
     # get the shortest distance between the node and every other node, then remove every node further than max_distance away
@@ -733,17 +785,23 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
     
     Parameters
     ----------
-    G : graph
-    north : float, northern latitude of bounding box
-    south : float, southern latitude of bounding box
-    east : float, eastern longitude of bounding box
-    west : float, western longitude of bounding box
-    truncate_by_edge : bool, if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
-    retain_all : bool, if True, return the entire graph even if it is not connected
+    G : networkx multidigraph
+    north : float
+        northern latitude of bounding box
+    south : float
+        southern latitude of bounding box
+    east : float
+        eastern longitude of bounding box
+    west : float
+        western longitude of bounding box
+    truncate_by_edge : bool
+        if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
     
     Returns
     -------
-    G : graph
+    networkx multidigraph
     """
     start_time = time.time()
     G = G.copy()
@@ -786,14 +844,18 @@ def quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9)
     
     Parameters
     ----------
-    geometry : shapely Polygon or MultiPolygon, the geometry to split up into smaller sub-polygons
-    quadrat_width : the linear width of the quadrats with which to cut up the geometry (in the units the geometry is in)
-    min_num : the minimum number of linear quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4 squares)
-    buffer_amount : buffer the quadrat grid lines by quadrat_width times buffer_amount
+    geometry : shapely Polygon or MultiPolygon
+        the geometry to split up into smaller sub-polygons
+    quadrat_width : numeric
+        the linear width of the quadrats with which to cut up the geometry (in the units the geometry is in)
+    min_num : int
+        the minimum number of linear quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4 squares)
+    buffer_amount : numeric
+        buffer the quadrat grid lines by quadrat_width times buffer_amount
     
     Returns
     -------
-    multipoly : shapely MultiPolygon
+    shapely MultiPolygon
     """
     
     # create n evenly spaced points between the min and max x and y bounds
@@ -824,15 +886,20 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buff
     
     Parameters
     ----------
-    gdf : GeoDataFrame, the set of points to intersect
-    geometry : shapely Polygon or MultiPolygon, the geometry to intersect with the points
-    quadrat_width : the linear length (in degrees) of the quadrats with which to cut up the geometry (default = 0.025, approx 2km at NYC's latitude)
-    min_num : the minimum number of linear quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4 squares)
-    buffer_amount : buffer the quadrat grid lines by quadrat_width times buffer_amount
+    gdf : GeoDataFrame
+        the set of points to intersect
+    geometry : shapely Polygon or MultiPolygon
+        the geometry to intersect with the points
+    quadrat_width : numeric
+        the linear length (in degrees) of the quadrats with which to cut up the geometry (default = 0.025, approx 2km at NYC's latitude)
+    min_num : int
+        the minimum number of linear quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4 squares)
+    buffer_amount : numeric
+        buffer the quadrat grid lines by quadrat_width times buffer_amount
     
     Returns
     -------
-    points_within_geometry : GeoDataFrame
+    GeoDataFrame
     """
     
     # create an empty dataframe to append matches to
@@ -877,14 +944,17 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False)
     
     Parameters
     ----------
-    G : graph
-    polygon : Polygon or MultiPolygon, only retain nodes in graph that lie within this geometry
-    retain_all : bool, if True, return the entire graph even if it is not connected
-    truncate_by_edge : bool, if True retain node if it's outside polygon but at least one of node's neighbors are within polygon (NOT CURRENTLY IMPLEMENTED)
+    G : networkx multidigraph
+    polygon : Polygon or MultiPolygon
+        only retain nodes in graph that lie within this geometry
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool
+        if True retain node if it's outside polygon but at least one of node's neighbors are within polygon (NOT CURRENTLY IMPLEMENTED)
     
     Returns
     -------
-    G : graph
+    networkx multidigraph
     """
     
     start_time = time.time()
@@ -919,11 +989,11 @@ def add_edge_lengths(G):
     
     Parameters
     ----------
-    G : graph
+    G : networkx multidigraph
     
     Returns
     -------
-    G : graph
+    G : networkx multidigraph
     """
     
     start_time = time.time()
@@ -946,14 +1016,16 @@ def get_nearest_node(G, point, return_dist=False):
     
     Parameters
     ----------
-    G : graph
-    point : tuple, the (lat, lon) point for which we will find the nearest node in the graph
-    return_dist : bool, optionally also return the distance between the point and the nearest node
+    G : networkx multidigraph
+    point : tuple
+        the (lat, lon) point for which we will find the nearest node in the graph
+    return_dist : bool
+        optionally also return the distance between the point and the nearest node
     
     Returns
     -------
-    G : graph
-    distance : float, optional
+    networkx multidigraph or tuple
+        multidigraph or optionally (multidigraph, float)
     """
     start_time = time.time()
     nodes = G.nodes(data=True)
@@ -977,9 +1049,11 @@ def add_path(G, data, one_way):
     
     Parameters
     ----------
-    G : graph
-    data : dict, the attributes of the path
-    one_way : bool, if this path is one-way or if it is bi-directional
+    G : networkx multidigraph
+    data : dict
+        the attributes of the path
+    one_way : bool
+        if this path is one-way or if it is bi-directional
     
     Returns
     -------
@@ -1009,9 +1083,11 @@ def add_paths(G, paths, network_type):
     
     Parameters
     ----------
-    G : graph
-    paths : dict, the paths from OSM
-    network_type : string, {'all', 'walk', 'drive', etc}, what type of network
+    G : networkx multidigraph
+    paths : dict
+        the paths from OSM
+    network_type : string
+        {'all', 'walk', 'drive', etc}, what type of network
     
     Returns
     -------
@@ -1045,14 +1121,18 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     
     Parameters
     ----------
-    response_jsons : list, list of dicts of JSON responses from from the Overpass API
-    name : string, the name of the graph
-    retain_all : bool, if True, return the entire graph even if it is not connected
-    network_type : string, what type of network to create
+    response_jsons : list
+        list of dicts of JSON responses from from the Overpass API
+    name : string
+        the name of the graph
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+    network_type : string
+        what type of network to create
     
     Returns
     -------
-    G : graph
+    networkx multidigraph
     """
     log('Creating networkx graph from downloaded OSM data...')
     start_time = time.time()
@@ -1102,13 +1182,17 @@ def bbox_from_point(point, distance=1000, project_utm=False):
     
     Parameters
     ----------
-    point : tuple, the (lat, lon) point to create the bounding box around
-    distance : int, how many meters the north, south, east, and west sides of the box should each be from the point
-    project_utm : bool, if True return bbox as UTM coordinates
+    point : tuple
+        the (lat, lon) point to create the bounding box around
+    distance : int
+        how many meters the north, south, east, and west sides of the box should each be from the point
+    project_utm : bool
+        if True return bbox as UTM coordinates
     
     Returns
     -------
-    north, south, east, west : tuple(float, float, float, float)
+    tuple
+        north, south, east, west
     """
     north = vincenty(meters=distance).destination(point, bearing=0).latitude
     south = vincenty(meters=distance).destination(point, bearing=180).latitude
@@ -1134,23 +1218,37 @@ def graph_from_bbox(north, south, east, west, network_type='all_private', simpli
     
     Parameters
     ----------
-    north : float, northern latitude of bounding box
-    south : float, southern latitude of bounding box
-    east : float, eastern longitude of bounding box
-    west : float, western longitude of bounding box
-    network_type : string, what type of street network to get
-    simplify : bool, if true, simplify the graph topology
-    retain_all : bool, if True, return the entire graph even if it is not connected
-    truncate_by_edge : bool, if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
-    name : string, the name of the graph
-    timeout : int, the timeout interval for requests and to pass to API
-    memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
-    max_query_area_size : float, max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
-    clean_periphery : if True (and simplify=True), buffer 0.5km to get a graph larger than requested, then simplify, then truncate it to requested spatial extent
+    north : float
+        northern latitude of bounding box
+    south : float
+        southern latitude of bounding box
+    east : float
+        eastern longitude of bounding box
+    west : float
+        western longitude of bounding box
+    network_type : string
+        what type of street network to get
+    simplify : bool
+        if true, simplify the graph topology
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool
+        if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
+    name : string
+        the name of the graph
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server will use its default allocation size
+    max_query_area_size : float
+        max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
+    clean_periphery : bool
+        if True (and simplify=True), buffer 0.5km to get a graph larger than requested, 
+        then simplify, then truncate it to requested spatial extent
     
     Returns
     -------
-    G : graph
+    networkx multidigraph
     """
     
     if clean_periphery and simplify:
@@ -1201,22 +1299,35 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     
     Parameters
     ----------
-    center_point : tuple, the (lat, lon) central point around which to construct the graph
-    distance : int, retain only those nodes within this many meters of the center of the graph
-    distance_type : string, {'network', 'bbox'} if 'bbox', retain only those nodes within a bounding box of the distance parameter. if 'network', retain only those nodes within some network distance from the center-most node.
-    network_type : string, what type of street network to get
-    simplify : bool, if true, simplify the graph topology
-    retain_all : bool, if True, return the entire graph even if it is not connected
-    truncate_by_edge : bool, if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
-    name : string, the name of the graph
-    timeout : int, the timeout interval for requests and to pass to API
-    memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
-    max_query_area_size : float, max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
-    clean_periphery : if True (and simplify=True), buffer 0.5km to get a graph larger than requested, then simplify, then truncate it to requested spatial extent
+    center_point : tuple
+        the (lat, lon) central point around which to construct the graph
+    distance : int
+        retain only those nodes within this many meters of the center of the graph
+    distance_type : string
+        {'network', 'bbox'} if 'bbox', retain only those nodes within a bounding box of the distance parameter. if 'network', retain only those nodes within some network distance from the center-most node.
+    network_type : string
+        what type of street network to get
+    simplify : bool
+        if true, simplify the graph topology
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool
+        if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
+    name : string
+        the name of the graph
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server will use its default allocation size
+    max_query_area_size : float
+        max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
+    clean_periphery : bool,
+        if True (and simplify=True), buffer 0.5km to get a graph larger than requested, 
+        then simplify, then truncate it to requested spatial extent
     
     Returns
     -------
-    G : graph
+    networkx multidigraph
     """
     
     # create a bounding box from the center point and the distance in each direction
@@ -1253,24 +1364,38 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     
     Parameters
     ----------
-    address : string, the address to geocode and use as the central point around which to construct the graph
-    distance : int, retain only those nodes within this many meters of the center of the graph
-    distance_type : string, {'network', 'bbox'} if 'bbox', retain only those nodes within a bounding box of the distance parameter. if 'network', retain only those nodes within some network distance from the center-most node.
-    network_type : string, what type of street network to get
-    simplify : bool, if true, simplify the graph topology
-    retain_all : bool, if True, return the entire graph even if it is not connected
-    truncate_by_edge : bool, if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
-    return_coords : bool, optionally also return the geocoded coordinates of the address
-    name : string, the name of the graph
-    timeout : int, the timeout interval for requests and to pass to API
-    memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
-    max_query_area_size : float, max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
-    clean_periphery : if True (and simplify=True), buffer 0.5km to get a graph larger than requested, then simplify, then truncate it to requested spatial extent
+    address : string
+        the address to geocode and use as the central point around which to construct the graph
+    distance : int
+        retain only those nodes within this many meters of the center of the graph
+    distance_type : string
+        {'network', 'bbox'} if 'bbox', retain only those nodes within a bounding box of the distance parameter. if 'network', retain only those nodes within some network distance from the center-most node.
+    network_type : string
+        what type of street network to get
+    simplify : bool
+        if true, simplify the graph topology
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool
+        if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
+    return_coords : bool
+        optionally also return the geocoded coordinates of the address
+    name : string
+        the name of the graph
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server will use its default allocation size
+    max_query_area_size
+        float, max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
+    clean_periphery : bool,
+        if True (and simplify=True), buffer 0.5km to get a graph larger than requested, 
+        then simplify, then truncate it to requested spatial extent
     
     Returns
     -------
-    G : graph
-    point : tuple, optional
+    networkx multidigraph or tuple
+        multidigraph or optionally (multidigraph, tuple)
     """
     
     # geocode the address string to a (lat, lon) point
@@ -1298,20 +1423,31 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
     
     Parameters
     ----------
-    polygon : shapely Polygon or MultiPolygon, the shape to get network data within
-    network_type : string, what type of street network to get
-    simplify : bool, if true, simplify the graph topology
-    retain_all : bool, if True, return the entire graph even if it is not connected
-    truncate_by_edge : bool, if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
-    name : string, the name of the graph
-    timeout : int, the timeout interval for requests and to pass to API
-    memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
-    max_query_area_size : float, max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
-    clean_periphery : if True (and simplify=True), buffer 0.5km to get a graph larger than requested, then simplify, then truncate it to requested spatial extent
+    polygon : shapely Polygon or MultiPolygon
+        the shape to get network data within
+    network_type : string
+        what type of street network to get
+    simplify : bool
+        if true, simplify the graph topology
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool
+        if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
+    name : string
+        the name of the graph
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server will use its default allocation size
+    max_query_area_size : float
+        max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
+    clean_periphery : bool
+        if True (and simplify=True), buffer 0.5km to get a graph larger than requested, 
+        then simplify, then truncate it to requested spatial extent
     
     Returns
     -------
-    G : graph
+    networkx multidigraph
     """
     
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon before proceeding
@@ -1368,22 +1504,35 @@ def graph_from_place(query, network_type='all_private', simplify=True, retain_al
     
     Parameters
     ----------
-    query : string or dict or list, the place(s) to geocode/download data for
-    network_type : string, what type of street network to get
-    simplify : bool, if true, simplify the graph topology
-    retain_all : bool, if True, return the entire graph even if it is not connected
-    truncate_by_edge : bool, if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
-    name : string, the name of the graph
-    which_result : int, max number of results to return and which to process upon receipt
-    buffer_dist : float, distance to buffer around the place geometry, in meters
-    timeout : int, the timeout interval for requests and to pass to API
-    memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
-    max_query_area_size : float, max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
-    clean_periphery : if True (and simplify=True), buffer 0.5km to get a graph larger than requested, then simplify, then truncate it to requested spatial extent
+    query : string or dict or list
+        the place(s) to geocode/download data for
+    network_type : string
+        what type of street network to get
+    simplify : bool
+        if true, simplify the graph topology
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool
+        if True retain node if it's outside bbox but at least one of node's neighbors are within bbox
+    name : string
+        the name of the graph
+    which_result : int
+        max number of results to return and which to process upon receipt
+    buffer_dist : float
+        distance to buffer around the place geometry, in meters
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server will use its default allocation size
+    max_query_area_size : float
+        max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
+    clean_periphery : bool,
+        if True (and simplify=True), buffer 0.5km to get a graph larger than requested, 
+        then simplify, then truncate it to requested spatial extent
     
     Returns
     -------
-    G : graph
+    networkx multidigraph
     """
     
     # create a GeoDataFrame with the spatial boundaries of the place(s)

@@ -26,9 +26,12 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
     
     Parameters
     ----------
-    gdf : GeoDataFrame, the gdf to be saved
-    filename : string, what to call the shapefile (file extensions are added automatically)
-    folder : string, where to save the shapefile, if none, then default folder
+    gdf : GeoDataFrame
+        the gdf to be saved
+    filename : string
+        what to call the shapefile (file extensions are added automatically)
+    folder : string
+        where to save the shapefile, if none, then default folder
     
     Returns
     -------
@@ -58,10 +61,13 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     
     Parameters
     ----------
-    G : graph
-    filename : string, the name of the shapefiles (not including file extensions)
-    folder : string, the folder to contain the shapefiles, if None, use default data folder
-    encoding : string, the character encoding for the saved shapefiles
+    G : networkx multidigraph
+    filename : string
+        the name of the shapefiles (not including file extensions)
+    folder : string
+        the folder to contain the shapefiles, if None, use default data folder
+    encoding : string
+        the character encoding for the saved shapefiles
     
     Returns
     -------
@@ -133,9 +139,11 @@ def save_graphml(G, filename='graph.graphml', folder=None):
     
     Parameters
     ----------
-    G : graph
-    filename : string, the name of the graphml file (including file extension)
-    folder : string, the folder to contain the file, if None, use default data folder
+    G : networkx multidigraph
+    filename : string
+        the name of the graphml file (including file extension)
+    folder : string
+        the folder to contain the file, if None, use default data folder
     
     Returns
     -------
@@ -173,12 +181,14 @@ def load_graphml(filename, folder=None):
     
     Parameters
     ----------
-    filename : string, the name of the graphml file (including file extension)
-    folder : string, the folder containing the file, if None, use default data folder
+    filename : string
+        the name of the graphml file (including file extension)
+    folder : string
+        the folder containing the file, if None, use default data folder
     
     Returns
     -------
-    G : graph
+    networkx multidigraph
     """
     start_time = time.time()
     
@@ -239,11 +249,11 @@ def get_undirected(G):
     
     Parameters
     ----------
-    G : graph
+    G : networkx multidigraph
     
     Returns
     -------
-    G_undir : Graph
+    networkx multigraph
     """
     # set from/to nodes and then make undirected
     G = G.copy()
@@ -288,16 +298,20 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     
     Parameters
     ----------
-    G : graph
-    nodes : bool, if True, convert graph nodes to a GeoDataFrame and return it
-    edges : bool, if True, convert graph edges to a GeoDataFrame and return it
-    node_geometry : bool, if True, create a geometry column from node x and y data
-    fill_edge_geometry : bool, if True, fill in missing edge geometry fields using origin and destination nodes
+    G : networkx multidigraph
+    nodes : bool
+        if True, convert graph nodes to a GeoDataFrame and return it
+    edges : bool
+        if True, convert graph edges to a GeoDataFrame and return it
+    node_geometry : bool
+        if True, create a geometry column from node x and y data
+    fill_edge_geometry : bool
+        if True, fill in missing edge geometry fields using origin and destination nodes
     
     Returns
     -------
-    gdf_nodes : GeoDataFrame (optional)
-    gdf_edges : GeoDataFrame (optional)
+    GeoDataFrame or tuple
+        gdf_nodes or gdf_edges or both as a tuple
     """
 
     if not (nodes or edges):
@@ -369,7 +383,7 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
     
     Returns
     -------
-    G : graph
+    networkx multidigraph
     """
     
     G = nx.MultiDiGraph()
@@ -401,11 +415,12 @@ def make_shp_filename(place_name):
     
     Parameters
     ----------
-    place_name : string, place name to convert into a filename
+    place_name : string
+        place name to convert into a filename
     
     Returns
     -------
-    filename : string
+    string
     """
     name_pieces = list(reversed(place_name.split(', ')))
     filename = '-'.join(name_pieces).lower().replace(' ','_')

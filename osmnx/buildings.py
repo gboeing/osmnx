@@ -22,23 +22,33 @@ from .utils import log
 def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None, 
                       network_type='all_private', timeout=180, memory=None, max_query_area_size=50*1000*50*1000):
     """
-    Downloading OpenStreetMap building footprint data.
+    Download OpenStreetMap building footprint data.
     
     Parameters
     ----------
-    polygon : shapely Polygon or MultiPolygon, geographic shape to fetch the street network within
-    north : float, northern latitude of bounding box
-    south : float, southern latitude of bounding box
-    east : float, eastern longitude of bounding box
-    west : float, western longitude of bounding box
-    network_type : string, {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what type of street network to get
-    timeout : int, the timeout interval for requests and to pass to API
-    memory : int, server memory allocation size for the query, in bytes. If none, server will use its default allocation size
-    max_query_area_size : float, max area for any part of the geometry, in the units the geometry is in: any polygon bigger will get divided up for multiple queries to API (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
+    polygon : shapely Polygon or MultiPolygon
+        geographic shape to fetch the street network within
+    north : float
+        northern latitude of bounding box
+    south : float
+        southern latitude of bounding box
+    east : float
+        eastern longitude of bounding box
+    west : float
+        western longitude of bounding box
+    network_type : string
+        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what type of street network to get
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server will use its default allocation size
+    max_query_area_size : float
+        max area for any part of the geometry, in the units the geometry is in: any polygon bigger will get divided up for multiple queries to API (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
     
     Returns
     -------
-    response_jsons : list of dicts
+    list
+        list of response_json dicts
     """
     
     # check if we're querying by polygon or by bounding box based on which argument(s) where passed into this function
@@ -101,20 +111,26 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
 
 def create_buildings_gdf(polygon=None, north=None, south=None, east=None, west=None, retain_invalid=False):
     """
-    Get building footprint data from OSM then assemble it into a GeoDataFrame
+    Get building footprint data from OSM then assemble it into a GeoDataFrame.
     
     Parameters
     ----------
-    polygon : shapely Polygon or MultiPolygon, geographic shape to fetch the street network within
-    north : float, northern latitude of bounding box
-    south : float, southern latitude of bounding box
-    east : float, eastern longitude of bounding box
-    west : float, western longitude of bounding box
-    retain_invalid : bool, if False discard any building footprints with an invalid geometry
+    polygon : shapely Polygon or MultiPolygon
+        geographic shape to fetch the street network within
+    north : float
+        northern latitude of bounding box
+    south : float
+        southern latitude of bounding box
+    east : float
+        eastern longitude of bounding box
+    west : float
+        western longitude of bounding box
+    retain_invalid : bool
+        if False discard any building footprints with an invalid geometry
     
     Returns
     -------
-    gdf : GeoDataFrame
+    GeoDataFrame
     """
     
     results = osm_bldg_download(polygon, north, south, east, west)
@@ -151,16 +167,18 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None, west=N
 
 def buildings_from_point(point, distance):
     """
-    Get building footprints within some distance north, south, east, and west of a lat-long point
+    Get building footprints within some distance north, south, east, and west of a lat-long point.
     
     Parameters
     ----------
-    point : tuple, a lat-long point
-    distance : numeric, distance in meters
+    point : tuple
+        a lat-long point
+    distance : numeric
+        distance in meters
     
     Returns
     -------
-    gdf : GeoDataFrame
+    GeoDataFrame
     """
     
     bbox = bbox_from_point(point=point, distance=distance)
@@ -170,16 +188,18 @@ def buildings_from_point(point, distance):
 
 def buildings_from_address(address, distance):
     """
-    Get building footprints within some distance north, south, east, and west of an address
+    Get building footprints within some distance north, south, east, and west of an address.
     
     Parameters
     ----------
-    address : string, the address to geocode to a lat-long point
-    distance : numeric, distance in meters
+    address : string
+        the address to geocode to a lat-long point
+    distance : numeric
+        distance in meters
     
     Returns
     -------
-    gdf : GeoDataFrame
+    GeoDataFrame
     """
     
     # geocode the address string to a (lat, lon) point
@@ -194,7 +214,7 @@ def buildings_from_address(address, distance):
 
 def buildings_from_polygon(polygon):
     """
-    Get building footprints within some polygon
+    Get building footprints within some polygon.
     
     Parameters
     ----------
@@ -202,22 +222,23 @@ def buildings_from_polygon(polygon):
     
     Returns
     -------
-    gdf : GeoDataFrame
+    GeoDataFrame
     """
     return create_buildings_gdf(polygon=polygon)
     
     
 def buildings_from_place(place):
     """
-    Get building footprints within the boundaries of some place
+    Get building footprints within the boundaries of some place.
     
     Parameters
     ----------
-    place : string, the query to geocode to get geojson boundary polygon
+    place : string
+        the query to geocode to get geojson boundary polygon
     
     Returns
     -------
-    gdf : GeoDataFrame
+    GeoDataFrame
     """
     
     city = gdf_from_place(place)
@@ -228,29 +249,41 @@ def buildings_from_place(place):
 def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w', set_bounds=True, bbox=None, axis_off=True,
                    save=False, show=True, close=False, filename='image', file_format='png', dpi=600):
     """
-    Plot a GeoDataFrame of building footprints
+    Plot a GeoDataFrame of building footprints.
     
     Parameters
     ----------
-    gdf : GeoDataFrame of building footprints
+    gdf : GeoDataFrame
+        building footprints
     fig : figure
     ax : axis
     figsize : tuple
-    color : string, the color of the building footprints
-    bgcolor : string, the background color of the plot
-    set_bounds : if True, set bounds from either passed-in bbox or the spatial extent of the gdf
-    bbox : if True and if set_bounds is True, set the display bounds to this bbox
-    axis_off : bool, if True matplotlib axis was turned off by plot_graph so constrain the saved figure's extent to the interior of the axis
-    save : bool, whether to save the figure to disk or not
-    show : bool, whether to display the figure or not
-    close : close the figure (only if show equals False) to prevent display
-    filename : string, the name of the file to save
-    file_format : string, the format of the file to save (e.g., 'jpg', 'png', 'svg')
-    dpi : int, the resolution of the image file if saving
+    color : string
+        the color of the building footprints
+    bgcolor : string
+        the background color of the plot
+    set_bounds : bool
+        if True, set bounds from either passed-in bbox or the spatial extent of the gdf
+    bbox : tuple
+        if True and if set_bounds is True, set the display bounds to this bbox
+    axis_off : bool
+        if True matplotlib axis was turned off by plot_graph so constrain the saved figure's extent to the interior of the axis
+    save : bool
+        whether to save the figure to disk or not
+    show : bool
+        whether to display the figure or not
+    close : bool
+        close the figure (only if show equals False) to prevent display
+    filename : string
+        the name of the file to save
+    file_format : string
+        the format of the file to save (e.g., 'jpg', 'png', 'svg')
+    dpi : int
+        the resolution of the image file if saving
     
     Returns
     -------
-    gdf : GeoDataFrame
+    GeoDataFrame
     """
     
     if fig is None or ax is None:
