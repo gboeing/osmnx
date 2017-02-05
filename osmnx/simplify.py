@@ -24,9 +24,11 @@ def is_endpoint(G, node, strict=True):
     
     Parameters
     ----------
-    G : graph
-    node : int, the node to examine
-    strict : bool, if False, allow nodes to be end points even if they fail all other rules but have edges with different OSM IDs
+    G : networkx multidigraph
+    node : int
+        the node to examine
+    strict : bool
+        if False, allow nodes to be end points even if they fail all other rules but have edges with different OSM IDs
     
     Returns
     -------
@@ -79,14 +81,18 @@ def build_path(G, node, endpoints, path):
     
     Parameters
     ----------
-    G : graph
-    node : int, the current node to start from
-    endpoints : set, the set of all nodes in the graph that are endpoints
-    path : list, the list of nodes in order in the path so far
+    G : networkx multidigraph
+    node : int
+        the current node to start from
+    endpoints : set
+        the set of all nodes in the graph that are endpoints
+    path : list
+        the list of nodes in order in the path so far
     
     Returns
     -------
-    paths_to_simplify : list
+    list
+        paths_to_simplify
     """
     # for each successor in the passed-in node
     for successor in G.successors(node):
@@ -115,12 +121,14 @@ def get_paths_to_simplify(G, strict=True):
     
     Parameters
     ----------
-    G : graph
-    strict : bool, if False, allow nodes to be end points even if they fail all other rules but have edges with different OSM IDs
+    G : networkx multidigraph
+    strict : bool
+        if False, allow nodes to be end points even if they fail all other rules but have edges with different OSM IDs
     
     Returns
     -------
-    paths_to_simplify : list
+    list
+        paths_to_simplify
     """
     
     # first identify all the nodes that are endpoints
@@ -156,7 +164,7 @@ def is_simplified(G):
     
     Parameters
     ----------
-    G : graph
+    G : networkx multidigraph
     
     Returns
     -------
@@ -175,11 +183,12 @@ def simplify_graph(G_, strict=True):
     Parameters
     ----------
     G_ : graph
-    strict : bool, if False, allow nodes to be end points even if they fail all other rules but have edges with different OSM IDs
+    strict : bool
+        if False, allow nodes to be end points even if they fail all other rules but have edges with different OSM IDs
     
     Returns
     -------
-    G : graph
+    networkx multidigraph
     """
     
     if is_simplified(G_):

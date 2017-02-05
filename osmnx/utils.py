@@ -33,17 +33,28 @@ def config(data_folder=globals.data_folder,
     
     Parameters
     ---------
-    data_folder : string, where to save and load data files
-    logs_folder : string, where to write the log files
-    imgs_folder : string, where to save figures
-    cache_folder : string, where to save the http response cache
-    use_cache : bool, if True, use a local cache to save/retrieve http responses instead of calling API repetitively for the same request URL
-    log_file : bool, if true, save log output to a log file in logs_folder
-    log_console : bool, if true, print log output to the console
-    log_level : int, one of the logger.level constants
-    log_name : string, name of the logger
-    useful_tags_node : list, a list of useful OSM tags to attempt to save from node elements
-    useful_tags_path : list, a list of useful OSM tags to attempt to save from path elements
+    data_folder : string
+        where to save and load data files
+    logs_folder : string
+        where to write the log files
+    imgs_folder : string
+        where to save figures
+    cache_folder : string
+        where to save the http response cache
+    use_cache : bool
+        if True, use a local cache to save/retrieve http responses instead of calling API repetitively for the same request URL
+    log_file : bool
+        if true, save log output to a log file in logs_folder
+    log_console : bool
+        if true, print log output to the console
+    log_level : int
+        one of the logger.level constants
+    log_name : string
+        name of the logger
+    useful_tags_node : list
+        a list of useful OSM tags to attempt to save from node elements
+    useful_tags_path : list
+        a list of useful OSM tags to attempt to save from path elements
     
     Returns
     -------
@@ -75,10 +86,14 @@ def log(message, level=None, name=None, filename=None):
     
     Parameters
     ----------
-    message : string, the content of the message to log
-    level : int, one of the logger.level constants
-    name : string, name of the logger
-    filename : string, name of the log file
+    message : string
+        the content of the message to log
+    level : int
+        one of the logger.level constants
+    name : string
+        name of the logger
+    filename : string
+        name of the log file
     
     Returns
     -------
@@ -124,13 +139,16 @@ def get_logger(level=None, name=None, filename=None):
     
     Parameters
     ----------
-    level : int, one of the logger.level constants
-    name : string, name of the logger
-    filename : string, name of the log file
+    level : int
+        one of the logger.level constants
+    name : string
+        name of the logger
+    filename : string
+        name of the log file
     
     Returns
     -------
-    logger : logger.logger
+    logger.logger
     """
     
     if level is None:
@@ -170,11 +188,12 @@ def make_str(value):
     
     Parameters
     ----------
-    value : any type, the value to convert to unicode/string
+    value : any
+        the value to convert to unicode/string
     
     Returns
     -------
-    value : unicode or string
+    unicode or string
     """
     try:
         # for python 2.x compatibility, use unicode
@@ -190,12 +209,13 @@ def get_largest_component(G, strongly=False):
     
     Parameters
     ----------
-    G : graph
-    strongly : bool, if True, return the largest strongly instead of weakly connected component
+    G : networkx multidigraph
+    strongly : bool
+        if True, return the largest strongly instead of weakly connected component
     
     Returns
     -------
-    G : graph
+    networkx multidigraph
     """
     
     start_time = time.time()

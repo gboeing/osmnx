@@ -21,12 +21,14 @@ def basic_stats(G, area=None):
     
     Parameters
     ----------
-    G : graph
-    area : numeric, the area covered by the street network, in square meters (typically land area); if none, will skip all density-based metrics
+    G : networkx multidigraph
+    area : numeric
+        the area covered by the street network, in square meters (typically land area); if none, will skip all density-based metrics
     
     Returns
     -------
-    stats : dict, containing the following elements:
+    dict
+        stats dict containing the following elements:
         n = number of nodes in the graph
         m = number of edges in the graph
         k_avg = average node degree of the graph
@@ -156,16 +158,22 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     
     Parameters
     ----------
-    G : graph
-    connectivity : bool, if True, calculate node and edge connectivity
-    anc : bool, if True, calculate average node connectivity
-    ecc : bool, if True, calculate shortest paths, eccentricity, and topological metrics that use eccentricity
-    bc : bool, if True, calculate node betweenness centrality
-    cc : bool, if True, calculate node closeness centrality
+    G : networkx multidigraph
+    connectivity : bool
+        if True, calculate node and edge connectivity
+    anc : bool, if True
+        calculate average node connectivity
+    ecc : bool
+        if True, calculate shortest paths, eccentricity, and topological metrics that use eccentricity
+    bc : bool
+        if True, calculate node betweenness centrality
+    cc : bool
+        if True, calculate node closeness centrality
     
     Returns
     -------
-    stats : dict, containing the following elements (some only calculated/returned optionally, based on passed parameters):
+    dict
+        stats dict containing the following elements (some only calculated/returned optionally, based on passed parameters):
         avg_neighbor_degree
         avg_neighbor_degree_avg
         avg_weighted_neighbor_degree
@@ -326,12 +334,14 @@ def count_streets_per_node(G, nodes=None):
     
     Parameters
     ----------
-    G : graph
-    nodes : iterable, the set of node IDs to get counts for
+    G : networkx multidigraph
+    nodes : iterable
+        the set of node IDs to get counts for
     
     Returns
     ----------
-    streets_per_node : dict, counts of how many streets emanate from each node with keys=node id and values=count
+    dict
+        streets_per_node: the counts of how many streets emanate from each node with keys=node id and values=count
     """
     
     start_time = time.time()
