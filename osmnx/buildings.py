@@ -20,14 +20,14 @@ from .utils import log
 
 
 def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None, 
-                      network_type='all_private', timeout=180, memory=None, max_query_area_size=50*1000*50*1000):
+                      timeout=180, memory=None, max_query_area_size=50*1000*50*1000):
     """
     Download OpenStreetMap building footprint data.
     
     Parameters
     ----------
     polygon : shapely Polygon or MultiPolygon
-        geographic shape to fetch the street network within
+        geographic shape to fetch the building footprints within
     north : float
         northern latitude of bounding box
     south : float
@@ -36,8 +36,6 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
         eastern longitude of bounding box
     west : float
         western longitude of bounding box
-    network_type : string
-        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what type of street network to get
     timeout : int
         the timeout interval for requests and to pass to API
     memory : int
@@ -76,7 +74,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
         # subdivide it if it exceeds the max area size (in meters), then project back to lat-long
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, crs = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
-        log('Requesting network data within bounding box from API in {:,} request(s)'.format(len(geometry)))
+        log('Requesting building footprints data within bounding box from API in {:,} request(s)'.format(len(geometry)))
         start_time = time.time()
         
         # loop through each polygon rectangle in the geometry (there will only be one if original bbox didn't exceed max area size)
@@ -87,7 +85,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
             query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        log('Got all network data within bounding box from API in {:,} request(s) and {:,.2f} seconds'.format(len(geometry), time.time()-start_time))
+        log('Got all building footprints data within bounding box from API in {:,} request(s) and {:,.2f} seconds'.format(len(geometry), time.time()-start_time))
     
     elif by_poly:
         # project to utm, divide polygon up into sub-polygons if area exceeds a max size (in meters), project back to lat-long, then get a list of polygon(s) exterior coordinates
@@ -95,7 +93,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, crs = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = get_polygons_coordinates(geometry)
-        log('Requesting network data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
+        log('Requesting building footprints data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
         start_time = time.time()
         
         # pass each polygon exterior coordinates in the list to the API, one at a time
@@ -104,7 +102,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
             query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        log('Got all network data within polygon from API in {:,} request(s) and {:,.2f} seconds'.format(len(polygon_coord_strs), time.time()-start_time))
+        log('Got all building footprints data within polygon from API in {:,} request(s) and {:,.2f} seconds'.format(len(polygon_coord_strs), time.time()-start_time))
         
     return response_jsons
     
@@ -116,7 +114,7 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None, west=N
     Parameters
     ----------
     polygon : shapely Polygon or MultiPolygon
-        geographic shape to fetch the street network within
+        geographic shape to fetch the building footprints within
     north : float
         northern latitude of bounding box
     south : float
@@ -267,7 +265,7 @@ def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolo
     bbox : tuple
         if True and if set_bounds is True, set the display bounds to this bbox
     axis_off : bool
-        if True matplotlib axis was turned off by plot_graph so constrain the saved figure's extent to the interior of the axis
+        if True, turn off axis display
     save : bool
         whether to save the figure to disk or not
     show : bool
