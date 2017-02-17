@@ -40,7 +40,7 @@ def test_imports():
 def test_gdf_shapefiles():
     
     city = ox.gdf_from_place('Manhattan, New York City, New York, USA')
-    city_projected = ox.project_gdf(city)
+    city_projected = ox.project_gdf(city, to_crs={'init':'epsg:3395'})
     ox.save_gdf_shapefile(city_projected)
     
     city = ox.gdf_from_place('Manhattan, New York City, New York, USA', buffer_dist=100)
