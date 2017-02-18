@@ -54,7 +54,7 @@ use [conda-forge](https://anaconda.org/conda-forge/geopandas) to get these depen
 
 ## Documentation
 
-Available on [readthedocs](https://osmnx.readthedocs.io/en/latest/).
+Available on [readthedocs](https://osmnx.readthedocs.io/en/stable/).
 
 ## How to use OSMnx
 
