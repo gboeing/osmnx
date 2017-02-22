@@ -25,11 +25,11 @@ from itertools import groupby
 from dateutil import parser as date_parser
 from shapely.geometry import Point, LineString, Polygon, MultiPolygon
 from shapely.ops import unary_union
-from geopy.distance import great_circle, vincenty
+from geopy.distance import vincenty
 from geopy.geocoders import Nominatim
 
 from . import globals
-from .utils import log, make_str, get_largest_component
+from .utils import log, make_str, get_largest_component, great_circle_vec
 from .simplify import simplify_graph
 from .projection import project_geometry, project_gdf
 from .stats import count_streets_per_node
@@ -994,22 +994,26 @@ def add_edge_lengths(G):
     Returns
     -------
     G : networkx multidigraph
-    """
+    """    
     
-    start_time = time.time()
-    
-    for u, v, key, data in G.edges(keys=True, data=True):
-        
-        #geopy points are (lat, lon) so that's (y, x) for this great_circle calculation
-        u_point = (G.node[u]['y'], G.node[u]['x'])
-        v_point = (G.node[v]['y'], G.node[v]['x'])
-        edge_length = great_circle(u_point, v_point).m 
-        data['length'] = edge_length
-    
-    log('Added edge lengths to graph in {:,.2f} seconds'.format(time.time()-start_time))
-    return G
-    
+    # first load all the edges' origin and destination coordinates as a dataframe indexed by u, v, key
+    coords = np.array([[u, v, k, G.node[u]['y'], G.node[u]['x'], G.node[v]['y'], G.node[v]['x']] for u, v, k in G.edges(keys=True)])
+    df_coords = pd.DataFrame(coords, columns=['u', 'v', 'k', 'u_y', 'u_x', 'v_y', 'v_x'])
+    df_coords[['u', 'v', 'k']] = df_coords[['u', 'v', 'k']].astype(np.int64)
+    df_coords = df_coords.set_index(['u', 'v', 'k'])
 
+    # then calculate the great circle distance with the vectorized function
+    gc_distances = great_circle_vec(lat1=df_coords['u_y'], 
+                                    lng1=df_coords['u_x'],
+                                    lat2=df_coords['v_y'], 
+                                    lng2=df_coords['v_x'])
+
+    gc_distances = gc_distances.fillna(value=0)
+    nx.set_edge_attributes(G, 'length', gc_distances.to_dict())
+    
+    return G
+   
+        
 def get_nearest_node(G, point, return_dist=False):
     """
     Return the graph node nearest to some specified point.
@@ -1026,21 +1030,29 @@ def get_nearest_node(G, point, return_dist=False):
     -------
     networkx multidigraph or tuple
         multidigraph or optionally (multidigraph, float)
-    """
-    start_time = time.time()
-    nodes = G.nodes(data=True)
+    """    
+    # dump graph node coordinates into a pandas dataframe indexed by node id with x and y columns
+    coords = np.array([[node, data['x'], data['y']] for node, data in G.nodes(data=True)])
+    df = pd.DataFrame(coords, columns=['node', 'x', 'y']).set_index('node')
     
-    # the nearest node is the one that minimizes great circle distance between its coordinates and the passed-in point
-    # geopy points are (lat, lon) so that's (y, x)
-    nearest_node = min(nodes, key=lambda node: great_circle((node[1]['y'], node[1]['x']), point).m)
-    log('Found nearest node ({}) to point {} in {:,.2f} seconds'.format(nearest_node[0], point, time.time()-start_time))
+    # add columns to the dataframe representing the (constant) coordinates of the reference point
+    df['reference_y'] = point[0]
+    df['reference_x'] = point[1]
     
+    # calculate the distance between each node and the reference point
+    distances = great_circle_vec(lat1=df['reference_y'], 
+                                 lng1=df['reference_x'],
+                                 lat2=df['y'], 
+                                 lng2=df['x'])
+    
+    # nearest node's ID is the index label of the minimum distance
+    nearest_node = int(distances.idxmin())
+    
+    # if caller requested return_dist, return distance between the point and the nearest node as well
     if return_dist:
-        # if caller requested return_dist, calculate the great circle distance between the point and the nearest node and return it as well
-        distance = great_circle((nearest_node[1]['y'], nearest_node[1]['x']), point).m
-        return nearest_node[0], distance
+        return nearest_node, distances.loc[nearest_node]
     else:
-        return nearest_node[0]
+        return nearest_node
 
         
 def add_path(G, data, one_way):

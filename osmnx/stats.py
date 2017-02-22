@@ -9,10 +9,12 @@ from __future__ import division
 from itertools import chain
 from collections import Counter
 import time
+import warnings
 import networkx as nx
-from geopy.distance import great_circle
+import numpy as np
+import pandas as pd
 
-from .utils import log, get_largest_component
+from .utils import log, get_largest_component, great_circle_vec
 
 
 def basic_stats(G, area=None):
@@ -114,10 +116,19 @@ def basic_stats(G, area=None):
         street_density_km = None
     
     # average circuity: sum of edge lengths divided by sum of great circle distance between edge endpoints
-    points = [((G.node[u]['y'], G.node[u]['x']), (G.node[v]['y'], G.node[v]['x'])) for u, v in G.edges()]
-    great_circle_distances = [great_circle(p1, p2).m for p1, p2 in points]
+    # first load all the edges origin and destination coordinates as a dataframe, then calculate the great circle distance with the vectorized function
+    coords = np.array([[G.node[u]['y'], G.node[u]['x'], G.node[v]['y'], G.node[v]['x']] for u, v, k in G.edges(keys=True)])
+    df_coords = pd.DataFrame(coords, columns=['u_y', 'u_x', 'v_y', 'v_x'])
+    # ignore warnings during this calculation because numpy warns it cannot calculate arccos for self-loops since u==v
+    warnings.filterwarnings('ignore')
+    gc_distances = great_circle_vec(lat1=df_coords['u_y'], 
+                                    lng1=df_coords['u_x'],
+                                    lat2=df_coords['v_y'], 
+                                    lng2=df_coords['v_x'])
+    warnings.filterwarnings('default')
+    gc_distances = gc_distances.fillna(value=0)
     try:
-        circuity_avg = edge_length_total / sum(great_circle_distances)
+        circuity_avg = edge_length_total / gc_distances.sum()
     except ZeroDivisionError:
         circuity_avg = np.nan
 
