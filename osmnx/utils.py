@@ -12,6 +12,7 @@ import unicodedata
 import logging as lg
 import datetime as dt
 import networkx as nx
+import numpy as np
 
 from . import globals
 
@@ -233,5 +234,36 @@ def get_largest_component(G, strongly=False):
             log('Graph was not connected, retained only the largest weakly connected component ({:,} of {:,} total nodes) in {:.2f} seconds'.format(len(list(G.nodes())), original_len, time.time()-start_time))
 
     return G
+
     
+def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
+    """
+    Vectorized function to calculate the great-circle distance between two points or between vectors of points.
+
+    Parameters
+    ----------
+    lat1 : float or array of float
+    lng1 : float or array of float
+    lat2 : float or array of float
+    lng2 : float or array of float
+    earth_radius : numeric
+        radius of earth in units in which distance will be returned (default is meters)
     
+    Returns
+    -------
+    distance : float or array of float
+        distance or vector of distances from (lat1, lng1) to (lat2, lng2) in units of earth_radius
+    """
+    
+    phi1 = np.deg2rad(90 - lat1)
+    phi2 = np.deg2rad(90 - lat2)
+    
+    theta1 = np.deg2rad(lng1)
+    theta2 = np.deg2rad(lng2)
+    
+    cos = (np.sin(phi1) * np.sin(phi2) * np.cos(theta1 - theta2) + np.cos(phi1) * np.cos(phi2))
+    arc = np.arccos(cos)
+    
+    # return distance in units of earth_radius
+    distance = arc * earth_radius
+    return distance 
