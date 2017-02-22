@@ -25,7 +25,6 @@ from itertools import groupby
 from dateutil import parser as date_parser
 from shapely.geometry import Point, LineString, Polygon, MultiPolygon
 from shapely.ops import unary_union
-from geopy.distance import vincenty
 from geopy.geocoders import Nominatim
 
 from . import globals
@@ -1206,18 +1205,19 @@ def bbox_from_point(point, distance=1000, project_utm=False):
     tuple
         north, south, east, west
     """
-    north = vincenty(meters=distance).destination(point, bearing=0).latitude
-    south = vincenty(meters=distance).destination(point, bearing=180).latitude
-    east = vincenty(meters=distance).destination(point, bearing=90).longitude
-    west = vincenty(meters=distance).destination(point, bearing=270).longitude
+    
+    # reverse the order of the (lat,lng) point so it is (x,y) for shapely, then project to UTM and buffer in meters
+    xy_point = reversed(point)
+    point_proj, crs_proj = project_geometry(Point(xy_point), crs={'init':'epsg:4326'})
+    buffer_proj = point_proj.buffer(distance)
     
     if project_utm:
-        # if user requests UTM coords, create a polygon from these coords, then project to UTM, extract the bounds, and return
-        bbox_utm, crs_utm = project_geometry(geometry=Polygon([(west, north), (west, south), (east, south), (east, north), (west, north)]), 
-                                             crs={'init':'epsg:4326'})
-        west, south, east, north = bbox_utm.bounds
+        west, south, east, north = buffer_proj.bounds
         log('Created bounding box {} meters in each direction from {} and projected it: {},{},{},{}'.format(distance, point, north, south, east, west))
     else:
+        # if project_utm is False, project back to lat-long then get the bounding coordinates
+        buffer_latlong, crs_latlong = project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
+        west, south, east, north = buffer_latlong.bounds
         log('Created bounding box {} meters in each direction from {}: {},{},{},{}'.format(distance, point, north, south, east, west))
         
     return north, south, east, west
