@@ -35,7 +35,7 @@ from .stats import count_streets_per_node
 
 def save_to_cache(url, response_json):
     """
-    Save am HTTP response json object to the cache. 
+    Save an HTTP response json object to the cache. 
     
     If the request was sent to server via POST instead of GET, 
     then URL should be a GET-style representation of request. Users should always pass OrderedDicts instead of dicts
