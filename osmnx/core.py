@@ -526,7 +526,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     if by_bbox:
         # turn bbox into a polygon and project to local UTM
         polygon = Polygon([(west, south), (east, south), (east, north), (west, north)])
-        geometry_proj, crs_proj = project_geometry(polygon, crs={'init':'epsg:4326'})
+        geometry_proj, crs_proj = project_geometry(polygon)
         
         # subdivide it if it exceeds the max area size (in meters), then project back to lat-long
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
@@ -546,7 +546,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     
     elif by_poly:
         # project to utm, divide polygon up into sub-polygons if area exceeds a max size (in meters), project back to lat-long, then get a list of polygon(s) exterior coordinates
-        geometry_proj, crs_proj = project_geometry(polygon, crs={'init':'epsg:4326'})
+        geometry_proj, crs_proj = project_geometry(polygon)
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, crs = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = get_polygons_coordinates(geometry)
@@ -1195,7 +1195,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     
 def bbox_from_point(point, distance=1000, project_utm=False):
     """
-    Create a bounding box some distance in each direction (north, south, east, and west) from some (lat, lon) point.
+    Create a bounding box some distance in each direction (north, south, east, and west) from some (lat, lng) point.
     
     Parameters
     ----------
@@ -1213,8 +1213,8 @@ def bbox_from_point(point, distance=1000, project_utm=False):
     """
     
     # reverse the order of the (lat,lng) point so it is (x,y) for shapely, then project to UTM and buffer in meters
-    xy_point = reversed(point)
-    point_proj, crs_proj = project_geometry(Point(xy_point), crs={'init':'epsg:4326'})
+    lat, lng = point
+    point_proj, crs_proj = project_geometry(Point((lng, lat)))
     buffer_proj = point_proj.buffer(distance)
     
     if project_utm:
@@ -1273,7 +1273,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private', simpli
         # create a new buffered bbox 0.5km around the desired one
         buffer_dist = 500
         polygon = Polygon([(west, north), (west, south), (east, south), (east, north)])
-        polygon_utm, crs_utm = project_geometry(geometry=polygon, crs={'init':'epsg:4326'})
+        polygon_utm, crs_utm = project_geometry(geometry=polygon)
         polygon_proj_buff = polygon_utm.buffer(buffer_dist)
         polygon_buff, crs = project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
         west_buffered, south_buffered, east_buffered, north_buffered = polygon_buff.bounds
@@ -1477,7 +1477,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
     if clean_periphery and simplify:
         # create a new buffered polygon 0.5km around the desired one
         buffer_dist = 500
-        polygon_utm, crs_utm = project_geometry(geometry=polygon, crs={'init':'epsg:4326'})
+        polygon_utm, crs_utm = project_geometry(geometry=polygon)
         polygon_proj_buff = polygon_utm.buffer(buffer_dist)
         polygon_buffered, crs = project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
         

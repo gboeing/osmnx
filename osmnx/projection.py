@@ -15,7 +15,7 @@ from shapely.geometry import Point
 from .utils import log, make_str
 
 
-def project_geometry(geometry, crs, to_crs=None, to_latlong=False):
+def project_geometry(geometry, crs={'init':'epsg:4326'}, to_crs=None, to_latlong=False):
     """
     Project a shapely Polygon or MultiPolygon from lat-long to UTM, or vice-versa
     
@@ -24,7 +24,7 @@ def project_geometry(geometry, crs, to_crs=None, to_latlong=False):
     geometry : shapely Polygon or MultiPolygon
         the geometry to project
     crs : dict
-        the starting coordinate reference system of the passed-in geometry
+        the starting coordinate reference system of the passed-in geometry (default is lat-long)
     to_crs : dict
         if not None, just project to this CRS instead of to UTM
     to_latlong : bool
