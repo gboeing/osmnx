@@ -1,6 +1,6 @@
 """
 OSMnx tests
--------
+-----------
 """
 
 import matplotlib as mpl
