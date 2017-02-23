@@ -18,7 +18,7 @@ before_install:
   - conda info -a
   
 install:
-  - conda create -n TESTENV python=$TRAVIS_PYTHON_VERSION requests numpy matplotlib pandas networkx Shapely Rtree descartes geopy geopandas folium
+  - conda create -n TESTENV python=$TRAVIS_PYTHON_VERSION requests numpy matplotlib pandas networkx Shapely Rtree descartes geopandas folium
   - source activate TESTENV
   - pip install pytest coverage coveralls
   - pip install .
