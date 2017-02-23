@@ -14,6 +14,7 @@ import datetime as dt
 import networkx as nx
 import numpy as np
 import pandas as pd
+import requests
 
 from . import globals
 
@@ -337,8 +338,8 @@ def geocode(query):
     
     # if results were returned, parse lat and long out of the result
     if len(results) > 0 and 'lat' in results[0] and 'lon' in results[0]:
-        lat = float(result['lat'])
-        lon = float(result['lon'])
+        lat = float(results[0]['lat'])
+        lon = float(results[0]['lon'])
         point = (lat, lon)
         return point
     else:
