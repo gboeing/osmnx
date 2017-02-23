@@ -28,7 +28,7 @@ from shapely.ops import unary_union
 from geopy.geocoders import Nominatim
 
 from . import globals
-from .utils import log, make_str, get_largest_component, great_circle_vec
+from .utils import log, make_str, get_largest_component, great_circle_vec, get_nearest_node
 from .simplify import simplify_graph
 from .projection import project_geometry, project_gdf
 from .stats import count_streets_per_node
@@ -1014,50 +1014,6 @@ def add_edge_lengths(G):
     
     log('Added edge lengths to graph in {:,.2f} seconds'.format(time.time()-start_time))
     return G
-   
-        
-def get_nearest_node(G, point, return_dist=False):
-    """
-    Return the graph node nearest to some specified point.
-    
-    Parameters
-    ----------
-    G : networkx multidigraph
-    point : tuple
-        the (lat, lon) point for which we will find the nearest node in the graph
-    return_dist : bool
-        optionally also return the distance between the point and the nearest node
-    
-    Returns
-    -------
-    networkx multidigraph or tuple
-        multidigraph or optionally (multidigraph, float)
-    """    
-    start_time = time.time()
-    
-    # dump graph node coordinates into a pandas dataframe indexed by node id with x and y columns
-    coords = np.array([[node, data['x'], data['y']] for node, data in G.nodes(data=True)])
-    df = pd.DataFrame(coords, columns=['node', 'x', 'y']).set_index('node')
-    
-    # add columns to the dataframe representing the (constant) coordinates of the reference point
-    df['reference_y'] = point[0]
-    df['reference_x'] = point[1]
-    
-    # calculate the distance between each node and the reference point
-    distances = great_circle_vec(lat1=df['reference_y'], 
-                                 lng1=df['reference_x'],
-                                 lat2=df['y'], 
-                                 lng2=df['x'])
-    
-    # nearest node's ID is the index label of the minimum distance
-    nearest_node = int(distances.idxmin())
-    log('Found nearest node ({}) to point {} in {:,.2f} seconds'.format(nearest_node, point, time.time()-start_time))
-    
-    # if caller requested return_dist, return distance between the point and the nearest node as well
-    if return_dist:
-        return nearest_node, distances.loc[nearest_node]
-    else:
-        return nearest_node
 
         
 def add_path(G, data, one_way):
