@@ -69,7 +69,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
     if by_bbox:
         # turn bbox into a polygon and project to local UTM
         polygon = Polygon([(west, south), (east, south), (east, north), (west, north)])
-        geometry_proj, crs_proj = project_geometry(polygon, crs={'init':'epsg:4326'})
+        geometry_proj, crs_proj = project_geometry(polygon)
         
         # subdivide it if it exceeds the max area size (in meters), then project back to lat-long
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
@@ -89,7 +89,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
     
     elif by_poly:
         # project to utm, divide polygon up into sub-polygons if area exceeds a max size (in meters), project back to lat-long, then get a list of polygon(s) exterior coordinates
-        geometry_proj, crs_proj = project_geometry(polygon, crs={'init':'epsg:4326'})
+        geometry_proj, crs_proj = project_geometry(polygon)
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, crs = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = get_polygons_coordinates(geometry)
