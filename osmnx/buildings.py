@@ -11,12 +11,11 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
 from shapely.geometry import Polygon, Point
 from descartes import PolygonPatch
-from geopy.geocoders import Nominatim
 
 from .projection import project_geometry
 from .plot import save_and_show
 from .core import consolidate_subdivide_geometry, get_polygons_coordinates, overpass_request, bbox_from_point, gdf_from_place
-from .utils import log
+from .utils import log, geocode
 
 
 def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None, 
@@ -201,12 +200,9 @@ def buildings_from_address(address, distance):
     """
     
     # geocode the address string to a (lat, lon) point
-    geolocation = Nominatim().geocode(query=address)
-    try:
-        point = (geolocation.latitude, geolocation.longitude)
-    except:
-        raise Exception('Geocoding failed for address "{}"'.format(address))
-        
+    point = geocode(query=address)
+    
+    # get buildings within distance of this point
     return buildings_from_point(point, distance)
 
 
@@ -222,6 +218,7 @@ def buildings_from_polygon(polygon):
     -------
     GeoDataFrame
     """
+    
     return create_buildings_gdf(polygon=polygon)
     
     

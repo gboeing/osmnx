@@ -25,10 +25,9 @@ from itertools import groupby
 from dateutil import parser as date_parser
 from shapely.geometry import Point, LineString, Polygon, MultiPolygon
 from shapely.ops import unary_union
-from geopy.geocoders import Nominatim
 
 from . import globals
-from .utils import log, make_str, get_largest_component, great_circle_vec, get_nearest_node
+from .utils import log, make_str, get_largest_component, great_circle_vec, get_nearest_node, geocode
 from .simplify import simplify_graph
 from .projection import project_geometry, project_gdf
 from .stats import count_streets_per_node
@@ -1373,11 +1372,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     """
     
     # geocode the address string to a (lat, lon) point
-    geolocation = Nominatim().geocode(query=address)
-    try:
-        point = (geolocation.latitude, geolocation.longitude)
-    except:
-        raise Exception('Geocoding failed for address "{}"'.format(address))
+    point = geocode(query=address)
     
     # then create a graph from this point
     G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all, 
