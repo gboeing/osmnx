@@ -995,6 +995,8 @@ def add_edge_lengths(G):
     G : networkx multidigraph
     """    
     
+    start_time = time.time()
+    
     # first load all the edges' origin and destination coordinates as a dataframe indexed by u, v, key
     coords = np.array([[u, v, k, G.node[u]['y'], G.node[u]['x'], G.node[v]['y'], G.node[v]['x']] for u, v, k in G.edges(keys=True)])
     df_coords = pd.DataFrame(coords, columns=['u', 'v', 'k', 'u_y', 'u_x', 'v_y', 'v_x'])
@@ -1010,6 +1012,7 @@ def add_edge_lengths(G):
     gc_distances = gc_distances.fillna(value=0)
     nx.set_edge_attributes(G, 'length', gc_distances.to_dict())
     
+    log('Added edge lengths to graph in {:,.2f} seconds'.format(time.time()-start_time))
     return G
    
         
@@ -1030,6 +1033,8 @@ def get_nearest_node(G, point, return_dist=False):
     networkx multidigraph or tuple
         multidigraph or optionally (multidigraph, float)
     """    
+    start_time = time.time()
+    
     # dump graph node coordinates into a pandas dataframe indexed by node id with x and y columns
     coords = np.array([[node, data['x'], data['y']] for node, data in G.nodes(data=True)])
     df = pd.DataFrame(coords, columns=['node', 'x', 'y']).set_index('node')
@@ -1046,6 +1051,7 @@ def get_nearest_node(G, point, return_dist=False):
     
     # nearest node's ID is the index label of the minimum distance
     nearest_node = int(distances.idxmin())
+    log('Found nearest node ({}) to point {} in {:,.2f} seconds'.format(nearest_node, point, time.time()-start_time))
     
     # if caller requested return_dist, return distance between the point and the nearest node as well
     if return_dist:
