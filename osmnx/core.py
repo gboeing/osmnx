@@ -35,7 +35,9 @@ from .stats import count_streets_per_node
 
 def save_to_cache(url, response_json):
     """
-    Save a HTTP response json object to the cache. If the request was sent to server via POST instead of GET, 
+    Save am HTTP response json object to the cache. 
+    
+    If the request was sent to server via POST instead of GET, 
     then URL should be a GET-style representation of request. Users should always pass OrderedDicts instead of dicts
     of parameters into request functions, so that the parameters stay in the same order each time, producing the same URL string,
     and thus the same hash. Otherwise the cache will eventually contain multiple saved responses for the same
@@ -83,8 +85,7 @@ def get_from_cache(url):
     
     Returns
     -------
-    dict
-        response_json
+    response_json : dict
     """
     # if the tool is configured to use the cache
     if globals.use_cache:
@@ -164,8 +165,7 @@ def nominatim_request(params, pause_duration=1, timeout=30, error_pause_duration
     
     Returns
     -------
-    dict
-        response_json
+    response_json : dict
     """
     
     # prepare the Nominatim API URL and see if request already exists in the cache
@@ -211,7 +211,7 @@ def nominatim_request(params, pause_duration=1, timeout=30, error_pause_duration
 
 def overpass_request(data, pause_duration=None, timeout=180, error_pause_duration=None):
     """
-    Send a request to the Overpass API via HTTP POST and return the JSON response
+    Send a request to the Overpass API via HTTP POST and return the JSON response.
     
     Parameters
     ----------
@@ -494,7 +494,8 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     memory : int
         server memory allocation size for the query, in bytes. If none, server will use its default allocation size
     max_query_area_size : float
-        max area for any part of the geometry, in the units the geometry is in: any polygon bigger will get divided up for multiple queries to API (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
+        max area for any part of the geometry, in the units the geometry is in: any polygon bigger will get divided up 
+        for multiple queries to API (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
     
     Returns
     -------
@@ -578,8 +579,7 @@ def consolidate_subdivide_geometry(geometry, max_query_area_size):
     
     Returns
     -------
-    Polygon or MultiPolygon
-        geometry
+    geometry : Polygon or MultiPolygon
     """
     
     # let the linear length of the quadrats (with which to subdivide the geometry) be the square root of max area size
@@ -613,8 +613,7 @@ def get_polygons_coordinates(geometry):
     
     Returns
     -------
-    list
-        polygon_coord_strs
+    polygon_coord_strs : list
     """
      
     # extract the exterior coordinates of the geometry to pass to the API later    
@@ -655,6 +654,7 @@ def get_node(element):
     -------
     dict
     """
+    
     node = {}
     node['y'] = element['lat']
     node['x'] = element['lon']
@@ -679,6 +679,7 @@ def get_path(element):
     -------
     dict
     """
+    
     path = {}
     path['osmid'] = element['id']
     
@@ -704,9 +705,9 @@ def parse_osm_nodes_paths(osm_data):
     
     Returns
     -------
-    tuple
-        (nodes, paths)
+    nodes, paths : tuple
     """
+    
     nodes = {}
     paths = {}
     for element in osm_data['elements']:
@@ -722,7 +723,7 @@ def parse_osm_nodes_paths(osm_data):
     
 def remove_isolated_nodes(G):
     """
-    Remove from a graph all the nodes that have no incident edges (ie, node degree = 0)
+    Remove from a graph all the nodes that have no incident edges (ie, node degree = 0).
     
     Parameters
     ----------
@@ -733,6 +734,7 @@ def remove_isolated_nodes(G):
     -------
     networkx multidigraph
     """
+    
     isolated_nodes = [node for node, degree in dict(G.degree()).items() if degree < 1]
     G.remove_nodes_from(isolated_nodes)
     log('Removed {:,} isolated nodes'.format(len(isolated_nodes)))
@@ -778,8 +780,10 @@ def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', reta
     
 def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, retain_all=False):
     """
-    Remove every node in graph that falls outside a bounding box. Needed because overpass returns entire ways that also 
-    include nodes outside the bbox if the way (that is, a way with a single OSM ID) has a node inside the bbox at some point.
+    Remove every node in graph that falls outside a bounding box.
+    
+    Needed because overpass returns entire ways that also include nodes outside the bbox if the way 
+    (that is, a way with a single OSM ID) has a node inside the bbox at some point.
     
     Parameters
     ----------
@@ -801,6 +805,7 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
     -------
     networkx multidigraph
     """
+    
     start_time = time.time()
     G = G.copy()
     nodes_outside_bbox = []
@@ -1031,6 +1036,7 @@ def add_path(G, data, one_way):
     -------
     None
     """
+    
     # extract the ordered list of nodes from this path element, then delete it so we don't add it as an attribute to the edge later
     path_nodes = data['nodes']
     del data['nodes']
@@ -1065,6 +1071,7 @@ def add_paths(G, paths, network_type):
     -------
     None
     """
+    
     # the list of values OSM uses in its 'oneway' tag to denote True
     osm_oneway_values = ['yes', 'true', '1', '-1']
     
@@ -1106,6 +1113,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     -------
     networkx multidigraph
     """
+    
     log('Creating networkx graph from downloaded OSM data...')
     start_time = time.time()
     
@@ -1163,8 +1171,7 @@ def bbox_from_point(point, distance=1000, project_utm=False):
     
     Returns
     -------
-    tuple
-        north, south, east, west
+    north, south, east, west : tuple
     """
     
     # reverse the order of the (lat,lng) point so it is (x,y) for shapely, then project to UTM and buffer in meters
@@ -1277,7 +1284,8 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     distance : int
         retain only those nodes within this many meters of the center of the graph
     distance_type : string
-        {'network', 'bbox'} if 'bbox', retain only those nodes within a bounding box of the distance parameter. if 'network', retain only those nodes within some network distance from the center-most node.
+        {'network', 'bbox'} if 'bbox', retain only those nodes within a bounding box of the distance parameter.
+        if 'network', retain only those nodes within some network distance from the center-most node.
     network_type : string
         what type of street network to get
     simplify : bool
@@ -1342,7 +1350,8 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     distance : int
         retain only those nodes within this many meters of the center of the graph
     distance_type : string
-        {'network', 'bbox'} if 'bbox', retain only those nodes within a bounding box of the distance parameter. if 'network', retain only those nodes within some network distance from the center-most node.
+        {'network', 'bbox'} if 'bbox', retain only those nodes within a bounding box of the distance parameter.
+        if 'network', retain only those nodes within some network distance from the center-most node.
     network_type : string
         what type of street network to get
     simplify : bool

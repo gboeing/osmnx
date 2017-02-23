@@ -40,7 +40,8 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
     memory : int
         server memory allocation size for the query, in bytes. If none, server will use its default allocation size
     max_query_area_size : float
-        max area for any part of the geometry, in the units the geometry is in: any polygon bigger will get divided up for multiple queries to API (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
+        max area for any part of the geometry, in the units the geometry is in: any polygon bigger will get divided 
+        up for multiple queries to API (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
     
     Returns
     -------

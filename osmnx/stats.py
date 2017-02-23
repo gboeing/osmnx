@@ -29,26 +29,28 @@ def basic_stats(G, area=None):
     
     Returns
     -------
-    dict
-        stats dict containing the following elements:
-        n = number of nodes in the graph
-        m = number of edges in the graph
-        k_avg = average node degree of the graph
-        count_intersections = number of intersections in graph, that is, nodes with >1 street emanating from them
-        streets_per_node_avg = how many streets (edges in the undirected representation of the graph) emanate from each node (ie, intersection or dead-end) on average (mean)
-        streets_per_node_counts = dict, with keys of number of streets emanating from the node, and values of number of nodes with this count
-        streets_per_node_proportion = dict, same as previous, but as a proportion of the total, rather than counts
-        edge_length_total = sum of all edge lengths in the graph, in meters
-        edge_length_avg = mean edge length in the graph, in meters
-        street_length_total = sum of all edges in the undirected representation of the graph
-        street_length_avg = mean edge length in the undirected representation of the graph, in meters
-        street_segments_count = number of edges in the undirected representation of the graph
-        node_density_km = n divided by area in square kilometers
-        intersection_density_km = count_intersections divided by area in square kilometers
-        edge_density_km = edge_length_total divided by area in square kilometers
-        street_density_km = street_length_total divided by area in square kilometers
-        circuity_avg = edge_length_total divided by the sum of the great circle distances between the nodes of each edge
-        self_loop_proportion = proportion of edges that have a single node as its two endpoints (ie, the edge links nodes u and v, and u==v)
+    stats : dict
+        dictionary of network measures containing the following elements:
+        
+          - n = number of nodes in the graph
+          - m = number of edges in the graph
+          - k_avg = average node degree of the graph
+          - count_intersections = number of intersections in graph, that is, nodes with >1 street emanating from them
+          - streets_per_node_avg = how many streets (edges in the undirected representation of the graph) emanate from each node (ie, intersection or dead-end) on average (mean)
+          - streets_per_node_counts = dict, with keys of number of streets emanating from the node, and values of number of nodes with this count
+          - streets_per_node_proportion = dict, same as previous, but as a proportion of the total, rather than counts
+          - edge_length_total = sum of all edge lengths in the graph, in meters
+          - edge_length_avg = mean edge length in the graph, in meters
+          - street_length_total = sum of all edges in the undirected representation of the graph
+          - street_length_avg = mean edge length in the undirected representation of the graph, in meters
+          - street_segments_count = number of edges in the undirected representation of the graph
+          - node_density_km = n divided by area in square kilometers
+          - intersection_density_km = count_intersections divided by area in square kilometers
+          - edge_density_km = edge_length_total divided by area in square kilometers
+          - street_density_km = street_length_total divided by area in square kilometers
+          - circuity_avg = edge_length_total divided by the sum of the great circle distances between the nodes of each edge
+          - self_loop_proportion = proportion of edges that have a single node as its two endpoints (ie, the edge links nodes u and v, and u==v)
+          
     """
     
     sq_m_in_sq_km = 1e6 #there are 1 million sq meters in 1 sq km
@@ -163,8 +165,11 @@ def basic_stats(G, area=None):
 
 def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=False):
     """
-    Calculate extended topological stats and metrics for a graph. Global topological analysis of large complex networks is extremely 
-    time consuming and may exhaust computer memory. Consider using function arguments to not run metrics that require computation of
+    Calculate extended topological stats and metrics for a graph. 
+    
+    Global topological analysis of large complex networks is extremely 
+    time consuming and may exhaust computer memory. Consider using function 
+    arguments to not run metrics that require computation of
     a full matrix of paths if they will not be needed.
     
     Parameters
@@ -183,35 +188,37 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     
     Returns
     -------
-    dict
-        stats dict containing the following elements (some only calculated/returned optionally, based on passed parameters):
-        avg_neighbor_degree
-        avg_neighbor_degree_avg
-        avg_weighted_neighbor_degree
-        avg_weighted_neighbor_degree_avg
-        degree_centrality
-        degree_centrality_avg
-        clustering_coefficient
-        clustering_coefficient_avg
-        clustering_coefficient_weighted
-        clustering_coefficient_weighted_avg
-        pagerank
-        pagerank_max_node
-        pagerank_max
-        pagerank_min_node
-        pagerank_min
-        node_connectivity
-        node_connectivity_avg
-        edge_connectivity
-        eccentricity
-        diameter
-        radius
-        center
-        periphery
-        closeness_centrality
-        closeness_centrality_avg
-        betweenness_centrality
-        betweenness_centrality_avg
+    stats : dict
+        dictionary of network measures containing the following elements (some only calculated/returned optionally, based on passed parameters):
+        
+          - avg_neighbor_degree
+          - avg_neighbor_degree_avg
+          - avg_weighted_neighbor_degree
+          - avg_weighted_neighbor_degree_avg
+          - degree_centrality
+          - degree_centrality_avg
+          - clustering_coefficient
+          - clustering_coefficient_avg
+          - clustering_coefficient_weighted
+          - clustering_coefficient_weighted_avg
+          - pagerank
+          - pagerank_max_node
+          - pagerank_max
+          - pagerank_min_node
+          - pagerank_min
+          - node_connectivity
+          - node_connectivity_avg
+          - edge_connectivity
+          - eccentricity
+          - diameter
+          - radius
+          - center
+          - periphery
+          - closeness_centrality
+          - closeness_centrality_avg
+          - betweenness_centrality
+          - betweenness_centrality_avg
+          
     """
     
     stats = {}
@@ -340,8 +347,9 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     
 def count_streets_per_node(G, nodes=None):
     """
-    Count how many street segments emanate from each node (i.e., intersections and dead-ends) in this graph. If nodes
-    is passed, then only count the nodes in the graph with those IDs.
+    Count how many street segments emanate from each node (i.e., intersections and dead-ends) in this graph. 
+    
+    If nodes is passed, then only count the nodes in the graph with those IDs.
     
     Parameters
     ----------
@@ -351,8 +359,8 @@ def count_streets_per_node(G, nodes=None):
     
     Returns
     ----------
-    dict
-        streets_per_node: the counts of how many streets emanate from each node with keys=node id and values=count
+    streets_per_node : dict
+        counts of how many streets emanate from each node with keys=node id and values=count
     """
     
     start_time = time.time()
@@ -388,4 +396,6 @@ def count_streets_per_node(G, nodes=None):
     counts = Counter(edges_flat)
     streets_per_node = {node:counts[node] for node in nodes}
     log('Got the counts of undirected street segments incident to each node (before removing peripheral edges) in {:,.2f} seconds'.format(time.time()-start_time))
-    return streets_per_node      
+    return streets_per_node
+    
+    

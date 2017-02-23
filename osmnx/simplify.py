@@ -15,6 +15,7 @@ from .utils import log
 def is_endpoint(G, node, strict=True):
     """
     Return True if the node is a "real" endpoint of an edge in the network, otherwise False.
+    
     OSM data includes lots of nodes that exist only as points to help streets bend around curves.
     An end point is a node that either:
     1) is its own neighbor, ie, it self-loops.
@@ -91,8 +92,7 @@ def build_path(G, node, endpoints, path):
     
     Returns
     -------
-    list
-        paths_to_simplify
+    paths_to_simplify : list
     """
     # for each successor in the passed-in node
     for successor in G.successors(node):
@@ -117,7 +117,9 @@ def build_path(G, node, endpoints, path):
 def get_paths_to_simplify(G, strict=True):
     """
     Create a list of all the paths to be simplified between endpoint nodes.
-    The path is ordered from the first endpoint, through the interstitial nodes, to the second endpoint.
+    
+    The path is ordered from the first endpoint, through the interstitial nodes, 
+    to the second endpoint.
     
     Parameters
     ----------
@@ -127,8 +129,7 @@ def get_paths_to_simplify(G, strict=True):
     
     Returns
     -------
-    list
-        paths_to_simplify
+    paths_to_simplify : list
     """
     
     # first identify all the nodes that are endpoints
@@ -159,8 +160,9 @@ def get_paths_to_simplify(G, strict=True):
     
 def is_simplified(G):
     """
-    Determine if a graph has already had its topology simplified. If any of its edges have a
-    geometry attribute, we know that it has previously been simplified.
+    Determine if a graph has already had its topology simplified. 
+    
+    If any of its edges have a geometry attribute, we know that it has previously been simplified.
     
     Parameters
     ----------
@@ -177,6 +179,7 @@ def is_simplified(G):
 def simplify_graph(G_, strict=True):
     """
     Simplify a graph's topology by removing all nodes that are not intersections or dead-ends.
+    
     Create an edge directly between the end points that encapsulate them,
     but retain the geometry of the original edges, saved as attribute in new edge
     

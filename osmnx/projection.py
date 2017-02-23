@@ -47,9 +47,10 @@ def project_geometry(geometry, crs={'init':'epsg:4326'}, to_crs=None, to_latlong
 
 def project_gdf(gdf, to_crs=None, to_latlong=False):
     """
-    Project a GeoDataFrame to the UTM zone appropriate for its geometries' centroid. The simple calculation
-    in this function works well for most latitudes, but won't work for some far northern locations like
-    Svalbard and parts of far northern Norway.
+    Project a GeoDataFrame to the UTM zone appropriate for its geometries' centroid. 
+    
+    The simple calculation in this function works well for most latitudes, but won't 
+    work for some far northern locations like Svalbard and parts of far northern Norway.
     
     Parameters
     ----------

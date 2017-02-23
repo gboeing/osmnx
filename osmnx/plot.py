@@ -21,7 +21,7 @@ from .projection import project_graph
 from .save_load import graph_to_gdfs
 from .core import graph_from_address, graph_from_point, bbox_from_point
 
-# folium is an optional dependency for the plot_route_folium function
+# folium is an optional dependency for the folium plotting functions
 try:
     import folium
 except ImportError as e:
@@ -53,8 +53,7 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6
     
     Returns
     -------
-    tuple
-        fig, ax
+    fig, ax : tuple
     """
     # plot the geometries one at a time
     fig, ax = plt.subplots(figsize=figsize)
@@ -84,7 +83,7 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6
 
 def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1):
     """
-    Get a list of edge colors by binning some continuous-variable attribute into quantiles
+    Get a list of edge colors by binning some continuous-variable attribute into quantiles.
     
     Parameters
     ----------
@@ -137,8 +136,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
     
     Returns
     -------
-    tuple
-        fig, ax
+    fig, ax : tuple
     """
     # save the figure if specified
     if save:
@@ -234,8 +232,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     
     Returns
     -------
-    tuple
-        fig, ax 
+    fig, ax : tuple
     """
     
     log('Begin plotting the graph...')
@@ -390,8 +387,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     
     Returns
     -------
-    tuple
-        fig, ax   
+    fig, ax : tuple
     """
     
     # plot the graph but not the route
@@ -451,7 +447,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
 def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attribute=None):
     
     """
-    Plot a graph on an interactive folium web map.
+    Turn a row from the gdf_edges GeoDataFrame into a folium PolyLine with attributes.
     
     Parameters
     ----------
@@ -475,18 +471,18 @@ def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attri
     if not folium:
         raise ImportError('The folium package must be installed to use this optional feature.')
     
-    # locations is a list of points
+    # locations is a list of points for the polyline
     locations = list(edge['geometry'].coords)
     
-    # if popup_attribute is None, then make no pop-ups
+    # if popup_attribute is None, then create no pop-up
     if popup_attribute is None:
         popup = None        
     else:
-        # folium doesn't interpret html in the html string (weird), so can't do newlines without an iframe
+        # folium doesn't interpret html in the html argument (weird), so can't do newlines without an iframe
         popup_text = str(edge[popup_attribute])
         popup = folium.Popup(html=popup_text)
     
-    # create a polyline with attributes
+    # create a folium polyline with attributes
     pl = folium.PolyLine(locations=locations, popup=popup, latlon=False, 
                          color=edge_color, weight=edge_width, opacity=edge_opacity)
     return pl
@@ -599,7 +595,7 @@ def plot_route_folium(G, route, popup_attribute=None, tiles='cartodbpositron', z
     # create the folium web map
     route_map = folium.Map(location=route_centroid, zoom_start=zoom, tiles=tiles)
     
-    # add each graph edge to the map
+    # add each route edge to the map
     for _, row in gdf_route_edges.iterrows():
         pl = make_folium_polyline(edge=row, edge_color=route_color, edge_width=route_width, 
                                   edge_opacity=route_opacity, popup_attribute=popup_attribute)
@@ -655,8 +651,7 @@ def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_s
     
     Returns
     -------
-    tuple
-        fig, ax
+    fig, ax : tuple
     """
     
     # get the network by either address or point, whichever was passed-in, using a distance multiplier to make sure we get more than enough network
