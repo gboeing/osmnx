@@ -112,7 +112,7 @@ def test_plots():
     fig, ax = ox.plot_figure_ground(address='Denver, Colorado, USA', file_format='png')
         
         
-def test_routing():
+def test_routing_folium():
     
     import networkx as nx
     G = ox.graph_from_address('N. Sicily Pl., Chandler, Arizona', distance=800, network_type='drive')
@@ -124,7 +124,9 @@ def test_routing():
     fig, ax = ox.plot_graph_route(G, route, save=True, filename='route', file_format='png')
     fig, ax = ox.plot_graph_route(G, route, origin_point=origin, destination_point=destination,
                                   save=True, filename='route', file_format='png')
-    route_map = ox.plot_route_folium(G, route)                              
+    
+    graph_map = ox.plot_graph_folium(G, popup_attribute='name')
+    route_map = ox.plot_route_folium(G, route)
     
     
 def test_buildings():
