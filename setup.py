@@ -57,6 +57,6 @@ setup(name='osmnx',
                         'matplotlib>=2.0',
                         'Shapely>=1.5',
                         'descartes>=1.0',
-                        'Rtree>=0.8.3'])
-      extras_require={'folium':['folium>=0.2']},
+                        'Rtree>=0.8.3'],
+      extras_require={'folium':['folium>=0.2']})
 
