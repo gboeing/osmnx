@@ -488,7 +488,7 @@ def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attri
     return pl
     
 
-def plot_graph_folium(G, popup_attribute=None, tiles='cartodbpositron', zoom=1, fit_bounds=True, 
+def plot_graph_folium(G, graph_map=None, popup_attribute=None, tiles='cartodbpositron', zoom=1, fit_bounds=True, 
                       edge_color='#333333', edge_width=5, edge_opacity=1):
     """
     Plot a graph on an interactive folium web map.
@@ -499,6 +499,8 @@ def plot_graph_folium(G, popup_attribute=None, tiles='cartodbpositron', zoom=1, 
     Parameters
     ----------
     G : networkx multidigraph
+    graph_map : folium.folium.Map
+        if not None, plot the graph on this preexisting folium map object
     popup_attribute : string
         edge attribute to display in a pop-up when an edge is clicked
     tiles : string
@@ -530,8 +532,9 @@ def plot_graph_folium(G, popup_attribute=None, tiles='cartodbpositron', zoom=1, 
     x, y = gdf_edges.unary_union.centroid.xy
     graph_centroid = (y[0], x[0])
     
-    # create the folium web map
-    graph_map = folium.Map(location=graph_centroid, zoom_start=zoom, tiles=tiles)
+    # create the folium web map if one wasn't passed-in
+    if graph_map is None:
+        graph_map = folium.Map(location=graph_centroid, zoom_start=zoom, tiles=tiles)
     
     # add each graph edge to the map
     for _, row in gdf_edges.iterrows():
@@ -548,7 +551,7 @@ def plot_graph_folium(G, popup_attribute=None, tiles='cartodbpositron', zoom=1, 
     return graph_map    
     
     
-def plot_route_folium(G, route, popup_attribute=None, tiles='cartodbpositron', zoom=1, fit_bounds=True, 
+def plot_route_folium(G, route, route_map=None, popup_attribute=None, tiles='cartodbpositron', zoom=1, fit_bounds=True, 
                       route_color='#cc0000', route_width=5, route_opacity=1):
     """
     Plot a route on an interactive folium web map.
@@ -558,6 +561,8 @@ def plot_route_folium(G, route, popup_attribute=None, tiles='cartodbpositron', z
     G : networkx multidigraph
     route : list
         the route as a list of nodes
+    route_map : folium.folium.Map
+        if not None, plot the route on this preexisting folium map object
     popup_attribute : string
         edge attribute to display in a pop-up when an edge is clicked
     tiles : string
@@ -592,8 +597,9 @@ def plot_route_folium(G, route, popup_attribute=None, tiles='cartodbpositron', z
     x, y = gdf_route_edges.unary_union.centroid.xy
     route_centroid = (y[0], x[0])
     
-    # create the folium web map
-    route_map = folium.Map(location=route_centroid, zoom_start=zoom, tiles=tiles)
+    # create the folium web map if one wasn't passed-in
+    if route_map is None:
+        route_map = folium.Map(location=route_centroid, zoom_start=zoom, tiles=tiles)
     
     # add each route edge to the map
     for _, row in gdf_route_edges.iterrows():
