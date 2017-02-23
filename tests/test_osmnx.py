@@ -22,7 +22,7 @@ ox.log('test error', level=lg.ERROR)
 
 def test_imports():
     
-    import json, math, sys, os, io, ast, unicodedata, hashlib, re, random, time, datetime as dt, logging as lg
+    import json, math, sys, os, io, ast, unicodedata, hashlib, re, random, time, warnings, datetime as dt, logging as lg
     from collections import OrderedDict, Counter
     from itertools import groupby, chain
     from dateutil import parser as date_parser
@@ -32,8 +32,6 @@ def test_imports():
     from shapely import wkt
     from shapely.ops import unary_union
     from descartes import PolygonPatch
-    from geopy.distance import great_circle, vincenty
-    from geopy.geocoders import Nominatim
     from rtree.index import Index as RTreeIndex
     
     
