@@ -317,7 +317,7 @@ def get_nearest_node(G, point, return_dist=False):
 
 def geocode(query):
     """
-    Geocode a query string to (lat, lon) with the Nominatim geocoder
+    Geocode a query string to (lat, lon) with the Nominatim geocoder.
 
     Parameters
     ----------
@@ -341,6 +341,7 @@ def geocode(query):
         lat = float(results[0]['lat'])
         lon = float(results[0]['lon'])
         point = (lat, lon)
+        log('Geocoded "{}" to {}'.format(query, point))
         return point
     else:
         raise Exception('Nominatim geocoder returned no results for query "{}"'.format(query))

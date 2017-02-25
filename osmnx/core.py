@@ -1311,28 +1311,21 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     networkx multidigraph
     """
     
+    if distance_type not in ['bbox', 'network']:
+        raise ValueError('distance_type must be "bbox" or "network"')
+    
     # create a bounding box from the center point and the distance in each direction
     north, south, east, west = bbox_from_point(center_point, distance)
-    if distance_type == 'bbox':
-        # if the network distance_type is bbox, create a graph from the bounding box
-        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify, retain_all=retain_all, 
-                            truncate_by_edge=truncate_by_edge, name=name, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, clean_periphery=clean_periphery)
-    elif distance_type == 'network':
-        # if the network distance_type is network, create a graph from the bounding box but do not simplify it yet (only simplify a graph after all truncation is performed! otherwise you get weird artifacts)
-        G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=False, retain_all=retain_all, 
-                            truncate_by_edge=truncate_by_edge, name=name, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, clean_periphery=clean_periphery)
-        
-        # next find the node in the graph nearest to the center point, and truncate the graph by network distance from this node
+    
+    # create a graph from the bounding box
+    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify, retain_all=retain_all, 
+                        truncate_by_edge=truncate_by_edge, name=name, timeout=timeout, memory=memory, 
+                        max_query_area_size=max_query_area_size, clean_periphery=clean_periphery)
+
+    # if the network distance_type is network, find the node in the graph nearest to the center point, and truncate the graph by network distance from this node
+    if distance_type == 'network':
         centermost_node = get_nearest_node(G, center_point)
         G = truncate_graph_dist(G, centermost_node, max_distance=distance)
-        
-        # simplify the graph topology as the last step. don't truncate after simplifying or you may have simplified out to an endpoint
-        # beyond the truncation distance, in which case you will then strip out your entire edge
-        # that's why simplify=False above, so we didn't do it before the truncate_graph_dist() call 2 lines after it
-        if simplify:
-            G = simplify_graph(G)
-    else:
-        raise ValueError('distance_type must be "bbox" or "network"')
     
     log('graph_from_point() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return G
