@@ -1,5 +1,16 @@
 # Change log
 
+## 0.4 (2017-03-01)
+
+  - plot entire networks with folium
+  - plot routes on top of networks with folium
+  - vectorize all great circle calculations
+  - new geocode function in utils
+  - remove geopy dependency
+  - refactor modules
+  - simplify before truncating by distance when getting graph by point and network distance
+  - project geometries, GeoDataFrames, and graphs to a passed-in CRS
+    
 ## 0.3.1 (2017-02-15)
 
   - clean up docstrings throughout
