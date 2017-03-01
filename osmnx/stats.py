@@ -121,13 +121,14 @@ def basic_stats(G, area=None):
     # first load all the edges origin and destination coordinates as a dataframe, then calculate the great circle distance with the vectorized function
     coords = np.array([[G.node[u]['y'], G.node[u]['x'], G.node[v]['y'], G.node[v]['x']] for u, v, k in G.edges(keys=True)])
     df_coords = pd.DataFrame(coords, columns=['u_y', 'u_x', 'v_y', 'v_x'])
+    
     # ignore warnings during this calculation because numpy warns it cannot calculate arccos for self-loops since u==v
-    warnings.filterwarnings('ignore')
-    gc_distances = great_circle_vec(lat1=df_coords['u_y'], 
-                                    lng1=df_coords['u_x'],
-                                    lat2=df_coords['v_y'], 
-                                    lng2=df_coords['v_x'])
-    warnings.filterwarnings('default')
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        gc_distances = great_circle_vec(lat1=df_coords['u_y'], 
+                                        lng1=df_coords['u_x'],
+                                        lat2=df_coords['v_y'], 
+                                        lng2=df_coords['v_x'])
     gc_distances = gc_distances.fillna(value=0)
     try:
         circuity_avg = edge_length_total / gc_distances.sum()
