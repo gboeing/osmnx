@@ -627,9 +627,9 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
     ----------
     G : networkx multidigraph
     address : string
-        the address to geocode as the center point
+        the address to geocode as the center point if G is not passed in
     point : tuple
-        the center point if address is not passed
+        the center point if address and G are not passed in
     dist : numeric
         how many meters to extend north, south, east, and west from the center point
     network_type : string
@@ -662,26 +662,24 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
     fig, ax : tuple
     """
 
-    if not G:
-        # get the network by either address or point, whichever was passed-in, using a distance multiplier to make sure we get more than enough network
-        multiplier = 1.2
-        if not address is None:
-            G, point = graph_from_address(address, distance=dist*multiplier, distance_type='bbox', network_type=network_type,
-                                          truncate_by_edge=True, return_coords=True)
-        elif not point is None:
-            G = graph_from_point(point, distance=dist*multiplier, distance_type='bbox', network_type=network_type,
-                                 truncate_by_edge=True)
-        else:
-            raise ValueError('You must pass an address or lat-long point.')
+    multiplier = 1.2
+    
+    # if G was passed-in, use this graph in the plot, centered on the centroid of its nodes
+    if G is not None:
+        gdf_nodes = graph_to_gdfs(G, edges=False, node_geometry=True)
+        lnglat_point = gdf_nodes.unary_union.centroid.coords[0]
+        point = tuple(reversed(lnglat_point))
+    
+    # otherwise, get the network by either address or point, whichever was passed-in, 
+    # using a distance multiplier to make sure we get more than enough network
+    elif address is not None:
+        G, point = graph_from_address(address, distance=dist*multiplier, distance_type='bbox', network_type=network_type,
+                                      truncate_by_edge=True, return_coords=True)
+    elif point is not None:
+        G = graph_from_point(point, distance=dist*multiplier, distance_type='bbox', network_type=network_type,
+                             truncate_by_edge=True)
     else:
-        G = get_largest_component(G, strongly=True)
-        center_nodes = nx.center(G)
-        # Bad performance [(node, data) for node, data in G.nodes(data=True) if node in nx.center(G)]
-        nodes_data = {node: data for node, data in G.nodes(data=True)}
-        # Arbitrarily choose first node
-        point = (nodes_data[center_nodes[0]]['y'], nodes_data[center_nodes[0]]['x'])
-
-
+        raise ValueError('You must pass an address or lat-long point or graph.')
     
     # project the network to UTM
     G = project_graph(G)
