@@ -11,12 +11,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import networkx as nx
 from matplotlib.collections import LineCollection
 from descartes import PolygonPatch
 from shapely.geometry import Polygon, MultiPolygon
 
 from . import globals
-from .utils import log
+from .utils import log, get_largest_component
 from .projection import project_graph
 from .save_load import graph_to_gdfs
 from .core import graph_from_address, graph_from_point, bbox_from_point
@@ -616,7 +617,7 @@ def plot_route_folium(G, route, route_map=None, popup_attribute=None, tiles='car
     return route_map
     
     
-def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_service',
+def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type='drive_service',
                        street_widths=None, default_width=4, fig_length=8, edge_color='w', bgcolor='#333333',
                        filename=None, file_format='png', show=False, save=True, close=True, dpi=300):
     """
@@ -624,6 +625,7 @@ def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_s
     
     Parameters
     ----------
+    G : networkx multidigraph
     address : string
         the address to geocode as the center point
     point : tuple
@@ -659,17 +661,27 @@ def plot_figure_ground(address=None, point=None, dist=805, network_type='drive_s
     -------
     fig, ax : tuple
     """
-    
-    # get the network by either address or point, whichever was passed-in, using a distance multiplier to make sure we get more than enough network
-    multiplier = 1.2
-    if not address is None:
-        G, point = graph_from_address(address, distance=dist*multiplier, distance_type='bbox', network_type=network_type, 
-                                      truncate_by_edge=True, return_coords=True)
-    elif not point is None:
-        G = graph_from_point(point, distance=dist*multiplier, distance_type='bbox', network_type=network_type, 
-                             truncate_by_edge=True)
+
+    if not G:
+        # get the network by either address or point, whichever was passed-in, using a distance multiplier to make sure we get more than enough network
+        multiplier = 1.2
+        if not address is None:
+            G, point = graph_from_address(address, distance=dist*multiplier, distance_type='bbox', network_type=network_type,
+                                          truncate_by_edge=True, return_coords=True)
+        elif not point is None:
+            G = graph_from_point(point, distance=dist*multiplier, distance_type='bbox', network_type=network_type,
+                                 truncate_by_edge=True)
+        else:
+            raise ValueError('You must pass an address or lat-long point.')
     else:
-        raise ValueError('You must pass an address or lat-long point.')
+        G = get_largest_component(G, strongly=True)
+        center_nodes = nx.center(G)
+        # Bad performance [(node, data) for node, data in G.nodes(data=True) if node in nx.center(G)]
+        nodes_data = {node: data for node, data in G.nodes(data=True)}
+        # Arbitrarily choose first node
+        point = (nodes_data[center_nodes[0]]['y'], nodes_data[center_nodes[0]]['x'])
+
+
     
     # project the network to UTM
     G = project_graph(G)
