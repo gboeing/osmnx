@@ -7,6 +7,7 @@
 
 import time
 import os
+import math
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -20,6 +21,7 @@ from . import globals
 from .utils import log, get_largest_component
 from .projection import project_graph
 from .save_load import graph_to_gdfs
+from .simplify import simplify_graph
 from .core import graph_from_address, graph_from_point, bbox_from_point
 
 # folium is an optional dependency for the folium plotting functions
@@ -161,6 +163,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
                 extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
             else:
                 extent = 'tight'
+            print(extent)
             fig.savefig(path_filename, dpi=dpi, bbox_inches=extent, format=file_format, facecolor=fig.get_facecolor(), transparent=True)
         log('Saved the figure to disk in {:,.2f} seconds'.format(time.time()-start_time))
     
@@ -176,7 +179,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
     return fig, ax
     
     
-def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off=True, bgcolor='w',
+def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off=True, equal_aspect=False, bgcolor='w',
                show=True, save=False, close=True, file_format='png', filename='temp', dpi=300, annotate=False,
                node_color='#66ccff', node_size=15, node_alpha=1, node_edgecolor='none', node_zorder=1,
                edge_color='#999999', edge_linewidth=1, edge_alpha=1, use_geom=True):
@@ -196,6 +199,8 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
         relative margin around the figure
     axis_off : bool
         if True turn off the matplotlib axis
+    equal_aspect : bool
+        if True set the axis aspect ratio equal
     bgcolor : string
         the background color of the figure and axis
     show : bool
@@ -296,6 +301,11 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
         ax.axis('off')
         ax.margins(0)
         ax.tick_params(which='both', direction='in')
+        fig.canvas.draw()
+        
+    if equal_aspect:
+        # make everything square
+        ax.set_aspect('equal')
         fig.canvas.draw()
     
     # annotate the axis with node IDs if annotate=True
@@ -618,7 +628,7 @@ def plot_route_folium(G, route, route_map=None, popup_attribute=None, tiles='car
     
     
 def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type='drive_service',
-                       street_widths=None, default_width=4, fig_length=8, edge_color='w', bgcolor='#333333',
+                       street_widths=None, default_width=4, fig_length=8, edge_color='w', bgcolor='#333333', smooth_joints=True,
                        filename=None, file_format='png', show=False, save=True, close=True, dpi=300):
     """
     Plot a figure-ground diagram of a street network, defaulting to one square mile.
@@ -644,6 +654,8 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
         the color of the streets
     bgcolor : string
         the color of the background
+    smooth_joints : bool
+        if True, plot nodes same width as streets to smooth line joints and prevent cracks between them from showing
     filename : string
         filename to save the image as
     file_format : string
@@ -672,12 +684,15 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
     
     # otherwise, get the network by either address or point, whichever was passed-in, 
     # using a distance multiplier to make sure we get more than enough network
+    # simplify in non-strict mode to not combine multiple street types into single edge
     elif address is not None:
         G, point = graph_from_address(address, distance=dist*multiplier, distance_type='bbox', network_type=network_type,
-                                      truncate_by_edge=True, return_coords=True)
+                                      simplify=False, truncate_by_edge=True, return_coords=True)
+        G = simplify_graph(G, strict=False)
     elif point is not None:
         G = graph_from_point(point, distance=dist*multiplier, distance_type='bbox', network_type=network_type,
-                             truncate_by_edge=True)
+                             simplify=False, truncate_by_edge=True)
+        G = simplify_graph(G, strict=False)
     else:
         raise ValueError('You must pass an address or lat-long point or graph.')
     
@@ -694,14 +709,49 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
                          'track' : 1.5,
                          'motorway' : 6}
     
+    # we need an undirected graph to find every edge incident to a node
+    G_undir = G.to_undirected()
+    
     # for each network edge, get a linewidth according to street type (the OSM 'highway' value)
     edge_linewidths = []
-    for u, v, key, data in G.edges(keys=True, data=True):
+    for u, v, key, data in G_undir.edges(keys=True, data=True):
         street_type = data['highway'][0] if isinstance(data['highway'], list) else data['highway']
         if street_type in street_widths:
             edge_linewidths.append(street_widths[street_type])
         else:
             edge_linewidths.append(default_width)
+    
+    if smooth_joints:
+        # for each node, get a nodesize according to the narrowest incident edge
+        node_widths = {}
+        for node in G_undir.nodes():
+            edge_types = [list(edge.values())[0]['highway'] for edge in G_undir.edge[node].values()]
+            if len(edge_types) < 1:
+                # if node has no edges, make size zero
+                node_widths[node] = 0
+            else:
+                # flatten the list of edge types
+                edge_types_flat = []
+                for et in edge_types:
+                    if isinstance(et, list):
+                        edge_types_flat.extend(et)
+                    else:
+                        edge_types_flat.append(et)
+                
+                # for each edge type in the flattened list, lookup the corresponding width
+                edge_widths = [street_widths[edge_type] if edge_type in street_widths else default_width for edge_type in edge_types_flat]
+                
+                # the node diameter will be the smallest of the edge widths - anything larger would extend past the street's line
+                circle_diameter = min(edge_widths)
+                
+                # mpl circle marker sizes are in area, so it is the diameter squared
+                circle_area = circle_diameter ** 2
+                node_widths[node] = circle_area
+            
+        # assign the node size to each node in the graph
+        node_sizes = [node_widths[node] for node in G_undir.nodes()]
+    else:
+        node_sizes = 0
     
     # define the spatial extents of the plotting figure to make it square, in projected units, and cropped to the desired area
     bbox_proj = bbox_from_point(point, dist, project_utm=True)
@@ -711,14 +761,10 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
         filename = 'figure_ground_{}_{}'.format(point, network_type)
     
     # plot the figure
-    fig, ax = plot_graph(G, bbox=bbox_proj, fig_height=fig_length, margin=0, node_size=0, 
-                         edge_linewidth=edge_linewidths, edge_color=edge_color, bgcolor=bgcolor, 
+    fig, ax = plot_graph(G_undir, bbox=bbox_proj, fig_height=fig_length, margin=0, axis_off=True, equal_aspect=True, bgcolor=bgcolor, 
+                         node_size=node_sizes, node_color='w', edge_linewidth=edge_linewidths, edge_color=edge_color, 
                          show=show, save=save, close=close, filename=filename, file_format=file_format, dpi=dpi)
-    
-    # make everything square
-    ax.set_aspect('equal')
-    fig.canvas.draw()
-    
+
     return fig, ax
     
     
