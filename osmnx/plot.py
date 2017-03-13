@@ -163,7 +163,6 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
                 extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
             else:
                 extent = 'tight'
-            print(extent)
             fig.savefig(path_filename, dpi=dpi, bbox_inches=extent, format=file_format, facecolor=fig.get_facecolor(), transparent=True)
         log('Saved the figure to disk in {:,.2f} seconds'.format(time.time()-start_time))
     

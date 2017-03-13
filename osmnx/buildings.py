@@ -81,7 +81,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
         for poly in geometry:
             # represent bbox as south,west,north,east and round lat-longs to 8 decimal places (ie, within 1 mm) so URL strings aren't different due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = '[out:json][timeout:{timeout}]{maxsize};(way["building"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;););out;'
+            query_template = '[out:json][timeout:{timeout}]{maxsize};((way["building"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation["building"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);));out;'
             query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
@@ -98,7 +98,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
         
         # pass each polygon exterior coordinates in the list to the API, one at a time
         for polygon_coord_str in polygon_coord_strs:
-            query_template = '[out:json][timeout:{timeout}]{maxsize};way(poly:"{polygon}")["building"];(._;>;);out;'
+            query_template = '[out:json][timeout:{timeout}]{maxsize};(way(poly:"{polygon}")["building"];(._;>;);relation(poly:"{polygon}")["building"];(._;>;));out;'
             query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
@@ -149,8 +149,11 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None, west=N
                 log('Polygon has invalid geometry: {}'.format(nodes))
             building = {'nodes' : nodes,
                         'geometry' : polygon}
-            for tag in result['tags']:
-                building[tag] = result['tags'][tag]
+            
+            if 'tags' in result:
+                for tag in result['tags']:
+                    building[tag] = result['tags'][tag]
+              
             buildings[result['id']] = building
             
     gdf = gpd.GeoDataFrame(buildings).T
@@ -163,7 +166,7 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None, west=N
     return gdf
 
 
-def buildings_from_point(point, distance):
+def buildings_from_point(point, distance, retain_invalid=False):
     """
     Get building footprints within some distance north, south, east, and west of a lat-long point.
     
@@ -173,7 +176,9 @@ def buildings_from_point(point, distance):
         a lat-long point
     distance : numeric
         distance in meters
-    
+    retain_invalid : bool
+        if False discard any building footprints with an invalid geometry
+        
     Returns
     -------
     GeoDataFrame
@@ -181,10 +186,10 @@ def buildings_from_point(point, distance):
     
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
-    return create_buildings_gdf(north=north, south=south, east=east, west=west)
+    return create_buildings_gdf(north=north, south=south, east=east, west=west, retain_invalid=retain_invalid)
 
 
-def buildings_from_address(address, distance):
+def buildings_from_address(address, distance, retain_invalid=False):
     """
     Get building footprints within some distance north, south, east, and west of an address.
     
@@ -194,7 +199,9 @@ def buildings_from_address(address, distance):
         the address to geocode to a lat-long point
     distance : numeric
         distance in meters
-    
+    retain_invalid : bool
+        if False discard any building footprints with an invalid geometry
+        
     Returns
     -------
     GeoDataFrame
@@ -204,26 +211,28 @@ def buildings_from_address(address, distance):
     point = geocode(query=address)
     
     # get buildings within distance of this point
-    return buildings_from_point(point, distance)
+    return buildings_from_point(point, distance, retain_invalid=retain_invalid)
 
 
-def buildings_from_polygon(polygon):
+def buildings_from_polygon(polygon, retain_invalid=False):
     """
     Get building footprints within some polygon.
     
     Parameters
     ----------
     polygon : Polygon
-    
+    retain_invalid : bool
+        if False discard any building footprints with an invalid geometry
+        
     Returns
     -------
     GeoDataFrame
     """
     
-    return create_buildings_gdf(polygon=polygon)
+    return create_buildings_gdf(polygon=polygon, retain_invalid=retain_invalid)
     
     
-def buildings_from_place(place):
+def buildings_from_place(place, retain_invalid=False):
     """
     Get building footprints within the boundaries of some place.
     
@@ -231,7 +240,9 @@ def buildings_from_place(place):
     ----------
     place : string
         the query to geocode to get geojson boundary polygon
-    
+    retain_invalid : bool
+        if False discard any building footprints with an invalid geometry
+        
     Returns
     -------
     GeoDataFrame
@@ -239,10 +250,10 @@ def buildings_from_place(place):
     
     city = gdf_from_place(place)
     polygon = city['geometry'].iloc[0]
-    return create_buildings_gdf(polygon)
+    return create_buildings_gdf(polygon, retain_invalid=retain_invalid)
 
 
-def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w', set_bounds=True, bbox=None, axis_off=True,
+def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w', set_bounds=True, bbox=None, 
                    save=False, show=True, close=False, filename='image', file_format='png', dpi=600):
     """
     Plot a GeoDataFrame of building footprints.
@@ -262,8 +273,6 @@ def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolo
         if True, set bounds from either passed-in bbox or the spatial extent of the gdf
     bbox : tuple
         if True and if set_bounds is True, set the display bounds to this bbox
-    axis_off : bool
-        if True, turn off axis display
     save : bool
         whether to save the figure to disk or not
     show : bool
@@ -306,14 +315,18 @@ def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolo
         ax.set_xlim((left, right))
         ax.set_ylim((bottom, top))
 
-    if axis_off:
-        ax.axis('off')
-        ax.margins(0)
-        ax.tick_params(which='both', direction='in')
-        fig.canvas.draw()
+    # turn off the axis display set the margins to zero and point the ticks in so there's no space around the plot
+    ax.axis('off')
+    ax.margins(0)
+    ax.tick_params(which='both', direction='in')
+    fig.canvas.draw()
+
+    # make everything square
+    ax.set_aspect('equal')
+    fig.canvas.draw()
 
     fig, ax = save_and_show(fig=fig, ax=ax, save=save, show=show, close=close, 
-                               filename=filename, file_format=file_format, dpi=dpi, axis_off=axis_off)
+                            filename=filename, file_format=file_format, dpi=dpi, axis_off=True)
     
     return fig, ax
 
