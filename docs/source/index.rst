@@ -12,14 +12,11 @@ OSMnx documentation
    
    osmnx
 
-**OSMnx**: retrieve, construct, analyze, and visualize street networks from OpenStreetMap. OSMnx is a Python package that lets you download spatial geometries and construct, project, visualize, 
-and analyze street networks from OpenStreetMap's APIs. Users can download and construct walkable, drivable, or bikable 
-urban networks with a single line of Python code, and then easily analyze and visualize them.
+**OSMnx**: retrieve, construct, analyze, and visualize street networks from OpenStreetMap. 
+OSMnx is a Python package that lets you download spatial geometries and construct, project, visualize, 
+and analyze street networks from OpenStreetMap's APIs. Users can download and construct walkable, drivable, 
+or bikable urban networks with a single line of Python code, and then easily analyze and visualize them.
 
-Citation info
--------------
-
-Boeing, G. 2017. "`OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks`_." doi:10.2139/ssrn.2865501.
 
 Installation
 ------------
@@ -66,7 +63,6 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: http://geoffboeing.com/publications/osmnx-complex-street-networks/
 .. _virtual environment: https://conda.io/docs/using/envs.html
 .. _https://github.com/gboeing/osmnx: https://github.com/gboeing/osmnx
 .. _https://github.com/gboeing/osmnx/issues: https://github.com/gboeing/osmnx/issues
