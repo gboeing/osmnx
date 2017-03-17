@@ -23,7 +23,7 @@ repository: https://github.com/gboeing/osmnx
 # Summary
 
 OSMnx is a Python package for downloading OpenStreetMap street network data and then constructing 
-it into a graph-theoretic NetworkX MultiDiGraph object. OSMnx can simplify and correct the network's 
+it into NetworkX graphs. OSMnx can simplify and correct the network's 
 topology automatically to ensure that nodes actually exclusively represent intersections and 
 dead-ends. Once the network is constructed and corrected, OSMnx can calculate shortest paths from 
 one node to another. It can also calculate various network measures relevant to urban design and 
