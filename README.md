@@ -8,8 +8,6 @@
 
 Retrieve, construct, analyze, and visualize street networks from OpenStreetMap: [full overview](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
 
-**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](http://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Manuscript under review*. doi:10.2139/ssrn.2865501.
-
 ## Overview
 
 **OSMnx** is a Python 2+3 package that lets you download spatial geometries and construct, project, visualize, 
@@ -134,5 +132,3 @@ For examples of analyzing street networks with OSMnx, see [this notebook](exampl
 ## More info
 
 For a more complete overview of [OSMnx, read this](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
-
-Download/cite the [journal article here](http://geoffboeing.com/publications/osmnx-complex-street-networks/).
