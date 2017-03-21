@@ -215,7 +215,7 @@ def load_graphml(filename, folder=None):
     for u, v, key, data in G.edges(keys=True, data=True):
 
         # first parse oneway to bool and length to float - they should always have only 1 value each
-        data['oneway'] = bool(data['oneway'])
+        data['oneway'] = ast.literal_eval(data['oneway'])
         data['length'] = float(data['length'])
 
         # these attributes might have a single value, or a list if edge's topology was simplified
