@@ -236,6 +236,12 @@ def load_graphml(filename, folder=None):
         if 'geometry' in data:
             data['geometry'] = wkt.loads(data['geometry'])
     
+    # remove node_default and edge_default metadata keys if they exist
+    if 'node_default' in G.graph:
+        del G.graph['node_default']
+    if 'edge_default' in G.graph:
+        del G.graph['edge_default']
+    
     log('Loaded graph with {:,} nodes and {:,} edges in {:,.2f} seconds from "{}"'.format(len(list(G.nodes())),
                                                                                           len(list(G.edges())),
                                                                                           time.time()-start_time,
