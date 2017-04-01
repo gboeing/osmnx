@@ -1,5 +1,13 @@
 # Change log
 
+## 0.4.1 (2017-04-01)
+  - fix load_graphml so we can save a graph again after loading it
+  - fix load_graphml so edge oneway attribute is not always set to True
+  - buildings module gets buildings stored in OSM as relations as well as ways
+  - fix figure-ground diagram saving to make perfect square and smooth joints
+  - add optional graph argument to plot_figure_ground
+  - suppress jupyter notebook deprecation warnings
+
 ## 0.4 (2017-03-01)
 
   - plot entire networks with folium
