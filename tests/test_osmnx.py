@@ -94,7 +94,6 @@ def test_plots():
     
     G = ox.graph_from_place('Piedmont, California, USA', network_type='drive', simplify=False)
     G2 = ox.simplify_graph(G, strict=False)
-    ec = ox.get_edge_colors_by_attr(G2, 'length')
     fig, ax = ox.plot_graph(G, save=True, file_format='png')
     
     G_simplified = ox.simplify_graph(G)
@@ -135,5 +134,15 @@ def test_buildings():
     gdf = ox.buildings_from_place(place='Piedmont, California, USA')
     gdf = ox.buildings_from_address(address='San Francisco, California, USA', distance=300)
     fig, ax = ox.plot_buildings(gdf)
+    
+
+def test_elevation():
+    
+    from keys import google_elevation_api_key
+    G = ox.graph_from_place('Piedmont, California, USA', network_type='drive')
+    G = ox.add_node_elevations(G, api_key=google_elevation_api_key)
+    G = ox.add_edge_grades(G)
+    nc = ox.get_node_colors_by_attr(G, 'elevation')
+    ec = ox.get_edge_colors_by_attr(G, 'grade')
     
     
