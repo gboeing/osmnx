@@ -15,7 +15,7 @@ from .core import save_to_cache, get_from_cache
 from .utils import log
 
 
-def add_node_elevations(G, api_key, max_locations_per_batch=350, pause_duration=0.02):
+def add_node_elevations(G, api_key, max_locations_per_batch=350, pause_duration=0.02): # pragma: no cover
     """
     Get the elevation (meters) of each node in the network and add it to the node as an attribute.
 
@@ -86,7 +86,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350, pause_duration=
     
     
     
-def add_edge_grades(G, add_absolute=True):
+def add_edge_grades(G, add_absolute=True): # pragma: no cover
     """
     Get the directed grade (ie, rise over run) for each edge in the network and add it to 
     the edge as an attribute. Nodes must have elevation attributes to use this function.
