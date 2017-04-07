@@ -136,13 +136,13 @@ def test_buildings():
     fig, ax = ox.plot_buildings(gdf)
     
 
-def test_elevation():
-    
-    from keys import google_elevation_api_key
-    G = ox.graph_from_place('Piedmont, California, USA', network_type='drive')
-    G = ox.add_node_elevations(G, api_key=google_elevation_api_key)
-    G = ox.add_edge_grades(G)
-    nc = ox.get_node_colors_by_attr(G, 'elevation')
-    ec = ox.get_edge_colors_by_attr(G, 'grade')
+#def test_elevation():
+    #
+    #from keys import google_elevation_api_key
+    #G = ox.graph_from_place('Piedmont, California, USA', network_type='drive')
+    #G = ox.add_node_elevations(G, api_key=google_elevation_api_key)
+    #G = ox.add_edge_grades(G)
+    #nc = ox.get_node_colors_by_attr(G, 'elevation')
+    #ec = ox.get_edge_colors_by_attr(G, 'grade')
     
     
