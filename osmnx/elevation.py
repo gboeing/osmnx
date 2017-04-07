@@ -86,24 +86,29 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350, pause_duration=
     
     
     
-def add_edge_grades(G):
+def add_edge_grades(G, add_absolute=True):
     """
-    Get the grade (ie, rise over run) for each edge in the network and add it to 
+    Get the directed grade (ie, rise over run) for each edge in the network and add it to 
     the edge as an attribute. Nodes must have elevation attributes to use this function.
 
     Parameters
     ----------
     G : networkx multidigraph
+    add_absolute : bool
+        if True, also add the absolute value of the grade as an edge attribute
     
     Returns
     -------
     G : networkx multidigraph
     """
     
-    # for each edge, calculate the difference in elevation between its endpoints then divide by edge length
+    # for each edge, calculate the difference in elevation from origin to destination, then divide by edge length
     for u, v, k, data in G.edges(keys=True, data=True):
-        elevation_change = abs(G.node[u]['elevation'] - G.node[v]['elevation'])
-        data['grade'] = elevation_change / data['length']
+        elevation_change = G.node[v]['elevation'] - G.node[u]['elevation']
+        grade = elevation_change / data['length']
+        data['grade'] = grade
+        if add_absolute:
+            data['grade_abs'] = abs(grade)
     
     log('Added grade data to all edges.')
     return G

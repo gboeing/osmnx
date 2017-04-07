@@ -508,7 +508,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     if not (by_poly or by_bbox):
         raise ValueError('You must pass a polygon or north, south, east, and west')
     
-    # create a filter to exclude certain kinds of routes based on the requested network_type
+    # create a filter to exclude certain kinds of ways based on the requested network_type
     osm_filter = get_osm_filter(network_type)
     response_jsons = []
     

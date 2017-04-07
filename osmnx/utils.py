@@ -347,3 +347,32 @@ def geocode(query):
         raise Exception('Nominatim geocoder returned no results for query "{}"'.format(query))
 
         
+def get_route_edge_attributes(G, route, attribute, minimize_key='length'):
+    """
+    Get a list of attribute values for each edge in a path.
+    
+    Parameters
+    ----------
+    G : networkx multidigraph
+    route : list
+        list of nodes in the path
+    attribute : string
+        the name of the attribute to get the value of for each edge
+    minimize_key : string
+        if there are parallel edges between two nodes, select the one with the 
+        lowest value of minimize_key
+
+    Returns
+    -------
+    attribute_values : list
+        list of edge attribute values
+    """
+    
+    attribute_values = []
+    for u, v in zip(route[:-1], route[1:]):
+        # if there are parallel edges between two nodes, select the one with the lowest value of minimize_key
+        data = min([data for data in G.edge[u][v].values()], key=lambda x: x[minimize_key])
+        attribute_values.append(data[attribute])
+    return attribute_values        
+    
+    
