@@ -84,6 +84,38 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6
     return fig, ax
 
 
+def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, stop=1):
+    """
+    Get a list of node colors by binning some continuous-variable attribute into quantiles.
+    
+    Parameters
+    ----------
+    G : networkx multidigraph
+    attr : string
+        the name of the attribute
+    num_bins : int
+        how many quantiles (default None assigns each node to its own bin)
+    cmap : string
+        name of a colormap
+    start : float
+        where to start in the colorspace
+    stop : float
+        where to end in the colorspace
+    
+    Returns
+    -------
+    list
+    """
+    if num_bins is None:
+        num_bins=len(G.nodes())
+    bin_labels = range(num_bins)
+    attr_values = pd.Series([data[attr] for node, data in G.nodes(data=True)])
+    cats = pd.qcut(x=attr_values, q=num_bins, labels=bin_labels)
+    colors = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, num_bins)]
+    node_colors = [colors[cat] for cat in cats]
+    return node_colors
+    
+    
 def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1):
     """
     Get a list of edge colors by binning some continuous-variable attribute into quantiles.
@@ -106,12 +138,14 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1
     -------
     list
     """
+    if num_bins is None:
+        num_bins=len(G.edges())
     bin_labels = range(num_bins)
     attr_values = pd.Series([data[attr] for u, v, key, data in G.edges(keys=True, data=True)])
     cats = pd.qcut(x=attr_values, q=num_bins, labels=bin_labels)
-    color_list = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, num_bins)]
-    colors = [color_list[cat] for cat in cats]
-    return colors
+    colors = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, num_bins)]
+    edge_colors = [colors[cat] for cat in cats]
+    return edge_colors
     
     
 def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off):
