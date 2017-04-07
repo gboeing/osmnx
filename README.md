@@ -1,6 +1,8 @@
 [![PyPI version](https://badge.fury.io/py/OSMnx.svg)](https://badge.fury.io/py/OSMnx)
 [![Build Status](https://travis-ci.org/gboeing/osmnx.svg?branch=master)](https://travis-ci.org/gboeing/osmnx)
 [![Coverage Status](https://coveralls.io/repos/github/gboeing/osmnx/badge.svg?branch=master)](https://coveralls.io/github/gboeing/osmnx?branch=master)
+[![Documentation Status](https://readthedocs.org/projects/osmnx/badge/?version=latest)](http://osmnx.readthedocs.io/en/latest/?badge=latest)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/osmnx/badges/downloads.svg)](https://anaconda.org/conda-forge/osmnx)
 
 # OSMnx
 
@@ -32,6 +34,8 @@ extended_stats = ox.extended_stats(G)
 print(extended_stats['pagerank_max_node'])
 ```
 
+You can just as easily download and work with building footprints, elevation data, and network routing.
+
 ## Installation
 
 You can install OSMnx with [conda](https://anaconda.org/conda-forge/osmnx):
@@ -52,7 +56,9 @@ use [conda-forge](https://anaconda.org/conda-forge/geopandas) to get these depen
 
 ## Documentation
 
-Available on [readthedocs](https://osmnx.readthedocs.io/en/stable/).
+Documentation available at [readthedocs](https://osmnx.readthedocs.io/en/stable/).
+
+Examples available in the [examples directory](examples).
 
 ## How to use OSMnx
 
@@ -123,12 +129,14 @@ For examples of saving and loading networks to/from disk, see [this notebook](ex
 ### Analyze and visualize street networks
 
 OSMnx allows you to calculate origin-destination routes along the network and quickly visualize them. You can easily
-visualize one-way streets, cul de sacs, high/low connectivity intersections, etc. OSMnx provides built-in capabilities
-to quickly calculate spatial network metrics like intersection density, average intersection degree, edge density, 
-average street segment length, clustering coefficients, betweenness centrality, etc. 
+visualize elevation, street grade, one-way streets, cul de sacs, high/low connectivity intersections, building footprints, 
+etc. OSMnx provides built-in capabilities to quickly calculate spatial network metrics like intersection density, average 
+intersection degree, edge density, average street segment length, clustering coefficients, betweenness centrality, etc. 
 
 For examples of analyzing street networks with OSMnx, see [this notebook](examples/06-example-osmnx-networkx.ipynb).
 
 ## More info
 
 For a more complete overview of [OSMnx, read this](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
+
+For more examples, see the [examples directory](examples).
