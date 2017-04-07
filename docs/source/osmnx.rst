@@ -20,6 +20,14 @@ osmnx.core module
     :undoc-members:
     :show-inheritance:
 
+osmnx.elevation module
+----------------------
+
+.. automodule:: osmnx.elevation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 osmnx.globals module
 --------------------
 
