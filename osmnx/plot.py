@@ -84,6 +84,51 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6
     return fig, ax
 
 
+def rgb_color_list_to_hex(color_list):
+    """
+    Convert a list of RGBa colors to a list of hexadecimal color codes.
+    
+    Parameters
+    ----------
+    color_list : list
+        the list of RGBa colors
+    
+    Returns : list
+    """
+    color_list_rgb = [[int(x*255) for x in c[0:3]] for c in color_list]
+    return ['#{:02X}{:02X}{:02X}'.format(rgb[0], rgb[1], rgb[2]) for rgb in color_list_rgb]
+
+    
+def get_colors(n, cmap='viridis', start=0., stop=1., alpha=1., return_hex=False):
+    """
+    Return n-length list of RGBa colors from the passed colormap name and alpha.
+    
+    Parameters
+    ----------
+    n : int
+        number of colors
+    cmap : string
+        name of a colormap
+    start : float
+        where to start in the colorspace
+    stop : float
+        where to end in the colorspace
+    alpha : float
+        x
+    return_hex : bool
+        if True, convert RGBa colors to a hexadecimal string
+        
+    Returns
+    -------
+    colors : list
+    """
+    colors = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, n)]
+    colors = [(r, g, b, alpha) for r, g, b, _ in colors]
+    if return_hex:
+        colors = rgb_color_list_to_hex(colors)
+    return colors
+    
+    
 def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, stop=1):
     """
     Get a list of node colors by binning some continuous-variable attribute into quantiles.
@@ -111,7 +156,7 @@ def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, sto
     bin_labels = range(num_bins)
     attr_values = pd.Series([data[attr] for node, data in G.nodes(data=True)])
     cats = pd.qcut(x=attr_values, q=num_bins, labels=bin_labels)
-    colors = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, num_bins)]
+    colors = get_colors(num_bins, cmap, start, stop)
     node_colors = [colors[cat] for cat in cats]
     return node_colors
     
@@ -143,7 +188,7 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1
     bin_labels = range(num_bins)
     attr_values = pd.Series([data[attr] for u, v, key, data in G.edges(keys=True, data=True)])
     cats = pd.qcut(x=attr_values, q=num_bins, labels=bin_labels)
-    colors = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, num_bins)]
+    colors = get_colors(num_bins, cmap, start, stop)
     edge_colors = [colors[cat] for cat in cats]
     return edge_colors
     
