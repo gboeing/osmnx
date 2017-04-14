@@ -930,7 +930,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buff
             possible_matches = gdf.iloc[possible_matches_index]
             precise_matches = possible_matches[possible_matches.intersects(poly)]
             points_within_geometry = points_within_geometry.append(precise_matches)
-    
+
     if len(points_within_geometry) > 0:
         # drop duplicate points, if buffered poly caused an overlap on point(s) that lay directly on a quadrat line
         points_within_geometry = points_within_geometry.drop_duplicates(subset='node')
