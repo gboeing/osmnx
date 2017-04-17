@@ -942,7 +942,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buff
     return points_within_geometry
 
 
-def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False):
+def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.025, min_num=3, buffer_amount=1e-9):
     """
     Remove every node in graph that falls outside some shapely Polygon or MultiPolygon.
 
@@ -954,7 +954,17 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False)
     retain_all : bool
         if True, return the entire graph even if it is not connected
     truncate_by_edge : bool
-        if True retain node if it's outside polygon but at least one of node's neighbors are within polygon (NOT CURRENTLY IMPLEMENTED)
+        if True retain node if it's outside polygon but at least one of node's neighbors 
+        are within polygon (NOT CURRENTLY IMPLEMENTED)
+    quadrat_width : numeric
+        passed on to intersect_index_quadrats: the linear length (in degrees) of the quadrats 
+        with which to cut up the geometry (default = 0.025, approx 2km at NYC's latitude)
+    min_num : int
+        passed on to intersect_index_quadrats: the minimum number of linear quadrat lines 
+        (e.g., min_num=3 would produce a quadrat grid of 4 squares)
+    buffer_amount : numeric
+        passed on to intersect_index_quadrats: buffer the quadrat grid lines by 
+        quadrat_width times buffer_amount
 
     Returns
     -------
@@ -971,7 +981,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False)
     gdf_nodes.crs = G.graph['crs']
 
     # find all the nodes in the graph that lie outside the polygon
-    points_within_geometry = intersect_index_quadrats(gdf_nodes, polygon)
+    points_within_geometry = intersect_index_quadrats(gdf_nodes, polygon, quadrat_width=quadrat_width, min_num=min_num, buffer_amount=buffer_amount)
     nodes_outside_polygon = gdf_nodes[~gdf_nodes.index.isin(points_within_geometry.index)]
 
     # now remove from the graph all those nodes that lie outside the place polygon
