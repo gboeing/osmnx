@@ -79,9 +79,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
         folder = globals.data_folder
 
     # convert directed graph G to an undirected graph for saving as a shapefile
-    G_save = G.copy()
-    G_save = get_undirected(G_save)
-
+    G_save = get_undirected(G.copy())
 
     # create a GeoDataFrame of the nodes and set CRS
     nodes = {node:data for node, data in G_save.nodes(data=True)}
@@ -249,9 +247,71 @@ def load_graphml(filename, folder=None):
     return G
 
 
+def is_duplicate_edge(data, data_other):
+    """
+    Check if two edge data dictionaries are the same based on OSM ID and geometry.
+
+    Parameters
+    ----------
+    data : dict
+        the first edge's data
+    data_other : dict
+        the second edge's data
+
+    Returns
+    -------
+    is_dupe : bool
+    """
+    
+    is_dupe = False
+    
+    if data['osmid'] == data_other['osmid']:
+        # if they have the same OSM IDs
+        if ('geometry' in data) and ('geometry' in data_other):
+            # if both edges have a geometry attribute
+            if is_same_geometry(data, data_other):
+                # if their edge geometries have the same coordinates
+                is_dupe = True
+        elif ('geometry' in data) and ('geometry' in data_other):
+            # if neither edge has a geometry attribute
+            is_dupe = True
+        else:
+            # if one edge has geometry attribute but the other doesn't, keep it
+            pass
+
+    return is_dupe
+    
+    
+def is_same_geometry(data, data_other):
+    """
+    Check if LineString geometries in two edge data dicts are the same, in normal or reversed order of points.
+
+    Parameters
+    ----------
+    data : dict
+        the first edge's data
+    data_other : dict
+        the second edge's data
+
+    Returns
+    -------
+    bool
+    """
+    
+    # extract geometries from each edge data dict
+    geom1 = [list(coords) for coords in data['geometry'].xy]
+    geom2 = [list(coords) for coords in data_other['geometry'].xy]
+    
+    # reverse the first edge's list of x's and y's to look for a match in either order
+    geom1_r = [list(reversed(list(coords))) for coords in data['geometry'].xy]
+    
+    # if the edge's geometry matches its reverse's geometry in either order, return True
+    return (geom1 == geom2 or geom1_r == geom2)
+    
+    
 def get_undirected(G):
     """
-    Convert a directed graph to an undirected graph that maintains parallel edges in opposite directions if geometries differ.
+    Convert a directed graph to an undirected graph that maintains parallel edges if geometries differ.
 
     Parameters
     ----------
@@ -261,41 +321,48 @@ def get_undirected(G):
     -------
     networkx multigraph
     """
-    # set from/to nodes and then make undirected
+    
+    start_time = time.time()
+    
+    # set from/to nodes before making graph undirected
     G = G.copy()
     for u, v, key in G.edges(keys=True):
         G.edge[u][v][key]['from'] = u
         G.edge[u][v][key]['to'] = v
+    
+    # now convert multidigraph to a multigraph, retaining all edges for now
+    H = nx.MultiGraph()
+    H.name = G.name
+    H.add_nodes_from(G)
+    H.add_edges_from(G.edges(keys=False, data=True))
+    H.graph = G.graph
+    H.node = G.node
+    
+    # the previous operation added all directed edges from G as undirected edges in H
+    # this means we have duplicate edges for every bi-directional street
+    # so, look through the edges and remove any duplicates
+    duplicate_edges = []
+    for u, v, key, data in H.edges(keys=True, data=True):
 
-    G_undir = G.to_undirected(reciprocal=False)
+        # if we haven't already flagged this edge as a duplicate
+        if not (u, v, key) in duplicate_edges:
 
-    # if edges in both directions (u,v) and (v,u) exist in the graph,
-    # attributes for the new undirected edge will be a combination of the attributes of the directed edges.
-    # if both edges exist in digraph and their edge data is different,
-    # only one edge is created with an arbitrary choice of which edge data to use.
-    # you need to manually retain edges in both directions between nodes if their geometries are different
-    # this is necessary to save shapefiles for weird intersections like the one at 41.8958697,-87.6794924
-    # find all edges (u,v) that have a parallel edge going the opposite direction (v,u) with a different osmid
-    for u, v, key, data in G.edges(keys=True, data=True):
-        try:
-            # look at each edge going the opposite direction (from v to u)
-            for key2 in G.edge[v][u]:
-                # if this edge has geometry and its osmid is different from its reverse's
-                if 'geometry' in data and not data['osmid'] == G.edge[v][u][key2]['osmid']:
-                    # turn the geometry of each edge into lists of x's and y's
-                    geom1 = [list(coords) for coords in data['geometry'].xy]
-                    geom2 = [list(coords) for coords in G_undir[u][v][key]['geometry'].xy]
-                    # reverse the first edge's list of x's and y's to look for a match in either order
-                    geom1_r = [list(reversed(list(coords))) for coords in data['geometry'].xy]
-                    # if the edge's geometry doesn't match its reverse's geometry in either order
-                    if not (geom1 == geom2 or geom1_r == geom2):
-                        # add it as a new edge to the graph to be saved (with key equal to the current largest key plus one)
-                        new_key = max(G.edge[u][v]) + 1
-                        G_undir.add_edge(u, v, new_key, **data)
-        except:
-            pass
+            # look at this first edge's parallel edges one at a time
+            for key_other in H.edge[u][v]:
 
-    return G_undir
+                # don't compare this edge to itself
+                if not key_other == key:
+
+                    # compare the first edge's data to the second's to see if they are duplicates
+                    if is_duplicate_edge(data, H.edge[u][v][key_other]):
+
+                        # if they match up, flag the duplicate for removal
+                        duplicate_edges.append((u, v, key_other))
+                        
+    H.remove_edges_from(duplicate_edges)
+    log('Made undirected graph in {:,.2f} seconds'.format(time.time() - start_time))
+    
+    return H
 
 
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
