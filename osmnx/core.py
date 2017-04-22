@@ -1483,6 +1483,11 @@ def graph_from_place(query, network_type='all_private', simplify=True, retain_al
                      truncate_by_edge=False, name='unnamed', which_result=1, buffer_dist=None, timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some geocodable place(s).
+    
+    The query must be geocodable and OSM must have polygon boundaries for the geocode result. If OSM
+    does not have a polygon for this place, you can instead get its street network using the
+    graph_from_address function, which geocodes the place name to a point and gets the network within
+    some distance of that point.
 
     Parameters
     ----------
