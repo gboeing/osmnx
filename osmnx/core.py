@@ -1487,7 +1487,10 @@ def graph_from_place(query, network_type='all_private', simplify=True, retain_al
     The query must be geocodable and OSM must have polygon boundaries for the geocode result. If OSM
     does not have a polygon for this place, you can instead get its street network using the
     graph_from_address function, which geocodes the place name to a point and gets the network within
-    some distance of that point.
+    some distance of that point. Alternatively, you might try to vary the which_result parameter to
+    use a different geocode result. For example, the first geocode result (ie, the default) might
+    resolve to a point geometry, but the second geocode result for this query might resolve to a 
+    polygon, in which case you can use graph_from_place with which_result=2.
 
     Parameters
     ----------
@@ -1513,7 +1516,7 @@ def graph_from_place(query, network_type='all_private', simplify=True, retain_al
         server memory allocation size for the query, in bytes. If none, server will use its default allocation size
     max_query_area_size : float
         max size for any part of the geometry, in square degrees: any polygon bigger will get divided up for multiple queries to API
-    clean_periphery : bool,
+    clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than requested,
         then simplify, then truncate it to requested spatial extent
 
