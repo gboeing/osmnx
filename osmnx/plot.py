@@ -93,10 +93,13 @@ def rgb_color_list_to_hex(color_list):
     color_list : list
         the list of RGBa colors
 
-    Returns : list
+    Returns
+    -------
+    color_list_hex : list
     """
     color_list_rgb = [[int(x*255) for x in c[0:3]] for c in color_list]
-    return ['#{:02X}{:02X}{:02X}'.format(rgb[0], rgb[1], rgb[2]) for rgb in color_list_rgb]
+    color_list_hex = ['#{:02X}{:02X}{:02X}'.format(rgb[0], rgb[1], rgb[2]) for rgb in color_list_rgb]
+    return color_list_hex
 
 
 def get_colors(n, cmap='viridis', start=0., stop=1., alpha=1., return_hex=False):
@@ -114,7 +117,7 @@ def get_colors(n, cmap='viridis', start=0., stop=1., alpha=1., return_hex=False)
     stop : float
         where to end in the colorspace
     alpha : float
-        x
+        opacity, the alpha channel for the RGBa colors
     return_hex : bool
         if True, convert RGBa colors to a hexadecimal string
 
