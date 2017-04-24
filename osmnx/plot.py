@@ -39,10 +39,10 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6
     ----------
     gdf : GeoDataFrame
         the gdf containing the geometries to plot
-    fc : string
-        the facecolor for the polygons
-    ec : string
-        the edgecolor for the polygons
+    fc : string or list
+        the facecolor (or list of facecolors) for the polygons
+    ec : string or list
+        the edgecolor (or list of edgecolors) for the polygons
     linewidth : numeric
         the width of the polygon edge lines
     alpha : numeric
@@ -58,14 +58,21 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6
     -------
     fig, ax : tuple
     """
+    
+    # if facecolor or edgecolor is a string instead of a list, make sure we have as many colors as gdf elements
+    if isinstance(fc, str):
+        fc = [fc] * len(gdf)
+    if isinstance(ec, str):
+        ec = [ec] * len(gdf)
+      
     # plot the geometries one at a time
     fig, ax = plt.subplots(figsize=figsize)
-    for geometry in gdf['geometry'].tolist():
+    for geometry, facecolor, edgecolor in zip(gdf['geometry'], fc, ec):
         if isinstance(geometry, (Polygon, MultiPolygon)):
             if isinstance(geometry, Polygon):
                 geometry = MultiPolygon([geometry])
             for polygon in geometry:
-                patch = PolygonPatch(polygon, fc=fc, ec=ec, linewidth=linewidth, alpha=alpha)
+                patch = PolygonPatch(polygon, fc=facecolor, ec=edgecolor, linewidth=linewidth, alpha=alpha)
                 ax.add_patch(patch)
         else:
             raise ValueError('All geometries in GeoDataFrame must be shapely Polygons or MultiPolygons')
