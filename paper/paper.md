@@ -14,7 +14,10 @@ tags:
 authors:
   - name: Geoff Boeing
     orcid: 0000-0003-1851-6411
-    affiliation: University of California, Berkeley
+    affiliation: 1
+affiliations:
+  - name: University of California, Berkeley
+    index: 1
 date: 17 March 2017
 bibliography: paper.bib
 repository: https://github.com/gboeing/osmnx
@@ -27,21 +30,21 @@ it into NetworkX graphs. OSMnx can simplify and correct the network's
 topology automatically to ensure that nodes actually exclusively represent intersections and 
 dead-ends. Once the network is constructed and corrected, OSMnx can calculate shortest paths from 
 one node to another. It can also calculate various network measures relevant to urban design and 
-transportation (Ewing and Cervero 2010) as well as statistical physics (Newman 2010; Barthélemy 2011), 
+transportation [@ewing_travel_2010] as well as statistical physics [@newman_networks:_2010; @barthelemy_spatial_2011], 
 including intersection density, average intersection degree, edge density, average street segment 
-length, circuity (Giacomin and Levinson 2015), clustering coefficients, betweenness centrality 
-(Crucitti et al. 2006), closeness centrality, PageRank (Brin and Page 1998), and many more. Its built-in
+length, circuity [@giacomin_road_2015], clustering coefficients, betweenness centrality 
+[@crucitti_centrality_2006], closeness centrality, PageRank [@brin_anatomy_1998], and many more. Its built-in
 visualization capabilities leverage matplotlib to easily plot routes (Figure 1), one-way streets, 
 dead-ends, high/low connectivity intersections, and figure-ground diagrams of street networks and 
 urban form (Figure 2).
 
-OpenStreetMap presents an important new source of geospatial network data (Jokar Arsanjani 2015; 
-Karduni et al. 2016). This package makes it easy to work with OpenStreetMap data for urban planning, 
+OpenStreetMap presents an important new source of geospatial network data [@jokar_arsanjani_openstreetmap_2015; 
+@karduni_protocol_2016]. This package makes it easy to work with OpenStreetMap data for urban planning, 
 transportation engineering, and network analysis purposes. Although scholars in urban studies and 
 physics have studied street networks in numerous ways, the existing software landscape limits 
 researchers' capabilities. The labor-intensive challenge of compiling street network data sets, 
 especially for multiple countries, tends to limit sample sizes and most studies fall back on planar 
-representations of the graph for tractibility (e.g., Porta et al. 2006; Strano et al. 2013). There 
+representations of the graph for tractibility [e.g., @porta_network_2006; @strano_urban_2013]. There 
 is currently no ideal tool that offers a consistent, scalable, configurable method for collecting 
 street network data from anywhere in the world and assembling it into graph-theoretic objects (rather 
 than simple spatial geometries).
