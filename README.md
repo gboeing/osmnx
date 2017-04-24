@@ -10,10 +10,12 @@
 
 Retrieve, construct, analyze, and visualize street networks from OpenStreetMap: [full overview](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
 
+**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](http://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Manuscript under review*. doi:10.2139/ssrn.2865501.
+
 ## Overview
 
-**OSMnx** is a Python 2+3 package that lets you download spatial geometries and construct, project, visualize, 
-and analyze street networks from OpenStreetMap's APIs. Users can download and construct walkable, drivable, or bikable 
+**OSMnx** is a Python 2+3 package that lets you download spatial geometries and construct, project, visualize,
+and analyze street networks from OpenStreetMap's APIs. Users can download and construct walkable, drivable, or bikable
 urban networks with a single line of Python code, and then easily analyze and visualize them:
 
 ```python
@@ -50,8 +52,8 @@ Or with [pip](https://pypi.python.org/pypi/OSMnx):
 pip install osmnx
 ```
 
-If you are pip installing OSMnx, install [geopandas](http://geoffboeing.com/2014/09/using-geopandas-windows/) 
-and [rtree](http://geoffboeing.com/2016/10/r-tree-spatial-index-python/) first. It's easiest to 
+If you are pip installing OSMnx, install [geopandas](http://geoffboeing.com/2014/09/using-geopandas-windows/)
+and [rtree](http://geoffboeing.com/2016/10/r-tree-spatial-index-python/) first. It's easiest to
 use [conda-forge](https://anaconda.org/conda-forge/geopandas) to get these dependencies installed.
 
 ## Documentation
@@ -66,7 +68,7 @@ For a quick demo overview of OSMnx, see this [demo notebook](examples/01-overvie
 
 ### Create place boundary shapefiles from OpenStreetMap
 
-OSMnx lets you download spatial "place boundary" geometries from OpenStreetMap (for cities, counties, states, countries, boroughs, etc.), save them to shapefiles, 
+OSMnx lets you download spatial "place boundary" geometries from OpenStreetMap (for cities, counties, states, countries, boroughs, etc.), save them to shapefiles,
 project them, and plot them. For example, to retrieve, construct, and save a shapefile of Berkeley's administrative boundaries:
 
 ```python
@@ -78,8 +80,8 @@ For a more in-depth demonstration of creating these shapefiles, see [this notebo
 
 ### Download and construct street networks
 
-OSMnx lets you download street network data and build topologically-corrected street networks, project to UTM and plot the 
-networks, and save the street network as SVGs, GraphML files, or shapefiles for later use. The street networks are 
+OSMnx lets you download street network data and build topologically corrected street networks, project to UTM and plot the
+networks, and save the street network as SVGs, GraphML files, or shapefiles for later use. The street networks are
 directed and preserve one-way directionality. API responses are cached locally so OSMnx doesn't have to request the same
 data from the API multiple times, saving bandwidth and increasing speed.
 
@@ -97,7 +99,7 @@ You can also specify several different network types:
   - `bike` - get all streets and paths that cyclists can use
   - `all` - download all non-private OSM streets and paths
   - `all_private` - download all OSM streets and paths, including private-access ones
-  
+
 For example, to download, construct, project, and plot Manhattan's drivable street network:
 
 ```python
@@ -109,11 +111,11 @@ For an in-depth demonstration of creating street networks, see [this notebook](e
 
 ### Correct and simplify street network topology
 
-Simplification is normally done by OSMnx automatically under the hood, but we can break it out to see how it works. 
-OpenStreetMap nodes include intersections, but they also include all the points along a single block where 
-the street curves. The latter are not nodes in the graph theory sense, so we remove them algorithmically and consolidate the 
-set of edges between "true" network nodes into a single edge, but retain the actual spatial geometry. There are two 
-simplification modes, strict and non-strict. The main difference is that unlike strict mode, non-strict mode allows 
+Simplification is normally done by OSMnx automatically under the hood, but we can break it out to see how it works.
+OpenStreetMap nodes include intersections, but they also include all the points along a single block where
+the street curves. The latter are not nodes in the graph theory sense, so we remove them algorithmically and consolidate the
+set of edges between "true" network nodes into a single edge, but retain the actual spatial geometry. There are two
+simplification modes, strict and non-strict. The main difference is that unlike strict mode, non-strict mode allows
 simplification to an *expansion graph*.
 
 For an in-depth demonstration of topological simplification with OSMnx, see [this notebook](examples/04-example-simplify-network.ipynb).
@@ -122,21 +124,23 @@ For an in-depth demonstration of topological simplification with OSMnx, see [thi
 
 OSMnx allows users to save street networks to disk as shapefiles to work with in GIS software, as GraphML files
 to work with in Gephi or NetworkX, and as SVG files to work with in Illustrator. It also allows you to save place
-boundary geometries as shapefiles. 
+boundary geometries as shapefiles.
 
 For examples of saving and loading networks to/from disk, see [this notebook](examples/05-example-save-load-networks-shapes.ipynb).
 
 ### Analyze and visualize street networks
 
 OSMnx allows you to calculate origin-destination routes along the network and quickly visualize them. You can easily
-visualize elevation, street grade, one-way streets, cul de sacs, high/low connectivity intersections, building footprints, 
-etc. OSMnx provides built-in capabilities to quickly calculate spatial network metrics like intersection density, average 
-intersection degree, edge density, average street segment length, clustering coefficients, betweenness centrality, etc. 
+visualize elevation, street grade, one-way streets, cul de sacs, high/low connectivity intersections, building footprints,
+etc. OSMnx provides built-in capabilities to quickly calculate spatial network metrics like intersection density, average
+intersection degree, edge density, average street segment length, clustering coefficients, betweenness centrality, etc.
 
 For examples of analyzing street networks with OSMnx, see [this notebook](examples/06-example-osmnx-networkx.ipynb).
 
 ## More info
 
 For a more complete overview of [OSMnx, read this](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
+
+Download/cite the [journal article here](http://geoffboeing.com/publications/osmnx-complex-street-networks/).
 
 For more examples, see the [examples directory](examples).
