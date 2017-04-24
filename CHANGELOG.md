@@ -1,5 +1,13 @@
 # Change log
 
+## 0.5
+  - add elevation module to get node elevations and street grades
+  - new color sequence creation and conversion functions in plot module
+  - new function to get a path's edge attribute values
+  - gracefully handle subpolygons that are invalid or have zero area
+  - make truncate_graph_polygon work on projected graphs
+  - rewrite algorithms to convert multidigraphs to multigraphs 
+
 ## 0.4.1 (2017-04-01)
   - fix load_graphml so we can save a graph again after loading it
   - fix load_graphml so edge oneway attribute is not always set to True
