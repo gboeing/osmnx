@@ -1,6 +1,6 @@
 # Change log
 
-## 0.5
+## 0.5 (2017-04-25)
   - add elevation module to get node elevations and street grades
   - new color sequence creation and conversion functions in plot module
   - new function to get a path's edge attribute values
