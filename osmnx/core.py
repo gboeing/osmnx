@@ -98,6 +98,32 @@ def get_from_cache(url):
             log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_path_filename, url))
             return response_json
 
+            
+def get_http_headers(user_agent=None, referer=None):
+    """
+    Update the default reqeuests HTTP headers with OSMnx info.
+
+    Parameters
+    ----------
+    user_agent : str
+        the user agent string, if None will set with OSMnx default
+    referer : str
+        the referer string, if None will set with OSMnx default
+
+    Returns
+    -------
+    headers : dict
+    """
+    
+    if user_agent is None:
+        user_agent = 'Python OSMnx package (https://github.com/gboeing/osmnx)'
+    if referer is None:
+        referer = 'Python OSMnx package (https://github.com/gboeing/osmnx)'
+        
+    headers = requests.utils.default_headers()
+    headers.update({'User-Agent': user_agent, 'referer': referer})
+    return headers            
+
 
 def get_pause_duration(recursive_delay=5, default_duration=10):
     """
@@ -115,7 +141,7 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
     int
     """
     try:
-        response = requests.get('http://overpass-api.de/api/status')
+        response = requests.get('http://overpass-api.de/api/status', headers=get_http_headers())
         status = response.text.split('\n')[3]
         status_first_token = status.split(' ')[0]
     except:
@@ -183,7 +209,7 @@ def nominatim_request(params, pause_duration=1, timeout=30, error_pause_duration
         time.sleep(pause_duration)
         start_time = time.time()
         log('Requesting {} with timeout={}'.format(prepared_url, timeout))
-        response = requests.get(url, params=params, timeout=timeout)
+        response = requests.get(url, params=params, timeout=timeout, headers=get_http_headers())
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
@@ -246,7 +272,7 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
         time.sleep(this_pause_duration)
         start_time = time.time()
         log('Posting to {} with timeout={}, "{}"'.format(url, timeout, data))
-        response = requests.post(url, data=data, timeout=timeout)
+        response = requests.post(url, data=data, timeout=timeout, headers=get_http_headers())
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
