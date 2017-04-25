@@ -6,6 +6,8 @@
   - new function to get a path's edge attribute values
   - gracefully handle subpolygons that are invalid or have zero area
   - make truncate_graph_polygon work on projected graphs
+  - plot_shape accepts a color or a list of colors
+  - make all requests to Overpass API set custom user-agent and referer
   - rewrite algorithms to convert multidigraphs to multigraphs 
 
 ## 0.4.1 (2017-04-01)
