@@ -1,5 +1,4 @@
-If you're having trouble with OSMnx, first search the previously opened issues to see if the problem has already been noted. 
-If not, fill in the template below. You can delete any sections that don't apply.
+If you're having trouble with OSMnx, first search the previously opened issues to see if the problem has already been noted. If not, fill in the template below. You can delete any sections that don't apply.
 
 #### Problem description (what did you do, what did you expect to happen, and what actually happened)
 
@@ -8,7 +7,7 @@ If not, fill in the template below. You can delete any sections that don't apply
 #### Complete list of your environment's packages and their versions (for example, run `conda list` or `pip list` then paste the output below)
 
 <details>
-# Paste the output of your Python packages and their versions here
+# Paste the output of your Python packages and their versions here, between these two "details" tags
 
 </details>
 
