@@ -7,9 +7,12 @@
 
 import time
 import logging as lg
-from shapely.geometry import Point, LineString
+import geopandas as gpd
+from shapely.geometry import Polygon, Point, LineString
 
 from .utils import log
+from .stats import count_streets_per_node
+from .save_load import graph_to_gdfs
 
 
 def is_endpoint(G, node, strict=True):
@@ -258,3 +261,53 @@ def simplify_graph(G_, strict=True):
     msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
     log(msg.format(initial_node_count, len(list(G.nodes())), initial_edge_count, len(list(G.edges())), time.time()-start_time))
     return G
+
+    
+def clean_intersections(G, tolerance=15, dead_ends=False):
+    """
+    Clean-up intersections comprising clusters of nodes by merging them and returning their centroids.
+
+    Divided roads are represented by separate centerline edges. The intersection of two divided roads
+    thus creates 4 nodes, representing where each edge intersects a perpendicular edge. These 4 nodes
+    represent a single intersection in the real world. This function cleans them up by buffering their
+    points to an arbitrary distance, merging overlapping buffers, and taking their centroid. For best
+    results, the tolerance argument should be adjusted to approximately match street design standards
+    in the specific street network.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    tolerance : float
+        nodes within this distance (in graph's geometry's units) will be dissolved into a single intersection
+    dead_ends : bool
+        if False, discard dead-end nodes to return only street-intersection points 
+
+    Returns
+    ----------
+    intersection_centroids : geopandas.GeoSeries
+        a GeoSeries of shapely Points representing the centroids of street intersections
+    """
+    
+    # if dead_ends is False, discard dead-end nodes to only work with edge intersections
+    if not dead_ends:
+        if 'streets_per_node' in G.graph:
+            streets_per_node = G.graph['streets_per_node']
+        else:
+            streets_per_node = count_streets_per_node(G)
+
+        dead_end_nodes = [node for node, count in streets_per_node.items() if count <= 1]
+        G = G.copy()
+        G.remove_nodes_from(dead_end_nodes)
+    
+    # create a GeoDataFrame of nodes, buffer to passed-in distance, merge overlaps
+    gdf_nodes = graph_to_gdfs(G, edges=False)
+    buffered_nodes = gdf_nodes.buffer(tolerance).unary_union
+    if isinstance(buffered_nodes, Polygon):
+        # if only a single node results, make it iterable so we can turn it into a GeoSeries
+        buffered_nodes = [buffered_nodes]
+        
+    # get the centroids of the merged intersection polygons
+    unified_intersections = gpd.GeoSeries(list(buffered_nodes))
+    intersection_centroids = unified_intersections.centroid
+    return intersection_centroids
+
