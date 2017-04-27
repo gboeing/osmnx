@@ -103,6 +103,7 @@ def test_plots():
     fig, ax = ox.plot_graph(G_simplified, show=False, save=True, close=True, file_format='svg')
 
     G_projected = ox.project_graph(G_simplified)
+    intersections = ox.clean_intersections(G_projected)
     fig, ax = ox.plot_graph(G_projected)
 
     fig, ax = ox.plot_graph(G_projected, fig_height=5, fig_width=5, margin=0.05, axis_off=False, bgcolor='y',
