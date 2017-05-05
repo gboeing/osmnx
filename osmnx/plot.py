@@ -850,7 +850,7 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
 
     # plot the figure
     fig, ax = plot_graph(G_undir, bbox=bbox_proj, fig_height=fig_length, margin=0, axis_off=True, equal_aspect=True, bgcolor=bgcolor,
-                         node_size=node_sizes, node_color='w', edge_linewidth=edge_linewidths, edge_color=edge_color,
+                         node_size=node_sizes, node_color=edge_color, edge_linewidth=edge_linewidths, edge_color=edge_color,
                          show=show, save=save, close=close, filename=filename, file_format=file_format, dpi=dpi)
 
     return fig, ax
