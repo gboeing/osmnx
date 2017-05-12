@@ -22,7 +22,7 @@ from .utils import log, make_str
 
 def save_gdf_shapefile(gdf, filename=None, folder=None):
     """
-    Save GeoDataFrame as an ESRI shapefile.
+    Save a GeoDataFrame of place shapes or building footprints as an ESRI shapefile.
 
     Parameters
     ----------
@@ -37,6 +37,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
     -------
     None
     """
+    
     if folder is None:
         folder = globals.data_folder
 
@@ -45,11 +46,16 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
 
     # give the save folder a filename subfolder to make the full path to the files
     folder_path = '{}/{}'.format(folder, filename)
-
+    
+    # make everything but geometry column a string
+    for col in [c for c in gdf.columns if not c == 'geometry']:
+        gdf[col] = gdf[col].fillna('').map(make_str)
+        
     # if the save folder does not already exist, create it with a filename subfolder
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     gdf.to_file(folder_path)
+    
     if not hasattr(gdf, 'gdf_name'):
         gdf.gdf_name = 'unnamed'
     log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.gdf_name, folder_path))
