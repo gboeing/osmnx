@@ -1,5 +1,10 @@
 # Change log
 
+## 0.5.1 (2017-05-12)
+  - Functionality to clean-up and consolidate complex intersections
+  - Let save_gdf_shapefile save building footprint GeoDataFrames
+  - Set node color correctly in figure-ground diagrams
+
 ## 0.5 (2017-04-25)
   - add elevation module to get node elevations and street grades
   - new color sequence creation and conversion functions in plot module
