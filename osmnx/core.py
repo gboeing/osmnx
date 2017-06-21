@@ -452,7 +452,7 @@ def get_osm_filter(network_type):
     Parameters
     ----------
     network_type : string
-        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what type of street network to get
+        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private', 'none'} what type of street or other network to get
 
     Returns
     -------
@@ -488,7 +488,10 @@ def get_osm_filter(network_type):
 
     # to download all ways, including private-access ones, just filter out everything not currently in use
     filters['all_private'] = '["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
-
+    
+    # no filter, needed for infrastructures other than "highway"
+    filters['none'] = ''
+    
     if network_type in filters:
         osm_filter = filters[network_type]
     else:
@@ -497,7 +500,7 @@ def get_osm_filter(network_type):
     return osm_filter
 
 
-def osm_net_download(polygon=None, north=None, south=None, east=None, west=None, network_type='all_private', timeout=180, memory=None, max_query_area_size=50*1000*50*1000):
+def osm_net_download(polygon=None, north=None, south=None, east=None, west=None, network_type='all_private', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, infrastructure='way["highway"]'):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
 
@@ -522,7 +525,10 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     max_query_area_size : float
         max area for any part of the geometry, in the units the geometry is in: any polygon bigger will get divided up
         for multiple queries to API (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
-
+    infrastructure : string
+        download infrastructure of given type (default is streets (ie, 'way["highway"]') but other 
+        infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
+    
     Returns
     -------
     dict
@@ -564,7 +570,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         for poly in geometry:
             # represent bbox as south,west,north,east and round lat-longs to 8 decimal places (ie, within 1 mm) so URL strings aren't different due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = '[out:json][timeout:{timeout}]{maxsize};(way["highway"]{filters}({south:.8f},{west:.8f},{north:.8f},{east:.8f});>;);out;'
+            query_template = '[out:json][timeout:{timeout}]{maxsize};('+infrastructure+'{filters}({south:.8f},{west:.8f},{north:.8f},{east:.8f});>;);out;'
             query_str = query_template.format(north=north, south=south, east=east, west=west, filters=osm_filter, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
@@ -581,7 +587,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
 
         # pass each polygon exterior coordinates in the list to the API, one at a time
         for polygon_coord_str in polygon_coord_strs:
-            query_template = '[out:json][timeout:{timeout}]{maxsize};(way["highway"]{filters}(poly:"{polygon}");>;);out;'
+            query_template = '[out:json][timeout:{timeout}]{maxsize};('+infrastructure+'{filters}(poly:"{polygon}");>;);out;'
             query_str = query_template.format(polygon=polygon_coord_str, filters=osm_filter, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
@@ -1229,7 +1235,7 @@ def bbox_from_point(point, distance=1000, project_utm=False):
 
 
 def graph_from_bbox(north, south, east, west, network_type='all_private', simplify=True, retain_all=False, truncate_by_edge=False,
-                    name='unnamed', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True):
+                    name='unnamed', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True, infrastructure='way["highway"]'):
     """
     Create a networkx graph from OSM data within some bounding box.
 
@@ -1262,6 +1268,9 @@ def graph_from_bbox(north, south, east, west, network_type='all_private', simpli
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than requested,
         then simplify, then truncate it to requested spatial extent
+    infrastructure : string
+        download infrastructure of given type (default is streets (ie, 'way["highway"]') but other 
+        infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
 
     Returns
     -------
@@ -1279,7 +1288,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private', simpli
 
         # get the network data from OSM then create the graph
         response_jsons = osm_net_download(north=north_buffered, south=south_buffered, east=east_buffered, west=west_buffered,
-                                          network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size)
+                                          network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, infrastructure=infrastructure)
         G_buffered = create_graph(response_jsons, name=name, retain_all=retain_all, network_type=network_type)
         G = truncate_graph_bbox(G_buffered, north, south, east, west, retain_all=True, truncate_by_edge=truncate_by_edge)
 
@@ -1294,7 +1303,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private', simpli
 
     else:
         # get the network data from OSM
-        response_jsons = osm_net_download(north=north, south=south, east=east, west=west, network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size)
+        response_jsons = osm_net_download(north=north, south=south, east=east, west=west, network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, infrastructure=infrastructure)
 
         # create the graph, then truncate to the bounding box
         G = create_graph(response_jsons, name=name, retain_all=retain_all, network_type=network_type)
@@ -1310,7 +1319,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private', simpli
 
 
 def graph_from_point(center_point, distance=1000, distance_type='bbox', network_type='all_private', simplify=True, retain_all=False,
-                     truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True):
+                     truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True, infrastructure='way["highway"]'):
     """
     Create a networkx graph from OSM data within some distance of some (lat, lon) center point.
 
@@ -1342,6 +1351,9 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     clean_periphery : bool,
         if True (and simplify=True), buffer 0.5km to get a graph larger than requested,
         then simplify, then truncate it to requested spatial extent
+    infrastructure : string
+        download infrastructure of given type (default is streets (ie, 'way["highway"]') but other 
+        infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
 
     Returns
     -------
@@ -1357,7 +1369,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
     # create a graph from the bounding box
     G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify, retain_all=retain_all,
                         truncate_by_edge=truncate_by_edge, name=name, timeout=timeout, memory=memory,
-                        max_query_area_size=max_query_area_size, clean_periphery=clean_periphery)
+                        max_query_area_size=max_query_area_size, clean_periphery=clean_periphery, infrastructure=infrastructure)
 
     # if the network distance_type is network, find the node in the graph nearest to the center point, and truncate the graph by network distance from this node
     if distance_type == 'network':
@@ -1369,7 +1381,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox', network_
 
 
 def graph_from_address(address, distance=1000, distance_type='bbox', network_type='all_private', simplify=True, retain_all=False,
-                       truncate_by_edge=False, return_coords=False, name='unnamed', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True):
+                       truncate_by_edge=False, return_coords=False, name='unnamed', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True, infrastructure='way["highway"]'):
     """
     Create a networkx graph from OSM data within some distance of some address.
 
@@ -1403,6 +1415,9 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
     clean_periphery : bool,
         if True (and simplify=True), buffer 0.5km to get a graph larger than requested,
         then simplify, then truncate it to requested spatial extent
+    infrastructure : string
+        download infrastructure of given type (default is streets (ie, 'way["highway"]') but other 
+        infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
 
     Returns
     -------
@@ -1415,7 +1430,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
 
     # then create a graph from this point
     G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all,
-                         truncate_by_edge=truncate_by_edge, name=name, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, clean_periphery=clean_periphery)
+                         truncate_by_edge=truncate_by_edge, name=name, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, clean_periphery=clean_periphery, infrastructure=infrastructure)
     log('graph_from_address() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
 
     if return_coords:
@@ -1425,7 +1440,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox', network_typ
 
 
 def graph_from_polygon(polygon, network_type='all_private', simplify=True, retain_all=False,
-                       truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True):
+                       truncate_by_edge=False, name='unnamed', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True, infrastructure='way["highway"]'):
     """
     Create a networkx graph from OSM data within the spatial boundaries of the passed-in shapely polygon.
 
@@ -1452,7 +1467,10 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than requested,
         then simplify, then truncate it to requested spatial extent
-
+    infrastructure : string
+        download infrastructure of given type (default is streets (ie, 'way["highway"]') but other 
+        infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
+        
     Returns
     -------
     networkx multidigraph
@@ -1472,7 +1490,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
         polygon_buffered, crs = project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
 
         # get the network data from OSM,  create the buffered graph, then truncate it to the buffered polygon
-        response_jsons = osm_net_download(polygon=polygon_buffered, network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size)
+        response_jsons = osm_net_download(polygon=polygon_buffered, network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, infrastructure=infrastructure)
         G_buffered = create_graph(response_jsons, name=name, retain_all=True, network_type=network_type)
         G_buffered = truncate_graph_polygon(G_buffered, polygon_buffered, retain_all=True, truncate_by_edge=truncate_by_edge)
 
@@ -1488,7 +1506,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
 
     else:
         # download a list of API responses for the polygon/multipolygon
-        response_jsons = osm_net_download(polygon=polygon, network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size)
+        response_jsons = osm_net_download(polygon=polygon, network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, infrastructure=infrastructure)
 
         # create the graph from the downloaded data
         G = create_graph(response_jsons, name=name, retain_all=True, network_type=network_type)
@@ -1506,7 +1524,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
 
 
 def graph_from_place(query, network_type='all_private', simplify=True, retain_all=False,
-                     truncate_by_edge=False, name='unnamed', which_result=1, buffer_dist=None, timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True):
+                     truncate_by_edge=False, name='unnamed', which_result=1, buffer_dist=None, timeout=180, memory=None, max_query_area_size=50*1000*50*1000, clean_periphery=True, infrastructure='way["highway"]'):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some geocodable place(s).
     
@@ -1545,7 +1563,10 @@ def graph_from_place(query, network_type='all_private', simplify=True, retain_al
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than requested,
         then simplify, then truncate it to requested spatial extent
-
+    infrastructure : string
+        download infrastructure of given type (default is streets (ie, 'way["highway"]') but other 
+        infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
+        
     Returns
     -------
     networkx multidigraph
@@ -1568,7 +1589,7 @@ def graph_from_place(query, network_type='all_private', simplify=True, retain_al
 
     # create graph using this polygon(s) geometry
     G = graph_from_polygon(polygon, network_type=network_type, simplify=simplify, retain_all=retain_all,
-                           truncate_by_edge=truncate_by_edge, name=name, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, clean_periphery=clean_periphery)
+                           truncate_by_edge=truncate_by_edge, name=name, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, clean_periphery=clean_periphery, infrastructure=infrastructure)
 
     log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return G
