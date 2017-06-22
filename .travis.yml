@@ -12,14 +12,15 @@ before_install:
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
-  - conda config --set always_yes yes
-  - conda config --add channels conda-forge
-  - conda update --all
-  - conda info -a
-  
-install:
-  - conda create -n TESTENV python=$TRAVIS_PYTHON_VERSION pytest coverage coveralls requests numpy matplotlib pandas networkx Shapely Rtree descartes geopandas folium
+  - conda config --set always_yes yes --set show_channel_urls true
+  - conda update conda
+  - conda config --add channels conda-forge --force
+  - conda create --quiet --name TESTENV python=$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt
   - source activate TESTENV
+  - conda info --all
+  - conda list
+
+install:
   - pip install .
   - pip show osmnx
 
