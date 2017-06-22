@@ -9,7 +9,7 @@ import time
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Polygon, MultiPolygon, Point
 from descartes import PolygonPatch
 
 from .projection import project_geometry
