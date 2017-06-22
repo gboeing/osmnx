@@ -131,30 +131,32 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None, west=N
     GeoDataFrame
     """
 
-    results = osm_bldg_download(polygon, north, south, east, west)
+    responses = osm_bldg_download(polygon, north, south, east, west)
 
     vertices = {}
-    for result in results[0]['elements']:
-        if 'type' in result and result['type']=='node':
-            vertices[result['id']] = {'lat' : result['lat'],
-                                      'lon' : result['lon']}
+    for response in responses:
+        for result in response['elements']:
+            if 'type' in result and result['type']=='node':
+                vertices[result['id']] = {'lat' : result['lat'],
+                                          'lon' : result['lon']}
 
     buildings = {}
-    for result in results[0]['elements']:
-        if 'type' in result and result['type']=='way':
-            nodes = result['nodes']
-            try:
-                polygon = Polygon([(vertices[node]['lon'], vertices[node]['lat']) for node in nodes])
-            except:
-                log('Polygon has invalid geometry: {}'.format(nodes))
-            building = {'nodes' : nodes,
-                        'geometry' : polygon}
+    for response in responses:
+        for result in response['elements']:
+            if 'type' in result and result['type']=='way':
+                nodes = result['nodes']
+                try:
+                    polygon = Polygon([(vertices[node]['lon'], vertices[node]['lat']) for node in nodes])
+                except:
+                    log('Polygon has invalid geometry: {}'.format(nodes))
+                building = {'nodes' : nodes,
+                            'geometry' : polygon}
 
-            if 'tags' in result:
-                for tag in result['tags']:
-                    building[tag] = result['tags'][tag]
+                if 'tags' in result:
+                    for tag in result['tags']:
+                        building[tag] = result['tags'][tag]
 
-            buildings[result['id']] = building
+                buildings[result['id']] = building
 
     gdf = gpd.GeoDataFrame(buildings).T
     gdf.crs = {'init':'epsg:4326'}
