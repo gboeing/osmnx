@@ -101,7 +101,7 @@ def get_from_cache(url):
             
 def get_http_headers(user_agent=None, referer=None):
     """
-    Update the default reqeuests HTTP headers with OSMnx info.
+    Update the default requests HTTP headers with OSMnx info.
 
     Parameters
     ----------
