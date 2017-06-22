@@ -35,6 +35,9 @@ classifiers=['Development Status :: 5 - Production/Stable',
              'Programming Language :: Python :: 3.5',
              'Programming Language :: Python :: 3.6']
 
+with open('requirements.txt') as f:
+    tests_require = f.readlines()
+install_requires = [t.strip() for t in tests_require]
 
 # now call setup
 setup(name='osmnx',
@@ -48,14 +51,6 @@ setup(name='osmnx',
       license='MIT',
       platforms='any',
       packages=['osmnx'],
-      install_requires=['requests>=2.11',
-                        'numpy>=1.11',
-                        'pandas>=0.19',
-                        'geopandas>=0.2.1',
-                        'networkx>=1.11',
-                        'matplotlib>=2.0',
-                        'Shapely>=1.5',
-                        'descartes>=1.0',
-                        'Rtree>=0.8.3'],
+      install_requires=install_requires,
       extras_require={'folium':['folium>=0.2']})
 
