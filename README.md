@@ -10,7 +10,7 @@
 
 Retrieve, construct, analyze, and visualize street networks from OpenStreetMap: [full overview](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
 
-**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](http://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Manuscript under review*. doi:10.2139/ssrn.2865501.
+**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](http://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems*, forthcoming. doi:10.2139/ssrn.2865501.
 
 ## Overview
 

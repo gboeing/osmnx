@@ -16,7 +16,7 @@ or bikable urban networks with a single line of Python code, and then easily ana
 Citation info
 -------------
 
-Boeing, G. 2017. "`OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks`_." doi:10.2139/ssrn.2865501.
+Boeing, G. 2017. "`OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks`_." *Computers, Environment and Urban Systems*, forthcoming. doi:10.2139/ssrn.2865501.
 
 Installation
 ------------
