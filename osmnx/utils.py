@@ -285,8 +285,9 @@ def get_nearest_node(G, point, return_dist=False):
 
     Returns
     -------
-    networkx multidigraph or tuple
-        multidigraph or optionally (multidigraph, float)
+    int or tuple of (int, float)
+        nearest node ID or optionally (node ID, dist), where dist is the distance between
+        the point and nearest node
     """
     start_time = time.time()
 
