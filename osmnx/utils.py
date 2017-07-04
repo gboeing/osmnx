@@ -274,21 +274,24 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
 
 def get_nearest_node(G, point, return_dist=False):
     """
-    Return the graph node nearest to some specified point.
+    Return the graph node nearest to some specified (lat, lng) point, and optionally the 
+    distance between the node and the point.
 
     Parameters
     ----------
     G : networkx multidigraph
     point : tuple
-        the (lat, lon) point for which we will find the nearest node in the graph
+        The (lat, lng) point for which we will find the nearest node in the graph
     return_dist : bool
-        optionally also return the distance between the point and the nearest node
+        Optionally also return the distance (great circle distance, in meters) between 
+        the point and the nearest node. Graph nodes' coordinates must be in units of 
+        decimal degrees.
 
     Returns
     -------
     int or tuple of (int, float)
-        nearest node ID or optionally (node ID, dist), where dist is the distance between
-        the point and nearest node
+        Nearest node ID or optionally (node ID, dist), where dist is the distance 
+        (in meters)between the point and nearest node
     """
     start_time = time.time()
 
