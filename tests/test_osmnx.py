@@ -85,6 +85,7 @@ def test_stats():
     
     location_point = (37.791427, -122.410018)
     G = ox.graph_from_point(location_point, distance=500, distance_type='network')
+    G = ox.add_edge_bearings(G)
     stats1 = ox.basic_stats(G)
     stats1 = ox.basic_stats(G, area=1000)
     stats2 = ox.extended_stats(G, connectivity=True, anc=True, ecc=True, bc=True, cc=True)

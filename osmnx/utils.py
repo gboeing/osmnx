@@ -9,6 +9,7 @@ import os
 import sys
 import time
 import unicodedata
+import math
 import logging as lg
 import datetime as dt
 import networkx as nx
@@ -313,6 +314,66 @@ def get_nearest_node(G, point, return_dist=False):
         return nearest_node, distances.loc[nearest_node]
     else:
         return nearest_node
+
+
+def get_bearing(origin_point, destination_point):
+    """
+    Calculate the bearing between two lat-long points. Each tuple should 
+    represent (lat, lng) as decimal degrees.
+    
+    Parameters
+    ----------
+    origin_point : tuple
+    destination_point : tuple
+    
+    Returns
+    -------
+    bearing : float
+        the compass bearing in decimal degrees from the origin point 
+        to the destination point
+    """
+    
+    if not (isinstance(origin_point, tuple) and isinstance(destination_point, tuple)):
+        raise TypeError('origin_point and destination_point must be (lat, lng) tuples')
+    
+    # get latitudes and the difference in longitude, as radians
+    lat1 = math.radians(origin_point[0])
+    lat2 = math.radians(destination_point[0])
+    diff_lng = math.radians(destination_point[1] - origin_point[1])
+
+    # calculate initial bearing from -180° to + 180°
+    x = math.sin(diff_lng) * math.cos(lat2)
+    y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1) * math.cos(lat2) * math.cos(diff_lng))
+    initial_bearing = math.atan2(x, y)
+
+    # normalize initial bearing to 0° to 360° to get compass bearing
+    initial_bearing = math.degrees(initial_bearing)
+    bearing = (initial_bearing + 360) % 360
+
+    return bearing
+
+
+def add_edge_bearings(G):
+    """
+    Calculate the compass bearing from origin node to destination node for each
+    edge in the directed graph then add each bearing as a new edge attribute.
+    
+    Parameters
+    ----------
+    G : networkx multidigraph
+        
+    Returns
+    -------
+    G : networkx multidigraph
+    """
+    
+    for u, v, k, data in G.edges(keys=True, data=True):
+        origin_point = (G.node[u]['y'], G.node[u]['x'])
+        destination_point = (G.node[v]['y'], G.node[v]['x'])
+        bearing = get_bearing(origin_point, destination_point)
+        data['bearing'] = bearing
+        
+    return G
 
 
 def geocode(query):
