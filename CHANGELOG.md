@@ -2,8 +2,9 @@
 
 ## 0.5.2dev
   
-  - add graph edges bearing calculation
-  - add ability to download other infrastructures beyond just roads/paths
+  - calculate graph edges' bearings
+  - add ability to download other infrastructures besides just roads/paths
+  - fix docstrings
   - fix building footprint downloads that require multiple calls for large areas
   - fix missing MultiPolygon import in buildings module
 
