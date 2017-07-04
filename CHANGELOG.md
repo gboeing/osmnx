@@ -1,11 +1,20 @@
 # Change log
 
+## 0.5.2dev
+  
+  - add graph edges bearing calculation
+  - add ability to download other infrastructures beyond just roads/paths
+  - fix building footprint downloads that require multiple calls for large areas
+  - fix missing MultiPolygon import in buildings module
+
 ## 0.5.1 (2017-05-12)
-  - Functionality to clean-up and consolidate complex intersections
-  - Let save_gdf_shapefile save building footprint GeoDataFrames
-  - Set node color correctly in figure-ground diagrams
+
+  - functionality to clean-up and consolidate complex intersections
+  - let save_gdf_shapefile save building footprint GeoDataFrames
+  - set node color correctly in figure-ground diagrams
 
 ## 0.5 (2017-04-25)
+
   - add elevation module to get node elevations and street grades
   - new color sequence creation and conversion functions in plot module
   - new function to get a path's edge attribute values
@@ -16,6 +25,7 @@
   - rewrite algorithms to convert multidigraphs to multigraphs 
 
 ## 0.4.1 (2017-04-01)
+
   - fix load_graphml so we can save a graph again after loading it
   - fix load_graphml so edge oneway attribute is not always set to True
   - buildings module gets buildings stored in OSM as relations as well as ways
