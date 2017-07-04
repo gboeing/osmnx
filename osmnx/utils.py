@@ -275,7 +275,8 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
 def get_nearest_node(G, point, return_dist=False):
     """
     Return the graph node nearest to some specified (lat, lng) point, and optionally the 
-    distance between the node and the point.
+    distance between the node and the point. This function uses a great-circle distance
+    calculator, so graph's nodes' coordinates must be in units of decimal degrees.
 
     Parameters
     ----------
@@ -291,7 +292,7 @@ def get_nearest_node(G, point, return_dist=False):
     -------
     int or tuple of (int, float)
         Nearest node ID or optionally (node ID, dist), where dist is the distance 
-        (in meters)between the point and nearest node
+        (in meters) between the point and nearest node
     """
     start_time = time.time()
 
