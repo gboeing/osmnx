@@ -342,12 +342,12 @@ def get_bearing(origin_point, destination_point):
     lat2 = math.radians(destination_point[0])
     diff_lng = math.radians(destination_point[1] - origin_point[1])
 
-    # calculate initial bearing from -180° to + 180°
+    # calculate initial bearing from -180 degrees to + 180 degrees
     x = math.sin(diff_lng) * math.cos(lat2)
     y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1) * math.cos(lat2) * math.cos(diff_lng))
     initial_bearing = math.atan2(x, y)
 
-    # normalize initial bearing to 0° to 360° to get compass bearing
+    # normalize initial bearing to 0 degrees to 360 degrees to get compass bearing
     initial_bearing = math.degrees(initial_bearing)
     bearing = (initial_bearing + 360) % 360
 
