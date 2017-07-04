@@ -272,27 +272,31 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     return distance
 
 
-def get_nearest_node(G, point, return_dist=False):
+def get_nearest_node(G, point, method='greatcircle', return_dist=False):
     """
-    Return the graph node nearest to some specified (lat, lng) point, and optionally the 
-    distance between the node and the point. This function uses a great-circle distance
-    calculator, so graph's nodes' coordinates must be in units of decimal degrees.
+    Return the graph node nearest to some specified (lat, lng) or (y, x) point,
+    and optionally the distance between the node and the point. This function
+    can use either a great circle or euclidean distance calculator.
 
     Parameters
     ----------
     G : networkx multidigraph
     point : tuple
-        The (lat, lng) point for which we will find the nearest node in the graph
+        The (lat, lng) or (y, x) point for which we will find the nearest node in the graph
+    method : str {'greatcircle', 'euclidean'}
+        Which method to use for calculating distances to find nearest node.
+        If 'greatcircle', graph nodes' coordinates must be in units of decimal
+        degrees. If 'euclidean', graph nodes' coordinates must be projected.
     return_dist : bool
-        Optionally also return the distance (great circle distance, in meters) between 
-        the point and the nearest node. Graph nodes' coordinates must be in units of 
-        decimal degrees.
+        Optionally also return the distance (in meters if great circle, or graph
+        node coordinate units if euclidean) between the point and the nearest node.
 
     Returns
     -------
     int or tuple of (int, float)
-        Nearest node ID or optionally (node ID, dist), where dist is the distance 
-        (in meters) between the point and nearest node
+        Nearest node ID or optionally a tuple of (node ID, dist), where dist is the distance
+         (in meters if great circle, or graph node coordinate units if euclidean)
+         between the point and nearest node
     """
     start_time = time.time()
 
@@ -305,10 +309,23 @@ def get_nearest_node(G, point, return_dist=False):
     df['reference_x'] = point[1]
 
     # calculate the distance between each node and the reference point
-    distances = great_circle_vec(lat1=df['reference_y'],
-                                 lng1=df['reference_x'],
-                                 lat2=df['y'],
-                                 lng2=df['x'])
+    if method == 'greatcircle':
+        # calculate distance vector using great circle distances (ie, for spherical lat-long geometries)
+        distances = great_circle_vec(lat1=df['reference_y'],
+                                     lng1=df['reference_x'],
+                                     lat2=df['y'],
+                                     lng2=df['x'])
+
+    elif method == 'euclidean':
+        # calculate distance vector using euclidean distances (ie, for projected planar geometries)
+        x1 = df['reference_x']
+        x2 = df['x']
+        y1 = df['reference_y']
+        y2 = df['y']
+        distances = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5 #euclid's formula
+
+    else:
+        raise ValueError('method argument must be either "greatcircle" or "euclidean"')
 
     # nearest node's ID is the index label of the minimum distance
     nearest_node = int(distances.idxmin())
@@ -323,30 +340,30 @@ def get_nearest_node(G, point, return_dist=False):
 
 def get_bearing(origin_point, destination_point):
     """
-    Calculate the bearing between two lat-long points. Each tuple should 
+    Calculate the bearing between two lat-long points. Each tuple should
     represent (lat, lng) as decimal degrees.
-    
+
     Parameters
     ----------
     origin_point : tuple
     destination_point : tuple
-    
+
     Returns
     -------
     bearing : float
-        the compass bearing in decimal degrees from the origin point 
+        the compass bearing in decimal degrees from the origin point
         to the destination point
     """
-    
+
     if not (isinstance(origin_point, tuple) and isinstance(destination_point, tuple)):
         raise TypeError('origin_point and destination_point must be (lat, lng) tuples')
-    
+
     # get latitudes and the difference in longitude, as radians
     lat1 = math.radians(origin_point[0])
     lat2 = math.radians(destination_point[0])
     diff_lng = math.radians(destination_point[1] - origin_point[1])
 
-    # calculate initial bearing from -180 degrees to + 180 degrees
+    # calculate initial bearing from -180 degrees to +180 degrees
     x = math.sin(diff_lng) * math.cos(lat2)
     y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1) * math.cos(lat2) * math.cos(diff_lng))
     initial_bearing = math.atan2(x, y)
@@ -362,22 +379,22 @@ def add_edge_bearings(G):
     """
     Calculate the compass bearing from origin node to destination node for each
     edge in the directed graph then add each bearing as a new edge attribute.
-    
+
     Parameters
     ----------
     G : networkx multidigraph
-        
+
     Returns
     -------
     G : networkx multidigraph
     """
-    
+
     for u, v, k, data in G.edges(keys=True, data=True):
         origin_point = (G.node[u]['y'], G.node[u]['x'])
         destination_point = (G.node[v]['y'], G.node[v]['x'])
         bearing = get_bearing(origin_point, destination_point)
         data['bearing'] = bearing
-        
+
     return G
 
 
