@@ -37,7 +37,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
     -------
     None
     """
-    
+
     if folder is None:
         folder = globals.data_folder
 
@@ -46,16 +46,16 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
 
     # give the save folder a filename subfolder to make the full path to the files
     folder_path = '{}/{}'.format(folder, filename)
-    
+
     # make everything but geometry column a string
     for col in [c for c in gdf.columns if not c == 'geometry']:
         gdf[col] = gdf[col].fillna('').map(make_str)
-        
+
     # if the save folder does not already exist, create it with a filename subfolder
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     gdf.to_file(folder_path)
-    
+
     if not hasattr(gdf, 'gdf_name'):
         gdf.gdf_name = 'unnamed'
     log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.gdf_name, folder_path))
@@ -268,9 +268,9 @@ def is_duplicate_edge(data, data_other):
     -------
     is_dupe : bool
     """
-    
+
     is_dupe = False
-    
+
     if data['osmid'] == data_other['osmid']:
         # if they have the same OSM IDs
         if ('geometry' in data) and ('geometry' in data_other):
@@ -286,8 +286,8 @@ def is_duplicate_edge(data, data_other):
             pass
 
     return is_dupe
-    
-    
+
+
 def is_same_geometry(data, data_other):
     """
     Check if LineString geometries in two edge data dicts are the same, in normal or reversed order of points.
@@ -303,18 +303,18 @@ def is_same_geometry(data, data_other):
     -------
     bool
     """
-    
+
     # extract geometries from each edge data dict
     geom1 = [list(coords) for coords in data['geometry'].xy]
     geom2 = [list(coords) for coords in data_other['geometry'].xy]
-    
+
     # reverse the first edge's list of x's and y's to look for a match in either order
     geom1_r = [list(reversed(list(coords))) for coords in data['geometry'].xy]
-    
+
     # if the edge's geometry matches its reverse's geometry in either order, return True
     return (geom1 == geom2 or geom1_r == geom2)
-    
-    
+
+
 def get_undirected(G):
     """
     Convert a directed graph to an undirected graph that maintains parallel edges if geometries differ.
@@ -327,15 +327,15 @@ def get_undirected(G):
     -------
     networkx multigraph
     """
-    
+
     start_time = time.time()
-    
+
     # set from/to nodes before making graph undirected
     G = G.copy()
     for u, v, key in G.edges(keys=True):
         G.edge[u][v][key]['from'] = u
         G.edge[u][v][key]['to'] = v
-    
+
     # now convert multidigraph to a multigraph, retaining all edges for now
     H = nx.MultiGraph()
     H.name = G.name
@@ -343,7 +343,7 @@ def get_undirected(G):
     H.add_edges_from(G.edges(keys=False, data=True))
     H.graph = G.graph
     H.node = G.node
-    
+
     # the previous operation added all directed edges from G as undirected edges in H
     # this means we have duplicate edges for every bi-directional street
     # so, look through the edges and remove any duplicates
@@ -364,10 +364,10 @@ def get_undirected(G):
 
                         # if they match up, flag the duplicate for removal
                         duplicate_edges.append((u, v, key_other))
-                        
+
     H.remove_edges_from(duplicate_edges)
     log('Made undirected graph in {:,.2f} seconds'.format(time.time() - start_time))
-    
+
     return H
 
 

@@ -58,13 +58,13 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6
     -------
     fig, ax : tuple
     """
-    
+
     # if facecolor or edgecolor is a string instead of a list, make sure we have as many colors as gdf elements
     if isinstance(fc, str):
         fc = [fc] * len(gdf)
     if isinstance(ec, str):
         ec = [ec] * len(gdf)
-      
+
     # plot the geometries one at a time
     fig, ax = plt.subplots(figsize=figsize)
     for geometry, facecolor, edgecolor in zip(gdf['geometry'], fc, ec):

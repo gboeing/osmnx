@@ -262,7 +262,7 @@ def simplify_graph(G_, strict=True):
     log(msg.format(initial_node_count, len(list(G.nodes())), initial_edge_count, len(list(G.edges())), time.time()-start_time))
     return G
 
-    
+
 def clean_intersections(G, tolerance=15, dead_ends=False):
     """
     Clean-up intersections comprising clusters of nodes by merging them and returning their centroids.
@@ -280,14 +280,14 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
     tolerance : float
         nodes within this distance (in graph's geometry's units) will be dissolved into a single intersection
     dead_ends : bool
-        if False, discard dead-end nodes to return only street-intersection points 
+        if False, discard dead-end nodes to return only street-intersection points
 
     Returns
     ----------
     intersection_centroids : geopandas.GeoSeries
         a GeoSeries of shapely Points representing the centroids of street intersections
     """
-    
+
     # if dead_ends is False, discard dead-end nodes to only work with edge intersections
     if not dead_ends:
         if 'streets_per_node' in G.graph:
@@ -298,16 +298,15 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
         dead_end_nodes = [node for node, count in streets_per_node.items() if count <= 1]
         G = G.copy()
         G.remove_nodes_from(dead_end_nodes)
-    
+
     # create a GeoDataFrame of nodes, buffer to passed-in distance, merge overlaps
     gdf_nodes = graph_to_gdfs(G, edges=False)
     buffered_nodes = gdf_nodes.buffer(tolerance).unary_union
     if isinstance(buffered_nodes, Polygon):
         # if only a single node results, make it iterable so we can turn it into a GeoSeries
         buffered_nodes = [buffered_nodes]
-        
+
     # get the centroids of the merged intersection polygons
     unified_intersections = gpd.GeoSeries(list(buffered_nodes))
     intersection_centroids = unified_intersections.centroid
     return intersection_centroids
-

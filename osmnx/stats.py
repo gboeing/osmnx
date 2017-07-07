@@ -168,9 +168,9 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     """
     Calculate extended topological stats and metrics for a graph.
 
-    Many of these algorithms have an inherently high time complexity. Global topological analysis of 
-    large complex networks is extremely time consuming and may exhaust computer memory. Consider using 
-    function arguments to not run metrics that require computation of a full matrix of paths if they 
+    Many of these algorithms have an inherently high time complexity. Global topological analysis of
+    large complex networks is extremely time consuming and may exhaust computer memory. Consider using
+    function arguments to not run metrics that require computation of a full matrix of paths if they
     will not be needed.
 
     Parameters
@@ -190,7 +190,7 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     Returns
     -------
     stats : dict
-        dictionary of network measures containing the following elements (some only calculated/returned 
+        dictionary of network measures containing the following elements (some only calculated/returned
         optionally, based on passed parameters):
 
           - avg_neighbor_degree
