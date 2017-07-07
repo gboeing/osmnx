@@ -1,6 +1,6 @@
 ###################################################################################################
 # Module: utils.py
-# Description: Utility functions for configuration, logging, etc
+# Description: Utility functions for configuration, logging, geocoding, geospatial, etc
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ###################################################################################################
@@ -294,9 +294,9 @@ def get_nearest_node(G, point, method='greatcircle', return_dist=False):
     Returns
     -------
     int or tuple of (int, float)
-        Nearest node ID or optionally a tuple of (node ID, dist), where dist is the distance
-         (in meters if great circle, or graph node coordinate units if euclidean)
-         between the point and nearest node
+        Nearest node ID or optionally a tuple of (node ID, dist), where dist is
+        the distance (in meters if great circle, or graph node coordinate units
+        if euclidean) between the point and nearest node
     """
     start_time = time.time()
 
