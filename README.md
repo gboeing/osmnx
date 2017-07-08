@@ -8,15 +8,19 @@
 
 **Python for street networks**
 
-Retrieve, construct, analyze, and visualize street networks from OpenStreetMap: [full overview](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
+Retrieve, construct, analyze, and visualize street networks from OpenStreetMap:
+[full overview](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
 
-**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](http://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems*, forthcoming. doi:10.2139/ssrn.2865501.
+**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](http://geoffboeing.com/publications/osmnx-complex-street-networks/)."
+*Computers, Environment and Urban Systems* 65, 126-139. doi:10.1016/j.compenvurbsys.2017.05.004
 
 ## Overview
 
-**OSMnx** is a Python 2+3 package that lets you download spatial geometries and construct, project, visualize,
-and analyze street networks from OpenStreetMap's APIs. Users can download and construct walkable, drivable, or bikable
-urban networks with a single line of Python code, and then easily analyze and visualize them:
+**OSMnx** is a Python 2+3 package that lets you download spatial geometries and
+construct, project, visualize, and analyze street networks from OpenStreetMap's
+APIs. Users can download and construct walkable, drivable, or bikable urban
+networks with a single line of Python code, and then easily analyze and
+visualize them:
 
 ```python
 import osmnx as ox
@@ -25,8 +29,10 @@ ox.plot_graph(ox.project_graph(G))
 ```
 ![](examples/images/manhattan.png)
 
-In a couple lines of code you can examine intersection density, network circuity, average block size, PageRank,
-betweenness centrality, connectivity, spatial distribution of dead-ends or 4-way intersections, etc for anywhere in the world:
+In a couple lines of code you can examine intersection density, network
+circuity, average block size, PageRank, betweenness centrality, connectivity,
+spatial distribution of dead-ends or 4-way intersections, etc for anywhere in
+the world:
 
 ```python
 basic_stats = ox.basic_stats(G)
@@ -36,11 +42,12 @@ extended_stats = ox.extended_stats(G)
 print(extended_stats['pagerank_max_node'])
 ```
 
-You can just as easily download and work with building footprints, elevation data, and network routing.
+You can just as easily download and work with building footprints, elevation
+data, street bearings/orientations, and network routing.
 
 ## Installation
 
-You can install OSMnx with [conda](https://anaconda.org/conda-forge/osmnx):
+Install OSMnx with [conda](https://anaconda.org/conda-forge/osmnx):
 
 ```
 conda install -c conda-forge osmnx
@@ -53,8 +60,32 @@ pip install osmnx
 ```
 
 If you are pip installing OSMnx, install [geopandas](http://geoffboeing.com/2014/09/using-geopandas-windows/)
-and [rtree](http://geoffboeing.com/2016/10/r-tree-spatial-index-python/) first. It's easiest to
-use [conda-forge](https://anaconda.org/conda-forge/geopandas) to get these dependencies installed.
+and [rtree](http://geoffboeing.com/2016/10/r-tree-spatial-index-python/) first.
+It's easiest to use [conda-forge](https://anaconda.org/conda-forge/geopandas)
+to get these dependencies installed.
+
+## Features
+
+OSMnx is built on top of geopandas, networkx, and matplotlib and works with
+OpenStreetMap's APIs to:
+
+  * Download street networks anywhere in the world with a single line of code
+  * Download other infrastructure network types, place polygons, or building footprints as well
+  * Download by city name, polygon, bounding box, or point/address + network distance
+  * Get drivable, walkable, bikable, or all street networks
+  * Visualize the street network as a static image or leaflet web map
+  * Simplify and correct the network's topology to clean and consolidate intersections
+  * Save networks to disk as shapefiles or GraphML
+  * Conduct topological and spatial analyses to automatically calculate dozens of indicators
+  * Calculate and plot shortest-path routes as a static image or leaflet web map
+  * Plot figure-ground diagrams of street networks and/or building footprints
+  * Download node elevations and calculate edge grades
+  * Visualize travel distance and travel time with isoline and isochrone maps
+  * Calculate and visualize street bearings and orientations
+
+Examples and demonstrations of these features are in the
+[examples directory](examples).
+More feature development details are in the change log.
 
 ## Documentation
 
@@ -68,8 +99,10 @@ For a quick demo overview of OSMnx, see this [demo notebook](examples/01-overvie
 
 ### Create place boundary shapefiles from OpenStreetMap
 
-OSMnx lets you download spatial "place boundary" geometries from OpenStreetMap (for cities, counties, states, countries, boroughs, etc.), save them to shapefiles,
-project them, and plot them. For example, to retrieve, construct, and save a shapefile of Berkeley's administrative boundaries:
+OSMnx lets you download spatial "place boundary" geometries from OpenStreetMap
+(for cities, counties, states, countries, boroughs, etc.), save them to
+shapefiles, project them, and plot them. For example, to retrieve, construct,
+and save a shapefile of Berkeley's administrative boundaries:
 
 ```python
 city = ox.gdf_from_place('Berkeley, California')

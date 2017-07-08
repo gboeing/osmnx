@@ -5,50 +5,84 @@ OSMnx documentation
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-   
+
    osmnx
 
-**OSMnx**: retrieve, construct, analyze, and visualize street networks from OpenStreetMap. 
-OSMnx is a Python package that lets you download spatial geometries and construct, project, visualize, 
-and analyze street networks from OpenStreetMap's APIs. Users can download and construct walkable, drivable, 
-or bikable urban networks with a single line of Python code, and then easily analyze and visualize them.
+**OSMnx**: retrieve, construct, analyze, and visualize street networks from
+OpenStreetMap. OSMnx is a Python package that lets you download spatial
+geometries and construct, project, visualize, and analyze street networks from
+OpenStreetMap's APIs. Users can download and construct walkable, drivable,
+or bikable urban networks with a single line of Python code, and then easily
+analyze and visualize them.
+
 
 Citation info
 -------------
 
-Boeing, G. 2017. "`OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks`_." *Computers, Environment and Urban Systems*, forthcoming. doi:10.2139/ssrn.2865501.
+Boeing, G. 2017. "`OSMnx: New Methods for Acquiring, Constructing, Analyzing,
+and Visualizing Complex Street Networks`_." *Computers, Environment and Urban
+Systems* 65, 126-139. doi:10.1016/j.compenvurbsys.2017.05.004
+
+
+Features
+--------
+
+OSMnx is built on top of geopandas, networkx, and matplotlib and works with
+OpenStreetMap's APIs to:
+
+  * Download street networks anywhere in the world with a single line of code
+  * Download other infrastructure network types, place polygons, or building footprints as well
+  * Download by city name, polygon, bounding box, or point/address + network distance
+  * Get drivable, walkable, bikable, or all street networks
+  * Visualize the street network as a static image or leaflet web map
+  * Simplify and correct the network's topology to clean and consolidate intersections
+  * Save networks to disk as shapefiles or GraphML
+  * Conduct topological and spatial analyses to automatically calculate dozens of indicators
+  * Calculate and plot shortest-path routes as a static image or leaflet web map
+  * Plot figure-ground diagrams of street networks and/or building footprints
+  * Download node elevations and calculate edge grades
+  * Visualize travel distance and travel time with isoline and isochrone maps
+  * Calculate and visualize street bearings and orientations
+
+Examples and demonstrations of these features are in GitHub repo (see below).
+More feature development details are in the `change log`_.
+
 
 Installation
 ------------
 
-Install OSMnx with pip by running:
+Install OSMnx with pip:
 
 .. code-block:: shell
-    
+
     pip install osmnx
-    
-or with conda by running:
-    
-.. code-block:: shell
-    
-    conda install -c conda-forge osmnx
-    
-If you have any trouble with the installation, try installing OSMnx in a new, clean `virtual environment`_:
+
+or with conda (easiest):
 
 .. code-block:: shell
-    
+
+    conda install -c conda-forge osmnx
+
+If you have any trouble with the installation, try installing OSMnx in a new,
+clean `virtual environment`_:
+
+.. code-block:: shell
+
     conda create --yes -c conda-forge -n OSMNX python=3 osmnx
     source activate OSMNX
-    
+
+
 Examples
 --------
 
 For examples and demos, see the GitHub repo: `https://github.com/gboeing/osmnx`_
-    
+
+
 Support
 -------
 
 Issue tracker: `https://github.com/gboeing/osmnx/issues`_
+
 
 License
 -------
@@ -63,6 +97,8 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+
+.. _change log: https://github.com/gboeing/osmnx/blob/master/CHANGELOG.md
 .. _virtual environment: https://conda.io/docs/using/envs.html
 .. _https://github.com/gboeing/osmnx: https://github.com/gboeing/osmnx
 .. _https://github.com/gboeing/osmnx/issues: https://github.com/gboeing/osmnx/issues
