@@ -1447,7 +1447,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True, retai
     Parameters
     ----------
     polygon : shapely Polygon or MultiPolygon
-        the shape to get network data within
+        the shape to get network data within. coordinates should be in units of latitude-longitude degrees.
     network_type : string
         what type of street network to get
     simplify : bool
