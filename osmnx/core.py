@@ -531,7 +531,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
 
     Returns
     -------
-    dict
+    response_jsons : list
     """
 
     # check if we're querying by polygon or by bounding box based on which argument(s) where passed into this function
