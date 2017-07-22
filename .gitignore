@@ -1,13 +1,5 @@
 .temp/*
-_backup/*
-keys.py
 tests/run_tests.bat
-examples/cache/*
-examples/data/*
-examples/logs/*
-examples/images/*
-!examples/images/manhattan.png
-
 
 # Compiled source #
 ###################
