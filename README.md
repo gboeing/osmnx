@@ -72,7 +72,7 @@ OpenStreetMap's APIs to:
   * Download street networks anywhere in the world with a single line of code
   * Download other infrastructure network types, place polygons, or building footprints as well
   * Download by city name, polygon, bounding box, or point/address + network distance
-  * Get drivable, walkable, bikable, or all street networks
+  * Get drivable, walkable, bikeable, or all street networks
   * Visualize the street network as a static image or leaflet web map
   * Simplify and correct the network's topology to clean and consolidate intersections
   * Save networks to disk as shapefiles or GraphML
@@ -84,18 +84,18 @@ OpenStreetMap's APIs to:
   * Calculate and visualize street bearings and orientations
 
 Examples and demonstrations of these features are in the
-[examples directory](examples).
+[examples repo](https://github.com/gboeing/osmnx-examples).
 More feature development details are in the change log.
 
 ## Documentation
 
 Documentation available at [readthedocs](https://osmnx.readthedocs.io/en/stable/).
 
-Examples available in the [examples directory](examples).
+Examples available in the [examples repo](https://github.com/gboeing/osmnx-examples).
 
 ## How to use OSMnx
 
-For a quick demo overview of OSMnx, see this [demo notebook](examples/01-overview-osmnx.ipynb).
+For a quick demo overview of OSMnx, see this [demo notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/01-overview-osmnx.ipynb).
 
 ### Create place boundary shapefiles from OpenStreetMap
 
@@ -109,7 +109,7 @@ city = ox.gdf_from_place('Berkeley, California')
 ox.save_gdf_shapefile(city)
 ```
 
-For a more in-depth demonstration of creating these shapefiles, see [this notebook](examples/02-example-osm-to-shapefile.ipynb).
+For a more in-depth demonstration of creating these shapefiles, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/02-example-osm-to-shapefile.ipynb).
 
 ### Download and construct street networks
 
@@ -140,7 +140,7 @@ G = ox.graph_from_place('Manhattan, New York, USA', network_type='drive')
 ox.plot_graph(ox.project_graph(G))
 ```
 
-For an in-depth demonstration of creating street networks, see [this notebook](examples/03-example-osm-place-network.ipynb).
+For an in-depth demonstration of creating street networks, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/03-example-osm-place-network.ipynb).
 
 ### Correct and simplify street network topology
 
@@ -151,7 +151,7 @@ set of edges between "true" network nodes into a single edge, but retain the act
 simplification modes, strict and non-strict. The main difference is that unlike strict mode, non-strict mode allows
 simplification to an *expansion graph*.
 
-For an in-depth demonstration of topological simplification with OSMnx, see [this notebook](examples/04-example-simplify-network.ipynb).
+For an in-depth demonstration of topological simplification with OSMnx, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/04-example-simplify-network.ipynb).
 
 ### Save street networks to disk
 
@@ -159,7 +159,7 @@ OSMnx allows users to save street networks to disk as shapefiles to work with in
 to work with in Gephi or NetworkX, and as SVG files to work with in Illustrator. It also allows you to save place
 boundary geometries as shapefiles.
 
-For examples of saving and loading networks to/from disk, see [this notebook](examples/05-example-save-load-networks-shapes.ipynb).
+For examples of saving and loading networks to/from disk, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/05-example-save-load-networks-shapes.ipynb).
 
 ### Analyze and visualize street networks
 
@@ -168,7 +168,7 @@ visualize elevation, street grade, one-way streets, cul de sacs, high/low connec
 etc. OSMnx provides built-in capabilities to quickly calculate spatial network metrics like intersection density, average
 intersection degree, edge density, average street segment length, clustering coefficients, betweenness centrality, etc.
 
-For examples of analyzing street networks with OSMnx, see [this notebook](examples/06-example-osmnx-networkx.ipynb).
+For examples of analyzing street networks with OSMnx, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/06-example-osmnx-networkx.ipynb).
 
 ## More info
 
@@ -176,4 +176,4 @@ For a more complete overview of [OSMnx, read this](http://geoffboeing.com/2016/1
 
 Download/cite the [journal article here](http://geoffboeing.com/publications/osmnx-complex-street-networks/).
 
-For more examples, see the [examples directory](examples).
+For more examples, see the [examples repo](https://github.com/gboeing/osmnx-examples).

@@ -44,7 +44,7 @@ OpenStreetMap's APIs to:
   * Visualize travel distance and travel time with isoline and isochrone maps
   * Calculate and visualize street bearings and orientations
 
-Examples and demonstrations of these features are in GitHub repo (see below).
+Examples and demonstrations of these features are in the GitHub repo (see below).
 More feature development details are in the `change log`_.
 
 
@@ -75,13 +75,13 @@ clean `virtual environment`_:
 Examples
 --------
 
-For examples and demos, see the GitHub repo: `https://github.com/gboeing/osmnx`_
+For examples and demos, see the `examples`_ GitHub repo.
 
 
 Support
 -------
 
-Issue tracker: `https://github.com/gboeing/osmnx/issues`_
+The `issue tracker`_ is at the `OSMnx GitHub repo`_.
 
 
 License
@@ -100,6 +100,7 @@ Indices and tables
 
 .. _change log: https://github.com/gboeing/osmnx/blob/master/CHANGELOG.md
 .. _virtual environment: https://conda.io/docs/using/envs.html
-.. _https://github.com/gboeing/osmnx: https://github.com/gboeing/osmnx
-.. _https://github.com/gboeing/osmnx/issues: https://github.com/gboeing/osmnx/issues
+.. _examples: https://github.com/gboeing/osmnx-examples
+.. _issue tracker: https://github.com/gboeing/osmnx/issues
+.. _OSMnx GitHub repo: https://github.com/gboeing/osmnx
 .. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: http://geoffboeing.com/publications/osmnx-complex-street-networks/
