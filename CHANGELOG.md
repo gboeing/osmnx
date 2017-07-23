@@ -1,9 +1,11 @@
 # Change log
 
-## 0.5.2dev
-  
+## 0.5.2 (2017-07-22)
+
+  - add ability to download other infrastructures besides just roads/paths (e.g., rail lines, power lines, etc.)
   - calculate graph edges' bearings
-  - add ability to download other infrastructures besides just roads/paths
+  - add ability to get nearest node by great circle or euclidean distance
+  - move examples/demo notebooks to new repo: osmnx-examples
   - fix docstrings
   - fix building footprint downloads that require multiple calls for large areas
   - fix missing MultiPolygon import in buildings module
@@ -23,7 +25,7 @@
   - make truncate_graph_polygon work on projected graphs
   - plot_shape accepts a color or a list of colors
   - make all requests to Overpass API set custom user-agent and referer
-  - rewrite algorithms to convert multidigraphs to multigraphs 
+  - rewrite algorithms to convert multidigraphs to multigraphs
 
 ## 0.4.1 (2017-04-01)
 
@@ -44,7 +46,7 @@
   - refactor modules
   - simplify before truncating by distance when getting graph by point and network distance
   - project geometries, GeoDataFrames, and graphs to a passed-in CRS
-    
+
 ## 0.3.1 (2017-02-15)
 
   - clean up docstrings throughout
@@ -80,12 +82,12 @@
 ## 0.1b2 (2016-11-29)
 
   - make simplification error messages explicit
-  
+
 ## 0.1b1 (2016-11-28)
 
   - process land use and area tags from OSM
   - make intersection error messages clear
-  
+
 ## 0.1a1 (2016-11-07)
 
   - first pre-release
