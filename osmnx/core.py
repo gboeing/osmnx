@@ -570,8 +570,8 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         for poly in geometry:
             # represent bbox as south,west,north,east and round lat-longs to 8 decimal places (ie, within 1 mm) so URL strings aren't different due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = '[out:json][timeout:{timeout}]{maxsize};('+infrastructure+'{filters}({south:.8f},{west:.8f},{north:.8f},{east:.8f});>;);out;'
-            query_str = query_template.format(north=north, south=south, east=east, west=west, filters=osm_filter, timeout=timeout, maxsize=maxsize)
+            query_template = '[out:json][timeout:{timeout}]{maxsize};({infrastructure}{filters}({south:.8f},{west:.8f},{north:.8f},{east:.8f});>;);out;'
+            query_str = query_template.format(north=north, south=south, east=east, west=west, infrastructure=infrastructure, filters=osm_filter, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         log('Got all network data within bounding box from API in {:,} request(s) and {:,.2f} seconds'.format(len(geometry), time.time()-start_time))
@@ -587,8 +587,8 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
 
         # pass each polygon exterior coordinates in the list to the API, one at a time
         for polygon_coord_str in polygon_coord_strs:
-            query_template = '[out:json][timeout:{timeout}]{maxsize};('+infrastructure+'{filters}(poly:"{polygon}");>;);out;'
-            query_str = query_template.format(polygon=polygon_coord_str, filters=osm_filter, timeout=timeout, maxsize=maxsize)
+            query_template = '[out:json][timeout:{timeout}]{maxsize};({infrastructure}{filters}(poly:"{polygon}");>;);out;'
+            query_str = query_template.format(polygon=polygon_coord_str, infrastructure=infrastructure, filters=osm_filter, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         log('Got all network data within polygon from API in {:,} request(s) and {:,.2f} seconds'.format(len(polygon_coord_strs), time.time()-start_time))
