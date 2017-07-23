@@ -5,11 +5,11 @@ from setuptools import setup
 
 # provide a long description using reStructuredText
 long_description = """
-**OSMnx** is a package to easily download, construct, project, visualize, and analyze complex street 
-networks from OpenStreetMap in Python with NetworkX. 
+**OSMnx** is a package to easily download, construct, project, visualize, and analyze complex street
+networks from OpenStreetMap in Python with NetworkX.
 
-You can get a city's or neighborhood's walking, driving, or biking network with a single line of Python 
-code. Then you can easily visualize cul-de-sacs or one-way streets, plot shortest-path routes, or 
+You can get a city's or neighborhood's walking, driving, or biking network with a single line of Python
+code. Then you can easily visualize cul-de-sacs or one-way streets, plot shortest-path routes, or
 calculate stats like intersection density, average node connectivity, betweenness centrality, etc.
 
 See the examples and demos on `GitHub`_ or read more about `OSMnx`_.
@@ -41,7 +41,7 @@ install_requires = [t.strip() for t in tests_require]
 
 # now call setup
 setup(name='osmnx',
-      version='0.5.2dev',
+      version='0.5.2',
       description='Retrieve, construct, analyze, and visualize street networks from OpenStreetMap',
       long_description=long_description,
       classifiers=classifiers,
@@ -53,4 +53,3 @@ setup(name='osmnx',
       packages=['osmnx'],
       install_requires=install_requires,
       extras_require={'folium':['folium>=0.2']})
-
