@@ -1,5 +1,9 @@
 # Change log
 
+## 0.5.3 (2017-07-22)
+
+  - add requirements files to distribution
+
 ## 0.5.2 (2017-07-22)
 
   - add ability to download other infrastructures besides just roads/paths (e.g., rail lines, power lines, etc.)
