@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 
 from .simplify import clean_intersections
-from .utils import log, get_largest_component, great_circle_vec
+from .utils import log, get_largest_component, great_circle_vec, count_streets_per_node
 
 
 def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
