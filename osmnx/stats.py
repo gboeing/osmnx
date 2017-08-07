@@ -14,10 +14,11 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+from .simplify import clean_intersections
 from .utils import log, get_largest_component, great_circle_vec
 
 
-def basic_stats(G, area=None):
+def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
     """
     Calculate basic descriptive stats and metrics for a graph.
 
@@ -25,12 +26,20 @@ def basic_stats(G, area=None):
     ----------
     G : networkx multidigraph
     area : numeric
-        the area covered by the street network, in square meters (typically land area); if none, will skip all density-based metrics
+        the area covered by the street network, in square meters (typically land
+        area); if none, will skip all density-based metrics
+    clean_intersects : bool
+        if True, calculate clean intersections count (and density, if area is
+        provided)
+    tolerance : numeric
+        tolerance value passed along if clean_intersects=True, see
+        clean_intersections() function documentation for details and usage
 
     Returns
     -------
     stats : dict
-        dictionary of network measures containing the following elements:
+        dictionary of network measures containing the following elements (some
+        keys may not be present, based on the arguments passed into the function):
 
           - n = number of nodes in the graph
           - m = number of edges in the graph
@@ -95,6 +104,11 @@ def basic_stats(G, area=None):
     street_segments_count = len(list(G_undirected.edges(keys=True)))
     street_length_avg = street_length_total / street_segments_count
 
+    # calculate clean intersection counts
+    if clean_intersects:
+        clean_intersection_points = clean_intersections(G, tolerance=tolerance, dead_ends=False )
+        clean_intersection_count = len(clean_intersection_points)
+
     # we can calculate density metrics only if area is not null
     if not area is None:
         area_km = area / sq_m_in_sq_km
@@ -110,12 +124,18 @@ def basic_stats(G, area=None):
 
         # calculate street density as linear meters per sq km
         street_density_km = street_length_total / area_km
+
+        if clean_intersects:
+            clean_intersection_density = clean_intersection_count / area_km
+        else:
+            clean_intersection_density = None
     else:
         # if area is None, then we cannot calculate density
         node_density_km = None
         intersection_density_km = None
         edge_density_km = None
         street_density_km = None
+        clean_intersection_density = None
 
     # average circuity: sum of edge lengths divided by sum of great circle distance between edge endpoints
     # first load all the edges origin and destination coordinates as a dataframe, then calculate the great circle distance with the vectorized function
@@ -158,7 +178,9 @@ def basic_stats(G, area=None):
              'edge_density_km':edge_density_km,
              'street_density_km':street_density_km,
              'circuity_avg':circuity_avg,
-             'self_loop_proportion':self_loop_proportion}
+             'self_loop_proportion':self_loop_proportion,
+             'clean_intersection_count':clean_intersection_count,
+             'clean_intersection_density':clean_intersection_density}
 
     # return the results
     return stats
