@@ -15,7 +15,7 @@ from shapely.geometry import Point
 from .utils import log, make_str
 
 
-def project_geometry(geometry, crs={'init':'epsg:4326'}, to_crs=None, to_latlong=False):
+def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     """
     Project a shapely Polygon or MultiPolygon from lat-long to UTM, or vice-versa
 
@@ -24,7 +24,8 @@ def project_geometry(geometry, crs={'init':'epsg:4326'}, to_crs=None, to_latlong
     geometry : shapely Polygon or MultiPolygon
         the geometry to project
     crs : dict
-        the starting coordinate reference system of the passed-in geometry (default is lat-long)
+        the starting coordinate reference system of the passed-in geometry,
+        default value (None) will set EPSG:4326 as the CRS
     to_crs : dict
         if not None, just project to this CRS instead of to UTM
     to_latlong : bool
@@ -35,6 +36,10 @@ def project_geometry(geometry, crs={'init':'epsg:4326'}, to_crs=None, to_latlong
     tuple
         (geometry_proj, crs), the projected shapely geometry and the crs of the projected geometry
     """
+
+    if crs is None:
+        crs = {'init':'epsg:4326'}
+
     gdf = gpd.GeoDataFrame()
     gdf.crs = crs
     gdf.gdf_name = 'geometry to project'
