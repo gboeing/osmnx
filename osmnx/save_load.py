@@ -216,7 +216,7 @@ def load_graphml(filename, folder=None):
         data['y'] = float(data['y'])
 
     # convert numeric, bool, and list node tags from string to correct data types
-    for u, v, key, data in G.edges(keys=True, data=True):
+    for u, v, key, data in G.edges(data=True, keys=True):
 
         # first parse oneway to bool and length to float - they should always have only 1 value each
         data['oneway'] = ast.literal_eval(data['oneway'])
