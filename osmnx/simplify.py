@@ -10,8 +10,7 @@ import logging as lg
 import geopandas as gpd
 from shapely.geometry import Polygon, Point, LineString
 
-from .utils import log
-from .stats import count_streets_per_node
+from .utils import log, count_streets_per_node
 from .save_load import graph_to_gdfs
 
 

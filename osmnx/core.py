@@ -27,10 +27,9 @@ from shapely.geometry import Point, LineString, Polygon, MultiPolygon
 from shapely.ops import unary_union
 
 from . import globals
-from .utils import log, make_str, get_largest_component, great_circle_vec, get_nearest_node, geocode
+from .utils import log, make_str, get_largest_component, great_circle_vec, get_nearest_node, geocode, count_streets_per_node
 from .simplify import simplify_graph
 from .projection import project_geometry, project_gdf
-from .stats import count_streets_per_node
 
 
 def save_to_cache(url, response_json):

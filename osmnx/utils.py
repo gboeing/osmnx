@@ -16,6 +16,8 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import requests
+from itertools import chain
+from collections import Counter
 
 from . import globals
 
@@ -457,3 +459,57 @@ def get_route_edge_attributes(G, route, attribute, minimize_key='length'):
         data = min([data for data in G.edge[u][v].values()], key=lambda x: x[minimize_key])
         attribute_values.append(data[attribute])
     return attribute_values
+
+
+def count_streets_per_node(G, nodes=None):
+    """
+    Count how many street segments emanate from each node (i.e., intersections and dead-ends) in this graph.
+
+    If nodes is passed, then only count the nodes in the graph with those IDs.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    nodes : iterable
+        the set of node IDs to get counts for
+
+    Returns
+    ----------
+    streets_per_node : dict
+        counts of how many streets emanate from each node with keys=node id and values=count
+    """
+
+    start_time = time.time()
+
+    # to calculate the counts, get undirected representation of the graph. for each node, get the list of the set of unique u,v,key edges, including parallel edges but excluding self-loop parallel edges
+    # (this is necessary because bi-directional self-loops will appear twice in the undirected graph as you have u,v,key0 and u,v,key1 where u==v when you convert from MultiDiGraph to MultiGraph - BUT,
+    # one-way self-loops will appear only once. to get consistent accurate counts of physical streets, ignoring directionality, we need the list of the set of unique edges...).
+    # then, count how many times the node appears in the u,v tuples in the list. this is the count of how many street segments emanate from this node.
+    # finally create a dict of node id:count
+    G_undir = G.to_undirected(reciprocal=False)
+    all_edges = G_undir.edges(keys=False)
+    if nodes is None:
+        nodes = G_undir.nodes()
+
+    # get all unique edges - this throws away any parallel edges (including those in self-loops)
+    all_unique_edges = set(all_edges)
+
+    # get all edges (including parallel edges) that are not self-loops
+    non_self_loop_edges = [e for e in all_edges if not e[0]==e[1]]
+
+    # get a single copy of each self-loop edge (ie, if it's bi-directional, we ignore the parallel edge going the reverse direction and keep only one copy)
+    set_non_self_loop_edges = set(non_self_loop_edges)
+    self_loop_edges = [e for e in all_unique_edges if e not in set_non_self_loop_edges]
+
+    # final list contains all unique edges, including each parallel edge, unless the parallel edge is a self-loop
+    # in which case it doesn't double-count the self-loop
+    edges = non_self_loop_edges + self_loop_edges
+
+    # flatten the list of (u,v) tuples
+    edges_flat = list(chain.from_iterable(edges))
+
+    # count how often each node appears in the list of flattened edge endpoints
+    counts = Counter(edges_flat)
+    streets_per_node = {node:counts[node] for node in nodes}
+    log('Got the counts of undirected street segments incident to each node (before removing peripheral edges) in {:,.2f} seconds'.format(time.time()-start_time))
+    return streets_per_node

@@ -6,8 +6,6 @@
 ###################################################################################################
 
 from __future__ import division
-from itertools import chain
-from collections import Counter
 import time
 import warnings
 import networkx as nx
@@ -20,7 +18,13 @@ from .utils import log, get_largest_component, great_circle_vec
 
 def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
     """
-    Calculate basic descriptive stats and metrics for a graph.
+    Calculate basic descriptive metric and topological stats for a graph.
+
+    Note that an unprojected graph is needed to calculated circuity correctly
+    because it uses great-circle distances as of right now. However, a
+    projected graph would be superior for calculating clean intersection
+    count/density as the tolerance value could then be provided in consistent
+    meaningful units such as meters.
 
     Parameters
     ----------
@@ -59,6 +63,8 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
           - street_density_km = street_length_total divided by area in square kilometers
           - circuity_avg = edge_length_total divided by the sum of the great circle distances between the nodes of each edge
           - self_loop_proportion = proportion of edges that have a single node as its two endpoints (ie, the edge links nodes u and v, and u==v)
+          - clean_intersection_count = number of intersections in street network, merging complex ones into single points
+          - clean_intersection_density_km = clean_intersection_count divided by area in square kilometers
 
     """
 
@@ -108,6 +114,8 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
     if clean_intersects:
         clean_intersection_points = clean_intersections(G, tolerance=tolerance, dead_ends=False )
         clean_intersection_count = len(clean_intersection_points)
+    else:
+        clean_intersection_count = None
 
     # we can calculate density metrics only if area is not null
     if not area is None:
@@ -126,16 +134,16 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
         street_density_km = street_length_total / area_km
 
         if clean_intersects:
-            clean_intersection_density = clean_intersection_count / area_km
+            clean_intersection_density_km = clean_intersection_count / area_km
         else:
-            clean_intersection_density = None
+            clean_intersection_density_km = None
     else:
         # if area is None, then we cannot calculate density
         node_density_km = None
         intersection_density_km = None
         edge_density_km = None
         street_density_km = None
-        clean_intersection_density = None
+        clean_intersection_density_km = None
 
     # average circuity: sum of edge lengths divided by sum of great circle distance between edge endpoints
     # first load all the edges origin and destination coordinates as a dataframe, then calculate the great circle distance with the vectorized function
@@ -180,7 +188,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
              'circuity_avg':circuity_avg,
              'self_loop_proportion':self_loop_proportion,
              'clean_intersection_count':clean_intersection_count,
-             'clean_intersection_density':clean_intersection_density}
+             'clean_intersection_density_km':clean_intersection_density_km}
 
     # return the results
     return stats
@@ -365,59 +373,3 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
 
     log('Calculated extended stats in {:,.2f} seconds'.format(time.time()-full_start_time))
     return stats
-
-
-
-
-def count_streets_per_node(G, nodes=None):
-    """
-    Count how many street segments emanate from each node (i.e., intersections and dead-ends) in this graph.
-
-    If nodes is passed, then only count the nodes in the graph with those IDs.
-
-    Parameters
-    ----------
-    G : networkx multidigraph
-    nodes : iterable
-        the set of node IDs to get counts for
-
-    Returns
-    ----------
-    streets_per_node : dict
-        counts of how many streets emanate from each node with keys=node id and values=count
-    """
-
-    start_time = time.time()
-
-    # to calculate the counts, get undirected representation of the graph. for each node, get the list of the set of unique u,v,key edges, including parallel edges but excluding self-loop parallel edges
-    # (this is necessary because bi-directional self-loops will appear twice in the undirected graph as you have u,v,key0 and u,v,key1 where u==v when you convert from MultiDiGraph to MultiGraph - BUT,
-    # one-way self-loops will appear only once. to get consistent accurate counts of physical streets, ignoring directionality, we need the list of the set of unique edges...).
-    # then, count how many times the node appears in the u,v tuples in the list. this is the count of how many street segments emanate from this node.
-    # finally create a dict of node id:count
-    G_undir = G.to_undirected(reciprocal=False)
-    all_edges = G_undir.edges(keys=False)
-    if nodes is None:
-        nodes = G_undir.nodes()
-
-    # get all unique edges - this throws away any parallel edges (including those in self-loops)
-    all_unique_edges = set(all_edges)
-
-    # get all edges (including parallel edges) that are not self-loops
-    non_self_loop_edges = [e for e in all_edges if not e[0]==e[1]]
-
-    # get a single copy of each self-loop edge (ie, if it's bi-directional, we ignore the parallel edge going the reverse direction and keep only one copy)
-    set_non_self_loop_edges = set(non_self_loop_edges)
-    self_loop_edges = [e for e in all_unique_edges if e not in set_non_self_loop_edges]
-
-    # final list contains all unique edges, including each parallel edge, unless the parallel edge is a self-loop
-    # in which case it doesn't double-count the self-loop
-    edges = non_self_loop_edges + self_loop_edges
-
-    # flatten the list of (u,v) tuples
-    edges_flat = list(chain.from_iterable(edges))
-
-    # count how often each node appears in the list of flattened edge endpoints
-    counts = Counter(edges_flat)
-    streets_per_node = {node:counts[node] for node in nodes}
-    log('Got the counts of undirected street segments incident to each node (before removing peripheral edges) in {:,.2f} seconds'.format(time.time()-start_time))
-    return streets_per_node
