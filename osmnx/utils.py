@@ -1,9 +1,10 @@
-###################################################################################################
+################################################################################
 # Module: utils.py
-# Description: Utility functions for configuration, logging, geocoding, geospatial, etc
+# Description: Utility functions for configuration, logging, geocoding,
+#              geospatial analysis, etc.
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
-###################################################################################################
+################################################################################
 
 import os
 import sys
@@ -49,7 +50,8 @@ def config(data_folder=globals.data_folder,
     cache_folder : string
         where to save the http response cache
     use_cache : bool
-        if True, use a local cache to save/retrieve http responses instead of calling API repetitively for the same request URL
+        if True, use a local cache to save/retrieve http responses instead of
+        calling API repetitively for the same request URL
     log_file : bool
         if true, save log output to a log file in logs_folder
     log_console : bool
@@ -116,7 +118,8 @@ def log(message, level=None, name=None, filename=None):
 
     # if logging to file is turned on
     if globals.log_file:
-        # get the current logger (or create a new one, if none), then log message at requested level
+        # get the current logger (or create a new one, if none), then log
+        # message at requested level
         logger = get_logger(level=level, name=name, filename=filename)
         if level == lg.DEBUG:
             logger.debug(message)
@@ -127,14 +130,17 @@ def log(message, level=None, name=None, filename=None):
         elif level == lg.ERROR:
             logger.error(message)
 
-    # if logging to console is turned on, convert message to ascii and print to the console
+    # if logging to console is turned on, convert message to ascii and print to
+    # the console
     if globals.log_console:
-        # capture current stdout, then switch it to the console, print the message, then switch back to what had been the stdout
-        # this prevents logging to notebook - instead, it goes to console
+        # capture current stdout, then switch it to the console, print the
+        # message, then switch back to what had been the stdout. this prevents
+        # logging to notebook - instead, it goes to console
         standard_out = sys.stdout
         sys.stdout = sys.__stdout__
 
-        # convert message to ascii for console display so it doesn't break windows terminals
+        # convert message to ascii for console display so it doesn't break
+        # windows terminals
         message = unicodedata.normalize('NFKD', make_str(message)).encode('ascii', errors='replace').decode()
         print(message)
         sys.stdout = standard_out
@@ -212,13 +218,15 @@ def make_str(value):
 
 def get_largest_component(G, strongly=False):
     """
-    Return the largest weakly or strongly connected component from a directed graph.
+    Return the largest weakly or strongly connected component from a directed
+    graph.
 
     Parameters
     ----------
     G : networkx multidigraph
     strongly : bool
-        if True, return the largest strongly instead of weakly connected component
+        if True, return the largest strongly instead of weakly connected
+        component
 
     Returns
     -------
@@ -229,12 +237,14 @@ def get_largest_component(G, strongly=False):
     original_len = len(list(G.nodes()))
 
     if strongly:
-        # if the graph is not connected and caller did not request retain_all, retain only the largest strongly connected component
+        # if the graph is not connected and caller did not request retain_all,
+        # retain only the largest strongly connected component
         if not nx.is_strongly_connected(G):
             G = max(nx.strongly_connected_component_subgraphs(G), key=len)
             log('Graph was not connected, retained only the largest strongly connected component ({:,} of {:,} total nodes) in {:.2f} seconds'.format(len(list(G.nodes())), original_len, time.time()-start_time))
     else:
-        # if the graph is not connected and caller did not request retain_all, retain only the largest weakly connected component
+        # if the graph is not connected and caller did not request retain_all,
+        # retain only the largest weakly connected component
         if not nx.is_weakly_connected(G):
             G = max(nx.weakly_connected_component_subgraphs(G), key=len)
             log('Graph was not connected, retained only the largest weakly connected component ({:,} of {:,} total nodes) in {:.2f} seconds'.format(len(list(G.nodes())), original_len, time.time()-start_time))
@@ -244,7 +254,8 @@ def get_largest_component(G, strongly=False):
 
 def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     """
-    Vectorized function to calculate the great-circle distance between two points or between vectors of points.
+    Vectorized function to calculate the great-circle distance between two
+    points or between vectors of points.
 
     Parameters
     ----------
@@ -253,12 +264,14 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     lat2 : float or array of float
     lng2 : float or array of float
     earth_radius : numeric
-        radius of earth in units in which distance will be returned (default is meters)
+        radius of earth in units in which distance will be returned (default is
+        meters)
 
     Returns
     -------
     distance : float or array of float
-        distance or vector of distances from (lat1, lng1) to (lat2, lng2) in units of earth_radius
+        distance or vector of distances from (lat1, lng1) to (lat2, lng2) in
+        units of earth_radius
     """
 
     phi1 = np.deg2rad(90 - lat1)
@@ -269,7 +282,8 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
 
     cos = (np.sin(phi1) * np.sin(phi2) * np.cos(theta1 - theta2) + np.cos(phi1) * np.cos(phi2))
 
-    # ignore warnings during this calculation because numpy warns it cannot calculate arccos for self-loops since u==v
+    # ignore warnings during this calculation because numpy warns it cannot
+    # calculate arccos for self-loops since u==v
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         arc = np.arccos(cos)
@@ -312,14 +326,16 @@ def get_nearest_node(G, point, method='greatcircle', return_dist=False):
     ----------
     G : networkx multidigraph
     point : tuple
-        The (lat, lng) or (y, x) point for which we will find the nearest node in the graph
+        The (lat, lng) or (y, x) point for which we will find the nearest node
+        in the graph
     method : str {'greatcircle', 'euclidean'}
         Which method to use for calculating distances to find nearest node.
         If 'greatcircle', graph nodes' coordinates must be in units of decimal
         degrees. If 'euclidean', graph nodes' coordinates must be projected.
     return_dist : bool
         Optionally also return the distance (in meters if great circle, or graph
-        node coordinate units if euclidean) between the point and the nearest node.
+        node coordinate units if euclidean) between the point and the nearest
+        node.
 
     Returns
     -------
@@ -330,24 +346,28 @@ def get_nearest_node(G, point, method='greatcircle', return_dist=False):
     """
     start_time = time.time()
 
-    # dump graph node coordinates into a pandas dataframe indexed by node id with x and y columns
+    # dump graph node coordinates into a pandas dataframe indexed by node id
+    # with x and y columns
     coords = np.array([[node, data['x'], data['y']] for node, data in G.nodes(data=True)])
     df = pd.DataFrame(coords, columns=['node', 'x', 'y']).set_index('node')
 
-    # add columns to the dataframe representing the (constant) coordinates of the reference point
+    # add columns to the dataframe representing the (constant) coordinates of
+    # the reference point
     df['reference_y'] = point[0]
     df['reference_x'] = point[1]
 
     # calculate the distance between each node and the reference point
     if method == 'greatcircle':
-        # calculate distance vector using great circle distances (ie, for spherical lat-long geometries)
+        # calculate distance vector using great circle distances (ie, for
+        # spherical lat-long geometries)
         distances = great_circle_vec(lat1=df['reference_y'],
                                      lng1=df['reference_x'],
                                      lat2=df['y'],
                                      lng2=df['x'])
 
     elif method == 'euclidean':
-        # calculate distance vector using euclidean distances (ie, for projected planar geometries)
+        # calculate distance vector using euclidean distances (ie, for projected
+        # planar geometries)
         distances = euclidean_dist_vec(y1=df['reference_y'],
                                        x1=df['reference_x'],
                                        y2=df['y'],
@@ -360,7 +380,8 @@ def get_nearest_node(G, point, method='greatcircle', return_dist=False):
     nearest_node = int(distances.idxmin())
     log('Found nearest node ({}) to point {} in {:,.2f} seconds'.format(nearest_node, point, time.time()-start_time))
 
-    # if caller requested return_dist, return distance between the point and the nearest node as well
+    # if caller requested return_dist, return distance between the point and the
+    # nearest node as well
     if return_dist:
         return nearest_node, distances.loc[nearest_node]
     else:
@@ -482,7 +503,8 @@ def get_route_edge_attributes(G, route, attribute, minimize_key='length'):
 
     attribute_values = []
     for u, v in zip(route[:-1], route[1:]):
-        # if there are parallel edges between two nodes, select the one with the lowest value of minimize_key
+        # if there are parallel edges between two nodes, select the one with the
+        # lowest value of minimize_key
         data = min([data for data in G.edge[u][v].values()], key=lambda x: x[minimize_key])
         attribute_values.append(data[attribute])
     return attribute_values
@@ -508,28 +530,38 @@ def count_streets_per_node(G, nodes=None):
 
     start_time = time.time()
 
-    # to calculate the counts, get undirected representation of the graph. for each node, get the list of the set of unique u,v,key edges, including parallel edges but excluding self-loop parallel edges
-    # (this is necessary because bi-directional self-loops will appear twice in the undirected graph as you have u,v,key0 and u,v,key1 where u==v when you convert from MultiDiGraph to MultiGraph - BUT,
-    # one-way self-loops will appear only once. to get consistent accurate counts of physical streets, ignoring directionality, we need the list of the set of unique edges...).
-    # then, count how many times the node appears in the u,v tuples in the list. this is the count of how many street segments emanate from this node.
-    # finally create a dict of node id:count
+    # to calculate the counts, get undirected representation of the graph. for
+    # each node, get the list of the set of unique u,v,key edges, including
+    # parallel edges but excluding self-loop parallel edges (this is necessary
+    # because bi-directional self-loops will appear twice in the undirected
+    # graph as you have u,v,key0 and u,v,key1 where u==v when you convert from
+    # MultiDiGraph to MultiGraph - BUT, one-way self-loops will appear only
+    # once. to get consistent accurate counts of physical streets, ignoring
+    # directionality, we need the list of the set of unique edges...). then,
+    # count how many times the node appears in the u,v tuples in the list. this
+    # is the count of how many street segments emanate from this node. finally,
+    # create a dict of node id:count
     G_undir = G.to_undirected(reciprocal=False)
     all_edges = G_undir.edges(keys=False)
     if nodes is None:
         nodes = G_undir.nodes()
 
-    # get all unique edges - this throws away any parallel edges (including those in self-loops)
+    # get all unique edges - this throws away any parallel edges (including
+    # those in self-loops)
     all_unique_edges = set(all_edges)
 
     # get all edges (including parallel edges) that are not self-loops
     non_self_loop_edges = [e for e in all_edges if not e[0]==e[1]]
 
-    # get a single copy of each self-loop edge (ie, if it's bi-directional, we ignore the parallel edge going the reverse direction and keep only one copy)
+    # get a single copy of each self-loop edge (ie, if it's bi-directional, we
+    # ignore the parallel edge going the reverse direction and keep only one
+    # copy)
     set_non_self_loop_edges = set(non_self_loop_edges)
     self_loop_edges = [e for e in all_unique_edges if e not in set_non_self_loop_edges]
 
-    # final list contains all unique edges, including each parallel edge, unless the parallel edge is a self-loop
-    # in which case it doesn't double-count the self-loop
+    # final list contains all unique edges, including each parallel edge, unless
+    # the parallel edge is a self-loop, in which case it doesn't double-count
+    # the self-loop
     edges = non_self_loop_edges + self_loop_edges
 
     # flatten the list of (u,v) tuples
