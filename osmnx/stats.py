@@ -7,24 +7,23 @@
 
 from __future__ import division
 import time
-import warnings
 import networkx as nx
 import numpy as np
 import pandas as pd
 
 from .simplify import clean_intersections
 from .utils import log, get_largest_component, great_circle_vec, count_streets_per_node
+from .utils import euclidean_dist_vec
 
 
-def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
+def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dist='gc'):
     """
     Calculate basic descriptive metric and topological stats for a graph.
 
-    Note that an unprojected graph is needed to calculated circuity correctly
-    because it uses great-circle distances as of right now. However, a
-    projected graph would be superior for calculating clean intersection
-    count/density as the tolerance value could then be provided in consistent
-    meaningful units such as meters.
+    For an unprojected lat-lng graph, tolerance and graph units should be in
+    degrees, and circuity_dist should be 'gc'. For a projected graph, tolerance
+    and graph units should be in meters (or similar) and circuity_dist should be
+    'euclidean'.
 
     Parameters
     ----------
@@ -38,6 +37,10 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
     tolerance : numeric
         tolerance value passed along if clean_intersects=True, see
         clean_intersections() function documentation for details and usage
+    circuity_dist : str
+        'gc' or 'euclidean', how to calculate straight-line distances for
+        circuity measurement; use former for lat-lng networks and latter for
+        projected networks
 
     Returns
     -------
@@ -48,7 +51,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
           - n = number of nodes in the graph
           - m = number of edges in the graph
           - k_avg = average node degree of the graph
-          - count_intersections = number of intersections in graph, that is, nodes with >1 street emanating from them
+          - intersection_count = number of intersections in graph, that is, nodes with >1 street emanating from them
           - streets_per_node_avg = how many streets (edges in the undirected representation of the graph) emanate from each node (ie, intersection or dead-end) on average (mean)
           - streets_per_node_counts = dict, with keys of number of streets emanating from the node, and values of number of nodes with this count
           - streets_per_node_proportion = dict, same as previous, but as a proportion of the total, rather than counts
@@ -58,7 +61,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
           - street_length_avg = mean edge length in the undirected representation of the graph, in meters
           - street_segments_count = number of edges in the undirected representation of the graph
           - node_density_km = n divided by area in square kilometers
-          - intersection_density_km = count_intersections divided by area in square kilometers
+          - intersection_density_km = intersection_count divided by area in square kilometers
           - edge_density_km = edge_length_total divided by area in square kilometers
           - street_density_km = street_length_total divided by area in square kilometers
           - circuity_avg = edge_length_total divided by the sum of the great circle distances between the nodes of each edge
@@ -88,7 +91,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
 
     # count number of intersections in graph, as nodes with >1 street emanating from them
     node_ids = set(G.nodes())
-    count_intersections = len([True for node, count in streets_per_node.items() if (count > 1) and (node in node_ids)])
+    intersection_count = len([True for node, count in streets_per_node.items() if (count > 1) and (node in node_ids)])
 
     # calculate the average number of streets (unidirected edges) incident to each node
     streets_per_node_avg = sum(streets_per_node.values()) / n
@@ -125,7 +128,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
         node_density_km = n / area_km
 
         # calculate intersection density as nodes with >1 street emanating from them, per sq km
-        intersection_density_km = count_intersections / area_km
+        intersection_density_km = intersection_count / area_km
 
         # calculate edge density as linear meters per sq km
         edge_density_km = edge_length_total / area_km
@@ -145,18 +148,25 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
         street_density_km = None
         clean_intersection_density_km = None
 
-    # average circuity: sum of edge lengths divided by sum of great circle distance between edge endpoints
-    # first load all the edges origin and destination coordinates as a dataframe, then calculate the great circle distance with the vectorized function
+    # average circuity: sum of edge lengths divided by sum of straight-line
+    # distance between edge endpoints. first load all the edges origin and
+    # destination coordinates as a dataframe, then calculate the straight-line
+    # distance
     coords = np.array([[G.node[u]['y'], G.node[u]['x'], G.node[v]['y'], G.node[v]['x']] for u, v, k in G.edges(keys=True)])
     df_coords = pd.DataFrame(coords, columns=['u_y', 'u_x', 'v_y', 'v_x'])
-
-    # ignore warnings during this calculation because numpy warns it cannot calculate arccos for self-loops since u==v
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
+    if circuity_dist == 'gc':
         gc_distances = great_circle_vec(lat1=df_coords['u_y'],
                                         lng1=df_coords['u_x'],
                                         lat2=df_coords['v_y'],
                                         lng2=df_coords['v_x'])
+    elif circuity_dist == 'euclidean':
+        gc_distances = euclidean_dist_vec(y1=df_coords['u_y'],
+                                          x1=df_coords['u_x'],
+                                          y2=df_coords['v_y'],
+                                          x2=df_coords['v_x'])
+    else:
+        raise ValueError('circuity_dist must be "gc" or "euclidean"')
+
     gc_distances = gc_distances.fillna(value=0)
     try:
         circuity_avg = edge_length_total / gc_distances.sum()
@@ -172,7 +182,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15):
     stats = {'n':n,
              'm':m,
              'k_avg':k_avg,
-             'count_intersections':count_intersections,
+             'intersection_count':intersection_count,
              'streets_per_node_avg':streets_per_node_avg,
              'streets_per_node_counts':streets_per_node_counts,
              'streets_per_node_proportion':streets_per_node_proportion,
