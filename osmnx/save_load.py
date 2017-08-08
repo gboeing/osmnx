@@ -1,9 +1,9 @@
-###################################################################################################
+################################################################################
 # Module: save_load.py
 # Description: Save and load networks to/from disk
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
-###################################################################################################
+################################################################################
 
 import re
 import time
@@ -24,7 +24,8 @@ from .utils import make_str
 
 def save_gdf_shapefile(gdf, filename=None, folder=None):
     """
-    Save a GeoDataFrame of place shapes or building footprints as an ESRI shapefile.
+    Save a GeoDataFrame of place shapes or building footprints as an ESRI
+    shapefile.
 
     Parameters
     ----------
@@ -46,14 +47,16 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
     if filename is None:
         filename = make_shp_filename(gdf.gdf_name)
 
-    # give the save folder a filename subfolder to make the full path to the files
+    # give the save folder a filename subfolder to make the full path to the
+    # files
     folder_path = '{}/{}'.format(folder, filename)
 
     # make everything but geometry column a string
     for col in [c for c in gdf.columns if not c == 'geometry']:
         gdf[col] = gdf[col].fillna('').map(make_str)
 
-    # if the save folder does not already exist, create it with a filename subfolder
+    # if the save folder does not already exist, create it with a filename
+    # subfolder
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     gdf.to_file(folder_path)
@@ -107,7 +110,8 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     edges = []
     for u, v, key, data in G_save.edges(keys=True, data=True):
 
-        # for each edge, add key and all attributes in data dict to the edge_details
+        # for each edge, add key and all attributes in data dict to the
+        # edge_details
         edge_details = {'key':key}
         for attr_key in data:
             edge_details[attr_key] = data[attr_key]
@@ -128,7 +132,8 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     for col in [c for c in gdf_edges.columns if not c == 'geometry']:
         gdf_edges[col] = gdf_edges[col].fillna('').map(make_str)
 
-    # if the save folder does not already exist, create it with a filename subfolder
+    # if the save folder does not already exist, create it with a filename
+    # subfolder
     folder = '{}/{}'.format(folder, filename)
     if not os.path.exists(folder):
         os.makedirs(folder)
@@ -160,7 +165,8 @@ def save_graphml(G, filename='graph.graphml', folder=None):
     if folder is None:
         folder = globals.data_folder
 
-    # create a copy and convert all the node/edge attribute values to string or it won't save
+    # create a copy and convert all the node/edge attribute values to string or
+    # it won't save
     G_save = G.copy()
     for dict_key in G_save.graph:
         # convert all the graph attribute values to strings
@@ -183,7 +189,8 @@ def save_graphml(G, filename='graph.graphml', folder=None):
 
 def load_graphml(filename, folder=None):
     """
-    Load a GraphML file from disk and convert the node/edge attributes to correct data types.
+    Load a GraphML file from disk and convert the node/edge attributes to
+    correct data types.
 
     Parameters
     ----------
@@ -220,25 +227,31 @@ def load_graphml(filename, folder=None):
     # convert numeric, bool, and list node tags from string to correct data types
     for u, v, key, data in G.edges(data=True, keys=True):
 
-        # first parse oneway to bool and length to float - they should always have only 1 value each
+        # first parse oneway to bool and length to float - they should always
+        # have only 1 value each
         data['oneway'] = ast.literal_eval(data['oneway'])
         data['length'] = float(data['length'])
 
-        # these attributes might have a single value, or a list if edge's topology was simplified
+        # these attributes might have a single value, or a list if edge's
+        # topology was simplified
         for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed', 'service', 'access', 'area', 'landuse', 'width', 'est_width']:
-            # if this edge has this attribute, and it starts with '[' and ends with ']', then it's a list to be parsed
+            # if this edge has this attribute, and it starts with '[' and ends
+            # with ']', then it's a list to be parsed
             if attr in data and data[attr][0] == '[' and data[attr][-1] == ']':
-                # convert the string list to a list type, else leave as single-value string
+                # convert the string list to a list type, else leave as
+                # single-value string
                 data[attr] = ast.literal_eval(data[attr])
 
-        # osmid might have a single value or a list, but if single value, then parse int
+        # osmid might have a single value or a list, but if single value, then
+        # parse int
         if 'osmid' in data:
             if data['osmid'][0] == '[' and data['osmid'][-1] == ']':
                 data['osmid'] = ast.literal_eval(data['osmid'])
             else:
                 data['osmid'] = int(data['osmid'])
 
-        # if geometry attribute exists, load the string as well-known text to shapely LineString
+        # if geometry attribute exists, load the string as well-known text to
+        # shapely LineString
         if 'geometry' in data:
             data['geometry'] = wkt.loads(data['geometry'])
 
@@ -257,7 +270,8 @@ def load_graphml(filename, folder=None):
 
 def is_duplicate_edge(data, data_other):
     """
-    Check if two edge data dictionaries are the same based on OSM ID and geometry.
+    Check if two edge data dictionaries are the same based on OSM ID and
+    geometry.
 
     Parameters
     ----------
@@ -292,7 +306,8 @@ def is_duplicate_edge(data, data_other):
 
 def is_same_geometry(data, data_other):
     """
-    Check if LineString geometries in two edge data dicts are the same, in normal or reversed order of points.
+    Check if LineString geometries in two edge data dicts are the same, in
+    normal or reversed order of points.
 
     Parameters
     ----------
@@ -310,16 +325,19 @@ def is_same_geometry(data, data_other):
     geom1 = [list(coords) for coords in data['geometry'].xy]
     geom2 = [list(coords) for coords in data_other['geometry'].xy]
 
-    # reverse the first edge's list of x's and y's to look for a match in either order
+    # reverse the first edge's list of x's and y's to look for a match in
+    # either order
     geom1_r = [list(reversed(list(coords))) for coords in data['geometry'].xy]
 
-    # if the edge's geometry matches its reverse's geometry in either order, return True
+    # if the edge's geometry matches its reverse's geometry in either order,
+    # return True
     return (geom1 == geom2 or geom1_r == geom2)
 
 
 def get_undirected(G):
     """
-    Convert a directed graph to an undirected graph that maintains parallel edges if geometries differ.
+    Convert a directed graph to an undirected graph that maintains parallel
+    edges if geometries differ.
 
     Parameters
     ----------
@@ -346,9 +364,9 @@ def get_undirected(G):
     H.graph = G.graph
     H.node = G.node
 
-    # the previous operation added all directed edges from G as undirected edges in H
-    # this means we have duplicate edges for every bi-directional street
-    # so, look through the edges and remove any duplicates
+    # the previous operation added all directed edges from G as undirected
+    # edges in H. this means we have duplicate edges for every bi-directional
+    # street. so, look through the edges and remove any duplicates
     duplicate_edges = []
     for u, v, key, data in H.edges(keys=True, data=True):
 
@@ -361,7 +379,8 @@ def get_undirected(G):
                 # don't compare this edge to itself
                 if not key_other == key:
 
-                    # compare the first edge's data to the second's to see if they are duplicates
+                    # compare the first edge's data to the second's to see if
+                    # they are duplicates
                     if is_duplicate_edge(data, H.edge[u][v][key_other]):
 
                         # if they match up, flag the duplicate for removal
@@ -387,7 +406,8 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     node_geometry : bool
         if True, create a geometry column from node x and y data
     fill_edge_geometry : bool
-        if True, fill in missing edge geometry fields using origin and destination nodes
+        if True, fill in missing edge geometry fields using origin and
+        destination nodes
 
     Returns
     -------
@@ -419,16 +439,19 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
         start_time = time.time()
 
-        # create a list to hold our edges, then loop through each edge in the graph
+        # create a list to hold our edges, then loop through each edge in the
+        # graph
         edges = []
         for u, v, key, data in G.edges(keys=True, data=True):
 
-            # for each edge, add key and all attributes in data dict to the edge_details
+            # for each edge, add key and all attributes in data dict to the
+            # edge_details
             edge_details = {'u':u, 'v':v, 'key':key}
             for attr_key in data:
                 edge_details[attr_key] = data[attr_key]
 
-            # if edge doesn't already have a geometry attribute, create one now if fill_edge_geometry==True
+            # if edge doesn't already have a geometry attribute, create one now
+            # if fill_edge_geometry==True
             if not 'geometry' in data:
                 if fill_edge_geometry:
                     point_u = Point((G.node[u]['x'], G.node[u]['y']))
@@ -479,7 +502,8 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
         attribute_values = {k:v for k, v in attributes[attribute_name].items() if pd.notnull(v)}
         nx.set_node_attributes(G, attribute_name, attribute_values)
 
-    # add the edges and attributes that are not u, v, key (as they're added separately) or null
+    # add the edges and attributes that are not u, v, key (as they're added
+    # separately) or null
     for _, row in gdf_edges.iterrows():
         attrs = {}
         for label, value in row.iteritems():

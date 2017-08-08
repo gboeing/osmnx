@@ -1,9 +1,10 @@
-###################################################################################################
+################################################################################
 # Module: elevation.py
-# Description: Get node elevations and edge grades from the Google Maps Elevation API
+# Description: Get node elevations and edge grades from the Google Maps
+#              Elevation API
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
-###################################################################################################
+################################################################################
 
 import math
 import time
@@ -16,9 +17,11 @@ from .core import get_from_cache
 from .utils import log
 
 
-def add_node_elevations(G, api_key, max_locations_per_batch=350, pause_duration=0.02): # pragma: no cover
+def add_node_elevations(G, api_key, max_locations_per_batch=350,
+                        pause_duration=0.02): # pragma: no cover
     """
-    Get the elevation (meters) of each node in the network and add it to the node as an attribute.
+    Get the elevation (meters) of each node in the network and add it to the
+    node as an attribute.
 
     Parameters
     ----------
@@ -26,8 +29,9 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350, pause_duration=
     api_key : string
         your google maps elevation API key
     max_locations_per_batch : int
-        max number of coordinate pairs to submit in each API call (if this is too high,
-        the server will reject the request because its character limit exceeds the max)
+        max number of coordinate pairs to submit in each API call (if this is
+        too high, the server will reject the request because its character
+        limit exceeds the max)
     pause_duration : float
         time to pause between API calls
 
@@ -40,7 +44,8 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350, pause_duration=
     url_template = 'https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}'
 
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
-    # round coorindates to 5 decimal places (approx 1 meter) to be able to fit in more locations per API call
+    # round coorindates to 5 decimal places (approx 1 meter) to be able to fit
+    # in more locations per API call
     node_points = pd.Series({node:'{:.5f},{:.5f}'.format(data['y'], data['x']) for node, data in G.nodes(data=True)})
     log('Requesting node elevations from the API in {} calls.'.format(math.ceil(len(node_points) / max_locations_per_batch)))
 
@@ -89,8 +94,9 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350, pause_duration=
 
 def add_edge_grades(G, add_absolute=True): # pragma: no cover
     """
-    Get the directed grade (ie, rise over run) for each edge in the network and add it to
-    the edge as an attribute. Nodes must have elevation attributes to use this function.
+    Get the directed grade (ie, rise over run) for each edge in the network and
+    add it to the edge as an attribute. Nodes must have elevation attributes to
+    use this function.
 
     Parameters
     ----------
@@ -103,7 +109,8 @@ def add_edge_grades(G, add_absolute=True): # pragma: no cover
     G : networkx multidigraph
     """
 
-    # for each edge, calculate the difference in elevation from origin to destination, then divide by edge length
+    # for each edge, calculate the difference in elevation from origin to
+    # destination, then divide by edge length
     for u, v, k, data in G.edges(keys=True, data=True):
         elevation_change = G.node[v]['elevation'] - G.node[u]['elevation']
         grade = elevation_change / data['length']

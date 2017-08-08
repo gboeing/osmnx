@@ -1,9 +1,10 @@
-###################################################################################################
+################################################################################
 # Module: __init__.py
-# Description: OSMnx: Retrieve, construct, analyze, and visualize street networks from OSM
+# Description: OSMnx - Retrieve, construct, analyze, and visualize street
+#              networks from OpenStreetMap
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
-###################################################################################################
+################################################################################
 
 from .buildings import *
 from .elevation import *

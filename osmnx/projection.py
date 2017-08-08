@@ -1,9 +1,9 @@
-###################################################################################################
+################################################################################
 # Module: projection.py
 # Description: Project spatial geometries and street networks to/from UTM
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
-###################################################################################################
+################################################################################
 
 import time
 import math
@@ -18,7 +18,8 @@ from .utils import make_str
 
 def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     """
-    Project a shapely Polygon or MultiPolygon from lat-long to UTM, or vice-versa
+    Project a shapely Polygon or MultiPolygon from lat-long to UTM, or
+    vice-versa
 
     Parameters
     ----------
@@ -30,12 +31,14 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     to_crs : dict
         if not None, just project to this CRS instead of to UTM
     to_latlong : bool
-        if True, project from crs to lat-long, if False, project from crs to local UTM zone
+        if True, project from crs to lat-long, if False, project from crs to
+        local UTM zone
 
     Returns
     -------
     tuple
-        (geometry_proj, crs), the projected shapely geometry and the crs of the projected geometry
+        (geometry_proj, crs), the projected shapely geometry and the crs of the
+        projected geometry
     """
 
     if crs is None:
@@ -53,10 +56,12 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
 
 def project_gdf(gdf, to_crs=None, to_latlong=False):
     """
-    Project a GeoDataFrame to the UTM zone appropriate for its geometries' centroid.
+    Project a GeoDataFrame to the UTM zone appropriate for its geometries'
+    centroid.
 
-    The simple calculation in this function works well for most latitudes, but won't
-    work for some far northern locations like Svalbard and parts of far northern Norway.
+    The simple calculation in this function works well for most latitudes, but
+    won't work for some far northern locations like Svalbard and parts of far
+    northern Norway.
 
     Parameters
     ----------
@@ -82,7 +87,8 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
     if to_crs is not None:
         projected_gdf = gdf.to_crs(to_crs)
 
-    # if to_crs was not passed-in, calculate the centroid of the geometry to determine UTM zone
+    # if to_crs was not passed-in, calculate the centroid of the geometry to
+    # determine UTM zone
     else:
         if to_latlong:
             # if to_latlong is True, project the gdf to latlong
@@ -95,10 +101,12 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
             if (not gdf.crs is None) and ('proj' in gdf.crs) and (gdf.crs['proj'] == 'utm'):
                 return gdf
 
-            # calculate the centroid of the union of all the geometries in the GeoDataFrame
+            # calculate the centroid of the union of all the geometries in the
+            # GeoDataFrame
             avg_longitude = gdf['geometry'].unary_union.centroid.x
 
-            # calculate the UTM zone from this avg longitude and define the UTM CRS to project
+            # calculate the UTM zone from this avg longitude and define the UTM
+            # CRS to project
             utm_zone = int(math.floor((avg_longitude + 180) / 6.) + 1)
             utm_crs = {'datum': 'NAD83',
                        'ellps': 'GRS80',
@@ -116,7 +124,8 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
 
 def project_graph(G, to_crs=None):
     """
-    Project a graph from lat-long to the UTM zone appropriate for its geographic location.
+    Project a graph from lat-long to the UTM zone appropriate for its geographic
+    location.
 
     Parameters
     ----------
@@ -140,7 +149,8 @@ def project_graph(G, to_crs=None):
     gdf_nodes.gdf_name = '{}_nodes'.format(G_proj.name)
     gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64).map(make_str)
 
-    # create new lat/lon columns just to save that data for later, and create a geometry column from x/y
+    # create new lat/lon columns just to save that data for later, and create a
+    # geometry column from x/y
     gdf_nodes['lon'] = gdf_nodes['x']
     gdf_nodes['lat'] = gdf_nodes['y']
     gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
@@ -155,8 +165,10 @@ def project_graph(G, to_crs=None):
         if 'geometry' in data:
             edges_with_geom.append({'u':u, 'v':v, 'key':key, 'geometry':data['geometry']})
 
-    # create an edges GeoDataFrame and project to UTM, if there were any edges with a geometry attribute
-    # geom attr only exists if graph has been simplified, otherwise you don't have to project anything for the edges because the nodes still contain all spatial data
+    # create an edges GeoDataFrame and project to UTM, if there were any edges
+    # with a geometry attribute. geom attr only exists if graph has been
+    # simplified, otherwise you don't have to project anything for the edges
+    # because the nodes still contain all spatial data
     if len(edges_with_geom) > 0:
         gdf_edges = gpd.GeoDataFrame(edges_with_geom)
         gdf_edges.crs = G_proj.graph['crs']
@@ -182,14 +194,16 @@ def project_graph(G, to_crs=None):
     for name in gdf_nodes_utm.columns:
         nx.set_node_attributes(G_proj, name, attributes[name])
 
-    # add the edges and all their attributes (including reconstructed geometry, when it exists) to the graph
+    # add the edges and all their attributes (including reconstructed geometry,
+    # when it exists) to the graph
     for u, v, key, attributes in edges:
         if 'geometry' in attributes:
             row = gdf_edges_utm[(gdf_edges_utm['u']==u) & (gdf_edges_utm['v']==v) & (gdf_edges_utm['key']==key)]
             attributes['geometry'] = row['geometry'].iloc[0]
         G_proj.add_edge(u, v, key=key, **attributes)
 
-    # set the graph's CRS attribute to the new, projected CRS and return the projected graph
+    # set the graph's CRS attribute to the new, projected CRS and return the
+    # projected graph
     G_proj.graph['crs'] = gdf_nodes_utm.crs
     G_proj.graph['name'] = '{}_UTM'.format(graph_name)
     if 'streets_per_node' in G.graph:

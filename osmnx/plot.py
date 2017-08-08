@@ -1,9 +1,9 @@
-###################################################################################################
+################################################################################
 # Module: plot.py
 # Description: Plot spatial geometries, street networks, and routes
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
-###################################################################################################
+################################################################################
 
 import time
 import os
@@ -36,7 +36,8 @@ except ImportError as e:
     folium = None
 
 
-def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6,6), margin=0.02, axis_off=True):
+def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1,
+               figsize=(6,6), margin=0.02, axis_off=True):
     """
     Plot a GeoDataFrame of place boundary geometries.
 
@@ -64,7 +65,8 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6
     fig, ax : tuple
     """
 
-    # if facecolor or edgecolor is a string instead of a list, make sure we have as many colors as gdf elements
+    # if facecolor or edgecolor is a string instead of a list, make sure we have
+    # as many colors as gdf elements
     if isinstance(fc, str):
         fc = [fc] * len(gdf)
     if isinstance(ec, str):
@@ -82,7 +84,8 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6
         else:
             raise ValueError('All geometries in GeoDataFrame must be shapely Polygons or MultiPolygons')
 
-    # adjust the axis margins and limits around the image and make axes equal-aspect
+    # adjust the axis margins and limits around the image and make axes
+    # equal-aspect
     west, south, east, north = gdf.unary_union.bounds
     margin_ns = (north - south) * margin
     margin_ew = (east - west) * margin
@@ -146,7 +149,8 @@ def get_colors(n, cmap='viridis', start=0., stop=1., alpha=1., return_hex=False)
 
 def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, stop=1):
     """
-    Get a list of node colors by binning some continuous-variable attribute into quantiles.
+    Get a list of node colors by binning some continuous-variable attribute into
+    quantiles.
 
     Parameters
     ----------
@@ -178,7 +182,8 @@ def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, sto
 
 def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1):
     """
-    Get a list of edge colors by binning some continuous-variable attribute into quantiles.
+    Get a list of edge colors by binning some continuous-variable attribute into
+    quantiles.
 
     Parameters
     ----------
@@ -229,7 +234,8 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
     dpi : int
         the resolution of the image file if saving
     axis_off : bool
-        if True matplotlib axis was turned off by plot_graph so constrain the saved figure's extent to the interior of the axis
+        if True matplotlib axis was turned off by plot_graph so constrain the
+        saved figure's extent to the interior of the axis
 
     Returns
     -------
@@ -253,7 +259,8 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
             fig.savefig(path_filename, bbox_inches=0, format=file_format, facecolor=fig.get_facecolor(), transparent=True)
         else:
             if axis_off:
-                # if axis is turned off, constrain the saved figure's extent to the interior of the axis
+                # if axis is turned off, constrain the saved figure's extent to
+                # the interior of the axis
                 extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
             else:
                 extent = 'tight'
@@ -272,10 +279,13 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
     return fig, ax
 
 
-def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off=True, equal_aspect=False, bgcolor='w',
-               show=True, save=False, close=True, file_format='png', filename='temp', dpi=300, annotate=False,
-               node_color='#66ccff', node_size=15, node_alpha=1, node_edgecolor='none', node_zorder=1,
-               edge_color='#999999', edge_linewidth=1, edge_alpha=1, use_geom=True):
+def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
+               axis_off=True, equal_aspect=False, bgcolor='w', show=True,
+               save=False, close=True, file_format='png', filename='temp',
+               dpi=300, annotate=False, node_color='#66ccff', node_size=15,
+               node_alpha=1, node_edgecolor='none', node_zorder=1,
+               edge_color='#999999', edge_linewidth=1, edge_alpha=1,
+               use_geom=True):
     """
     Plot a networkx spatial graph.
 
@@ -283,7 +293,8 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     ----------
     G : networkx multidigraph
     bbox : tuple
-        bounding box as north,south,east,west - if None will calculate from spatial extents of data
+        bounding box as north,south,east,west - if None will calculate from
+        spatial extents of data
     fig_height : int
         matplotlib figure height in inches
     fig_width : int
@@ -319,7 +330,8 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     node_edgecolor : string
         the color of the node's marker's border
     node_zorder : int
-        zorder to plot nodes, edges are always 2, so make node_zorder 1 to plot nodes beneath them or 3 to plot nodes atop them
+        zorder to plot nodes, edges are always 2, so make node_zorder 1 to plot
+        nodes beneath them or 3 to plot nodes atop them
     edge_color : string
         the color of the edges' lines
     edge_linewidth : float
@@ -327,7 +339,9 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     edge_alpha : float
         the opacity of the edges' lines
     use_geom : bool
-        if True, use the spatial geometry attribute of the edges to draw geographically accurate edges, rather than just lines straight from node to node
+        if True, use the spatial geometry attribute of the edges to draw
+        geographically accurate edges, rather than just lines straight from node
+        to node
 
     Returns
     -------
@@ -338,14 +352,16 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     node_Xs = [float(node['x']) for node in G.node.values()]
     node_Ys = [float(node['y']) for node in G.node.values()]
 
-    # get north, south, east, west values either from bbox parameter or from the spatial extent of the edges' geometries
+    # get north, south, east, west values either from bbox parameter or from the
+    # spatial extent of the edges' geometries
     if bbox is None:
         edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
         west, south, east, north = edges.total_bounds
     else:
         north, south, east, west = bbox
 
-    # if caller did not pass in a fig_width, calculate it proportionately from the fig_height and bounding box aspect ratio
+    # if caller did not pass in a fig_width, calculate it proportionately from
+    # the fig_height and bounding box aspect ratio
     bbox_aspect_ratio = (north-south)/(east-west)
     if fig_width is None:
         fig_width = fig_height / bbox_aspect_ratio
@@ -359,11 +375,13 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     lines = []
     for u, v, key, data in G.edges(keys=True, data=True):
         if 'geometry' in data and use_geom:
-            # if it has a geometry attribute (a list of line segments), add them to the list of lines to plot
+            # if it has a geometry attribute (a list of line segments), add them
+            # to the list of lines to plot
             xs, ys = data['geometry'].xy
             lines.append(list(zip(xs, ys)))
         else:
-            # if it doesn't have a geometry attribute, the edge is a straight line from node to node
+            # if it doesn't have a geometry attribute, the edge is a straight
+            # line from node to node
             x1 = G.node[u]['x']
             y1 = G.node[u]['y']
             x2 = G.node[v]['x']
@@ -389,7 +407,8 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     ax.get_xaxis().get_major_formatter().set_useOffset(False)
     ax.get_yaxis().get_major_formatter().set_useOffset(False)
 
-    # if axis_off, turn off the axis display set the margins to zero and point the ticks in so there's no space around the plot
+    # if axis_off, turn off the axis display set the margins to zero and point
+    # the ticks in so there's no space around the plot
     if axis_off:
         ax.axis('off')
         ax.margins(0)
@@ -411,13 +430,17 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02, axis_off
     return fig, ax
 
 
-def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0.02, bgcolor='w',
-                     axis_off=True, show=True, save=False, close=True, file_format='png', filename='temp', dpi=300, annotate=False,
-                     node_color='#999999', node_size=15, node_alpha=1, node_edgecolor='none', node_zorder=1,
-                     edge_color='#999999', edge_linewidth=1, edge_alpha=1, use_geom=True,
-                     origin_point=None, destination_point=None,
-                     route_color='r', route_linewidth=4, route_alpha=0.5, orig_dest_node_alpha=0.5,
-                     orig_dest_node_size=100, orig_dest_node_color='r', orig_dest_point_color='b'):
+def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
+                     margin=0.02, bgcolor='w', axis_off=True, show=True,
+                     save=False, close=True, file_format='png', filename='temp',
+                     dpi=300, annotate=False, node_color='#999999',
+                     node_size=15, node_alpha=1, node_edgecolor='none',
+                     node_zorder=1, edge_color='#999999', edge_linewidth=1,
+                     edge_alpha=1, use_geom=True, origin_point=None,
+                     destination_point=None, route_color='r', route_linewidth=4,
+                     route_alpha=0.5, orig_dest_node_alpha=0.5,
+                     orig_dest_node_size=100, orig_dest_node_color='r',
+                     orig_dest_point_color='b'):
     """
     Plot a route along a networkx spatial graph.
 
@@ -427,7 +450,8 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     route : list
         the route as a list of nodes
     bbox : tuple
-        bounding box as north,south,east,west - if None will calculate from spatial extents of data
+        bounding box as north,south,east,west - if None will calculate from
+        spatial extents of data
     fig_height : int
         matplotlib figure height in inches
     fig_width : int
@@ -461,7 +485,8 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     node_edgecolor : string
         the color of the node's marker's border
     node_zorder : int
-        zorder to plot nodes, edges are always 2, so make node_zorder 1 to plot nodes beneath them or 3 to plot nodes atop them
+        zorder to plot nodes, edges are always 2, so make node_zorder 1 to plot
+        nodes beneath them or 3 to plot nodes atop them
     edge_color : string
         the color of the edges' lines
     edge_linewidth : float
@@ -469,11 +494,14 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     edge_alpha : float
         the opacity of the edges' lines
     use_geom : bool
-        if True, use the spatial geometry attribute of the edges to draw geographically accurate edges, rather than just lines straight from node to node
+        if True, use the spatial geometry attribute of the edges to draw
+        geographically accurate edges, rather than just lines straight from node
+        to node
     origin_point : tuple
         optional, an origin (lat, lon) point to plot instead of the origin node
     destination_point : tuple
-        optional, a destination (lat, lon) point to plot instead of the destination node
+        optional, a destination (lat, lon) point to plot instead of the
+        destination node
     route_color : string
         the color of the route
     route_linewidth : int
@@ -487,7 +515,8 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     orig_dest_node_color : string
         the color of the origin and destination nodes
     orig_dest_point_color : string
-        the color of the origin and destination points if being plotted instead of nodes
+        the color of the origin and destination points if being plotted instead
+        of nodes
 
     Returns
     -------
@@ -495,17 +524,22 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
     """
 
     # plot the graph but not the route
-    fig, ax = plot_graph(G, bbox=bbox, fig_height=fig_height, fig_width=fig_width, margin=margin, axis_off=axis_off, bgcolor=bgcolor,
-                         show=False, save=False, close=False, filename=filename, dpi=dpi, annotate=annotate,
-                         node_color=node_color, node_size=node_size, node_alpha=node_alpha, node_edgecolor=node_edgecolor, node_zorder=node_zorder,
-                         edge_color=edge_color, edge_linewidth=edge_linewidth, edge_alpha=edge_alpha, use_geom=use_geom)
+    fig, ax = plot_graph(G, bbox=bbox, fig_height=fig_height, fig_width=fig_width,
+                         margin=margin, axis_off=axis_off, bgcolor=bgcolor,
+                         show=False, save=False, close=False, filename=filename,
+                         dpi=dpi, annotate=annotate, node_color=node_color,
+                         node_size=node_size, node_alpha=node_alpha,
+                         node_edgecolor=node_edgecolor, node_zorder=node_zorder,
+                         edge_color=edge_color, edge_linewidth=edge_linewidth,
+                         edge_alpha=edge_alpha, use_geom=use_geom)
 
     # the origin and destination nodes are the first and last nodes in the route
     origin_node = route[0]
     destination_node = route[-1]
 
     if origin_point is None or destination_point is None:
-        # if caller didn't pass points, use the first and last node in route as origin/destination
+        # if caller didn't pass points, use the first and last node in route as
+        # origin/destination
         origin_destination_lats = (G.node[origin_node]['y'], G.node[destination_node]['y'])
         origin_destination_lons = (G.node[origin_node]['x'], G.node[destination_node]['x'])
     else:
@@ -531,7 +565,8 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
             xs, ys = data['geometry'].xy
             lines.append(list(zip(xs, ys)))
         else:
-            # if it doesn't have a geometry attribute, the edge is a straight line from node to node
+            # if it doesn't have a geometry attribute, the edge is a straight
+            # line from node to node
             x1 = G.node[u]['x']
             y1 = G.node[u]['y']
             x2 = G.node[v]['x']
@@ -551,7 +586,8 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None, margin=0
 def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attribute=None):
 
     """
-    Turn a row from the gdf_edges GeoDataFrame into a folium PolyLine with attributes.
+    Turn a row from the gdf_edges GeoDataFrame into a folium PolyLine with
+    attributes.
 
     Parameters
     ----------
@@ -564,7 +600,8 @@ def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attri
     edge_opacity : numeric
         opacity of the edge lines
     popup_attribute : string
-        edge attribute to display in a pop-up when an edge is clicked, if None, no popup
+        edge attribute to display in a pop-up when an edge is clicked, if None,
+        no popup
 
     Returns
     -------
@@ -582,7 +619,8 @@ def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attri
     if popup_attribute is None:
         popup = None
     else:
-        # folium doesn't interpret html in the html argument (weird), so can't do newlines without an iframe
+        # folium doesn't interpret html in the html argument (weird), so can't
+        # do newlines without an iframe
         popup_text = str(edge[popup_attribute])
         popup = folium.Popup(html=popup_text)
 
@@ -592,13 +630,14 @@ def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attri
     return pl
 
 
-def plot_graph_folium(G, graph_map=None, popup_attribute=None, tiles='cartodbpositron', zoom=1, fit_bounds=True,
+def plot_graph_folium(G, graph_map=None, popup_attribute=None,
+                      tiles='cartodbpositron', zoom=1, fit_bounds=True,
                       edge_color='#333333', edge_width=5, edge_opacity=1):
     """
     Plot a graph on an interactive folium web map.
 
-    Note that anything larger than a small city can take a long time to plot and create a large web map
-    file that is very slow to load as JavaScript.
+    Note that anything larger than a small city can take a long time to plot and
+    create a large web map file that is very slow to load as JavaScript.
 
     Parameters
     ----------
@@ -646,7 +685,8 @@ def plot_graph_folium(G, graph_map=None, popup_attribute=None, tiles='cartodbpos
                                   edge_opacity=edge_opacity, popup_attribute=popup_attribute)
         pl.add_to(graph_map)
 
-    # if fit_bounds is True, fit the map to the bounds of the route by passing list of lat-lng points as [southwest, northeast]
+    # if fit_bounds is True, fit the map to the bounds of the route by passing
+    # list of lat-lng points as [southwest, northeast]
     if fit_bounds:
         tb = gdf_edges.total_bounds
         bounds = [(tb[1], tb[0]), (tb[3], tb[2])]
@@ -655,7 +695,8 @@ def plot_graph_folium(G, graph_map=None, popup_attribute=None, tiles='cartodbpos
     return graph_map
 
 
-def plot_route_folium(G, route, route_map=None, popup_attribute=None, tiles='cartodbpositron', zoom=1, fit_bounds=True,
+def plot_route_folium(G, route, route_map=None, popup_attribute=None,
+                      tiles='cartodbpositron', zoom=1, fit_bounds=True,
                       route_color='#cc0000', route_width=5, route_opacity=1):
     """
     Plot a route on an interactive folium web map.
@@ -711,7 +752,8 @@ def plot_route_folium(G, route, route_map=None, popup_attribute=None, tiles='car
                                   edge_opacity=route_opacity, popup_attribute=popup_attribute)
         pl.add_to(route_map)
 
-    # if fit_bounds is True, fit the map to the bounds of the route by passing list of lat-lng points as [southwest, northeast]
+    # if fit_bounds is True, fit the map to the bounds of the route by passing
+    # list of lat-lng points as [southwest, northeast]
     if fit_bounds:
         tb = gdf_route_edges.total_bounds
         bounds = [(tb[1], tb[0]), (tb[3], tb[2])]
@@ -720,11 +762,15 @@ def plot_route_folium(G, route, route_map=None, popup_attribute=None, tiles='car
     return route_map
 
 
-def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type='drive_service',
-                       street_widths=None, default_width=4, fig_length=8, edge_color='w', bgcolor='#333333', smooth_joints=True,
-                       filename=None, file_format='png', show=False, save=True, close=True, dpi=300):
+def plot_figure_ground(G=None, address=None, point=None, dist=805,
+                       network_type='drive_service', street_widths=None,
+                       default_width=4, fig_length=8, edge_color='w',
+                       bgcolor='#333333', smooth_joints=True, filename=None,
+                       file_format='png', show=False, save=True, close=True,
+                       dpi=300):
     """
-    Plot a figure-ground diagram of a street network, defaulting to one square mile.
+    Plot a figure-ground diagram of a street network, defaulting to one square
+    mile.
 
     Parameters
     ----------
@@ -734,13 +780,15 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
     point : tuple
         the center point if address and G are not passed in
     dist : numeric
-        how many meters to extend north, south, east, and west from the center point
+        how many meters to extend north, south, east, and west from the center
+        point
     network_type : string
         what type of network to get
     street_widths : dict
         where keys are street types and values are widths to plot in pixels
     default_width : numeric
-        the default street width in pixels for any street type not found in street_widths dict
+        the default street width in pixels for any street type not found in
+        street_widths dict
     fig_length : numeric
         the height and width of this square diagram
     edge_color : string
@@ -748,7 +796,8 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
     bgcolor : string
         the color of the background
     smooth_joints : bool
-        if True, plot nodes same width as streets to smooth line joints and prevent cracks between them from showing
+        if True, plot nodes same width as streets to smooth line joints and
+        prevent cracks between them from showing
     filename : string
         filename to save the image as
     file_format : string
@@ -769,15 +818,17 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
 
     multiplier = 1.2
 
-    # if G was passed-in, use this graph in the plot, centered on the centroid of its nodes
+    # if G was passed-in, use this graph in the plot, centered on the centroid
+    # of its nodes
     if G is not None:
         gdf_nodes = graph_to_gdfs(G, edges=False, node_geometry=True)
         lnglat_point = gdf_nodes.unary_union.centroid.coords[0]
         point = tuple(reversed(lnglat_point))
 
-    # otherwise, get the network by either address or point, whichever was passed-in,
-    # using a distance multiplier to make sure we get more than enough network
-    # simplify in non-strict mode to not combine multiple street types into single edge
+    # otherwise, get the network by either address or point, whichever was
+    # passed-in, using a distance multiplier to make sure we get more than
+    # enough network. simplify in non-strict mode to not combine multiple street
+    # types into single edge
     elif address is not None:
         G, point = graph_from_address(address, distance=dist*multiplier, distance_type='bbox', network_type=network_type,
                                       simplify=False, truncate_by_edge=True, return_coords=True)
@@ -792,7 +843,8 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
     # project the network to UTM
     G = project_graph(G)
 
-    # if user did not pass in custom street widths, create a dict of default values
+    # if user did not pass in custom street widths, create a dict of default
+    # values
     if street_widths is None:
         street_widths = {'footway' : 1.5,
                          'steps' : 1.5,
@@ -805,7 +857,8 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
     # we need an undirected graph to find every edge incident to a node
     G_undir = G.to_undirected()
 
-    # for each network edge, get a linewidth according to street type (the OSM 'highway' value)
+    # for each network edge, get a linewidth according to street type (the OSM
+    # 'highway' value)
     edge_linewidths = []
     for u, v, key, data in G_undir.edges(keys=True, data=True):
         street_type = data['highway'][0] if isinstance(data['highway'], list) else data['highway']
@@ -831,13 +884,16 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
                     else:
                         edge_types_flat.append(et)
 
-                # for each edge type in the flattened list, lookup the corresponding width
+                # for each edge type in the flattened list, lookup the
+                # corresponding width
                 edge_widths = [street_widths[edge_type] if edge_type in street_widths else default_width for edge_type in edge_types_flat]
 
-                # the node diameter will be the smallest of the edge widths - anything larger would extend past the street's line
+                # the node diameter will be the smallest of the edge widths -
+                # anything larger would extend past the street's line
                 circle_diameter = min(edge_widths)
 
-                # mpl circle marker sizes are in area, so it is the diameter squared
+                # mpl circle marker sizes are in area, so it is the diameter
+                # squared
                 circle_area = circle_diameter ** 2
                 node_widths[node] = circle_area
 
@@ -846,7 +902,8 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
     else:
         node_sizes = 0
 
-    # define the spatial extents of the plotting figure to make it square, in projected units, and cropped to the desired area
+    # define the spatial extents of the plotting figure to make it square, in
+    # projected units, and cropped to the desired area
     bbox_proj = bbox_from_point(point, dist, project_utm=True)
 
     # create a filename if one was not passed
@@ -854,8 +911,12 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805, network_type=
         filename = 'figure_ground_{}_{}'.format(point, network_type)
 
     # plot the figure
-    fig, ax = plot_graph(G_undir, bbox=bbox_proj, fig_height=fig_length, margin=0, axis_off=True, equal_aspect=True, bgcolor=bgcolor,
-                         node_size=node_sizes, node_color=edge_color, edge_linewidth=edge_linewidths, edge_color=edge_color,
-                         show=show, save=save, close=close, filename=filename, file_format=file_format, dpi=dpi)
+    fig, ax = plot_graph(G_undir, bbox=bbox_proj, fig_height=fig_length,
+                         margin=0, axis_off=True, equal_aspect=True,
+                         bgcolor=bgcolor, node_size=node_sizes,
+                         node_color=edge_color, edge_linewidth=edge_linewidths,
+                         edge_color=edge_color, show=show, save=save,
+                         close=close, filename=filename, file_format=file_format,
+                         dpi=dpi)
 
     return fig, ax
