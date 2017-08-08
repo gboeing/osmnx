@@ -86,9 +86,11 @@ def test_stats():
     location_point = (37.791427, -122.410018)
     G = ox.graph_from_point(location_point, distance=500, distance_type='network')
     G = ox.add_edge_bearings(G)
+    G_proj = ox.project_graph(G)
     stats1 = ox.basic_stats(G)
-    stats1 = ox.basic_stats(G, area=1000)
-    stats2 = ox.extended_stats(G, connectivity=True, anc=True, ecc=True, bc=True, cc=True)
+    stats2 = ox.basic_stats(G, area=1000)
+    stats3 = ox.basic_stats(G_proj, area=1000, clean_intersects=True, tolerance=15, circuity_dist='euclidean')
+    stats4 = ox.extended_stats(G, connectivity=True, anc=True, ecc=True, bc=True, cc=True)
 
 
 def test_plots():
@@ -104,7 +106,6 @@ def test_plots():
     fig, ax = ox.plot_graph(G_simplified, show=False, save=True, close=True, file_format='svg')
 
     G_projected = ox.project_graph(G_simplified)
-    intersections = ox.clean_intersections(G_projected)
     fig, ax = ox.plot_graph(G_projected)
 
     fig, ax = ox.plot_graph(G_projected, fig_height=5, fig_width=5, margin=0.05, axis_off=False, bgcolor='y',
