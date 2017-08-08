@@ -9,13 +9,19 @@ import time
 import geopandas as gpd
 import matplotlib.pyplot as plt
 from matplotlib.collections import PatchCollection
-from shapely.geometry import Polygon, MultiPolygon, Point
+from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon
 from descartes import PolygonPatch
 
-from .projection import project_geometry
+from .core import consolidate_subdivide_geometry
+from .core import get_polygons_coordinates
+from .core import overpass_request
+from .core import bbox_from_point
+from .core import gdf_from_place
 from .plot import save_and_show
-from .core import consolidate_subdivide_geometry, get_polygons_coordinates, overpass_request, bbox_from_point, gdf_from_place
-from .utils import log, geocode
+from .projection import project_geometry
+from .utils import log
+from .utils import geocode
 
 
 def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None,

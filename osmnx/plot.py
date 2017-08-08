@@ -15,14 +15,19 @@ import matplotlib.cm as cm
 import networkx as nx
 from matplotlib.collections import LineCollection
 from descartes import PolygonPatch
-from shapely.geometry import Polygon, MultiPolygon
+from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon
 
 from . import globals
-from .utils import log, get_largest_component
+from .core import graph_from_address
+from .core import graph_from_point
+from .core import bbox_from_point
 from .projection import project_graph
 from .save_load import graph_to_gdfs
 from .simplify import simplify_graph
-from .core import graph_from_address, graph_from_point, bbox_from_point
+from .utils import log
+from .utils import get_largest_component
+
 
 # folium is an optional dependency for the folium plotting functions
 try:

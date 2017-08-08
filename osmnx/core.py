@@ -23,13 +23,23 @@ import networkx as nx
 from collections import OrderedDict
 from itertools import groupby
 from dateutil import parser as date_parser
-from shapely.geometry import Point, LineString, Polygon, MultiPolygon
+from shapely.geometry import Point
+from shapely.geometry import LineString
+from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon
 from shapely.ops import unary_union
 
 from . import globals
-from .utils import log, make_str, get_largest_component, great_circle_vec, get_nearest_node, geocode, count_streets_per_node
+from .projection import project_geometry
+from .projection import project_gdf
 from .simplify import simplify_graph
-from .projection import project_geometry, project_gdf
+from .utils import log
+from .utils import make_str
+from .utils import get_largest_component
+from .utils import great_circle_vec
+from .utils import get_nearest_node
+from .utils import geocode
+from .utils import count_streets_per_node
 
 
 def save_to_cache(url, response_json):

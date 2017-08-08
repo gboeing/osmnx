@@ -8,10 +8,13 @@
 import time
 import logging as lg
 import geopandas as gpd
-from shapely.geometry import Polygon, Point, LineString
+from shapely.geometry import Polygon
+from shapely.geometry import Point
+from shapely.geometry import LineString
 
-from .utils import log, count_streets_per_node
 from .save_load import graph_to_gdfs
+from .utils import log
+from .utils import count_streets_per_node
 
 
 def is_endpoint(G, node, strict=True):

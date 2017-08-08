@@ -11,7 +11,8 @@ import requests
 import pandas as pd
 import networkx as nx
 
-from .core import save_to_cache, get_from_cache
+from .core import save_to_cache
+from .core import get_from_cache
 from .utils import log
 
 

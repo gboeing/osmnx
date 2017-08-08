@@ -13,11 +13,13 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 import networkx as nx
-from shapely.geometry import Point, LineString
+from shapely.geometry import Point
+from shapely.geometry import LineString
 from shapely import wkt
 
 from . import globals
-from .utils import log, make_str
+from .utils import log
+from .utils import make_str
 
 
 def save_gdf_shapefile(gdf, filename=None, folder=None):
