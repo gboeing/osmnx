@@ -10,6 +10,7 @@ import sys
 import time
 import unicodedata
 import math
+import warnings
 import logging as lg
 import datetime as dt
 import networkx as nx
@@ -267,10 +268,37 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     theta2 = np.deg2rad(lng2)
 
     cos = (np.sin(phi1) * np.sin(phi2) * np.cos(theta1 - theta2) + np.cos(phi1) * np.cos(phi2))
-    arc = np.arccos(cos)
+
+    # ignore warnings during this calculation because numpy warns it cannot calculate arccos for self-loops since u==v
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        arc = np.arccos(cos)
 
     # return distance in units of earth_radius
     distance = arc * earth_radius
+    return distance
+
+
+def euclidean_dist_vec(y1, x1, y2, x2):
+    """
+    Vectorized function to calculate the euclidean distance between two points
+    or between vectors of points.
+
+    Parameters
+    ----------
+    y1 : float or array of float
+    x1 : float or array of float
+    y2 : float or array of float
+    x2 : float or array of float
+
+    Returns
+    -------
+    distance : float or array of float
+        distance or vector of distances from (x1, y1) to (x2, y2) in graph units
+    """
+
+    # euclid's formula
+    distance = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
     return distance
 
 
@@ -320,11 +348,10 @@ def get_nearest_node(G, point, method='greatcircle', return_dist=False):
 
     elif method == 'euclidean':
         # calculate distance vector using euclidean distances (ie, for projected planar geometries)
-        x1 = df['reference_x']
-        x2 = df['x']
-        y1 = df['reference_y']
-        y2 = df['y']
-        distances = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5 #euclid's formula
+        distances = euclidean_dist_vec(y1=df['reference_y'],
+                                       x1=df['reference_x'],
+                                       y2=df['y'],
+                                       x2=df['x'])
 
     else:
         raise ValueError('method argument must be either "greatcircle" or "euclidean"')
