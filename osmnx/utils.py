@@ -211,7 +211,7 @@ def make_str(value):
     try:
         # for python 2.x compatibility, use unicode
         return unicode(value)
-    except:
+    except NameError:
         # python 3.x has no unicode type, so if error, use str type
         return str(value)
 
@@ -439,7 +439,7 @@ def add_edge_bearings(G):
     G : networkx multidigraph
     """
 
-    for u, v, k, data in G.edges(keys=True, data=True):
+    for u, v, data in G.edges(keys=False, data=True):
         origin_point = (G.node[u]['y'], G.node[u]['x'])
         destination_point = (G.node[v]['y'], G.node[v]['x'])
         bearing = get_bearing(origin_point, destination_point)

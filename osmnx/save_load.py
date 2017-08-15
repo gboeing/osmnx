@@ -171,11 +171,11 @@ def save_graphml(G, filename='graph.graphml', folder=None):
     for dict_key in G_save.graph:
         # convert all the graph attribute values to strings
         G_save.graph[dict_key] = make_str(G_save.graph[dict_key])
-    for node, data in G_save.nodes(data=True):
+    for _, data in G_save.nodes(data=True):
         for dict_key in data:
             # convert all the node attribute values to strings
             data[dict_key] = make_str(data[dict_key])
-    for u, v, key, data in G_save.edges(keys=True, data=True):
+    for _, _, data in G_save.edges(keys=False, data=True):
         for dict_key in data:
             # convert all the edge attribute values to strings
             data[dict_key] = make_str(data[dict_key])
@@ -219,13 +219,13 @@ def load_graphml(filename, folder=None):
 
     # convert numeric node tags from string to numeric data types
     log('Converting node and edge attribute data types')
-    for node, data in G.nodes(data=True):
+    for _, data in G.nodes(data=True):
         data['osmid'] = int(data['osmid'])
         data['x'] = float(data['x'])
         data['y'] = float(data['y'])
 
     # convert numeric, bool, and list node tags from string to correct data types
-    for u, v, key, data in G.edges(data=True, keys=True):
+    for _, _, data in G.edges(data=True, keys=False):
 
         # first parse oneway to bool and length to float - they should always
         # have only 1 value each

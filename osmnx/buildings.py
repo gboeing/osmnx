@@ -165,7 +165,7 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None,
                 nodes = result['nodes']
                 try:
                     polygon = Polygon([(vertices[node]['lon'], vertices[node]['lat']) for node in nodes])
-                except Exception as e:
+                except Exception:
                     log('Polygon has invalid geometry: {}'.format(nodes))
                 building = {'nodes' : nodes,
                             'geometry' : polygon}
