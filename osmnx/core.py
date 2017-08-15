@@ -30,7 +30,7 @@ from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
 from shapely.ops import unary_union
 
-from . import globals
+from . import settings
 from .projection import project_geometry
 from .projection import project_gdf
 from .simplify import simplify_graph
@@ -66,18 +66,18 @@ def save_to_cache(url, response_json):
     -------
     None
     """
-    if globals.use_cache:
+    if settings.use_cache:
         if response_json is None:
             log('Saved nothing to cache because response_json is None')
         else:
             # create the folder on the disk if it doesn't already exist
-            if not os.path.exists(globals.cache_folder):
-                os.makedirs(globals.cache_folder)
+            if not os.path.exists(settings.cache_folder):
+                os.makedirs(settings.cache_folder)
 
             # hash the url (to make filename shorter than the often extremely
             # long url)
             filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-            cache_path_filename = '{}/{}.json'.format(globals.cache_folder, filename)
+            cache_path_filename = '{}/{}.json'.format(settings.cache_folder, filename)
 
             # dump to json, and save to file
             json_str = make_str(json.dumps(response_json))
@@ -101,10 +101,10 @@ def get_from_cache(url):
     response_json : dict
     """
     # if the tool is configured to use the cache
-    if globals.use_cache:
+    if settings.use_cache:
         # determine the filename by hashing the url
         filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-        cache_path_filename = '{}/{}.json'.format(globals.cache_folder, filename)
+        cache_path_filename = '{}/{}.json'.format(settings.cache_folder, filename)
         # open the cache file for this url hash if it already exists, otherwise
         # return None
         if os.path.isfile(cache_path_filename):
@@ -759,7 +759,7 @@ def get_node(element):
     node['x'] = element['lon']
     node['osmid'] = element['id']
     if 'tags' in element:
-        for useful_tag in globals.useful_tags_node:
+        for useful_tag in settings.useful_tags_node:
             if useful_tag in element['tags']:
                 node[useful_tag] = element['tags'][useful_tag]
     return node
@@ -787,7 +787,7 @@ def get_path(element):
     path['nodes'] = [group[0] for group in grouped_list]
 
     if 'tags' in element:
-        for useful_tag in globals.useful_tags_path:
+        for useful_tag in settings.useful_tags_path:
             if useful_tag in element['tags']:
                 path[useful_tag] = element['tags'][useful_tag]
     return path

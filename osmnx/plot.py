@@ -18,7 +18,7 @@ from descartes import PolygonPatch
 from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
 
-from . import globals
+from . import settings
 from .core import graph_from_address
 from .core import graph_from_point
 from .core import bbox_from_point
@@ -246,9 +246,9 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
         start_time = time.time()
 
         # create the save folder if it doesn't already exist
-        if not os.path.exists(globals.imgs_folder):
-            os.makedirs(globals.imgs_folder)
-        path_filename = '{}/{}.{}'.format(globals.imgs_folder, filename, file_format)
+        if not os.path.exists(settings.imgs_folder):
+            os.makedirs(settings.imgs_folder)
+        path_filename = '{}/{}.{}'.format(settings.imgs_folder, filename, file_format)
 
         if file_format == 'svg':
             # if the file_format is svg, prep the fig/ax a bit for saving

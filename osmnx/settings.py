@@ -1,6 +1,6 @@
 ################################################################################
-# Module: globals.py
-# Description: Global defaults, can be configured by user by passing values to
+# Module: settings.py
+# Description: Global settings, can be configured by user by passing values to
 #              utils.config()
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
@@ -9,7 +9,7 @@
 import logging as lg
 
 
-# default locations to save data, logs, images, and cache
+# locations to save data, logs, images, and cache
 data_folder = 'data'
 logs_folder = 'logs'
 imgs_folder = 'images'

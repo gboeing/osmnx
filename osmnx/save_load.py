@@ -17,7 +17,7 @@ from shapely.geometry import Point
 from shapely.geometry import LineString
 from shapely import wkt
 
-from . import globals
+from . import settings
 from .utils import log
 from .utils import make_str
 
@@ -42,7 +42,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
     """
 
     if folder is None:
-        folder = globals.data_folder
+        folder = settings.data_folder
 
     if filename is None:
         filename = make_shp_filename(gdf.gdf_name)
@@ -87,7 +87,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
 
     start_time = time.time()
     if folder is None:
-        folder = globals.data_folder
+        folder = settings.data_folder
 
     # convert directed graph G to an undirected graph for saving as a shapefile
     G_save = get_undirected(G.copy())
@@ -163,7 +163,7 @@ def save_graphml(G, filename='graph.graphml', folder=None):
 
     start_time = time.time()
     if folder is None:
-        folder = globals.data_folder
+        folder = settings.data_folder
 
     # create a copy and convert all the node/edge attribute values to string or
     # it won't save
@@ -207,7 +207,7 @@ def load_graphml(filename, folder=None):
 
     # read the graph from disk
     if folder is None:
-        folder = globals.data_folder
+        folder = settings.data_folder
     path = '{}/{}'.format(folder, filename)
     G = nx.MultiDiGraph(nx.read_graphml(path, node_type=int))
 

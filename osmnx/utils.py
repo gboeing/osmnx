@@ -21,21 +21,21 @@ import requests
 from itertools import chain
 from collections import Counter
 
-from . import globals
+from . import settings
 
 
-def config(data_folder=globals.data_folder,
-           logs_folder=globals.logs_folder,
-           imgs_folder=globals.imgs_folder,
-           cache_folder=globals.cache_folder,
-           use_cache=globals.use_cache,
-           log_file=globals.log_file,
-           log_console=globals.log_console,
-           log_level=globals.log_level,
-           log_name=globals.log_name,
-           log_filename=globals.log_filename,
-           useful_tags_node=globals.useful_tags_node,
-           useful_tags_path=globals.useful_tags_path):
+def config(data_folder=settings.data_folder,
+           logs_folder=settings.logs_folder,
+           imgs_folder=settings.imgs_folder,
+           cache_folder=settings.cache_folder,
+           use_cache=settings.use_cache,
+           log_file=settings.log_file,
+           log_console=settings.log_console,
+           log_level=settings.log_level,
+           log_name=settings.log_name,
+           log_filename=settings.log_filename,
+           useful_tags_node=settings.useful_tags_node,
+           useful_tags_path=settings.useful_tags_path):
     """
     Configure osmnx by setting the default global vars to desired values.
 
@@ -71,21 +71,21 @@ def config(data_folder=globals.data_folder,
     """
 
     # set each global variable to the passed-in parameter value
-    globals.use_cache = use_cache
-    globals.cache_folder = cache_folder
-    globals.data_folder = data_folder
-    globals.imgs_folder = imgs_folder
-    globals.logs_folder = logs_folder
-    globals.log_console = log_console
-    globals.log_file = log_file
-    globals.log_level = log_level
-    globals.log_name = log_name
-    globals.log_filename = log_filename
-    globals.useful_tags_node = useful_tags_node
-    globals.useful_tags_path = useful_tags_path
+    settings.use_cache = use_cache
+    settings.cache_folder = cache_folder
+    settings.data_folder = data_folder
+    settings.imgs_folder = imgs_folder
+    settings.logs_folder = logs_folder
+    settings.log_console = log_console
+    settings.log_file = log_file
+    settings.log_level = log_level
+    settings.log_name = log_name
+    settings.log_filename = log_filename
+    settings.useful_tags_node = useful_tags_node
+    settings.useful_tags_path = useful_tags_path
 
     # if logging is turned on, log that we are configured
-    if globals.log_file or globals.log_console:
+    if settings.log_file or settings.log_console:
         log('Configured osmnx')
 
 
@@ -110,14 +110,14 @@ def log(message, level=None, name=None, filename=None):
     """
 
     if level is None:
-        level = globals.log_level
+        level = settings.log_level
     if name is None:
-        name = globals.log_name
+        name = settings.log_name
     if filename is None:
-        filename = globals.log_filename
+        filename = settings.log_filename
 
     # if logging to file is turned on
-    if globals.log_file:
+    if settings.log_file:
         # get the current logger (or create a new one, if none), then log
         # message at requested level
         logger = get_logger(level=level, name=name, filename=filename)
@@ -132,7 +132,7 @@ def log(message, level=None, name=None, filename=None):
 
     # if logging to console is turned on, convert message to ascii and print to
     # the console
-    if globals.log_console:
+    if settings.log_console:
         # capture current stdout, then switch it to the console, print the
         # message, then switch back to what had been the stdout. this prevents
         # logging to notebook - instead, it goes to console
@@ -165,11 +165,11 @@ def get_logger(level=None, name=None, filename=None):
     """
 
     if level is None:
-        level = globals.log_level
+        level = settings.log_level
     if name is None:
-        name = globals.log_name
+        name = settings.log_name
     if filename is None:
-        filename = globals.log_filename
+        filename = settings.log_filename
 
     logger = lg.getLogger(name)
 
@@ -178,11 +178,11 @@ def get_logger(level=None, name=None, filename=None):
 
         # get today's date and construct a log filename
         todays_date = dt.datetime.today().strftime('%Y_%m_%d')
-        log_filename = '{}/{}_{}.log'.format(globals.logs_folder, filename, todays_date)
+        log_filename = '{}/{}_{}.log'.format(settings.logs_folder, filename, todays_date)
 
         # if the logs folder does not already exist, create it
-        if not os.path.exists(globals.logs_folder):
-            os.makedirs(globals.logs_folder)
+        if not os.path.exists(settings.logs_folder):
+            os.makedirs(settings.logs_folder)
 
         # create file handler and log formatter and set them up
         handler = lg.FileHandler(log_filename, encoding='utf-8')
