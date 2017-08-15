@@ -85,7 +85,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
         # subdivide it if it exceeds the max area size (in meters), then project
         # back to lat-long
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
-        geometry, crs = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
+        geometry, _ = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         log('Requesting building footprints data within bounding box from API in {:,} request(s)'.format(len(geometry)))
         start_time = time.time()
 
@@ -165,7 +165,7 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None,
                 nodes = result['nodes']
                 try:
                     polygon = Polygon([(vertices[node]['lon'], vertices[node]['lat']) for node in nodes])
-                except:
+                except Exception as e:
                     log('Polygon has invalid geometry: {}'.format(nodes))
                 building = {'nodes' : nodes,
                             'geometry' : polygon}
