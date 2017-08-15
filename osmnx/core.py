@@ -333,7 +333,7 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
         return response_json
 
 
-def osm_polygon_download(query, limit=1, polygon_geojson=1, pause_duration=1):
+def osm_polygon_download(query, limit=1, polygon_geojson=1):
     """
     Geocode a place and download its boundary geometry from OSM's Nominatim API.
 
@@ -345,8 +345,6 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1, pause_duration=1):
         max number of results to return
     polygon_geojson : int
         request the boundary geometry polygon from the API, 0=no, 1=yes
-    pause_duration : int
-        time in seconds to pause before API requests
 
     Returns
     -------
@@ -620,7 +618,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         # subdivide it if it exceeds the max area size (in meters), then project
         # back to lat-long
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
-        geometry, crs = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
+        geometry, _ = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         log('Requesting network data within bounding box from API in {:,} request(s)'.format(len(geometry)))
         start_time = time.time()
 
@@ -1030,7 +1028,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buff
     points_within_geometry = pd.DataFrame()
 
     # cut the geometry into chunks for r-tree spatial index intersecting
-    multipoly = quadrat_cut_geometry(geometry, quadrat_width=quadrat_width, buffer_amount=buffer_amount)
+    multipoly = quadrat_cut_geometry(geometry, quadrat_width=quadrat_width, buffer_amount=buffer_amount, min_num=min_num)
 
     # create an r-tree spatial index for the nodes (ie, points)
     start_time = time.time()
@@ -1345,7 +1343,7 @@ def bbox_from_point(point, distance=1000, project_utm=False):
     else:
         # if project_utm is False, project back to lat-long then get the
         # bounding coordinates
-        buffer_latlong, crs_latlong = project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
+        buffer_latlong, _ = project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
         west, south, east, north = buffer_latlong.bounds
         log('Created bounding box {} meters in each direction from {}: {},{},{},{}'.format(distance, point, north, south, east, west))
 
@@ -1407,7 +1405,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
         polygon = Polygon([(west, north), (west, south), (east, south), (east, north)])
         polygon_utm, crs_utm = project_geometry(geometry=polygon)
         polygon_proj_buff = polygon_utm.buffer(buffer_dist)
-        polygon_buff, crs = project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
+        polygon_buff, _ = project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
         west_buffered, south_buffered, east_buffered, north_buffered = polygon_buff.bounds
 
         # get the network data from OSM then create the graph
@@ -1648,7 +1646,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         buffer_dist = 500
         polygon_utm, crs_utm = project_geometry(geometry=polygon)
         polygon_proj_buff = polygon_utm.buffer(buffer_dist)
-        polygon_buffered, crs = project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
+        polygon_buffered, _ = project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
 
         # get the network data from OSM,  create the buffered graph, then
         # truncate it to the buffered polygon
