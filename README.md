@@ -1,8 +1,10 @@
 [![PyPI version](https://badge.fury.io/py/OSMnx.svg)](https://badge.fury.io/py/OSMnx)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/osmnx/badges/downloads.svg)](https://anaconda.org/conda-forge/osmnx)
+[![Documentation Status](https://readthedocs.org/projects/osmnx/badge/?version=stable)](http://osmnx.readthedocs.io/en/stable/?badge=stable)
 [![Build Status](https://travis-ci.org/gboeing/osmnx.svg?branch=master)](https://travis-ci.org/gboeing/osmnx)
 [![Coverage Status](https://coveralls.io/repos/github/gboeing/osmnx/badge.svg?branch=master)](https://coveralls.io/github/gboeing/osmnx?branch=master)
-[![Documentation Status](https://readthedocs.org/projects/osmnx/badge/?version=latest)](http://osmnx.readthedocs.io/en/latest/?badge=latest)
-[![Anaconda-Server Badge](https://anaconda.org/conda-forge/osmnx/badges/downloads.svg)](https://anaconda.org/conda-forge/osmnx)
+[![Code Health](https://landscape.io/github/gboeing/osmnx/master/landscape.svg?style=flat)](https://landscape.io/github/gboeing/osmnx/master)
+
 
 # OSMnx
 
