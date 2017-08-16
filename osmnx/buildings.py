@@ -107,7 +107,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
         # max size (in meters), project back to lat-long, then get a list of polygon(s) exterior coordinates
         geometry_proj, crs_proj = project_geometry(polygon)
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
-        geometry, crs = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
+        geometry, _ = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = get_polygons_coordinates(geometry)
         log('Requesting building footprints data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
         start_time = time.time()

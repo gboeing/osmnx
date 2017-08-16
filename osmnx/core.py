@@ -160,7 +160,7 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
         response = requests.get('http://overpass-api.de/api/status', headers=get_http_headers())
         status = response.text.split('\n')[3]
         status_first_token = status.split(' ')[0]
-    except:
+    except Exception:
         # if we cannot reach the status endpoint or parse its output, log an
         # error and return default duration
         log('Unable to query http://overpass-api.de/api/status', level=lg.ERROR)
@@ -171,7 +171,7 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
         # wait required
         available_slots = int(status_first_token)
         pause_duration = 0
-    except:
+    except Exception:
         # if first token is 'Slot', it tells you when your slot will be free
         if status_first_token == 'Slot':
             utc_time_str = status.split(' ')[3]
@@ -242,7 +242,7 @@ def nominatim_request(params, pause_duration=1, timeout=30, error_pause_duration
         try:
             response_json = response.json()
             save_to_cache(prepared_url, response_json)
-        except:
+        except Exception:
             #429 is 'too many requests' and 504 is 'gateway timeout' from server
             # overload - handle these errors by recursively calling
             # nominatim_request until we get a valid response
@@ -313,7 +313,7 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
             if 'remark' in response_json:
                 log('Server remark: "{}"'.format(response_json['remark'], level=lg.WARNING))
             save_to_cache(prepared_url, response_json)
-        except:
+        except Exception:
             #429 is 'too many requests' and 504 is 'gateway timeout' from server
             # overload - handle these errors by recursively calling
             # overpass_request until we get a valid response
@@ -641,7 +641,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         # polygon(s) exterior coordinates
         geometry_proj, crs_proj = project_geometry(polygon)
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
-        geometry, crs = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
+        geometry, _ = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = get_polygons_coordinates(geometry)
         log('Requesting network data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
         start_time = time.time()
