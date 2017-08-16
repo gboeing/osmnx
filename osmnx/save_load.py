@@ -117,7 +117,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
             edge_details[attr_key] = data[attr_key]
 
         # if edge doesn't already have a geometry attribute, create one now
-        if not 'geometry' in data:
+        if 'geometry' not in data:
             point_u = Point((G_save.node[u]['x'], G_save.node[u]['y']))
             point_v = Point((G_save.node[v]['x'], G_save.node[v]['y']))
             edge_details['geometry'] = LineString([point_u, point_v])
@@ -452,7 +452,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
             # if edge doesn't already have a geometry attribute, create one now
             # if fill_edge_geometry==True
-            if not 'geometry' in data:
+            if 'geometry' not in data:
                 if fill_edge_geometry:
                     point_u = Point((G.node[u]['x'], G.node[u]['y']))
                     point_v = Point((G.node[v]['x'], G.node[v]['y']))

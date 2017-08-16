@@ -60,7 +60,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
 
     # check if we're querying by polygon or by bounding box based on which
     # argument(s) where passed into this function
-    by_poly = not polygon is None
+    by_poly = polygon is not None
     by_bbox = not (north is None or south is None or east is None or west is None)
     if not (by_poly or by_bbox):
         raise ValueError('You must pass a polygon or north, south, east, and west')
@@ -96,11 +96,15 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
             # decimal places (ie, within 1 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = '[out:json][timeout:{timeout}]{maxsize};((way["building"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation["building"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);));out;'
+            query_template = ('[out:json][timeout:{timeout}]{maxsize};((way["building"]({south:.8f},'
+                              '{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation["building"]'
+                              '({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);));out;')
             query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        log('Got all building footprints data within bounding box from API in {:,} request(s) and {:,.2f} seconds'.format(len(geometry), time.time()-start_time))
+        msg = ('Got all building footprints data within bounding box from '
+               'API in {:,} request(s) and {:,.2f} seconds')
+        log(msg.format(len(geometry), time.time()-start_time))
 
     elif by_poly:
         # project to utm, divide polygon up into sub-polygons if area exceeds a
@@ -115,11 +119,15 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
-            query_template = '[out:json][timeout:{timeout}]{maxsize};(way(poly:"{polygon}")["building"];(._;>;);relation(poly:"{polygon}")["building"];(._;>;));out;'
+            query_template = ('[out:json][timeout:{timeout}]{maxsize};(way'
+                              '(poly:"{polygon}")["building"];(._;>;);relation'
+                              '(poly:"{polygon}")["building"];(._;>;));out;')
             query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        log('Got all building footprints data within polygon from API in {:,} request(s) and {:,.2f} seconds'.format(len(polygon_coord_strs), time.time()-start_time))
+        msg = ('Got all building footprints data within polygon from API in '
+               '{:,} request(s) and {:,.2f} seconds')
+        log(msg.format(len(polygon_coord_strs), time.time()-start_time))
 
     return response_jsons
 

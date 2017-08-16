@@ -241,13 +241,17 @@ def get_largest_component(G, strongly=False):
         # retain only the largest strongly connected component
         if not nx.is_strongly_connected(G):
             G = max(nx.strongly_connected_component_subgraphs(G), key=len)
-            log('Graph was not connected, retained only the largest strongly connected component ({:,} of {:,} total nodes) in {:.2f} seconds'.format(len(list(G.nodes())), original_len, time.time()-start_time))
+            msg = ('Graph was not connected, retained only the largest strongly '
+                   'connected component ({:,} of {:,} total nodes) in {:.2f} seconds')
+            log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
     else:
         # if the graph is not connected and caller did not request retain_all,
         # retain only the largest weakly connected component
         if not nx.is_weakly_connected(G):
             G = max(nx.weakly_connected_component_subgraphs(G), key=len)
-            log('Graph was not connected, retained only the largest weakly connected component ({:,} of {:,} total nodes) in {:.2f} seconds'.format(len(list(G.nodes())), original_len, time.time()-start_time))
+            msg = ('Graph was not connected, retained only the largest weakly '
+                   'connected component ({:,} of {:,} total nodes) in {:.2f} seconds')
+            log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
 
     return G
 
@@ -570,5 +574,7 @@ def count_streets_per_node(G, nodes=None):
     # count how often each node appears in the list of flattened edge endpoints
     counts = Counter(edges_flat)
     streets_per_node = {node:counts[node] for node in nodes}
-    log('Got the counts of undirected street segments incident to each node (before removing peripheral edges) in {:,.2f} seconds'.format(time.time()-start_time))
+    msg = ('Got the counts of undirected street segments incident to each node '
+           '(before removing peripheral edges) in {:,.2f} seconds')
+    log(msg.format(time.time()-start_time))
     return streets_per_node
