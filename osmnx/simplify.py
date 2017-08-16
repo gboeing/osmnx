@@ -108,11 +108,11 @@ def build_path(G, node, endpoints, path):
     """
     # for each successor in the passed-in node
     for successor in G.successors(node):
-        if not successor in path:
+        if successor not in path:
             # if this successor is already in the path, ignore it, otherwise add
             # it to the path
             path.append(successor)
-            if not successor in endpoints:
+            if successor not in endpoints:
                 # if this successor is not an endpoint, recursively call
                 # build_path until you find an endpoint
                 path = build_path(G, successor, endpoints, path)
@@ -121,7 +121,7 @@ def build_path(G, node, endpoints, path):
                 # so return it
                 return path
 
-    if (not path[-1] in endpoints) and (path[0] in G.successors(path[-1])):
+    if (path[-1] not in endpoints) and (path[0] in G.successors(path[-1])):
         # if the end of the path is not actually an endpoint and the path's
         # first node is a successor of the path's final node, then this is
         # actually a self loop, so add path's first node to end of path to
@@ -161,7 +161,7 @@ def get_paths_to_simplify(G, strict=True):
     # for each endpoint node, look at each of its successor nodes
     for node in endpoints:
         for successor in G.successors(node):
-            if not successor in endpoints:
+            if successor not in endpoints:
                 # if the successor is not an endpoint, build a path from the
                 # endpoint node to the next endpoint node
                 try:

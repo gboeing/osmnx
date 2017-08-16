@@ -30,7 +30,7 @@ from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
 from shapely.ops import unary_union
 
-from . import globals
+from . import settings
 from .projection import project_geometry
 from .projection import project_gdf
 from .simplify import simplify_graph
@@ -66,18 +66,18 @@ def save_to_cache(url, response_json):
     -------
     None
     """
-    if globals.use_cache:
+    if settings.use_cache:
         if response_json is None:
             log('Saved nothing to cache because response_json is None')
         else:
             # create the folder on the disk if it doesn't already exist
-            if not os.path.exists(globals.cache_folder):
-                os.makedirs(globals.cache_folder)
+            if not os.path.exists(settings.cache_folder):
+                os.makedirs(settings.cache_folder)
 
             # hash the url (to make filename shorter than the often extremely
             # long url)
             filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-            cache_path_filename = '{}/{}.json'.format(globals.cache_folder, filename)
+            cache_path_filename = '{}/{}.json'.format(settings.cache_folder, filename)
 
             # dump to json, and save to file
             json_str = make_str(json.dumps(response_json))
@@ -101,10 +101,10 @@ def get_from_cache(url):
     response_json : dict
     """
     # if the tool is configured to use the cache
-    if globals.use_cache:
+    if settings.use_cache:
         # determine the filename by hashing the url
         filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-        cache_path_filename = '{}/{}.json'.format(globals.cache_folder, filename)
+        cache_path_filename = '{}/{}.json'.format(settings.cache_folder, filename)
         # open the cache file for this url hash if it already exists, otherwise
         # return None
         if os.path.isfile(cache_path_filename):
@@ -160,7 +160,7 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
         response = requests.get('http://overpass-api.de/api/status', headers=get_http_headers())
         status = response.text.split('\n')[3]
         status_first_token = status.split(' ')[0]
-    except:
+    except Exception:
         # if we cannot reach the status endpoint or parse its output, log an
         # error and return default duration
         log('Unable to query http://overpass-api.de/api/status', level=lg.ERROR)
@@ -171,7 +171,7 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
         # wait required
         available_slots = int(status_first_token)
         pause_duration = 0
-    except:
+    except Exception:
         # if first token is 'Slot', it tells you when your slot will be free
         if status_first_token == 'Slot':
             utc_time_str = status.split(' ')[3]
@@ -221,7 +221,7 @@ def nominatim_request(params, pause_duration=1, timeout=30, error_pause_duration
     prepared_url = requests.Request('GET', url, params=params).prepare().url
     cached_response_json = get_from_cache(prepared_url)
 
-    if not cached_response_json is None:
+    if cached_response_json is not None:
         # found this request in the cache, just return it instead of making a
         # new HTTP call
         return cached_response_json
@@ -242,13 +242,16 @@ def nominatim_request(params, pause_duration=1, timeout=30, error_pause_duration
         try:
             response_json = response.json()
             save_to_cache(prepared_url, response_json)
-        except:
+        except Exception:
             #429 is 'too many requests' and 504 is 'gateway timeout' from server
             # overload - handle these errors by recursively calling
             # nominatim_request until we get a valid response
             if response.status_code in [429, 504]:
                 # pause for error_pause_duration seconds before re-trying request
-                log('Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(domain, response.status_code, error_pause_duration), level=lg.WARNING)
+                log('Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(domain,
+                                                                                                                         response.status_code,
+                                                                                                                         error_pause_duration),
+                                                                                                                         level=lg.WARNING)
                 time.sleep(error_pause_duration)
                 response_json = nominatim_request(params=params, pause_duration=pause_duration, timeout=timeout)
 
@@ -288,7 +291,7 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
     prepared_url = requests.Request('GET', url, params=data).prepare().url
     cached_response_json = get_from_cache(prepared_url)
 
-    if not cached_response_json is None:
+    if cached_response_json is not None:
         # found this request in the cache, just return it instead of making a
         # new HTTP call
         return cached_response_json
@@ -313,7 +316,7 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
             if 'remark' in response_json:
                 log('Server remark: "{}"'.format(response_json['remark'], level=lg.WARNING))
             save_to_cache(prepared_url, response_json)
-        except:
+        except Exception:
             #429 is 'too many requests' and 504 is 'gateway timeout' from server
             # overload - handle these errors by recursively calling
             # overpass_request until we get a valid response
@@ -321,7 +324,10 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
                 # pause for error_pause_duration seconds before re-trying request
                 if error_pause_duration is None:
                     error_pause_duration = get_pause_duration()
-                log('Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(domain, response.status_code, error_pause_duration), level=lg.WARNING)
+                log('Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(domain,
+                                                                                                                         response.status_code,
+                                                                                                                         error_pause_duration),
+                                                                                                                         level=lg.WARNING)
                 time.sleep(error_pause_duration)
                 response_json = overpass_request(data=data, pause_duration=pause_duration, timeout=timeout)
 
@@ -333,7 +339,7 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
         return response_json
 
 
-def osm_polygon_download(query, limit=1, polygon_geojson=1, pause_duration=1):
+def osm_polygon_download(query, limit=1, polygon_geojson=1):
     """
     Geocode a place and download its boundary geometry from OSM's Nominatim API.
 
@@ -345,8 +351,6 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1, pause_duration=1):
         max number of results to return
     polygon_geojson : int
         request the boundary geometry polygon from the API, 0=no, 1=yes
-    pause_duration : int
-        time in seconds to pause before API requests
 
     Returns
     -------
@@ -432,7 +436,7 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
 
         # if buffer_dist was passed in, project the geometry to UTM, buffer it
         # in meters, then project it back to lat-long
-        if not buffer_dist is None:
+        if buffer_dist is not None:
             gdf_utm = project_gdf(gdf)
             gdf_utm['geometry'] = gdf_utm['geometry'].buffer(buffer_dist)
             gdf = project_gdf(gdf_utm, to_latlong=True)
@@ -548,7 +552,9 @@ def get_osm_filter(network_type):
     return osm_filter
 
 
-def osm_net_download(polygon=None, north=None, south=None, east=None, west=None, network_type='all_private', timeout=180, memory=None, max_query_area_size=50*1000*50*1000, infrastructure='way["highway"]'):
+def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
+                     network_type='all_private', timeout=180, memory=None,
+                     max_query_area_size=50*1000*50*1000, infrastructure='way["highway"]'):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
 
@@ -589,7 +595,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
 
     # check if we're querying by polygon or by bounding box based on which
     # argument(s) where passed into this function
-    by_poly = not polygon is None
+    by_poly = polygon is not None
     by_bbox = not (north is None or south is None or east is None or west is None)
     if not (by_poly or by_bbox):
         raise ValueError('You must pass a polygon or north, south, east, and west')
@@ -620,7 +626,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         # subdivide it if it exceeds the max area size (in meters), then project
         # back to lat-long
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
-        geometry, crs = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
+        geometry, _ = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         log('Requesting network data within bounding box from API in {:,} request(s)'.format(len(geometry)))
         start_time = time.time()
 
@@ -632,7 +638,11 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
             query_template = '[out:json][timeout:{timeout}]{maxsize};({infrastructure}{filters}({south:.8f},{west:.8f},{north:.8f},{east:.8f});>;);out;'
-            query_str = query_template.format(north=north, south=south, east=east, west=west, infrastructure=infrastructure, filters=osm_filter, timeout=timeout, maxsize=maxsize)
+            query_str = query_template.format(north=north, south=south,
+                                              east=east, west=west,
+                                              infrastructure=infrastructure,
+                                              filters=osm_filter,
+                                              timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         log('Got all network data within bounding box from API in {:,} request(s) and {:,.2f} seconds'.format(len(geometry), time.time()-start_time))
@@ -643,7 +653,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         # polygon(s) exterior coordinates
         geometry_proj, crs_proj = project_geometry(polygon)
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
-        geometry, crs = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
+        geometry, _ = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = get_polygons_coordinates(geometry)
         log('Requesting network data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
         start_time = time.time()
@@ -761,7 +771,7 @@ def get_node(element):
     node['x'] = element['lon']
     node['osmid'] = element['id']
     if 'tags' in element:
-        for useful_tag in globals.useful_tags_node:
+        for useful_tag in settings.useful_tags_node:
             if useful_tag in element['tags']:
                 node[useful_tag] = element['tags'][useful_tag]
     return node
@@ -789,7 +799,7 @@ def get_path(element):
     path['nodes'] = [group[0] for group in grouped_list]
 
     if 'tags' in element:
-        for useful_tag in globals.useful_tags_path:
+        for useful_tag in settings.useful_tags_path:
             if useful_tag in element['tags']:
                 path[useful_tag] = element['tags'][useful_tag]
     return path
@@ -1030,7 +1040,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buff
     points_within_geometry = pd.DataFrame()
 
     # cut the geometry into chunks for r-tree spatial index intersecting
-    multipoly = quadrat_cut_geometry(geometry, quadrat_width=quadrat_width, buffer_amount=buffer_amount)
+    multipoly = quadrat_cut_geometry(geometry, quadrat_width=quadrat_width, buffer_amount=buffer_amount, min_num=min_num)
 
     # create an r-tree spatial index for the nodes (ie, points)
     start_time = time.time()
@@ -1345,7 +1355,7 @@ def bbox_from_point(point, distance=1000, project_utm=False):
     else:
         # if project_utm is False, project back to lat-long then get the
         # bounding coordinates
-        buffer_latlong, crs_latlong = project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
+        buffer_latlong, _ = project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
         west, south, east, north = buffer_latlong.bounds
         log('Created bounding box {} meters in each direction from {}: {},{},{},{}'.format(distance, point, north, south, east, west))
 
@@ -1407,12 +1417,15 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
         polygon = Polygon([(west, north), (west, south), (east, south), (east, north)])
         polygon_utm, crs_utm = project_geometry(geometry=polygon)
         polygon_proj_buff = polygon_utm.buffer(buffer_dist)
-        polygon_buff, crs = project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
+        polygon_buff, _ = project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
         west_buffered, south_buffered, east_buffered, north_buffered = polygon_buff.bounds
 
         # get the network data from OSM then create the graph
-        response_jsons = osm_net_download(north=north_buffered, south=south_buffered, east=east_buffered, west=west_buffered,
-                                          network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, infrastructure=infrastructure)
+        response_jsons = osm_net_download(north=north_buffered, south=south_buffered,
+                                          east=east_buffered, west=west_buffered,
+                                          network_type=network_type, timeout=timeout,
+                                          memory=memory, max_query_area_size=max_query_area_size,
+                                          infrastructure=infrastructure)
         G_buffered = create_graph(response_jsons, name=name, retain_all=retain_all, network_type=network_type)
         G = truncate_graph_bbox(G_buffered, north, south, east, west, retain_all=True, truncate_by_edge=truncate_by_edge)
 
@@ -1430,7 +1443,11 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
 
     else:
         # get the network data from OSM
-        response_jsons = osm_net_download(north=north, south=south, east=east, west=west, network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, infrastructure=infrastructure)
+        response_jsons = osm_net_download(north=north, south=south, east=east,
+                                          west=west, network_type=network_type,
+                                          timeout=timeout, memory=memory,
+                                          max_query_area_size=max_query_area_size,
+                                          infrastructure=infrastructure)
 
         # create the graph, then truncate to the bounding box
         G = create_graph(response_jsons, name=name, retain_all=retain_all, network_type=network_type)
@@ -1581,8 +1598,11 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
     point = geocode(query=address)
 
     # then create a graph from this point
-    G = graph_from_point(point, distance, distance_type, network_type=network_type, simplify=simplify, retain_all=retain_all,
-                         truncate_by_edge=truncate_by_edge, name=name, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, clean_periphery=clean_periphery, infrastructure=infrastructure)
+    G = graph_from_point(point, distance, distance_type, network_type=network_type,
+                         simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge,
+                         name=name, timeout=timeout, memory=memory,
+                         max_query_area_size=max_query_area_size,
+                         clean_periphery=clean_periphery, infrastructure=infrastructure)
     log('graph_from_address() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
 
     if return_coords:
@@ -1648,11 +1668,14 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         buffer_dist = 500
         polygon_utm, crs_utm = project_geometry(geometry=polygon)
         polygon_proj_buff = polygon_utm.buffer(buffer_dist)
-        polygon_buffered, crs = project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
+        polygon_buffered, _ = project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
 
         # get the network data from OSM,  create the buffered graph, then
         # truncate it to the buffered polygon
-        response_jsons = osm_net_download(polygon=polygon_buffered, network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, infrastructure=infrastructure)
+        response_jsons = osm_net_download(polygon=polygon_buffered, network_type=network_type,
+                                          timeout=timeout, memory=memory,
+                                          max_query_area_size=max_query_area_size,
+                                          infrastructure=infrastructure)
         G_buffered = create_graph(response_jsons, name=name, retain_all=True, network_type=network_type)
         G_buffered = truncate_graph_polygon(G_buffered, polygon_buffered, retain_all=True, truncate_by_edge=truncate_by_edge)
 
@@ -1673,7 +1696,10 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
 
     else:
         # download a list of API responses for the polygon/multipolygon
-        response_jsons = osm_net_download(polygon=polygon, network_type=network_type, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, infrastructure=infrastructure)
+        response_jsons = osm_net_download(polygon=polygon, network_type=network_type,
+                                          timeout=timeout, memory=memory,
+                                          max_query_area_size=max_query_area_size,
+                                          infrastructure=infrastructure)
 
         # create the graph from the downloaded data
         G = create_graph(response_jsons, name=name, retain_all=True, network_type=network_type)
@@ -1767,8 +1793,11 @@ def graph_from_place(query, network_type='all_private', simplify=True,
     log('Constructed place geometry polygon(s) to query API')
 
     # create graph using this polygon(s) geometry
-    G = graph_from_polygon(polygon, network_type=network_type, simplify=simplify, retain_all=retain_all,
-                           truncate_by_edge=truncate_by_edge, name=name, timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, clean_periphery=clean_periphery, infrastructure=infrastructure)
+    G = graph_from_polygon(polygon, network_type=network_type, simplify=simplify,
+                           retain_all=retain_all, truncate_by_edge=truncate_by_edge,
+                           name=name, timeout=timeout, memory=memory,
+                           max_query_area_size=max_query_area_size,
+                           clean_periphery=clean_periphery, infrastructure=infrastructure)
 
     log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return G

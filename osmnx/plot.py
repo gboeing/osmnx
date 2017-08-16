@@ -7,18 +7,16 @@
 
 import time
 import os
-import math
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-import networkx as nx
 from matplotlib.collections import LineCollection
 from descartes import PolygonPatch
 from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
 
-from . import globals
+from . import settings
 from .core import graph_from_address
 from .core import graph_from_point
 from .core import bbox_from_point
@@ -26,7 +24,6 @@ from .projection import project_graph
 from .save_load import graph_to_gdfs
 from .simplify import simplify_graph
 from .utils import log
-from .utils import get_largest_component
 
 
 # folium is an optional dependency for the folium plotting functions
@@ -246,9 +243,9 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
         start_time = time.time()
 
         # create the save folder if it doesn't already exist
-        if not os.path.exists(globals.imgs_folder):
-            os.makedirs(globals.imgs_folder)
-        path_filename = '{}/{}.{}'.format(globals.imgs_folder, filename, file_format)
+        if not os.path.exists(settings.imgs_folder):
+            os.makedirs(settings.imgs_folder)
+        path_filename = '{}/{}.{}'.format(settings.imgs_folder, filename, file_format)
 
         if file_format == 'svg':
             # if the file_format is svg, prep the fig/ax a bit for saving
@@ -373,7 +370,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     # draw the edges as lines from node to node
     start_time = time.time()
     lines = []
-    for u, v, key, data in G.edges(keys=True, data=True):
+    for u, v, data in G.edges(keys=False, data=True):
         if 'geometry' in data and use_geom:
             # if it has a geometry attribute (a list of line segments), add them
             # to the list of lines to plot
@@ -860,7 +857,7 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
     # for each network edge, get a linewidth according to street type (the OSM
     # 'highway' value)
     edge_linewidths = []
-    for u, v, key, data in G_undir.edges(keys=True, data=True):
+    for _, _, data in G_undir.edges(keys=False, data=True):
         street_type = data['highway'][0] if isinstance(data['highway'], list) else data['highway']
         if street_type in street_widths:
             edge_linewidths.append(street_widths[street_type])

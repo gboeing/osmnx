@@ -149,7 +149,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
         clean_intersection_count = None
 
     # we can calculate density metrics only if area is not null
-    if not area is None:
+    if area is not None:
         area_km = area / sq_m_in_sq_km
 
         # calculate node density as nodes per sq km

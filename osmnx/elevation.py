@@ -59,7 +59,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
 
         # check if this request is already in the cache (if global use_cache=True)
         cached_response_json = get_from_cache(url)
-        if not cached_response_json is None:
+        if cached_response_json is not None:
             response_json = cached_response_json
         else:
             try:
@@ -111,7 +111,7 @@ def add_edge_grades(G, add_absolute=True): # pragma: no cover
 
     # for each edge, calculate the difference in elevation from origin to
     # destination, then divide by edge length
-    for u, v, k, data in G.edges(keys=True, data=True):
+    for u, v, data in G.edges(keys=False, data=True):
         elevation_change = G.node[v]['elevation'] - G.node[u]['elevation']
         grade = elevation_change / data['length']
         data['grade'] = grade

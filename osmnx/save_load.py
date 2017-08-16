@@ -17,7 +17,7 @@ from shapely.geometry import Point
 from shapely.geometry import LineString
 from shapely import wkt
 
-from . import globals
+from . import settings
 from .utils import log
 from .utils import make_str
 
@@ -42,7 +42,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
     """
 
     if folder is None:
-        folder = globals.data_folder
+        folder = settings.data_folder
 
     if filename is None:
         filename = make_shp_filename(gdf.gdf_name)
@@ -87,7 +87,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
 
     start_time = time.time()
     if folder is None:
-        folder = globals.data_folder
+        folder = settings.data_folder
 
     # convert directed graph G to an undirected graph for saving as a shapefile
     G_save = get_undirected(G.copy())
@@ -117,7 +117,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
             edge_details[attr_key] = data[attr_key]
 
         # if edge doesn't already have a geometry attribute, create one now
-        if not 'geometry' in data:
+        if 'geometry' not in data:
             point_u = Point((G_save.node[u]['x'], G_save.node[u]['y']))
             point_v = Point((G_save.node[v]['x'], G_save.node[v]['y']))
             edge_details['geometry'] = LineString([point_u, point_v])
@@ -163,7 +163,7 @@ def save_graphml(G, filename='graph.graphml', folder=None):
 
     start_time = time.time()
     if folder is None:
-        folder = globals.data_folder
+        folder = settings.data_folder
 
     # create a copy and convert all the node/edge attribute values to string or
     # it won't save
@@ -171,11 +171,11 @@ def save_graphml(G, filename='graph.graphml', folder=None):
     for dict_key in G_save.graph:
         # convert all the graph attribute values to strings
         G_save.graph[dict_key] = make_str(G_save.graph[dict_key])
-    for node, data in G_save.nodes(data=True):
+    for _, data in G_save.nodes(data=True):
         for dict_key in data:
             # convert all the node attribute values to strings
             data[dict_key] = make_str(data[dict_key])
-    for u, v, key, data in G_save.edges(keys=True, data=True):
+    for _, _, data in G_save.edges(keys=False, data=True):
         for dict_key in data:
             # convert all the edge attribute values to strings
             data[dict_key] = make_str(data[dict_key])
@@ -207,7 +207,7 @@ def load_graphml(filename, folder=None):
 
     # read the graph from disk
     if folder is None:
-        folder = globals.data_folder
+        folder = settings.data_folder
     path = '{}/{}'.format(folder, filename)
     G = nx.MultiDiGraph(nx.read_graphml(path, node_type=int))
 
@@ -219,13 +219,13 @@ def load_graphml(filename, folder=None):
 
     # convert numeric node tags from string to numeric data types
     log('Converting node and edge attribute data types')
-    for node, data in G.nodes(data=True):
+    for _, data in G.nodes(data=True):
         data['osmid'] = int(data['osmid'])
         data['x'] = float(data['x'])
         data['y'] = float(data['y'])
 
     # convert numeric, bool, and list node tags from string to correct data types
-    for u, v, key, data in G.edges(data=True, keys=True):
+    for _, _, data in G.edges(data=True, keys=False):
 
         # first parse oneway to bool and length to float - they should always
         # have only 1 value each
@@ -452,7 +452,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
             # if edge doesn't already have a geometry attribute, create one now
             # if fill_edge_geometry==True
-            if not 'geometry' in data:
+            if 'geometry' not in data:
                 if fill_edge_geometry:
                     point_u = Point((G.node[u]['x'], G.node[u]['y']))
                     point_v = Point((G.node[v]['x'], G.node[v]['y']))
