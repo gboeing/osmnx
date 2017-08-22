@@ -17,7 +17,8 @@ before_install:
   - conda config --add channels conda-forge --force
   - conda create --quiet --name TESTENV python=$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt
   - source activate TESTENV
-  - pip install --pre networkx --upgrade
+  - pip uninstall networkx
+  - pip install --pre --upgrade networkx
   - conda info --all
   - conda list
 
