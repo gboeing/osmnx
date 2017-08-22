@@ -71,13 +71,13 @@ def is_endpoint(G, node, strict=True):
 
         # add all the edge OSM IDs for incoming edges
         for u in G.predecessors(node):
-            for key in G.edge[u][node]:
-                osmids.append(G.edge[u][node][key]['osmid'])
+            for key in range(G.number_of_edges(u, node)):
+                osmids.append(G.edges[u, node, key]['osmid'])
 
         # add all the edge OSM IDs for outgoing edges
         for v in G.successors(node):
-            for key in G.edge[node][v]:
-                osmids.append(G.edge[node][v][key]['osmid'])
+            for key in range(G.number_of_edges(node, v)):
+                osmids.append(G.edges[node, v, key]['osmid'])
 
         # if there is more than 1 OSM ID in the list of edge OSM IDs then it is
         # an endpoint, if not, it isn't
@@ -243,14 +243,13 @@ def simplify_graph(G_, strict=True):
         for u, v in zip(path[:-1], path[1:]):
 
             # there shouldn't be multiple edges between interstitial nodes
-            edges = G.edge[u][v]
-            if not len(edges) == 1:
+            if not G.number_of_edges(u=u, v=v) == 1:
                 log('Multiple edges between "{}" and "{}" found when simplifying'.format(u, v), level=lg.WARNING)
 
-            # the only element in this list as long as above assertion is True
+            # the only element in this list as long as above check is True
             # (MultiGraphs use keys (the 0 here), indexed with ints from 0 and
             # up)
-            edge = edges[0]
+            edge = G.edges[u, v, 0]
             for key in edge:
                 if key in edge_attributes:
                     # if this key already exists in the dict, append it to the
@@ -272,7 +271,7 @@ def simplify_graph(G_, strict=True):
                 edge_attributes[key] = list(set(edge_attributes[key]))
 
         # construct the geometry and sum the lengths of the segments
-        edge_attributes['geometry'] = LineString([Point((G.node[node]['x'], G.node[node]['y'])) for node in path])
+        edge_attributes['geometry'] = LineString([Point((G.nodes[node]['x'], G.nodes[node]['y'])) for node in path])
         edge_attributes['length'] = sum(edge_attributes['length'])
 
         # add the nodes and edges to their lists for processing at the end

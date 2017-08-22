@@ -112,7 +112,7 @@ def add_edge_grades(G, add_absolute=True): # pragma: no cover
     # for each edge, calculate the difference in elevation from origin to
     # destination, then divide by edge length
     for u, v, data in G.edges(keys=False, data=True):
-        elevation_change = G.node[v]['elevation'] - G.node[u]['elevation']
+        elevation_change = G.nodes[v]['elevation'] - G.nodes[u]['elevation']
         grade = elevation_change / data['length']
         data['grade'] = grade
         if add_absolute:
