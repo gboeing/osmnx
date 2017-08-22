@@ -509,7 +509,7 @@ def get_route_edge_attributes(G, route, attribute, minimize_key='length'):
     for u, v in zip(route[:-1], route[1:]):
         # if there are parallel edges between two nodes, select the one with the
         # lowest value of minimize_key
-        data = min([data for data in G.edges[u, v].values()], key=lambda x: x[minimize_key])
+        data = min(G.get_edge_data(u, v).values(), key=lambda x: x[minimize_key])
         attribute_values.append(data[attribute])
     return attribute_values
 

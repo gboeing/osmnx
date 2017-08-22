@@ -85,7 +85,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
     # add elevation as an attribute to the nodes
     df = pd.DataFrame(node_points, columns=['node_points'])
     df['elevation'] = [result['elevation'] for result in results]
-    nx.set_node_attributes(G, 'elevation', df['elevation'].to_dict())
+    nx.set_node_attributes(G, name='elevation', values=df['elevation'].to_dict())
     log('Added elevation data to all nodes.')
 
     return G
