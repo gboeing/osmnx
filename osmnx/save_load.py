@@ -373,7 +373,7 @@ def get_undirected(G):
         if not (u, v, key) in duplicate_edges:
 
             # look at this first edge's parallel edges one at a time
-            for key_other in range(H.number_of_edges(u, v)):
+            for key_other in dict(H[u][v]).keys():
 
                 # don't compare this edge to itself
                 if not key_other == key:

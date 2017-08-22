@@ -71,12 +71,12 @@ def is_endpoint(G, node, strict=True):
 
         # add all the edge OSM IDs for incoming edges
         for u in G.predecessors(node):
-            for key in range(G.number_of_edges(u, node)):
+            for key in dict(G[u][node]).keys():
                 osmids.append(G.edges[u, node, key]['osmid'])
 
         # add all the edge OSM IDs for outgoing edges
         for v in G.successors(node):
-            for key in range(G.number_of_edges(node, v)):
+            for key in dict(G[node][v]).keys():
                 osmids.append(G.edges[node, v, key]['osmid'])
 
         # if there is more than 1 OSM ID in the list of edge OSM IDs then it is

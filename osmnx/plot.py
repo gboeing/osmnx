@@ -346,8 +346,8 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     """
 
     log('Begin plotting the graph...')
-    node_Xs = [float(data['x']) for _, data in G.nodes(data=True)]
-    node_Ys = [float(data['y']) for _, data in G.nodes(data=True)]
+    node_Xs = [float(x) for _, x in G.nodes(data='x')]
+    node_Ys = [float(y) for _, y in G.nodes(data='y')]
 
     # get north, south, east, west values either from bbox parameter or from the
     # spatial extent of the edges' geometries
@@ -554,7 +554,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
     lines = []
     for u, v in edge_nodes:
         # if there are parallel edges, select the shortest in length
-        data = min([data for data in G.edges[u, v].values()], key=lambda x: x['length'])
+        data = min(G.get_edge_data(u, v).values(), key=lambda x: x['length'])
 
         # if it has a geometry attribute (ie, a list of line segments)
         if 'geometry' in data and use_geom:
@@ -868,9 +868,11 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
         # for each node, get a nodesize according to the narrowest incident edge
         node_widths = {}
         for node in G_undir.nodes():
-            edge_types = [list(edge.values())[0]['highway'] for edge in G_undir.edge[node].values()]
+            # first, identify all the highway types of this node's incident edges
+            incident_edges_data = [G_undir.get_edge_data(node, neighbor) for neighbor in G_undir.neighbors(node)]
+            edge_types = [data[0]['highway'] for data in incident_edges_data]
             if len(edge_types) < 1:
-                # if node has no edges, make size zero
+                # if node has no incident edges, make size zero
                 node_widths[node] = 0
             else:
                 # flatten the list of edge types
