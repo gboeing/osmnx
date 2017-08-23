@@ -1,5 +1,12 @@
 # Change log
 
+## 0.5.4 (in development)
+
+  - migrate to networkx 2.0
+  - add cleaned intersections count to basic stats
+  - allow circuity to be calculated for projected or unprojected networks
+  - various code clean-up and refactoring
+
 ## 0.5.3 (2017-07-22)
 
   - add requirements files to distribution
