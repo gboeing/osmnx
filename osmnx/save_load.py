@@ -352,16 +352,17 @@ def get_undirected(G):
 
     # set from/to nodes before making graph undirected
     G = G.copy()
-    for u, v, key in G.edges(keys=True):
-        G.edges[u, v, key]['from'] = u
-        G.edges[u, v, key]['to'] = v
+    for u, v, k in G.edges(keys=True):
+        G.edges[u, v, k]['from'] = u
+        G.edges[u, v, k]['to'] = v
 
-    # now convert multidigraph to a multigraph, retaining all edges for now
+    # now convert multidigraph to a multigraph, retaining all edges in both
+    # directions for now, as well as all graph attributes
     H = nx.MultiGraph()
-    H.name = G.name
     H.add_nodes_from(G.nodes(data=True))
-    H.add_edges_from(G.edges(keys=False, data=True))
+    H.add_edges_from(G.edges(keys=True, data=True))
     H.graph = G.graph
+    H.name = G.name
 
     # the previous operation added all directed edges from G as undirected
     # edges in H. this means we have duplicate edges for every bi-directional
@@ -372,7 +373,7 @@ def get_undirected(G):
         # if we haven't already flagged this edge as a duplicate
         if not (u, v, key) in duplicate_edges:
 
-            # look at this first edge's parallel edges one at a time
+            # look at every other edge between u and v, one at a time
             for key_other in dict(H[u][v]).keys():
 
                 # don't compare this edge to itself
@@ -380,7 +381,8 @@ def get_undirected(G):
 
                     # compare the first edge's data to the second's to see if
                     # they are duplicates
-                    if is_duplicate_edge(data, H.edges[u, v, key_other]):
+                    data_other = H.edges[u, v, key_other]
+                    if is_duplicate_edge(data, data_other):
 
                         # if they match up, flag the duplicate for removal
                         duplicate_edges.append((u, v, key_other))

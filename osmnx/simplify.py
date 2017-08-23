@@ -200,7 +200,7 @@ def is_simplified(G):
     return len(edges_with_geometry) > 0
 
 
-def simplify_graph(G_, strict=True):
+def simplify_graph(G, strict=True):
     """
     Simplify a graph's topology by removing all nodes that are not intersections
     or dead-ends.
@@ -211,7 +211,7 @@ def simplify_graph(G_, strict=True):
 
     Parameters
     ----------
-    G_ : graph
+    G : graph
     strict : bool
         if False, allow nodes to be end points even if they fail all other rules
         but have edges with different OSM IDs
@@ -221,11 +221,11 @@ def simplify_graph(G_, strict=True):
     networkx multidigraph
     """
 
-    if is_simplified(G_):
+    if is_simplified(G):
         raise Exception('This graph has already been simplified, cannot simplify it again.')
 
     log('Begin topologically simplifying the graph...')
-    G = G_.copy()
+    G = G.copy()
     initial_node_count = len(list(G.nodes()))
     initial_edge_count = len(list(G.edges()))
     all_nodes_to_remove = []
