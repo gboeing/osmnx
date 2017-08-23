@@ -1170,7 +1170,7 @@ def add_edge_lengths(G):
                                     lng2=df_coords['v_x'])
 
     gc_distances = gc_distances.fillna(value=0)
-    nx.set_edge_attributes(G, gc_distances.to_dict(), name='length')
+    nx.set_edge_attributes(G, name='length', values=gc_distances.to_dict())
 
     log('Added edge lengths to graph in {:,.2f} seconds'.format(time.time()-start_time))
     return G
