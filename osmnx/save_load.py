@@ -374,7 +374,7 @@ def get_undirected(G):
         if not (u, v, key) in duplicate_edges:
 
             # look at every other edge between u and v, one at a time
-            for key_other in dict(H[u][v]).keys():
+            for key_other in H[u][v]:
 
                 # don't compare this edge to itself
                 if not key_other == key:
