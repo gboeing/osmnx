@@ -116,6 +116,7 @@ def build_path(G, node, endpoints, path):
                 # if this successor is not an endpoint, recursively call
                 # build_path until you find an endpoint
                 path = build_path(G, successor, endpoints, path)
+                break
             else:
                 # if this successor is an endpoint, we've completed the path,
                 # so return it
