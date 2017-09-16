@@ -1,9 +1,12 @@
 # Change log
 
-## 0.5.4 (in development)
+## 0.6 (in development)
 
   - migrate to networkx 2.0
-  - add cleaned intersections count to basic stats
+
+## 0.5.4 (2017-09-16)
+
+  - add optional cleaned intersections count to basic stats
   - allow circuity to be calculated for projected or unprojected networks
   - various code clean-up and refactoring
 
