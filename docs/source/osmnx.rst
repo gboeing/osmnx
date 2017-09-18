@@ -28,14 +28,6 @@ osmnx.elevation module
     :undoc-members:
     :show-inheritance:
 
-osmnx.globals module
---------------------
-
-.. automodule:: osmnx.globals
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 osmnx.plot module
 -----------------
 
@@ -56,6 +48,14 @@ osmnx.save_load module
 ----------------------
 
 .. automodule:: osmnx.save_load
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+osmnx.settings module
+---------------------
+
+.. automodule:: osmnx.settings
     :members:
     :undoc-members:
     :show-inheritance:
