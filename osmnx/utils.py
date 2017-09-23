@@ -444,8 +444,8 @@ def add_edge_bearings(G):
     """
 
     for u, v, data in G.edges(keys=False, data=True):
-        origin_point = (G.node[u]['y'], G.node[u]['x'])
-        destination_point = (G.node[v]['y'], G.node[v]['x'])
+        origin_point = (G.nodes[u]['y'], G.nodes[u]['x'])
+        destination_point = (G.nodes[v]['y'], G.nodes[v]['x'])
         bearing = get_bearing(origin_point, destination_point)
         data['bearing'] = bearing
 
@@ -509,7 +509,7 @@ def get_route_edge_attributes(G, route, attribute, minimize_key='length'):
     for u, v in zip(route[:-1], route[1:]):
         # if there are parallel edges between two nodes, select the one with the
         # lowest value of minimize_key
-        data = min([data for data in G.edge[u][v].values()], key=lambda x: x[minimize_key])
+        data = min(G.get_edge_data(u, v).values(), key=lambda x: x[minimize_key])
         attribute_values.append(data[attribute])
     return attribute_values
 

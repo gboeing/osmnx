@@ -944,8 +944,8 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
                 any_neighbors_in_bbox = False
                 neighbors = list(G.successors(node)) + list(G.predecessors(node))
                 for neighbor in neighbors:
-                    x = G.node[neighbor]['x']
-                    y = G.node[neighbor]['y']
+                    x = G.nodes[neighbor]['x']
+                    y = G.nodes[neighbor]['y']
                     if y < north and y > south and x < east and x > west:
                         any_neighbors_in_bbox = True
 
@@ -1158,7 +1158,7 @@ def add_edge_lengths(G):
 
     # first load all the edges' origin and destination coordinates as a
     # dataframe indexed by u, v, key
-    coords = np.array([[u, v, k, G.node[u]['y'], G.node[u]['x'], G.node[v]['y'], G.node[v]['x']] for u, v, k in G.edges(keys=True)])
+    coords = np.array([[u, v, k, G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in G.edges(keys=True)])
     df_coords = pd.DataFrame(coords, columns=['u', 'v', 'k', 'u_y', 'u_x', 'v_y', 'v_x'])
     df_coords[['u', 'v', 'k']] = df_coords[['u', 'v', 'k']].astype(np.int64)
     df_coords = df_coords.set_index(['u', 'v', 'k'])
@@ -1170,7 +1170,7 @@ def add_edge_lengths(G):
                                     lng2=df_coords['v_x'])
 
     gc_distances = gc_distances.fillna(value=0)
-    nx.set_edge_attributes(G, 'length', gc_distances.to_dict())
+    nx.set_edge_attributes(G, name='length', values=gc_distances.to_dict())
 
     log('Added edge lengths to graph in {:,.2f} seconds'.format(time.time()-start_time))
     return G

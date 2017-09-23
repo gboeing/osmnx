@@ -1,7 +1,7 @@
 descartes>=1.1
 geopandas>=0.2.1
 matplotlib>=2.0
-networkx>=1.11,<2.0
+networkx>=2.0
 numpy>=1.13
 pandas>=0.20
 requests>=2.18

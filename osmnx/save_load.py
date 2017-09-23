@@ -118,8 +118,8 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
 
         # if edge doesn't already have a geometry attribute, create one now
         if 'geometry' not in data:
-            point_u = Point((G_save.node[u]['x'], G_save.node[u]['y']))
-            point_v = Point((G_save.node[v]['x'], G_save.node[v]['y']))
+            point_u = Point((G_save.nodes[u]['x'], G_save.nodes[u]['y']))
+            point_v = Point((G_save.nodes[v]['x'], G_save.nodes[v]['y']))
             edge_details['geometry'] = LineString([point_u, point_v])
 
         edges.append(edge_details)
@@ -352,17 +352,17 @@ def get_undirected(G):
 
     # set from/to nodes before making graph undirected
     G = G.copy()
-    for u, v, key in G.edges(keys=True):
-        G.edge[u][v][key]['from'] = u
-        G.edge[u][v][key]['to'] = v
+    for u, v, k in G.edges(keys=True):
+        G.edges[u, v, k]['from'] = u
+        G.edges[u, v, k]['to'] = v
 
-    # now convert multidigraph to a multigraph, retaining all edges for now
+    # now convert multidigraph to a multigraph, retaining all edges in both
+    # directions for now, as well as all graph attributes
     H = nx.MultiGraph()
-    H.name = G.name
-    H.add_nodes_from(G)
-    H.add_edges_from(G.edges(keys=False, data=True))
+    H.add_nodes_from(G.nodes(data=True))
+    H.add_edges_from(G.edges(keys=True, data=True))
     H.graph = G.graph
-    H.node = G.node
+    H.name = G.name
 
     # the previous operation added all directed edges from G as undirected
     # edges in H. this means we have duplicate edges for every bi-directional
@@ -373,15 +373,16 @@ def get_undirected(G):
         # if we haven't already flagged this edge as a duplicate
         if not (u, v, key) in duplicate_edges:
 
-            # look at this first edge's parallel edges one at a time
-            for key_other in H.edge[u][v]:
+            # look at every other edge between u and v, one at a time
+            for key_other in H[u][v]:
 
                 # don't compare this edge to itself
                 if not key_other == key:
 
                     # compare the first edge's data to the second's to see if
                     # they are duplicates
-                    if is_duplicate_edge(data, H.edge[u][v][key_other]):
+                    data_other = H.edges[u, v, key_other]
+                    if is_duplicate_edge(data, data_other):
 
                         # if they match up, flag the duplicate for removal
                         duplicate_edges.append((u, v, key_other))
@@ -454,8 +455,8 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             # if fill_edge_geometry==True
             if 'geometry' not in data:
                 if fill_edge_geometry:
-                    point_u = Point((G.node[u]['x'], G.node[u]['y']))
-                    point_v = Point((G.node[v]['x'], G.node[v]['y']))
+                    point_u = Point((G.nodes[u]['x'], G.nodes[u]['y']))
+                    point_v = Point((G.nodes[v]['x'], G.nodes[v]['y']))
                     edge_details['geometry'] = LineString([point_u, point_v])
                 else:
                     edge_details['geometry'] = np.nan
@@ -500,7 +501,7 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
     for attribute_name in gdf_nodes.columns:
         # only add this attribute to nodes which have a non-null value for it
         attribute_values = {k:v for k, v in attributes[attribute_name].items() if pd.notnull(v)}
-        nx.set_node_attributes(G, attribute_name, attribute_values)
+        nx.set_node_attributes(G, name=attribute_name, values=attribute_values)
 
     # add the edges and attributes that are not u, v, key (as they're added
     # separately) or null

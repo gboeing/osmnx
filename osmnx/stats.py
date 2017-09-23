@@ -181,7 +181,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
     # distance between edge endpoints. first load all the edges origin and
     # destination coordinates as a dataframe, then calculate the straight-line
     # distance
-    coords = np.array([[G.node[u]['y'], G.node[u]['x'], G.node[v]['y'], G.node[v]['x']] for u, v, k in G.edges(keys=True)])
+    coords = np.array([[G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in G.edges(keys=True)])
     df_coords = pd.DataFrame(coords, columns=['u_y', 'u_x', 'v_y', 'v_x'])
     if circuity_dist == 'gc':
         gc_distances = great_circle_vec(lat1=df_coords['u_y'],

@@ -191,8 +191,8 @@ def project_graph(G, to_crs=None):
     # add the projected nodes and all their attributes to the graph
     G_proj.add_nodes_from(gdf_nodes_utm.index)
     attributes = gdf_nodes_utm.to_dict()
-    for name in gdf_nodes_utm.columns:
-        nx.set_node_attributes(G_proj, name, attributes[name])
+    for label in gdf_nodes_utm.columns:
+        nx.set_node_attributes(G_proj, name=label, values=attributes[label])
 
     # add the edges and all their attributes (including reconstructed geometry,
     # when it exists) to the graph
