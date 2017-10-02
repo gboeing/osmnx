@@ -53,4 +53,4 @@ setup(name='osmnx',
       platforms='any',
       packages=['osmnx'],
       install_requires=install_requires,
-      extras_require={'folium':['folium']})
+      extras_require={'folium':['folium>=0.3']})
