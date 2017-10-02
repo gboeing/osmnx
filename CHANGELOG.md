@@ -1,8 +1,8 @@
 # Change log
 
-## 0.6 (in development)
+## 0.6 (2017-10-02)
 
-  - migrate to networkx 2.0
+  - migrate to the networkx 2.0 API
 
 ## 0.5.4 (2017-09-16)
 
