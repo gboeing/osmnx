@@ -1801,3 +1801,79 @@ def graph_from_place(query, network_type='all_private', simplify=True,
 
     log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return G
+
+
+def graph_from_file(filename, network_type='all_private', simplify=True,
+                    retain_all=False, truncate_by_edge=False, name='unnamed',
+                    which_result=1, buffer_dist=None, timeout=180, memory=None,
+                    max_query_area_size=50*1000*50*1000, clean_periphery=True,
+                    infrastructure='way["highway"]'):
+    """
+    Create a networkx graph from OSM data in an XML file.
+
+    Parameters
+    ----------
+    filename : string
+        the name of a file containing OSM XML data
+    network_type : string
+        what type of street network to get
+    simplify : bool
+        if true, simplify the graph topology
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool
+        if True retain node if it's outside bbox but at least one of node's
+        neighbors are within bbox
+    name : string
+        the name of the graph
+    which_result : int
+        max number of results to return and which to process upon receipt
+    buffer_dist : float
+        distance to buffer around the place geometry, in meters
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
+    max_query_area_size : float
+        max size for any part of the geometry, in square degrees: any polygon
+        bigger will get divided up for multiple queries to API
+    clean_periphery : bool
+        if True (and simplify=True), buffer 0.5km to get a graph larger than
+        requested, then simplify, then truncate it to requested spatial extent
+    infrastructure : string
+        download infrastructure of given type (default is streets (ie, 'way["highway"]') but other
+        infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
+
+    Returns
+    -------
+    networkx multidigraph
+    """
+    
+    raise NotImplementedError('Not going to make a graph from {}'.format(filename))
+
+    # create a GeoDataFrame with the spatial boundaries of the place(s)
+    if isinstance(query, str) or isinstance(query, dict):
+        # if it is a string (place name) or dict (structured place query), then
+        # it is a single place
+        gdf_place = gdf_from_place(query, which_result=which_result, buffer_dist=buffer_dist)
+        name = query
+    elif isinstance(query, list):
+        # if it is a list, it contains multiple places to get
+        gdf_place = gdf_from_places(query, buffer_dist=buffer_dist)
+    else:
+        raise ValueError('query must be a string or a list of query strings')
+
+    # extract the geometry from the GeoDataFrame to use in API query
+    polygon = gdf_place['geometry'].unary_union
+    log('Constructed place geometry polygon(s) to query API')
+
+    # create graph using this polygon(s) geometry
+    G = graph_from_polygon(polygon, network_type=network_type, simplify=simplify,
+                           retain_all=retain_all, truncate_by_edge=truncate_by_edge,
+                           name=name, timeout=timeout, memory=memory,
+                           max_query_area_size=max_query_area_size,
+                           clean_periphery=clean_periphery, infrastructure=infrastructure)
+
+    log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
+    return G
