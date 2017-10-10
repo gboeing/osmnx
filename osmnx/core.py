@@ -1806,9 +1806,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
 
 def graph_from_file(filename, network_type='all_private', simplify=True,
                     retain_all=False, truncate_by_edge=False, name='unnamed',
-                    which_result=1, buffer_dist=None, timeout=180, memory=None,
-                    max_query_area_size=50*1000*50*1000, clean_periphery=True,
-                    infrastructure='way["highway"]'):
+                    which_result=1, buffer_dist=None):
     """
     Create a networkx graph from OSM data in an XML file.
 
@@ -1824,37 +1822,31 @@ def graph_from_file(filename, network_type='all_private', simplify=True,
         if True, return the entire graph even if it is not connected
     truncate_by_edge : bool
         if True retain node if it's outside bbox but at least one of node's
-        neighbors are within bbox
+        neighbors are within bbox (NOT CURRENTLY IMPLEMENTED)
     name : string
         the name of the graph
     which_result : int
         max number of results to return and which to process upon receipt
     buffer_dist : float
         distance to buffer around the place geometry, in meters
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    max_query_area_size : float
-        max size for any part of the geometry, in square degrees: any polygon
-        bigger will get divided up for multiple queries to API
-    clean_periphery : bool
-        if True (and simplify=True), buffer 0.5km to get a graph larger than
-        requested, then simplify, then truncate it to requested spatial extent
-    infrastructure : string
-        download infrastructure of given type (default is streets (ie, 'way["highway"]') but other
-        infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
 
     Returns
     -------
     networkx multidigraph
     """
+    # transmogrify file of OSM XML data into JSON
+    response_jsons = [overpass_json_from_file(filename)]
     
-    response_json = overpass_json_from_file(filename)
+    # create graph using this response JSON
+    G = create_graph(response_jsons, network_type=network_type,
+                     retain_all=retain_all, name=name)
+
+    # simplify the graph topology as the last step.
+    if simplify:
+        G = simplify_graph(G)
     
-    G = create_graph([response_json])
-    
+    log('graph_from_file() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
+
     from .plot import plot_graph
     from .projection import project_graph
     
