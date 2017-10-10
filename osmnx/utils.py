@@ -590,36 +590,30 @@ class OSMContentHandler (xml.sax.handler.ContentHandler):
         and http://overpass-api.de/output_formats.html#json
     '''
     def __init__(self):
-        self._elements = []
-        self._tags = None
-        self.object = {'elements': self._elements}
+        self._element = None
+        self.object = {'elements': []}
 
     def startElement(self, name, attrs):
         if name == 'osm':
-            self.object.update(version=attrs.get('version'), generator=attrs.get('generator'))
-        
-        elif name == 'relation':
-            print(name, dict(attrs))
+            self.object.update({k: attrs[k] for k in attrs.keys()
+                if k in ('version', 'generator')})
         
         elif name in ('node', 'way'):
-            node = dict(type=name, nodes=[], **attrs)
-            node.update({k: float(attrs[k]) for k in ('lat', 'lon') if k in attrs})
-            node.update({k: int(attrs[k]) for k in ('id', 'uid', 'version', 'changeset')
-                if k in attrs})
-            self._elements.append(node)
+            self._element = dict(type=name, tags={}, nodes=[], **attrs)
+            self._element.update({k: float(attrs[k]) for k in attrs.keys()
+                if k in ('lat', 'lon')})
+            self._element.update({k: int(attrs[k]) for k in attrs.keys()
+                if k in ('id', 'uid', 'version', 'changeset')})
         
         elif name == 'tag':
-            if self._tags is None:
-                self._tags = dict()
-            self._tags.update({attrs['k']: attrs['v']})
+            self._element['tags'].update({attrs['k']: attrs['v']})
         
         elif name == 'nd':
-            self._elements[-1]['nodes'].append(int(attrs['ref']))
+            self._element['nodes'].append(int(attrs['ref']))
 
     def endElement(self, name):
-        if name in ('node', 'way') and self._tags:
-            self._elements[-1].update(tags=self._tags)
-            self._tags = None
+        if name in ('node', 'way'):
+            self.object['elements'].append(self._element)
 
 
 def overpass_json_from_file(filename):
