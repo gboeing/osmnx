@@ -41,6 +41,7 @@ from .utils import great_circle_vec
 from .utils import get_nearest_node
 from .utils import geocode
 from .utils import count_streets_per_node
+from .utils import overpass_json_from_file
 
 
 def save_to_cache(url, response_json):
@@ -1849,6 +1850,15 @@ def graph_from_file(filename, network_type='all_private', simplify=True,
     -------
     networkx multidigraph
     """
+    
+    response_json = overpass_json_from_file(filename)
+    
+    G = create_graph([response_json])
+    
+    from .plot import plot_graph
+    from .projection import project_graph
+    
+    plot_graph(project_graph(G))
     
     raise NotImplementedError('Not going to make a graph from {}'.format(filename))
 

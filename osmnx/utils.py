@@ -17,6 +17,8 @@ import datetime as dt
 import networkx as nx
 import numpy as np
 import pandas as pd
+import bz2
+import xml.sax
 import requests
 from itertools import chain
 from collections import Counter
@@ -578,3 +580,61 @@ def count_streets_per_node(G, nodes=None):
            '(before removing peripheral edges) in {:,.2f} seconds')
     log(msg.format(time.time()-start_time))
     return streets_per_node
+
+
+class OSMContentHandler (xml.sax.handler.ContentHandler):
+    ''' SAX content handler for OSM XML.
+    
+        Used to build an Overpass-like response JSON object in self.object. For format
+        notes, see http://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes
+    '''
+    def __init__(self):
+        self._elements = []
+        self._tags = None
+        self.object = {'elements': self._elements}
+
+    def startElement(self, name, attrs):
+        if name == 'osm':
+            self.object.update(version=attrs.get('version'), generator=attrs.get('generator'))
+        
+        elif name == 'relation':
+            print(name, dict(attrs))
+        
+        elif name in ('node', 'way'):
+            node = dict(type=name, nodes=[], **attrs)
+            node.update({k: float(attrs[k]) for k in ('lat', 'lon') if k in attrs})
+            node.update({k: int(attrs[k]) for k in ('id', 'uid', 'version', 'changeset')
+                if k in attrs})
+            self._elements.append(node)
+        
+        elif name == 'tag':
+            if self._tags is None:
+                self._tags = dict()
+            self._tags.update({attrs['k']: attrs['v']})
+        
+        elif name == 'nd':
+            self._elements[-1]['nodes'].append(int(attrs['ref']))
+
+    def endElement(self, name):
+        if name in ('node', 'way') and self._tags:
+            self._elements[-1].update(tags=self._tags)
+            self._tags = None
+
+
+def overpass_json_from_file(filename):
+    ''' Read OSM XML from input filename and return Overpass-like JSON.
+    '''
+    _, ext = os.path.splitext(filename)
+    
+    if ext == '.bz2':
+        opener = bz2.open
+    else:
+        raise NotImplementedError("Don't know how to open a {} file".format(ext))
+    
+    with opener(filename) as file:
+        handler = OSMContentHandler()
+        xml.sax.parse(file, handler)
+        
+        #import pprint; pprint.pprint(handler.object)
+        
+        return handler.object
