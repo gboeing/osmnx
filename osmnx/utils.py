@@ -628,11 +628,13 @@ def overpass_json_from_file(filename):
     _, ext = os.path.splitext(filename)
     
     if ext == '.bz2':
-        opener = bz2.open
+        # Use Python 2/3 compatible BZ2File()
+        opener = lambda fn: bz2.BZ2File(fn)
     else:
-        opener = open # Assume an unrecognized file extension is just XML
+        # Assume an unrecognized file extension is just XML
+        opener = lambda fn: open(fn, mode='rb')
     
-    with opener(filename, mode='rb') as file:
+    with opener(filename) as file:
         handler = OSMContentHandler()
         xml.sax.parse(file, handler)
         
