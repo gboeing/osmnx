@@ -45,6 +45,20 @@ def test_gdf_shapefiles():
     ox.plot_shape(city)
 
 
+def test_graph_from_file():
+    
+    G = ox.graph_from_file('tests/input_data/West-Oakland.osm.bz2')
+    node_id, neighbor_ids = 53098262, (53092170, 53060438, 53027353, 667744075)
+
+    assert node_id in G.nodes
+
+    for neighbor_id in neighbor_ids:
+        edge_key = (node_id, neighbor_id, 0)
+        assert neighbor_id in G.nodes
+        assert edge_key in G.edges
+        assert G.edges[edge_key]['name'] in ('8th Street', 'Willow Street')
+
+
 def test_network_saving_loading():
 
     G = ox.graph_from_place('Piedmont, California, USA')
