@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 import bz2
 import xml.sax
+import io
 import requests
 from itertools import chain
 from collections import Counter
@@ -629,9 +630,9 @@ def overpass_json_from_file(filename):
     if ext == '.bz2':
         opener = bz2.open
     else:
-        raise NotImplementedError("Don't know how to open a {} file".format(ext))
+        opener = open # Assume an unrecognized file extension is just XML
     
-    with opener(filename) as file:
+    with opener(filename, mode='rb') as file:
         handler = OSMContentHandler()
         xml.sax.parse(file, handler)
         
