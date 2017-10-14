@@ -610,6 +610,11 @@ class OSMContentHandler (xml.sax.handler.ContentHandler):
         
         elif name == 'nd':
             self._element['nodes'].append(int(attrs['ref']))
+        
+        elif name == 'relation':
+            # Placeholder for future relation support.
+            # Look for nested members and tags.
+            pass
 
     def endElement(self, name):
         if name in ('node', 'way'):
