@@ -121,7 +121,7 @@ def test_plots():
 def test_routing_folium():
 
     import networkx as nx
-    G = ox.graph_from_address('N. Sicily Pl., Chandler, Arizona', distance=800, network_type='drive')
+    G = ox.graph_from_address('398 N. Sicily Pl., Chandler, Arizona', distance=800, network_type='drive')
     origin = (33.307792, -111.894940)
     destination = (33.312994, -111.894998)
     origin_node = ox.get_nearest_node(G, origin)
