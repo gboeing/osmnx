@@ -41,6 +41,7 @@ from .utils import great_circle_vec
 from .utils import get_nearest_node
 from .utils import geocode
 from .utils import count_streets_per_node
+from .utils import overpass_json_from_file
 
 
 def save_to_cache(url, response_json):
@@ -1800,4 +1801,41 @@ def graph_from_place(query, network_type='all_private', simplify=True,
                            clean_periphery=clean_periphery, infrastructure=infrastructure)
 
     log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
+    return G
+
+
+def graph_from_file(filename, network_type='all_private', simplify=True,
+                    retain_all=False, name='unnamed'):
+    """
+    Create a networkx graph from OSM data in an XML file.
+
+    Parameters
+    ----------
+    filename : string
+        the name of a file containing OSM XML data
+    network_type : string
+        what type of street network to get
+    simplify : bool
+        if true, simplify the graph topology
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+    name : string
+        the name of the graph
+
+    Returns
+    -------
+    networkx multidigraph
+    """
+    # transmogrify file of OSM XML data into JSON
+    response_jsons = [overpass_json_from_file(filename)]
+    
+    # create graph using this response JSON
+    G = create_graph(response_jsons, network_type=network_type,
+                     retain_all=retain_all, name=name)
+
+    # simplify the graph topology as the last step.
+    if simplify:
+        G = simplify_graph(G)
+    
+    log('graph_from_file() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return G
