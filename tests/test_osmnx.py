@@ -19,6 +19,13 @@ ox.log('test info', level=lg.INFO)
 ox.log('test warning', level=lg.WARNING)
 ox.log('test error', level=lg.ERROR)
 
+import httmock
+
+
+@httmock.all_requests
+def response_content(url, request):
+    raise Exception(url)
+
 
 def test_imports():
 
@@ -37,11 +44,13 @@ def test_imports():
 
 def test_gdf_shapefiles():
 
-    city = ox.gdf_from_place('Manhattan, New York City, New York, USA')
+    with httmock.HTTMock(response_content):
+        city = ox.gdf_from_place('Manhattan, New York City, New York, USA')
     city_projected = ox.project_gdf(city, to_crs={'init':'epsg:3395'})
     ox.save_gdf_shapefile(city_projected)
 
-    city = ox.gdf_from_place('Manhattan, New York City, New York, USA', buffer_dist=100)
+    with httmock.HTTMock(response_content):
+        city = ox.gdf_from_place('Manhattan, New York City, New York, USA', buffer_dist=100)
     ox.plot_shape(city)
 
 
@@ -70,7 +79,8 @@ def test_graph_from_file():
 
 def test_network_saving_loading():
 
-    G = ox.graph_from_place('Piedmont, California, USA')
+    with httmock.HTTMock(response_content):
+        G = ox.graph_from_place('Piedmont, California, USA')
     G_projected = ox.project_graph(G)
     ox.save_graph_shapefile(G_projected)
     ox.save_graphml(G_projected)
@@ -85,29 +95,35 @@ def test_get_network_methods():
 
     import geopandas as gpd
     north, south, east, west = 37.79, 37.78, -122.41, -122.43
-    G1 = ox.graph_from_bbox(north, south, east, west, network_type='drive_service')
-    G1 = ox.graph_from_bbox(north, south, east, west, network_type='drive_service', truncate_by_edge=True)
+    with httmock.HTTMock(response_content):
+        G1 = ox.graph_from_bbox(north, south, east, west, network_type='drive_service')
+        G1 = ox.graph_from_bbox(north, south, east, west, network_type='drive_service', truncate_by_edge=True)
 
     location_point = (37.791427, -122.410018)
     bbox = ox.bbox_from_point(location_point, project_utm=True)
-    G2 = ox.graph_from_point(location_point, distance=750, distance_type='bbox', network_type='drive')
-    G3 = ox.graph_from_point(location_point, distance=500, distance_type='network')
+    with httmock.HTTMock(response_content):
+        G2 = ox.graph_from_point(location_point, distance=750, distance_type='bbox', network_type='drive')
+        G3 = ox.graph_from_point(location_point, distance=500, distance_type='network')
 
-    G4 = ox.graph_from_address(address='350 5th Ave, New York, NY', distance=1000, distance_type='network', network_type='bike')
+    with httmock.HTTMock(response_content):
+        G4 = ox.graph_from_address(address='350 5th Ave, New York, NY', distance=1000, distance_type='network', network_type='bike')
 
     places = ['Los Altos, California, USA', {'city':'Los Altos Hills', 'state':'California'}, 'Loyola, California']
-    G5 = ox.graph_from_place(places, network_type='all', clean_periphery=False)
+    with httmock.HTTMock(response_content):
+        G5 = ox.graph_from_place(places, network_type='all', clean_periphery=False)
 
     calif = gpd.read_file('tests/input_data/ZillowNeighborhoods-CA')
     mission_district = calif[(calif['CITY']=='San Francisco') & (calif['NAME']=='Mission')]
     polygon = mission_district['geometry'].iloc[0]
-    G6 = ox.graph_from_polygon(polygon, network_type='walk')
+    with httmock.HTTMock(response_content):
+        G6 = ox.graph_from_polygon(polygon, network_type='walk')
 
 
 def test_stats():
 
     location_point = (37.791427, -122.410018)
-    G = ox.graph_from_point(location_point, distance=500, distance_type='network')
+    with httmock.HTTMock(response_content):
+        G = ox.graph_from_point(location_point, distance=500, distance_type='network')
     G = ox.add_edge_bearings(G)
     G_proj = ox.project_graph(G)
     stats1 = ox.basic_stats(G)
@@ -118,7 +134,8 @@ def test_stats():
 
 def test_plots():
 
-    G = ox.graph_from_place('Piedmont, California, USA', network_type='drive', simplify=False)
+    with httmock.HTTMock(response_content):
+        G = ox.graph_from_place('Piedmont, California, USA', network_type='drive', simplify=False)
     G2 = ox.simplify_graph(G, strict=False)
     nc = ox.get_node_colors_by_attr(G2, 'osmid')
     ec = ox.get_edge_colors_by_attr(G2, 'length')
@@ -144,7 +161,8 @@ def test_plots():
 def test_routing_folium():
 
     import networkx as nx
-    G = ox.graph_from_address('398 N. Sicily Pl., Chandler, Arizona', distance=800, network_type='drive')
+    with httmock.HTTMock(response_content):
+        G = ox.graph_from_address('398 N. Sicily Pl., Chandler, Arizona', distance=800, network_type='drive')
     origin = (33.307792, -111.894940)
     destination = (33.312994, -111.894998)
     origin_node = ox.get_nearest_node(G, origin)
@@ -163,6 +181,7 @@ def test_routing_folium():
 
 def test_buildings():
 
-    gdf = ox.buildings_from_place(place='Piedmont, California, USA')
-    gdf = ox.buildings_from_address(address='San Francisco, California, USA', distance=300)
+    with httmock.HTTMock(response_content):
+        gdf = ox.buildings_from_place(place='Piedmont, California, USA')
+        gdf = ox.buildings_from_address(address='San Francisco, California, USA', distance=300)
     fig, ax = ox.plot_buildings(gdf)
