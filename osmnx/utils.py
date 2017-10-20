@@ -17,6 +17,9 @@ import datetime as dt
 import networkx as nx
 import numpy as np
 import pandas as pd
+import bz2
+import xml.sax
+import io
 import requests
 from itertools import chain
 from collections import Counter
@@ -578,3 +581,63 @@ def count_streets_per_node(G, nodes=None):
            '(before removing peripheral edges) in {:,.2f} seconds')
     log(msg.format(time.time()-start_time))
     return streets_per_node
+
+
+class OSMContentHandler (xml.sax.handler.ContentHandler):
+    ''' SAX content handler for OSM XML.
+    
+        Used to build an Overpass-like response JSON object in self.object. For format
+        notes, see http://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes
+        and http://overpass-api.de/output_formats.html#json
+    '''
+    def __init__(self):
+        self._element = None
+        self.object = {'elements': []}
+
+    def startElement(self, name, attrs):
+        if name == 'osm':
+            self.object.update({k: attrs[k] for k in attrs.keys()
+                if k in ('version', 'generator')})
+        
+        elif name in ('node', 'way'):
+            self._element = dict(type=name, tags={}, nodes=[], **attrs)
+            self._element.update({k: float(attrs[k]) for k in attrs.keys()
+                if k in ('lat', 'lon')})
+            self._element.update({k: int(attrs[k]) for k in attrs.keys()
+                if k in ('id', 'uid', 'version', 'changeset')})
+        
+        elif name == 'tag':
+            self._element['tags'].update({attrs['k']: attrs['v']})
+        
+        elif name == 'nd':
+            self._element['nodes'].append(int(attrs['ref']))
+        
+        elif name == 'relation':
+            # Placeholder for future relation support.
+            # Look for nested members and tags.
+            pass
+
+    def endElement(self, name):
+        if name in ('node', 'way'):
+            self.object['elements'].append(self._element)
+
+
+def overpass_json_from_file(filename):
+    ''' Read OSM XML from input filename and return Overpass-like JSON.
+    '''
+    _, ext = os.path.splitext(filename)
+    
+    if ext == '.bz2':
+        # Use Python 2/3 compatible BZ2File()
+        opener = lambda fn: bz2.BZ2File(fn)
+    else:
+        # Assume an unrecognized file extension is just XML
+        opener = lambda fn: open(fn, mode='rb')
+    
+    with opener(filename) as file:
+        handler = OSMContentHandler()
+        xml.sax.parse(file, handler)
+        
+        #import pprint; pprint.pprint(handler.object)
+        
+        return handler.object
