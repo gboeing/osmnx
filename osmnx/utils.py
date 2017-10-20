@@ -352,6 +352,9 @@ def get_nearest_node(G, point, method='greatcircle', return_dist=False):
         if euclidean) between the point and nearest node
     """
     start_time = time.time()
+	
+    if not G or (G.number_of_nodes() == 0):
+        raise ValueError('G argument must be not be empty or should contain at least one node')
 
     # dump graph node coordinates into a pandas dataframe indexed by node id
     # with x and y columns
