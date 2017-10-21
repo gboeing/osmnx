@@ -29,7 +29,7 @@ def get_mock_response_content(overpass_filename=None):
     Nominatim_Searches = {}
     
     # Load all Nominatim searches into a dictionary
-    with open(os.path.join(tests_dir, 'nominatim-responses.txt'), 'r') as file:
+    with open(os.path.join(tests_dir, 'nominatim-responses.txt'), 'r', encoding='utf8') as file:
         while True:
             try:
                 key, value, _ = next(file).strip(), next(file), next(file)
