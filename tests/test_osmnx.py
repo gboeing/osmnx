@@ -25,7 +25,7 @@ import httmock, urllib.parse, gzip
 def get_mock_response_content(overpass_filename=None):
     ''' Return a mock HTTP handler suitable for use by httmock.HTTMock().
     '''
-    tests_dir = os.path.dirname(__file__)
+    tests_dir = os.path.join(os.path.dirname(__file__), 'input_data')
     Nominatim_Searches = {}
     
     # Load all Nominatim searches into a dictionary
