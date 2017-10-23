@@ -19,7 +19,7 @@ ox.log('test info', level=lg.INFO)
 ox.log('test warning', level=lg.WARNING)
 ox.log('test error', level=lg.ERROR)
 
-import httmock, gzip
+import httmock, gzip, io
 
 try:
     from urllib.parse import parse_qsl
@@ -34,7 +34,7 @@ def get_mock_response_content(overpass_filename=None):
     Nominatim_Searches = {}
     
     # Load all Nominatim searches into a dictionary
-    with open(os.path.join(tests_dir, 'nominatim-responses.txt'), 'r', encoding='utf8') as file:
+    with io.open(os.path.join(tests_dir, 'nominatim-responses.txt'), 'r', encoding='utf8') as file:
         while True:
             try:
                 key, value, _ = next(file).strip(), next(file), next(file)
