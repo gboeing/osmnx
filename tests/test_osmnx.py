@@ -19,7 +19,12 @@ ox.log('test info', level=lg.INFO)
 ox.log('test warning', level=lg.WARNING)
 ox.log('test error', level=lg.ERROR)
 
-import httmock, urllib.parse, gzip
+import httmock, gzip
+
+try:
+    from urllib.parse import parse_qsl
+except ImportError:
+    from urlparse import parse_qsl
 
 
 def get_mock_response_content(overpass_filename=None):
@@ -50,8 +55,8 @@ def get_mock_response_content(overpass_filename=None):
                 return httmock.response(200, file.read())
 
         # Look for Nominatim responses in the dictionary loaded earlier
-        query_dict = dict(urllib.parse.parse_qsl(url.query)) if url.query else {}
-        body_dict = dict(urllib.parse.parse_qsl(request.body)) if request.body else {}
+        query_dict = dict(parse_qsl(url.query)) if url.query else {}
+        body_dict = dict(parse_qsl(request.body)) if request.body else {}
     
         if (url.netloc, url.path) == ('nominatim.openstreetmap.org', '/search'):
             key1 = query_dict.get('q')
