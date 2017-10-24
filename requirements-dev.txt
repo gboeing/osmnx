@@ -2,3 +2,4 @@ coverage
 coveralls
 folium
 pytest
+httmock
