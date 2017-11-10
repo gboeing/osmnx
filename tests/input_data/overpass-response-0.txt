@@ -1,5 +1,0 @@
-Connected as: 8675309
-Current time: 1970-01-01T00:00:00Z
-Rate limit: 3
-3 slots available now.
-Currently running queries (pid, space limit, time limit, start time):

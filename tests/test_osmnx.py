@@ -19,58 +19,6 @@ ox.log('test info', level=lg.INFO)
 ox.log('test warning', level=lg.WARNING)
 ox.log('test error', level=lg.ERROR)
 
-import httmock, gzip, io
-
-try:
-    from urllib.parse import parse_qsl
-except ImportError:
-    from urlparse import parse_qsl
-
-
-def get_mock_response_content(overpass_filename=None):
-    ''' Return a mock HTTP handler suitable for use by httmock.HTTMock().
-    '''
-    tests_dir = os.path.join(os.path.dirname(__file__), 'input_data')
-    Nominatim_Searches = {}
-    
-    # Load all Nominatim searches into a dictionary
-    with io.open(os.path.join(tests_dir, 'nominatim-responses.txt'), 'r', encoding='utf8') as file:
-        while True:
-            try:
-                key, value, _ = next(file).strip(), next(file), next(file)
-            except StopIteration:
-                break
-            else:
-                Nominatim_Searches[key] = value
-
-    def response_content(url, request):
-        # Return with a stock Overpass status that doesn't trigger a wait
-        if (url.netloc, url.path) == ('overpass-api.de', '/api/status'):
-            with open(os.path.join(tests_dir, 'overpass-response-0.txt'), 'rb') as file:
-                return httmock.response(200, file.read())
-
-        # For larger Overpass responses, look to the given filename for data
-        if (url.netloc, url.path) == ('www.overpass-api.de', '/api/interpreter'):
-            with gzip.open(os.path.join(tests_dir, overpass_filename), 'r') as file:
-                return httmock.response(200, file.read())
-
-        # Look for Nominatim responses in the dictionary loaded earlier
-        query_dict = dict(parse_qsl(url.query)) if url.query else {}
-        body_dict = dict(parse_qsl(request.body)) if request.body else {}
-    
-        if (url.netloc, url.path) == ('nominatim.openstreetmap.org', '/search'):
-            key1 = query_dict.get('q')
-            key2 = '{c}, {s}'.format(c=query_dict.get('city'), s=query_dict.get('state'))
-            for key in (key1, key2):
-                if key in Nominatim_Searches:
-                    return httmock.response(200, Nominatim_Searches[key])
-
-            raise ValueError('Unknown Nominatim query: {}'.format(url.query))
-        
-        raise ValueError('Unknown URL: {}'.format(url))
-        
-    return response_content
-
 
 def test_imports():
 
@@ -89,13 +37,11 @@ def test_imports():
 
 def test_gdf_shapefiles():
 
-    with httmock.HTTMock(get_mock_response_content()):
-        city = ox.gdf_from_place('Manhattan, New York City, New York, USA')
+    city = ox.gdf_from_place('Manhattan, New York City, New York, USA')
     city_projected = ox.project_gdf(city, to_crs={'init':'epsg:3395'})
     ox.save_gdf_shapefile(city_projected)
 
-    with httmock.HTTMock(get_mock_response_content()):
-        city = ox.gdf_from_place('Manhattan, New York City, New York, USA', buffer_dist=100)
+    city = ox.gdf_from_place('Manhattan, New York City, New York, USA', buffer_dist=100)
     ox.plot_shape(city)
 
 
@@ -124,8 +70,7 @@ def test_graph_from_file():
 
 def test_network_saving_loading():
 
-    with httmock.HTTMock(get_mock_response_content('overpass-response-7.json.gz')):
-        G = ox.graph_from_place('Piedmont, California, USA')
+    G = ox.graph_from_place('Piedmont, California, USA')
     G_projected = ox.project_graph(G)
     ox.save_graph_shapefile(G_projected)
     ox.save_graphml(G_projected)
@@ -140,39 +85,29 @@ def test_get_network_methods():
 
     import geopandas as gpd
     north, south, east, west = 37.79, 37.78, -122.41, -122.43
-    with httmock.HTTMock(get_mock_response_content('overpass-response-6.json.gz')):
-        G1 = ox.graph_from_bbox(north, south, east, west, network_type='drive_service')
-
-    with httmock.HTTMock(get_mock_response_content()):
-        G1 = ox.graph_from_bbox(north, south, east, west, network_type='drive_service', truncate_by_edge=True)
+    G1 = ox.graph_from_bbox(north, south, east, west, network_type='drive_service')
+    G1 = ox.graph_from_bbox(north, south, east, west, network_type='drive_service', truncate_by_edge=True)
 
     location_point = (37.791427, -122.410018)
     bbox = ox.bbox_from_point(location_point, project_utm=True)
-    with httmock.HTTMock(get_mock_response_content('overpass-response-8.json.gz')):
-        G2 = ox.graph_from_point(location_point, distance=750, distance_type='bbox', network_type='drive')
+    G2 = ox.graph_from_point(location_point, distance=750, distance_type='bbox', network_type='drive')
+    G3 = ox.graph_from_point(location_point, distance=500, distance_type='network')
 
-    with httmock.HTTMock(get_mock_response_content('overpass-response-9.json.gz')):
-        G3 = ox.graph_from_point(location_point, distance=500, distance_type='network')
-
-    with httmock.HTTMock(get_mock_response_content('overpass-response-10.json.gz')):
-        G4 = ox.graph_from_address(address='350 5th Ave, New York, NY', distance=1000, distance_type='network', network_type='bike')
+    G4 = ox.graph_from_address(address='350 5th Ave, New York, NY', distance=1000, distance_type='network', network_type='bike')
 
     places = ['Los Altos, California, USA', {'city':'Los Altos Hills', 'state':'California'}, 'Loyola, California']
-    with httmock.HTTMock(get_mock_response_content('overpass-response-11.json.gz')):
-        G5 = ox.graph_from_place(places, network_type='all', clean_periphery=False)
+    G5 = ox.graph_from_place(places, network_type='all', clean_periphery=False)
 
     calif = gpd.read_file('tests/input_data/ZillowNeighborhoods-CA')
     mission_district = calif[(calif['CITY']=='San Francisco') & (calif['NAME']=='Mission')]
     polygon = mission_district['geometry'].iloc[0]
-    with httmock.HTTMock(get_mock_response_content('overpass-response-12.json.gz')):
-        G6 = ox.graph_from_polygon(polygon, network_type='walk')
+    G6 = ox.graph_from_polygon(polygon, network_type='walk')
 
 
 def test_stats():
 
     location_point = (37.791427, -122.410018)
-    with httmock.HTTMock(get_mock_response_content('overpass-response-5.json.gz')):
-        G = ox.graph_from_point(location_point, distance=500, distance_type='network')
+    G = ox.graph_from_point(location_point, distance=500, distance_type='network')
     G = ox.add_edge_bearings(G)
     G_proj = ox.project_graph(G)
     stats1 = ox.basic_stats(G)
@@ -183,8 +118,7 @@ def test_stats():
 
 def test_plots():
 
-    with httmock.HTTMock(get_mock_response_content('overpass-response-4.json.gz')):
-        G = ox.graph_from_place('Piedmont, California, USA', network_type='drive', simplify=False)
+    G = ox.graph_from_place('Piedmont, California, USA', network_type='drive', simplify=False)
     G2 = ox.simplify_graph(G, strict=False)
     nc = ox.get_node_colors_by_attr(G2, 'osmid')
     ec = ox.get_edge_colors_by_attr(G2, 'length')
@@ -210,8 +144,7 @@ def test_plots():
 def test_routing_folium():
 
     import networkx as nx
-    with httmock.HTTMock(get_mock_response_content('overpass-response-3.json.gz')):
-        G = ox.graph_from_address('398 N. Sicily Pl., Chandler, Arizona', distance=800, network_type='drive')
+    G = ox.graph_from_address('398 N. Sicily Pl., Chandler, Arizona', distance=800, network_type='drive')
     origin = (33.307792, -111.894940)
     destination = (33.312994, -111.894998)
     origin_node = ox.get_nearest_node(G, origin)
@@ -230,10 +163,6 @@ def test_routing_folium():
 
 def test_buildings():
 
-    with httmock.HTTMock(get_mock_response_content('overpass-response-1.json.gz')):
-        gdf = ox.buildings_from_place(place='Piedmont, California, USA')
-
-    with httmock.HTTMock(get_mock_response_content('overpass-response-2.json.gz')):
-        gdf = ox.buildings_from_address(address='San Francisco, California, USA', distance=300)
-
+    gdf = ox.buildings_from_place(place='Piedmont, California, USA')
+    gdf = ox.buildings_from_address(address='San Francisco, California, USA', distance=300)
     fig, ax = ox.plot_buildings(gdf)
