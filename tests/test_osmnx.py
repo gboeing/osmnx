@@ -46,7 +46,7 @@ def test_gdf_shapefiles():
 
 
 def test_graph_from_file():
-    
+
     node_id = 53098262
     neighbor_ids = 53092170, 53060438, 53027353, 667744075
 
@@ -164,5 +164,5 @@ def test_routing_folium():
 def test_buildings():
 
     gdf = ox.buildings_from_place(place='Piedmont, California, USA')
-    gdf = ox.buildings_from_address(address='San Francisco, California, USA', distance=300)
+    gdf = ox.buildings_from_address(address='260 Stockton Street, San Francisco, California, USA', distance=300)
     fig, ax = ox.plot_buildings(gdf)
