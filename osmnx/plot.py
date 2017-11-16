@@ -610,7 +610,9 @@ def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attri
         raise ImportError('The folium package must be installed to use this optional feature.')
 
     # locations is a list of points for the polyline
-    locations = list(edge['geometry'].coords)
+    # folium takes coords in lat,lon but geopandas provides them in lon,lat
+    # so we have to flip them around
+    locations = list([(lat, lon) for lon, lat in edge['geometry'].coords])
 
     # if popup_attribute is None, then create no pop-up
     if popup_attribute is None:
@@ -622,7 +624,7 @@ def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attri
         popup = folium.Popup(html=popup_text)
 
     # create a folium polyline with attributes
-    pl = folium.PolyLine(locations=locations, popup=popup, latlon=False,
+    pl = folium.PolyLine(locations=locations, popup=popup,
                          color=edge_color, weight=edge_width, opacity=edge_opacity)
     return pl
 
