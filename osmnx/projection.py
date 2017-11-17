@@ -109,7 +109,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
             # CRS to project
             utm_zone = int(math.floor((avg_longitude + 180) / 6.) + 1)
             utm_crs = {'datum': 'WGS84',
-                       'ellps': 'GRS80',
+                       'ellps': 'WGS84',
                        'proj' : 'utm',
                        'zone' : utm_zone,
                        'units': 'm'}
