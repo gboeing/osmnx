@@ -59,8 +59,8 @@ def get_mock_response_content(overpass_filename=None):
         body_dict = dict(parse_qsl(request.body)) if request.body else {}
 
         if (url.netloc, url.path) == ('nominatim.openstreetmap.org', '/search'):
-            key1 = query_dict.get('q')
-            key2 = '{c}, {s}'.format(c=query_dict.get('city'), s=query_dict.get('state'))
+            key1 = query_dict.get('q') #try this method for any single string queries
+            key2 = '{c}, {s}'.format(c=query_dict.get('city'), s=query_dict.get('state')) #try this method for any dict queries
             for key in (key1, key2):
                 if key in Nominatim_Searches:
                     return httmock.response(200, Nominatim_Searches[key])
