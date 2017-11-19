@@ -234,6 +234,6 @@ def test_buildings():
         gdf = ox.buildings_from_place(place='Piedmont, California, USA')
 
     with httmock.HTTMock(get_mock_response_content('overpass-response-2.json.gz')):
-        gdf = ox.buildings_from_address(address='San Francisco, California, USA', distance=300)
+        gdf = ox.buildings_from_address(address='260 Stockton Street, San Francisco, California, USA', distance=300)
 
     fig, ax = ox.plot_buildings(gdf)
