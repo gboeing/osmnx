@@ -1,6 +1,6 @@
 import sys, urllib.parse, http.client, json, logging
 
-logging.basicConfig(level=logging.INFO, stream=sys.stderr, format='%(levelname)09s - %(message)s')
+logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(levelname)09s - %(message)s')
 
 def get_nominatim_response(query):
     '''
