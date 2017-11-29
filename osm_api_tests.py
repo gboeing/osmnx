@@ -104,7 +104,9 @@ def is_good_nominatim_response(body, expect_geojson):
     return True
 
 def is_good_overpass_response(body):
-    '''
+    ''' Return True if JSON body contains expected Overpass API response.
+    
+        JSON response documentation: http://overpass-api.de/output_formats.html
     '''
     results = json.loads(body)
     
@@ -126,10 +128,8 @@ def is_good_overpass_response(body):
                 logging.warning('No lon, lat in Overpass node element')
                 return False
         
-        elif element['type'] == 'way':
-            if 'tags' not in element:
-                logging.warning('No tags in Overpass way element')
-                return False
+        elif element['type'] in ('way', 'relation'):
+            pass
         
         else:
             logging.warning('Unknown Overpass element type')
@@ -138,7 +138,7 @@ def is_good_overpass_response(body):
     return True
 
 def is_bounded_overpass_response(elements, minlat, maxlat, minlon, maxlon):
-    '''
+    ''' Return True if all Overpass API nodes are in bounds.
     '''
     node_lats = [float(el['lat']) for el in elements if el['type'] == 'node']
     node_lons = [float(el['lon']) for el in elements if el['type'] == 'node']
@@ -161,18 +161,22 @@ def is_bounded_overpass_response(elements, minlat, maxlat, minlon, maxlon):
         
     return True
 
-def is_correctly_tagged_overpass_response(elements, expected_ways, unwanted_ways):
-    '''
-    '''
-    way_types = set([el['tags']['highway'] for el in elements if el['type'] == 'way'])
+def is_correctly_tagged_overpass_response(elements, tag_name, expected_values, unwanted_values):
+    ''' Return True if all way and relation tags match expectations.
     
-    for expected_way in expected_ways:
-        if expected_way not in way_types:
+        Look at one tag name, and check for presence of expected values
+        and absence of unwanted values.
+    '''
+    all_values = set([el['tags'].get(tag_name) for el in elements
+        if el['type'] in ('way', 'relation') and 'tags' in el])
+    
+    for expected_value in expected_values:
+        if expected_value not in all_values:
             logging.warning('An expected tag is missing from Overpass way elements')
             return False
 
-    for unwanted_way in unwanted_ways:
-        if unwanted_way in way_types:
+    for unwanted_value in unwanted_values:
+        if unwanted_value in all_values:
             logging.warning('An unwanted tag is present from Overpass way elements')
             return False
 
@@ -233,10 +237,11 @@ def main():
     
     elements4 = json.loads(body4)['elements']
     assert is_bounded_overpass_response(elements4, 37.7, 37.9, -122.5, -122.3)
-    assert is_correctly_tagged_overpass_response(elements4, ('secondary', 'service'), ('path', ))
+    assert is_correctly_tagged_overpass_response(elements4, 'highway', ('secondary', 'service'), ('path', 'abandoned'))
     
     #
     
+    time.sleep(1)
     logging.info(f'Querying Overpass for driving roads in a bounding box')
     data5 = '[out:json][timeout:180];(way["highway"]["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|proposed|construction|bridleway|abandoned|platform|raceway|service"]["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private"]["service"!~"parking|parking_aisle|driveway|private|emergency_access"](37.78016097,-122.42421511,37.80269301,-122.39582092);>;);out;'
     resp5 = get_overpass_response(data5, False)
@@ -246,7 +251,7 @@ def main():
     
     elements5 = json.loads(body5)['elements']
     assert is_bounded_overpass_response(elements5, 37.7, 37.9, -122.5, -122.3)
-    assert is_correctly_tagged_overpass_response(elements5, ('secondary', ), ('service', 'path'))
+    assert is_correctly_tagged_overpass_response(elements5, 'highway', ('secondary', ), ('service', 'path', 'abandoned'))
     
     #
     
@@ -260,7 +265,21 @@ def main():
     
     elements6 = json.loads(body6)['elements']
     assert is_bounded_overpass_response(elements6, 37.8, 38.0, -122.3, -122.1)
-    assert is_correctly_tagged_overpass_response(elements6, ('secondary', 'service', 'path'), tuple())
+    assert is_correctly_tagged_overpass_response(elements6, 'highway', ('secondary', 'service', 'path'), ('abandoned', ))
+    
+    #
+    
+    time.sleep(1)
+    logging.info(f'Querying Overpass for all buildings in a bounding box')
+    data7 = '[out:json][timeout:180];((way["building"](37.79387218,-122.41182759,37.79927982,-122.40501281);(._;>;););(relation["building"](37.79387218,-122.41182759,37.79927982,-122.40501281);(._;>;);));out;'
+    resp7 = get_overpass_response(data7, True)
+    
+    body7 = resp7.read()
+    assert is_good_overpass_response(body7), 'Should be good Overpass response'
+    
+    elements7 = json.loads(body7)['elements']
+    assert is_bounded_overpass_response(elements7, 37.7, 37.9, -122.5, -122.3)
+    assert is_correctly_tagged_overpass_response(elements7, 'building', ('yes', ), ('no', 'false'))
 
 def lambda_handler(event, context):
     return main()

@@ -37,6 +37,7 @@ deploy:
   region: "us-east-1"
   role: "arn:aws:iam::101696101272:role/service-role/OSMnx-RunLambda"
   runtime: "python3.6"
+  timeout: 60
   module_name: "osm_api_tests"
   handler_name: "lambda_handler"
   zip: osm_api_tests.py
