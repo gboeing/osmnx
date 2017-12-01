@@ -1,6 +1,7 @@
 import sys, urllib.parse, http.client, json, logging, time
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(levelname)09s - %(message)s')
+http_params = dict(headers={'User-Agent': 'OSMnx (https://github.com/gboeing/osmnx/issues/107)'})
 
 def get_nominatim_response(query, include_geojson):
     '''
@@ -11,7 +12,7 @@ def get_nominatim_response(query, include_geojson):
         params.update(polygon_geojson=1)
     
     conn = http.client.HTTPConnection('nominatim.openstreetmap.org')
-    conn.request('GET', '/search?'+urllib.parse.urlencode(params))
+    conn.request('GET', '/search?'+urllib.parse.urlencode(params), **http_params)
     
     return conn.getresponse()
 
@@ -22,9 +23,9 @@ def get_overpass_response(data, use_post):
     conn = http.client.HTTPConnection('www.overpass-api.de')
     
     if use_post:
-        conn.request('POST', '/api/interpreter', urllib.parse.urlencode(params))
+        conn.request('POST', '/api/interpreter', urllib.parse.urlencode(params), **http_params)
     else:
-        conn.request('GET', '/api/interpreter?'+urllib.parse.urlencode(params))
+        conn.request('GET', '/api/interpreter?'+urllib.parse.urlencode(params), **http_params)
     
     return conn.getresponse()
 
