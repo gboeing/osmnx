@@ -13,15 +13,18 @@ def get_nominatim_response(query, include_geojson):
     
     conn = http.client.HTTPConnection('nominatim.openstreetmap.org')
     
-    for delay in (1, 2, 4):
-        conn.request('GET', '/search?'+urllib.parse.urlencode(params), **http_params)
-        resp = conn.getresponse()
-        
-        if resp.status in (429, 504):
-            logging.warning('Got {} HTTP response'.format(resp.status))
-            time.sleep(delay)
+    for delay in (1, 4, 16):
+        try:
+            conn.request('GET', '/search?'+urllib.parse.urlencode(params), **http_params)
+            resp = conn.getresponse()
+        except:
+            continue
         else:
-            return resp
+            if resp.status in (429, 504):
+                logging.warning('Got {} HTTP response'.format(resp.status))
+                time.sleep(delay)
+            else:
+                return resp
 
 def get_overpass_response(data, use_post):
     '''
@@ -29,19 +32,22 @@ def get_overpass_response(data, use_post):
     params = dict(data=data)
     conn = http.client.HTTPConnection('www.overpass-api.de')
     
-    for delay in (1, 2, 4):
-        if use_post:
-            conn.request('POST', '/api/interpreter', urllib.parse.urlencode(params), **http_params)
-        else:
-            conn.request('GET', '/api/interpreter?'+urllib.parse.urlencode(params), **http_params)
+    for delay in (1, 4, 16):
+        try:
+            if use_post:
+                conn.request('POST', '/api/interpreter', urllib.parse.urlencode(params), **http_params)
+            else:
+                conn.request('GET', '/api/interpreter?'+urllib.parse.urlencode(params), **http_params)
     
-        resp = conn.getresponse()
-        
-        if resp.status in (429, 504):
-            logging.warning('Got {} HTTP response'.format(resp.status))
-            time.sleep(delay)
+            resp = conn.getresponse()
+        except:
+            continue
         else:
-            return resp
+            if resp.status in (429, 504):
+                logging.warning('Got {} HTTP response'.format(resp.status))
+                time.sleep(delay)
+            else:
+                return resp
 
 def is_good_nominatim_response(body, expect_geojson):
     ''' Return True if JSON body contains expected Nominatim response.
