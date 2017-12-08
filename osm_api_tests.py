@@ -1,6 +1,5 @@
 import sys, urllib.parse, http.client, json, logging, time
 
-logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(levelname)09s - %(message)s')
 http_params = dict(headers={'User-Agent': 'OSMnx (https://github.com/gboeing/osmnx/issues/107)'})
 
 def get_nominatim_response(query, include_geojson):
@@ -206,6 +205,8 @@ def is_correctly_tagged_overpass_response(elements, tag_name, expected_values, u
 def main():
     '''
     '''
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(levelname)09s - %(message)s')
+    
     logging.info(f'Querying Nominatim for Manhattan')
     resp1 = get_nominatim_response('Manhattan, New York City, New York, USA', True)
     assert resp1.status == 200, 'Should see an HTTP 200 response'
