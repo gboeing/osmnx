@@ -29,7 +29,7 @@ def get_overpass_response(data, use_post):
     '''
     '''
     params = dict(data=data)
-    conn = http.client.HTTPConnection('www.overpass-api.de')
+    conn = http.client.HTTPConnection('overpass-api.de')
     
     for delay in (1, 4, 16):
         try:
