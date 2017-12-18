@@ -7,6 +7,7 @@
 
 import time
 import os
+import json
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -620,7 +621,7 @@ def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attri
     else:
         # folium doesn't interpret html in the html argument (weird), so can't
         # do newlines without an iframe
-        popup_text = str(edge[popup_attribute])
+        popup_text = json.dumps(edge[popup_attribute])
         popup = folium.Popup(html=popup_text)
 
     # create a folium polyline with attributes
