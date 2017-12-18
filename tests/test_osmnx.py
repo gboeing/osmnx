@@ -50,7 +50,7 @@ def get_mock_response_content(overpass_filename=None):
                 return httmock.response(200, file.read())
 
         # For larger Overpass responses, look to the given filename for data
-        if (url.netloc, url.path) == ('www.overpass-api.de', '/api/interpreter'):
+        if (url.netloc, url.path) == ('overpass-api.de', '/api/interpreter'):
             with gzip.open(os.path.join(tests_dir, overpass_filename), 'r') as file:
                 return httmock.response(200, file.read())
 
