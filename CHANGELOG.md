@@ -1,5 +1,12 @@
 # Change log
 
+## 0.7 (TBD)
+
+  - ability to load a graph from a .osm file
+  - change datum from NAD83 to WGS84
+  - fix folium web maps rendering
+  - convert tests to use offline cached HTTP responses
+
 ## 0.6 (2017-10-02)
 
   - migrate to the networkx 2.0 API
