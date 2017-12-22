@@ -1,5 +1,5 @@
 ################################################################################
-# Module: buildings.py
+# Module: pois.py
 # Description: Download and plot Points of Interests (POIs) from OpenStreetMap
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
