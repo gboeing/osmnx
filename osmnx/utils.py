@@ -23,6 +23,7 @@ import io
 import requests
 from itertools import chain
 from collections import Counter
+from shapely.geometry import Polygon
 
 from . import settings
 
@@ -644,3 +645,6 @@ def overpass_json_from_file(filename):
         #import pprint; pprint.pprint(handler.object)
         
         return handler.object
+
+def bbox_to_poly(north, south, east, west):
+    return Polygon([(west, south), (east, south), (east, north), (west, north)])
