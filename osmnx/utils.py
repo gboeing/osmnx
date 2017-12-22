@@ -23,7 +23,12 @@ import warnings
 import xml.sax
 from collections import Counter
 from itertools import chain
-from shapely.geometry import Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon
+from shapely.geometry import Point
+from shapely.geometry import MultiPoint
+from shapely.geometry import LineString
+from shapely.geometry import MultiLineString
+from shapely.geometry import MultiPolygon
+from shapely.geometry import Polygon
 
 from . import settings
 
@@ -998,3 +1003,9 @@ def overpass_json_from_file(filename):
         xml.sax.parse(file, handler)
 
         return handler.object
+
+def bbox_to_poly(north, south, east, west):
+    """
+    Convenience function to parse bbox -> poly
+    """
+    return Polygon([(west, south), (east, south), (east, north), (west, north)])
