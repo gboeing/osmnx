@@ -7,6 +7,7 @@
 ################################################################################
 
 from .buildings import *
+from .pois import *
 from .elevation import *
 from .core import *
 from .plot import *
