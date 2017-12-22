@@ -64,7 +64,7 @@ def validate_amenities(amenities=None):
     valid_cnt = 0
     for amenity in amenities:
         # Check known amenities
-        if amenity in available:
+        if amenity in available_amenities:
             valid_cnt += 1
         else:
             Warning("Amenity {} was not recognized.".format(amenity))
