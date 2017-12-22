@@ -121,9 +121,21 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
 
     Parameters
     ----------
-    poi_json : json
-        Overpass API JSON object.
-
+    polygon : shapely Polygon or MultiPolygon
+        geographic shape to fetch the building footprints within
+    amenities: list
+        List of amenities that will be used for finding the POIs from the selected area.
+    north : float
+        northern latitude of bounding box
+    south : float
+        southern latitude of bounding box
+    east : float
+        eastern longitude of bounding box
+    west : float
+        western longitude of bounding box
+    retain_invalid : bool
+        if False discard any building footprints with an invalid geometry
+        
     Returns
     -------
     Geopandas GeoDataFrame with POIs and the associated attributes. 
