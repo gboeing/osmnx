@@ -11,7 +11,7 @@ from .core import overpass_request, bbox_from_point, gdf_from_place
 from .utils import log, geocode, bbox_to_poly
 
 # List of available amenities
-available = ['fast_food', 'restaurant', 'food_court', 'pub', 'bar', 'nighclub', 'biergarten', 'cafe', 'bakery',
+available_amenities = ['fast_food', 'restaurant', 'food_court', 'pub', 'bar', 'nighclub', 'biergarten', 'cafe', 'bakery',
                        'hairdresser', 'beauty_shop', 'supermarket', 'kiosk', 'beverages', 'greengrocer', 'butcher', 'convenience', 'department_store', 'computer_shop', 'clothes', 'sports_shop', 'bicycle_shop', 'video_shop', 'furniture_shop', 'outdoor_shop', 'shoe_shop', 'bookshop', 'jeweller', 'gift_shop', 'mobile_phone_shop',
                        'car_dealership', 'chemist', 'florist', 'garden_centre', 'mall', 'sports_shop', 'toy_shop', 'vending_any', 'vending_machine',
                        'dentist', 'pharmacy', 'optician', 'hospital', 'doctors', 'nursing_home', 'veterinary',
