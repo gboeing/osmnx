@@ -7,6 +7,7 @@
 ################################################################################
 
 from .buildings import *
+from .pois import *
 from .elevation import *
 from .core import *
 from .plot import *
@@ -16,4 +17,4 @@ from .simplify import *
 from .stats import *
 from .utils import *
 
-__version__ = '0.7.dev'
+__version__ = '0.7.1.dev'
