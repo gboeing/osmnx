@@ -150,11 +150,11 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
                 log('Point has invalid geometry: {}'.format(result['id']))
 
         elif result['type'] == 'relation':
-            print("TODO relation")
-            # print(result)
+            # TODO: Add functionalities to parse 'relation' tags.
+            pass
         elif result['type'] == 'way':
-            print("TODO way")
-            # print(result)
+            # TODO: Add functionalities to parse 'way' tags as a separate GeoDataFrame.
+            pass
 
     gdf = gpd.GeoDataFrame(pois).T
     gdf.crs = {'init': 'epsg:4326'}
