@@ -7,10 +7,10 @@
 ################################################################################
 
 from .buildings import *
-from .pois import *
 from .elevation import *
 from .core import *
 from .plot import *
+from .pois import *
 from .projection import *
 from .save_load import *
 from .simplify import *
