@@ -25,14 +25,12 @@ available_amenities = ['fast_food', 'restaurant', 'food_court', 'pub', 'bar', 'n
                        'toilet', 'vending_parking', 'waste_basket', 'wastewater_plant', 'water_mill', 'water_tower', 'water_well', 'water_works', 'wayside_cross', 'wayside_shrine', 'bench', 'drinking_water',
                        'recycling', 'recycling_clothes', 'recycling_glass', 'recycling_metal', 'recycling_paper']
 
-def parse_poi_query(amenities, west, south, east, north, timeout=180, maxsize=''):
+def parse_poi_query(west, south, east, north, amenities=None, timeout=180, maxsize=''):
     """
     Parse the Overpass QL query based on the list of amenities.
 
     Parameters
     ----------
-    amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
     west : float
         Westernmost coordinate of the bounding box of the search area.
     south : float
@@ -41,19 +39,32 @@ def parse_poi_query(amenities, west, south, east, north, timeout=180, maxsize=''
         Easternmost coordinate from bounding box of the search area.
     north : float
         Northernmost coordinate from bounding box of the search area.
+    amenities : list
+        List of amenities that will be used for finding the POIs from the selected area.
     timeout : int
         Timeout for the API request. 
     """
+    if amenities:
+        # Overpass QL template
+        query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"~"{amenities}"]({south:.8f},'
+                          '{west:.8f},{north:.8f},{east:.8f});(._;>;););(way["amenity"~"{amenities}"]({south:.8f},'
+                          '{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation["amenity"~"{amenities}"]'
+                          '({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);));out;')
 
-    # Overpass QL template
-    query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"~"{amenities}"]({south:.8f},'
-                      '{west:.8f},{north:.8f},{east:.8f});(._;>;););(way["amenity"~"{amenities}"]({south:.8f},'
-                      '{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation["amenity"~"{amenities}"]'
-                      '({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);));out;')
+        # Parse amenties
+        query_str = query_template.format(amenities="|".join(amenities), north=north, south=south, east=east, west=west,
+                                          timeout=timeout, maxsize=maxsize)
+    else:
+        # Overpass QL template
+        query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"]({south:.8f},'
+                          '{west:.8f},{north:.8f},{east:.8f});(._;>;););(way["amenity"]({south:.8f},'
+                          '{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation["amenity"]'
+                          '({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);));out;')
 
-    # Parse amenties
-    query_str = query_template.format(amenities="|".join(amenities), north=north, south=south, east=east, west=west,
-                                      timeout=timeout, maxsize=maxsize)
+        # Parse amenties
+        query_str = query_template.format(north=north, south=south, east=east, west=west,
+                                          timeout=timeout, maxsize=maxsize)
+
     return query_str
 
 def validate_amenities(amenities=None):
@@ -69,7 +80,7 @@ def validate_amenities(amenities=None):
         else:
             Warning("Amenity {} was not recognized.".format(amenity))
     if valid_cnt == 0:
-        raise Warning("There were not any recognized amenities. You might not get any results. Check available amenities by running: ox.pois.available")
+        Warning("There were not any recognized amenities. You might not get any results. Check available amenities by running: ox.pois.available")
 
 def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=None, west=None,
                      timeout=180, max_query_area_size=50*1000*50*1000):
@@ -90,14 +101,15 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
     """
 
     # Validate amenities
-    validate_amenities(amenities)
+    if amenities:
+        validate_amenities(amenities)
 
     if polygon:
         # Bounds
         west, south, east, north = polygon.bounds
 
         # Parse the Overpass QL query
-        query = parse_poi_query(amenities, west, south, east, north)
+        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north)
 
     elif not (north is None or south is None or east is None or west is None):
         # TODO: Add functionality for subdividing search area geometry based on max_query_area_size
@@ -105,7 +117,7 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
         #polygon = bbox_to_poly(north=north, south=south, east=east, west=west)
 
         # Parse the Overpass QL query
-        query = parse_poi_query(amenities, west, south, east, north)
+        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north)
 
     else:
         raise ValueError('You must pass a polygon or north, south, east, and west')
@@ -172,7 +184,7 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     gdf.crs = {'init': 'epsg:4326'}
     return gdf
 
-def pois_from_point(point, amenities, distance=None, retain_invalid=False):
+def pois_from_point(point, distance=None, amenities=None, retain_invalid=False):
     """
     Get Point of interests (POIs) within some distance north, south, east, and west of
     a lat-long point.
@@ -196,7 +208,7 @@ def pois_from_point(point, amenities, distance=None, retain_invalid=False):
     north, south, east, west = bbox
     return create_poi_gdf(amenities=amenities, north=north, south=south, east=east, west=west)
 
-def pois_from_address(address, amenities, distance, retain_invalid=False):
+def pois_from_address(address, distance, amenities=None, retain_invalid=False):
     """
     Get OSM Points of Interests within some distance north, south, east, and west of
     an address.
@@ -223,7 +235,7 @@ def pois_from_address(address, amenities, distance, retain_invalid=False):
     # get buildings within distance of this point
     return pois_from_point(point=point, amenities=amenities, distance=distance)
 
-def pois_from_polygon(polygon, amenities, retain_invalid=False):
+def pois_from_polygon(polygon, amenities=None, retain_invalid=False):
     """
     Get OSM Points of Interests within some polygon.
 
@@ -243,7 +255,7 @@ def pois_from_polygon(polygon, amenities, retain_invalid=False):
 
     return create_poi_gdf(polygon=polygon, amenities=amenities)
 
-def pois_from_place(place, amenities, retain_invalid=False):
+def pois_from_place(place, amenities=None, retain_invalid=False):
     """
     Get building footprints within the boundaries of some place.
 
@@ -263,4 +275,4 @@ def pois_from_place(place, amenities, retain_invalid=False):
 
     city = gdf_from_place(place)
     polygon = city['geometry'].iloc[0]
-    return create_poi_gdf(polygon, amenities, retain_invalid=retain_invalid)
+    return create_poi_gdf(polygon=polygon, amenities=amenities, retain_invalid=retain_invalid)
