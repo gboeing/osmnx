@@ -10,22 +10,6 @@ import geopandas as gpd
 from .core import overpass_request, bbox_from_point, gdf_from_place
 from .utils import log, geocode, bbox_to_poly
 
-"""
-# List of available amenities
-available_amenities = ['fast_food', 'restaurant', 'food_court', 'pub', 'bar', 'nighclub', 'biergarten', 'cafe', 'bakery',
-                       'hairdresser', 'beauty_shop', 'supermarket', 'kiosk', 'beverages', 'greengrocer', 'butcher', 'convenience', 'department_store', 'computer_shop', 'clothes', 'sports_shop', 'bicycle_shop', 'video_shop', 'furniture_shop', 'outdoor_shop', 'shoe_shop', 'bookshop', 'jeweller', 'gift_shop', 'mobile_phone_shop',
-                       'car_dealership', 'chemist', 'florist', 'garden_centre', 'mall', 'sports_shop', 'toy_shop', 'vending_any', 'vending_machine',
-                       'dentist', 'pharmacy', 'optician', 'hospital', 'doctors', 'nursing_home', 'veterinary',
-                       'school', 'kindergarten', 'college', 'university',
-                       'arts_centre', 'archaeological', 'artwork', 'attraction', 'battlefield', 'castle', 'fort', 'fountain', 'lighthouse', 'memorial', 'monument', 'museum', 'observation_tower', 'ruins', 'tower','town_hall', 'viewpoint', 'windmill',
-                       'bank', 'atm', 'bicycle_rental', 'car_rental', 'car_sharing',
-                       'camp_site', 'hotel', 'hostel', 'alpine_hut', 'caravan_site', 'chalet', 'guest_house',
-                       'car_repair', 'car_wash', 'laundry', 'library', 'tourist_info', 'travel_agent',
-                       'cinema', 'theatre', 'theme_park', 'zoo', 'dog_park', 'golf_course', 'hunting_stand', 'ice_rink', 'park', 'picnic_site', 'pitch', 'playground', 'sports_centre', 'stadium', 'swimming_pool', 'track', 'community_centre', 'courthouse', 'embassy', 'doityourself',
-                       'fire_station', 'graveyard', 'police', 'post_box', 'post_office', 'prison', 'public_building', 'shelter', 'telephone',
-                       'toilet', 'vending_parking', 'waste_basket', 'wastewater_plant', 'water_mill', 'water_tower', 'water_well', 'water_works', 'wayside_cross', 'wayside_shrine', 'bench', 'drinking_water',
-                       'recycling', 'recycling_clothes', 'recycling_glass', 'recycling_metal', 'recycling_paper']
-"""
 def parse_poi_query(west, south, east, north, amenities=None, timeout=180, maxsize=''):
     """
     Parse the Overpass QL query based on the list of amenities.
@@ -272,7 +256,7 @@ def parse_osm_relations(relations, osm_way_df):
     osm_way_df = osm_way_df.append(gdf_relations)
     return osm_way_df
 
-def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=None, west=None, retain_invalid=False):
+def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=None, west=None):
     """
     Parse GeoDataFrames from POI json that was returned by Overpass API.
 
@@ -281,7 +265,7 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     polygon : shapely Polygon or MultiPolygon
         geographic shape to fetch the building footprints within
     amenities: list
-        List of amenities that will be used for finding the POIs from the selected area. See available amenities from: 
+        List of amenities that will be used for finding the POIs from the selected area. See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity 
     north : float
         northern latitude of bounding box
     south : float
@@ -290,8 +274,6 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
         eastern longitude of bounding box
     west : float
         western longitude of bounding box
-    retain_invalid : bool
-        if False discard any building footprints with an invalid geometry
         
     Returns
     -------
@@ -346,7 +328,7 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
 
     return gdf
 
-def pois_from_point(point, distance=None, amenities=None, retain_invalid=False):
+def pois_from_point(point, distance=None, amenities=None):
     """
     Get Point of interests (POIs) within some distance north, south, east, and west of
     a lat-long point.
@@ -355,12 +337,10 @@ def pois_from_point(point, distance=None, amenities=None, retain_invalid=False):
     ----------
     point : tuple
         a lat-long point
-    amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
     distance : numeric
         distance in meters
-    retain_invalid : bool
-        if False discard any building footprints with an invalid geometry
+    amenities : list
+        List of amenities that will be used for finding the POIs from the selected area. See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
 
     Returns
     -------
@@ -370,7 +350,7 @@ def pois_from_point(point, distance=None, amenities=None, retain_invalid=False):
     north, south, east, west = bbox
     return create_poi_gdf(amenities=amenities, north=north, south=south, east=east, west=west)
 
-def pois_from_address(address, distance, amenities=None, retain_invalid=False):
+def pois_from_address(address, distance, amenities=None):
     """
     Get OSM Points of Interests within some distance north, south, east, and west of
     an address.
@@ -379,12 +359,10 @@ def pois_from_address(address, distance, amenities=None, retain_invalid=False):
     ----------
     address : string
         the address to geocode to a lat-long point
-    amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
     distance : numeric
         distance in meters
-    retain_invalid : bool
-        if False discard any building footprints with an invalid geometry
+    amenities : list
+        List of amenities that will be used for finding the POIs from the selected area. See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
 
     Returns
     -------
@@ -397,7 +375,7 @@ def pois_from_address(address, distance, amenities=None, retain_invalid=False):
     # get buildings within distance of this point
     return pois_from_point(point=point, amenities=amenities, distance=distance)
 
-def pois_from_polygon(polygon, amenities=None, retain_invalid=False):
+def pois_from_polygon(polygon, amenities=None):
     """
     Get OSM Points of Interests within some polygon.
 
@@ -406,9 +384,7 @@ def pois_from_polygon(polygon, amenities=None, retain_invalid=False):
     polygon : Polygon
         Polygon where the POIs are search from. 
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
-    retain_invalid : bool
-        if False discard any building footprints with an invalid geometry
+        List of amenities that will be used for finding the POIs from the selected area. See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
 
     Returns
     -------
@@ -417,7 +393,7 @@ def pois_from_polygon(polygon, amenities=None, retain_invalid=False):
 
     return create_poi_gdf(polygon=polygon, amenities=amenities)
 
-def pois_from_place(place, amenities=None, retain_invalid=False):
+def pois_from_place(place, amenities=None):
     """
     Get building footprints within the boundaries of some place.
 
@@ -426,9 +402,7 @@ def pois_from_place(place, amenities=None, retain_invalid=False):
     place : string
         the query to geocode to get geojson boundary polygon.
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
-    retain_invalid : bool
-        if False discard any building footprints with an invalid geometry
+        List of amenities that will be used for finding the POIs from the selected area. See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
 
     Returns
     -------
@@ -437,5 +411,4 @@ def pois_from_place(place, amenities=None, retain_invalid=False):
 
     city = gdf_from_place(place)
     polygon = city['geometry'].iloc[0]
-    return create_poi_gdf(polygon=polygon, amenities=amenities, retain_invalid=retain_invalid)
-
+    return create_poi_gdf(polygon=polygon, amenities=amenities)
