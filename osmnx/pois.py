@@ -395,7 +395,7 @@ def pois_from_polygon(polygon, amenities=None):
 
 def pois_from_place(place, amenities=None):
     """
-    Get building footprints within the boundaries of some place.
+    Get Point of interests (POIs) within the boundaries of some place.
 
     Parameters
     ----------
