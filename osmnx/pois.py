@@ -10,6 +10,7 @@ import geopandas as gpd
 from .core import overpass_request, bbox_from_point, gdf_from_place
 from .utils import log, geocode, bbox_to_poly
 
+"""
 # List of available amenities
 available_amenities = ['fast_food', 'restaurant', 'food_court', 'pub', 'bar', 'nighclub', 'biergarten', 'cafe', 'bakery',
                        'hairdresser', 'beauty_shop', 'supermarket', 'kiosk', 'beverages', 'greengrocer', 'butcher', 'convenience', 'department_store', 'computer_shop', 'clothes', 'sports_shop', 'bicycle_shop', 'video_shop', 'furniture_shop', 'outdoor_shop', 'shoe_shop', 'bookshop', 'jeweller', 'gift_shop', 'mobile_phone_shop',
@@ -24,7 +25,7 @@ available_amenities = ['fast_food', 'restaurant', 'food_court', 'pub', 'bar', 'n
                        'fire_station', 'graveyard', 'police', 'post_box', 'post_office', 'prison', 'public_building', 'shelter', 'telephone',
                        'toilet', 'vending_parking', 'waste_basket', 'wastewater_plant', 'water_mill', 'water_tower', 'water_well', 'water_works', 'wayside_cross', 'wayside_shrine', 'bench', 'drinking_water',
                        'recycling', 'recycling_clothes', 'recycling_glass', 'recycling_metal', 'recycling_paper']
-
+"""
 def parse_poi_query(west, south, east, north, amenities=None, timeout=180, maxsize=''):
     """
     Parse the Overpass QL query based on the list of amenities.
@@ -67,21 +68,6 @@ def parse_poi_query(west, south, east, north, amenities=None, timeout=180, maxsi
 
     return query_str
 
-def validate_amenities(amenities=None):
-    """
-    Validate the list of amenities. Warn users about unrecognized amenities. 
-    """
-    # Count valid amenities
-    valid_cnt = 0
-    for amenity in amenities:
-        # Check known amenities
-        if amenity in available_amenities:
-            valid_cnt += 1
-        else:
-            Warning("Amenity {} was not recognized.".format(amenity))
-    if valid_cnt == 0:
-        Warning("There were not any recognized amenities. You might not get any results. Check available amenities by running: ox.pois.available")
-
 def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=None, west=None,
                      timeout=180, max_query_area_size=50*1000*50*1000):
     """
@@ -99,10 +85,6 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
     gdf : geopandas.GeoDataFrame
         Points of interests and the tags associated to them as Geopandas GeoDataFrame.
     """
-
-    # Validate amenities
-    if amenities:
-        validate_amenities(amenities)
 
     if polygon:
         # Bounds
@@ -166,7 +148,8 @@ def parse_osm_way(vertices, response):
             polygon = Polygon([(vertices[node]['lon'], vertices[node]['lat']) for node in nodes])
 
             poi = {'nodes': nodes,
-                   'geometry': polygon}
+                   'geometry': polygon,
+                   'osmid': response['id']}
 
             if 'tags' in response:
                 for tag in response['tags']:
@@ -205,6 +188,29 @@ def parse_osm_node(response):
 
     return poi
 
+def invalid_multipoly_handler(gdf, relation, way_ids):
+    """
+    Handles invalid multipolygon geometries when there exists e.g. a feature without geometry (geometry == NaN)
+
+    Parameters
+    ==========
+
+    gdf : gpd.GeoDataFrame
+        GeoDataFrame with Polygon geometries that should be converted into a MultiPolygon object.
+    relation : dict
+        OSM 'relation' dictionary
+    way_ids : list
+        A list of 'way' ids that should be converted into a MultiPolygon object. 
+    """
+    try:
+        gdf_clean = gdf.dropna(subset=['geometry'])
+        multipoly = MultiPolygon(list(gdf_clean['geometry']))
+        return multipoly
+    except Exception:
+        log("Invalid geometry at relation id %s.\nWay-ids of the invalid MultiPolygon:" % (
+        relation['id'], str(way_ids)))
+        return None
+
 def parse_osm_relations(relations, osm_way_df):
     """
     Parses the osm relations from osm ways and nodes.
@@ -213,8 +219,8 @@ def parse_osm_relations(relations, osm_way_df):
     ==========
     relations : list
         OSM 'relation' items (dictionaries) in a list. 
-    osm_way_gdf : gpd.GeoDataFrame
-        OSM 'way' features as a GeoDataFrame that contains all the 'way' features that will constitute the 'relations' .
+    osm_way_df : gpd.GeoDataFrame
+        OSM 'way' features as a GeoDataFrame that contains all the 'way' features that will constitute the multipolygon relations.
      
     Information
     ===========
@@ -230,31 +236,37 @@ def parse_osm_relations(relations, osm_way_df):
     # Iterate over relations and extract the items
     for relation in relations:
         if relation['tags']['type'] == 'multipolygon':
-            # Parse member 'way' ids
-            member_way_ids = [member['ref'] for member in relation['members'] if member['type'] == 'way']
-            # Extract the ways
-            member_ways = osm_way_df.loc[member_way_ids]
-            # Extract the nodes of those ways
-            member_nodes = list(member_ways['nodes'].values)
-            # Create MultiPolygon
-            multipoly = MultiPolygon(list(member_ways['geometry'].values))
-            # Create GeoDataFrame with the tags and the MultiPolygon and its 'ways' (ids), and the 'nodes' of those ways
-            geo = gpd.GeoDataFrame(relation['tags'], index=[relation['id']])
-            geo['geometry'] = None
-            geo['ways'] = None
-            geo['nodes'] = None
-            geo.loc[relation['id'], 'geometry'] = multipoly
-            geo.loc[relation['id'], 'ways'] = member_way_ids
-            geo.loc[relation['id'], 'nodes'] = member_nodes
+            try:
+                # Parse member 'way' ids
+                member_way_ids = [member['ref'] for member in relation['members'] if member['type'] == 'way']
+                # Extract the ways
+                member_ways = osm_way_df.loc[member_way_ids]
+                # Extract the nodes of those ways
+                member_nodes = list(member_ways['nodes'].values)
+                try:
+                    # Create MultiPolygon from geometries (exclude NaNs)
+                    multipoly = MultiPolygon(list(member_ways['geometry']))
+                except Exception:
+                    multipoly = invalid_multipoly_handler(gdf=member_ways, relation=relation, way_ids=member_way_ids)
 
-            # Append to relation GeoDataFrame
-            gdf_relations = gdf_relations.append(geo)
-            # Remove such 'ways' from 'osm_way_df' that are part of the 'relation'
-            osm_way_df = osm_way_df.drop(member_way_ids)
-        elif relation['type'] == 'multiline':
-            print("TODO: multiline relation")
-        elif relation['type'] == 'multipoint':
-            print("TODO: multipoint relation")
+                if multipoly:
+                    # Create GeoDataFrame with the tags and the MultiPolygon and its 'ways' (ids), and the 'nodes' of those ways
+                    geo = gpd.GeoDataFrame(relation['tags'], index=[relation['id']])
+                    # Initialize columns (needed for .loc inserts)
+                    geo = geo.assign(geometry=None, ways=None, nodes=None, element_type=None, osmid=None)
+                    # Add attributes
+                    geo.loc[relation['id'], 'geometry'] = multipoly
+                    geo.loc[relation['id'], 'ways'] = member_way_ids
+                    geo.loc[relation['id'], 'nodes'] = member_nodes
+                    geo.loc[relation['id'], 'element_type'] = 'relation'
+                    geo.loc[relation['id'], 'osmid'] = relation['id']
+
+                    # Append to relation GeoDataFrame
+                    gdf_relations = gdf_relations.append(geo)
+                    # Remove such 'ways' from 'osm_way_df' that are part of the 'relation'
+                    osm_way_df = osm_way_df.drop(member_way_ids)
+            except Exception:
+                log("Could not handle OSM 'relation': {}".format(relation['id']))
 
     # Merge 'osm_way_df' and the 'gdf_relations'
     osm_way_df = osm_way_df.append(gdf_relations)
@@ -269,7 +281,7 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     polygon : shapely Polygon or MultiPolygon
         geographic shape to fetch the building footprints within
     amenities: list
-        List of amenities that will be used for finding the POIs from the selected area.
+        List of amenities that will be used for finding the POIs from the selected area. See available amenities from: 
     north : float
         northern latitude of bounding box
     south : float
@@ -290,8 +302,8 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     # Parse vertices
     vertices = parse_vertice_nodes(responses)
 
-    # POIs
-    pois = {}
+    # POI nodes
+    poi_nodes = {}
 
     # POI ways
     poi_ways = {}
@@ -302,18 +314,25 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     for result in responses['elements']:
         if result['type'] == 'node' and 'tags' in result:
             poi = parse_osm_node(response=result)
-            pois[result['id']] = poi
+            # Add element_type
+            poi['element_type'] = 'node'
+            # Add to 'pois'
+            poi_nodes[result['id']] = poi
         elif result['type'] == 'way':
             # Parse POI area Polygon
             poi_area = parse_osm_way(vertices=vertices, response=result)
             if poi_area:
+                # Add element_type
+                poi_area['element_type'] = 'way'
+                # Add to 'poi_ways'
                 poi_ways[result['id']] = poi_area
+
         elif result['type'] == 'relation':
             # Add relation to a relation list (needs to be parsed after all nodes and ways have been parsed)
             relations.append(result)
 
     # Create GeoDataFrames
-    gdf_nodes = gpd.GeoDataFrame(pois).T
+    gdf_nodes = gpd.GeoDataFrame(poi_nodes).T
     gdf_nodes.crs = {'init': 'epsg:4326'}
 
     gdf_ways = gpd.GeoDataFrame(poi_ways).T
@@ -322,7 +341,10 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     # Parse relations (MultiPolygons) from 'ways'
     gdf_ways = parse_osm_relations(relations=relations, osm_way_df=gdf_ways)
 
-    return (gdf_nodes, gdf_ways)
+    # Combine GeoDataFrames
+    gdf = gdf_nodes.append(gdf_ways)
+
+    return gdf
 
 def pois_from_point(point, distance=None, amenities=None, retain_invalid=False):
     """
@@ -416,3 +438,4 @@ def pois_from_place(place, amenities=None, retain_invalid=False):
     city = gdf_from_place(place)
     polygon = city['geometry'].iloc[0]
     return create_poi_gdf(polygon=polygon, amenities=amenities, retain_invalid=retain_invalid)
+
