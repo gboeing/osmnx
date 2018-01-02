@@ -1480,7 +1480,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
         the (lat, lon) central point around which to construct the graph
     distance : int
         retain only those nodes within this many meters of the center of the
-        graph
+        graph, with distance determined according to distance_type argument
     distance_type : string
         {'network', 'bbox'} if 'bbox', retain only those nodes within a bounding
         box of the distance parameter. if 'network', retain only those nodes
