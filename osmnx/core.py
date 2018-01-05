@@ -509,14 +509,14 @@ def get_osm_filter(network_type):
     # anything specifying motor=no. also filter out any non-service roads that
     # are tagged as providing parking, driveway, private, or emergency-access
     # services
-    filters['drive'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|'
+    filters['drive'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
                         'proposed|construction|bridleway|abandoned|platform|raceway|service"]'
                         '["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private"]'
                         '["service"!~"parking|parking_aisle|driveway|private|emergency_access"]')
 
     # drive+service: allow ways tagged 'service' but filter out certain types of
     # service ways
-    filters['drive_service'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|'
+    filters['drive_service'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
                                 'proposed|construction|bridleway|abandoned|platform|raceway"]'
                                 '["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private"]'
                                 '["service"!~"parking|parking_aisle|private|emergency_access"]')
@@ -530,7 +530,7 @@ def get_osm_filter(network_type):
 
     # biking: filter out foot ways, motor ways, private ways, and anything
     # specifying biking=no
-    filters['bike'] = ('["area"!~"yes"]["highway"!~"footway|motor|proposed|construction|abandoned|platform|raceway"]'
+    filters['bike'] = ('["area"!~"yes"]["highway"!~"footway|corridor|motor|proposed|construction|abandoned|platform|raceway"]'
                        '["bicycle"!~"no"]["service"!~"private"]["access"!~"private"]')
 
     # to download all ways, just filter out everything not currently in use or
