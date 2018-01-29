@@ -1248,7 +1248,7 @@ def add_paths(G, paths, network_type):
             # add this path (in only one direction) to the graph
             add_path(G, data, one_way=True)
 
-        elif 'junction' in data and data['junction'] == 'roundabout':
+        elif ('junction' in data and data['junction'] == 'roundabout') and not network_type == 'walk':
             # roundabout are also oneway but not tagged as is
             add_path(G, data, one_way=True)
 
