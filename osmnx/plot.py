@@ -417,6 +417,10 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
         # make everything square
         ax.set_aspect('equal')
         fig.canvas.draw()
+    else:
+        coslat = np.cos((min(node_Ys)+max(node_Ys))/2/180*np.pi)
+        ax.set_aspect(1/coslat)
+        fig.canvas.draw()
 
     # annotate the axis with node IDs if annotate=True
     if annotate:
