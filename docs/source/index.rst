@@ -51,24 +51,24 @@ More feature development details are in the `change log`_.
 Installation
 ------------
 
-Install OSMnx with pip:
-
-.. code-block:: shell
-
-    pip install osmnx
-
-or with conda (easiest):
+Install OSMnx with conda (easiest):
 
 .. code-block:: shell
 
     conda install -c conda-forge osmnx
 
-If you have any trouble with the installation, try installing OSMnx in a new,
-clean `virtual environment`_:
+or with pip:
 
 .. code-block:: shell
 
-    conda create --yes -c conda-forge -n OSMNX python=3 osmnx
+    pip install osmnx
+
+If you have any trouble with the installation, try installing OSMnx in a new,
+clean `virtual environment`_ using conda and conda-forge:
+
+.. code-block:: shell
+
+    conda create --override-channels -c conda-forge -n OSMNX python=3 osmnx
     source activate OSMNX
 
 

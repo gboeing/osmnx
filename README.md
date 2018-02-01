@@ -18,7 +18,7 @@ Retrieve, construct, analyze, and visualize street networks from OpenStreetMap:
 
 ## Overview
 
-**OSMnx** is a Python 2+3 package that lets you download spatial geometries and
+**OSMnx** is a Python package that lets you download spatial geometries and
 construct, project, visualize, and analyze street networks from OpenStreetMap's
 APIs. Users can download and construct walkable, drivable, or bikable urban
 networks with a single line of Python code, and then easily analyze and
@@ -64,7 +64,8 @@ pip install osmnx
 If you are pip installing OSMnx, install [geopandas](http://geoffboeing.com/2014/09/using-geopandas-windows/)
 and [rtree](http://geoffboeing.com/2016/10/r-tree-spatial-index-python/) first.
 It's easiest to use [conda-forge](https://anaconda.org/conda-forge/geopandas)
-to get these dependencies installed.
+to get these dependencies installed. If you have any trouble with the installation, read
+the [docs](https://osmnx.readthedocs.io).
 
 ## Features
 
@@ -91,7 +92,7 @@ More feature development details are in the change log.
 
 ## Documentation
 
-Documentation available at [readthedocs](https://osmnx.readthedocs.io/en/stable/).
+Documentation available at [readthedocs](https://osmnx.readthedocs.io).
 
 Examples available in the [examples repo](https://github.com/gboeing/osmnx-examples).
 
