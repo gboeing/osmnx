@@ -30,20 +30,4 @@ script:
 after_success:
   - coverage report -m
   - coveralls
-
-deploy:
-  provider: lambda
-  function_name: "OSMnx-Test-Overpass"
-  region: "us-east-1"
-  role: "arn:aws:iam::101696101272:role/service-role/OSMnx-RunLambda"
-  runtime: "python3.6"
-  timeout: 60
-  module_name: "osm_api_tests"
-  handler_name: "lambda_handler"
-  zip: osm_api_tests.py
-  access_key_id: "AKIAINV3BFLF5O2OS7SQ"
-  secret_access_key:
-    secure: "OIqNBZWxwIJyS6s420BOQVghaBbD+gTWZh7Uiiq66BnkM5PfuTOc2hxzdqikTLqWU7bpNQ2VuJEl7xZ0usf5Bpv5tdVCTjQf+1DfOgahAiCDjNd83BlkjFestRP5GMEcJoZk99h1E3OD2kgFNTm8GMXU96JYCc5e91T+nRFE7Yus+V/h/E9+/KmzYrapvpQAuKTJJC681wKY/gshVSydWY1v/jaWzRZ909VSuqjG1R+J1VpRWGGDWyQ8ZYdeezLUMEMzzp+OplZqyQmvHJX6YhO1g5GXxyN65EtKkNBaUcKwXXVHDmteE0thWLiUWPCCfi+MAC2qzvZrcvgCAQn6kSUkDt0j+e5qN3VK6ioY9bqoQj0Qg5PPkOORi5CeIqCnylxwhyox8dy3GEa/s2TYtf0EdUzKMmgihEbeWx6o/Vxru+klGjI4XpqRzzD5tUHWmOhXru+sZh5NhJnGDsXRsDVlw12Y6Ik+vS7awROdMLlAQdXvv8zZE62to2Zt3xTuzD0Lk9gjT+iPeBY9Dpt9AnEIPfKwBWkcihjAqZt3seiFjdc2gt4XrkB173EUeEnUmeQS4UqFKPAFnKZJ2Ndawe/0wXExu4XeyLudgtq5NNxtYR5dhZF4QH/gEoO9p4Y9RSk8X5f4qbGfOIZFVRb0cmEUnIm9JaZr8W2RONF3yEU="
-  on:
-    branch: "master"
-
+  
