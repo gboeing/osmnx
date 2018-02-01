@@ -18,6 +18,7 @@ tests/run_tests.bat
 *.7z
 *.dmg
 *.gz
+!tests/input_data/*.json.gz
 *.iso
 *.jar
 *.rar
