@@ -109,7 +109,8 @@ def get_from_cache(url):
         # open the cache file for this url hash if it already exists, otherwise
         # return None
         if os.path.isfile(cache_path_filename):
-            response_json = json.load(io.open(cache_path_filename, encoding='utf-8'))
+            with io.open(cache_path_filename, encoding='utf-8') as cache_file:
+            	response_json = json.load(cache_file)
             log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_path_filename, url))
             return response_json
 
