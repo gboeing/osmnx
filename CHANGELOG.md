@@ -1,11 +1,12 @@
 # Change log
 
-## 0.7 (TBD)
+## 0.7 (2018-02-01)
 
   - ability to load a graph from a .osm file
   - change datum from NAD83 to WGS84
+  - make roundabouts one-way
+  - conformal plotting for unprojected graphs
   - fix folium web maps rendering
-  - convert tests to use offline cached HTTP responses
 
 ## 0.6 (2017-10-02)
 
