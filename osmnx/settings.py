@@ -31,3 +31,6 @@ useful_tags_node = ['ref', 'highway']
 useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name',
                     'highway', 'maxspeed', 'service', 'access', 'area',
                     'landuse', 'width', 'est_width', 'junction']
+
+# default CRS to set when creating graphs
+default_crs = {'init':'epsg:4326'}

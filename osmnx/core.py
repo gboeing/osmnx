@@ -33,6 +33,7 @@ from shapely.ops import unary_union
 from . import settings
 from .projection import project_geometry
 from .projection import project_gdf
+from .settings import default_crs
 from .simplify import simplify_graph
 from .utils import log
 from .utils import make_str
@@ -430,11 +431,10 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
         if geometry['type'] not in ['Polygon', 'MultiPolygon']:
             log('OSM returned a {} as the geometry.'.format(geometry['type']), level=lg.WARNING)
 
-        # create the GeoDataFrame, name it, and set its original CRS to lat-long
-        # (EPSG 4326)
+        # create the GeoDataFrame, name it, and set its original CRS to default_crs
         gdf = gpd.GeoDataFrame.from_features(features)
         gdf.gdf_name = gdf_name
-        gdf.crs = {'init':'epsg:4326'}
+        gdf.crs = default_crs
 
         # if buffer_dist was passed in, project the geometry to UTM, buffer it
         # in meters, then project it back to lat-long
@@ -484,8 +484,8 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None):
     gdf = gdf.reset_index().drop(labels='index', axis=1)
     gdf.gdf_name = gdf_name
 
-    # set the original CRS of the GeoDataFrame to lat-long, and return it
-    gdf.crs = {'init':'epsg:4326'}
+    # set the original CRS of the GeoDataFrame to default_crs, and return it
+    gdf.crs = default_crs
     log('Finished creating GeoDataFrame with {} rows from {} queries'.format(len(gdf), len(queries)))
     return gdf
 
@@ -1295,8 +1295,8 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     if len(elements) < 1:
         raise ValueError('There are no data elements in the response JSON objects')
 
-    # create the graph as a MultiDiGraph and set the original CRS to EPSG 4326
-    G = nx.MultiDiGraph(name=name, crs={'init':'epsg:4326'})
+    # create the graph as a MultiDiGraph and set the original CRS to default_crs
+    G = nx.MultiDiGraph(name=name, crs=default_crs)
 
     # extract nodes and paths from the downloaded osm data
     nodes = {}

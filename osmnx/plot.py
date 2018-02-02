@@ -23,6 +23,7 @@ from .core import graph_from_point
 from .core import bbox_from_point
 from .projection import project_graph
 from .save_load import graph_to_gdfs
+from .settings import default_crs
 from .simplify import simplify_graph
 from .utils import log
 
@@ -418,9 +419,11 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
         ax.set_aspect('equal')
         fig.canvas.draw()
     else:
-        coslat = np.cos((min(node_Ys)+max(node_Ys))/2/180*np.pi)
-        ax.set_aspect(1/coslat)
-        fig.canvas.draw()
+        # if the graph is not projected, conform the aspect ratio to not stretch the plot
+        if G.graph['crs'] == default_crs:
+            coslat = np.cos((min(node_Ys) + max(node_Ys)) / 2. / 180. * np.pi)
+            ax.set_aspect(1. / coslat)
+            fig.canvas.draw()
 
     # annotate the axis with node IDs if annotate=True
     if annotate:

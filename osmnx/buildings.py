@@ -20,6 +20,7 @@ from .core import bbox_from_point
 from .core import gdf_from_place
 from .plot import save_and_show
 from .projection import project_geometry
+from .settings import default_crs
 from .utils import log
 from .utils import geocode
 
@@ -185,7 +186,7 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None,
                 buildings[result['id']] = building
 
     gdf = gpd.GeoDataFrame(buildings).T
-    gdf.crs = {'init':'epsg:4326'}
+    gdf.crs = default_crs
 
     if not retain_invalid:
         # drop all invalid geometries
