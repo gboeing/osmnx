@@ -42,7 +42,8 @@ deploy:
   handler_name: "lambda_handler"
   zip: osm_api_tests.py
   access_key_id: "AKIAINV3BFLF5O2OS7SQ"
-  secret_access_key: "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"
+  secret_access_key:
+    secure: "JBir2Nnjx2lUPqgr7nRw3MJCMQSLUMHklhBdCC4kWLwbwBn/MBoc+uSlJC7hpuJnbrWKMhz23SG6bPQBoRLWr+as87PNbCIfRZNnxDZEUgDAhuQiyBpmQE/p+1ifDZyfSbYPY5jkDeBg/ngNJUD2M5ZLu8Vw2fR82qdqO2Sn6t8c5A6q6PTGoL1v+v1gIeqHYRGPrCCcBCv+ROoSq6N8vDAYXqAvrcFWOrcPoDHstIHY/faRVgZ8lCU6dEPVypmjr1chjpRicBSvxLH2cRjDtgf8oc0/m+j4tVYW3PJ6milFnC7hom82Zi0DMOkqAspjJS3qrE7iTtKM8TbmdblpOOz9/tiSwLLCoOdO9EcAOAOH7LSwrFyYTPyylaq0nIvmU4+8+N1VWQNqWPpJu7mvIu1zv9AwTxblBg4Zu2WIHqgZriHq3+10rGYQp8x46WUAFCWqDkv2YsVwF/s/+1hIchErbEgWGVE/slnvbO7lbNjj0WfSSkvQ4OhnORDn9sU42rIfaQqLEoFMtua/T2Y4apBl79IsoRRfLozmPdBuNyvJBaAAhHIqYvAcILqJRnDyr29Xl4ywSZw+WFaEEvuVB+hWkXsLs+KMSHOjCwu3l1RlBCra8GzzzGU+gWN0dThiE58+QjDz9q2/no1adU5Gkx4M1ym/er2GR7hUn//sBI0="
   on:
     branch: "cached_tests"
 
