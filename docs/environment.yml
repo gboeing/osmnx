@@ -1,0 +1,17 @@
+name: OSMNX_DOCS
+
+channels:
+  - defaults
+  - conda-forge
+
+dependencies:
+  - python=3
+  - descartes
+  - geopandas
+  - matplotlib
+  - networkx
+  - numpy
+  - pandas
+  - requests
+  - Rtree
+  - Shapely

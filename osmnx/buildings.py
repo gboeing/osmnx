@@ -252,6 +252,7 @@ def buildings_from_polygon(polygon, retain_invalid=False):
     Parameters
     ----------
     polygon : Polygon
+
     retain_invalid : bool
         if False discard any building footprints with an invalid geometry
 
@@ -292,7 +293,7 @@ def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolo
     Parameters
     ----------
     gdf : GeoDataFrame
-        building footprints
+    	building footprints
     fig : figure
     ax : axis
     figsize : tuple
@@ -301,8 +302,7 @@ def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolo
     bgcolor : string
         the background color of the plot
     set_bounds : bool
-        if True, set bounds from either passed-in bbox or the spatial extent of
-        the gdf
+        if True, set bounds from either passed-in bbox or the spatial extent of the gdf
     bbox : tuple
         if True and if set_bounds is True, set the display bounds to this bbox
     save : bool
@@ -320,7 +320,8 @@ def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolo
 
     Returns
     -------
-    GeoDataFrame
+    fig, ax : tuple
+
     """
 
     if fig is None or ax is None:
