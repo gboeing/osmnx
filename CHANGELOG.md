@@ -1,5 +1,10 @@
 # Change log
 
+## 0.7.1 (2018-02-04)
+
+  - fix documentation build
+  - ignore ways marked access=no
+
 ## 0.7 (2018-02-01)
 
   - ability to load a graph from a .osm file
