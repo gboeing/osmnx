@@ -510,7 +510,7 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
         for label, value in row.iteritems():
             if (label not in ['u', 'v', 'key']) and (isinstance(value, list) or pd.notnull(value)):
                 attrs[label] = value
-        G.add_edge(u=row['u'], v=row['v'], key=row['key'], **attrs)
+        G.add_edge(row['u'], row['v'], key=row['key'], **attrs)
 
     return G
 

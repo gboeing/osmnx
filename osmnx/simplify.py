@@ -243,7 +243,7 @@ def simplify_graph(G, strict=True):
         for u, v in zip(path[:-1], path[1:]):
 
             # there shouldn't be multiple edges between interstitial nodes
-            if not G.number_of_edges(u=u, v=v) == 1:
+            if not G.number_of_edges(u, v) == 1:
                 log('Multiple edges between "{}" and "{}" found when simplifying'.format(u, v), level=lg.WARNING)
 
             # the only element in this list as long as above check is True
