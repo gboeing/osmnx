@@ -1,5 +1,9 @@
 # Change log
 
+## 0.7.2 (2018-02-15)
+
+  - compatibility with networkx 2.1
+
 ## 0.7.1 (2018-02-04)
 
   - fix documentation build
