@@ -292,7 +292,8 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     G : networkx multidigraph
     bbox : tuple
         bounding box as north,south,east,west - if None will calculate from
-        spatial extents of data
+        spatial extents of data. if passing a bbox, you probably also want to
+        pass margin=0 to constrain it.
     fig_height : int
         matplotlib figure height in inches
     fig_width : int
@@ -455,7 +456,8 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
         the route as a list of nodes
     bbox : tuple
         bounding box as north,south,east,west - if None will calculate from
-        spatial extents of data
+        spatial extents of data. if passing a bbox, you probably also want to
+        pass margin=0 to constrain it.
     fig_height : int
         matplotlib figure height in inches
     fig_width : int
