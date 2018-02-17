@@ -10,9 +10,9 @@ import math
 import numpy as np
 import geopandas as gpd
 import networkx as nx
-from .settings import default_crs
 from shapely.geometry import Point
 
+from . import settings
 from .utils import log
 from .utils import make_str
 
@@ -43,7 +43,7 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     """
 
     if crs is None:
-        crs = default_crs
+        crs = settings.default_crs
 
     gdf = gpd.GeoDataFrame()
     gdf.crs = crs
@@ -93,7 +93,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
     else:
         if to_latlong:
             # if to_latlong is True, project the gdf to latlong
-            latlong_crs = default_crs
+            latlong_crs = settings.default_crs
             projected_gdf = gdf.to_crs(latlong_crs)
             log('Projected the GeoDataFrame "{}" to default_crs in {:,.2f} seconds'.format(gdf.gdf_name, time.time()-start_time))
         else:

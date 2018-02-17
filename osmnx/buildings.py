@@ -13,6 +13,7 @@ from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
 from descartes import PolygonPatch
 
+from . import settings
 from .core import consolidate_subdivide_geometry
 from .core import get_polygons_coordinates
 from .core import overpass_request
@@ -20,7 +21,6 @@ from .core import bbox_from_point
 from .core import gdf_from_place
 from .plot import save_and_show
 from .projection import project_geometry
-from .settings import default_crs
 from .utils import log
 from .utils import geocode
 
@@ -186,7 +186,7 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None,
                 buildings[result['id']] = building
 
     gdf = gpd.GeoDataFrame(buildings).T
-    gdf.crs = default_crs
+    gdf.crs = settings.default_crs
 
     if not retain_invalid:
         # drop all invalid geometries
