@@ -38,7 +38,9 @@ def config(data_folder=settings.data_folder,
            log_name=settings.log_name,
            log_filename=settings.log_filename,
            useful_tags_node=settings.useful_tags_node,
-           useful_tags_path=settings.useful_tags_path):
+           useful_tags_path=settings.useful_tags_path,
+           default_access=settings.default_access,
+           default_crs=settings.default_crs):
     """
     Configure osmnx by setting the default global vars to desired values.
 
@@ -67,6 +69,10 @@ def config(data_folder=settings.data_folder,
         a list of useful OSM tags to attempt to save from node elements
     useful_tags_path : list
         a list of useful OSM tags to attempt to save from path elements
+    default_access : string
+        default filter for OSM "access" key
+    default_crs : string
+        default CRS to set when creating graphs
 
     Returns
     -------
@@ -86,6 +92,9 @@ def config(data_folder=settings.data_folder,
     settings.log_filename = log_filename
     settings.useful_tags_node = useful_tags_node
     settings.useful_tags_path = useful_tags_path
+    settings.useful_tags_node = useful_tags_node
+    settings.default_access = default_access
+    settings.default_crs = default_crs
 
     # if logging is turned on, log that we are configured
     if settings.log_file or settings.log_console:

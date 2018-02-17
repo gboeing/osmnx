@@ -33,7 +33,6 @@ from shapely.ops import unary_union
 from . import settings
 from .projection import project_geometry
 from .projection import project_gdf
-from .settings import default_crs
 from .simplify import simplify_graph
 from .utils import log
 from .utils import make_str
@@ -434,7 +433,7 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
         # create the GeoDataFrame, name it, and set its original CRS to default_crs
         gdf = gpd.GeoDataFrame.from_features(features)
         gdf.gdf_name = gdf_name
-        gdf.crs = default_crs
+        gdf.crs = settings.default_crs
 
         # if buffer_dist was passed in, project the geometry to UTM, buffer it
         # in meters, then project it back to lat-long
@@ -485,7 +484,7 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None):
     gdf.gdf_name = gdf_name
 
     # set the original CRS of the GeoDataFrame to default_crs, and return it
-    gdf.crs = default_crs
+    gdf.crs = settings.default_crs
     log('Finished creating GeoDataFrame with {} rows from {} queries'.format(len(gdf), len(queries)))
     return gdf
 
@@ -505,6 +504,7 @@ def get_osm_filter(network_type):
     string
     """
     filters = {}
+    print(settings.default_access)
 
     # driving: filter out un-drivable roads, service roads, private ways, and
     # anything specifying motor=no. also filter out any non-service roads that
@@ -512,32 +512,32 @@ def get_osm_filter(network_type):
     # services
     filters['drive'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
                         'proposed|construction|bridleway|abandoned|platform|raceway|service"]'
-                        '["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private|no"]'
-                        '["service"!~"parking|parking_aisle|driveway|private|emergency_access"]')
+                        '["motor_vehicle"!~"no"]["motorcar"!~"no"]{}'
+                        '["service"!~"parking|parking_aisle|driveway|private|emergency_access"]').format(settings.default_access)
 
     # drive+service: allow ways tagged 'service' but filter out certain types of
     # service ways
     filters['drive_service'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
                                 'proposed|construction|bridleway|abandoned|platform|raceway"]'
-                                '["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private|no"]'
-                                '["service"!~"parking|parking_aisle|private|emergency_access"]')
+                                '["motor_vehicle"!~"no"]["motorcar"!~"no"]{}'
+                                '["service"!~"parking|parking_aisle|private|emergency_access"]').format(settings.default_access)
 
     # walking: filter out cycle ways, motor ways, private ways, and anything
     # specifying foot=no. allow service roads, permitting things like parking
     # lot lanes, alleys, etc that you *can* walk on even if they're not exactly
     # pleasant walks
     filters['walk'] = ('["area"!~"yes"]["highway"!~"cycleway|motor|proposed|construction|abandoned|platform|raceway"]'
-                       '["foot"!~"no"]["service"!~"private"]["access"!~"private|no"]')
+                       '["foot"!~"no"]["service"!~"private"]{}').format(settings.default_access)
 
     # biking: filter out foot ways, motor ways, private ways, and anything
     # specifying biking=no
     filters['bike'] = ('["area"!~"yes"]["highway"!~"footway|corridor|motor|proposed|construction|abandoned|platform|raceway"]'
-                       '["bicycle"!~"no"]["service"!~"private"]["access"!~"private|no"]')
+                       '["bicycle"!~"no"]["service"!~"private"]{}').format(settings.default_access)
 
     # to download all ways, just filter out everything not currently in use or
     # that is private-access only
     filters['all'] = ('["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
-                      '["service"!~"private"]["access"!~"private|no"]')
+                      '["service"!~"private"]{}').format(settings.default_access)
 
     # to download all ways, including private-access ones, just filter out
     # everything not currently in use
@@ -1296,7 +1296,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
         raise ValueError('There are no data elements in the response JSON objects')
 
     # create the graph as a MultiDiGraph and set the original CRS to default_crs
-    G = nx.MultiDiGraph(name=name, crs=default_crs)
+    G = nx.MultiDiGraph(name=name, crs=settings.default_crs)
 
     # extract nodes and paths from the downloaded osm data
     nodes = {}
