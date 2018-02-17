@@ -504,7 +504,6 @@ def get_osm_filter(network_type):
     string
     """
     filters = {}
-    print(settings.default_access)
 
     # driving: filter out un-drivable roads, service roads, private ways, and
     # anything specifying motor=no. also filter out any non-service roads that
