@@ -246,7 +246,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
         # create the save folder if it doesn't already exist
         if not os.path.exists(settings.imgs_folder):
             os.makedirs(settings.imgs_folder)
-        path_filename = '{}/{}.{}'.format(settings.imgs_folder, filename, file_format)
+        path_filename = os.path.join(settings.imgs_folder, os.extsep.join([filename, file_format]))
 
         if file_format == 'svg':
             # if the file_format is svg, prep the fig/ax a bit for saving

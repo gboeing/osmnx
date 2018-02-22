@@ -78,7 +78,7 @@ def save_to_cache(url, response_json):
             # hash the url (to make filename shorter than the often extremely
             # long url)
             filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-            cache_path_filename = '{}/{}.json'.format(settings.cache_folder, filename)
+            cache_path_filename = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
 
             # dump to json, and save to file
             json_str = make_str(json.dumps(response_json))
@@ -105,7 +105,8 @@ def get_from_cache(url):
     if settings.use_cache:
         # determine the filename by hashing the url
         filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-        cache_path_filename = '{}/{}.json'.format(settings.cache_folder, filename)
+
+        cache_path_filename = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
         # open the cache file for this url hash if it already exists, otherwise
         # return None
         if os.path.isfile(cache_path_filename):

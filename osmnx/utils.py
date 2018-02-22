@@ -190,7 +190,7 @@ def get_logger(level=None, name=None, filename=None):
 
         # get today's date and construct a log filename
         todays_date = dt.datetime.today().strftime('%Y_%m_%d')
-        log_filename = '{}/{}_{}.log'.format(settings.logs_folder, filename, todays_date)
+        log_filename = os.path.join(settings.logs_folder, '{}_{}.log'.format(filename, todays_date))
 
         # if the logs folder does not already exist, create it
         if not os.path.exists(settings.logs_folder):
