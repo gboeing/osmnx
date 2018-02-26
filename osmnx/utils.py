@@ -228,6 +228,45 @@ def make_str(value):
         return str(value)
 
 
+def get_largest_wcc_subgraph(G):
+    """
+    Return the largest weakly connected component subgraph from a directed
+    graph.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+
+    Returns
+    -------
+    networkx multidigraph
+    """
+
+    # get all the weakly connected components in the graph
+    # then identify the largest
+    wccs = nx.weakly_connected_components(G)
+    largest_wcc = max(wccs, key=len)
+
+    # copy nodes from the largest weakly connected component into new graph
+    G2 = G.fresh_copy()
+    G2.add_nodes_from((n, G.nodes[n]) for n in largest_wcc)
+    
+    # copy edges to new graph, including parallel edges
+    if G2.is_multigraph:
+        G2.add_edges_from((n, nbr, key, d)
+            for n, nbrs in G.adj.items() if n in largest_wcc
+            for nbr, keydict in nbrs.items() if nbr in largest_wcc
+            for key, d in keydict.items())
+    else:
+        G2.add_edges_from((n, nbr, d)
+            for n, nbrs in G.adj.items() if n in largest_wcc
+            for nbr, d in nbrs.items() if nbr in largest_wcc)
+    
+    # update graph attribute dict, and return graph
+    G2.graph.update(G.graph)
+    return G2
+
+
 def get_largest_component(G, strongly=False):
     """
     Return the largest weakly or strongly connected component from a directed
@@ -249,19 +288,16 @@ def get_largest_component(G, strongly=False):
     original_len = len(list(G.nodes()))
 
     if strongly:
-        # if the graph is not connected and caller did not request retain_all,
-        # retain only the largest strongly connected component
+        # if the graph is not connected retain only the largest strongly connected component
         if not nx.is_strongly_connected(G):
             G = max(nx.strongly_connected_component_subgraphs(G), key=len)
             msg = ('Graph was not connected, retained only the largest strongly '
                    'connected component ({:,} of {:,} total nodes) in {:.2f} seconds')
             log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
     else:
-        # if the graph is not connected and caller did not request retain_all,
-        # retain only the largest weakly connected component
+        # if the graph is not connected retain only the largest weakly connected component
         if not nx.is_weakly_connected(G):
-            subgraphs = [G.subgraph(c).copy() for c in nx.weakly_connected_components(G)]
-            G = max(subgraphs, key=len)
+            G = get_largest_wcc_subgraph(G)
             msg = ('Graph was not connected, retained only the largest weakly '
                    'connected component ({:,} of {:,} total nodes) in {:.2f} seconds')
             log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
