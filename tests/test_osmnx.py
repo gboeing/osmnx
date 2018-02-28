@@ -6,33 +6,87 @@ OSMnx tests
 import matplotlib as mpl
 mpl.use('Agg') #use agg backend so you don't need a display on travis-ci
 
-import os, shutil, bz2, tempfile
+# remove the .temp folder if it already exists so we start fresh with tests
+import os, shutil
 if os.path.exists('.temp'):
     shutil.rmtree('.temp')
 
-import osmnx as ox, logging as lg
-ox.config(log_console=True, log_file=True, use_cache=True,
-          data_folder='.temp/data', logs_folder='.temp/logs', imgs_folder='.temp/imgs', cache_folder='.temp/cache')
+import osmnx as ox
 
-ox.log('test debug', level=lg.DEBUG)
-ox.log('test info', level=lg.INFO)
-ox.log('test warning', level=lg.WARNING)
-ox.log('test error', level=lg.ERROR)
+ox.config(log_console=True, log_file=True, use_cache=True,
+          data_folder='.temp/data', logs_folder='.temp/logs', 
+          imgs_folder='.temp/imgs', cache_folder='.temp/cache')
 
 
 def test_imports():
 
-    import json, math, sys, os, io, ast, unicodedata, hashlib, re, random, time, warnings, datetime as dt, logging as lg
-    from collections import OrderedDict, Counter
-    from itertools import groupby, chain
-    from dateutil import parser as date_parser
-    import requests, numpy as np, pandas as pd, geopandas as gpd, networkx as nx, matplotlib.pyplot as plt, matplotlib.cm as cm
+    import ast
+    import datetime
+    import geopandas
+    import hashlib
+    import io
+    import json
+    import logging
+    import math
+    import matplotlib.cm
+    import matplotlib.pyplot
+    import networkx
+    import numpy
+    import os
+    import pandas
+    import random
+    import requests
+    import re
+    import sys
+    import time
+    import unicodedata
+    import warnings
+    from collections import Counter, OrderedDict
+    from dateutil import parser
+    from descartes import PolygonPatch
+    from itertools import chain, groupby
     from matplotlib.collections import LineCollection
-    from shapely.geometry import Point, LineString, Polygon, MultiPolygon
+    from rtree.index import Index
+    from shapely.geometry import Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon
     from shapely import wkt
     from shapely.ops import unary_union
-    from descartes import PolygonPatch
-    from rtree.index import Index as RTreeIndex
+
+
+def test_logging():
+
+	import logging as lg
+
+	ox.log('test debug', level=lg.DEBUG)
+	ox.log('test info', level=lg.INFO)
+	ox.log('test warning', level=lg.WARNING)
+	ox.log('test error', level=lg.ERROR)
+
+
+def test_geometry_coords_rounding():
+
+	from shapely.geometry import Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon
+
+	precision = 3
+
+	shape1 = Point(1.123456, 2.123456)
+	shape2 = ox.round_shape_coords(shape1, precision)
+
+	shape1 = MultiPoint([(1.123456, 2.123456), (3.123456, 4.123456)])
+	shape2 = ox.round_shape_coords(shape1, precision)
+
+	shape1 = LineString([(1.123456, 2.123456), (3.123456, 4.123456)])
+	shape2 = ox.round_shape_coords(shape1, precision)
+
+	shape1 = MultiLineString([[(1.123456, 2.123456), (3.123456, 4.123456)],
+	                          [(11.123456, 12.123456), (13.123456, 14.123456)]])
+	shape2 = ox.round_shape_coords(shape1, precision)
+
+	shape1 = Polygon([(1.123456, 2.123456), (3.123456, 4.123456), (6.123456, 5.123456)])
+	shape2 = ox.round_shape_coords(shape1, precision)
+
+	shape1 = MultiPolygon([Polygon([(1.123456, 2.123456), (3.123456, 4.123456), (6.123456, 5.123456)]),
+	                       Polygon([(16.123456, 15.123456), (13.123456, 14.123456), (12.123456, 11.123456)])])
+	shape2 = ox.round_shape_coords(shape1, precision)
 
 
 def test_gdf_shapefiles():
@@ -47,6 +101,8 @@ def test_gdf_shapefiles():
 
 def test_graph_from_file():
     
+    import bz2, tempfile
+
     node_id = 53098262
     neighbor_ids = 53092170, 53060438, 53027353, 667744075
 
