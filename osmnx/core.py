@@ -635,11 +635,11 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         # loop through each polygon rectangle in the geometry (there will only
         # be one if original bbox didn't exceed max area size)
         for poly in geometry:
-            # represent bbox as south,west,north,east and round lat-longs to 8
-            # decimal places (ie, within 1 mm) so URL strings aren't different
+            # represent bbox as south,west,north,east and round lat-longs to 6
+            # decimal places (ie, ~100 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = '[out:json][timeout:{timeout}]{maxsize};({infrastructure}{filters}({south:.8f},{west:.8f},{north:.8f},{east:.8f});>;);out;'
+            query_template = '[out:json][timeout:{timeout}]{maxsize};({infrastructure}{filters}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;'
             query_str = query_template.format(north=north, south=south,
                                               east=east, west=west,
                                               infrastructure=infrastructure,
@@ -715,7 +715,7 @@ def consolidate_subdivide_geometry(geometry, max_query_area_size):
 def get_polygons_coordinates(geometry):
     """
     Extract exterior coordinates from polygon(s) to pass to OSM in a query by
-    polygon.
+    polygon. Ignore the interior ("holes") coordinates.
 
     Parameters
     ----------
@@ -746,9 +746,9 @@ def get_polygons_coordinates(geometry):
         s = ''
         separator = ' '
         for coord in list(coords):
-            # round floating point lats and longs to 14 places, so we can hash
-            # and cache strings consistently
-            s = '{}{}{:.14f}{}{:.14f}'.format(s, separator, coord[1], separator, coord[0])
+            # round floating point lats and longs to 6 decimal places (ie, ~100 mm),
+            # so we can hash and cache strings consistently
+            s = '{}{}{:.6f}{}{:.6f}'.format(s, separator, coord[1], separator, coord[0])
         polygon_coord_strs.append(s.strip(separator))
 
     return polygon_coord_strs
@@ -1171,7 +1171,8 @@ def add_edge_lengths(G):
                                     lat2=df_coords['v_y'],
                                     lng2=df_coords['v_x'])
 
-    gc_distances = gc_distances.fillna(value=0)
+    # fill nulls with zeros and round to the millimeter
+    gc_distances = gc_distances.fillna(value=0).round(3)
     nx.set_edge_attributes(G, name='length', values=gc_distances.to_dict())
 
     log('Added edge lengths to graph in {:,.2f} seconds'.format(time.time()-start_time))
@@ -1654,8 +1655,9 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        download infrastructure of given type (default is streets (ie, 'way["highway"]') but other
-        infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
+        download infrastructure of given type (default is streets
+        (ie, 'way["highway"]') but other infrastructures may be selected 
+        like power grids (ie, 'way["power"~"line"]'))
 
     Returns
     -------
@@ -1667,7 +1669,10 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
     if not polygon.is_valid:
         raise ValueError('Shape does not have a valid geometry')
     if not isinstance(polygon, (Polygon, MultiPolygon)):
-        raise ValueError('Geometry must be a shapely Polygon or MultiPolygon')
+        raise ValueError('Geometry must be a shapely Polygon or MultiPolygon. If you requested '
+                         'graph from place name or address, make sure your query resolves to a '
+                         'Polygon or MultiPolygon, and not some other geometry, like a Point. '
+                         'See OSMnx documentation for details.')
 
     if clean_periphery and simplify:
         # create a new buffered polygon 0.5km around the desired one
