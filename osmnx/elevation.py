@@ -85,6 +85,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
     # add elevation as an attribute to the nodes
     df = pd.DataFrame(node_points, columns=['node_points'])
     df['elevation'] = [result['elevation'] for result in results]
+    df['elevation'] = df['elevation'].round(3) # round to millimeter
     nx.set_node_attributes(G, name='elevation', values=df['elevation'].to_dict())
     log('Added elevation data to all nodes.')
 
@@ -113,7 +114,9 @@ def add_edge_grades(G, add_absolute=True): # pragma: no cover
     # destination, then divide by edge length
     for u, v, data in G.edges(keys=False, data=True):
         elevation_change = G.nodes[v]['elevation'] - G.nodes[u]['elevation']
-        grade = elevation_change / data['length']
+        
+        # round to ten-thousandths decimal place
+        grade = round(elevation_change / data['length'], 4)
         data['grade'] = grade
         if add_absolute:
             data['grade_abs'] = abs(grade)
