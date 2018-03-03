@@ -544,7 +544,7 @@ def add_search_bearings(search_bearing, perpendicular=True):
     search_list=[]
     if type(search_bearing) == list:
         for i in search_bearing:
-            search.append(i)
+            search_list.append(i)
             if perpendicular==True:
                 for t in range(3):
                     search_list.append((i+(90*(t+1)))%360)
