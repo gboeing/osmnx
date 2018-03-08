@@ -256,7 +256,7 @@ def get_largest_wcc_subgraph(G):
     # copy nodes from the largest weakly connected component into new graph
     G2 = G.fresh_copy()
     G2.add_nodes_from((n, G.nodes[n]) for n in largest_wcc)
-    
+
     # copy edges to new graph, including parallel edges
     if G2.is_multigraph:
         G2.add_edges_from((n, nbr, key, d)
@@ -267,7 +267,7 @@ def get_largest_wcc_subgraph(G):
         G2.add_edges_from((n, nbr, d)
             for n, nbrs in G.adj.items() if n in largest_wcc
             for nbr, d in nbrs.items() if nbr in largest_wcc)
-    
+
     # update graph attribute dict, and return graph
     G2.graph.update(G.graph)
     return G2
@@ -408,7 +408,7 @@ def get_nearest_node(G, point, method='greatcircle', return_dist=False):
         if euclidean) between the point and nearest node
     """
     start_time = time.time()
-	
+
     if not G or (G.number_of_nodes() == 0):
         raise ValueError('G argument must be not be empty or should contain at least one node')
 
@@ -508,16 +508,82 @@ def add_edge_bearings(G):
     """
 
     for u, v, data in G.edges(keys=False, data=True):
-        
+
     	# calculate bearing from edge's origin to its destination
         origin_point = (G.nodes[u]['y'], G.nodes[u]['x'])
         destination_point = (G.nodes[v]['y'], G.nodes[v]['x'])
         bearing = get_bearing(origin_point, destination_point)
-        
+
         # round to thousandth of a degree
         data['bearing'] = round(bearing, 3)
 
     return G
+
+
+
+def add_search_bearings(search_bearing, perpendicular=True):
+    """
+    Take in a single bearing or list of bearings and returns it either as a list
+    of itself if perpendicular is set to False or a list of itself and all its
+    parallel and perpendicular bearings if perpendicular is kept set to True.
+    Use for filtering objects by desired bearings.
+
+    Parameters
+    ----------
+    search_bearing : list or integer
+        compass bearing(s) to be put into search_list
+    perpendicular : boolean
+        whether or not to add the perpendicular and parallel bearings of each
+        search_bearing to search_list
+    Returns
+    -------
+    search_list : list
+
+    """
+
+    search_list=[]
+    if type(search_bearing) == list:
+        for i in search_bearing:
+            search_list.append(i)
+            if perpendicular==True:
+                for t in range(3):
+                    search_list.append((i+(90*(t+1)))%360)
+            else:
+                pass
+    elif type(search_bearing) == int:
+        search_list.append(search_bearing)
+        if perpendicular==True:
+            for t in range(3):
+                search_list.append((search_bearing+(90*(t+1)))%360)
+        else:
+            pass
+    else:
+        print("Please make sure the bearing(s) you are searching for are either an integer or a list of integers")
+    return search_list
+
+
+
+def add_more_edge_bearing_info(G):
+    """
+    Take compass bearing info from edges of a networkx multidigraph and adds
+    new 2 attributes 'rounded_bearing' for their rounded bearing and
+    'modulo_bearing' the rounded_bearing modulo 90, which allows edges to be
+    organized into 90 distinct groups of parallel and perpendicular rounded
+    bearings.
+    Requires add_edge_bearings() first.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+
+    Returns
+    -------
+    G : networkx multidigraph
+    """
+
+    for u,v,a in G.edges(data=True):
+        a['rounded_bearing']=int(round(a['bearing']))
+        a['modulo_bearing']=a['rounded_bearing']%90
 
 
 
@@ -668,7 +734,7 @@ def round_polygon_coords(p, precision):
     new_poly : shapely Polygon
         the polygon with rounded coordinates
     """
-    
+
     # round the coordinates of the Polygon exterior
     new_exterior = [[round(x, precision) for x in c] for c in p.exterior.coords]
 
@@ -676,7 +742,7 @@ def round_polygon_coords(p, precision):
     new_interiors = []
     for interior in p.interiors:
         new_interiors.append([[round(x, precision) for x in c] for c in interior.coords])
-    
+
     # construct a new Polygon with the rounded coordinates
     # buffer by zero to clean self-touching or self-crossing polygons
     new_poly = Polygon(shell=new_exterior, holes=new_interiors).buffer(0)
@@ -699,7 +765,7 @@ def round_multipolygon_coords(mp, precision):
     -------
     MultiPolygon
     """
-    
+
     return MultiPolygon([round_polygon_coords(p, precision) for p in mp])
 
 
@@ -719,7 +785,7 @@ def round_point_coords(pt, precision):
     -------
     Point
     """
-    
+
     return Point([round(x, precision) for x in pt.coords[0]])
 
 
@@ -739,7 +805,7 @@ def round_multipoint_coords(mpt, precision):
     -------
     MultiPoint
     """
-    
+
     return MultiPoint([round_point_coords(pt, precision) for pt in mpt])
 
 
@@ -759,7 +825,7 @@ def round_linestring_coords(ls, precision):
     -------
     LineString
     """
-    
+
     return LineString([[round(x, precision) for x in c] for c in ls.coords])
 
 
@@ -779,7 +845,7 @@ def round_multilinestring_coords(mls, precision):
     -------
     MultiLineString
     """
-    
+
     return MultiLineString([round_linestring_coords(ls, precision) for ls in mls])
 
 
@@ -800,25 +866,25 @@ def round_shape_coords(shape, precision):
     -------
     shapely geometry
     """
-    
+
     if isinstance(shape, Point):
         return round_point_coords(shape, precision)
-    
+
     elif isinstance(shape, MultiPoint):
         return round_multipoint_coords(shape, precision)
-    
+
     elif isinstance(shape, LineString):
         return round_linestring_coords(shape, precision)
-    
+
     elif isinstance(shape, MultiLineString):
         return round_multilinestring_coords(shape, precision)
-    
+
     elif isinstance(shape, Polygon):
         return round_polygon_coords(shape, precision)
-    
+
     elif isinstance(shape, MultiPolygon):
         return round_multipolygon_coords(shape, precision)
-    
+
     else:
         raise TypeError('cannot round coordinates of unhandled geometry type: {}'.format(type(shape)))
 
@@ -827,7 +893,7 @@ def round_shape_coords(shape, precision):
 class OSMContentHandler (xml.sax.handler.ContentHandler):
     """
     SAX content handler for OSM XML.
-    
+
     Used to build an Overpass-like response JSON object in self.object. For format
     notes, see http://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes
     and http://overpass-api.de/output_formats.html#json
@@ -841,20 +907,20 @@ class OSMContentHandler (xml.sax.handler.ContentHandler):
         if name == 'osm':
             self.object.update({k: attrs[k] for k in attrs.keys()
                 if k in ('version', 'generator')})
-        
+
         elif name in ('node', 'way'):
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
             self._element.update({k: float(attrs[k]) for k in attrs.keys()
                 if k in ('lat', 'lon')})
             self._element.update({k: int(attrs[k]) for k in attrs.keys()
                 if k in ('id', 'uid', 'version', 'changeset')})
-        
+
         elif name == 'tag':
             self._element['tags'].update({attrs['k']: attrs['v']})
-        
+
         elif name == 'nd':
             self._element['nodes'].append(int(attrs['ref']))
-        
+
         elif name == 'relation':
             # Placeholder for future relation support.
             # Look for nested members and tags.
@@ -881,16 +947,16 @@ def overpass_json_from_file(filename):
     """
 
     _, ext = os.path.splitext(filename)
-    
+
     if ext == '.bz2':
         # Use Python 2/3 compatible BZ2File()
         opener = lambda fn: bz2.BZ2File(fn)
     else:
         # Assume an unrecognized file extension is just XML
         opener = lambda fn: open(fn, mode='rb')
-    
+
     with opener(filename) as file:
         handler = OSMContentHandler()
         xml.sax.parse(file, handler)
-        
+
         return handler.object
