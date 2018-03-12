@@ -1,5 +1,16 @@
 # Change log
 
+## 0.7.3 (2018-03-12)
+
+  - turn off x- and y-axes to improve plotting appearance
+  - make floating-point precision and rounding more sensible
+  - improve OS path handling cross-platform
+  - replace great-circle distance calculator with haversine
+  - add access filter as configurable setting
+  - improve performance of inducing subgraphs
+  - fix utils.get_largest_component for networkx 2.2 compatibility
+  - fix config settings namespacing
+
 ## 0.7.2 (2018-02-15)
 
   - compatibility with networkx 2.1
