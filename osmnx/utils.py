@@ -324,7 +324,7 @@ def get_largest_component(G, strongly=False):
 def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     """
     Vectorized function to calculate the great-circle distance between two
-    points or between vectors of points.
+    points or between vectors of points, using haversine.
 
     Parameters
     ----------
@@ -338,19 +338,21 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
 
     Returns
     -------
-    distance : float or array of float
+    distance : float or vector of floats
         distance or vector of distances from (lat1, lng1) to (lat2, lng2) in
         units of earth_radius
     """
 
-    phi1 = np.deg2rad(lat1) 
-    phi2 = np.deg2rad(lat2) 
-    dphi = phi2-phi1 
+    phi1 = np.deg2rad(lat1)
+    phi2 = np.deg2rad(lat2)
+    d_phi = phi2 - phi1
 
-    dtheta = np.deg2rad(lng2 - lng1)
+    theta1 = np.deg2rad(lng1)
+    theta2 = np.deg2rad(lng2)
+    d_theta = theta2 - theta1
 
-    h = np.sin(dphi/2)**2 + np.cos(phi1) * np.cos(phi2) * np.sin(dtheta/2)**2 
-    h = np.minimum(1.0, h) # protection against floating point errors
+    h = np.sin(d_phi / 2) ** 2 + np.cos(phi1) * np.cos(phi2) * np.sin(d_theta / 2) ** 2 
+    h = np.minimum(1.0, h) # protect against floating point errors
 
     arc = 2 * np.arcsin(np.sqrt(h))
 
