@@ -6,25 +6,27 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-import os
-import sys
-import time
-import unicodedata
-import math
-import warnings
-import logging as lg
+import bz2
 import datetime as dt
+import io
+import logging as lg
+import math
+import os
 import networkx as nx
 import numpy as np
 import pandas as pd
-import bz2
-import xml.sax
-import io
 import requests
-from itertools import chain
+import sys
+import time
+import unicodedata
+import warnings
+import xml.sax
 from collections import Counter
+from itertools import chain
+from shapely.geometry import Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon
 
 from . import settings
+
 
 
 def config(data_folder=settings.data_folder,
@@ -101,6 +103,7 @@ def config(data_folder=settings.data_folder,
         log('Configured osmnx')
 
 
+
 def log(message, level=None, name=None, filename=None):
     """
     Write a message to the log file and/or print to the the console.
@@ -158,6 +161,7 @@ def log(message, level=None, name=None, filename=None):
         sys.stdout = standard_out
 
 
+
 def get_logger(level=None, name=None, filename=None):
     """
     Create a logger or return the current one if already instantiated.
@@ -190,7 +194,7 @@ def get_logger(level=None, name=None, filename=None):
 
         # get today's date and construct a log filename
         todays_date = dt.datetime.today().strftime('%Y_%m_%d')
-        log_filename = '{}/{}_{}.log'.format(settings.logs_folder, filename, todays_date)
+        log_filename = os.path.join(settings.logs_folder, '{}_{}.log'.format(filename, todays_date))
 
         # if the logs folder does not already exist, create it
         if not os.path.exists(settings.logs_folder):
@@ -205,6 +209,7 @@ def get_logger(level=None, name=None, filename=None):
         logger.handler_set = True
 
     return logger
+
 
 
 def make_str(value):
@@ -228,6 +233,45 @@ def make_str(value):
         return str(value)
 
 
+
+def induce_subgraph(G, node_subset):
+    """
+    Induce a subgraph of G.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    node_subset : list-like
+        the set of nodes to induce a subgraph from
+
+    Returns
+    -------
+    networkx multidigraph
+    """
+
+    node_subset = set(node_subset)
+
+    # copy nodes into new graph
+    G2 = G.fresh_copy()
+    G2.add_nodes_from((n, G.nodes[n]) for n in node_subset)
+    
+    # copy edges to new graph, including parallel edges
+    if G2.is_multigraph:
+        G2.add_edges_from((n, nbr, key, d)
+            for n, nbrs in G.adj.items() if n in node_subset
+            for nbr, keydict in nbrs.items() if nbr in node_subset
+            for key, d in keydict.items())
+    else:
+        G2.add_edges_from((n, nbr, d)
+            for n, nbrs in G.adj.items() if n in node_subset
+            for nbr, d in nbrs.items() if nbr in node_subset)
+    
+    # update graph attribute dict, and return graph
+    G2.graph.update(G.graph)
+    return G2
+
+
+
 def get_largest_component(G, strongly=False):
     """
     Return the largest weakly or strongly connected component from a directed
@@ -249,24 +293,32 @@ def get_largest_component(G, strongly=False):
     original_len = len(list(G.nodes()))
 
     if strongly:
-        # if the graph is not connected and caller did not request retain_all,
-        # retain only the largest strongly connected component
+        # if the graph is not connected retain only the largest strongly connected component
         if not nx.is_strongly_connected(G):
-            G = max(nx.strongly_connected_component_subgraphs(G), key=len)
+            
+            # get all the strongly connected components in graph then identify the largest
+            sccs = nx.strongly_connected_components(G)
+            largest_scc = max(sccs, key=len)
+            G = induce_subgraph(G, largest_scc)
+            
             msg = ('Graph was not connected, retained only the largest strongly '
                    'connected component ({:,} of {:,} total nodes) in {:.2f} seconds')
             log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
     else:
-        # if the graph is not connected and caller did not request retain_all,
-        # retain only the largest weakly connected component
+        # if the graph is not connected retain only the largest weakly connected component
         if not nx.is_weakly_connected(G):
-            subgraphs = [G.subgraph(c).copy() for c in nx.weakly_connected_components(G)]
-            G = max(subgraphs, key=len)
+            
+            # get all the weakly connected components in graph then identify the largest
+            wccs = nx.weakly_connected_components(G)
+            largest_wcc = max(wccs, key=len)
+            G = induce_subgraph(G, largest_wcc)
+            
             msg = ('Graph was not connected, retained only the largest weakly '
                    'connected component ({:,} of {:,} total nodes) in {:.2f} seconds')
             log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
 
     return G
+
 
 
 def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
@@ -307,6 +359,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     return distance
 
 
+
 def euclidean_dist_vec(y1, x1, y2, x2):
     """
     Vectorized function to calculate the euclidean distance between two points
@@ -328,6 +381,7 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     # euclid's formula
     distance = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
     return distance
+
 
 
 def get_nearest_node(G, point, method='greatcircle', return_dist=False):
@@ -405,6 +459,7 @@ def get_nearest_node(G, point, method='greatcircle', return_dist=False):
         return nearest_node
 
 
+
 def get_bearing(origin_point, destination_point):
     """
     Calculate the bearing between two lat-long points. Each tuple should
@@ -442,6 +497,7 @@ def get_bearing(origin_point, destination_point):
     return bearing
 
 
+
 def add_edge_bearings(G):
     """
     Calculate the compass bearing from origin node to destination node for each
@@ -457,12 +513,17 @@ def add_edge_bearings(G):
     """
 
     for u, v, data in G.edges(keys=False, data=True):
+        
+    	# calculate bearing from edge's origin to its destination
         origin_point = (G.nodes[u]['y'], G.nodes[u]['x'])
         destination_point = (G.nodes[v]['y'], G.nodes[v]['x'])
         bearing = get_bearing(origin_point, destination_point)
-        data['bearing'] = bearing
+        
+        # round to thousandth of a degree
+        data['bearing'] = round(bearing, 3)
 
     return G
+
 
 
 def geocode(query):
@@ -497,6 +558,7 @@ def geocode(query):
         raise Exception('Nominatim geocoder returned no results for query "{}"'.format(query))
 
 
+
 def get_route_edge_attributes(G, route, attribute, minimize_key='length'):
     """
     Get a list of attribute values for each edge in a path.
@@ -525,6 +587,7 @@ def get_route_edge_attributes(G, route, attribute, minimize_key='length'):
         data = min(G.get_edge_data(u, v).values(), key=lambda x: x[minimize_key])
         attribute_values.append(data[attribute])
     return attribute_values
+
 
 
 def count_streets_per_node(G, nodes=None):
@@ -593,13 +656,188 @@ def count_streets_per_node(G, nodes=None):
     return streets_per_node
 
 
-class OSMContentHandler (xml.sax.handler.ContentHandler):
-    ''' SAX content handler for OSM XML.
+
+def round_polygon_coords(p, precision):
+    """
+    Round the coordinates of a shapely Polygon to some decimal precision.
+
+    Parameters
+    ----------
+    p : shapely Polygon
+        the polygon to round the coordinates of
+    precision : int
+        decimal precision to round coordinates to
+
+    Returns
+    -------
+    new_poly : shapely Polygon
+        the polygon with rounded coordinates
+    """
     
-        Used to build an Overpass-like response JSON object in self.object. For format
-        notes, see http://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes
-        and http://overpass-api.de/output_formats.html#json
-    '''
+    # round the coordinates of the Polygon exterior
+    new_exterior = [[round(x, precision) for x in c] for c in p.exterior.coords]
+
+    # round the coordinates of the (possibly multiple, possibly none) Polygon interior(s)
+    new_interiors = []
+    for interior in p.interiors:
+        new_interiors.append([[round(x, precision) for x in c] for c in interior.coords])
+    
+    # construct a new Polygon with the rounded coordinates
+    # buffer by zero to clean self-touching or self-crossing polygons
+    new_poly = Polygon(shell=new_exterior, holes=new_interiors).buffer(0)
+    return new_poly
+
+
+
+def round_multipolygon_coords(mp, precision):
+    """
+    Round the coordinates of a shapely MultiPolygon to some decimal precision.
+
+    Parameters
+    ----------
+    mp : shapely MultiPolygon
+        the MultiPolygon to round the coordinates of
+    precision : int
+        decimal precision to round coordinates to
+
+    Returns
+    -------
+    MultiPolygon
+    """
+    
+    return MultiPolygon([round_polygon_coords(p, precision) for p in mp])
+
+
+
+def round_point_coords(pt, precision):
+    """
+    Round the coordinates of a shapely Point to some decimal precision.
+
+    Parameters
+    ----------
+    pt : shapely Point
+        the Point to round the coordinates of
+    precision : int
+        decimal precision to round coordinates to
+
+    Returns
+    -------
+    Point
+    """
+    
+    return Point([round(x, precision) for x in pt.coords[0]])
+
+
+
+def round_multipoint_coords(mpt, precision):
+    """
+    Round the coordinates of a shapely MultiPoint to some decimal precision.
+
+    Parameters
+    ----------
+    mpt : shapely MultiPoint
+        the MultiPoint to round the coordinates of
+    precision : int
+        decimal precision to round coordinates to
+
+    Returns
+    -------
+    MultiPoint
+    """
+    
+    return MultiPoint([round_point_coords(pt, precision) for pt in mpt])
+
+
+
+def round_linestring_coords(ls, precision):
+    """
+    Round the coordinates of a shapely LineString to some decimal precision.
+
+    Parameters
+    ----------
+    ls : shapely LineString
+        the LineString to round the coordinates of
+    precision : int
+        decimal precision to round coordinates to
+
+    Returns
+    -------
+    LineString
+    """
+    
+    return LineString([[round(x, precision) for x in c] for c in ls.coords])
+
+
+
+def round_multilinestring_coords(mls, precision):
+    """
+    Round the coordinates of a shapely MultiLineString to some decimal precision.
+
+    Parameters
+    ----------
+    mls : shapely MultiLineString
+        the MultiLineString to round the coordinates of
+    precision : int
+        decimal precision to round coordinates to
+
+    Returns
+    -------
+    MultiLineString
+    """
+    
+    return MultiLineString([round_linestring_coords(ls, precision) for ls in mls])
+
+
+
+def round_shape_coords(shape, precision):
+    """
+    Round the coordinates of a shapely geometry to some decimal precision.
+
+    Parameters
+    ----------
+    shape : shapely geometry, one of Point, MultiPoint, LineString,
+    		MultiLineString, Polygon, or MultiPolygon
+        the geometry to round the coordinates of
+    precision : int
+        decimal precision to round coordinates to
+
+    Returns
+    -------
+    shapely geometry
+    """
+    
+    if isinstance(shape, Point):
+        return round_point_coords(shape, precision)
+    
+    elif isinstance(shape, MultiPoint):
+        return round_multipoint_coords(shape, precision)
+    
+    elif isinstance(shape, LineString):
+        return round_linestring_coords(shape, precision)
+    
+    elif isinstance(shape, MultiLineString):
+        return round_multilinestring_coords(shape, precision)
+    
+    elif isinstance(shape, Polygon):
+        return round_polygon_coords(shape, precision)
+    
+    elif isinstance(shape, MultiPolygon):
+        return round_multipolygon_coords(shape, precision)
+    
+    else:
+        raise TypeError('cannot round coordinates of unhandled geometry type: {}'.format(type(shape)))
+
+
+
+class OSMContentHandler (xml.sax.handler.ContentHandler):
+    """
+    SAX content handler for OSM XML.
+    
+    Used to build an Overpass-like response JSON object in self.object. For format
+    notes, see http://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes
+    and http://overpass-api.de/output_formats.html#json
+    """
+
     def __init__(self):
         self._element = None
         self.object = {'elements': []}
@@ -632,9 +870,21 @@ class OSMContentHandler (xml.sax.handler.ContentHandler):
             self.object['elements'].append(self._element)
 
 
+
 def overpass_json_from_file(filename):
-    ''' Read OSM XML from input filename and return Overpass-like JSON.
-    '''
+    """
+    Read OSM XML from input filename and return Overpass-like JSON.
+
+    Parameters
+    ----------
+    filename : string
+        name of file containing OSM XML data
+
+    Returns
+    -------
+    OSMContentHandler object
+    """
+
     _, ext = os.path.splitext(filename)
     
     if ext == '.bz2':
@@ -647,7 +897,5 @@ def overpass_json_from_file(filename):
     with opener(filename) as file:
         handler = OSMContentHandler()
         xml.sax.parse(file, handler)
-        
-        #import pprint; pprint.pprint(handler.object)
-        
+
         return handler.object
