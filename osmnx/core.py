@@ -525,7 +525,8 @@ def get_osm_filter(network_type):
     # walking: filter out cycle ways, motor ways, private ways, and anything
     # specifying foot=no. allow service roads, permitting things like parking
     # lot lanes, alleys, etc that you *can* walk on even if they're not exactly
-    # pleasant walks
+    # pleasant walks. some cycleways may allow pedestrians, but this filter ignores
+    # such cycleways.
     filters['walk'] = ('["area"!~"yes"]["highway"!~"cycleway|motor|proposed|construction|abandoned|platform|raceway"]'
                        '["foot"!~"no"]["service"!~"private"]{}').format(settings.default_access)
 
