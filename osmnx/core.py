@@ -1133,8 +1133,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
     G.remove_nodes_from(nodes_outside_polygon['node'])
     log('Removed {:,} nodes outside polygon in {:,.2f} seconds'.format(len(nodes_outside_polygon), time.time()-start_time))
 
-    # remove any isolated nodes and retain only the largest component (if
-    # retain_all is True)
+    # remove any isolated nodes and retain only the largest component (if retain_all is False)
     if not retain_all:
         G = remove_isolated_nodes(G)
         G = get_largest_component(G)
