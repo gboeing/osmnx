@@ -343,19 +343,16 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
         units of earth_radius
     """
 
-    phi1 = np.deg2rad(90 - lat1)
-    phi2 = np.deg2rad(90 - lat2)
+    phi1 = np.deg2rad(lat1) 
+    phi2 = np.deg2rad(lat2) 
+    dphi = phi2-phi1 
 
-    theta1 = np.deg2rad(lng1)
-    theta2 = np.deg2rad(lng2)
+    dtheta = np.deg2rad(lng2 - lng1)
 
-    cos = (np.sin(phi1) * np.sin(phi2) * np.cos(theta1 - theta2) + np.cos(phi1) * np.cos(phi2))
+    h = np.sin(dphi/2)**2 + np.cos(phi1) * np.cos(phi2) * np.sin(dtheta/2)**2 
+    h = np.minimum(1.0, h) # protection against floating point errors
 
-    # ignore warnings during this calculation because numpy warns it cannot
-    # calculate arccos for self-loops since u==v
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        arc = np.arccos(cos)
+    arc = 2 * np.arcsin(np.sqrt(h))
 
     # return distance in units of earth_radius
     distance = arc * earth_radius
@@ -900,5 +897,5 @@ def overpass_json_from_file(filename):
     with opener(filename) as file:
         handler = OSMContentHandler()
         xml.sax.parse(file, handler)
-        
+
         return handler.object
