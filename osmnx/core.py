@@ -557,7 +557,8 @@ def get_osm_filter(network_type):
 
 def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
                      network_type='all_private', timeout=180, memory=None,
-                     max_query_area_size=50*1000*50*1000, infrastructure='way["highway"]'):
+                     max_query_area_size=50*1000*50*1000, infrastructure='way["highway"]',
+                     custom_filter=None):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
 
@@ -590,6 +591,8 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         download infrastructure of given type. default is streets, ie,
         'way["highway"]') but other infrastructures may be selected like power
         grids, ie, 'way["power"~"line"]'
+    custom_filter : string
+        a custom network filter to be used instead of the network_type presets
 
     Returns
     -------
@@ -605,7 +608,10 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
 
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type
-    osm_filter = get_osm_filter(network_type)
+    if custom_filter:
+        osm_filter = custom_filter
+    else:
+        osm_filter = get_osm_filter(network_type)
     response_jsons = []
 
     # pass server memory allocation in bytes for the query to the API
