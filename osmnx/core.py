@@ -6,28 +6,28 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-import math
-import re
-import time
-import json
-import io
-import os
-import hashlib
 import datetime as dt
-import logging as lg
-import requests
-import numpy as np
-import pandas as pd
 import geopandas as gpd
+import hashlib
+import io
+import json
+import logging as lg
+import math
 import networkx as nx
+import numpy as np
+import os
+import pandas as pd
+import re
+import requests
+import time
 
 from collections import OrderedDict
-from itertools import groupby
 from dateutil import parser as date_parser
-from shapely.geometry import Point
+from itertools import groupby
 from shapely.geometry import LineString
-from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
+from shapely.geometry import Point
+from shapely.geometry import Polygon
 from shapely.ops import unary_union
 
 from . import settings
