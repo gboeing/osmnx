@@ -140,24 +140,38 @@ def test_network_saving_loading():
 def test_get_network_methods():
 
     import geopandas as gpd
+
+    # graph from bounding box
     north, south, east, west = 37.79, 37.78, -122.41, -122.43
     G1 = ox.graph_from_bbox(north, south, east, west, network_type='drive_service')
     G1 = ox.graph_from_bbox(north, south, east, west, network_type='drive_service', truncate_by_edge=True)
 
+    # graph from point
     location_point = (37.791427, -122.410018)
     bbox = ox.bbox_from_point(location_point, project_utm=True)
     G2 = ox.graph_from_point(location_point, distance=750, distance_type='bbox', network_type='drive')
     G3 = ox.graph_from_point(location_point, distance=500, distance_type='network')
 
+    # graph from address
     G4 = ox.graph_from_address(address='350 5th Ave, New York, NY', distance=1000, distance_type='network', network_type='bike')
 
+    # graph from list of places
     places = ['Los Altos, California, USA', {'city':'Los Altos Hills', 'state':'California'}, 'Loyola, California']
     G5 = ox.graph_from_place(places, network_type='all', clean_periphery=False)
 
+    # graph from polygon (from shapefile)
     calif = gpd.read_file('tests/input_data/ZillowNeighborhoods-CA')
     mission_district = calif[(calif['CITY']=='San Francisco') & (calif['NAME']=='Mission')]
     polygon = mission_district['geometry'].iloc[0]
     G6 = ox.graph_from_polygon(polygon, network_type='walk')
+
+    # test custom query filter
+    filt = ('["area"!~"yes"]'
+            '["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
+            '["foot"!~"no"]'
+            '["service"!~"private"]'
+            '["access"!~"private"]')
+    G = ox.graph_from_point(location_point, network_type='walk', custom_filter=filt)
 
 
 def test_stats():
