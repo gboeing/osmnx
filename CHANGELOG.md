@@ -1,5 +1,10 @@
 # Change log
 
+## 0.7.4dev (TBD)
+
+  - add fast nearest-nodes search
+  - allow custom network query filters
+
 ## 0.7.3 (2018-03-12)
 
   - turn off x- and y-axes to improve plotting appearance

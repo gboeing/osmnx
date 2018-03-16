@@ -48,7 +48,7 @@ install_requires = [r.strip() for r in requirements_lines]
 
 # now call setup
 setup(name='osmnx',
-      version='0.7.3',
+      version='0.7.4dev',
       description='Retrieve, construct, analyze, and visualize street networks from OpenStreetMap',
       long_description=long_description,
       classifiers=classifiers,
@@ -59,4 +59,6 @@ setup(name='osmnx',
       platforms='any',
       packages=['osmnx'],
       install_requires=install_requires,
-      extras_require={'folium':['folium>=0.5']})
+      extras_require={'folium':['folium>=0.5'],
+                      'kdtree':['scipy>=1.0'],
+                      'balltree':['scikit-learn>=0.19']})
