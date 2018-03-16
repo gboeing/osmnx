@@ -2,3 +2,5 @@ coverage
 coveralls
 folium
 pytest
+scikit-learn
+scipy
