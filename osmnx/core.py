@@ -1379,7 +1379,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                     simplify=True, retain_all=False, truncate_by_edge=False,
                     name='unnamed', timeout=180, memory=None,
                     max_query_area_size=50*1000*50*1000, clean_periphery=True,
-                    infrastructure='way["highway"]'):
+                    infrastructure='way["highway"]', custom_filter=None):
     """
     Create a networkx graph from OSM data within some bounding box.
 
@@ -1418,6 +1418,8 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
     infrastructure : string
         download infrastructure of given type (default is streets (ie, 'way["highway"]') but other
         infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
+    custom_filter : string
+        a custom network filter to be used instead of the network_type presets
 
     Returns
     -------
@@ -1438,7 +1440,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                                           east=east_buffered, west=west_buffered,
                                           network_type=network_type, timeout=timeout,
                                           memory=memory, max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure)
+                                          infrastructure=infrastructure, custom_filter=custom_filter)
         G_buffered = create_graph(response_jsons, name=name, retain_all=retain_all, network_type=network_type)
         G = truncate_graph_bbox(G_buffered, north, south, east, west, retain_all=True, truncate_by_edge=truncate_by_edge)
 
@@ -1460,7 +1462,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                                           west=west, network_type=network_type,
                                           timeout=timeout, memory=memory,
                                           max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure)
+                                          infrastructure=infrastructure, custom_filter=custom_filter)
 
         # create the graph, then truncate to the bounding box
         G = create_graph(response_jsons, name=name, retain_all=retain_all, network_type=network_type)
@@ -1481,7 +1483,8 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
                      network_type='all_private', simplify=True, retain_all=False,
                      truncate_by_edge=False, name='unnamed', timeout=180,
                      memory=None, max_query_area_size=50*1000*50*1000,
-                     clean_periphery=True, infrastructure='way["highway"]'):
+                     clean_periphery=True, infrastructure='way["highway"]',
+                     custom_filter=None):
     """
     Create a networkx graph from OSM data within some distance of some (lat,
     lon) center point.
@@ -1522,6 +1525,8 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
     infrastructure : string
         download infrastructure of given type (default is streets (ie, 'way["highway"]') but other
         infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
+    custom_filter : string
+        a custom network filter to be used instead of the network_type presets
 
     Returns
     -------
@@ -1536,9 +1541,11 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
     north, south, east, west = bbox_from_point(center_point, distance)
 
     # create a graph from the bounding box
-    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify, retain_all=retain_all,
-                        truncate_by_edge=truncate_by_edge, name=name, timeout=timeout, memory=memory,
-                        max_query_area_size=max_query_area_size, clean_periphery=clean_periphery, infrastructure=infrastructure)
+    G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify,
+    					retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name, 
+    					timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, 
+    					clean_periphery=clean_periphery, infrastructure=infrastructure,
+    					custom_filter=custom_filter)
 
     # if the network distance_type is network, find the node in the graph
     # nearest to the center point, and truncate the graph by network distance
@@ -1556,7 +1563,8 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
                        truncate_by_edge=False, return_coords=False,
                        name='unnamed', timeout=180, memory=None,
                        max_query_area_size=50*1000*50*1000,
-                       clean_periphery=True, infrastructure='way["highway"]'):
+                       clean_periphery=True, infrastructure='way["highway"]',
+                       custom_filter=None):
     """
     Create a networkx graph from OSM data within some distance of some address.
 
@@ -1600,6 +1608,8 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
     infrastructure : string
         download infrastructure of given type (default is streets (ie, 'way["highway"]') but other
         infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
+    custom_filter : string
+        a custom network filter to be used instead of the network_type presets
 
     Returns
     -------
@@ -1615,7 +1625,8 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
                          simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge,
                          name=name, timeout=timeout, memory=memory,
                          max_query_area_size=max_query_area_size,
-                         clean_periphery=clean_periphery, infrastructure=infrastructure)
+                         clean_periphery=clean_periphery, infrastructure=infrastructure,
+                         custom_filter=custom_filter)
     log('graph_from_address() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
 
     if return_coords:
@@ -1628,7 +1639,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
                        retain_all=False, truncate_by_edge=False, name='unnamed',
                        timeout=180, memory=None,
                        max_query_area_size=50*1000*50*1000,
-                       clean_periphery=True, infrastructure='way["highway"]'):
+                       clean_periphery=True, infrastructure='way["highway"]',
+                       custom_filter=None):
     """
     Create a networkx graph from OSM data within the spatial boundaries of the
     passed-in shapely polygon.
@@ -1664,6 +1676,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         download infrastructure of given type (default is streets
         (ie, 'way["highway"]') but other infrastructures may be selected 
         like power grids (ie, 'way["power"~"line"]'))
+    custom_filter : string
+        a custom network filter to be used instead of the network_type presets
 
     Returns
     -------
@@ -1692,7 +1706,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         response_jsons = osm_net_download(polygon=polygon_buffered, network_type=network_type,
                                           timeout=timeout, memory=memory,
                                           max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure)
+                                          infrastructure=infrastructure, custom_filter=custom_filter)
         G_buffered = create_graph(response_jsons, name=name, retain_all=True, network_type=network_type)
         G_buffered = truncate_graph_polygon(G_buffered, polygon_buffered, retain_all=True, truncate_by_edge=truncate_by_edge)
 
@@ -1716,7 +1730,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         response_jsons = osm_net_download(polygon=polygon, network_type=network_type,
                                           timeout=timeout, memory=memory,
                                           max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure)
+                                          infrastructure=infrastructure, custom_filter=custom_filter)
 
         # create the graph from the downloaded data
         G = create_graph(response_jsons, name=name, retain_all=True, network_type=network_type)
@@ -1739,7 +1753,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
                      retain_all=False, truncate_by_edge=False, name='unnamed',
                      which_result=1, buffer_dist=None, timeout=180, memory=None,
                      max_query_area_size=50*1000*50*1000, clean_periphery=True,
-                     infrastructure='way["highway"]'):
+                     infrastructure='way["highway"]', custom_filter=None):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some
     geocodable place(s).
@@ -1787,6 +1801,8 @@ def graph_from_place(query, network_type='all_private', simplify=True,
     infrastructure : string
         download infrastructure of given type (default is streets (ie, 'way["highway"]') but other
         infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
+    custom_filter : string
+        a custom network filter to be used instead of the network_type presets
 
     Returns
     -------
@@ -1814,7 +1830,8 @@ def graph_from_place(query, network_type='all_private', simplify=True,
                            retain_all=retain_all, truncate_by_edge=truncate_by_edge,
                            name=name, timeout=timeout, memory=memory,
                            max_query_area_size=max_query_area_size,
-                           clean_periphery=clean_periphery, infrastructure=infrastructure)
+                           clean_periphery=clean_periphery, infrastructure=infrastructure,
+                           custom_filter=custom_filter)
 
     log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return G
