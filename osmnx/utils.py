@@ -507,6 +507,8 @@ def get_nearest_nodes(G, X, Y, method=None):
         list of nearest node IDs
     """
     
+    start_time = time.time()
+
     if method is None:
         
         # calculate nearest node one at a time for each point
@@ -550,7 +552,9 @@ def get_nearest_nodes(G, X, Y, method=None):
     
     else:
         raise ValueError('You must pass a valid method name, or None.')
-    
+
+    log('Found nearest nodes to {:,} points in {:,.2f} seconds'.format(len(X), time.time()-start_time))
+
     return np.array(nn)
 
 
