@@ -293,7 +293,7 @@ def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolo
     Parameters
     ----------
     gdf : GeoDataFrame
-    	building footprints
+        building footprints
     fig : figure
     ax : axis
     figsize : tuple

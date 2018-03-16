@@ -257,7 +257,7 @@ def induce_subgraph(G, node_subset):
     Returns
     -------
     G2 : networkx multidigraph
-    	the subgraph of G induced by node_subset
+        the subgraph of G induced by node_subset
     """
 
     node_subset = set(node_subset)
@@ -298,7 +298,7 @@ def get_largest_component(G, strongly=False):
     Returns
     -------
     G : networkx multidigraph
-    	the largest connected component subgraph from the original graph
+        the largest connected component subgraph from the original graph
     """
 
     start_time = time.time()
@@ -427,7 +427,7 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
         if euclidean) between the point and nearest node
     """
     start_time = time.time()
-	
+    
     if not G or (G.number_of_nodes() == 0):
         raise ValueError('G argument must be not be empty or should contain at least one node')
 
@@ -613,7 +613,7 @@ def add_edge_bearings(G):
 
     for u, v, data in G.edges(keys=False, data=True):
         
-    	# calculate bearing from edge's origin to its destination
+        # calculate bearing from edge's origin to its destination
         origin_point = (G.nodes[u]['y'], G.nodes[u]['x'])
         destination_point = (G.nodes[v]['y'], G.nodes[v]['x'])
         bearing = get_bearing(origin_point, destination_point)
@@ -895,7 +895,7 @@ def round_shape_coords(shape, precision):
     Parameters
     ----------
     shape : shapely geometry, one of Point, MultiPoint, LineString,
-    		MultiLineString, Polygon, or MultiPolygon
+            MultiLineString, Polygon, or MultiPolygon
         the geometry to round the coordinates of
     precision : int
         decimal precision to round coordinates to

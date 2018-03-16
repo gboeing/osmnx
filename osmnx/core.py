@@ -111,7 +111,7 @@ def get_from_cache(url):
         # return None
         if os.path.isfile(cache_path_filename):
             with io.open(cache_path_filename, encoding='utf-8') as cache_file:
-            	response_json = json.load(cache_file)
+                response_json = json.load(cache_file)
             log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_path_filename, url))
             return response_json
 
@@ -1542,10 +1542,10 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
 
     # create a graph from the bounding box
     G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify,
-    					retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name, 
-    					timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, 
-    					clean_periphery=clean_periphery, infrastructure=infrastructure,
-    					custom_filter=custom_filter)
+                        retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name, 
+                        timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, 
+                        clean_periphery=clean_periphery, infrastructure=infrastructure,
+                        custom_filter=custom_filter)
 
     # if the network distance_type is network, find the node in the graph
     # nearest to the center point, and truncate the graph by network distance
