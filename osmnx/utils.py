@@ -242,11 +242,12 @@ def induce_subgraph(G, node_subset):
     ----------
     G : networkx multidigraph
     node_subset : list-like
-        the set of nodes to induce a subgraph from
+        the subset of nodes to induce a subgraph of G
 
     Returns
     -------
-    networkx multidigraph
+    G2 : networkx multidigraph
+    	the subgraph of G induced by node_subset
     """
 
     node_subset = set(node_subset)
@@ -274,8 +275,8 @@ def induce_subgraph(G, node_subset):
 
 def get_largest_component(G, strongly=False):
     """
-    Return the largest weakly or strongly connected component from a directed
-    graph.
+    Return a subgraph of the largest weakly or strongly connected component
+    from a directed graph.
 
     Parameters
     ----------
@@ -286,7 +287,8 @@ def get_largest_component(G, strongly=False):
 
     Returns
     -------
-    networkx multidigraph
+    G : networkx multidigraph
+    	the largest connected component subgraph from the original graph
     """
 
     start_time = time.time()
@@ -386,11 +388,11 @@ def euclidean_dist_vec(y1, x1, y2, x2):
 
 
 
-def get_nearest_node(G, point, method='greatcircle', return_dist=False):
+def get_nearest_node(G, point, method='haversine', return_dist=False):
     """
     Return the graph node nearest to some specified (lat, lng) or (y, x) point,
     and optionally the distance between the node and the point. This function
-    can use either a great circle or euclidean distance calculator.
+    can use either a haversine or euclidean distance calculator.
 
     Parameters
     ----------
@@ -398,12 +400,12 @@ def get_nearest_node(G, point, method='greatcircle', return_dist=False):
     point : tuple
         The (lat, lng) or (y, x) point for which we will find the nearest node
         in the graph
-    method : str {'greatcircle', 'euclidean'}
+    method : str {'haversine', 'euclidean'}
         Which method to use for calculating distances to find nearest node.
-        If 'greatcircle', graph nodes' coordinates must be in units of decimal
+        If 'haversine', graph nodes' coordinates must be in units of decimal
         degrees. If 'euclidean', graph nodes' coordinates must be projected.
     return_dist : bool
-        Optionally also return the distance (in meters if great circle, or graph
+        Optionally also return the distance (in meters if haversine, or graph
         node coordinate units if euclidean) between the point and the nearest
         node.
 
@@ -411,7 +413,7 @@ def get_nearest_node(G, point, method='greatcircle', return_dist=False):
     -------
     int or tuple of (int, float)
         Nearest node ID or optionally a tuple of (node ID, dist), where dist is
-        the distance (in meters if great circle, or graph node coordinate units
+        the distance (in meters if haversine, or graph node coordinate units
         if euclidean) between the point and nearest node
     """
     start_time = time.time()
@@ -430,8 +432,8 @@ def get_nearest_node(G, point, method='greatcircle', return_dist=False):
     df['reference_x'] = point[1]
 
     # calculate the distance between each node and the reference point
-    if method == 'greatcircle':
-        # calculate distance vector using great circle distances (ie, for
+    if method == 'haversine':
+        # calculate distance vector using haversine (ie, for
         # spherical lat-long geometries)
         distances = great_circle_vec(lat1=df['reference_y'],
                                      lng1=df['reference_x'],
@@ -447,7 +449,7 @@ def get_nearest_node(G, point, method='greatcircle', return_dist=False):
                                        x2=df['x'])
 
     else:
-        raise ValueError('method argument must be either "greatcircle" or "euclidean"')
+        raise ValueError('method argument must be either "haversine" or "euclidean"')
 
     # nearest node's ID is the index label of the minimum distance
     nearest_node = int(distances.idxmin())
