@@ -27,6 +27,16 @@ from shapely.geometry import Point, MultiPoint, LineString, MultiLineString, Pol
 
 from . import settings
 
+# scipy and sklearn are optional dependencies for faster nearest node search
+try:
+    from scipy.spatial import cKDTree
+except ImportError as e:
+    cKDTree = None
+try:
+    from sklearn.neighbors import BallTree
+except ImportError as e:
+    BallTree = None
+
 
 
 def config(data_folder=settings.data_folder,
@@ -461,6 +471,87 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
         return nearest_node, distances.loc[nearest_node]
     else:
         return nearest_node
+
+
+
+def get_nearest_nodes(G, X, Y, method=None):
+    """
+    Return the graph nodes nearest to a list of points. Pass in points
+    as separate vectors of X and Y coordinates. The 'kdtree' method
+    is by far the fastest with large data sets, but only finds approximate
+    nearest nodes if working in unprojected coordinates like lat-lng (it
+    precisely finds the nearest node if working in projected coordinates).
+    The 'balltree' method is second fastest with large data sets, but it 
+    is precise if working in unprojected coordinates like lat-lng.
+    
+    Parameters
+    ----------
+    G : networkx multidigraph
+    X : list-like
+        The vector of longitudes or x's for which we will find the nearest
+        node in the graph
+    Y : list-like
+        The vector of latitudes or y's for which we will find the nearest
+        node in the graph
+    method : str {None, 'kdtree', 'balltree'}
+        Which method to use for finding nearest node to each point.
+        If None, we manually find each node one at a time using 
+        osmnx.utils.get_nearest_node and haversine. If 'kdtree' we use 
+        scipy.spatial.cKDTree for very fast euclidean search. If
+        'balltree', we use sklearn.neighbors.BallTree for fast 
+        haversine search.
+        
+    Returns
+    -------
+    nn : array
+        list of nearest node IDs
+    """
+    
+    if method is None:
+        
+        # calculate nearest node one at a time for each point
+        nn = [get_nearest_node(G, (y, x), method='haversine') for x, y in zip(X, Y)]
+    
+    elif method == 'kdtree':
+        
+        # check if we were able to import scipy.spatial.cKDTree successfully
+        if not cKDTree:
+            raise ImportError('The scipy package must be installed to use this optional feature.')
+        
+        # build a k-d tree for euclidean nearest node search
+        nodes = pd.DataFrame({'x':nx.get_node_attributes(G, 'x'),
+                              'y':nx.get_node_attributes(G, 'y')})
+        tree = cKDTree(data=nodes[['x', 'y']], compact_nodes=True, balanced_tree=True)
+        
+        # query the tree for nearest node to each point
+        points = np.array([X, Y]).T
+        dist, idx = tree.query(points, k=1)
+        nn = nodes.iloc[idx].index
+        
+    elif method == 'balltree':
+        
+        # check if we were able to import sklearn.neighbors.BallTree successfully
+        if not BallTree:
+            raise ImportError('The scikit-learn package must be installed to use this optional feature.')
+        
+        # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
+        nodes = pd.DataFrame({'x':nx.get_node_attributes(G, 'x'),
+                              'y':nx.get_node_attributes(G, 'y')})
+        nodes_rad = np.deg2rad(nodes[['y', 'x']].astype(np.float))
+        points = np.array([Y.astype(np.float), X.astype(np.float)]).T
+        points_rad = np.deg2rad(points)
+
+        # build a ball tree for haversine nearest node search
+        tree = BallTree(nodes_rad, metric='haversine')
+
+        # query the tree for nearest node to each point
+        idx = tree.query(points_rad, k=1, return_distance=False)
+        nn = nodes.iloc[idx[:,0]].index
+    
+    else:
+        raise ValueError('You must pass a valid method name, or None.')
+    
+    return np.array(nn)
 
 
 
