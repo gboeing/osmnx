@@ -201,7 +201,9 @@ def project_graph(G, to_crs=None):
         if 'geometry' in attributes:
             row = gdf_edges_utm[(gdf_edges_utm['u']==u) & (gdf_edges_utm['v']==v) & (gdf_edges_utm['key']==key)]
             attributes['geometry'] = row['geometry'].iloc[0]
-        G_proj.add_edge(u, v, key=key, **attributes)
+
+        # attributes dict contains key, so we don't need to explicitly pass it here
+        G_proj.add_edge(u, v, **attributes)
 
     # set the graph's CRS attribute to the new, projected CRS and return the
     # projected graph
