@@ -1331,7 +1331,8 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
 
     # add length (great circle distance between nodes) attribute to each edge to
     # use as weight
-    G = add_edge_lengths(G)
+    if len(G.edges) > 0:
+        G = add_edge_lengths(G)
 
     return G
 
