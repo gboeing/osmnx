@@ -903,9 +903,9 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
                 # corresponding width
                 edge_widths = [street_widths[edge_type] if edge_type in street_widths else default_width for edge_type in edge_types_flat]
 
-                # the node diameter will be the smallest of the edge widths -
-                # anything larger would extend past the street's line
-                circle_diameter = min(edge_widths)
+                # the node diameter will be the biggest of the edge widths, to make joints perfectly smooth
+                # alternatively, use min (?) to pervent anything larger from extending past smallest street's line
+                circle_diameter = max(edge_widths)
 
                 # mpl circle marker sizes are in area, so it is the diameter
                 # squared
