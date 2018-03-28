@@ -267,7 +267,7 @@ def test_buildings():
 def test_pois():
 
     # download all points of interests from place
-    gdf = os.pois_from_place(place='Kamppi, Helsinki, Finland')
+    gdf = ox.pois_from_place(place='Kamppi, Helsinki, Finland')
 
     # Get all restaurants and schools from place
     restaurants = ox.pois_from_place(place='Emeryville, California, USA', amenities=['restaurant'])
