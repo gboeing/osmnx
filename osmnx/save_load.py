@@ -49,7 +49,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
 
     # give the save folder a filename subfolder to make the full path to the
     # files
-    folder_path = '{}/{}'.format(folder, filename)
+    folder_path = os.path.join(folder, filename)
 
     # make everything but geometry column a string
     for col in [c for c in gdf.columns if not c == 'geometry']:
@@ -134,7 +134,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
 
     # if the save folder does not already exist, create it with a filename
     # subfolder
-    folder = '{}/{}'.format(folder, filename)
+    folder = os.path.join(folder, filename)
     if not os.path.exists(folder):
         os.makedirs(folder)
 
@@ -183,8 +183,8 @@ def save_graphml(G, filename='graph.graphml', folder=None):
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    nx.write_graphml(G_save, '{}/{}'.format(folder, filename))
-    log('Saved graph "{}" to disk as GraphML at "{}/{}" in {:,.2f} seconds'.format(G_save.name, folder, filename, time.time()-start_time))
+    nx.write_graphml(G_save, os.path.join(folder, filename))
+    log('Saved graph "{}" to disk as GraphML at "{}" in {:,.2f} seconds'.format(G_save.name, os.path.join(folder, filename), time.time()-start_time))
 
 
 def load_graphml(filename, folder=None):
@@ -208,7 +208,7 @@ def load_graphml(filename, folder=None):
     # read the graph from disk
     if folder is None:
         folder = settings.data_folder
-    path = '{}/{}'.format(folder, filename)
+    path = os.path.join(folder, filename)
     G = nx.MultiDiGraph(nx.read_graphml(path, node_type=int))
 
     # convert graph crs attribute from saved string to correct dict data type
@@ -510,7 +510,7 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
         for label, value in row.iteritems():
             if (label not in ['u', 'v', 'key']) and (isinstance(value, list) or pd.notnull(value)):
                 attrs[label] = value
-        G.add_edge(u=row['u'], v=row['v'], key=row['key'], **attrs)
+        G.add_edge(row['u'], row['v'], key=row['key'], **attrs)
 
     return G
 

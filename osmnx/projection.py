@@ -12,6 +12,7 @@ import geopandas as gpd
 import networkx as nx
 from shapely.geometry import Point
 
+from . import settings
 from .utils import log
 from .utils import make_str
 
@@ -27,7 +28,7 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
         the geometry to project
     crs : dict
         the starting coordinate reference system of the passed-in geometry,
-        default value (None) will set EPSG:4326 as the CRS
+        default value (None) will set settings.default_crs as the CRS
     to_crs : dict
         if not None, just project to this CRS instead of to UTM
     to_latlong : bool
@@ -42,7 +43,7 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     """
 
     if crs is None:
-        crs = {'init':'epsg:4326'}
+        crs = settings.default_crs
 
     gdf = gpd.GeoDataFrame()
     gdf.crs = crs
@@ -92,9 +93,9 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
     else:
         if to_latlong:
             # if to_latlong is True, project the gdf to latlong
-            latlong_crs = {'init':'epsg:4326'}
+            latlong_crs = settings.default_crs
             projected_gdf = gdf.to_crs(latlong_crs)
-            log('Projected the GeoDataFrame "{}" to EPSG 4326 in {:,.2f} seconds'.format(gdf.gdf_name, time.time()-start_time))
+            log('Projected the GeoDataFrame "{}" to default_crs in {:,.2f} seconds'.format(gdf.gdf_name, time.time()-start_time))
         else:
             # else, project the gdf to UTM
             # if GeoDataFrame is already in UTM, just return it
@@ -200,7 +201,9 @@ def project_graph(G, to_crs=None):
         if 'geometry' in attributes:
             row = gdf_edges_utm[(gdf_edges_utm['u']==u) & (gdf_edges_utm['v']==v) & (gdf_edges_utm['key']==key)]
             attributes['geometry'] = row['geometry'].iloc[0]
-        G_proj.add_edge(u, v, key=key, **attributes)
+
+        # attributes dict contains key, so we don't need to explicitly pass it here
+        G_proj.add_edge(u, v, **attributes)
 
     # set the graph's CRS attribute to the new, projected CRS and return the
     # projected graph

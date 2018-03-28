@@ -18,7 +18,7 @@ Retrieve, construct, analyze, and visualize street networks from OpenStreetMap:
 
 ## Overview
 
-**OSMnx** is a Python 2+3 package that lets you download spatial geometries and
+**OSMnx** is a Python package that lets you download spatial geometries and
 construct, project, visualize, and analyze street networks from OpenStreetMap's
 APIs. Users can download and construct walkable, drivable, or bikable urban
 networks with a single line of Python code, and then easily analyze and
@@ -64,7 +64,8 @@ pip install osmnx
 If you are pip installing OSMnx, install [geopandas](http://geoffboeing.com/2014/09/using-geopandas-windows/)
 and [rtree](http://geoffboeing.com/2016/10/r-tree-spatial-index-python/) first.
 It's easiest to use [conda-forge](https://anaconda.org/conda-forge/geopandas)
-to get these dependencies installed.
+to get these dependencies installed. If you have any trouble with the installation, read
+the [docs](https://osmnx.readthedocs.io).
 
 ## Features
 
@@ -72,10 +73,11 @@ OSMnx is built on top of geopandas, networkx, and matplotlib and works with
 OpenStreetMap's APIs to:
 
   * Download street networks anywhere in the world with a single line of code
-  * Download other infrastructure network types, place polygons, or building footprints as well
+  * Download other infrastructure network types, place polygons, or building footprints
   * Download by city name, polygon, bounding box, or point/address + network distance
-  * Get drivable, walkable, bikeable, or all street networks
-  * Visualize the street network as a static image or leaflet web map
+  * Download drivable, walkable, bikeable, or all street networks
+  * Load street network from a local .osm file
+  * Visualize street network as a static image or leaflet web map
   * Simplify and correct the network's topology to clean and consolidate intersections
   * Save networks to disk as shapefiles or GraphML
   * Conduct topological and spatial analyses to automatically calculate dozens of indicators
@@ -91,7 +93,7 @@ More feature development details are in the change log.
 
 ## Documentation
 
-Documentation available at [readthedocs](https://osmnx.readthedocs.io/en/stable/).
+Documentation available at [readthedocs](https://osmnx.readthedocs.io).
 
 Examples available in the [examples repo](https://github.com/gboeing/osmnx-examples).
 

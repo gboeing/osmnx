@@ -19,29 +19,29 @@ from .utils import count_streets_per_node
 
 def is_endpoint(G, node, strict=True):
     """
-    Return True if the node is a "real" endpoint of an edge in the network,
-    otherwise False.
-
-    OSM data includes lots of nodes that exist only as points to help streets
-    bend around curves. An end point is a node that either:
-    1) is its own neighbor, ie, it self-loops.
-    2) or, has no incoming edges or no outgoing edges, ie, all its incident
-        edges point inward or all its incident edges point outward.
-    3) or, it does not have exactly two neighbors and degree of 2 or 4.
-    4) or, if strict mode is false, if its edges have different OSM IDs.
+    Return True if the node is a "real" endpoint of an edge in the network, \
+    otherwise False. OSM data includes lots of nodes that exist only as points \
+    to help streets bend around curves. An end point is a node that either: \
+    1) is its own neighbor, ie, it self-loops. \
+    2) or, has no incoming edges or no outgoing edges, ie, all its incident \
+        edges point inward or all its incident edges point outward. \
+    3) or, it does not have exactly two neighbors and degree of 2 or 4. \
+    4) or, if strict mode is false, if its edges have different OSM IDs. \
 
     Parameters
     ----------
     G : networkx multidigraph
+
     node : int
         the node to examine
     strict : bool
-        if False, allow nodes to be end points even if they fail all other rules
+        if False, allow nodes to be end points even if they fail all other rules \
         but have edges with different OSM IDs
 
     Returns
     -------
     bool
+
     """
     neighbors = set(list(G.predecessors(node)) + list(G.successors(node)))
     n = len(neighbors)
@@ -243,7 +243,7 @@ def simplify_graph(G, strict=True):
         for u, v in zip(path[:-1], path[1:]):
 
             # there shouldn't be multiple edges between interstitial nodes
-            if not G.number_of_edges(u=u, v=v) == 1:
+            if not G.number_of_edges(u, v) == 1:
                 log('Multiple edges between "{}" and "{}" found when simplifying'.format(u, v), level=lg.WARNING)
 
             # the only element in this list as long as above check is True

@@ -246,7 +246,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
         # create the save folder if it doesn't already exist
         if not os.path.exists(settings.imgs_folder):
             os.makedirs(settings.imgs_folder)
-        path_filename = '{}/{}.{}'.format(settings.imgs_folder, filename, file_format)
+        path_filename = os.path.join(settings.imgs_folder, os.extsep.join([filename, file_format]))
 
         if file_format == 'svg':
             # if the file_format is svg, prep the fig/ax a bit for saving
@@ -292,7 +292,8 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     G : networkx multidigraph
     bbox : tuple
         bounding box as north,south,east,west - if None will calculate from
-        spatial extents of data
+        spatial extents of data. if passing a bbox, you probably also want to
+        pass margin=0 to constrain it.
     fig_height : int
         matplotlib figure height in inches
     fig_width : int
@@ -402,8 +403,11 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     ax.set_xlim((west - margin_ew, east + margin_ew))
 
     # configure axis appearance
-    ax.get_xaxis().get_major_formatter().set_useOffset(False)
-    ax.get_yaxis().get_major_formatter().set_useOffset(False)
+    xaxis = ax.get_xaxis()
+    yaxis = ax.get_yaxis()
+
+    xaxis.get_major_formatter().set_useOffset(False)
+    yaxis.get_major_formatter().set_useOffset(False)
 
     # if axis_off, turn off the axis display set the margins to zero and point
     # the ticks in so there's no space around the plot
@@ -411,12 +415,20 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
         ax.axis('off')
         ax.margins(0)
         ax.tick_params(which='both', direction='in')
+        xaxis.set_visible(False)
+        yaxis.set_visible(False)
         fig.canvas.draw()
 
     if equal_aspect:
         # make everything square
         ax.set_aspect('equal')
         fig.canvas.draw()
+    else:
+        # if the graph is not projected, conform the aspect ratio to not stretch the plot
+        if G.graph['crs'] == settings.default_crs:
+            coslat = np.cos((min(node_Ys) + max(node_Ys)) / 2. / 180. * np.pi)
+            ax.set_aspect(1. / coslat)
+            fig.canvas.draw()
 
     # annotate the axis with node IDs if annotate=True
     if annotate:
@@ -449,7 +461,8 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
         the route as a list of nodes
     bbox : tuple
         bounding box as north,south,east,west - if None will calculate from
-        spatial extents of data
+        spatial extents of data. if passing a bbox, you probably also want to
+        pass margin=0 to constrain it.
     fig_height : int
         matplotlib figure height in inches
     fig_width : int
@@ -890,9 +903,9 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
                 # corresponding width
                 edge_widths = [street_widths[edge_type] if edge_type in street_widths else default_width for edge_type in edge_types_flat]
 
-                # the node diameter will be the smallest of the edge widths -
-                # anything larger would extend past the street's line
-                circle_diameter = min(edge_widths)
+                # the node diameter will be the biggest of the edge widths, to make joints perfectly smooth
+                # alternatively, use min (?) to pervent anything larger from extending past smallest street's line
+                circle_diameter = max(edge_widths)
 
                 # mpl circle marker sizes are in area, so it is the diameter
                 # squared

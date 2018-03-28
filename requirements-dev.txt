@@ -2,4 +2,5 @@ coverage
 coveralls
 folium
 pytest
-httmock
+scikit-learn
+scipy

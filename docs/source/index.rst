@@ -31,10 +31,11 @@ OSMnx is built on top of geopandas, networkx, and matplotlib and works with
 OpenStreetMap's APIs to:
 
   * Download street networks anywhere in the world with a single line of code
-  * Download other infrastructure network types, place polygons, or building footprints as well
+  * Download other infrastructure network types, place polygons, or building footprints
   * Download by city name, polygon, bounding box, or point/address + network distance
-  * Get drivable, walkable, bikable, or all street networks
-  * Visualize the street network as a static image or leaflet web map
+  * Download drivable, walkable, bikeable, or all street networks
+  * Load street network from a local .osm file
+  * Visualize street network as a static image or leaflet web map
   * Simplify and correct the network's topology to clean and consolidate intersections
   * Save networks to disk as shapefiles or GraphML
   * Conduct topological and spatial analyses to automatically calculate dozens of indicators
@@ -51,24 +52,24 @@ More feature development details are in the `change log`_.
 Installation
 ------------
 
-Install OSMnx with pip:
-
-.. code-block:: shell
-
-    pip install osmnx
-
-or with conda (easiest):
+Install OSMnx with conda (easiest):
 
 .. code-block:: shell
 
     conda install -c conda-forge osmnx
 
-If you have any trouble with the installation, try installing OSMnx in a new,
-clean `virtual environment`_:
+or with pip:
 
 .. code-block:: shell
 
-    conda create --yes -c conda-forge -n OSMNX python=3 osmnx
+    pip install osmnx
+
+If you have any trouble with the installation, try installing OSMnx in a new,
+clean `virtual environment`_ using conda and conda-forge:
+
+.. code-block:: shell
+
+    conda create --override-channels -c conda-forge -n OSMNX python=3 osmnx
     source activate OSMNX
 
 

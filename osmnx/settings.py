@@ -30,4 +30,16 @@ log_filename = 'osmnx'
 useful_tags_node = ['ref', 'highway']
 useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name',
                     'highway', 'maxspeed', 'service', 'access', 'area',
-                    'landuse', 'width', 'est_width']
+                    'landuse', 'width', 'est_width', 'junction']
+
+# default filter for OSM "access" key. filtering out "access=no" ways prevents
+# including transit-only bridges like tilikum crossing from appearing in drivable
+# road network (e.g., '["access"!~"private|no"]'). however, some drivable 
+# tollroads have "access=no" plus a "access:conditional" key to clarify when 
+# it is accessible, so we can't filter out all "access=no" ways by default.
+# best to be permissive here then remove complicated combinations of tags in 
+# python after the full graph is downloaded and constructed.
+default_access = '["access"!~"private"]'
+
+# default CRS to set when creating graphs
+default_crs = {'init':'epsg:4326'}

@@ -13,6 +13,7 @@ from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
 from descartes import PolygonPatch
 
+from . import settings
 from .core import consolidate_subdivide_geometry
 from .core import get_polygons_coordinates
 from .core import overpass_request
@@ -185,7 +186,7 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None,
                 buildings[result['id']] = building
 
     gdf = gpd.GeoDataFrame(buildings).T
-    gdf.crs = {'init':'epsg:4326'}
+    gdf.crs = settings.default_crs
 
     if not retain_invalid:
         # drop all invalid geometries
@@ -251,6 +252,7 @@ def buildings_from_polygon(polygon, retain_invalid=False):
     Parameters
     ----------
     polygon : Polygon
+
     retain_invalid : bool
         if False discard any building footprints with an invalid geometry
 
@@ -300,8 +302,7 @@ def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolo
     bgcolor : string
         the background color of the plot
     set_bounds : bool
-        if True, set bounds from either passed-in bbox or the spatial extent of
-        the gdf
+        if True, set bounds from either passed-in bbox or the spatial extent of the gdf
     bbox : tuple
         if True and if set_bounds is True, set the display bounds to this bbox
     save : bool
@@ -319,7 +320,8 @@ def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolo
 
     Returns
     -------
-    GeoDataFrame
+    fig, ax : tuple
+
     """
 
     if fig is None or ax is None:
