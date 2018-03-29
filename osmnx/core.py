@@ -1337,7 +1337,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     return G
 
 
-def bbox_from_point(point, distance=1000, project_utm=False):
+def bbox_from_point(point, distance=1000, project_utm=False, return_crs=False):
     """
     Create a bounding box some distance in each direction (north, south, east,
     and west) from some (lat, lng) point.
@@ -1351,10 +1351,13 @@ def bbox_from_point(point, distance=1000, project_utm=False):
         each be from the point
     project_utm : bool
         if True return bbox as UTM coordinates
+    return_crs : bool
+        if True and project_utm=True, return the projected CRS
 
     Returns
     -------
-    north, south, east, west : tuple
+    north, south, east, west : tuple, if return_crs=False
+    north, south, east, west, crs_proj : tuple, if return_crs=True
     """
 
     # reverse the order of the (lat,lng) point so it is (x,y) for shapely, then
@@ -1373,7 +1376,10 @@ def bbox_from_point(point, distance=1000, project_utm=False):
         west, south, east, north = buffer_latlong.bounds
         log('Created bounding box {} meters in each direction from {}: {},{},{},{}'.format(distance, point, north, south, east, west))
 
-    return north, south, east, west
+    if return_crs:
+        return north, south, east, west, crs_proj
+    else:
+        return north, south, east, west
 
 
 def graph_from_bbox(north, south, east, west, network_type='all_private',
