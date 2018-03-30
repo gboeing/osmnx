@@ -352,9 +352,16 @@ def get_undirected(G):
 
     # set from/to nodes before making graph undirected
     G = G.copy()
-    for u, v, k in G.edges(keys=True):
+    for u, v, k, data in G.edges(keys=True, data=True):
         G.edges[u, v, k]['from'] = u
         G.edges[u, v, k]['to'] = v
+        
+        # add geometry if it doesn't already exist, to retain parallel
+        # edges' distinct geometries
+        if 'geometry' not in data:
+            point_u = Point((G.nodes[u]['x'], G.nodes[u]['y']))
+            point_v = Point((G.nodes[v]['x'], G.nodes[v]['y']))
+            data['geometry'] = LineString([point_u, point_v])
 
     # now convert multidigraph to a multigraph, retaining all edges in both
     # directions for now, as well as all graph attributes
