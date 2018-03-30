@@ -339,6 +339,53 @@ def is_same_geometry(ls1, ls2):
     return (geom1 == geom2 or geom1_r == geom2)
 
 
+
+def update_edge_keys(G):
+    """
+    Update the keys of edges that share a u, v with another edge but differ in
+    geometry. For example, two one-way streets from u to v that bow away from
+    each other as separate streets, rather than opposite direction edges of a 
+    single street.
+    
+    Parameters
+    ----------
+    G : networkx multidigraph
+
+    Returns
+    -------
+    networkx multigraph
+    """
+
+    edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
+    edges['uv'] = edges.apply(lambda row: '_'.join(map(str, sorted([row['u'], row['v']]))), axis=1)
+    edges['dupe'] = edges['uv'].duplicated(keep=False)
+    dupes = edges[edges['dupe']==True].dropna(subset=['geometry'])
+
+    different_streets = []
+    groups = dupes[['geometry', 'uv', 'u', 'v', 'key', 'dupe']].groupby('uv')
+    for label, group in groups:
+        
+        is_different = False
+        
+        if len(group['geometry']) > 2:
+            l = group['geometry'].tolist()
+            l.append(l[0])
+            geom_pairs = list(zip(l[:-1], l[1:]))
+        else:
+            geom_pairs = [(group['geometry'].iloc[0], group['geometry'].iloc[1])]
+        
+        for geom1, geom2 in geom_pairs:
+            if not is_same_geometry(geom1, geom2):
+                different_streets.append((group['u'].iloc[0], group['v'].iloc[0]))
+
+    for u, v in set(different_streets):
+        G.add_edge(u, v, key=1, **G[u][v][0])
+        G.remove_edge(u, v, key=0)
+
+    return G
+
+
+
 def get_undirected(G):
     """
     Convert a directed graph to an undirected graph that maintains parallel
@@ -368,6 +415,8 @@ def get_undirected(G):
             point_v = Point((G.nodes[v]['x'], G.nodes[v]['y']))
             data['geometry'] = LineString([point_u, point_v])
 
+    #G = update_edge_keys(G)
+
     # now convert multidigraph to a multigraph, retaining all edges in both
     # directions for now, as well as all graph attributes
     H = nx.MultiGraph()
@@ -375,10 +424,6 @@ def get_undirected(G):
     H.add_edges_from(G.edges(keys=True, data=True))
     H.graph = G.graph
     H.name = G.name
-
-    print(H[4780659225][311367476])
-
-    print(H[311367476][4780659225])
 
     # the previous operation added all directed edges from G as undirected
     # edges in H. this means we have duplicate edges for every bi-directional
