@@ -287,11 +287,16 @@ def is_duplicate_edge(data, data_other):
 
     is_dupe = False
 
-    if data['osmid'] == data_other['osmid']:
-        # if they have the same OSM IDs
+    # if either edge's OSM ID contains multiple values (due to simplification), we want
+    # to compare as sets so they are order-invariant, otherwise uv does not match vu
+    osmid = set(data['osmid']) if isinstance(data['osmid'], list) else data['osmid']
+    osmid_other = set(data_other['osmid']) if isinstance(data_other['osmid'], list) else data_other['osmid']
+
+    if osmid == osmid_other:
+        # if they contain the same OSM ID or set of OSM IDs (due to simplification)
         if ('geometry' in data) and ('geometry' in data_other):
             # if both edges have a geometry attribute
-            if is_same_geometry(data, data_other):
+            if is_same_geometry(data['geometry'], data_other['geometry']):
                 # if their edge geometries have the same coordinates
                 is_dupe = True
         elif ('geometry' in data) and ('geometry' in data_other):
@@ -304,17 +309,17 @@ def is_duplicate_edge(data, data_other):
     return is_dupe
 
 
-def is_same_geometry(data, data_other):
+def is_same_geometry(ls1, ls2):
     """
-    Check if LineString geometries in two edge data dicts are the same, in
+    Check if LineString geometries in two edges are the same, in
     normal or reversed order of points.
 
     Parameters
     ----------
-    data : dict
-        the first edge's data
-    data_other : dict
-        the second edge's data
+    ls1 : LineString
+        the first edge's geometry
+    ls2 : LineString
+        the second edge's geometry
 
     Returns
     -------
@@ -322,12 +327,12 @@ def is_same_geometry(data, data_other):
     """
 
     # extract geometries from each edge data dict
-    geom1 = [list(coords) for coords in data['geometry'].xy]
-    geom2 = [list(coords) for coords in data_other['geometry'].xy]
+    geom1 = [list(coords) for coords in ls1.xy]
+    geom2 = [list(coords) for coords in ls2.xy]
 
     # reverse the first edge's list of x's and y's to look for a match in
     # either order
-    geom1_r = [list(reversed(list(coords))) for coords in data['geometry'].xy]
+    geom1_r = [list(reversed(list(coords))) for coords in ls1.xy]
 
     # if the edge's geometry matches its reverse's geometry in either order,
     # return True
@@ -370,6 +375,10 @@ def get_undirected(G):
     H.add_edges_from(G.edges(keys=True, data=True))
     H.graph = G.graph
     H.name = G.name
+
+    print(H[4780659225][311367476])
+
+    print(H[311367476][4780659225])
 
     # the previous operation added all directed edges from G as undirected
     # edges in H. this means we have duplicate edges for every bi-directional
