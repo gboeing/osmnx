@@ -357,12 +357,12 @@ def update_edge_keys(G):
     """
 
     edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
-    edges['uv'] = edges.apply(lambda row: '_'.join(map(str, sorted([row['u'], row['v']]))), axis=1)
-    edges['dupe'] = edges['uv'].duplicated(keep=False)
+    edges['uvk'] = edges.apply(lambda row: '_'.join(sorted([str(row['u']), str(row['v'])]) + [str(row['key'])]), axis=1)
+    edges['dupe'] = edges['uvk'].duplicated(keep=False)
     dupes = edges[edges['dupe']==True].dropna(subset=['geometry'])
 
     different_streets = []
-    groups = dupes[['geometry', 'uv', 'u', 'v', 'key', 'dupe']].groupby('uv')
+    groups = dupes[['geometry', 'uvk', 'u', 'v', 'key', 'dupe']].groupby('uvk')
     for label, group in groups:
         
         is_different = False
@@ -415,7 +415,7 @@ def get_undirected(G):
             point_v = Point((G.nodes[v]['x'], G.nodes[v]['y']))
             data['geometry'] = LineString([point_u, point_v])
 
-    #G = update_edge_keys(G)
+    G = update_edge_keys(G)
 
     # now convert multidigraph to a multigraph, retaining all edges in both
     # directions for now, as well as all graph attributes
