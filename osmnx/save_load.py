@@ -356,6 +356,9 @@ def update_edge_keys(G):
     networkx multigraph
     """
 
+    # identify all the edges that are duplicates based on a sorted combination
+    # of their origin, destination, and key. that is, edge uv will match edge vu
+    # as a duplicate, but only if they have the same key
     edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
     edges['uvk'] = edges.apply(lambda row: '_'.join(sorted([str(row['u']), str(row['v'])]) + [str(row['key'])]), axis=1)
     edges['dupe'] = edges['uvk'].duplicated(keep=False)
@@ -363,24 +366,31 @@ def update_edge_keys(G):
 
     different_streets = []
     groups = dupes[['geometry', 'uvk', 'u', 'v', 'key', 'dupe']].groupby('uvk')
+    
+    # for each set of duplicate edges
     for label, group in groups:
         
-        is_different = False
-        
+        # if there are more than 2 edges here, make sure to compare all
         if len(group['geometry']) > 2:
             l = group['geometry'].tolist()
             l.append(l[0])
             geom_pairs = list(zip(l[:-1], l[1:]))
+        # otherwise, just compare the first edge to the second edge
         else:
             geom_pairs = [(group['geometry'].iloc[0], group['geometry'].iloc[1])]
         
+        # for each pair of edges to compare
         for geom1, geom2 in geom_pairs:
+            # if they don't have the same geometry, flag them as different streets
             if not is_same_geometry(geom1, geom2):
-                different_streets.append((group['u'].iloc[0], group['v'].iloc[0]))
+                # add edge uvk, but not edge vuk, otherwise we'll iterate both their keys
+                # and they'll still duplicate each other at the end of this process
+                different_streets.append((group['u'].iloc[0], group['v'].iloc[0], group['key'].iloc[0]))
 
-    for u, v in set(different_streets):
-        G.add_edge(u, v, key=1, **G[u][v][0])
-        G.remove_edge(u, v, key=0)
+    # for each unique different street, iterate its key + 1 so it's unique
+    for u, v, k in set(different_streets):
+        G.add_edge(u, v, key=k+1, **G[u][v][k])
+        G.remove_edge(u, v, key=k)
 
     return G
 
@@ -415,6 +425,8 @@ def get_undirected(G):
             point_v = Point((G.nodes[v]['x'], G.nodes[v]['y']))
             data['geometry'] = LineString([point_u, point_v])
 
+    # update edge keys so we don't retain only one edge of sets of parallel edges
+    # when we convert from a multidigraph to a multigraph
     G = update_edge_keys(G)
 
     # now convert multidigraph to a multigraph, retaining all edges in both
