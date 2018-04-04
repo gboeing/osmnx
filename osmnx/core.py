@@ -44,6 +44,11 @@ from .utils import count_streets_per_node
 from .utils import overpass_json_from_file
 
 
+class EmptyOverpassResponse(ValueError):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
+
 def save_to_cache(url, response_json):
     """
     Save an HTTP response json object to the cache.
@@ -1300,7 +1305,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     for response_json in response_jsons:
         elements.extend(response_json['elements'])
     if len(elements) < 1:
-        raise ValueError('There are no data elements in the response JSON objects')
+        raise EmptyOverpassResponse('There are no data elements in the response JSON objects')
 
     # create the graph as a MultiDiGraph and set the original CRS to default_crs
     G = nx.MultiDiGraph(name=name, crs=settings.default_crs)
