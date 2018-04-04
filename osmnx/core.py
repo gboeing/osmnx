@@ -61,7 +61,7 @@ class UnknownNetowrkType(ValueError):
 
 class InsufficientNetworkQueryArguments(ValueError):
     def __init__(self,*args,**kwargs):
-        Exception.__init__(self,*args,**kwargs))
+        Exception.__init__(self,*args,**kwargs)
 
 
 def save_to_cache(url, response_json):
