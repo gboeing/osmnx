@@ -54,7 +54,7 @@ class InvalidDistanceType(ValueError):
         Exception.__init__(self,*args,**kwargs)
 
 
-class UnknownNetowrkType(ValueError):
+class UnknownNetworkType(ValueError):
     def __init__(self,*args,**kwargs):
         Exception.__init__(self,*args,**kwargs)
 
@@ -570,7 +570,7 @@ def get_osm_filter(network_type):
     if network_type in filters:
         osm_filter = filters[network_type]
     else:
-        raise UnknownNetowrkType('unknown network_type "{}"'.format(network_type))
+        raise UnknownNetworkType('unknown network_type "{}"'.format(network_type))
 
     return osm_filter
 
