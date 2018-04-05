@@ -44,6 +44,26 @@ from .utils import count_streets_per_node
 from .utils import overpass_json_from_file
 
 
+class EmptyOverpassResponse(ValueError):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
+
+class InvalidDistanceType(ValueError):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
+
+class UnknownNetworkType(ValueError):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
+
+class InsufficientNetworkQueryArguments(ValueError):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
+
 def save_to_cache(url, response_json):
     """
     Save an HTTP response json object to the cache.
@@ -376,7 +396,7 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1):
         for key in sorted(list(query.keys())):
             params[key] = query[key]
     else:
-        raise ValueError('query must be a dict or a string')
+        raise TypeError('query must be a dict or a string')
 
     # request the URL, return the JSON
     response_json = nominatim_request(params=params, timeout=30)
@@ -550,7 +570,7 @@ def get_osm_filter(network_type):
     if network_type in filters:
         osm_filter = filters[network_type]
     else:
-        raise ValueError('unknown network_type "{}"'.format(network_type))
+        raise UnknownNetworkType('unknown network_type "{}"'.format(network_type))
 
     return osm_filter
 
@@ -604,7 +624,8 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     by_poly = polygon is not None
     by_bbox = not (north is None or south is None or east is None or west is None)
     if not (by_poly or by_bbox):
-        raise ValueError('You must pass a polygon or north, south, east, and west')
+        raise InsufficientNetworkQueryArguments(
+            'You must pass a polygon or north, south, east, and west')
 
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type
@@ -702,7 +723,7 @@ def consolidate_subdivide_geometry(geometry, max_query_area_size):
     quadrat_width = math.sqrt(max_query_area_size)
 
     if not isinstance(geometry, (Polygon, MultiPolygon)):
-        raise ValueError('Geometry must be a shapely Polygon or MultiPolygon')
+        raise TypeError('Geometry must be a shapely Polygon or MultiPolygon')
 
     # if geometry is a MultiPolygon OR a single Polygon whose area exceeds the
     # max size, get the convex hull around the geometry
@@ -744,7 +765,7 @@ def get_polygons_coordinates(geometry):
             x, y = polygon.exterior.xy
             polygons_coords.append(list(zip(x, y)))
     else:
-        raise ValueError('Geometry must be a shapely Polygon or MultiPolygon')
+        raise TypeError('Geometry must be a shapely Polygon or MultiPolygon')
 
     # convert the exterior coordinates of the polygon(s) to the string format
     # the API expects
@@ -1300,7 +1321,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     for response_json in response_jsons:
         elements.extend(response_json['elements'])
     if len(elements) < 1:
-        raise ValueError('There are no data elements in the response JSON objects')
+        raise EmptyOverpassResponse('There are no data elements in the response JSON objects')
 
     # create the graph as a MultiDiGraph and set the original CRS to default_crs
     G = nx.MultiDiGraph(name=name, crs=settings.default_crs)
@@ -1541,7 +1562,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
     """
 
     if distance_type not in ['bbox', 'network']:
-        raise ValueError('distance_type must be "bbox" or "network"')
+        raise InvalidDistanceType('distance_type must be "bbox" or "network"')
 
     # create a bounding box from the center point and the distance in each
     # direction
@@ -1694,9 +1715,9 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:
-        raise ValueError('Shape does not have a valid geometry')
+        raise TypeError('Shape does not have a valid geometry')
     if not isinstance(polygon, (Polygon, MultiPolygon)):
-        raise ValueError('Geometry must be a shapely Polygon or MultiPolygon. If you requested '
+        raise TypeError('Geometry must be a shapely Polygon or MultiPolygon. If you requested '
                          'graph from place name or address, make sure your query resolves to a '
                          'Polygon or MultiPolygon, and not some other geometry, like a Point. '
                          'See OSMnx documentation for details.')
@@ -1826,7 +1847,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
         # if it is a list, it contains multiple places to get
         gdf_place = gdf_from_places(query, buffer_dist=buffer_dist)
     else:
-        raise ValueError('query must be a string or a list of query strings')
+        raise TypeError('query must be a string or a list of query strings')
 
     # extract the geometry from the GeoDataFrame to use in API query
     polygon = gdf_place['geometry'].unary_union
