@@ -16,4 +16,4 @@ from .simplify import *
 from .stats import *
 from .utils import *
 
-__version__ = '0.7.4'
+__version__ = '0.8dev'
