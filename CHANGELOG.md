@@ -1,9 +1,15 @@
 # Change log
 
-## 0.7.4dev (TBD)
+## 0.7.4 (2018-04-05)
 
   - add fast nearest-nodes search
   - allow custom network query filters
+  - allow create_graph to return graph with no edges
+  - improve figure_ground joint smoothing
+  - fix handling of parallel edges when making multidigraph undirected
+  - generalize same-geometry checker
+  - improve detection of prior topology simplification
+  - custom error types for finer-grained handling
 
 ## 0.7.3 (2018-03-12)
 

@@ -196,8 +196,8 @@ def is_simplified(G):
     -------
     bool
     """
-    edges_with_geometry = [d for u, v, k, d in G.edges(data=True, keys=True) if 'geometry' in d]
-    return len(edges_with_geometry) > 0
+
+    return 'simplified' in G.graph and G.graph['simplified']
 
 
 def simplify_graph(G, strict=True):
@@ -211,7 +211,7 @@ def simplify_graph(G, strict=True):
 
     Parameters
     ----------
-    G : graph
+    G : networkx multidigraph
     strict : bool
         if False, allow nodes to be end points even if they fail all other rules
         but have edges with different OSM IDs
@@ -287,6 +287,8 @@ def simplify_graph(G, strict=True):
 
     # finally remove all the interstitial nodes between the new edges
     G.remove_nodes_from(set(all_nodes_to_remove))
+
+    G.graph['simplified'] = True
 
     msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
     log(msg.format(initial_node_count, len(list(G.nodes())), initial_edge_count, len(list(G.edges())), time.time()-start_time))
