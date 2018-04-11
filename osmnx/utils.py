@@ -994,9 +994,6 @@ def overpass_json_from_file(filename):
     with opener(filename) as file:
         handler = OSMContentHandler()
         xml.sax.parse(file, handler)
-
-        #import pprint; pprint.pprint(handler.object)
-        
         return handler.object
 
 def bbox_to_poly(north, south, east, west):

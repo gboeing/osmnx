@@ -10,20 +10,21 @@ import geopandas as gpd
 from .core import overpass_request, bbox_from_point, gdf_from_place
 from .utils import log, geocode, bbox_to_poly
 
-def parse_poi_query(west, south, east, north, amenities=None, timeout=180, maxsize=''):
+def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsize=''):
     """
     Parse the Overpass QL query based on the list of amenities.
 
     Parameters
     ----------
-    west : float
-        Westernmost coordinate of the bounding box of the search area.
+    
+    north : float
+        Northernmost coordinate from bounding box of the search area.
     south : float
         Southernmost coordinate from bounding box of the search area.
     east : float
         Easternmost coordinate from bounding box of the search area.
-    north : float
-        Northernmost coordinate from bounding box of the search area.
+    west : float
+        Westernmost coordinate of the bounding box of the search area.
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area.
     timeout : int
@@ -31,20 +32,20 @@ def parse_poi_query(west, south, east, north, amenities=None, timeout=180, maxsi
     """
     if amenities:
         # Overpass QL template
-        query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"~"{amenities}"]({south:.8f},'
-                          '{west:.8f},{north:.8f},{east:.8f});(._;>;););(way["amenity"~"{amenities}"]({south:.8f},'
-                          '{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation["amenity"~"{amenities}"]'
-                          '({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);));out;')
+        query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"~"{amenities}"]({south:.6f},'
+                          '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"~"{amenities}"]({south:.6f},'
+                          '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"~"{amenities}"]'
+                          '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);));out;')
 
         # Parse amenties
         query_str = query_template.format(amenities="|".join(amenities), north=north, south=south, east=east, west=west,
                                           timeout=timeout, maxsize=maxsize)
     else:
         # Overpass QL template
-        query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"]({south:.8f},'
-                          '{west:.8f},{north:.8f},{east:.8f});(._;>;););(way["amenity"]({south:.8f},'
-                          '{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation["amenity"]'
-                          '({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);));out;')
+        query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"]({south:.6f},'
+                          '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"]({south:.6f},'
+                          '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"]'
+                          '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);));out;')
 
         # Parse amenties
         query_str = query_template.format(north=north, south=south, east=east, west=west,
@@ -197,7 +198,8 @@ def invalid_multipoly_handler(gdf, relation, way_ids):
 
 def parse_osm_relations(relations, osm_way_df):
     """
-    Parses the osm relations from osm ways and nodes.
+    Parses the osm relations from osm ways and nodes. 
+    See more information about relations from OSM documentation: http://wiki.openstreetmap.org/wiki/Relation 
          
     Parameters
     ==========
@@ -206,10 +208,6 @@ def parse_osm_relations(relations, osm_way_df):
     osm_way_df : gpd.GeoDataFrame
         OSM 'way' features as a GeoDataFrame that contains all the 'way' features that will constitute the multipolygon relations.
      
-    Information
-    ===========
-    http://wiki.openstreetmap.org/wiki/Relation 
-    
     Returns
     =======
     gpd.GeoDataFrame
