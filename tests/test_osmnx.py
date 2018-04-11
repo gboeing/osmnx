@@ -263,4 +263,18 @@ def test_buildings():
     gdf = ox.buildings_from_place(place='Emeryville, California, USA')
     gdf = ox.buildings_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
     fig, ax = ox.plot_buildings(gdf)
-    
+
+def test_pois():
+
+    # download all points of interests from place
+    gdf = ox.pois_from_place(place='Kamppi, Helsinki, Finland')
+
+    # Get all restaurants and schools from place
+    restaurants = ox.pois_from_place(place='Emeryville, California, USA', amenities=['restaurant'])
+    schools = ox.pois_from_place(place='Emeryville, California, USA', amenities=['school'])
+
+    # Get all Universities from Boston area (with 2 km buffer to cover also Cambridge)
+    boston_q = "Boston, Massachusetts, United States of America"
+    boston_poly = ox.gdf_from_place(boston_q, buffer_dist=2000)
+    universities = ox.pois_from_polygon(boston_poly.geometry.values[0], amenities=['university'])
+
