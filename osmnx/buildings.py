@@ -99,7 +99,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
             west, south, east, north = poly.bounds
             query_template = ('[out:json][timeout:{timeout}]{maxsize};((way["building"]({south:.8f},'
                               '{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation["building"]'
-                              '({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);));out;')
+                              '({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);););out;')
             query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
