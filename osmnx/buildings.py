@@ -122,7 +122,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
         for polygon_coord_str in polygon_coord_strs:
             query_template = ('[out:json][timeout:{timeout}]{maxsize};(way'
                               '(poly:"{polygon}")["building"];(._;>;);relation'
-                              '(poly:"{polygon}")["building"];(._;>;));out;')
+                              '(poly:"{polygon}")["building"];(._;>;););out;')
             query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
