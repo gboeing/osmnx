@@ -1041,7 +1041,7 @@ def quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9)
     return multipoly
 
 
-def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buffer_amount=1e-9):
+def intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
     """
     Intersect points with a polygon, using an r-tree spatial index and cutting
     the polygon up into smaller sub-polygons for r-tree acceleration.
@@ -1054,7 +1054,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buff
         the geometry to intersect with the points
     quadrat_width : numeric
         the linear length (in degrees) of the quadrats with which to cut up the
-        geometry (default = 0.025, approx 2km at NYC's latitude)
+        geometry (default = 0.05, approx 4km at NYC's latitude)
     min_num : int
         the minimum number of linear quadrat lines (e.g., min_num=3 would
         produce a quadrat grid of 4 squares)
@@ -1110,7 +1110,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buff
     return points_within_geometry
 
 
-def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.025, min_num=3, buffer_amount=1e-9):
+def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
     """
     Remove every node in graph that falls outside some shapely Polygon or
     MultiPolygon.
@@ -1127,8 +1127,8 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
         neighbors are within polygon (NOT CURRENTLY IMPLEMENTED)
     quadrat_width : numeric
         passed on to intersect_index_quadrats: the linear length (in degrees) of
-        the quadrats with which to cut up the geometry (default = 0.025, approx
-        2km at NYC's latitude)
+        the quadrats with which to cut up the geometry (default = 0.05, approx
+        4km at NYC's latitude)
     min_num : int
         passed on to intersect_index_quadrats: the minimum number of linear
         quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4
