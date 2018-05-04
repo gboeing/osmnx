@@ -35,7 +35,7 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsi
         query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"~"{amenities}"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"~"{amenities}"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"~"{amenities}"]'
-                          '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);));out;')
+                          '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);););out;')
 
         # Parse amenties
         query_str = query_template.format(amenities="|".join(amenities), north=north, south=south, east=east, west=west,
@@ -45,7 +45,7 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsi
         query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"]'
-                          '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);));out;')
+                          '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);););out;')
 
         # Parse amenties
         query_str = query_template.format(north=north, south=south, east=east, west=west,
