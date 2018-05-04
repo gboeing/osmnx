@@ -389,7 +389,9 @@ def update_edge_keys(G):
 
     # for each unique different street, iterate its key + 1 so it's unique
     for u, v, k in set(different_streets):
-        G.add_edge(u, v, key=k+1, **G[u][v][k])
+    	# filter out key if it appears in data dict as we'll pass it explicitly
+        attributes = {k:v for k, v in G[u][v][k].items() if k != 'key'}
+        G.add_edge(u, v, key=k+1, **attributes)
         G.remove_edge(u, v, key=k)
 
     return G
