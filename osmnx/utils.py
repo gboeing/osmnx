@@ -42,8 +42,6 @@ try:
 except ImportError as e:
     BallTree = None
 
-
-
 def config(data_folder=settings.data_folder,
            logs_folder=settings.logs_folder,
            imgs_folder=settings.imgs_folder,
@@ -1001,11 +999,11 @@ def overpass_json_from_file(filename):
     with opener(filename) as file:
         handler = OSMContentHandler()
         xml.sax.parse(file, handler)
-
         return handler.object
 
 def bbox_to_poly(north, south, east, west):
     """
     Convenience function to parse bbox -> poly
     """
+    
     return Polygon([(west, south), (east, south), (east, north), (west, north)])

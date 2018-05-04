@@ -67,7 +67,7 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsi
 def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=None, west=None,
                      timeout=180, max_query_area_size=50*1000*50*1000):
     """
-    Get point of interests (POIs) from OpenStreetMap based on selected amenity types.
+    Get points of interests (POIs) from OpenStreetMap based on selected amenity types.
 
     Parameters
     ----------
@@ -111,12 +111,12 @@ def parse_vertice_nodes(osm_response):
     Parse node vertices from OSM response.
      
     Parameters
-    ==========
+    ----------
     osm_response : JSON 
         OSM response JSON 
     
     Returns
-    =======
+    -------
     Dict of vertex IDs and their lat, lon coordinates.
     """
 
@@ -133,12 +133,12 @@ def parse_osm_way(vertices, response):
     Parse ways (areas) from OSM node vertices.
 
     Parameters
-    ==========
+    ----------
     vertices : Python dict 
         Node vertices parsed from OSM response.  
 
     Returns
-    =======
+    -------
     Dict of vertex IDs and their lat, lon coordinates.
     """
 
@@ -166,12 +166,12 @@ def parse_osm_node(response):
     Parse points from OSM nodes.
 
     Parameters
-    ==========
+    ----------
     response : JSON 
         Nodes from OSM response.  
 
     Returns
-    =======
+    -------
     Dict of vertex IDs and their lat, lon coordinates.
     """
 
@@ -194,10 +194,11 @@ def parse_osm_node(response):
 
 def invalid_multipoly_handler(gdf, relation, way_ids):
     """
-    Handles invalid multipolygon geometries when there exists e.g. a feature without geometry (geometry == NaN)
+    Handles invalid multipolygon geometries when there exists e.g. a feature without 
+    geometry (geometry == NaN)
 
     Parameters
-    ==========
+    ----------
 
     gdf : gpd.GeoDataFrame
         GeoDataFrame with Polygon geometries that should be converted into a MultiPolygon object.
@@ -223,14 +224,14 @@ def parse_osm_relations(relations, osm_way_df):
     See more information about relations from OSM documentation: http://wiki.openstreetmap.org/wiki/Relation 
          
     Parameters
-    ==========
+    ----------
     relations : list
         OSM 'relation' items (dictionaries) in a list. 
     osm_way_df : gpd.GeoDataFrame
         OSM 'way' features as a GeoDataFrame that contains all the 'way' features that will constitute the multipolygon relations.
      
     Returns
-    =======
+    -------
     gpd.GeoDataFrame
         A GeoDataFrame with MultiPolygon representations of the relations and the attributes associated with them.   
     """
@@ -286,7 +287,8 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     polygon : shapely Polygon or MultiPolygon
         geographic shape to fetch the building footprints within
     amenities: list
-        List of amenities that will be used for finding the POIs from the selected area. See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity 
+        List of amenities that will be used for finding the POIs from the selected area. 
+        See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity 
     north : float
         northern latitude of bounding box
     south : float
