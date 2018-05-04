@@ -222,7 +222,7 @@ def parse_osm_relations(relations, osm_way_df):
                 # Parse member 'way' ids
                 member_way_ids = [member['ref'] for member in relation['members'] if member['type'] == 'way']
                 # Extract the ways
-                member_ways = osm_way_df.loc[member_way_ids]
+                member_ways = osm_way_df.iloc[member_way_ids]
                 # Extract the nodes of those ways
                 member_nodes = list(member_ways['nodes'].values)
                 try:
