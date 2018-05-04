@@ -1,14 +1,24 @@
 ################################################################################
 # Module: pois.py
-# Description: Download and plot Points of Interests (POIs) from OpenStreetMap
+# Description: Download and plot points of interests (POIs) from OpenStreetMap
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-from shapely.geometry import Point, LineString, MultiPolygon, Polygon, box
 import geopandas as gpd
-from .core import overpass_request, bbox_from_point, gdf_from_place
-from .utils import log, geocode, bbox_to_poly
+from shapely.geometry import box
+from shapely.geometry import LineString
+from shapely.geometry import MultiPolygon
+from shapely.geometry import Point
+from shapely.geometry import Polygon
+
+from .core import bbox_from_point
+from .core import gdf_from_place
+from .core import overpass_request
+from .utils import bbox_to_poly
+from .utils import geocode
+from .utils import log
+
 
 def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsize=''):
     """
@@ -53,10 +63,11 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsi
 
     return query_str
 
+
 def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=None, west=None,
                      timeout=180, max_query_area_size=50*1000*50*1000):
     """
-    Get Point of interests (POIs) from OpenStreetMap based on selected amenity types.
+    Get point of interests (POIs) from OpenStreetMap based on selected amenity types.
 
     Parameters
     ----------
@@ -68,7 +79,7 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
     Returns
     -------
     gdf : geopandas.GeoDataFrame
-        Points of interests and the tags associated to them as Geopandas GeoDataFrame.
+        Points of interest and the tags associated with them as geopandas GeoDataFrame.
     """
 
     if polygon:
@@ -94,6 +105,7 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
 
     return responses
 
+
 def parse_vertice_nodes(osm_response):
     """
     Parse node vertices from OSM response.
@@ -105,14 +117,16 @@ def parse_vertice_nodes(osm_response):
     
     Returns
     =======
-    Dict of vertice IDs and their lat, lon coordinates.
+    Dict of vertex IDs and their lat, lon coordinates.
     """
+
     vertices = {}
     for result in osm_response['elements']:
         if 'type' in result and result['type'] == 'node':
             vertices[result['id']] = {'lat': result['lat'],
                                       'lon': result['lon']}
     return vertices
+
 
 def parse_osm_way(vertices, response):
     """
@@ -125,8 +139,9 @@ def parse_osm_way(vertices, response):
 
     Returns
     =======
-    Dict of vertice IDs and their lat, lon coordinates.
+    Dict of vertex IDs and their lat, lon coordinates.
     """
+
     if 'type' in response and response['type'] == 'way':
         nodes = response['nodes']
         try:
@@ -145,6 +160,7 @@ def parse_osm_way(vertices, response):
             log('Polygon has invalid geometry: {}'.format(nodes))
     return None
 
+
 def parse_osm_node(response):
     """
     Parse points from OSM nodes.
@@ -156,8 +172,9 @@ def parse_osm_node(response):
 
     Returns
     =======
-    Dict of vertice IDs and their lat, lon coordinates.
+    Dict of vertex IDs and their lat, lon coordinates.
     """
+
     try:
         point = Point(response['lon'], response['lat'])
 
@@ -168,10 +185,12 @@ def parse_osm_node(response):
         if 'tags' in response:
             for tag in response['tags']:
                 poi[tag] = response['tags'][tag]
+
     except Exception:
         log('Point has invalid geometry: {}'.format(response['id']))
 
     return poi
+
 
 def invalid_multipoly_handler(gdf, relation, way_ids):
     """
@@ -187,10 +206,12 @@ def invalid_multipoly_handler(gdf, relation, way_ids):
     way_ids : list
         A list of 'way' ids that should be converted into a MultiPolygon object. 
     """
+
     try:
         gdf_clean = gdf.dropna(subset=['geometry'])
         multipoly = MultiPolygon(list(gdf_clean['geometry']))
         return multipoly
+
     except Exception:
         log("Invalid geometry at relation id %s.\nWay-ids of the invalid MultiPolygon:" % (
         relation['id'], str(way_ids)))
@@ -213,6 +234,7 @@ def parse_osm_relations(relations, osm_way_df):
     gpd.GeoDataFrame
         A GeoDataFrame with MultiPolygon representations of the relations and the attributes associated with them.   
     """
+
     gdf_relations = gpd.GeoDataFrame()
 
     # Iterate over relations and extract the items
@@ -254,6 +276,7 @@ def parse_osm_relations(relations, osm_way_df):
     osm_way_df = osm_way_df.append(gdf_relations)
     return osm_way_df
 
+
 def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=None, west=None):
     """
     Parse GeoDataFrames from POI json that was returned by Overpass API.
@@ -277,6 +300,7 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     -------
     Geopandas GeoDataFrame with POIs and the associated attributes. 
     """
+
     responses = osm_poi_download(polygon=polygon, amenities=amenities, north=north, south=south, east=east, west=west)
 
     # Parse vertices
@@ -326,9 +350,10 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
 
     return gdf
 
+
 def pois_from_point(point, distance=None, amenities=None):
     """
-    Get Point of interests (POIs) within some distance north, south, east, and west of
+    Get point of interests (POIs) within some distance north, south, east, and west of
     a lat-long point.
 
     Parameters
@@ -338,19 +363,22 @@ def pois_from_point(point, distance=None, amenities=None):
     distance : numeric
         distance in meters
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area. See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+        List of amenities that will be used for finding the POIs from the selected area. 
+        See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
 
     Returns
     -------
     GeoDataFrame 
     """
+
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
     return create_poi_gdf(amenities=amenities, north=north, south=south, east=east, west=west)
 
+
 def pois_from_address(address, distance, amenities=None):
     """
-    Get OSM Points of Interests within some distance north, south, east, and west of
+    Get OSM points of Interests within some distance north, south, east, and west of
     an address.
 
     Parameters
@@ -360,7 +388,8 @@ def pois_from_address(address, distance, amenities=None):
     distance : numeric
         distance in meters
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area. See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+        List of amenities that will be used for finding the POIs from the selected area. See available 
+        amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
 
     Returns
     -------
@@ -373,16 +402,18 @@ def pois_from_address(address, distance, amenities=None):
     # get buildings within distance of this point
     return pois_from_point(point=point, amenities=amenities, distance=distance)
 
+
 def pois_from_polygon(polygon, amenities=None):
     """
-    Get OSM Points of Interests within some polygon.
+    Get OSM points of interest within some polygon.
 
     Parameters
     ----------
     polygon : Polygon
         Polygon where the POIs are search from. 
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area. See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+        List of amenities that will be used for finding the POIs from the selected area. 
+        See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
 
     Returns
     -------
@@ -391,16 +422,18 @@ def pois_from_polygon(polygon, amenities=None):
 
     return create_poi_gdf(polygon=polygon, amenities=amenities)
 
+
 def pois_from_place(place, amenities=None):
     """
-    Get Point of interests (POIs) within the boundaries of some place.
+    Get points of interest (POIs) within the boundaries of some place.
 
     Parameters
     ----------
     place : string
         the query to geocode to get geojson boundary polygon.
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area. See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+        List of amenities that will be used for finding the POIs from the selected area.
+        See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
 
     Returns
     -------
