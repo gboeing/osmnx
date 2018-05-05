@@ -1,5 +1,12 @@
 # Change log
 
+## 0.8 (2018-05-05)
+
+  - add ability to retrieve points of interest
+  - improve performance for retrieving huge geographies' street networks
+  - fix building footprint retrieval query syntax
+  - minor bug fixes
+
 ## 0.7.4 (2018-04-05)
 
   - add fast nearest-nodes search
