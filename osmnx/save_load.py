@@ -238,9 +238,12 @@ def load_graphml(filename, folder=None):
             # if this edge has this attribute, and it starts with '[' and ends
             # with ']', then it's a list to be parsed
             if attr in data and data[attr][0] == '[' and data[attr][-1] == ']':
-                # convert the string list to a list type, else leave as
-                # single-value string
-                data[attr] = ast.literal_eval(data[attr])
+                # try to convert the string list to a list type, else leave as
+                # single-value string (and leave as string if error)
+                try:
+                    data[attr] = ast.literal_eval(data[attr])
+                except:
+                    pass
 
         # osmid might have a single value or a list, but if single value, then
         # parse int
