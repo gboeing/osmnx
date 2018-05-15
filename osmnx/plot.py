@@ -270,9 +270,6 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
         start_time = time.time()
         plt.show()
         log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
-    # if show=False, close the figure if close=True to prevent display
-    elif close:
-        plt.close()
 
     return fig, ax
 
