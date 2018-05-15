@@ -274,7 +274,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
     return fig, ax
 
 
-def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
+def plot_graph(G,fig=None,ax=None, bbox=None, fig_height=6, fig_width=None, margin=0.02,
                axis_off=True, equal_aspect=False, bgcolor='w', show=True,
                save=False, close=True, file_format='png', filename='temp',
                dpi=300, annotate=False, node_color='#66ccff', node_size=15,
@@ -287,6 +287,11 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     Parameters
     ----------
     G : networkx multidigraph
+    fig : matplotlib.figure
+       matplotlib figure that's going to be drawn on. Use show=True in case you
+       want to pass fig & ax on to other functions.
+    ax : matplotlib Axes
+        axes object that is used to render the graph.
     bbox : tuple
         bounding box as north,south,east,west - if None will calculate from
         spatial extents of data. if passing a bbox, you probably also want to
@@ -363,8 +368,9 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
         fig_width = fig_height / bbox_aspect_ratio
 
     # create the figure and axis
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=bgcolor)
-    ax.set_facecolor(bgcolor)
+    if not fig:
+        fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=bgcolor)
+        ax.set_facecolor(bgcolor)
 
     # draw the edges as lines from node to node
     start_time = time.time()
