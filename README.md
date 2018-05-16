@@ -73,7 +73,7 @@ OSMnx is built on top of geopandas, networkx, and matplotlib and works with
 OpenStreetMap's APIs to:
 
   * Download street networks anywhere in the world with a single line of code
-  * Download other infrastructure network types, place polygons, or building footprints
+  * Download other infrastructure network types, place polygons, building footprints, and points of interest
   * Download by city name, polygon, bounding box, or point/address + network distance
   * Download drivable, walkable, bikeable, or all street networks
   * Load street network from a local .osm file

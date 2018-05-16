@@ -31,7 +31,7 @@ OSMnx is built on top of geopandas, networkx, and matplotlib and works with
 OpenStreetMap's APIs to:
 
   * Download street networks anywhere in the world with a single line of code
-  * Download other infrastructure network types, place polygons, or building footprints
+  * Download other infrastructure network types, place polygons, building footprints, and points of interest
   * Download by city name, polygon, bounding box, or point/address + network distance
   * Download drivable, walkable, bikeable, or all street networks
   * Load street network from a local .osm file
@@ -82,7 +82,9 @@ For examples and demos, see the `examples`_ GitHub repo.
 Support
 -------
 
-The `issue tracker`_ is at the `OSMnx GitHub repo`_.
+If you've discovered a bug in OSMnx, please open an `issue`_ at the `OSMnx GitHub repo`_ 
+documenting what is broken in the package. Alternatively, if you have a usage question, 
+please ask it on `StackOverflow`_.
 
 
 License
@@ -102,6 +104,7 @@ Indices and tables
 .. _change log: https://github.com/gboeing/osmnx/blob/master/CHANGELOG.md
 .. _virtual environment: https://conda.io/docs/using/envs.html
 .. _examples: https://github.com/gboeing/osmnx-examples
-.. _issue tracker: https://github.com/gboeing/osmnx/issues
+.. _issue: https://github.com/gboeing/osmnx/issues
 .. _OSMnx GitHub repo: https://github.com/gboeing/osmnx
+.. _StackOverflow: https://stackoverflow.com/search?q=osmnx
 .. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: http://geoffboeing.com/publications/osmnx-complex-street-networks/
