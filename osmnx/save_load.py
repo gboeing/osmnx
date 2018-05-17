@@ -144,7 +144,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, folder, time.time()-start_time))
 
 
-def save_graphml(G, filename='graph.graphml', folder=None):
+def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
     """
     Save graph as GraphML file to disk.
 
@@ -155,6 +155,9 @@ def save_graphml(G, filename='graph.graphml', folder=None):
         the name of the graphml file (including file extension)
     folder : string
         the folder to contain the file, if None, use default data folder
+    gephi : bool
+        if True, give each edge a unique key to work around Gephi's
+        restrictive interpretation of the GraphML specification
 
     Returns
     -------
@@ -165,16 +168,41 @@ def save_graphml(G, filename='graph.graphml', folder=None):
     if folder is None:
         folder = settings.data_folder
 
-    # create a copy and convert all the node/edge attribute values to string or
-    # it won't save
+    # create a copy to convert all the node/edge attribute values to string
     G_save = G.copy()
-    for dict_key in G_save.graph:
-        # convert all the graph attribute values to strings
-        G_save.graph[dict_key] = make_str(G_save.graph[dict_key])
+
+    if gephi:
+        
+        gdf_nodes, gdf_edges = graph_to_gdfs(G_save, nodes=True, edges=True, node_geometry=True,
+                                             fill_edge_geometry=True)
+        
+        # turn each edge's key into a unique ID for Gephi compatibility
+        gdf_edges['key'] = range(len(gdf_edges))
+        
+        # gephi doesn't handle node attrs named x and y well, so rename
+        gdf_nodes['xcoord'] = gdf_nodes['x']
+        gdf_nodes['ycoord'] = gdf_nodes['y']
+        G_save = gdfs_to_graph(gdf_nodes, gdf_edges)
+
+        # remove graph attributes as Gephi only accepts node and edge attrs
+        G_save.graph = {}
+
+    else:
+        # if not gephi, keep graph attrs and stringify them
+        for dict_key in G_save.graph:
+            # convert all the graph attribute values to strings
+            G_save.graph[dict_key] = make_str(G_save.graph[dict_key])
+
+    # stringify node and edge attributes
     for _, data in G_save.nodes(data=True):
         for dict_key in data:
-            # convert all the node attribute values to strings
-            data[dict_key] = make_str(data[dict_key])
+            if gephi and dict_key in ['xcoord', 'ycoord']:
+                # don't convert x y values to string if saving for gephi
+                continue
+            else:
+                # convert all the node attribute values to strings
+                data[dict_key] = make_str(data[dict_key])
+    
     for _, _, data in G_save.edges(keys=False, data=True):
         for dict_key in data:
             # convert all the edge attribute values to strings
