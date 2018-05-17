@@ -136,7 +136,9 @@ def get_paths_to_simplify(G, strict=True):
     Create a list of all the paths to be simplified between endpoint nodes.
 
     The path is ordered from the first endpoint, through the interstitial nodes,
-    to the second endpoint.
+    to the second endpoint. If your street network is in a rural area with many
+    interstitial nodes between true edge endpoints, you may want to increase
+    your system's recursion limit to avoid recursion errors.
 
     Parameters
     ----------
@@ -170,7 +172,9 @@ def get_paths_to_simplify(G, strict=True):
                 except RuntimeError:
                     log('Recursion error: exceeded max depth, moving on to next endpoint successor', level=lg.WARNING)
                     # recursion errors occur if some connected component is a
-                    # self-contained ring in which all nodes are not end points
+                    # self-contained ring in which all nodes are not end points.
+                    # could also occur in extremely long street segments (eg, in
+                    # rural areas) with too many nodes between true endpoints.
                     # handle it by just ignoring that component and letting its
                     # topology remain intact (this should be a rare occurrence)
                     # RuntimeError is what Python <3.5 will throw, Py3.5+ throws
