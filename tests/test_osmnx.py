@@ -144,6 +144,7 @@ def test_network_saving_loading():
     G_projected = ox.project_graph(G)
     ox.save_graph_shapefile(G_projected)
     ox.save_graphml(G_projected)
+    ox.save_graphml(G_projected, filename='gephi.graphml', gephi=True)
     G2 = ox.load_graphml('graph.graphml')
 
     # convert graph to node/edge GeoDataFrames and back again
