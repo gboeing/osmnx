@@ -267,14 +267,14 @@ def parse_osm_relations(relations, osm_way_df):
                     geo.loc[relation['id'], 'osmid'] = relation['id']
 
                     # Append to relation GeoDataFrame
-                    gdf_relations = gdf_relations.append(geo)
+                    gdf_relations = gdf_relations.append(geo, sort=False)
                     # Remove such 'ways' from 'osm_way_df' that are part of the 'relation'
                     osm_way_df = osm_way_df.drop(member_way_ids)
             except Exception:
                 log("Could not handle OSM 'relation': {}".format(relation['id']))
 
     # Merge 'osm_way_df' and the 'gdf_relations'
-    osm_way_df = osm_way_df.append(gdf_relations)
+    osm_way_df = osm_way_df.append(gdf_relations, sort=False)
     return osm_way_df
 
 
@@ -348,7 +348,7 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     gdf_ways = parse_osm_relations(relations=relations, osm_way_df=gdf_ways)
 
     # Combine GeoDataFrames
-    gdf = gdf_nodes.append(gdf_ways)
+    gdf = gdf_nodes.append(gdf_ways, sort=False)
 
     return gdf
 
