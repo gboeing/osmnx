@@ -1,5 +1,10 @@
 # Change log
 
+## 0.8.1 (2018-05-17)
+
+  - add Gephi compatibility argument for saving GraphML
+  - handle square bracket encapsulated strings when loading GraphML
+
 ## 0.8 (2018-05-05)
 
   - add ability to retrieve points of interest
