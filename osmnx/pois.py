@@ -12,6 +12,7 @@ from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 
+from . import settings
 from .core import bbox_from_point
 from .core import gdf_from_place
 from .core import overpass_request
@@ -106,46 +107,49 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
     return responses
 
 
-def parse_vertice_nodes(osm_response):
+def parse_nodes_coords(osm_response):
     """
-    Parse node vertices from OSM response.
-     
+    Parse node coordinates from OSM response. Some nodes are
+    standalone points of interest, others are vertices in 
+    polygonal (areal) POIs.
+    
     Parameters
     ----------
-    osm_response : JSON 
-        OSM response JSON 
+    osm_response : string
+        OSM response JSON string
     
     Returns
     -------
-    Dict of vertex IDs and their lat, lon coordinates.
+    coords : dict
+    	dict of node IDs and their lat, lon coordinates
     """
 
-    vertices = {}
+    coords = {}
     for result in osm_response['elements']:
         if 'type' in result and result['type'] == 'node':
-            vertices[result['id']] = {'lat': result['lat'],
-                                      'lon': result['lon']}
-    return vertices
+            coords[result['id']] = {'lat': result['lat'],
+                                    'lon': result['lon']}
+    return coords
 
 
-def parse_osm_way(vertices, response):
+def parse_polygonal_poi(coords, response):
     """
-    Parse ways (areas) from OSM node vertices.
+    Parse areal POI way polygons from OSM node coords.
 
     Parameters
     ----------
-    vertices : Python dict 
-        Node vertices parsed from OSM response.  
+    coords : dict
+    	dict of node IDs and their lat, lon coordinates
 
     Returns
     -------
-    Dict of vertex IDs and their lat, lon coordinates.
+    dict of POIs containing each's nodes, polygon geometry, and osmid
     """
 
     if 'type' in response and response['type'] == 'way':
         nodes = response['nodes']
         try:
-            polygon = Polygon([(vertices[node]['lon'], vertices[node]['lat']) for node in nodes])
+            polygon = Polygon([(coords[node]['lon'], coords[node]['lat']) for node in nodes])
 
             poi = {'nodes': nodes,
                    'geometry': polygon,
@@ -158,6 +162,7 @@ def parse_osm_way(vertices, response):
 
         except Exception:
             log('Polygon has invalid geometry: {}'.format(nodes))
+    
     return None
 
 
@@ -220,20 +225,23 @@ def invalid_multipoly_handler(gdf, relation, way_ids):
 
 def parse_osm_relations(relations, osm_way_df):
     """
-    Parses the osm relations from osm ways and nodes. 
-    See more information about relations from OSM documentation: http://wiki.openstreetmap.org/wiki/Relation 
+    Parses the osm relations (multipolygons) from osm 
+    ways and nodes. See more information about relations 
+    from OSM documentation: http://wiki.openstreetmap.org/wiki/Relation 
          
     Parameters
     ----------
     relations : list
         OSM 'relation' items (dictionaries) in a list. 
     osm_way_df : gpd.GeoDataFrame
-        OSM 'way' features as a GeoDataFrame that contains all the 'way' features that will constitute the multipolygon relations.
+        OSM 'way' features as a GeoDataFrame that contains all the 
+        'way' features that will constitute the multipolygon relations.
      
     Returns
     -------
     gpd.GeoDataFrame
-        A GeoDataFrame with MultiPolygon representations of the relations and the attributes associated with them.   
+        A GeoDataFrame with MultiPolygon representations of the 
+        relations and the attributes associated with them.   
     """
 
     gdf_relations = gpd.GeoDataFrame()
@@ -305,8 +313,8 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
 
     responses = osm_poi_download(polygon=polygon, amenities=amenities, north=north, south=south, east=east, west=west)
 
-    # Parse vertices
-    vertices = parse_vertice_nodes(responses)
+    # Parse coordinates from all the nodes in the response
+    coords = parse_nodes_coords(responses)
 
     # POI nodes
     poi_nodes = {}
@@ -326,7 +334,7 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
             poi_nodes[result['id']] = poi
         elif result['type'] == 'way':
             # Parse POI area Polygon
-            poi_area = parse_osm_way(vertices=vertices, response=result)
+            poi_area = parse_polygonal_poi(coords=coords, response=result)
             if poi_area:
                 # Add element_type
                 poi_area['element_type'] = 'way'
@@ -339,10 +347,10 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
 
     # Create GeoDataFrames
     gdf_nodes = gpd.GeoDataFrame(poi_nodes).T
-    gdf_nodes.crs = {'init': 'epsg:4326'}
+    gdf_nodes.crs = settings.default_crs
 
     gdf_ways = gpd.GeoDataFrame(poi_ways).T
-    gdf_ways.crs = {'init': 'epsg:4326'}
+    gdf_ways.crs = settings.default_crs
 
     # Parse relations (MultiPolygons) from 'ways'
     gdf_ways = parse_osm_relations(relations=relations, osm_way_df=gdf_ways)
