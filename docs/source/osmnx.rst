@@ -36,6 +36,14 @@ osmnx.plot module
     :undoc-members:
     :show-inheritance:
 
+osmnx.pois module
+-----------------
+
+.. automodule:: osmnx.pois
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 osmnx.projection module
 -----------------------
 
