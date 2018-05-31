@@ -1,8 +1,8 @@
 name: OSMNX_DOCS
 
 channels:
-  - defaults
   - conda-forge
+  - defaults
 
 dependencies:
   - python=3
