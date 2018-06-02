@@ -26,7 +26,6 @@ from .save_load import graph_to_gdfs
 from .simplify import simplify_graph
 from .utils import log
 
-
 # folium is an optional dependency for the folium plotting functions
 try:
     import folium
@@ -274,7 +273,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
     return fig, ax
 
 
-def plot_graph(G,fig=None,ax=None, bbox=None, fig_height=6, fig_width=None, margin=0.02,
+def plot_graph(G, fig=None, ax=None, bbox=None, fig_height=6, fig_width=None, margin=0.02,
                axis_off=True, equal_aspect=False, bgcolor='w', show=True,
                save=False, close=True, file_format='png', filename='temp',
                dpi=300, annotate=False, node_color='#66ccff', node_size=15,
@@ -363,12 +362,12 @@ def plot_graph(G,fig=None,ax=None, bbox=None, fig_height=6, fig_width=None, marg
 
     # if caller did not pass in a fig_width, calculate it proportionately from
     # the fig_height and bounding box aspect ratio
-    bbox_aspect_ratio = (north-south)/(east-west)
+    bbox_aspect_ratio = (north - south) / (east - west)
     if fig_width is None:
         fig_width = fig_height / bbox_aspect_ratio
 
     # create the figure and axis
-    if not fig:
+    if fig is None or ax is None:
         fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=bgcolor)
         ax.set_facecolor(bgcolor)
 
@@ -394,11 +393,10 @@ def plot_graph(G,fig=None,ax=None, bbox=None, fig_height=6, fig_width=None, marg
     # add the lines to the axis as a linecollection
     lc = LineCollection(lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=2)
     ax.add_collection(lc)
-    log('Drew the graph edges in {:,.2f} seconds'.format(time.time()-start_time))
+    log('Drew the graph edges in {:,.2f} seconds'.format(time.time() - start_time))
 
     # scatter plot the nodes
     ax.scatter(node_Xs, node_Ys, s=node_size, c=node_color, alpha=node_alpha, edgecolor=node_edgecolor, zorder=node_zorder)
-
     # set the extent of the figure
     margin_ns = (north - south) * margin
     margin_ew = (east - west) * margin
@@ -420,18 +418,16 @@ def plot_graph(G,fig=None,ax=None, bbox=None, fig_height=6, fig_width=None, marg
         ax.tick_params(which='both', direction='in')
         xaxis.set_visible(False)
         yaxis.set_visible(False)
-        fig.canvas.draw()
 
     if equal_aspect:
         # make everything square
         ax.set_aspect('equal')
-        fig.canvas.draw()
+
     else:
         # if the graph is not projected, conform the aspect ratio to not stretch the plot
         if G.graph['crs'] == settings.default_crs:
             coslat = np.cos((min(node_Ys) + max(node_Ys)) / 2. / 180. * np.pi)
             ax.set_aspect(1. / coslat)
-            fig.canvas.draw()
 
     # annotate the axis with node IDs if annotate=True
     if annotate:
@@ -453,7 +449,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
                      destination_point=None, route_color='r', route_linewidth=4,
                      route_alpha=0.5, orig_dest_node_alpha=0.5,
                      orig_dest_node_size=100, orig_dest_node_color='r',
-                     orig_dest_point_color='b'):
+                     orig_dest_point_color='b', **kwargs):
     """
     Plot a route along a networkx spatial graph.
 
@@ -532,12 +528,15 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
         the color of the origin and destination points if being plotted instead
         of nodes
 
+    Kwargs:
+        fig : matplotlib figure object
+        ax : matpltolib axis object.
+
     Returns
     -------
     fig, ax : tuple
     """
 
-    # plot the graph but not the route
     fig, ax = plot_graph(G, bbox=bbox, fig_height=fig_height, fig_width=fig_width,
                          margin=margin, axis_off=axis_off, bgcolor=bgcolor,
                          show=False, save=False, close=False, filename=filename,
@@ -545,7 +544,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
                          node_size=node_size, node_alpha=node_alpha,
                          node_edgecolor=node_edgecolor, node_zorder=node_zorder,
                          edge_color=edge_color, edge_linewidth=edge_linewidth,
-                         edge_alpha=edge_alpha, use_geom=use_geom)
+                         edge_alpha=edge_alpha, use_geom=use_geom, **kwargs)
 
     # the origin and destination nodes are the first and last nodes in the route
     origin_node = route[0]
@@ -598,7 +597,6 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
 
 
 def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attribute=None):
-
     """
     Turn a row from the gdf_edges GeoDataFrame into a folium PolyLine with
     attributes.
@@ -862,13 +860,13 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
     # if user did not pass in custom street widths, create a dict of default
     # values
     if street_widths is None:
-        street_widths = {'footway' : 1.5,
-                         'steps' : 1.5,
-                         'pedestrian' : 1.5,
-                         'service' : 1.5,
-                         'path' : 1.5,
-                         'track' : 1.5,
-                         'motorway' : 6}
+        street_widths = {'footway': 1.5,
+                         'steps': 1.5,
+                         'pedestrian': 1.5,
+                         'service': 1.5,
+                         'path': 1.5,
+                         'track': 1.5,
+                         'motorway': 6}
 
     # we need an undirected graph to find every edge incident to a node
     G_undir = G.to_undirected()
