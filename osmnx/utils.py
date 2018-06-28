@@ -1018,13 +1018,13 @@ def citation():
 
     Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing, 
     and Visualizing Complex Street Networks. Computers, Environment and Urban 
-    Systems, 65(126–139). doi:10.1016/j.compenvurbsys.2017.05.004
+    Systems, 65(126-139). doi:10.1016/j.compenvurbsys.2017.05.004
     """
     
     cite = ("To cite OSMnx, use:\n\n"
             "Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing, "
             "and Visualizing Complex Street Networks. Computers, Environment and Urban "
-            "Systems, 65(126–139). doi:10.1016/j.compenvurbsys.2017.05.004"
+            "Systems, 65(126-139). doi:10.1016/j.compenvurbsys.2017.05.004"
             "\n\n"
             "BibTeX entry for LaTeX users:\n\n"
 
