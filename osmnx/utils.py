@@ -627,14 +627,19 @@ def add_edge_bearings(G):
     """
 
     for u, v, data in G.edges(keys=False, data=True):
+
+        if u == v:
+            # a self-loop has an undefined compass bearing
+            data['bearing'] = np.nan
         
-        # calculate bearing from edge's origin to its destination
-        origin_point = (G.nodes[u]['y'], G.nodes[u]['x'])
-        destination_point = (G.nodes[v]['y'], G.nodes[v]['x'])
-        bearing = get_bearing(origin_point, destination_point)
-        
-        # round to thousandth of a degree
-        data['bearing'] = round(bearing, 3)
+        else:
+            # calculate bearing from edge's origin to its destination
+            origin_point = (G.nodes[u]['y'], G.nodes[u]['x'])
+            destination_point = (G.nodes[v]['y'], G.nodes[v]['x'])
+            bearing = get_bearing(origin_point, destination_point)
+            
+            # round to thousandth of a degree
+            data['bearing'] = round(bearing, 3)
 
     return G
 
