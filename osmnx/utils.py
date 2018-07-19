@@ -55,7 +55,10 @@ def config(data_folder=settings.data_folder,
            useful_tags_node=settings.useful_tags_node,
            useful_tags_path=settings.useful_tags_path,
            default_access=settings.default_access,
-           default_crs=settings.default_crs):
+           default_crs=settings.default_crs,
+           default_user_agent=settings.default_user_agent,
+           default_referer=settings.default_referer,
+           default_accept_language=settings.default_accept_language):
     """
     Configure osmnx by setting the default global vars to desired values.
 
@@ -88,6 +91,12 @@ def config(data_folder=settings.data_folder,
         default filter for OSM "access" key
     default_crs : string
         default CRS to set when creating graphs
+    default_user_agent : string
+        HTTP header user-agent
+    default_referer : string
+        HTTP header referer
+    default_accept_language : string
+        HTTP header accept-language
 
     Returns
     -------
@@ -110,6 +119,9 @@ def config(data_folder=settings.data_folder,
     settings.useful_tags_node = useful_tags_node
     settings.default_access = default_access
     settings.default_crs = default_crs
+    settings.default_user_agent = default_user_agent
+    settings.default_referer = default_referer
+    settings.default_accept_language = default_accept_language
 
     # if logging is turned on, log that we are configured
     if settings.log_file or settings.log_console:
