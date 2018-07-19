@@ -136,7 +136,7 @@ def get_from_cache(url):
             return response_json
 
 
-def get_http_headers(user_agent=None, referer=None):
+def get_http_headers(user_agent=None, referer=None, accept_language=None):
     """
     Update the default requests HTTP headers with OSMnx info.
 
@@ -146,6 +146,8 @@ def get_http_headers(user_agent=None, referer=None):
         the user agent string, if None will set with OSMnx default
     referer : str
         the referer string, if None will set with OSMnx default
+    accept_language : str
+        make accept-language explicit e.g. for consistent nominatim result sorting
 
     Returns
     -------
@@ -153,12 +155,14 @@ def get_http_headers(user_agent=None, referer=None):
     """
 
     if user_agent is None:
-        user_agent = 'Python OSMnx package (https://github.com/gboeing/osmnx)'
+        user_agent = settings.default_user_agent
     if referer is None:
-        referer = 'Python OSMnx package (https://github.com/gboeing/osmnx)'
+        referer = settings.default_referer
+    if accept_language is None:
+        accept_language = settings.default_accept_language
 
     headers = requests.utils.default_headers()
-    headers.update({'User-Agent': user_agent, 'referer': referer})
+    headers.update({'User-Agent': user_agent, 'referer': referer, 'Accept-Language': accept_language})
     return headers
 
 
