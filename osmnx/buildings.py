@@ -268,6 +268,12 @@ def buildings_from_place(place, retain_invalid=False):
     """
     Get building footprints within the boundaries of some place.
 
+    The query must be geocodable and OSM must have polygon boundaries for the
+    geocode result. If OSM does not have a polygon for this place, you can
+    instead get its buildings using the buildings_from_address function, which
+    geocodes the place name to a point and gets the buildings within some distance
+    of that point.
+
     Parameters
     ----------
     place : string
