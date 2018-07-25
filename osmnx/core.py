@@ -982,6 +982,7 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
                     y = G.nodes[neighbor]['y']
                     if y < north and y > south and x < east and x > west:
                         any_neighbors_in_bbox = True
+                        break
 
                 # if none of its neighbors are within the bounding box, add node
                 # to list of nodes outside the bounding box
