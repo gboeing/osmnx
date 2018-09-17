@@ -1,12 +1,16 @@
 Thanks for using OSMnx and for considering contributing to it!
 
+#### If you're having an installation problem:
+
+  - if you installed OSMnx via conda-forge, please open an issue at https://github.com/conda-forge/osmnx-feedstock/issues
+
 #### If you've found an error:
 
   - read the error message and [documentation](https://osmnx.readthedocs.io/)
   - search through the [open issues](https://github.com/gboeing/osmnx/issues?q=is%3Aopen+is%3Aissue) and [closed issues](https://github.com/gboeing/osmnx/issues?q=is%3Aissue+is%3Aclosed) first
   - if the problem is with a dependency of this project, open an issue on the dependency's repo
   - if the problem is with OSMnx and you can fix it simply, please submit a PR
-  - if the problem persists, please open an issue in the [issue tracker](https://github.com/gboeing/osmnx/issues) filling out all sections of the template, including a minimal working example to reproduce the problem
+  - if the problem persists, please open an issue in the [issue tracker](https://github.com/gboeing/osmnx/issues) filling out all sections of the template, including a minimal working example so others can independently and completely reproduce the problem
 
 #### If you have a feature proposal or want to contribute:
 
