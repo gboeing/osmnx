@@ -593,6 +593,164 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
     fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
     return fig, ax
 
+def plot_graph_routes(G, routes, bbox=None, fig_height=6, fig_width=None,
+                      margin=0.02, bgcolor='w', axis_off=True, show=True,
+                      save=False, close=True, file_format='png', filename='temp',
+                      dpi=300, annotate=False, node_color='#999999',
+                      node_size=15, node_alpha=1, node_edgecolor='none',
+                      node_zorder=1, edge_color='#999999', edge_linewidth=1,
+                      edge_alpha=1, use_geom=True, orig_dest_points=None,
+                      route_color='r', route_linewidth=4,
+                      route_alpha=0.5, orig_dest_node_alpha=0.5,
+                      orig_dest_node_size=100, orig_dest_node_color='r',
+                      orig_dest_point_color='b'):
+    """
+    Plot several routes along a networkx spatial graph.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    routes : list
+        the routes as a list of lists of nodes
+    bbox : tuple
+        bounding box as north,south,east,west - if None will calculate from
+        spatial extents of data. if passing a bbox, you probably also want to
+        pass margin=0 to constrain it.
+    fig_height : int
+        matplotlib figure height in inches
+    fig_width : int
+        matplotlib figure width in inches
+    margin : float
+        relative margin around the figure
+    axis_off : bool
+        if True turn off the matplotlib axis
+    bgcolor : string
+        the background color of the figure and axis
+    show : bool
+        if True, show the figure
+    save : bool
+        if True, save the figure as an image file to disk
+    close : bool
+        close the figure (only if show equals False) to prevent display
+    file_format : string
+        the format of the file to save (e.g., 'jpg', 'png', 'svg')
+    filename : string
+        the name of the file if saving
+    dpi : int
+        the resolution of the image file if saving
+    annotate : bool
+        if True, annotate the nodes in the figure
+    node_color : string
+        the color of the nodes
+    node_size : int
+        the size of the nodes
+    node_alpha : float
+        the opacity of the nodes
+    node_edgecolor : string
+        the color of the node's marker's border
+    node_zorder : int
+        zorder to plot nodes, edges are always 2, so make node_zorder 1 to plot
+        nodes beneath them or 3 to plot nodes atop them
+    edge_color : string
+        the color of the edges' lines
+    edge_linewidth : float
+        the width of the edges' lines
+    edge_alpha : float
+        the opacity of the edges' lines
+    use_geom : bool
+        if True, use the spatial geometry attribute of the edges to draw
+        geographically accurate edges, rather than just lines straight from node
+        to node
+    orig_dest_points : list of tuples
+        optional, a group of (lat, lon) points to plot instead of the
+        origins and destinations of each route nodes
+    route_color : string
+        the color of the route
+    route_linewidth : int
+        the width of the route line
+    route_alpha : float
+        the opacity of the route line
+    orig_dest_node_alpha : float
+        the opacity of the origin and destination nodes
+    orig_dest_node_size : int
+        the size of the origin and destination nodes
+    orig_dest_node_color : string
+        the color of the origin and destination nodes
+    orig_dest_point_color : string
+        the color of the origin and destination points if being plotted instead
+        of nodes
+
+    Returns
+    -------
+    fig, ax : tuple
+    """
+
+    # plot the graph but not the routes
+    fig, ax = plot_graph(G, bbox=bbox, fig_height=fig_height, fig_width=fig_width,
+                         margin=margin, axis_off=axis_off, bgcolor=bgcolor,
+                         show=False, save=False, close=False, filename=filename,
+                         dpi=dpi, annotate=annotate, node_color=node_color,
+                         node_size=node_size, node_alpha=node_alpha,
+                         node_edgecolor=node_edgecolor, node_zorder=node_zorder,
+                         edge_color=edge_color, edge_linewidth=edge_linewidth,
+                         edge_alpha=edge_alpha, use_geom=use_geom)
+
+    # save coordinates of the given reference points
+    orig_dest_points_lats = []
+    orig_dest_points_lons = []
+
+    if orig_dest_points is None:
+        # if caller didn't pass points, use the first and last node in each route as
+        # origin/destination points
+        for route in routes:
+            origin_node = route[0]
+            destination_node = route[-1]
+            orig_dest_points_lats.append(G.nodes[origin_node]['y'])
+            orig_dest_points_lats.append(G.nodes[destination_node]['y'])
+            orig_dest_points_lons.append(G.nodes[origin_node]['x'])
+            orig_dest_points_lons.append(G.nodes[destination_node]['x'])
+
+    else:
+        # otherwise, use the passed points as origin/destination points
+        for point in orig_dest_points:
+            orig_dest_points_lats.append(point[0])
+            orig_dest_points_lons.append(point[1])
+        orig_dest_node_color = orig_dest_point_color
+
+    # scatter the origin and destination points
+    ax.scatter(orig_dest_points_lons, orig_dest_points_lats, s=orig_dest_node_size,
+               c=orig_dest_node_color, alpha=orig_dest_node_alpha, edgecolor=node_edgecolor, zorder=4)
+
+    # plot the routes lines
+    lines = []
+    for route in routes:
+        edge_nodes = list(zip(route[:-1], route[1:]))
+        for u, v in edge_nodes:
+            # if there are parallel edges, select the shortest in length
+            data = min(G.get_edge_data(u, v).values(), key=lambda x: x['length'])
+
+            # if it has a geometry attribute (ie, a list of line segments)
+            if 'geometry' in data and use_geom:
+                # add them to the list of lines to plot
+                xs, ys = data['geometry'].xy
+                lines.append(list(zip(xs, ys)))
+            else:
+                # if it doesn't have a geometry attribute, the edge is a straight
+                # line from node to node
+                x1 = G.nodes[u]['x']
+                y1 = G.nodes[u]['y']
+                x2 = G.nodes[v]['x']
+                y2 = G.nodes[v]['y']
+                line = [(x1, y1), (x2, y2)]
+                lines.append(line)
+
+    # add the lines to the axis as a linecollection
+    lc = LineCollection(lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3)
+    ax.add_collection(lc)
+
+    # save and show the figure as specified
+    fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
+    return fig, ax
 
 def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attribute=None):
 
