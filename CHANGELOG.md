@@ -1,5 +1,15 @@
 # Change log
 
+## 0.8.2 (2018-09-19)
+
+  - add python 3.7 compatibility
+  - add convenience function to plot several routes over the same map
+  - optimize graph truncation to bounding box
+  - give self-loops a null bearing when calculating edge bearings
+  - make accept-language http header explicit and configurable
+  - add citation function
+  - refactor POI module
+
 ## 0.8.1 (2018-05-17)
 
   - add Gephi compatibility argument for saving GraphML
