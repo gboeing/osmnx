@@ -23,6 +23,24 @@ import sys
 # go up two levels from /docs/source to the package root
 sys.path.insert(0, os.path.abspath('../..'))
 
+# mock import these packages because readthedocs doesn't have them installed
+autodoc_mock_imports = [
+  'descartes',
+  'geopandas',
+  'matplotlib',
+  'matplotlib.cm',
+  'matplotlib.collections',
+  'matplotlib.pyplot',
+  'networkx',
+  'numpy',
+  'pandas',
+  'requests',
+  'rtree',
+  'rtree.index',
+  'shapely',
+  'shapely.geometry',
+  'shapely.ops'
+]
 
 # -- General configuration ------------------------------------------------
 
