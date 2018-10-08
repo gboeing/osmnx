@@ -71,6 +71,8 @@ def test_logging():
     ox.log('test a fake warning', level=lg.WARNING)
     ox.log('test a fake error', level=lg.ERROR)
 
+    ox.citation()
+
 
 def test_geometry_coords_rounding():
 
