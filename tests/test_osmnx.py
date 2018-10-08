@@ -214,6 +214,9 @@ def test_plots():
 
     G = ox.graph_from_place('Piedmont, California, USA', network_type='drive', simplify=False)
     G2 = ox.simplify_graph(G, strict=False)
+
+    # test getting colors
+    co = ox.get_colors(n=5, return_hex=True)
     nc = ox.get_node_colors_by_attr(G2, 'osmid')
     ec = ox.get_edge_colors_by_attr(G2, 'length')
 
@@ -254,6 +257,9 @@ def test_routing_folium():
     fig, ax = ox.plot_graph_route(G, route, origin_point=origin, destination_point=destination,
                                   save=True, filename='route', file_format='png')
 
+    # test multiple routes
+    fig, ax = ox.plot_graph_routes(G, [route, route])
+
     graph_map = ox.plot_graph_folium(G, popup_attribute='name')
     route_map = ox.plot_route_folium(G, route)
 
@@ -270,12 +276,15 @@ def test_pois():
     # download all points of interests from place
     gdf = ox.pois_from_place(place='Kamppi, Helsinki, Finland')
 
-    # Get all restaurants and schools from place
+    # get all restaurants and schools from place
     restaurants = ox.pois_from_place(place='Emeryville, California, USA', amenities=['restaurant'])
     schools = ox.pois_from_place(place='Emeryville, California, USA', amenities=['school'])
 
-    # Get all Universities from Boston area (with 2 km buffer to cover also Cambridge)
+    # get all universities from Boston area (with 2 km buffer to cover also Cambridge)
     boston_q = "Boston, Massachusetts, United States of America"
     boston_poly = ox.gdf_from_place(boston_q, buffer_dist=2000)
     universities = ox.pois_from_polygon(boston_poly.geometry.values[0], amenities=['university'])
 
+    # by point and by address
+    restaurants = ox.pois_from_point(point=(42.344490, -71.070570), distance=1000, amenities=['restaurant'])
+    restaurants = ox.pois_from_address(address='Emeryville, California, USA', distance=1000, amenities=['restaurant'])
