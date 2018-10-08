@@ -145,7 +145,7 @@ def get_colors(n, cmap='viridis', start=0., stop=1., alpha=1., return_hex=False)
     return colors
 
 
-def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, stop=1):
+def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, stop=1, na_color='none'):
     """
     Get a list of node colors by binning some continuous-variable attribute into
     quantiles.
@@ -163,6 +163,8 @@ def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, sto
         where to start in the colorspace
     stop : float
         where to end in the colorspace
+    na_color : string
+    	what color to assign nodes with null attribute values
 
     Returns
     -------
@@ -174,11 +176,11 @@ def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, sto
     attr_values = pd.Series([data[attr] for node, data in G.nodes(data=True)])
     cats = pd.qcut(x=attr_values, q=num_bins, labels=bin_labels)
     colors = get_colors(num_bins, cmap, start, stop)
-    node_colors = [colors[cat] for cat in cats]
+    node_colors = [colors[int(cat)] if pd.notnull(cat) else na_color for cat in cats]
     return node_colors
 
 
-def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1):
+def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1, na_color='none'):
     """
     Get a list of edge colors by binning some continuous-variable attribute into
     quantiles.
@@ -196,6 +198,8 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1
         where to start in the colorspace
     stop : float
         where to end in the colorspace
+    na_color : string
+    	what color to assign nodes with null attribute values
 
     Returns
     -------
@@ -207,7 +211,7 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1
     attr_values = pd.Series([data[attr] for u, v, key, data in G.edges(keys=True, data=True)])
     cats = pd.qcut(x=attr_values, q=num_bins, labels=bin_labels)
     colors = get_colors(num_bins, cmap, start, stop)
-    edge_colors = [colors[cat] for cat in cats]
+    edge_colors = [colors[int(cat)] if pd.notnull(cat) else na_color for cat in cats]
     return edge_colors
 
 
