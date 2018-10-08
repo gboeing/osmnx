@@ -1015,9 +1015,6 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
     else:
         raise ValueError('You must pass an address or lat-long point or graph.')
 
-    # project the network to UTM
-    G = project_graph(G)
-
     # if user did not pass in custom street widths, create a dict of default
     # values
     if street_widths is None:
@@ -1081,15 +1078,15 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
 
     # define the spatial extents of the plotting figure to make it square, in
     # projected units, and cropped to the desired area
-    bbox_proj = bbox_from_point(point, dist, project_utm=True)
+    bbox = bbox_from_point(point, dist, project_utm=False)
 
     # create a filename if one was not passed
     if filename is None and save:
         filename = 'figure_ground_{}_{}'.format(point, network_type)
 
     # plot the figure
-    fig, ax = plot_graph(G_undir, bbox=bbox_proj, fig_height=fig_length,
-                         margin=0, axis_off=True, equal_aspect=True,
+    fig, ax = plot_graph(G_undir, bbox=bbox, fig_height=fig_length,
+                         margin=0, axis_off=True, equal_aspect=False,
                          bgcolor=bgcolor, node_size=node_sizes,
                          node_color=edge_color, edge_linewidth=edge_linewidths,
                          edge_color=edge_color, show=show, save=save,
