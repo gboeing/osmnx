@@ -16,7 +16,7 @@ import osmnx as ox
 
 # configure OSMnx
 ox.config(log_console=True, log_file=True, use_cache=True,
-          data_folder='.temp/data', logs_folder='.temp/logs', 
+          data_folder='.temp/data', logs_folder='.temp/logs',
           imgs_folder='.temp/imgs', cache_folder='.temp/cache')
 
 
@@ -114,7 +114,7 @@ def test_gdf_shapefiles():
 
 
 def test_graph_from_file():
-    
+
     # test loading a graph from a local .osm file
     import bz2, tempfile
 
@@ -290,3 +290,57 @@ def test_pois():
     # by point and by address
     restaurants = ox.pois_from_point(point=(42.344490, -71.070570), distance=1000, amenities=['restaurant'])
     restaurants = ox.pois_from_address(address='Emeryville, California, USA', distance=1000, amenities=['restaurant'])
+
+def test_nominatim():
+
+    from collections import OrderedDict
+
+    good_address = "Newcastle A186 Westgate Rd"
+    bad_address = "AAAAAAAAAAA"
+
+    params = OrderedDict()
+    params['format'] = "json"
+    params['address_details'] = 0
+    params['q'] = bad_address
+
+    # Bad Address
+    response_json = ox.nominatim_request(params = params,
+                                         service = ox.NominatimService.SEARCH)
+
+    ways = filter(lambda x: x['osm_type'] == "way", response_json)
+    osmids = map(lambda x: int(x["osm_id"]), ways)
+
+    assert list(osmids) == []
+
+    # Good Address
+    params['q'] = good_address
+
+    expected_osmids = \
+        [37899441,
+         461119586,
+         4725926,
+         4692270,
+         4655478,
+         2544439,
+         31992849]
+
+    response_json = ox.nominatim_request(params = params,
+                                         service = ox.NominatimService.SEARCH)
+
+    ways = filter(lambda x: x['osm_type'] == "way", response_json)
+    osmids = map(lambda x: int(x["osm_id"]), ways)
+
+    assert set(expected_osmids).issubset(set(osmids))
+
+    # Lookup
+    params = OrderedDict()
+    params['format'] = "json"
+    params['address_details'] = 0
+    params['osm_ids'] = "W68876073"
+
+    response_json = ox.nominatim_request(params = params,
+                                         service = ox.NominatimService.LOOKUP)
+
+    assert len(response_json) > 0
+    assert response_json[0]['address']['suburb'] == "Arthur's Hill"
+    assert response_json[0]['address']['city'] == "Newcastle upon Tyne"
