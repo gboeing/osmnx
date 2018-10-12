@@ -293,6 +293,7 @@ def test_pois():
 
 def test_nominatim():
 
+    import pytest
     from collections import OrderedDict
 
     good_address = "Newcastle A186 Westgate Rd"
@@ -344,3 +345,9 @@ def test_nominatim():
     assert len(response_json) > 0
     assert response_json[0]['address']['suburb'] == "Arthur's Hill"
     assert response_json[0]['address']['city'] == "Newcastle upon Tyne"
+
+    # Invalid NominatimService
+    with pytest.raises(ValueError):
+        response_json = ox.nominatim_request(
+                            params = params,
+                            service = 1000)

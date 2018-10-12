@@ -75,6 +75,10 @@ class NominatimService(Enum):
     def __str__(self):
         return str(self.name).lower()
 
+    @classmethod
+    def has_value(cls, value):
+        return any(value == item.value for item in cls)
+
 
 def save_to_cache(url, response_json):
     """
@@ -255,6 +259,10 @@ def nominatim_request(params, service = NominatimService.SEARCH, pause_duration=
     -------
     response_json : dict
     """
+
+    service_value = service.value if type(service) == NominatimService else service    
+    if not NominatimService.has_value(service_value):
+        raise ValueError("Provided Nominatim Service is invalid.")
 
     # prepare the Nominatim API URL and see if request already exists in the
     # cache
