@@ -21,6 +21,7 @@ import re
 import requests
 import time
 
+from enum import Enum, auto
 from collections import OrderedDict
 from dateutil import parser as date_parser
 from itertools import groupby
@@ -62,6 +63,17 @@ class UnknownNetworkType(ValueError):
 class InsufficientNetworkQueryArguments(ValueError):
     def __init__(self,*args,**kwargs):
         Exception.__init__(self,*args,**kwargs)
+
+
+class NominatimService(Enum):
+    __order__ = "SEARCH, REVERSE, LOOKUP"
+
+    SEARCH = auto()  # Node
+    REVERSE = auto()  # Way
+    LOOKUP = auto()  # Relation
+
+    def __str__(self):
+        return str(self.name).lower()
 
 
 def save_to_cache(url, response_json):
@@ -221,7 +233,7 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
     return pause_duration
 
 
-def nominatim_request(params, pause_duration=1, timeout=30, error_pause_duration=180):
+def nominatim_request(params, service = NominatimService.SEARCH, pause_duration=1, timeout=30, error_pause_duration=180):
     """
     Send a request to the Nominatim API via HTTP GET and return the JSON
     response.
@@ -230,6 +242,8 @@ def nominatim_request(params, pause_duration=1, timeout=30, error_pause_duration
     ----------
     params : dict or OrderedDict
         key-value pairs of parameters
+    service : NominatimService
+        one of the three available nominatim services: search, reverse and lookup
     pause_duration : int
         how long to pause before requests, in seconds
     timeout : int
@@ -244,7 +258,7 @@ def nominatim_request(params, pause_duration=1, timeout=30, error_pause_duration
 
     # prepare the Nominatim API URL and see if request already exists in the
     # cache
-    url = 'https://nominatim.openstreetmap.org/search'
+    url = 'https://nominatim.openstreetmap.org/{}'.format(str(service))
     prepared_url = requests.Request('GET', url, params=params).prepare().url
     cached_response_json = get_from_cache(prepared_url)
 
@@ -1575,8 +1589,8 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
 
     # create a graph from the bounding box
     G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify,
-                        retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name, 
-                        timeout=timeout, memory=memory, max_query_area_size=max_query_area_size, 
+                        retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name,
+                        timeout=timeout, memory=memory, max_query_area_size=max_query_area_size,
                         clean_periphery=clean_periphery, infrastructure=infrastructure,
                         custom_filter=custom_filter)
 
@@ -1707,7 +1721,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
         download infrastructure of given type (default is streets
-        (ie, 'way["highway"]') but other infrastructures may be selected 
+        (ie, 'way["highway"]') but other infrastructures may be selected
         like power grids (ie, 'way["power"~"line"]'))
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
@@ -1894,7 +1908,7 @@ def graph_from_file(filename, network_type='all_private', simplify=True,
     """
     # transmogrify file of OSM XML data into JSON
     response_jsons = [overpass_json_from_file(filename)]
-    
+
     # create graph using this response JSON
     G = create_graph(response_jsons, network_type=network_type,
                      retain_all=retain_all, name=name)
@@ -1902,6 +1916,6 @@ def graph_from_file(filename, network_type='all_private', simplify=True,
     # simplify the graph topology as the last step.
     if simplify:
         G = simplify_graph(G)
-    
+
     log('graph_from_file() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return G
