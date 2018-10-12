@@ -306,7 +306,7 @@ def test_nominatim():
 
     # Bad Address
     response_json = ox.nominatim_request(params = params,
-                                         service = ox.NominatimService.SEARCH)
+                                         type = "search")
 
     ways = filter(lambda x: x['osm_type'] == "way", response_json)
     osmids = map(lambda x: int(x["osm_id"]), ways)
@@ -326,7 +326,7 @@ def test_nominatim():
          31992849]
 
     response_json = ox.nominatim_request(params = params,
-                                         service = ox.NominatimService.SEARCH)
+                                         type = "search")
 
     ways = filter(lambda x: x['osm_type'] == "way", response_json)
     osmids = map(lambda x: int(x["osm_id"]), ways)
@@ -340,7 +340,7 @@ def test_nominatim():
     params['osm_ids'] = "W68876073"
 
     response_json = ox.nominatim_request(params = params,
-                                         service = ox.NominatimService.LOOKUP)
+                                         type = "lookup")
 
     assert len(response_json) > 0
     assert response_json[0]['address']['suburb'] == "Arthur's Hill"
@@ -350,4 +350,4 @@ def test_nominatim():
     with pytest.raises(ValueError):
         response_json = ox.nominatim_request(
                             params = params,
-                            service = 1000)
+                            type = 1000)

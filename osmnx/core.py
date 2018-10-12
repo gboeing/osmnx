@@ -65,21 +65,6 @@ class InsufficientNetworkQueryArguments(ValueError):
         Exception.__init__(self,*args,**kwargs)
 
 
-class NominatimService(Enum):
-    __order__ = "SEARCH, REVERSE, LOOKUP"
-
-    SEARCH = auto()  # Node
-    REVERSE = auto()  # Way
-    LOOKUP = auto()  # Relation
-
-    def __str__(self):
-        return str(self.name).lower()
-
-    @classmethod
-    def has_value(cls, value):
-        return any(value == item.value for item in cls)
-
-
 def save_to_cache(url, response_json):
     """
     Save an HTTP response json object to the cache.
@@ -237,7 +222,7 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
     return pause_duration
 
 
-def nominatim_request(params, service = NominatimService.SEARCH, pause_duration=1, timeout=30, error_pause_duration=180):
+def nominatim_request(params, type = "search", pause_duration=1, timeout=30, error_pause_duration=180):
     """
     Send a request to the Nominatim API via HTTP GET and return the JSON
     response.
@@ -246,8 +231,8 @@ def nominatim_request(params, service = NominatimService.SEARCH, pause_duration=
     ----------
     params : dict or OrderedDict
         key-value pairs of parameters
-    service : NominatimService
-        one of the three available nominatim services: search, reverse and lookup
+    type : string
+        Type of Nominatim query. One of the following: search, reverse or lookup
     pause_duration : int
         how long to pause before requests, in seconds
     timeout : int
@@ -260,13 +245,13 @@ def nominatim_request(params, service = NominatimService.SEARCH, pause_duration=
     response_json : dict
     """
 
-    service_value = service.value if type(service) == NominatimService else service    
-    if not NominatimService.has_value(service_value):
-        raise ValueError("Provided Nominatim Service is invalid.")
+    known_requests = {"search", "reverse", "lookup"}
+    if type not in known_requests:
+        raise ValueError("The type of Nominatim request is invalid. Please choose one of {{'search', 'reverse', 'lookup'}}")
 
     # prepare the Nominatim API URL and see if request already exists in the
     # cache
-    url = 'https://nominatim.openstreetmap.org/{}'.format(str(service))
+    url = 'https://nominatim.openstreetmap.org/{}'.format(type)
     prepared_url = requests.Request('GET', url, params=params).prepare().url
     cached_response_json = get_from_cache(prepared_url)
 
