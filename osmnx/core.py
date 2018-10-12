@@ -21,7 +21,6 @@ import re
 import requests
 import time
 
-from enum import Enum, auto
 from collections import OrderedDict
 from dateutil import parser as date_parser
 from itertools import groupby
