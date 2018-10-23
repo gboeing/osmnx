@@ -311,19 +311,10 @@ def test_nominatim():
     ways = filter(lambda x: x['osm_type'] == "way", response_json)
     osmids = map(lambda x: int(x["osm_id"]), ways)
 
-    assert list(osmids) == []
+    assert len(list(osmids)) == 0
 
     # Good Address
     params['q'] = good_address
-
-    expected_osmids = \
-        [37899441,
-         461119586,
-         4725926,
-         4692270,
-         4655478,
-         2544439,
-         31992849]
 
     response_json = ox.nominatim_request(params = params,
                                          type = "search")
@@ -331,7 +322,7 @@ def test_nominatim():
     ways = filter(lambda x: x['osm_type'] == "way", response_json)
     osmids = map(lambda x: int(x["osm_id"]), ways)
 
-    assert set(expected_osmids).issubset(set(osmids))
+    assert len(list(osmids)) > 0
 
     # Lookup
     params = OrderedDict()
@@ -346,8 +337,8 @@ def test_nominatim():
     assert response_json[0]['address']['suburb'] == "Arthur's Hill"
     assert response_json[0]['address']['city'] == "Newcastle upon Tyne"
 
-    # Invalid NominatimService
+    # Invalid nominatim query type
     with pytest.raises(ValueError):
         response_json = ox.nominatim_request(
                             params = params,
-                            type = 1000)
+                            type = "transfer")
