@@ -136,7 +136,9 @@ def get_paths_to_simplify(G, strict=True):
     Create a list of all the paths to be simplified between endpoint nodes.
 
     The path is ordered from the first endpoint, through the interstitial nodes,
-    to the second endpoint.
+    to the second endpoint. If your street network is in a rural area with many
+    interstitial nodes between true edge endpoints, you may want to increase
+    your system's recursion limit to avoid recursion errors.
 
     Parameters
     ----------
@@ -170,7 +172,9 @@ def get_paths_to_simplify(G, strict=True):
                 except RuntimeError:
                     log('Recursion error: exceeded max depth, moving on to next endpoint successor', level=lg.WARNING)
                     # recursion errors occur if some connected component is a
-                    # self-contained ring in which all nodes are not end points
+                    # self-contained ring in which all nodes are not end points.
+                    # could also occur in extremely long street segments (eg, in
+                    # rural areas) with too many nodes between true endpoints.
                     # handle it by just ignoring that component and letting its
                     # topology remain intact (this should be a rare occurrence)
                     # RuntimeError is what Python <3.5 will throw, Py3.5+ throws
@@ -196,8 +200,8 @@ def is_simplified(G):
     -------
     bool
     """
-    edges_with_geometry = [d for u, v, k, d in G.edges(data=True, keys=True) if 'geometry' in d]
-    return len(edges_with_geometry) > 0
+
+    return 'simplified' in G.graph and G.graph['simplified']
 
 
 def simplify_graph(G, strict=True):
@@ -211,7 +215,7 @@ def simplify_graph(G, strict=True):
 
     Parameters
     ----------
-    G : graph
+    G : networkx multidigraph
     strict : bool
         if False, allow nodes to be end points even if they fail all other rules
         but have edges with different OSM IDs
@@ -287,6 +291,8 @@ def simplify_graph(G, strict=True):
 
     # finally remove all the interstitial nodes between the new edges
     G.remove_nodes_from(set(all_nodes_to_remove))
+
+    G.graph['simplified'] = True
 
     msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
     log(msg.format(initial_node_count, len(list(G.nodes())), initial_edge_count, len(list(G.edges())), time.time()-start_time))

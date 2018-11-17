@@ -40,7 +40,8 @@ classifiers = ['Development Status :: 5 - Production/Stable',
                'Programming Language :: Python :: 3',
                'Programming Language :: Python :: 3.4',
                'Programming Language :: Python :: 3.5',
-               'Programming Language :: Python :: 3.6']
+               'Programming Language :: Python :: 3.6',
+               'Programming Language :: Python :: 3.7']
 
 with open('requirements.txt') as f:
     requirements_lines = f.readlines()
@@ -48,17 +49,17 @@ install_requires = [r.strip() for r in requirements_lines]
 
 # now call setup
 setup(name='osmnx',
-      version='0.7.4dev',
+      version='0.8.2',
       description='Retrieve, construct, analyze, and visualize street networks from OpenStreetMap',
       long_description=long_description,
       classifiers=classifiers,
       url='https://github.com/gboeing/osmnx',
       author='Geoff Boeing',
-      author_email='gboeing@berkeley.edu',
+      author_email='g.boeing@northeastern.edu',
       license='MIT',
       platforms='any',
       packages=['osmnx'],
       install_requires=install_requires,
-      extras_require={'folium':['folium>=0.5'],
-                      'kdtree':['scipy>=1.0'],
+      extras_require={'folium':['folium>=0.6'],
+                      'kdtree':['scipy>=1.1'],
                       'balltree':['scikit-learn>=0.19']})

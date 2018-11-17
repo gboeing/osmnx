@@ -23,7 +23,12 @@ import warnings
 import xml.sax
 from collections import Counter
 from itertools import chain
-from shapely.geometry import Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon
+from shapely.geometry import Point
+from shapely.geometry import MultiPoint
+from shapely.geometry import LineString
+from shapely.geometry import MultiLineString
+from shapely.geometry import MultiPolygon
+from shapely.geometry import Polygon
 
 from . import settings
 
@@ -36,8 +41,6 @@ try:
     from sklearn.neighbors import BallTree
 except ImportError as e:
     BallTree = None
-
-
 
 def config(data_folder=settings.data_folder,
            logs_folder=settings.logs_folder,
@@ -52,7 +55,10 @@ def config(data_folder=settings.data_folder,
            useful_tags_node=settings.useful_tags_node,
            useful_tags_path=settings.useful_tags_path,
            default_access=settings.default_access,
-           default_crs=settings.default_crs):
+           default_crs=settings.default_crs,
+           default_user_agent=settings.default_user_agent,
+           default_referer=settings.default_referer,
+           default_accept_language=settings.default_accept_language):
     """
     Configure osmnx by setting the default global vars to desired values.
 
@@ -85,6 +91,12 @@ def config(data_folder=settings.data_folder,
         default filter for OSM "access" key
     default_crs : string
         default CRS to set when creating graphs
+    default_user_agent : string
+        HTTP header user-agent
+    default_referer : string
+        HTTP header referer
+    default_accept_language : string
+        HTTP header accept-language
 
     Returns
     -------
@@ -107,6 +119,9 @@ def config(data_folder=settings.data_folder,
     settings.useful_tags_node = useful_tags_node
     settings.default_access = default_access
     settings.default_crs = default_crs
+    settings.default_user_agent = default_user_agent
+    settings.default_referer = default_referer
+    settings.default_accept_language = default_accept_language
 
     # if logging is turned on, log that we are configured
     if settings.log_file or settings.log_console:
@@ -612,14 +627,19 @@ def add_edge_bearings(G):
     """
 
     for u, v, data in G.edges(keys=False, data=True):
+
+        if u == v:
+            # a self-loop has an undefined compass bearing
+            data['bearing'] = np.nan
         
-        # calculate bearing from edge's origin to its destination
-        origin_point = (G.nodes[u]['y'], G.nodes[u]['x'])
-        destination_point = (G.nodes[v]['y'], G.nodes[v]['x'])
-        bearing = get_bearing(origin_point, destination_point)
-        
-        # round to thousandth of a degree
-        data['bearing'] = round(bearing, 3)
+        else:
+            # calculate bearing from edge's origin to its destination
+            origin_point = (G.nodes[u]['y'], G.nodes[u]['x'])
+            destination_point = (G.nodes[v]['y'], G.nodes[v]['x'])
+            bearing = get_bearing(origin_point, destination_point)
+            
+            # round to thousandth of a degree
+            data['bearing'] = round(bearing, 3)
 
     return G
 
@@ -996,5 +1016,43 @@ def overpass_json_from_file(filename):
     with opener(filename) as file:
         handler = OSMContentHandler()
         xml.sax.parse(file, handler)
-
         return handler.object
+
+
+
+def bbox_to_poly(north, south, east, west):
+    """
+    Convenience function to parse bbox -> poly
+    """
+    
+    return Polygon([(west, south), (east, south), (east, north), (west, north)])
+
+
+
+def citation():
+    """
+    Print the OSMnx package's citation information.
+
+    Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing, 
+    and Visualizing Complex Street Networks. Computers, Environment and Urban 
+    Systems, 65(126-139). doi:10.1016/j.compenvurbsys.2017.05.004
+    """
+    
+    cite = ("To cite OSMnx, use:\n\n"
+            "Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing, "
+            "and Visualizing Complex Street Networks. Computers, Environment and Urban "
+            "Systems, 65(126-139). doi:10.1016/j.compenvurbsys.2017.05.004"
+            "\n\n"
+            "BibTeX entry for LaTeX users:\n\n"
+
+            "@article{boeing_osmnx_2017,\n"
+            "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, {Constructing}, {Analyzing}, and {Visualizing} {Complex} {Street} {Networks}},\n"
+            "    volume = {65},\n"
+            "    doi = {10.1016/j.compenvurbsys.2017.05.004},\n"
+            "    number = {126-139},\n"
+            "    journal = {Computers, Environment and Urban Systems},\n"
+            "    author = {Boeing, G.},\n"
+            "    year = {2017}\n"
+            "}")
+
+    print(cite)

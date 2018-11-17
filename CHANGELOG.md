@@ -1,9 +1,37 @@
 # Change log
 
-## 0.7.4dev (TBD)
+## 0.8.2 (2018-09-19)
+
+  - add python 3.7 compatibility
+  - add convenience function to plot several routes over the same map
+  - optimize graph truncation to bounding box
+  - give self-loops a null bearing when calculating edge bearings
+  - make accept-language http header explicit and configurable
+  - add citation function
+  - refactor POI module
+
+## 0.8.1 (2018-05-17)
+
+  - add Gephi compatibility argument for saving GraphML
+  - handle square bracket encapsulated strings when loading GraphML
+
+## 0.8 (2018-05-05)
+
+  - add ability to retrieve points of interest
+  - improve performance for retrieving huge geographies' street networks
+  - fix building footprint retrieval query syntax
+  - minor bug fixes
+
+## 0.7.4 (2018-04-05)
 
   - add fast nearest-nodes search
   - allow custom network query filters
+  - allow create_graph to return graph with no edges
+  - improve figure_ground joint smoothing
+  - fix handling of parallel edges when making multidigraph undirected
+  - generalize same-geometry checker
+  - improve detection of prior topology simplification
+  - custom error types for finer-grained handling
 
 ## 0.7.3 (2018-03-12)
 

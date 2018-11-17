@@ -144,7 +144,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, folder, time.time()-start_time))
 
 
-def save_graphml(G, filename='graph.graphml', folder=None):
+def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
     """
     Save graph as GraphML file to disk.
 
@@ -155,6 +155,9 @@ def save_graphml(G, filename='graph.graphml', folder=None):
         the name of the graphml file (including file extension)
     folder : string
         the folder to contain the file, if None, use default data folder
+    gephi : bool
+        if True, give each edge a unique key to work around Gephi's
+        restrictive interpretation of the GraphML specification
 
     Returns
     -------
@@ -165,16 +168,41 @@ def save_graphml(G, filename='graph.graphml', folder=None):
     if folder is None:
         folder = settings.data_folder
 
-    # create a copy and convert all the node/edge attribute values to string or
-    # it won't save
+    # create a copy to convert all the node/edge attribute values to string
     G_save = G.copy()
-    for dict_key in G_save.graph:
-        # convert all the graph attribute values to strings
-        G_save.graph[dict_key] = make_str(G_save.graph[dict_key])
+
+    if gephi:
+        
+        gdf_nodes, gdf_edges = graph_to_gdfs(G_save, nodes=True, edges=True, node_geometry=True,
+                                             fill_edge_geometry=True)
+        
+        # turn each edge's key into a unique ID for Gephi compatibility
+        gdf_edges['key'] = range(len(gdf_edges))
+        
+        # gephi doesn't handle node attrs named x and y well, so rename
+        gdf_nodes['xcoord'] = gdf_nodes['x']
+        gdf_nodes['ycoord'] = gdf_nodes['y']
+        G_save = gdfs_to_graph(gdf_nodes, gdf_edges)
+
+        # remove graph attributes as Gephi only accepts node and edge attrs
+        G_save.graph = {}
+
+    else:
+        # if not gephi, keep graph attrs and stringify them
+        for dict_key in G_save.graph:
+            # convert all the graph attribute values to strings
+            G_save.graph[dict_key] = make_str(G_save.graph[dict_key])
+
+    # stringify node and edge attributes
     for _, data in G_save.nodes(data=True):
         for dict_key in data:
-            # convert all the node attribute values to strings
-            data[dict_key] = make_str(data[dict_key])
+            if gephi and dict_key in ['xcoord', 'ycoord']:
+                # don't convert x y values to string if saving for gephi
+                continue
+            else:
+                # convert all the node attribute values to strings
+                data[dict_key] = make_str(data[dict_key])
+    
     for _, _, data in G_save.edges(keys=False, data=True):
         for dict_key in data:
             # convert all the edge attribute values to strings
@@ -238,9 +266,12 @@ def load_graphml(filename, folder=None):
             # if this edge has this attribute, and it starts with '[' and ends
             # with ']', then it's a list to be parsed
             if attr in data and data[attr][0] == '[' and data[attr][-1] == ']':
-                # convert the string list to a list type, else leave as
-                # single-value string
-                data[attr] = ast.literal_eval(data[attr])
+                # try to convert the string list to a list type, else leave as
+                # single-value string (and leave as string if error)
+                try:
+                    data[attr] = ast.literal_eval(data[attr])
+                except:
+                    pass
 
         # osmid might have a single value or a list, but if single value, then
         # parse int
@@ -287,11 +318,16 @@ def is_duplicate_edge(data, data_other):
 
     is_dupe = False
 
-    if data['osmid'] == data_other['osmid']:
-        # if they have the same OSM IDs
+    # if either edge's OSM ID contains multiple values (due to simplification), we want
+    # to compare as sets so they are order-invariant, otherwise uv does not match vu
+    osmid = set(data['osmid']) if isinstance(data['osmid'], list) else data['osmid']
+    osmid_other = set(data_other['osmid']) if isinstance(data_other['osmid'], list) else data_other['osmid']
+
+    if osmid == osmid_other:
+        # if they contain the same OSM ID or set of OSM IDs (due to simplification)
         if ('geometry' in data) and ('geometry' in data_other):
             # if both edges have a geometry attribute
-            if is_same_geometry(data, data_other):
+            if is_same_geometry(data['geometry'], data_other['geometry']):
                 # if their edge geometries have the same coordinates
                 is_dupe = True
         elif ('geometry' in data) and ('geometry' in data_other):
@@ -304,17 +340,17 @@ def is_duplicate_edge(data, data_other):
     return is_dupe
 
 
-def is_same_geometry(data, data_other):
+def is_same_geometry(ls1, ls2):
     """
-    Check if LineString geometries in two edge data dicts are the same, in
+    Check if LineString geometries in two edges are the same, in
     normal or reversed order of points.
 
     Parameters
     ----------
-    data : dict
-        the first edge's data
-    data_other : dict
-        the second edge's data
+    ls1 : LineString
+        the first edge's geometry
+    ls2 : LineString
+        the second edge's geometry
 
     Returns
     -------
@@ -322,16 +358,75 @@ def is_same_geometry(data, data_other):
     """
 
     # extract geometries from each edge data dict
-    geom1 = [list(coords) for coords in data['geometry'].xy]
-    geom2 = [list(coords) for coords in data_other['geometry'].xy]
+    geom1 = [list(coords) for coords in ls1.xy]
+    geom2 = [list(coords) for coords in ls2.xy]
 
     # reverse the first edge's list of x's and y's to look for a match in
     # either order
-    geom1_r = [list(reversed(list(coords))) for coords in data['geometry'].xy]
+    geom1_r = [list(reversed(list(coords))) for coords in ls1.xy]
 
     # if the edge's geometry matches its reverse's geometry in either order,
     # return True
     return (geom1 == geom2 or geom1_r == geom2)
+
+
+
+def update_edge_keys(G):
+    """
+    Update the keys of edges that share a u, v with another edge but differ in
+    geometry. For example, two one-way streets from u to v that bow away from
+    each other as separate streets, rather than opposite direction edges of a 
+    single street.
+    
+    Parameters
+    ----------
+    G : networkx multidigraph
+
+    Returns
+    -------
+    networkx multigraph
+    """
+
+    # identify all the edges that are duplicates based on a sorted combination
+    # of their origin, destination, and key. that is, edge uv will match edge vu
+    # as a duplicate, but only if they have the same key
+    edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
+    edges['uvk'] = edges.apply(lambda row: '_'.join(sorted([str(row['u']), str(row['v'])]) + [str(row['key'])]), axis=1)
+    edges['dupe'] = edges['uvk'].duplicated(keep=False)
+    dupes = edges[edges['dupe']==True].dropna(subset=['geometry'])
+
+    different_streets = []
+    groups = dupes[['geometry', 'uvk', 'u', 'v', 'key', 'dupe']].groupby('uvk')
+    
+    # for each set of duplicate edges
+    for label, group in groups:
+        
+        # if there are more than 2 edges here, make sure to compare all
+        if len(group['geometry']) > 2:
+            l = group['geometry'].tolist()
+            l.append(l[0])
+            geom_pairs = list(zip(l[:-1], l[1:]))
+        # otherwise, just compare the first edge to the second edge
+        else:
+            geom_pairs = [(group['geometry'].iloc[0], group['geometry'].iloc[1])]
+        
+        # for each pair of edges to compare
+        for geom1, geom2 in geom_pairs:
+            # if they don't have the same geometry, flag them as different streets
+            if not is_same_geometry(geom1, geom2):
+                # add edge uvk, but not edge vuk, otherwise we'll iterate both their keys
+                # and they'll still duplicate each other at the end of this process
+                different_streets.append((group['u'].iloc[0], group['v'].iloc[0], group['key'].iloc[0]))
+
+    # for each unique different street, iterate its key + 1 so it's unique
+    for u, v, k in set(different_streets):
+        # filter out key if it appears in data dict as we'll pass it explicitly
+        attributes = {k:v for k, v in G[u][v][k].items() if k != 'key'}
+        G.add_edge(u, v, key=k+1, **attributes)
+        G.remove_edge(u, v, key=k)
+
+    return G
+
 
 
 def get_undirected(G):
@@ -352,9 +447,20 @@ def get_undirected(G):
 
     # set from/to nodes before making graph undirected
     G = G.copy()
-    for u, v, k in G.edges(keys=True):
+    for u, v, k, data in G.edges(keys=True, data=True):
         G.edges[u, v, k]['from'] = u
         G.edges[u, v, k]['to'] = v
+        
+        # add geometry if it doesn't already exist, to retain parallel
+        # edges' distinct geometries
+        if 'geometry' not in data:
+            point_u = Point((G.nodes[u]['x'], G.nodes[u]['y']))
+            point_v = Point((G.nodes[v]['x'], G.nodes[v]['y']))
+            data['geometry'] = LineString([point_u, point_v])
+
+    # update edge keys so we don't retain only one edge of sets of parallel edges
+    # when we convert from a multidigraph to a multigraph
+    G = update_edge_keys(G)
 
     # now convert multidigraph to a multigraph, retaining all edges in both
     # directions for now, as well as all graph attributes

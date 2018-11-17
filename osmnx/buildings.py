@@ -99,7 +99,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
             west, south, east, north = poly.bounds
             query_template = ('[out:json][timeout:{timeout}]{maxsize};((way["building"]({south:.8f},'
                               '{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation["building"]'
-                              '({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);));out;')
+                              '({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);););out;')
             query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
@@ -122,7 +122,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
         for polygon_coord_str in polygon_coord_strs:
             query_template = ('[out:json][timeout:{timeout}]{maxsize};(way'
                               '(poly:"{polygon}")["building"];(._;>;);relation'
-                              '(poly:"{polygon}")["building"];(._;>;));out;')
+                              '(poly:"{polygon}")["building"];(._;>;););out;')
             query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
@@ -267,6 +267,12 @@ def buildings_from_polygon(polygon, retain_invalid=False):
 def buildings_from_place(place, retain_invalid=False):
     """
     Get building footprints within the boundaries of some place.
+
+    The query must be geocodable and OSM must have polygon boundaries for the
+    geocode result. If OSM does not have a polygon for this place, you can
+    instead get its buildings using the buildings_from_address function, which
+    geocodes the place name to a point and gets the buildings within some distance
+    of that point.
 
     Parameters
     ----------

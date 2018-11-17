@@ -43,3 +43,8 @@ default_access = '["access"!~"private"]'
 
 # default CRS to set when creating graphs
 default_crs = {'init':'epsg:4326'}
+
+# default HTTP request headers
+default_user_agent = 'Python OSMnx package (https://github.com/gboeing/osmnx)'
+default_referer = 'Python OSMnx package (https://github.com/gboeing/osmnx)'
+default_accept_language = 'en'

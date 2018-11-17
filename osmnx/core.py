@@ -44,6 +44,26 @@ from .utils import count_streets_per_node
 from .utils import overpass_json_from_file
 
 
+class EmptyOverpassResponse(ValueError):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
+
+class InvalidDistanceType(ValueError):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
+
+class UnknownNetworkType(ValueError):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
+
+class InsufficientNetworkQueryArguments(ValueError):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+
+
 def save_to_cache(url, response_json):
     """
     Save an HTTP response json object to the cache.
@@ -116,7 +136,7 @@ def get_from_cache(url):
             return response_json
 
 
-def get_http_headers(user_agent=None, referer=None):
+def get_http_headers(user_agent=None, referer=None, accept_language=None):
     """
     Update the default requests HTTP headers with OSMnx info.
 
@@ -126,6 +146,8 @@ def get_http_headers(user_agent=None, referer=None):
         the user agent string, if None will set with OSMnx default
     referer : str
         the referer string, if None will set with OSMnx default
+    accept_language : str
+        make accept-language explicit e.g. for consistent nominatim result sorting
 
     Returns
     -------
@@ -133,12 +155,14 @@ def get_http_headers(user_agent=None, referer=None):
     """
 
     if user_agent is None:
-        user_agent = 'Python OSMnx package (https://github.com/gboeing/osmnx)'
+        user_agent = settings.default_user_agent
     if referer is None:
-        referer = 'Python OSMnx package (https://github.com/gboeing/osmnx)'
+        referer = settings.default_referer
+    if accept_language is None:
+        accept_language = settings.default_accept_language
 
     headers = requests.utils.default_headers()
-    headers.update({'User-Agent': user_agent, 'referer': referer})
+    headers.update({'User-Agent': user_agent, 'referer': referer, 'Accept-Language': accept_language})
     return headers
 
 
@@ -376,7 +400,7 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1):
         for key in sorted(list(query.keys())):
             params[key] = query[key]
     else:
-        raise ValueError('query must be a dict or a string')
+        raise TypeError('query must be a dict or a string')
 
     # request the URL, return the JSON
     response_json = nominatim_request(params=params, timeout=30)
@@ -550,7 +574,7 @@ def get_osm_filter(network_type):
     if network_type in filters:
         osm_filter = filters[network_type]
     else:
-        raise ValueError('unknown network_type "{}"'.format(network_type))
+        raise UnknownNetworkType('unknown network_type "{}"'.format(network_type))
 
     return osm_filter
 
@@ -604,7 +628,8 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     by_poly = polygon is not None
     by_bbox = not (north is None or south is None or east is None or west is None)
     if not (by_poly or by_bbox):
-        raise ValueError('You must pass a polygon or north, south, east, and west')
+        raise InsufficientNetworkQueryArguments(
+            'You must pass a polygon or north, south, east, and west')
 
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type
@@ -702,7 +727,7 @@ def consolidate_subdivide_geometry(geometry, max_query_area_size):
     quadrat_width = math.sqrt(max_query_area_size)
 
     if not isinstance(geometry, (Polygon, MultiPolygon)):
-        raise ValueError('Geometry must be a shapely Polygon or MultiPolygon')
+        raise TypeError('Geometry must be a shapely Polygon or MultiPolygon')
 
     # if geometry is a MultiPolygon OR a single Polygon whose area exceeds the
     # max size, get the convex hull around the geometry
@@ -744,7 +769,7 @@ def get_polygons_coordinates(geometry):
             x, y = polygon.exterior.xy
             polygons_coords.append(list(zip(x, y)))
     else:
-        raise ValueError('Geometry must be a shapely Polygon or MultiPolygon')
+        raise TypeError('Geometry must be a shapely Polygon or MultiPolygon')
 
     # convert the exterior coordinates of the polygon(s) to the string format
     # the API expects
@@ -957,6 +982,7 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
                     y = G.nodes[neighbor]['y']
                     if y < north and y > south and x < east and x > west:
                         any_neighbors_in_bbox = True
+                        break
 
                 # if none of its neighbors are within the bounding box, add node
                 # to list of nodes outside the bounding box
@@ -1020,7 +1046,7 @@ def quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9)
     return multipoly
 
 
-def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buffer_amount=1e-9):
+def intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
     """
     Intersect points with a polygon, using an r-tree spatial index and cutting
     the polygon up into smaller sub-polygons for r-tree acceleration.
@@ -1033,7 +1059,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buff
         the geometry to intersect with the points
     quadrat_width : numeric
         the linear length (in degrees) of the quadrats with which to cut up the
-        geometry (default = 0.025, approx 2km at NYC's latitude)
+        geometry (default = 0.05, approx 4km at NYC's latitude)
     min_num : int
         the minimum number of linear quadrat lines (e.g., min_num=3 would
         produce a quadrat grid of 4 squares)
@@ -1089,7 +1115,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.025, min_num=3, buff
     return points_within_geometry
 
 
-def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.025, min_num=3, buffer_amount=1e-9):
+def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
     """
     Remove every node in graph that falls outside some shapely Polygon or
     MultiPolygon.
@@ -1106,8 +1132,8 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
         neighbors are within polygon (NOT CURRENTLY IMPLEMENTED)
     quadrat_width : numeric
         passed on to intersect_index_quadrats: the linear length (in degrees) of
-        the quadrats with which to cut up the geometry (default = 0.025, approx
-        2km at NYC's latitude)
+        the quadrats with which to cut up the geometry (default = 0.05, approx
+        4km at NYC's latitude)
     min_num : int
         passed on to intersect_index_quadrats: the minimum number of linear
         quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4
@@ -1300,7 +1326,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     for response_json in response_jsons:
         elements.extend(response_json['elements'])
     if len(elements) < 1:
-        raise ValueError('There are no data elements in the response JSON objects')
+        raise EmptyOverpassResponse('There are no data elements in the response JSON objects')
 
     # create the graph as a MultiDiGraph and set the original CRS to default_crs
     G = nx.MultiDiGraph(name=name, crs=settings.default_crs)
@@ -1337,7 +1363,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
     return G
 
 
-def bbox_from_point(point, distance=1000, project_utm=False):
+def bbox_from_point(point, distance=1000, project_utm=False, return_crs=False):
     """
     Create a bounding box some distance in each direction (north, south, east,
     and west) from some (lat, lng) point.
@@ -1351,10 +1377,13 @@ def bbox_from_point(point, distance=1000, project_utm=False):
         each be from the point
     project_utm : bool
         if True return bbox as UTM coordinates
+    return_crs : bool
+        if True and project_utm=True, return the projected CRS
 
     Returns
     -------
-    north, south, east, west : tuple
+    north, south, east, west : tuple, if return_crs=False
+    north, south, east, west, crs_proj : tuple, if return_crs=True
     """
 
     # reverse the order of the (lat,lng) point so it is (x,y) for shapely, then
@@ -1373,7 +1402,10 @@ def bbox_from_point(point, distance=1000, project_utm=False):
         west, south, east, north = buffer_latlong.bounds
         log('Created bounding box {} meters in each direction from {}: {},{},{},{}'.format(distance, point, north, south, east, west))
 
-    return north, south, east, west
+    if return_crs:
+        return north, south, east, west, crs_proj
+    else:
+        return north, south, east, west
 
 
 def graph_from_bbox(north, south, east, west, network_type='all_private',
@@ -1535,7 +1567,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
     """
 
     if distance_type not in ['bbox', 'network']:
-        raise ValueError('distance_type must be "bbox" or "network"')
+        raise InvalidDistanceType('distance_type must be "bbox" or "network"')
 
     # create a bounding box from the center point and the distance in each
     # direction
@@ -1688,9 +1720,9 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:
-        raise ValueError('Shape does not have a valid geometry')
+        raise TypeError('Shape does not have a valid geometry')
     if not isinstance(polygon, (Polygon, MultiPolygon)):
-        raise ValueError('Geometry must be a shapely Polygon or MultiPolygon. If you requested '
+        raise TypeError('Geometry must be a shapely Polygon or MultiPolygon. If you requested '
                          'graph from place name or address, make sure your query resolves to a '
                          'Polygon or MultiPolygon, and not some other geometry, like a Point. '
                          'See OSMnx documentation for details.')
@@ -1820,7 +1852,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
         # if it is a list, it contains multiple places to get
         gdf_place = gdf_from_places(query, buffer_dist=buffer_dist)
     else:
-        raise ValueError('query must be a string or a list of query strings')
+        raise TypeError('query must be a string or a list of query strings')
 
     # extract the geometry from the GeoDataFrame to use in API query
     polygon = gdf_place['geometry'].unary_union
