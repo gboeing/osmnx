@@ -1476,7 +1476,8 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                                           network_type=network_type, timeout=timeout,
                                           memory=memory, max_query_area_size=max_query_area_size,
                                           infrastructure=infrastructure, custom_filter=custom_filter)
-        G_buffered = create_graph(response_jsons, name=name, retain_all=retain_all, network_type=network_type)
+        G_buffered = create_graph(response_jsons, name=name, retain_all=retain_all,
+                                  bidirectional=network_type in settings.bidirectional_network_types)
         G = truncate_graph_bbox(G_buffered, north, south, east, west, retain_all=True, truncate_by_edge=truncate_by_edge)
 
         # simplify the graph topology
@@ -1500,7 +1501,8 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                                           infrastructure=infrastructure, custom_filter=custom_filter)
 
         # create the graph, then truncate to the bounding box
-        G = create_graph(response_jsons, name=name, retain_all=retain_all, network_type=network_type)
+        G = create_graph(response_jsons, name=name, retain_all=retain_all,
+                         bidirectional=network_type in settings.bidirectional_network_types)
         G = truncate_graph_bbox(G, north, south, east, west, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
 
         # simplify the graph topology as the last step. don't truncate after
@@ -1742,7 +1744,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
                                           timeout=timeout, memory=memory,
                                           max_query_area_size=max_query_area_size,
                                           infrastructure=infrastructure, custom_filter=custom_filter)
-        G_buffered = create_graph(response_jsons, name=name, retain_all=True, network_type=network_type)
+        G_buffered = create_graph(response_jsons, name=name, retain_all=True,
+                                  bidirectional=network_type in settings.bidirectional_network_types)
         G_buffered = truncate_graph_polygon(G_buffered, polygon_buffered, retain_all=True, truncate_by_edge=truncate_by_edge)
 
         # simplify the graph topology
@@ -1768,7 +1771,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
                                           infrastructure=infrastructure, custom_filter=custom_filter)
 
         # create the graph from the downloaded data
-        G = create_graph(response_jsons, name=name, retain_all=True, network_type=network_type)
+        G = create_graph(response_jsons, name=name, retain_all=True,
+                         bidirectional=network_type in settings.bidirectional_network_types)
 
         # truncate the graph to the extent of the polygon
         G = truncate_graph_polygon(G, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
