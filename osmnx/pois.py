@@ -48,8 +48,12 @@ def parse_poi_query(north, south, east, west, tags=None, timeout=180, maxsize=''
         tags = {'amenity':None}
     
     # define templates for objects and extents    
-    object_template = '({object_type}[~"^({{keys}})$"~"{{values}}"]{{extent}});'
+    object_template = '({object_type}[{{keys}}{{op}}"{{values}}"]{{extent}});'
+    # object_template = '({object_type}[~"^({{keys}})$"{{op}}"{{values}}"]{{extent}});'
     
+    re_keys_template = '~"^({keys})$"'
+    single_key_template = '"{key}"'
+
     extent_template = '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);'
     extent = extent_template.format(south=south, west=west, north=north, east=east)
     
@@ -59,28 +63,35 @@ def parse_poi_query(north, south, east, west, tags=None, timeout=180, maxsize=''
     
     # add statements for each object type
     templates = [object_template.format(object_type=x) for x in ['node','way','relation']]
+
     for template in templates:
+
+        print(template)
         
         # add statements for each key
         for keys, values in tags.items():
 
             # ensure keys is a list
             keys = [keys] if not isinstance(keys, list) else keys
-            
-            # use '.' as value if none specified
-            if not values:
+           
+            if values == True:
+                # get features with any value for these keys
+                # add positive statement with multiple keys and no specific values
+                query_str += template.format(keys=re_keys_template.format(keys='|'.join(keys)), values='.*', extent=extent, op='~')
 
-                # add statement with multiple keys and no specific values
-                query_str += template.format(keys='{}'.format('|'.join(keys)), values='.', extent=extent)
+            elif values == False:
+                # get features wihout these keys, not matter their values
+                for key in keys:
+                    # add negative statement with multiple keys and no specific values
+                    # can only be added one at a time withough key regex
+                    query_str += template.format(keys=single_key_template.format(key=key), values='.*', extent=extent, op='!~')
 
-            # otherwise, get all values
-            else:
-                
+            else: 
+                # get features with specified values for these keys
                 # ensure values is a list
                 values = [values] if not isinstance(values, list) else values
-                
-                # add statement with multiple keys in specific values
-                query_str += template.format(keys='{}'.format('|'.join(keys)), values='|'.join(values), extent=extent)
+                # add positive statement with multiple keys in specific values
+                query_str += template.format(keys='{}'.format('|'.join(keys)), values='|'.join(values), extent=extent, op='~')
                            
     # terminate query string
     query_str += ");out;"
