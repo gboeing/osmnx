@@ -41,6 +41,9 @@ useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name',
 # python after the full graph is downloaded and constructed.
 default_access = '["access"!~"private"]'
 
+# The network types for which a bidirectional graph will be created
+bidirectional_network_types = ["walk"]
+
 # default CRS to set when creating graphs
 default_crs = {'init':'epsg:4326'}
 

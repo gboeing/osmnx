@@ -1250,7 +1250,7 @@ def add_path(G, data, one_way):
         G.add_edges_from(path_edges_opposite_direction, **data)
 
 
-def add_paths(G, paths, network_type):
+def add_paths(G, paths, bidirectional=False):
     """
     Add a collection of paths to the graph.
 
@@ -1259,8 +1259,9 @@ def add_paths(G, paths, network_type):
     G : networkx multidigraph
     paths : dict
         the paths from OSM
-    network_type : string
-        {'all', 'walk', 'drive', etc}, what type of network
+    bidirectional : bool
+        if True, create bidirectional edges for one-way streets
+
 
     Returns
     -------
@@ -1274,7 +1275,7 @@ def add_paths(G, paths, network_type):
 
         # if this path is tagged as one-way and if it is not a walking network,
         # then we'll add the path in one direction only
-        if ('oneway' in data and data['oneway'] in osm_oneway_values) and not network_type=='walk':
+        if ('oneway' in data and data['oneway'] in osm_oneway_values) and not bidirectional:
             if data['oneway'] == '-1':
                 # paths with a one-way value of -1 are one-way, but in the
                 # reverse direction of the nodes' order, see osm documentation
@@ -1282,7 +1283,7 @@ def add_paths(G, paths, network_type):
             # add this path (in only one direction) to the graph
             add_path(G, data, one_way=True)
 
-        elif ('junction' in data and data['junction'] == 'roundabout') and not network_type == 'walk':
+        elif ('junction' in data and data['junction'] == 'roundabout') and not bidirectional:
             # roundabout are also oneway but not tagged as is
             add_path(G, data, one_way=True)
 
@@ -1298,7 +1299,7 @@ def add_paths(G, paths, network_type):
     return G
 
 
-def create_graph(response_jsons, name='unnamed', retain_all=False, network_type='all_private'):
+def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional=False):
     """
     Create a networkx graph from OSM data.
 
@@ -1310,8 +1311,9 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
         the name of the graph
     retain_all : bool
         if True, return the entire graph even if it is not connected
-    network_type : string
-        what type of network to create
+    bidirectional : bool
+        if True, create bidirectional edges for one-way streets
+   
 
     Returns
     -------
@@ -1346,7 +1348,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, network_type=
         G.add_node(node, **data)
 
     # add each osm way (aka, path) to the graph
-    G = add_paths(G, paths, network_type)
+    G = add_paths(G, paths, bidirectional=bidirectional)
 
     # retain only the largest connected component, if caller did not
     # set retain_all=True
@@ -1474,7 +1476,8 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                                           network_type=network_type, timeout=timeout,
                                           memory=memory, max_query_area_size=max_query_area_size,
                                           infrastructure=infrastructure, custom_filter=custom_filter)
-        G_buffered = create_graph(response_jsons, name=name, retain_all=retain_all, network_type=network_type)
+        G_buffered = create_graph(response_jsons, name=name, retain_all=retain_all,
+                                  bidirectional=network_type in settings.bidirectional_network_types)
         G = truncate_graph_bbox(G_buffered, north, south, east, west, retain_all=True, truncate_by_edge=truncate_by_edge)
 
         # simplify the graph topology
@@ -1498,7 +1501,8 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                                           infrastructure=infrastructure, custom_filter=custom_filter)
 
         # create the graph, then truncate to the bounding box
-        G = create_graph(response_jsons, name=name, retain_all=retain_all, network_type=network_type)
+        G = create_graph(response_jsons, name=name, retain_all=retain_all,
+                         bidirectional=network_type in settings.bidirectional_network_types)
         G = truncate_graph_bbox(G, north, south, east, west, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
 
         # simplify the graph topology as the last step. don't truncate after
@@ -1740,7 +1744,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
                                           timeout=timeout, memory=memory,
                                           max_query_area_size=max_query_area_size,
                                           infrastructure=infrastructure, custom_filter=custom_filter)
-        G_buffered = create_graph(response_jsons, name=name, retain_all=True, network_type=network_type)
+        G_buffered = create_graph(response_jsons, name=name, retain_all=True,
+                                  bidirectional=network_type in settings.bidirectional_network_types)
         G_buffered = truncate_graph_polygon(G_buffered, polygon_buffered, retain_all=True, truncate_by_edge=truncate_by_edge)
 
         # simplify the graph topology
@@ -1766,7 +1771,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
                                           infrastructure=infrastructure, custom_filter=custom_filter)
 
         # create the graph from the downloaded data
-        G = create_graph(response_jsons, name=name, retain_all=True, network_type=network_type)
+        G = create_graph(response_jsons, name=name, retain_all=True,
+                         bidirectional=network_type in settings.bidirectional_network_types)
 
         # truncate the graph to the extent of the polygon
         G = truncate_graph_polygon(G, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
@@ -1870,7 +1876,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
     return G
 
 
-def graph_from_file(filename, network_type='all_private', simplify=True,
+def graph_from_file(filename, bidirectional=False, simplify=True,
                     retain_all=False, name='unnamed'):
     """
     Create a networkx graph from OSM data in an XML file.
@@ -1879,10 +1885,10 @@ def graph_from_file(filename, network_type='all_private', simplify=True,
     ----------
     filename : string
         the name of a file containing OSM XML data
-    network_type : string
-        what type of street network to get
+    bidirectional : bool
+        if True, create bidirectional edges for one-way streets
     simplify : bool
-        if true, simplify the graph topology
+        if True, simplify the graph topology
     retain_all : bool
         if True, return the entire graph even if it is not connected
     name : string
@@ -1896,7 +1902,7 @@ def graph_from_file(filename, network_type='all_private', simplify=True,
     response_jsons = [overpass_json_from_file(filename)]
     
     # create graph using this response JSON
-    G = create_graph(response_jsons, network_type=network_type,
+    G = create_graph(response_jsons, bidirectional=bidirectional,
                      retain_all=retain_all, name=name)
 
     # simplify the graph topology as the last step.
