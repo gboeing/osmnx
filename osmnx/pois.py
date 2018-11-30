@@ -62,12 +62,11 @@ def parse_poi_query(north, south, east, west, tags=None, timeout=180, maxsize=''
     query_str = query_template.format(timeout=timeout, maxsize=maxsize)
     
     # add statements for each object type
-    templates = [object_template.format(object_type=x) for x in ['node','way','relation']]
+    # templates = [object_template.format(object_type=x) for x in ['node','way','relation']]
+    templates = [object_template.format(object_type=x) for x in ['nwr']]
 
     for template in templates:
-
-        print(template)
-        
+       
         # add statements for each key
         for keys, values in tags.items():
 
