@@ -122,20 +122,28 @@ def osm_poi_download(polygon=None, north=None, south=None, east=None, west=None,
         Points of interest and the tags associated with them as geopandas GeoDataFrame.
     """
 
+    def set_query(west, south, east, north, tags):
+        if isinstance(tags, dict):
+            return parse_poi_query(west=west, south=south, east=east, north=north, tags=tags)
+        elif isinstance(tags, str):
+            return tags
+        else:
+            raise ValueError('tags must be defined with a dictionary or a pre-formatted query string')
+
     if polygon:
         # Bounds
         west, south, east, north = polygon.bounds
 
         # Parse the Overpass QL query
-        query = parse_poi_query(west=west, south=south, east=east, north=north, tags=tags)
-
+        query = set_query(west=west, south=south, east=east, north=north, tags=tags)
+        
     elif not (north is None or south is None or east is None or west is None):
         # TODO: Add functionality for subdividing search area geometry based on max_query_area_size
         # Parse Polygon from bbox
         #polygon = bbox_to_poly(north=north, south=south, east=east, west=west)
 
         # Parse the Overpass QL query
-        query = parse_poi_query(west=west, south=south, east=east, north=north, tags=tags)
+        query = set_query(west=west, south=south, east=east, north=north, tags=tags)
 
     else:
         raise ValueError('You must pass a polygon or north, south, east, and west')
