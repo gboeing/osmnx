@@ -16,7 +16,7 @@ import osmnx as ox
 
 # configure OSMnx
 ox.config(log_console=True, log_file=True, use_cache=True,
-          data_folder='.temp/data', logs_folder='.temp/logs', 
+          data_folder='.temp/data', logs_folder='.temp/logs',
           imgs_folder='.temp/imgs', cache_folder='.temp/cache')
 
 
@@ -114,7 +114,7 @@ def test_gdf_shapefiles():
 
 
 def test_graph_from_file():
-    
+
     # test loading a graph from a local .osm file
     import bz2, tempfile
 
@@ -290,3 +290,37 @@ def test_pois():
     # by point and by address
     restaurants = ox.pois_from_point(point=(42.344490, -71.070570), distance=1000, amenities=['restaurant'])
     restaurants = ox.pois_from_address(address='Emeryville, California, USA', distance=1000, amenities=['restaurant'])
+
+def test_nominatim():
+
+    import pytest
+    from collections import OrderedDict
+
+    params = OrderedDict()
+    params['format'] = "json"
+    params['address_details'] = 0
+
+    # Bad Address - should return an empty response
+    params['q'] = "AAAAAAAAAAA"
+    response_json = ox.nominatim_request(params = params,
+                                         type = "search")
+
+    # Good Address - should return a valid response with a valid osm_id
+    params['q'] = "Newcastle A186 Westgate Rd"
+    response_json = ox.nominatim_request(params = params,
+                                         type = "search")
+
+    # Lookup
+    params = OrderedDict()
+    params['format'] = "json"
+    params['address_details'] = 0
+    params['osm_ids'] = "W68876073"
+
+    response_json = ox.nominatim_request(params = params,
+                                         type = "lookup")
+
+    # Invalid nominatim query type
+    with pytest.raises(ValueError):
+        response_json = ox.nominatim_request(
+                            params = params,
+                            type = "transfer")
