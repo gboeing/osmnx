@@ -331,6 +331,7 @@ def test_nominatim():
 def test_utilities():
 
     import networkx as nx
+    import pytest
 
     location_point = (37.791427, -122.410018)
     G = ox.graph_from_point(location_point, distance=500, distance_type='network')
@@ -351,9 +352,7 @@ def test_utilities():
 
     assert len(lanes) == len(path) - 1
     assert "under_construction" in lanes
-    try:
+    with pytest.raises(KeyError):
         ox.get_route_edge_attributes(G, route=path, attribute="lanes")
-    except KeyError:
-        assert True
 
 
