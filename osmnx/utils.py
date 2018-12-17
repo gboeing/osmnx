@@ -678,7 +678,7 @@ def geocode(query):
 
 
 
-def get_route_edge_attributes(G, route, attribute, minimize_key='length'):
+def get_route_edge_attributes(G, route, attribute, minimize_key='length', retrieve_default=None):
     """
     Get a list of attribute values for each edge in a path.
 
@@ -692,7 +692,9 @@ def get_route_edge_attributes(G, route, attribute, minimize_key='length'):
     minimize_key : string
         if there are parallel edges between two nodes, select the one with the
         lowest value of minimize_key
-
+    retrieve_default : Callable[Tuple[Any, Any], Any]
+        Function called with the edge nodes as parameters to retrieve a default value, if the edge does not
+        contain the given attribute. Per default, a `KeyError` is raised
     Returns
     -------
     attribute_values : list
@@ -704,7 +706,11 @@ def get_route_edge_attributes(G, route, attribute, minimize_key='length'):
         # if there are parallel edges between two nodes, select the one with the
         # lowest value of minimize_key
         data = min(G.get_edge_data(u, v).values(), key=lambda x: x[minimize_key])
-        attribute_values.append(data[attribute])
+        if retrieve_default is not None:
+            attribute_value = data.get(attribute, retrieve_default(u, v))
+        else:
+            attribute_value = data[attribute]
+        attribute_values.append(attribute_value)
     return attribute_values
 
 

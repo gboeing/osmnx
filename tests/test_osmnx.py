@@ -273,6 +273,7 @@ def test_buildings():
     gdf = ox.buildings_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
     fig, ax = ox.plot_buildings(gdf)
 
+
 def test_pois():
 
     # download all points of interests from place
@@ -290,6 +291,7 @@ def test_pois():
     # by point and by address
     restaurants = ox.pois_from_point(point=(42.344490, -71.070570), distance=1000, amenities=['restaurant'])
     restaurants = ox.pois_from_address(address='Emeryville, California, USA', distance=1000, amenities=['restaurant'])
+
 
 def test_nominatim():
 
@@ -324,3 +326,28 @@ def test_nominatim():
         response_json = ox.nominatim_request(
                             params = params,
                             type = "transfer")
+
+
+def test_utilities():
+
+    import networkx as nx
+
+    location_point = (37.791427, -122.410018)
+    G = ox.graph_from_point(location_point, distance=500, distance_type='network')
+
+    def on_no_lanes(u, v):
+        return "under_construction"
+
+    path = [65366915, 65326733, 65326736, 65326738, 65319946, 65319944, 65290756, 65312380, 65319942]
+    lanes = ox.get_route_edge_attributes(G, route=path, attribute="lanes", retrieve_default=on_no_lanes)
+
+    # Just so the test case passes if they ever build a lane
+    for (n1, n2, d) in G.edges(data=True):
+        d.pop("lanes", None)
+
+    assert len(lanes) == len(path) - 1
+    assert "under_construction" in lanes
+    try:
+        ox.get_route_edge_attributes(G, route=path, attribute="lanes")
+    except KeyError:
+        assert True
