@@ -661,11 +661,6 @@ def get_nearest_edges(G, X, Y, method=None, dist=10):
     """
     start_time = time.time()
 
-    if not isinstance(X, list) or not isinstance(Y, list):
-        # Check X or Y are not lists, throw them in one
-        X = [X]
-        Y = [Y]
-
     if method is None:
         # calculate nearest edge one at a time for each point
         ne = [get_nearest_edge(G, (x, y)) for x, y in zip(X, Y)]
