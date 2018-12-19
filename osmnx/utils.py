@@ -488,6 +488,51 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
         return nearest_node
 
 
+def get_nearest_edge(G, point):
+    """
+    Return the nearest edge to a pair of coordinates. Pass in a graph and a tuple
+    with the coordinates. We first get all the edges in the graph. Secondly we compute
+    the euclidean distance from the coordinates to the segments determined by each edge.
+    The last step is to sort the edge segments in ascending order based on the distance
+    from the coordinates to the edge. In the end, the first element in the list of edges
+    will be the closest edge that we will return as a tuple containing the shapely
+    geometry and the u, v nodes.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    point : tuple
+        The (lat, lng) or (y, x) point for which we will find the nearest edge
+        in the graph
+
+    Returns
+    -------
+    closest_edge_to_point : tuple (shapely.geometry, u, v)
+        A geometry object representing the segment and the coordinates of the two
+        nodes that determine the edge section, u and v, the OSM ids of the nodes.
+    """
+    start_time = time.time()
+
+    gdf = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+    graph_edges = gdf[["geometry", "u", "v"]].values.tolist()
+
+    edges_with_distances = [
+        (
+            graph_edge,
+            Point(tuple(reversed(point))).distance(graph_edge[0])
+        )
+        for graph_edge in graph_edges
+    ]
+
+    edges_with_distances = sorted(edges_with_distances, key=lambda x: x[1])
+    closest_edge_to_point = edges_with_distances[0][0]
+
+    geometry, u, v = closest_edge_to_point
+
+    log('Found nearest edge ({}) to point {} in {:,.2f} seconds'.format((u, v), point, time.time() - start_time))
+
+    return geometry, u, v
+
 
 def get_nearest_nodes(G, X, Y, method=None):
     """
@@ -572,6 +617,130 @@ def get_nearest_nodes(G, X, Y, method=None):
 
     return np.array(nn)
 
+
+def get_nearest_edges(G, X, Y, method=None, dist=10):
+    """
+    Return the graph edges nearest to a list of points. Pass in points
+    as separate vectors of X and Y coordinates. The 'kdtree' method
+    is by far the fastest with large data sets, but only finds approximate
+    nearest edges if working in unprojected coordinates like lat-lng (it
+    precisely finds the nearest edge if working in projected coordinates).
+
+    The method creates equally distanced points along the edges of the network.
+    Then, these points are used in a kdTree search to find the nearest point along
+    an edge.
+
+    This method will not give the exact perpendicular point along the edge, but the
+    smaller the *dist* parameter, closer the solution will be.
+
+    Code is adapted from an answer by JHuw from this original question:
+    https://gis.stackexchange.com/questions/222315/geopandas-find-nearest-point-in-other-dataframe
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    X : list-like
+        The vector of longitudes or x's for which we will find the nearest
+        edge in the graph
+    Y : list-like
+        The vector of latitudes or y's for which we will find the nearest
+        edge in the graph
+    method : str {None, 'kdtree'}
+        Which method to use for finding nearest edge to each point.
+        If None, we manually find each edge one at a time using
+        osmnx.utils.get_nearest_edge. If 'kdtree' we use
+        scipy.spatial.cKDTree for very fast euclidean search.
+    dist : float
+        spacing  distance for the point creation along edges. The smaller, the more points are created.
+
+    Returns
+    -------
+    closest_road_to_point : tuple
+        A geometry object representing the segment and the coordinates of the two
+        nodes that determine the road section, u and v, the OSM ids of the nodes.
+    """
+    start_time = time.time()
+
+    if not isinstance(X, list) or not isinstance(Y, list):
+        # Check X or Y are not lists, throw them in one
+        X = [X]
+        Y = [Y]
+
+    if method is None:
+        # calculate nearest edge one at a time for each point
+        ne = [get_nearest_edge(G, (x, y)) for x, y in zip(X, Y)]
+        ne = [(u, v) for _, u, v in ne]
+
+    elif method == 'kdtree':
+
+        # check if we were able to import scipy.spatial.cKDTree successfully
+        if not cKDTree:
+            raise ImportError('The scipy package must be installed to use this optional feature.')
+
+        # transform graph into DataFrame
+        edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+
+        # transform edges into evenly spaced points
+        edges['points'] = edges.apply(lambda x: redistribute_vertices(x.geometry, dist), axis=1)
+
+        # develop edges data for each created points
+        extended = edges['points'].apply([pd.Series]).stack().reset_index(level=1, drop=True).join(edges).reset_index()
+
+        # Prepare btree arrays
+        nbdata = np.array(list(zip(extended['Series'].apply(lambda x: x.x),
+                                   extended['Series'].apply(lambda x: x.y))))
+
+        # build a k-d tree for euclidean nearest node search
+        btree = cKDTree(data=nbdata, compact_nodes=True, balanced_tree=True)
+
+        # query the tree for nearest node to each point
+        points = np.array([X, Y]).T
+        dist, idx = btree.query(points, k=1)  # Returns ids of closest point
+        eidx = extended.loc[idx, 'index']
+        ne = edges.loc[eidx, ['u', 'v']]
+
+    else:
+        raise ValueError('You must pass a valid method name, or None.')
+
+    log('Found nearest edges to {:,} points in {:,.2f} seconds'.format(len(X), time.time() - start_time))
+
+    return np.array(ne)
+
+
+def redistribute_vertices(geom, dist):
+    """
+    Redistribute the vertices on a projected LineString or MultiLineString. The distance
+    argument is only approximate since the total distance of the linestring may not be
+    a multiple of the preferred distance. This function works on only [Multi]LineString
+    geometry types.
+
+    This code is adapted from an answer by Mike T from this original question:
+    https://stackoverflow.com/questions/34906124/interpolating-every-x-distance-along-multiline-in-shapely
+
+    Parameters
+    ----------
+    geom: LineString or MultiLineString
+        a Shapely geometry
+    dist : float
+        point spacing along edges. The smaller, the more points are created.
+        Units must
+
+    Returns
+    -------
+        list of Point geometries : list
+    """
+    if geom.geom_type == 'LineString':
+        num_vert = int(round(geom.length / dist))
+        if num_vert == 0:
+            num_vert = 1
+        return [geom.interpolate(float(n) / num_vert, normalized=True)
+                for n in range(num_vert + 1)]
+    elif geom.geom_type == 'MultiLineString':
+        parts = [redistribute_vertices(part, dist)
+                 for part in geom]
+        return type(geom)([p for p in parts if not p.is_empty])
+    else:
+        raise ValueError('unhandled geometry {}'.format(geom.geom_type))
 
 
 def get_bearing(origin_point, destination_point):
@@ -1056,3 +1225,5 @@ def citation():
             "}")
 
     print(cite)
+
+from .save_load import graph_to_gdfs
