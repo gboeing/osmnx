@@ -265,13 +265,14 @@ def test_routing_folium():
     graph_map = ox.plot_graph_folium(G, popup_attribute='name')
     route_map = ox.plot_route_folium(G, route)
 
-def test_nearest_road():
+
+def test_nearest_edge():
 
     # test in closest road section
     sheik_sayed_dubai = [25.09, 25.06, 55.16, 55.11]
     location_coordinates = (25.071764, 55.138978)
     G = ox.graph_from_bbox(*sheik_sayed_dubai, simplify=False, retain_all=True, network_type='drive')
-    geometry, u, v = ox.get_nearest_road(G, location_coordinates)
+    geometry, u, v = ox.get_nearest_edge(G, location_coordinates)
 
 def test_buildings():
 
