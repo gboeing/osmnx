@@ -161,6 +161,11 @@ def test_network_saving_loading():
     nn2 = ox.get_nearest_nodes(G, X, Y, method='kdtree')
     nn3 = ox.get_nearest_nodes(G, X, Y, method='balltree')
 
+    # find graph edges nearest to some set of points
+    ne1 = ox.get_nearest_edges(G, X, Y)
+    ne2 = ox.get_nearest_edges(G, X, Y, method='kdtree')
+    ne3 = ox.get_nearest_edges(G, X, Y, method='kdtree', dist=50)
+
 
 def test_get_network_methods():
 
@@ -273,6 +278,16 @@ def test_nearest_edge():
     location_coordinates = (25.071764, 55.138978)
     G = ox.graph_from_bbox(*sheik_sayed_dubai, simplify=False, retain_all=True, network_type='drive')
     geometry, u, v = ox.get_nearest_edge(G, location_coordinates)
+
+
+def test_nearest_edges():
+
+    # test in closest road section
+    sheik_sayed_dubai = [25.09, 25.06, 55.16, 55.11]
+    location_coordinates = (25.071764, 55.138978)
+    G = ox.graph_from_bbox(*sheik_sayed_dubai, simplify=False, retain_all=True, network_type='drive')
+    ne = ox.get_nearest_edges(G, X=location_coordinates[0], Y=location_coordinates[1], dist=10)
+
 
 def test_buildings():
 
