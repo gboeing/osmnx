@@ -185,6 +185,47 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None,
 
                 buildings[result['id']] = building
 
+    # Create multipolygon buildings and pop untagged supporting polygons from buildings
+    pop_list = []
+
+    for response in responses:
+        for result in response['elements']:
+            if 'type' in result and result['type']=='relation':
+
+                outer_polys = []
+                inner_polys = []
+                multipoly = []
+
+                for member in result['members']:
+                    if 'role' in member and member['role']=='outer':
+                        outer_polys.append(member['ref'])
+                    if 'role' in member and member['role']=='inner':
+                        inner_polys.append(member['ref'])
+                    # create a list of untagged supporting polygons
+                    if 'tags' not in member:
+                        pop_list.append(member['ref'])
+
+                # osm allows multiple outer polygons in a relation
+                for outer_poly in outer_polys:
+                    temp_poly=buildings[outer_poly]['geometry']
+
+                    for inner_poly in inner_polys:
+                        temp_poly=temp_poly.difference(buildings[inner_poly]['geometry'])
+
+                    multipoly.append(temp_poly)
+
+                building = {'geometry' : MultiPolygon(multipoly)}
+
+                if 'tags' in result:
+                    for tag in result['tags']:
+                        building[tag] = result['tags'][tag]
+
+                buildings[result['id']] = building
+
+    # remove supporting geometry from buildings dictionary
+    for item in pop_list:
+        buildings.pop(item)
+
     gdf = gpd.GeoDataFrame(buildings).T
     gdf.crs = settings.default_crs
 
