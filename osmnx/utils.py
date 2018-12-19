@@ -488,47 +488,43 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
         return nearest_node
 
 
-
-def get_nearest_road(G, point):
+def get_nearest_edge(G, point):
     """
-    Return the nearest road to a pair of coordinates.
-    Pass in the graph representing the road network and a tuple with the
-    coordinates. We first get all the roads in the graph. Secondly we
-    compute the distance from the coordinates to the segments determined
-    by each road. The last step is to sort the road segments in ascending
-    order based on the distance from the coordinates to the road.
-    In the end, the first element in the list of roads will be the closest
-    road that we will return as a tuple containing the shapely geometry and
-    the u, v nodes.
+    Return the nearest edge to a pair of coordinates. Pass in a graph and a tuple
+    with the coordinates. We first get all the edges in the graph. Secondly we compute
+    the euclidean distance from the coordinates to the segments determined by each edge.
+    The last step is to sort the edge segments in ascending order based on the distance
+    from the coordinates to the edge. In the end, the first element in the list of edges
+    will be the closest edge that we will return as a tuple containing the shapely
+    geometry and the u, v nodes.
 
     Parameters
     ----------
     G : networkx multidigraph
     point : tuple
-        The (lat, lng) or (y, x) point for which we will find the nearest node
+        The (lat, lng) or (y, x) point for which we will find the nearest edge
         in the graph
 
     Returns
     -------
-    closest_road_to_point : tuple
+    closest_edge_to_point : tuple (shapely.geometry, u, v)
         A geometry object representing the segment and the coordinates of the two
-        nodes that determine the road section, u and v, the OSM ids of the nodes.
+        nodes that determine the edge section, u and v, the OSM ids of the nodes.
     """
     gdf = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
-    graph_roads = gdf[["geometry", "u", "v"]].values.tolist()
+    graph_edges = gdf[["geometry", "u", "v"]].values.tolist()
 
-    roads_with_distances = [
+    edges_with_distances = [
         (
-            graph_road,
-            Point(tuple(reversed(point))).distance(graph_road[0])
+            graph_edge,
+            Point(tuple(reversed(point))).distance(graph_edge[0])
         )
-        for graph_road in graph_roads
+        for graph_edge in graph_edges
     ]
 
-    roads_with_distances = sorted(roads_with_distances, key=lambda x: x[1])
-    closest_road_to_point = roads_with_distances[0][0]
-    return closest_road_to_point
-
+    edges_with_distances = sorted(edges_with_distances, key=lambda x: x[1])
+    closest_edge_to_point = edges_with_distances[0][0]
+    return closest_edge_to_point
 
 
 def get_nearest_nodes(G, X, Y, method=None):
