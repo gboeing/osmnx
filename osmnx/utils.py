@@ -511,6 +511,8 @@ def get_nearest_edge(G, point):
         A geometry object representing the segment and the coordinates of the two
         nodes that determine the edge section, u and v, the OSM ids of the nodes.
     """
+    start_time = time.time()
+
     gdf = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
     graph_edges = gdf[["geometry", "u", "v"]].values.tolist()
 
@@ -524,7 +526,12 @@ def get_nearest_edge(G, point):
 
     edges_with_distances = sorted(edges_with_distances, key=lambda x: x[1])
     closest_edge_to_point = edges_with_distances[0][0]
-    return closest_edge_to_point
+
+    geometry, u, v = closest_edge_to_point
+
+    log('Found nearest edge ({}) to point {} in {:,.2f} seconds'.format((u, v), point, time.time() - start_time))
+
+    return geometry, u, v
 
 
 def get_nearest_nodes(G, X, Y, method=None):
