@@ -148,7 +148,6 @@ def project_graph(G, to_crs=None):
     gdf_nodes = gpd.GeoDataFrame(nodes).T
     gdf_nodes.crs = G_proj.graph['crs']
     gdf_nodes.gdf_name = '{}_nodes'.format(G_proj.name)
-    gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64).map(make_str)
 
     # create new lat/lon columns just to save that data for later, and create a
     # geometry column from x/y

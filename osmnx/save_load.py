@@ -102,7 +102,6 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     gdf_nodes = gdf_nodes.drop(['x', 'y'], axis=1)
 
     # make everything but geometry column a string
-    gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64)
     for col in [c for c in gdf_nodes.columns if not c == 'geometry']:
         gdf_nodes[col] = gdf_nodes[col].fillna('').map(make_str)
 
@@ -248,7 +247,6 @@ def load_graphml(filename, folder=None):
     # convert numeric node tags from string to numeric data types
     log('Converting node and edge attribute data types')
     for _, data in G.nodes(data=True):
-        data['osmid'] = int(data['osmid'])
         data['x'] = float(data['x'])
         data['y'] = float(data['y'])
 
@@ -276,10 +274,7 @@ def load_graphml(filename, folder=None):
         # osmid might have a single value or a list, but if single value, then
         # parse int
         if 'osmid' in data:
-            if data['osmid'][0] == '[' and data['osmid'][-1] == ']':
-                data['osmid'] = ast.literal_eval(data['osmid'])
-            else:
-                data['osmid'] = int(data['osmid'])
+            data['osmid'] = ast.literal_eval(data['osmid'])
 
         # if geometry attribute exists, load the string as well-known text to
         # shapely LineString
@@ -537,7 +532,6 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
         gdf_nodes.crs = G.graph['crs']
         gdf_nodes.gdf_name = '{}_nodes'.format(G.graph['name'])
-        gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64).map(make_str)
 
         to_return.append(gdf_nodes)
         log('Created GeoDataFrame "{}" from graph in {:,.2f} seconds'.format(gdf_nodes.gdf_name, time.time()-start_time))
