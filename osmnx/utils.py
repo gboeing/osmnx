@@ -448,7 +448,7 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
 
     # dump graph node coordinates into a pandas dataframe indexed by node id
     # with x and y columns
-    coords = np.array([[node, data['x'], data['y']] for node, data in G.nodes(data=True)])
+    coords = [[node, data['x'], data['y']] for node, data in G.nodes(data=True)]
     df = pd.DataFrame(coords, columns=['node', 'x', 'y']).set_index('node')
 
     # add columns to the dataframe representing the (constant) coordinates of
@@ -477,7 +477,7 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
         raise ValueError('method argument must be either "haversine" or "euclidean"')
 
     # nearest node's ID is the index label of the minimum distance
-    nearest_node = int(distances.idxmin())
+    nearest_node = distances.idxmin()
     log('Found nearest node ({}) to point {} in {:,.2f} seconds'.format(nearest_node, point, time.time()-start_time))
 
     # if caller requested return_dist, return distance between the point and the

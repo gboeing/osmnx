@@ -148,11 +148,12 @@ def test_network_saving_loading():
     ox.save_graphml(G_projected)
     ox.save_graphml(G_projected, filename='gephi.graphml', gephi=True)
     G2 = ox.load_graphml('graph.graphml')
+    G3 = ox.load_graphml('graph.graphml', node_type=str)
 
     # convert graph to node/edge GeoDataFrames and back again
     gdf_edges = ox.graph_to_gdfs(G, nodes=False, edges=True, fill_edge_geometry=False)
     gdf_nodes, gdf_edges = ox.graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True)
-    G3 = ox.gdfs_to_graph(gdf_nodes, gdf_edges)
+    G4 = ox.gdfs_to_graph(gdf_nodes, gdf_edges)
 
     # find graph nodes nearest to some set of points
     X = gdf_nodes['x'].head()
