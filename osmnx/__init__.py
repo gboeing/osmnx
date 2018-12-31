@@ -16,5 +16,6 @@ from .save_load import *
 from .simplify import *
 from .stats import *
 from .utils import *
+from .footprints import *
 
-__version__ = '0.8.2'
+__version__ = '0.8.2' # to be updated
