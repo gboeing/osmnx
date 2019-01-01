@@ -249,7 +249,10 @@ def load_graphml(filename, folder=None, node_type=int):
     # convert numeric node tags from string to numeric data types
     log('Converting node and edge attribute data types')
     for _, data in G.nodes(data=True):
-        data['osmid'] = node_type(data['osmid'])
+        if node_type == int:
+            data['osmid'] = int(data['osmid'])
+        else:
+            data['osmid'] = ast.literal_eval(data['osmid'])
         data['x'] = float(data['x'])
         data['y'] = float(data['y'])
 
