@@ -93,8 +93,8 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     G_save = get_undirected(G.copy())
 
     # create a GeoDataFrame of the nodes and set CRS
-    node_data = [list(i) for i in zip(*G_save.nodes(data=True))]
-    gdf_nodes = gpd.GeoDataFrame(node_data[1], index=node_data[0])
+    nodes, data = zip(*G_save.nodes(data=True))
+    gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
     gdf_nodes.crs = G_save.graph['crs']
 
     # create a geometry column then drop the x and y columns
@@ -533,8 +533,8 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
         start_time = time.time()
 
-        node_data = [list(i) for i in zip(*G.nodes(data=True))]
-        gdf_nodes = gpd.GeoDataFrame(node_data[1], index=node_data[0])
+        nodes, data = zip(*G.nodes(data=True))
+        gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
         if node_geometry:
             gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
         gdf_nodes.crs = G.graph['crs']

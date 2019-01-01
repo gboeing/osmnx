@@ -144,8 +144,8 @@ def project_graph(G, to_crs=None):
     start_time = time.time()
 
     # create a GeoDataFrame of the nodes, name it, convert osmid to str
-    node_data = [list(i) for i in zip(*G_proj.nodes(data=True))]
-    gdf_nodes = gpd.GeoDataFrame(node_data[1], index=node_data[0])
+    nodes, data = zip(*G_proj.nodes(data=True))
+    gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
     gdf_nodes.crs = G_proj.graph['crs']
     gdf_nodes.gdf_name = '{}_nodes'.format(G_proj.name)
 
