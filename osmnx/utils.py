@@ -640,23 +640,23 @@ def get_nearest_edges(G, X, Y, method='kdtree', dist=10):
     G : networkx multidigraph
     X : list-like
         The vector of longitudes or x's for which we will find the nearest
-        edge in the graph
+        edge in the graph. For projected graphs, use the projected coordinates, usually in meters.
     Y : list-like
         The vector of latitudes or y's for which we will find the nearest
-        edge in the graph
-    method : str {None, 'kdtree'}
+        edge in the graph. For projected graphs, use the projected coordinates, usually in meters.
+    method : str {'kdtree', None}
         Which method to use for finding nearest edge to each point.
+        If 'kdtree' we use scipy.spatial.cKDTree for very fast euclidean search.
         If None, we manually find each edge one at a time using
-        osmnx.utils.get_nearest_edge. If 'kdtree' we use
-        scipy.spatial.cKDTree for very fast euclidean search.
+        osmnx.utils.get_nearest_edge.
     dist : float
-        spacing  distance for the point creation along edges. The smaller, the more points are created.
+        spacing length along edges. Units are the same as the geom; Degrees for unprojected
+        geometries and meters for projected geometries. The smaller the value, the more points are created.
 
     Returns
     -------
-    closest_road_to_point : tuple
-        A geometry object representing the segment and the coordinates of the two
-        nodes that determine the road section, u and v, the OSM ids of the nodes.
+    ne : ndarray
+        array of nearest edges represented by their startpoint and endpoint ids, u and v, the OSM ids of the nodes.
     """
     start_time = time.time()
 
@@ -716,8 +716,8 @@ def redistribute_vertices(geom, dist):
     geom: LineString or MultiLineString
         a Shapely geometry
     dist : float
-        point spacing along edges. The smaller, the more points are created.
-        Units must
+        spacing length along edges. Units are the same as the geom; Degrees for unprojected geometries and meters
+        for projected geometries. The smaller the value, the more points are created.
 
     Returns
     -------
