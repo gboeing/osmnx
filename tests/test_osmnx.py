@@ -273,7 +273,7 @@ def test_routing_folium():
 
 def test_nearest_edge():
 
-    # test in closest road section
+    # test in closest edge section
     sheik_sayed_dubai = [25.09, 25.06, 55.16, 55.11]
     location_coordinates = (25.071764, 55.138978)
     G = ox.graph_from_bbox(*sheik_sayed_dubai, simplify=False, retain_all=True, network_type='drive')
@@ -282,7 +282,7 @@ def test_nearest_edge():
 
 def test_nearest_edges():
 
-    # test in closest road section
+    # test in closest edge section
     sheik_sayed_dubai = [25.09, 25.06, 55.16, 55.11]
     location_coordinates = (25.071764, 55.138978)
     G = ox.graph_from_bbox(*sheik_sayed_dubai, simplify=False, retain_all=True, network_type='drive')
