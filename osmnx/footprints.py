@@ -24,9 +24,57 @@ from .projection import project_geometry
 from .utils import log
 from .utils import geocode
 
+def get_ftprnts_filter(footprint_type):
+    """
+    Create a filter to query OSM for the specified footprint type.
+
+    Parameters
+    ----------
+    footprint_type : string
+        {'city_block', 'land-use', 'land-cover', 'all', 'none'}
+        what type of footprints to get
+
+    Returns
+    -------
+    string
+    """
+    filters = {}
+
+    # driving: filter out un-drivable roads, service roads, private ways, and
+    # anything specifying motor=no. also filter out any non-service roads that
+    # are tagged as providing parking, driveway, private, or emergency-access
+    # services
+    filters['city_block'] = ''
+
+    filters['land-use'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
+                        'proposed|construction|bridleway|abandoned|platform|raceway|service"]'
+                        '["motor_vehicle"!~"no"]["motorcar"!~"no"]{}'
+                        '["service"!~"parking|parking_aisle|driveway|private|emergency_access"]').format(settings.default_access)
+
+    filters['land-cover'] = ''
+
+    # to download all ways, just filter out everything not currently in use or
+    # that is private-access only
+    filters['all'] = ('["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
+                      '["service"!~"private"]{}').format(settings.default_access)
+
+    # to download all ways, including private-access ones, just filter out
+    # everything not currently in use
+    filters['all_private'] = '["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
+
+    # no filter, needed for infrastructures other than "highway"
+    filters['none'] = ''
+
+    if footprint_type in filters:
+        ftprnt_filter = filters[footprint_type]
+    else:
+        raise UnknownFootprintType('unknown footprint_type "{}"'.format(footprint_type))
+
+    return ftprnt_filter
 
 def osm_footprint_download(polygon=None, north=None, south=None, east=None, west=None,
-                      timeout=180, memory=None, max_query_area_size=50*1000*50*1000):
+                      timeout=180, memory=None, max_query_area_size=50*1000*50*1000,
+                      footprint='"place"="city_block"'):
     """
     Download OpenStreetMap footprint data.
 
@@ -52,6 +100,8 @@ def osm_footprint_download(polygon=None, north=None, south=None, east=None, west
         any polygon bigger will get divided up for multiple queries to API
         (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are
         meters))
+    footprint : string
+        type of area to be downloaded options include "place"="city_block",
 
     Returns
     -------
@@ -97,10 +147,10 @@ def osm_footprint_download(polygon=None, north=None, south=None, east=None, west
             # decimal places (ie, within 1 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = ('[out:json][timeout:{timeout}]{maxsize};((way["place"="city_block"]({south:.8f},'
-                              '{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation["place"="city_block"]'
+            query_template = ('[out:json][timeout:{timeout}]{maxsize};((way[{footprint}]({south:.8f},'
+                              '{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation[{footprint}]'
                               '({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);););out;')
-            query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout, maxsize=maxsize)
+            query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout, maxsize=maxsize, footprint=footprint)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within bounding box from '
@@ -121,9 +171,9 @@ def osm_footprint_download(polygon=None, north=None, south=None, east=None, west
         # a time
         for polygon_coord_str in polygon_coord_strs:
             query_template = ('[out:json][timeout:{timeout}]{maxsize};(way'
-                              '(poly:"{polygon}")["place"="city_block"];(._;>;);relation'
-                              '(poly:"{polygon}")["place"="city_block"];(._;>;););out;')
-            query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize)
+                              '(poly:"{polygon}")[{footprint}];(._;>;);relation'
+                              '(poly:"{polygon}")[{footprint}];(._;>;););out;')
+            query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize, footprint=footprint)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within polygon from API in '
