@@ -618,7 +618,7 @@ def get_nearest_nodes(G, X, Y, method=None):
     return np.array(nn)
 
 
-def get_nearest_edges(G, X, Y, method=None, dist=10):
+def get_nearest_edges(G, X, Y, method='kdtree', dist=10):
     """
     Return the graph edges nearest to a list of points. Pass in points
     as separate vectors of X and Y coordinates. The 'kdtree' method
@@ -627,11 +627,10 @@ def get_nearest_edges(G, X, Y, method=None, dist=10):
     precisely finds the nearest edge if working in projected coordinates).
 
     The method creates equally distanced points along the edges of the network.
-    Then, these points are used in a kdTree search to find the nearest point along
-    an edge.
+    Then, these points are used in a kdTree search to identify which is nearest to the
 
     This method will not give the exact perpendicular point along the edge, but the
-    smaller the *dist* parameter, closer the solution will be.
+    smaller the *dist* parameter, the closer the solution will be.
 
     Code is adapted from an answer by JHuw from this original question:
     https://gis.stackexchange.com/questions/222315/geopandas-find-nearest-point-in-other-dataframe
