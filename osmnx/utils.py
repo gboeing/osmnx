@@ -705,6 +705,36 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         eidx = extended.loc[idx, 'index']
         ne = edges.loc[eidx, ['u', 'v']]
 
+    elif method == 'balltree':
+
+        # check if we were able to import sklearn.neighbors.BallTree successfully
+        if not BallTree:
+            raise ImportError('The scikit-learn package must be installed to use this optional feature.')
+
+        # transform graph into DataFrame
+        edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+
+        # transform edges into evenly spaced points
+        edges['points'] = edges.apply(lambda x: redistribute_vertices(x.geometry, dist), axis=1)
+
+        # develop edges data for each created points
+        extended = edges['points'].apply([pd.Series]).stack().reset_index(level=1, drop=True).join(edges).reset_index()
+
+        # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
+        nodes = pd.DataFrame({'x': extended['Series'].apply(lambda x: x.x),
+                              'y': extended['Series'].apply(lambda x: x.y)})
+        nodes_rad = np.deg2rad(nodes[['y', 'x']].values.astype(np.float))
+        points = np.array([Y, X]).T
+        points_rad = np.deg2rad(points)
+
+        # build a ball tree for haversine nearest node search
+        tree = BallTree(nodes_rad, metric='haversine')
+
+        # query the tree for nearest node to each point
+        idx = tree.query(points_rad, k=1, return_distance=False)
+        eidx = extended.loc[idx[:, 0], 'index']
+        ne = edges.loc[eidx, ['u', 'v']]
+
     else:
         raise ValueError('You must pass a valid method name, or None.')
 
