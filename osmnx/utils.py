@@ -689,7 +689,7 @@ def get_route_edge_attributes(G, route, attribute=None, minimize_key='length', r
         list of nodes in the path
     attribute : string
         the name of the attribute to get the value of for each edge.
-        If not specified, the list of dictionaries containing all attributes is returned.
+        If not specified, the complete data dict is returned for each edge.
     minimize_key : string
         if there are parallel edges between two nodes, select the one with the
         lowest value of minimize_key
