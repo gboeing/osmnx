@@ -282,12 +282,25 @@ def test_nearest_edge():
 
 def test_nearest_edges():
 
+    from pyproj import Proj
+
     # test in closest edge section
     sheik_sayed_dubai = [25.09, 25.06, 55.16, 55.11]
     location_coordinates = (25.071764, 55.138978)
     G = ox.graph_from_bbox(*sheik_sayed_dubai, simplify=False, retain_all=True, network_type='drive')
-    ne = ox.get_nearest_edges(G, X=location_coordinates[0], Y=location_coordinates[1], dist=10)
 
+    # Unprojected
+    ne1 = ox.get_nearest_edges(G, X=[location_coordinates[1], location_coordinates[1]],
+                                  Y=[location_coordinates[0], location_coordinates[0]], method='balltree', dist=0.0001)
+
+    # Projected
+    G2 = ox.project_graph(G)
+    crs = Proj(G2.graph['crs'])
+
+    projected_point = crs(location_coordinates[1], location_coordinates[0])
+    ne2 = ox.get_nearest_edges(G2, X=[projected_point[0], projected_point[0]],
+                                   Y=[projected_point[1], projected_point[1]], method='kdtree', dist=10)
+    assert (ne1 == ne2).all()
 
 def test_buildings():
 
