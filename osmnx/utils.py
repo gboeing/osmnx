@@ -755,7 +755,7 @@ def redistribute_vertices(geom, dist):
 
     Parameters
     ----------
-    geom: LineString or MultiLineString
+    geom : LineString or MultiLineString
         a Shapely geometry
     dist : float
         spacing length along edges. Units are the same as the geom; Degrees for unprojected geometries and meters
