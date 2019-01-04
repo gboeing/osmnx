@@ -24,13 +24,14 @@ from .projection import project_geometry
 from .utils import log
 from .utils import geocode
 
-def get_ftprnts_filter(footprint_type):
+
+def get_ftprnts_filter(footprint_filter):
     """
     Create a filter to query OSM for the specified footprint type.
 
     Parameters
     ----------
-    footprint_type : string
+    footprint_filter : string
         {'city_block', 'land-use', 'land-cover', 'all', 'none'}
         what type of footprints to get
 
@@ -40,41 +41,27 @@ def get_ftprnts_filter(footprint_type):
     """
     filters = {}
 
-    # driving: filter out un-drivable roads, service roads, private ways, and
-    # anything specifying motor=no. also filter out any non-service roads that
-    # are tagged as providing parking, driveway, private, or emergency-access
-    # services
-    filters['city_block'] = ''
+    # filters to be developed
 
-    filters['land-use'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
-                        'proposed|construction|bridleway|abandoned|platform|raceway|service"]'
-                        '["motor_vehicle"!~"no"]["motorcar"!~"no"]{}'
-                        '["service"!~"parking|parking_aisle|driveway|private|emergency_access"]').format(settings.default_access)
+    filters['land-use'] = ''
 
     filters['land-cover'] = ''
 
-    # to download all ways, just filter out everything not currently in use or
-    # that is private-access only
-    filters['all'] = ('["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
-                      '["service"!~"private"]{}').format(settings.default_access)
+    filters['all'] = ''
 
-    # to download all ways, including private-access ones, just filter out
-    # everything not currently in use
-    filters['all_private'] = '["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
-
-    # no filter, needed for infrastructures other than "highway"
     filters['none'] = ''
 
-    if footprint_type in filters:
-        ftprnt_filter = filters[footprint_type]
+    if footprint_filter in filters:
+        filter = filters[footprint_filter]
     else:
-        raise UnknownFootprintType('unknown footprint_type "{}"'.format(footprint_type))
+        raise UnknownFootprintType('unknown footprint_filter "{}"'.format(footprint_filter))
 
-    return ftprnt_filter
+    return filter
+
 
 def osm_footprint_download(polygon=None, north=None, south=None, east=None, west=None,
                       timeout=180, memory=None, max_query_area_size=50*1000*50*1000,
-                      footprint='"place"="city_block"'):
+                      footprint='["place"="city_block"]', footprint_filter='all', custom_filter=None):
     """
     Download OpenStreetMap footprint data.
 
@@ -101,7 +88,11 @@ def osm_footprint_download(polygon=None, north=None, south=None, east=None, west
         (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are
         meters))
     footprint : string
-        type of area to be downloaded options include "place"="city_block",
+        type of area to be downloaded options include "place"="city_block"
+    footprint_filter : string
+        filter to be applied to footprints
+    custom_filter : string
+        custom filter different from presets
 
     Returns
     -------
@@ -115,6 +106,13 @@ def osm_footprint_download(polygon=None, north=None, south=None, east=None, west
     by_bbox = not (north is None or south is None or east is None or west is None)
     if not (by_poly or by_bbox):
         raise ValueError('You must pass a polygon or north, south, east, and west')
+
+    # create a filter to exclude certain kinds of footprints based on the requested
+    # footprint_type
+    if custom_filter:
+        filter = custom_filter
+    else:
+        filter = get_ftprnts_filter(footprint_filter)
 
     response_jsons = []
 
@@ -147,10 +145,12 @@ def osm_footprint_download(polygon=None, north=None, south=None, east=None, west
             # decimal places (ie, within 1 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = ('[out:json][timeout:{timeout}]{maxsize};((way[{footprint}]({south:.8f},'
-                              '{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation[{footprint}]'
-                              '({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);););out;')
-            query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout, maxsize=maxsize, footprint=footprint)
+            query_template = ('[out:json][timeout:{timeout}]{maxsize};'
+                              '((way{footprint}{filters}({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
+                              '(._;>;););'
+                              '(relation{footprint}{filters}({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
+                              '(._;>;);););out;')
+            query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout, maxsize=maxsize, footprint=footprint, filters=filter)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within bounding box from '
@@ -171,9 +171,9 @@ def osm_footprint_download(polygon=None, north=None, south=None, east=None, west
         # a time
         for polygon_coord_str in polygon_coord_strs:
             query_template = ('[out:json][timeout:{timeout}]{maxsize};(way'
-                              '(poly:"{polygon}")[{footprint}];(._;>;);relation'
-                              '(poly:"{polygon}")[{footprint}];(._;>;););out;')
-            query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize, footprint=footprint)
+                              '(poly:"{polygon}"){footprint}{filters};(._;>;);relation'
+                              '(poly:"{polygon}"){footprint}{filters};(._;>;););out;')
+            query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize, footprint=footprint, filters=filter)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within polygon from API in '
@@ -184,7 +184,8 @@ def osm_footprint_download(polygon=None, north=None, south=None, east=None, west
 
 
 def create_footprints_gdf(polygon=None, north=None, south=None, east=None,
-                         west=None, retain_invalid=False):
+                         west=None, retain_invalid=False,
+                         footprint='["place"="city_block"]', footprint_filter='all', custom_filter=None):
     """
     Get footprint data from OSM then assemble it into a GeoDataFrame.
 
@@ -208,7 +209,9 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None,
     GeoDataFrame
     """
 
-    responses = osm_ftprnt_download(polygon, north, south, east, west)
+    responses = osm_footprint_download(polygon, north, south, east, west,
+                                    footprint=footprint, footprint_filter=footprint_filter,
+                                    custom_filter=custom_filter)
 
     vertices = {}
     for response in responses:
@@ -286,7 +289,8 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None,
     return gdf
 
 
-def footprints_from_point(point, distance, retain_invalid=False):
+def footprints_from_point(point, distance, retain_invalid=False,
+                          footprint='["place"="city_block"]', footprint_filter='all', custom_filter=None):
     """
     Get footprints within some distance north, south, east, and west of
     a lat-long point.
@@ -307,10 +311,13 @@ def footprints_from_point(point, distance, retain_invalid=False):
 
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
-    return create_footprints_gdf(north=north, south=south, east=east, west=west, retain_invalid=retain_invalid)
+    return create_footprints_gdf(north=north, south=south, east=east, west=west, retain_invalid=retain_invalid,
+                                 footprint=footprint, footprint_filter=footprint_filter,
+                                 custom_filter=custom_filter)
 
 
-def footprints_from_address(address, distance, retain_invalid=False):
+def footprints_from_address(address, distance, retain_invalid=False,
+                            footprint='["place"="city_block"]', footprint_filter='all', custom_filter=None):
     """
     Get footprints within some distance north, south, east, and west of
     an address.
@@ -333,10 +340,13 @@ def footprints_from_address(address, distance, retain_invalid=False):
     point = geocode(query=address)
 
     # get footprints within distance of this point
-    return footprints_from_point(point, distance, retain_invalid=retain_invalid)
+    return footprints_from_point(point, distance, retain_invalid=retain_invalid,
+                                 footprint=footprint, footprint_filter=footprint_filter,
+                                 custom_filter=custom_filter)
 
 
-def footprints_from_polygon(polygon, retain_invalid=False):
+def footprints_from_polygon(polygon, retain_invalid=False,
+                            footprint='["place"="city_block"]', footprint_filter='all', custom_filter=None):
     """
     Get footprints within some polygon.
 
@@ -352,10 +362,13 @@ def footprints_from_polygon(polygon, retain_invalid=False):
     GeoDataFrame
     """
 
-    return create_footprints_gdf(polygon=polygon, retain_invalid=retain_invalid)
+    return create_footprints_gdf(polygon=polygon, retain_invalid=retain_invalid,
+                                     footprint=footprint, footprint_filter=footprint_filter,
+                                     custom_filter=custom_filter)
 
 
-def footprints_from_place(place, retain_invalid=False):
+def footprints_from_place(place, retain_invalid=False,
+                          footprint='["place"="city_block"]', footprint_filter='all', custom_filter=None):
     """
     Get footprints within the boundaries of some place.
 
@@ -379,85 +392,88 @@ def footprints_from_place(place, retain_invalid=False):
 
     city = gdf_from_place(place)
     polygon = city['geometry'].iloc[0]
-    return create_footprints_gdf(polygon, retain_invalid=retain_invalid)
+    return create_footprints_gdf(polygon, retain_invalid=retain_invalid,
+                                 footprint=footprint, footprint_filter=footprint_filter,
+                                 custom_filter=custom_filter)
 
 
-def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w', set_bounds=True, bbox=None,
-                   save=False, show=True, close=False, filename='image', file_format='png', dpi=600):
-    """
-    Plot a GeoDataFrame of footprints.
-
-    Parameters
-    ----------
-    gdf : GeoDataFrame
-        footprints
-    fig : figure
-    ax : axis
-    figsize : tuple
-    color : string
-        the color of the footprints
-    bgcolor : string
-        the background color of the plot
-    set_bounds : bool
-        if True, set bounds from either passed-in bbox or the spatial extent of the gdf
-    bbox : tuple
-        if True and if set_bounds is True, set the display bounds to this bbox
-    save : bool
-        whether to save the figure to disk or not
-    show : bool
-        whether to display the figure or not
-    close : bool
-        close the figure (only if show equals False) to prevent display
-    filename : string
-        the name of the file to save
-    file_format : string
-        the format of the file to save (e.g., 'jpg', 'png', 'svg')
-    dpi : int
-        the resolution of the image file if saving
-
-    Returns
-    -------
-    fig, ax : tuple
-
-    """
-
-    if fig is None or ax is None:
-        fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)
-        ax.set_facecolor(bgcolor)
-
-    # extract each polygon as a descartes patch, and add to a matplotlib patch
-    # collection
-    patches = []
-    for geometry in gdf['geometry']:
-        if isinstance(geometry, Polygon):
-            patches.append(PolygonPatch(geometry))
-        elif isinstance(geometry, MultiPolygon):
-            for subpolygon in geometry: #if geometry is multipolygon, go through each constituent subpolygon
-                patches.append(PolygonPatch(subpolygon))
-    pc = PatchCollection(patches, facecolor=color, edgecolor=color, linewidth=0, alpha=1)
-    ax.add_collection(pc)
-
-    if set_bounds:
-        if bbox is None:
-            # set the figure bounds to the polygons' bounds
-            left, bottom, right, top = gdf.total_bounds
-        else:
-            top, bottom, right, left = bbox
-        ax.set_xlim((left, right))
-        ax.set_ylim((bottom, top))
-
-    # turn off the axis display set the margins to zero and point the ticks in
-    # so there's no space around the plot
-    ax.axis('off')
-    ax.margins(0)
-    ax.tick_params(which='both', direction='in')
-    fig.canvas.draw()
-
-    # make everything square
-    ax.set_aspect('equal')
-    fig.canvas.draw()
-
-    fig, ax = save_and_show(fig=fig, ax=ax, save=save, show=show, close=close,
-                            filename=filename, file_format=file_format, dpi=dpi, axis_off=True)
-
-    return fig, ax
+# currently untested and unamended
+# def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w', set_bounds=True, bbox=None,
+#                    save=False, show=True, close=False, filename='image', file_format='png', dpi=600):
+#     """
+#     Plot a GeoDataFrame of footprints.
+#
+#     Parameters
+#     ----------
+#     gdf : GeoDataFrame
+#         footprints
+#     fig : figure
+#     ax : axis
+#     figsize : tuple
+#     color : string
+#         the color of the footprints
+#     bgcolor : string
+#         the background color of the plot
+#     set_bounds : bool
+#         if True, set bounds from either passed-in bbox or the spatial extent of the gdf
+#     bbox : tuple
+#         if True and if set_bounds is True, set the display bounds to this bbox
+#     save : bool
+#         whether to save the figure to disk or not
+#     show : bool
+#         whether to display the figure or not
+#     close : bool
+#         close the figure (only if show equals False) to prevent display
+#     filename : string
+#         the name of the file to save
+#     file_format : string
+#         the format of the file to save (e.g., 'jpg', 'png', 'svg')
+#     dpi : int
+#         the resolution of the image file if saving
+#
+#     Returns
+#     -------
+#     fig, ax : tuple
+#
+#     """
+#
+#     if fig is None or ax is None:
+#         fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)
+#         ax.set_facecolor(bgcolor)
+#
+#     # extract each polygon as a descartes patch, and add to a matplotlib patch
+#     # collection
+#     patches = []
+#     for geometry in gdf['geometry']:
+#         if isinstance(geometry, Polygon):
+#             patches.append(PolygonPatch(geometry))
+#         elif isinstance(geometry, MultiPolygon):
+#             for subpolygon in geometry: #if geometry is multipolygon, go through each constituent subpolygon
+#                 patches.append(PolygonPatch(subpolygon))
+#     pc = PatchCollection(patches, facecolor=color, edgecolor=color, linewidth=0, alpha=1)
+#     ax.add_collection(pc)
+#
+#     if set_bounds:
+#         if bbox is None:
+#             # set the figure bounds to the polygons' bounds
+#             left, bottom, right, top = gdf.total_bounds
+#         else:
+#             top, bottom, right, left = bbox
+#         ax.set_xlim((left, right))
+#         ax.set_ylim((bottom, top))
+#
+#     # turn off the axis display set the margins to zero and point the ticks in
+#     # so there's no space around the plot
+#     ax.axis('off')
+#     ax.margins(0)
+#     ax.tick_params(which='both', direction='in')
+#     fig.canvas.draw()
+#
+#     # make everything square
+#     ax.set_aspect('equal')
+#     fig.canvas.draw()
+#
+#     fig, ax = save_and_show(fig=fig, ax=ax, save=save, show=show, close=close,
+#                             filename=filename, file_format=file_format, dpi=dpi, axis_off=True)
+#
+#     return fig, ax
