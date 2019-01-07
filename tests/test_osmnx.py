@@ -161,6 +161,11 @@ def test_network_saving_loading():
     nn2 = ox.get_nearest_nodes(G, X, Y, method='kdtree')
     nn3 = ox.get_nearest_nodes(G, X, Y, method='balltree')
 
+    # find graph edges nearest to some set of points
+    ne1 = ox.get_nearest_edges(G, X, Y)
+    ne2 = ox.get_nearest_edges(G, X, Y, method='kdtree')
+    ne3 = ox.get_nearest_edges(G, X, Y, method='kdtree', dist=50)
+
 
 def test_get_network_methods():
 
@@ -265,13 +270,37 @@ def test_routing_folium():
     graph_map = ox.plot_graph_folium(G, popup_attribute='name')
     route_map = ox.plot_route_folium(G, route)
 
-def test_nearest_road():
 
-    # test in closest road section
+def test_nearest_edge():
+
+    # test in closest edge section
     sheik_sayed_dubai = [25.09, 25.06, 55.16, 55.11]
     location_coordinates = (25.071764, 55.138978)
     G = ox.graph_from_bbox(*sheik_sayed_dubai, simplify=False, retain_all=True, network_type='drive')
-    geometry, u, v = ox.get_nearest_road(G, location_coordinates)
+    geometry, u, v = ox.get_nearest_edge(G, location_coordinates)
+
+
+def test_nearest_edges():
+
+    from pyproj import Proj
+
+    # test in closest edge section
+    sheik_sayed_dubai = [25.09, 25.06, 55.16, 55.11]
+    location_coordinates = (25.071764, 55.138978)
+    G = ox.graph_from_bbox(*sheik_sayed_dubai, simplify=False, retain_all=True, network_type='drive')
+
+    # Unprojected
+    ne1 = ox.get_nearest_edges(G, X=[location_coordinates[1], location_coordinates[1]],
+                                  Y=[location_coordinates[0], location_coordinates[0]], method='balltree', dist=0.0001)
+
+    # Projected
+    G2 = ox.project_graph(G)
+    crs = Proj(G2.graph['crs'])
+
+    projected_point = crs(location_coordinates[1], location_coordinates[0])
+    ne2 = ox.get_nearest_edges(G2, X=[projected_point[0], projected_point[0]],
+                                   Y=[projected_point[1], projected_point[1]], method='kdtree', dist=10)
+    assert (ne1 == ne2).all()
 
 def test_buildings():
 
