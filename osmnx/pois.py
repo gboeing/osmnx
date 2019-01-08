@@ -24,6 +24,8 @@ def parse_poi_query(north, south, east, west, tags=None, timeout=180, maxsize=''
     """
     Construct an Overpass QL query to load POIs with certain tags.
 
+    By default, queries all features with an amenity tag.
+
     Parameters
     ----------
     north : float
@@ -45,7 +47,7 @@ def parse_poi_query(north, south, east, west, tags=None, timeout=180, maxsize=''
 
     # build default tags
     if not tags:
-        tags = {'amenity':None}
+        tags = {'amenity':True}
     
     # define templates for objects and extents    
     object_template = '({object_type}[{{keys}}{{op}}"{{values}}"]{{extent}});'
@@ -94,31 +96,43 @@ def parse_poi_query(north, south, east, west, tags=None, timeout=180, maxsize=''
                            
     # terminate query string
     query_str += ");out;"
-
-    print(query_str)
-    
+   
     return query_str
 
 
 def osm_poi_download(polygon=None, north=None, south=None, east=None, west=None,
-                     timeout=180, max_query_area_size=50*1000*50*1000, tags=None):
+                     timeout=180, max_query_area_size=50*1000*50*1000, tags=None,
+                     return_query=False):
     """
     Get points of interests (POIs) from OpenStreetMap based on selected amenity types.
 
     Parameters
     ----------
-    poly : shapely.geometry.Polygon
-        Polygon that will be used to limit the POI search. 
+    polygon : shapely.geometry.Polygon
+        Polygon that will be used to limit the POI search.
+    north : float
+    	Northern WGS84 extent (lat)
+	south : float
+		Southern WGS84 extent (lat)
+	east : float
+		Eastern WGS84 extent (lon)
+	west : float
+		Western WGS84 extent (lon)
     tags : dict
         Dictionary of tag keys and values that will be used for finding POIs in the selected area.
         Keys may be strings or lists of strings.
         Values make be string, lists of strings, or None, if all values should be returned for a given key.
         By default, all POIs with an 'amenity' key of any value will be be returned.
+    return_query : bool (default=False)
+    	If True, Overpass API query based on tags dictionary is returned as the second
+    	object in a tuple
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
         Points of interest and the tags associated with them as geopandas GeoDataFrame.
+    query : str (optional; returned only if `return_query=True`)
+    	Overpass API query constructed based on tags dictionary input
     """
 
     def set_query(west, south, east, north, tags):
@@ -150,7 +164,10 @@ def osm_poi_download(polygon=None, north=None, south=None, east=None, west=None,
     # Get the POIs
     responses = overpass_request(data={'data': query}, timeout=timeout)
 
-    return responses
+    if return_query:
+        return responses, query
+    else:
+        return responses
 
 
 def parse_nodes_coords(osm_response):
@@ -332,7 +349,7 @@ def parse_osm_relations(relations, osm_way_df):
     return osm_way_df
 
 
-def create_poi_gdf(polygon=None, north=None, south=None, east=None, west=None, tags=None):
+def create_poi_gdf(polygon=None, north=None, south=None, east=None, west=None, tags=None, return_query=False):
     """
     Parse GeoDataFrames from POI json that was returned by Overpass API.
 
@@ -359,7 +376,10 @@ def create_poi_gdf(polygon=None, north=None, south=None, east=None, west=None, t
     Geopandas GeoDataFrame with POIs and the associated attributes. 
     """
 
-    responses = osm_poi_download(polygon=polygon, north=north, south=south, east=east, west=west, tags=tags)
+    if return_query:
+        responses, query = osm_poi_download(polygon=polygon, north=north, south=south, east=east, west=west, tags=tags, return_query=return_query)
+    else:
+        responses = osm_poi_download(polygon=polygon, north=north, south=south, east=east, west=west, tags=tags)
 
     # Parse coordinates from all the nodes in the response
     coords = parse_nodes_coords(responses)
@@ -406,10 +426,13 @@ def create_poi_gdf(polygon=None, north=None, south=None, east=None, west=None, t
     # Combine GeoDataFrames
     gdf = gdf_nodes.append(gdf_ways, sort=False)
 
-    return gdf
+    if return_query:
+        return gdf, query
+    else:
+        return gdf
 
 
-def pois_from_point(point, distance=None, tags=None, **kwargs):
+def pois_from_point(point, distance=None, tags=None, return_query=False, **kwargs):
     """
     Get point of interests (POIs) within some distance north, south, east, and west of
     a lat-long point.
@@ -444,7 +467,7 @@ def pois_from_point(point, distance=None, tags=None, **kwargs):
     return create_poi_gdf(north=north, south=south, east=east, west=west, tags=tags)
 
 
-def pois_from_address(address, distance, tags=None, **kwargs):
+def pois_from_address(address, distance, tags=None, return_query=False, **kwargs):
     """
     Get OSM points of Interests within some distance north, south, east, and west of
     an address.
@@ -478,10 +501,10 @@ def pois_from_address(address, distance, tags=None, **kwargs):
     point = geocode(query=address)
 
     # get buildings within distance of this point
-    return pois_from_point(point=point, distance=distance, tags=tags)
+    return pois_from_point(point=point, distance=distance, tags=tags, return_query=return_query)
 
 
-def pois_from_polygon(polygon, tags=None, **kwargs):
+def pois_from_polygon(polygon, tags=None, return_query=False, **kwargs):
     """
     Get OSM points of interest within some polygon.
 
@@ -507,10 +530,10 @@ def pois_from_polygon(polygon, tags=None, **kwargs):
     """
     if 'amenities' in locals():
         tags = {'amenity':amenities}
-    return create_poi_gdf(polygon=polygon, tags=tags)
+    return create_poi_gdf(polygon=polygon, tags=tags, return_query=return_query)
 
 
-def pois_from_place(place, tags=None, **kwargs):
+def pois_from_place(place, tags=None, return_query=False, **kwargs):
     """
     Get points of interest (POIs) within the boundaries of some place.
 
@@ -523,19 +546,25 @@ def pois_from_place(place, tags=None, **kwargs):
         Keys may be strings or lists of strings.
         Values make be string, lists of strings, or None, if all values should be returned for a given key.
         By default, all POIs with an 'amenity' key of any value will be be returned.
+    return_query : bool (default=False)
+    	If True, Overpass API query based on tags dictionary is returned as the second
+    	object in a tuple
 
     Keyword Arguments
     -----------------
     amenities : list
         If provided, will override tags with the dictionary {'amenities':amenities}.
         Accommodates the depricatd amenities parameter.
-
+    
     Returns
     -------
-    GeoDataFrame
+    gdf : geopandas.GeoDataFrame
+        Points of interest and the tags associated with them as geopandas GeoDataFrame.
+    query : str (optional; returned only if `return_query=True`)
+    	Overpass API query constructed based on tags dictionary input
     """
     if 'amenities' in locals():
         tags = {'amenity':amenities}
     city = gdf_from_place(place)
     polygon = city['geometry'].iloc[0]
-    return create_poi_gdf(polygon=polygon, tags=tags)
+    return create_poi_gdf(polygon=polygon, tags=tags, return_query=return_query)
