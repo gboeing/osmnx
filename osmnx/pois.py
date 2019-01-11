@@ -461,6 +461,8 @@ def pois_from_point(point, distance=None, tags=None, return_query=False, **kwarg
     """
     if 'amenities' in locals():
         tags = {'amenity':amenities}
+    if not tags:
+        tags = {'amenity':True}
 
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
@@ -530,6 +532,8 @@ def pois_from_polygon(polygon, tags=None, return_query=False, **kwargs):
     """
     if 'amenities' in locals():
         tags = {'amenity':amenities}
+    if not tags:
+        tags = {'amenity':True}
     return create_poi_gdf(polygon=polygon, tags=tags, return_query=return_query)
 
 
@@ -565,6 +569,9 @@ def pois_from_place(place, tags=None, return_query=False, **kwargs):
     """
     if 'amenities' in locals():
         tags = {'amenity':amenities}
+    if not tags:
+        tags = {'amenity':True}
+
     city = gdf_from_place(place)
     polygon = city['geometry'].iloc[0]
     return create_poi_gdf(polygon=polygon, tags=tags, return_query=return_query)
