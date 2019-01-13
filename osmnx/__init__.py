@@ -18,4 +18,4 @@ from .stats import *
 from .utils import *
 from .footprints import *
 
-__version__ = '0.8.2' # to be updated
+__version__ = '0.8.2'
