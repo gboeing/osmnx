@@ -10,6 +10,7 @@ import os
 import json
 import numpy as np
 import pandas as pd
+import networkx as nx
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib.collections import LineCollection
@@ -376,7 +377,8 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     # draw the edges as lines from node to node
     start_time = time.time()
     lines = []
-    for u, v, data in G.edges(keys=False, data=True):
+
+    for u, v, data in nx.Graph(G).edges(data=True):
         if 'geometry' in data and use_geom:
             # if it has a geometry attribute (a list of line segments), add them
             # to the list of lines to plot
