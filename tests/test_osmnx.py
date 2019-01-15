@@ -360,3 +360,21 @@ def test_nominatim():
         response_json = ox.nominatim_request(
                             params = params,
                             type = "transfer")
+
+def test_planar_plot():
+
+    # This test shows that we can use either statement to get the total bounds
+    # Using nodes instead of edges avoids the use of G.edges(keys=True)
+    # so that planar graphs are supported for plotting
+    G = ox.graph_from_place('Piedmont, California, USA')
+
+    nodes = ox.graph_to_gdfs(G, nodes=True, edges=False)
+    edges = ox.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+
+    assert nodes.total_bounds.all() == edges.total_bounds.all()
+
+    # Make sure that plot_graph runs smoothly with a dummy nx.Graph()
+    import networkx as nx
+
+    planar_G = nx.Graph(G)
+    ox.plot_graph(planar_G)
