@@ -359,8 +359,8 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     # get north, south, east, west values either from bbox parameter or from the
     # spatial extent of the edges' geometries
     if bbox is None:
-        edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
-        west, south, east, north = edges.total_bounds
+        nodes = graph_to_gdfs(G, nodes=True, edges=False)
+        west, south, east, north = nodes.total_bounds
     else:
         north, south, east, west = bbox
 
