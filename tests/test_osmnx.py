@@ -273,6 +273,13 @@ def test_buildings():
     gdf = ox.buildings_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
     fig, ax = ox.plot_buildings(gdf)
 
+def test_footprints():
+
+    # download footprints and plot them
+    gdf = ox.footprints_from_place(place='Emeryville, California, USA')
+    gdf = ox.footprints_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
+    fig, ax = ox.plot_footprints(gdf)
+
 def test_pois():
 
     # download all points of interests from place
