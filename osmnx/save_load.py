@@ -226,7 +226,7 @@ def load_graphml(filename, folder=None, node_type=int):
     folder : string
         the folder containing the file, if None, use default data folder
     node_type : type
-        (Python type (default: int)) – Convert node ids to this type
+        (Python type (default: int)) - Convert node ids to this type
 
     Returns
     -------
