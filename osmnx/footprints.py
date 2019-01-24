@@ -216,6 +216,9 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None,
                                     footprint_type=footprint_type, footprint_filter=footprint_filter,
                                     custom_filter=custom_filter)
 
+    # list of polygons to removed at the end of the process
+    pop_list = []
+
     vertices = {}
     for response in responses:
         for result in response['elements']:
@@ -239,11 +242,16 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None,
                     for tag in result['tags']:
                         footprint[tag] = result['tags'][tag]
 
+                # if polygons are untagged or not tagged with the footprint_type
+                # add them to pop_list to be removed from the final dictionary
+                if 'tags' not in result:
+                    pop_list.append(result['id'])
+                elif footprint_type not in result['tags']:
+                    pop_list.append(result['id'])
+
                 footprints[result['id']] = footprint
 
     # Create multipolygon footprints and pop untagged supporting polygons from footprints
-    pop_list = []
-
     for response in responses:
         for result in response['elements']:
             if 'type' in result and result['type']=='relation':
@@ -257,9 +265,6 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None,
                         outer_polys.append(member['ref'])
                     if 'role' in member and member['role']=='inner':
                         inner_polys.append(member['ref'])
-                    # create a list of untagged supporting polygons
-                    if 'tags' not in member:
-                        pop_list.append(member['ref'])
 
                 # osm allows multiple outer polygons in a relation
                 for outer_poly in outer_polys:
