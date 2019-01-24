@@ -1,8 +1,8 @@
-The issue tracker is for reporting bugs and feature requests. Before you proceed, please read the contributing guidelines in this repo's CONTRIBUTING.md.
+This issue tracker is for reporting bugs or proposing new features. Please ask "how-to" questions on https://stackoverflow.com/ instead. Before you proceed, please read the contributing guidelines in this repo's CONTRIBUTING.md.
 
 If you installed OSMnx via conda and are experiencing installation problems, please open an issue at https://github.com/conda-forge/osmnx-feedstock/issues
 
-If you're having trouble with OSMnx, first search the previously opened issues to see if the problem has already been noted. If not, fill in the template below:
+If you're having trouble with OSMnx, first search the previously opened issues (and Stack Overflow) to see if the problem has already been noted. If not, fill in the template below:
 
 #### Problem description (what did you do, what did you expect to happen, and what actually happened)
 
