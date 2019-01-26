@@ -24,7 +24,7 @@ from .utils import make_str
 
 def save_gdf_shapefile(gdf, filename=None, folder=None):
     """
-    Save a GeoDataFrame of place shapes or building footprints as an ESRI
+    Save a GeoDataFrame of place shapes or footprints as an ESRI
     shapefile.
 
     Parameters

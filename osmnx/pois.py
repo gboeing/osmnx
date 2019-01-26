@@ -293,7 +293,7 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     Parameters
     ----------
     polygon : shapely Polygon or MultiPolygon
-        geographic shape to fetch the building footprints within
+        geographic shape to fetch the POIs within
     amenities: list
         List of amenities that will be used for finding the POIs from the selected area. 
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity 
