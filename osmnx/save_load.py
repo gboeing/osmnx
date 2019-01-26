@@ -277,8 +277,10 @@ def load_graphml(filename, folder=None, node_type=int):
         # osmid might have a single value or a list
         if 'osmid' in data:
             if data['osmid'][0] == '[' and data['osmid'][-1] == ']':
+                # if it's a list, eval the list then convert each element to node_type
                 data['osmid'] = [node_type(i) for i in ast.literal_eval(data['osmid'])]
             else:
+                # if it's not a list, convert it to the node_type
                 data['osmid'] = node_type(data['osmid'])
 
         # if geometry attribute exists, load the string as well-known text to
