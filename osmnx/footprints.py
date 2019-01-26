@@ -5,13 +5,13 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-import time
 import geopandas as gpd
 import matplotlib.pyplot as plt
+import time
+from descartes import PolygonPatch
 from matplotlib.collections import PatchCollection
 from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
-from descartes import PolygonPatch
 
 from . import settings
 from .core import consolidate_subdivide_geometry
@@ -24,39 +24,11 @@ from .projection import project_geometry
 from .utils import log
 from .utils import geocode
 
-# NB - check naming and need for filter
-
-def get_footprints_filter(footprint_filter):
-    """
-    Create a filter to query OSM for the specified footprint type.
-
-    Parameters
-    ----------
-    footprint_filter : string
-        {'all', 'none', 'city_block'}
-        filter the footprints
-
-    Returns
-    -------
-    string
-    """
-    filters = {}
-
-    # NB - filters to be developed
-
-    filters["none"] = ''
-
-    filters["city_block"] = ('["place"="city_block"]')
-
-    if footprint_filter not in filters:
-        raise UnknownFootprintType('unknown footprint_filter "{}"'.format(footprint_filter))
-    else:
-        return filters[footprint_filter]
 
 
 def osm_footprints_download(polygon=None, north=None, south=None, east=None, west=None,
-                      timeout=180, memory=None, max_query_area_size=50*1000*50*1000,
-                      footprint_type="building", footprint_filter="none", custom_filter=None):
+                            timeout=180, memory=None, max_query_area_size=50*1000*50*1000,
+                            footprint_type='building'):
     """
     Download OpenStreetMap footprint data.
 
@@ -83,11 +55,7 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
         (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are
         meters))
     footprint_type : string
-        type of footprint to be downloaded. OSM tag key e.g. "building", "landuse", "place", etc.
-    footprint_filter : string
-        filter to be applied to footprint_type e.g. "all", "none", "city_block"
-    custom_filter : string
-        custom filter not in presets
+        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
 
     Returns
     -------
@@ -101,13 +69,6 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
     by_bbox = not (north is None or south is None or east is None or west is None)
     if not (by_poly or by_bbox):
         raise ValueError('You must pass a polygon or north, south, east, and west')
-
-    # create a filter to exclude certain kinds of footprints based on the requested
-    # footprint_type
-    if custom_filter:
-        filter = custom_filter
-    else:
-        filter = get_footprints_filter(footprint_filter)
 
     response_jsons = []
 
@@ -141,12 +102,12 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
             query_template = ('[out:json][timeout:{timeout}]{maxsize};'
-                              '((way["{footprint_type}"]{filter}({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
+                              '((way["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
                               '(._;>;););'
-                              '(relation["{footprint_type}"]{filter}({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
+                              '(relation["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
                               '(._;>;);););out;')
             query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout,
-                                              maxsize=maxsize, footprint_type=footprint_type, filter=filter)
+                                              maxsize=maxsize, footprint_type=footprint_type)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within bounding box from '
@@ -167,10 +128,10 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
         # a time
         for polygon_coord_str in polygon_coord_strs:
             query_template = ('[out:json][timeout:{timeout}]{maxsize};('
-                              'way(poly:"{polygon}")["{footprint_type}"]{filter};(._;>;);'
-                              'relation(poly:"{polygon}")["{footprint_type}"]{filter};(._;>;););out;')
+                              'way(poly:"{polygon}")["{footprint_type}"];(._;>;);'
+                              'relation(poly:"{polygon}")["{footprint_type}"];(._;>;););out;')
             query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize,
-                                              footprint_type=footprint_type, filter=filter)
+                                              footprint_type=footprint_type)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within polygon from API in '
@@ -181,8 +142,7 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
 
 
 def create_footprints_gdf(polygon=None, north=None, south=None, east=None,
-                         west=None, retain_invalid=False,
-                         footprint_type="building", footprint_filter="none", custom_filter=None):
+                         west=None, retain_invalid=False, footprint_type='building'):
     """
     Get footprint data from OSM then assemble it into a GeoDataFrame.
 
@@ -201,11 +161,6 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None,
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
     footprint_type : string
-        type of footprint to be downloaded. OSM tag key e.g. "building", "landuse", "place", etc.
-    footprint_filter : string
-        filter to be applied to footprint_type e.g. "all", "none", "city_block"
-    custom_filter : string
-        custom filter not in presets
 
     Returns
     -------
@@ -213,8 +168,7 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None,
     """
 
     responses = osm_footprints_download(polygon, north, south, east, west,
-                                    footprint_type=footprint_type, footprint_filter=footprint_filter,
-                                    custom_filter=custom_filter)
+                                        footprint_type=footprint_type)
 
     # list of polygons to removed at the end of the process
     pop_list = []
@@ -298,7 +252,7 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None,
 
 
 def footprints_from_point(point, distance, retain_invalid=False,
-                          footprint_type="building", footprint_filter="none", custom_filter=None):
+                          footprint_type='building'):
     """
     Get footprints within some distance north, south, east, and west of
     a lat-long point.
@@ -312,11 +266,7 @@ def footprints_from_point(point, distance, retain_invalid=False,
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
     footprint_type : string
-        type of footprint to be downloaded. OSM tag key e.g. "building", "landuse", "place", etc.
-    footprint_filter : string
-        filter to be applied to footprint_type e.g. "all", "none", "city_block"
-    custom_filter : string
-        custom filter not in presets
+        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
 
     Returns
     -------
@@ -326,12 +276,11 @@ def footprints_from_point(point, distance, retain_invalid=False,
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
     return create_footprints_gdf(north=north, south=south, east=east, west=west, retain_invalid=retain_invalid,
-                                 footprint_type=footprint_type, footprint_filter=footprint_filter,
-                                 custom_filter=custom_filter)
+                                 footprint_type=footprint_type)
 
 
 def footprints_from_address(address, distance, retain_invalid=False,
-                            footprint_type="building", footprint_filter="none", custom_filter=None):
+                            footprint_type='building'):
     """
     Get footprints within some distance north, south, east, and west of
     an address.
@@ -345,11 +294,7 @@ def footprints_from_address(address, distance, retain_invalid=False,
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
     footprint_type : string
-        type of footprint to be downloaded. OSM tag key e.g. "building", "landuse", "place", etc.
-    footprint_filter : string
-        filter to be applied to footprint_type e.g. "all", "none", "city_block"
-    custom_filter : string
-        custom filter not in presets
+        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
 
     Returns
     -------
@@ -361,12 +306,11 @@ def footprints_from_address(address, distance, retain_invalid=False,
 
     # get footprints within distance of this point
     return footprints_from_point(point, distance, retain_invalid=retain_invalid,
-                                 footprint_type=footprint_type, footprint_filter=footprint_filter,
-                                 custom_filter=custom_filter)
+                                 footprint_type=footprint_type)
 
 
 def footprints_from_polygon(polygon, retain_invalid=False,
-                            footprint_type="building", footprint_filter="none", custom_filter=None):
+                            footprint_type='building'):
     """
     Get footprints within some polygon.
 
@@ -378,11 +322,7 @@ def footprints_from_polygon(polygon, retain_invalid=False,
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
     footprint_type : string
-        type of footprint to be downloaded. OSM tag key e.g. "building", "landuse", "place", etc.
-    footprint_filter : string
-        filter to be applied to footprint_type e.g. "all", "none", "city_block"
-    custom_filter : string
-        custom filter not in presets
+        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
 
     Returns
     -------
@@ -390,12 +330,11 @@ def footprints_from_polygon(polygon, retain_invalid=False,
     """
 
     return create_footprints_gdf(polygon=polygon, retain_invalid=retain_invalid,
-                                     footprint_type=footprint_type, footprint_filter=footprint_filter,
-                                     custom_filter=custom_filter)
+                                 footprint_type=footprint_type)
 
 
 def footprints_from_place(place, retain_invalid=False,
-                          footprint_type="building", footprint_filter="none", custom_filter=None):
+                          footprint_type='building'):
     """
     Get footprints within the boundaries of some place.
 
@@ -412,11 +351,7 @@ def footprints_from_place(place, retain_invalid=False,
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
     footprint_type : string
-        type of footprint to be downloaded. OSM tag key e.g. "building", "landuse", "place", etc.
-    footprint_filter : string
-        filter to be applied to footprint_type e.g. "all", "none", "city_block"
-    custom_filter : string
-        custom filter not in presets
+        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
 
     Returns
     -------
@@ -426,8 +361,7 @@ def footprints_from_place(place, retain_invalid=False,
     city = gdf_from_place(place)
     polygon = city['geometry'].iloc[0]
     return create_footprints_gdf(polygon, retain_invalid=retain_invalid,
-                                 footprint_type=footprint_type, footprint_filter=footprint_filter,
-                                 custom_filter=custom_filter)
+                                 footprint_type=footprint_type)
 
 
 def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w', set_bounds=True, bbox=None,
