@@ -93,8 +93,8 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     G_save = get_undirected(G.copy())
 
     # create a GeoDataFrame of the nodes and set CRS
-    nodes = {node:data for node, data in G_save.nodes(data=True)}
-    gdf_nodes = gpd.GeoDataFrame(nodes).T
+    nodes, data = zip(*G_save.nodes(data=True))
+    gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
     gdf_nodes.crs = G_save.graph['crs']
 
     # create a geometry column then drop the x and y columns
@@ -102,7 +102,6 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     gdf_nodes = gdf_nodes.drop(['x', 'y'], axis=1)
 
     # make everything but geometry column a string
-    gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64)
     for col in [c for c in gdf_nodes.columns if not c == 'geometry']:
         gdf_nodes[col] = gdf_nodes[col].fillna('').map(make_str)
 
@@ -215,7 +214,7 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
     log('Saved graph "{}" to disk as GraphML at "{}" in {:,.2f} seconds'.format(G_save.name, os.path.join(folder, filename), time.time()-start_time))
 
 
-def load_graphml(filename, folder=None):
+def load_graphml(filename, folder=None, node_type=int):
     """
     Load a GraphML file from disk and convert the node/edge attributes to
     correct data types.
@@ -226,6 +225,8 @@ def load_graphml(filename, folder=None):
         the name of the graphml file (including file extension)
     folder : string
         the folder containing the file, if None, use default data folder
+    node_type : type
+        (Python type (default: int)) - Convert node ids to this type
 
     Returns
     -------
@@ -237,7 +238,7 @@ def load_graphml(filename, folder=None):
     if folder is None:
         folder = settings.data_folder
     path = os.path.join(folder, filename)
-    G = nx.MultiDiGraph(nx.read_graphml(path, node_type=int))
+    G = nx.MultiDiGraph(nx.read_graphml(path, node_type=node_type))
 
     # convert graph crs attribute from saved string to correct dict data type
     G.graph['crs'] = ast.literal_eval(G.graph['crs'])
@@ -248,7 +249,7 @@ def load_graphml(filename, folder=None):
     # convert numeric node tags from string to numeric data types
     log('Converting node and edge attribute data types')
     for _, data in G.nodes(data=True):
-        data['osmid'] = int(data['osmid'])
+        data['osmid'] = node_type(data['osmid'])
         data['x'] = float(data['x'])
         data['y'] = float(data['y'])
 
@@ -273,13 +274,12 @@ def load_graphml(filename, folder=None):
                 except:
                     pass
 
-        # osmid might have a single value or a list, but if single value, then
-        # parse int
+        # osmid might have a single value or a list
         if 'osmid' in data:
             if data['osmid'][0] == '[' and data['osmid'][-1] == ']':
-                data['osmid'] = ast.literal_eval(data['osmid'])
+                data['osmid'] = [node_type(i) for i in ast.literal_eval(data['osmid'])]
             else:
-                data['osmid'] = int(data['osmid'])
+                data['osmid'] = node_type(data['osmid'])
 
         # if geometry attribute exists, load the string as well-known text to
         # shapely LineString
@@ -531,13 +531,12 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
         start_time = time.time()
 
-        nodes = {node:data for node, data in G.nodes(data=True)}
-        gdf_nodes = gpd.GeoDataFrame(nodes).T
+        nodes, data = zip(*G.nodes(data=True))
+        gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
         if node_geometry:
             gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
         gdf_nodes.crs = G.graph['crs']
         gdf_nodes.gdf_name = '{}_nodes'.format(G.graph['name'])
-        gdf_nodes['osmid'] = gdf_nodes['osmid'].astype(np.int64).map(make_str)
 
         to_return.append(gdf_nodes)
         log('Created GeoDataFrame "{}" from graph in {:,.2f} seconds'.format(gdf_nodes.gdf_name, time.time()-start_time))
