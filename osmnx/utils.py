@@ -278,7 +278,7 @@ def induce_subgraph(G, node_subset):
     node_subset = set(node_subset)
 
     # copy nodes into new graph
-    G2 = G.__class__
+    G2 = G.__class__()
     G2.add_nodes_from((n, G.nodes[n]) for n in node_subset)
     
     # copy edges to new graph, including parallel edges
