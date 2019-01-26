@@ -61,7 +61,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
     """
 
     warnings.warn('The buildings module has been deprecated, please use the ' \
-    	          'footprints module instead.', FutureWarning)
+                  'footprints module instead.', FutureWarning)
 
     # check if we're querying by polygon or by bounding box based on which
     # argument(s) where passed into this function
@@ -163,7 +163,7 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None,
     """
 
     warnings.warn('The buildings module has been deprecated, please use the ' \
-    	          'footprints module instead.', FutureWarning)
+                  'footprints module instead.', FutureWarning)
 
     responses = osm_bldg_download(polygon, north, south, east, west)
 
@@ -263,7 +263,7 @@ def buildings_from_point(point, distance, retain_invalid=False):
     """
 
     warnings.warn('The buildings module has been deprecated, please use the ' \
-    	          'footprints module instead.', FutureWarning)
+                  'footprints module instead.', FutureWarning)
 
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
@@ -290,7 +290,7 @@ def buildings_from_address(address, distance, retain_invalid=False):
     """
 
     warnings.warn('The buildings module has been deprecated, please use the ' \
-    	          'footprints module instead.', FutureWarning)
+                  'footprints module instead.', FutureWarning)
 
     # geocode the address string to a (lat, lon) point
     point = geocode(query=address)
@@ -316,7 +316,7 @@ def buildings_from_polygon(polygon, retain_invalid=False):
     """
 
     warnings.warn('The buildings module has been deprecated, please use the ' \
-    	          'footprints module instead.', FutureWarning)
+                  'footprints module instead.', FutureWarning)
 
     return create_buildings_gdf(polygon=polygon, retain_invalid=retain_invalid)
 
@@ -344,7 +344,7 @@ def buildings_from_place(place, retain_invalid=False):
     """
 
     warnings.warn('The buildings module has been deprecated, please use the ' \
-    	          'footprints module instead.', FutureWarning)
+                  'footprints module instead.', FutureWarning)
 
     city = gdf_from_place(place)
     polygon = city['geometry'].iloc[0]
@@ -391,7 +391,7 @@ def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolo
     """
 
     warnings.warn('The buildings module has been deprecated, please use the ' \
-    	          'footprints module instead.', FutureWarning)
+                  'footprints module instead.', FutureWarning)
 
     if fig is None or ax is None:
         fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)

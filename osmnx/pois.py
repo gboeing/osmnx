@@ -121,7 +121,7 @@ def parse_nodes_coords(osm_response):
     Returns
     -------
     coords : dict
-    	dict of node IDs and their lat, lon coordinates
+        dict of node IDs and their lat, lon coordinates
     """
 
     coords = {}
@@ -139,7 +139,7 @@ def parse_polygonal_poi(coords, response):
     Parameters
     ----------
     coords : dict
-    	dict of node IDs and their lat, lon coordinates
+        dict of node IDs and their lat, lon coordinates
 
     Returns
     -------
