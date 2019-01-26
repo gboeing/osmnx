@@ -4,3 +4,4 @@ folium
 pytest
 scikit-learn
 scipy
+sphinx
