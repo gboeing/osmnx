@@ -27,8 +27,8 @@ from .utils import geocode
 
 
 def osm_footprints_download(polygon=None, north=None, south=None, east=None, west=None,
-                            timeout=180, memory=None, max_query_area_size=50*1000*50*1000,
-                            footprint_type='building'):
+                            footprint_type='building', timeout=180, memory=None, 
+                            max_query_area_size=50*1000*50*1000):
     """
     Download OpenStreetMap footprint data.
 
@@ -44,6 +44,8 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
         eastern longitude of bounding box
     west : float
         western longitude of bounding box
+    footprint_type : string
+        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     timeout : int
         the timeout interval for requests and to pass to API
     memory : int
@@ -54,8 +56,6 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
         any polygon bigger will get divided up for multiple queries to API
         (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are
         meters))
-    footprint_type : string
-        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
 
     Returns
     -------
@@ -141,8 +141,8 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
     return response_jsons
 
 
-def create_footprints_gdf(polygon=None, north=None, south=None, east=None,
-                         west=None, retain_invalid=False, footprint_type='building'):
+def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None, 
+                          footprint_type='building', retain_invalid=False):
     """
     Get footprint data from OSM then assemble it into a GeoDataFrame.
 
@@ -158,17 +158,17 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None,
         eastern longitude of bounding box
     west : float
         western longitude of bounding box
+    footprint_type : string
+        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
-    footprint_type : string
 
     Returns
     -------
     GeoDataFrame
     """
 
-    responses = osm_footprints_download(polygon, north, south, east, west,
-                                        footprint_type=footprint_type)
+    responses = osm_footprints_download(polygon, north, south, east, west, footprint_type)
 
     # list of polygons to removed at the end of the process
     pop_list = []
@@ -251,8 +251,7 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None,
     return gdf
 
 
-def footprints_from_point(point, distance, retain_invalid=False,
-                          footprint_type='building'):
+def footprints_from_point(point, distance, footprint_type='building', retain_invalid=False):
     """
     Get footprints within some distance north, south, east, and west of
     a lat-long point.
@@ -263,10 +262,10 @@ def footprints_from_point(point, distance, retain_invalid=False,
         a lat-long point
     distance : numeric
         distance in meters
-    retain_invalid : bool
-        if False discard any footprints with an invalid geometry
     footprint_type : string
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
+    retain_invalid : bool
+        if False discard any footprints with an invalid geometry
 
     Returns
     -------
@@ -275,12 +274,11 @@ def footprints_from_point(point, distance, retain_invalid=False,
 
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
-    return create_footprints_gdf(north=north, south=south, east=east, west=west, retain_invalid=retain_invalid,
-                                 footprint_type=footprint_type)
+    return create_footprints_gdf(north=north, south=south, east=east, west=west, 
+                                 footprint_type=footprint_type, retain_invalid=retain_invalid)
 
 
-def footprints_from_address(address, distance, retain_invalid=False,
-                            footprint_type='building'):
+def footprints_from_address(address, distance, footprint_type='building', retain_invalid=False):
     """
     Get footprints within some distance north, south, east, and west of
     an address.
@@ -291,10 +289,10 @@ def footprints_from_address(address, distance, retain_invalid=False,
         the address to geocode to a lat-long point
     distance : numeric
         distance in meters
-    retain_invalid : bool
-        if False discard any footprints with an invalid geometry
     footprint_type : string
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
+    retain_invalid : bool
+        if False discard any footprints with an invalid geometry
 
     Returns
     -------
@@ -305,12 +303,11 @@ def footprints_from_address(address, distance, retain_invalid=False,
     point = geocode(query=address)
 
     # get footprints within distance of this point
-    return footprints_from_point(point, distance, retain_invalid=retain_invalid,
-                                 footprint_type=footprint_type)
+    return footprints_from_point(point, distance, footprint_type=footprint_type, 
+                                 retain_invalid=retain_invalid)
 
 
-def footprints_from_polygon(polygon, retain_invalid=False,
-                            footprint_type='building'):
+def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=False):
     """
     Get footprints within some polygon.
 
@@ -319,22 +316,21 @@ def footprints_from_polygon(polygon, retain_invalid=False,
     polygon : shapely Polygon or MultiPolygon
         the shape to get data within. coordinates should be in units of
         latitude-longitude degrees.
-    retain_invalid : bool
-        if False discard any footprints with an invalid geometry
     footprint_type : string
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
+    retain_invalid : bool
+        if False discard any footprints with an invalid geometry
 
     Returns
     -------
     GeoDataFrame
     """
 
-    return create_footprints_gdf(polygon=polygon, retain_invalid=retain_invalid,
-                                 footprint_type=footprint_type)
+    return create_footprints_gdf(polygon=polygon, footprint_type=footprint_type, 
+                                 retain_invalid=retain_invalid)
 
 
-def footprints_from_place(place, retain_invalid=False,
-                          footprint_type='building'):
+def footprints_from_place(place, footprint_type='building', retain_invalid=False):
     """
     Get footprints within the boundaries of some place.
 
@@ -348,10 +344,10 @@ def footprints_from_place(place, retain_invalid=False,
     ----------
     place : string
         the query to geocode to get geojson boundary polygon
-    retain_invalid : bool
-        if False discard any footprints with an invalid geometry
     footprint_type : string
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
+    retain_invalid : bool
+        if False discard any footprints with an invalid geometry
 
     Returns
     -------
@@ -364,8 +360,9 @@ def footprints_from_place(place, retain_invalid=False,
                                  footprint_type=footprint_type)
 
 
-def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w', set_bounds=True, bbox=None,
-                   save=False, show=True, close=False, filename='image', file_format='png', dpi=600):
+def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w',
+                   set_bounds=True, bbox=None, save=False, show=True, close=False, 
+                   filename='image', file_format='png', dpi=600):
     """
     Plot a GeoDataFrame of footprints.
 
