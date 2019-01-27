@@ -303,12 +303,14 @@ def test_nearest_edges():
                                    Y=[projected_point[1], projected_point[1]], method='kdtree', dist=10)
     assert (ne1 == ne2).all()
 
+
 def test_buildings():
 
     # download building footprints and plot them
     gdf = ox.buildings_from_place(place='Emeryville, California, USA')
     gdf = ox.buildings_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
     fig, ax = ox.plot_buildings(gdf)
+
 
 def test_footprints():
 
@@ -317,6 +319,7 @@ def test_footprints():
     gdf = ox.footprints_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
     fig, ax = ox.plot_footprints(gdf)
 
+
 def test_multipolygon_footprint():
 
     # 'point' is the location of known multipolygon building, relation id 1767022
@@ -324,6 +327,7 @@ def test_multipolygon_footprint():
     gdf = ox.footprints_from_point(point=point, distance=20)
     assert 1767022 in gdf.index, "relation 1767022 was not returned in the geodataframe"
     assert gdf.loc[1767022]['geometry'].type=='MultiPolygon', "relation 1767022 is not a multipolygon"
+
 
 def test_pois():
 
@@ -342,6 +346,7 @@ def test_pois():
     # by point and by address
     restaurants = ox.pois_from_point(point=(42.344490, -71.070570), distance=1000, amenities=['restaurant'])
     restaurants = ox.pois_from_address(address='Emeryville, California, USA', distance=1000, amenities=['restaurant'])
+
 
 def test_nominatim():
 
@@ -376,3 +381,5 @@ def test_nominatim():
         response_json = ox.nominatim_request(
                             params = params,
                             type = "transfer")
+
+
