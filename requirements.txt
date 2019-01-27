@@ -1,9 +1,9 @@
 descartes>=1.1
 geopandas>=0.4
 matplotlib>=2.2
-networkx>=2.1
+networkx>=2.2
 numpy>=1.15
 pandas>=0.23
-requests>=2.19
+requests>=2.21
 Rtree>=0.8.3
 Shapely>=1.6

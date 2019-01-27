@@ -164,7 +164,7 @@ def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, sto
     stop : float
         where to end in the colorspace
     na_color : string
-    	what color to assign nodes with null attribute values
+        what color to assign nodes with null attribute values
 
     Returns
     -------
@@ -199,7 +199,7 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1
     stop : float
         where to end in the colorspace
     na_color : string
-    	what color to assign nodes with null attribute values
+        what color to assign nodes with null attribute values
 
     Returns
     -------
