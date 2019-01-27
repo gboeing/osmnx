@@ -328,31 +328,3 @@ def test_nominatim():
                             type = "transfer")
 
 
-def test_utilities():
-
-    import networkx as nx
-    import pytest
-
-    location_point = (37.791427, -122.410018)
-    G = ox.graph_from_point(location_point, distance=500, distance_type='network')
-
-    def on_no_lanes(u, v):
-        return "under_construction"
-
-    path = [65366915, 65326733, 65326736, 65326738, 65319946, 65319944, 65290756, 65312380, 65319942]
-
-    path_attributes = ox.get_route_edge_attributes(G, route=path, attribute=None)
-    assert all(isinstance(data, dict) for data in path_attributes)
-
-    # Just so the test case passes if they ever build a lane
-    for (n1, n2, d) in G.edges(data=True):
-        d.pop("lanes", None)
-
-    lanes = ox.get_route_edge_attributes(G, route=path, attribute="lanes", retrieve_default=on_no_lanes)
-
-    assert len(lanes) == len(path) - 1
-    assert "under_construction" in lanes
-    with pytest.raises(KeyError):
-        ox.get_route_edge_attributes(G, route=path, attribute="lanes")
-
-
