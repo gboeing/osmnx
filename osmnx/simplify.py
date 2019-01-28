@@ -12,11 +12,9 @@ import numpy   as np
 import pandas  as pd
 import networkx as nx
 import geopandas as gpd
-from shapely.ops      import linemerge
 from shapely.geometry import Polygon
 from shapely.geometry import Point
 from shapely.geometry import LineString
-from shapely.geometry import MultiLineString
 
 from .save_load import graph_to_gdfs
 from .utils import log
