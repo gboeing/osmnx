@@ -6,7 +6,6 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-from .buildings import *
 from .core import *
 from .elevation import *
 from .footprints import *
