@@ -6,16 +6,27 @@
 ################################################################################
 
 import time
+import collections
 import logging as lg
+import numpy   as np
+import pandas  as pd
+import networkx as nx
 import geopandas as gpd
+from shapely.ops      import linemerge
 from shapely.geometry import Polygon
 from shapely.geometry import Point
 from shapely.geometry import LineString
+from shapely.geometry import MultiLineString
 
 from .save_load import graph_to_gdfs
 from .utils import log
 from .utils import count_streets_per_node
 
+# scipy and sklearn are optional dependencies for faster nearest node search
+try:
+    from scipy.spatial import cKDTree
+except ImportError as e:
+    cKDTree = None
 
 def is_endpoint(G, node, strict=True):
     """
@@ -325,10 +336,19 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
 
     Returns
     ----------
-    intersection_centroids : geopandas.GeoSeries
-        a GeoSeries of shapely Points representing the centroids of street
-        intersections
+    G__ : networkx multidigraph
+        a new spatial graph, topologically equal to G (approximately), but with
+        clusters of nodes merged into a single centroid node.
     """
+
+    start_time = time.time()
+
+    if 'proj' not in G.graph['crs'] and G.graph['proj'] != "utm":
+        log("The provided graph might not have been projected to utm.",
+            level = lg.WARNING)
+
+    # Let's make a copy of G
+    G = G.copy()
 
     # if dead_ends is False, discard dead-end nodes to only work with edge
     # intersections
@@ -339,7 +359,6 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
             streets_per_node = count_streets_per_node(G)
 
         dead_end_nodes = [node for node, count in streets_per_node.items() if count <= 1]
-        G = G.copy()
         G.remove_nodes_from(dead_end_nodes)
 
     # create a GeoDataFrame of nodes, buffer to passed-in distance, merge
@@ -354,4 +373,162 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
     # get the centroids of the merged intersection polygons
     unified_intersections = gpd.GeoSeries(list(buffered_nodes))
     intersection_centroids = unified_intersections.centroid
-    return intersection_centroids
+
+    # To make things simpler, every edge should have a geometry
+    # (this avoids KeyError later when choosing between several
+    #  geometries or when the centroid inherits a geometry directly)
+    for u, v, data in G.edges(keys=False, data=True):
+        if 'geometry' not in data:
+            # if it doesn't have a geometry attribute, the edge is a straight
+            # line from node to node
+            x1 = G.nodes[u]['x']
+            y1 = G.nodes[u]['y']
+            x2 = G.nodes[v]['x']
+            y2 = G.nodes[v]['y']
+            data['geometry'] = LineString([(x1, y1), (x2, y2)])
+
+    # First, we need to find the nearest centroid to each node
+    if cKDTree:
+        # the search is faster if we use a cKDTree
+        # build a k-d tree for euclidean nearest node search
+        centroids = pd.DataFrame({'x': list(map(lambda c: c.x, intersection_centroids)),
+                                  'y': list(map(lambda c: c.y, intersection_centroids))})
+
+        tree = cKDTree(data=centroids[['x', 'y']], compact_nodes=True, balanced_tree=True)
+
+        X = [ x for node, x in G.nodes(data = 'x') ]
+        Y = [ y for node, y in G.nodes(data = 'y') ]
+
+        # query the tree for nearest centroid to each point
+        points = np.array([X, Y]).T
+        dist, idx = tree.query(points, k=1)
+        nearest_centroid = centroids.iloc[idx].index
+
+        # We build the mapping: osmid -> centroid
+        node_centroids = { osmid : nearest_centroid[i]
+                           for i, osmid in enumerate(G.nodes(data = False))}
+    else:
+        # else a lot slower if scipy is not available
+        nodes_centroids = {
+            osmid : np.argmin([node['geometry'].distance(centroid) \
+                               for centroid in intersection_centroids]) \
+            for osmid, node in gdf_nodes.iterrows()
+        }
+
+    # We also build the reverse mapping: centroid -> osmids
+    centroid_elements = {i : [] for i in range(len(intersection_centroids))}
+    for i, osmid in enumerate(G.nodes(data = False)):
+        centroid = nearest_centroid[i]
+        centroid_elements[centroid].append(osmid)
+
+    # We're ready to start building the new graph
+    G__ = nx.DiGraph(name = G.graph['name'],
+                     crs = G.graph['crs'])
+
+    # Add the nodes first
+    # The centroids are given new ids = 0 .. total_centroids-1
+    for centroid, elements in centroid_elements.items():
+        x = intersection_centroids[centroid].x
+        y = intersection_centroids[centroid].y
+
+        osmid = elements[0] if len(elements) == 1 else elements
+        G__.add_node(centroid, osmid = osmid, x = x, y = y)
+
+    for centroid, elements in centroid_elements.items():
+            # get the outgoing edges for all elements in the centroid
+            out_edges = []
+            for node in elements:
+                out_edges += list(G.out_edges(node))
+
+            # select the neighbor nodes of each element in the centroid
+            out_nodes = map(lambda edge: edge[1], out_edges)
+
+            # and get the corresponding centroid of each element
+            neighbors = list(map(lambda osmid: node_centroids[osmid],
+                                 out_nodes))
+
+            # remove duplicate neighbor centroids
+            neighbors = set(neighbors)
+            # and self-loops
+            if centroid in neighbors:
+                neighbors.remove(centroid)
+
+            # helper for fixing geometries
+            centroid_point = Point(
+                intersection_centroids[centroid].x,
+                intersection_centroids[centroid].y)
+
+            # add an outgoing edge to each resulting neighbor
+            for neighbor in neighbors:
+                # retrieve the elements of this neighbor
+                neighbor_elements = centroid_elements[neighbor]
+                # select the edges (c1,c2) where c1 is an element of this centroid,
+                # and c2 is an element of this neighbor's centroid
+                out_edges_neighbor = set(filter(lambda x: x[1] in neighbor_elements, out_edges))
+
+                if len(out_edges_neighbor) > 1:
+                    # If there are multiple edges that fit this criteria, then we need
+                    # to combine their attributes, except for geometry and length
+                    # for which we need to pick a single value
+
+                    edges_attrs = [ G.edges[edge[0], edge[1], 0] for edge in out_edges_neighbor ]
+
+                    all_keys = []
+                    for edge_attr in edges_attrs:
+                        all_keys += edge_attr.keys()
+
+                    key_counter = collections.Counter(all_keys)
+
+                    attr = {key : [] if count > 1 else "" for key, count in key_counter.items()}
+
+                    for edge_attr in edges_attrs:
+                        for key in edge_attr.keys():
+                            val = edge_attr[key]
+
+                            if key_counter[key] == 1:
+                                attr[key] = val
+                            else:
+                                attr[key].append(val)
+
+                    whichmax = np.argmax(attr['length'])
+                    attr['length'] = attr['length'][whichmax]
+                    attr['geometry'] = attr['geometry'][whichmax]
+                    length = attr['length']
+
+                else:
+                    edge = list(out_edges_neighbor)[0]
+                    attr = G.edges[edge[0], edge[1], 0]
+                    length = attr['length']
+
+                neighbor_point = Point(
+                    intersection_centroids[neighbor].x,
+                    intersection_centroids[neighbor].y)
+
+                # fix edge geometries - make sure they intersect their centroids,
+                # otherwise we may have gaps on the resulting graph when plotted
+                coords = attr['geometry'].coords[:]
+                if not attr['geometry'].intersects(centroid_point):
+                    coords = centroid_point.coords[:] + coords
+                if not attr['geometry'].intersects(neighbor_point):
+                    coords = coords + neighbor_point.coords[:]
+
+                # update geometry
+                attr['geometry'] = LineString(coords)
+                # update length
+                attr['length'] = attr['geometry'].length
+
+                # is the new length larger than expected?
+                if attr['length'] > (length + 2 * tolerance):
+                    log(("New edge ({},{}) has a length larger than expected."
+                         "Max previous length = {} . Threshold = 2 * tolerance = {}."
+                         "New length from geometry = {}.")\
+                            .format(centroid, neighbor, length, tolerance, attr['length']),
+                        level = lg.WARNING)
+
+                G__.add_edge(centroid, neighbor, **attr)
+
+    msg = 'Cleaned intersections of graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
+    log(msg.format(len(list(G.nodes())), len(list(G__.nodes())),
+                   len(list(G.edges())), len(list(G__.edges())), time.time()-start_time))
+
+    return nx.MultiDiGraph(G__)
