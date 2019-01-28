@@ -519,10 +519,8 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
 
                 # is the new length larger than expected?
                 if attr['length'] > (length + 2 * tolerance):
-                    log(("New edge ({},{}) has a length larger than expected."
-                         "Max previous length = {} . Threshold = 2 * tolerance = {}."
-                         "New length from geometry = {}.")\
-                            .format(centroid, neighbor, length, tolerance, attr['length']),
+                    log("New edge ({},{}) has length larger than expected: {:,.1f} > {:,.1f} + {}."\
+                            .format(centroid, neighbor, length, attr['length'], 2*tolerance),
                         level = lg.WARNING)
 
                 G__.add_edge(centroid, neighbor, **attr)
