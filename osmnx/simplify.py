@@ -389,10 +389,10 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
     if cKDTree:
         # the search is faster if we use a cKDTree
         # build a k-d tree for euclidean nearest node search
-        centroids = pd.DataFrame({'x': list(map(lambda c: c.x, intersection_centroids)),
-                                  'y': list(map(lambda c: c.y, intersection_centroids))})
+        centroids = pd.DataFrame({'x' : intersection_centroids.apply(lambda pt: pt.x),
+                                  'y' : intersection_centroids.apply(lambda pt: pt.y)})
 
-        tree = cKDTree(data=centroids[['x', 'y']], compact_nodes=True, balanced_tree=True)
+        tree = cKDTree(data=centroids, compact_nodes=True, balanced_tree=True)
 
         X = [ x for node, x in G.nodes(data = 'x') ]
         Y = [ y for node, y in G.nodes(data = 'y') ]
@@ -471,51 +471,66 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
 
                     edges_attrs = [ G.edges[edge[0], edge[1], 0] for edge in out_edges_neighbor ]
 
+                    # Not every edge has the same set of keys, so we compute the union of the individual
+                    # sets, and also count their occurrence for initialisation purposes
                     all_keys = []
                     for edge_attr in edges_attrs:
                         all_keys += edge_attr.keys()
 
                     key_counter = collections.Counter(all_keys)
 
+                    # If if the key counter is greater than 1, we initialise the new
+                    # dictionary with empty lists, so that we can later call append()
                     attr = {key : [] if count > 1 else "" for key, count in key_counter.items()}
 
                     for edge_attr in edges_attrs:
                         for key in edge_attr.keys():
                             val = edge_attr[key]
 
+                            # This key only occurs once, so we can set its value
                             if key_counter[key] == 1:
                                 attr[key] = val
+                            # Otherwise, append
                             else:
                                 attr[key].append(val)
 
+                    # We pick the geometry with largest length
+                    # but, there may be a better way to make this decision
                     whichmax = np.argmax(attr['length'])
                     attr['length'] = attr['length'][whichmax]
                     attr['geometry'] = attr['geometry'][whichmax]
                     length = attr['length']
 
+                # If there is only one edge to this centroid, then we can just
+                # reuse the existing attributes
                 else:
                     edge = list(out_edges_neighbor)[0]
                     attr = G.edges[edge[0], edge[1], 0]
                     length = attr['length']
 
+                # fix edge geometries - make sure they intersect their centroids,
+                # otherwise we may have gaps on the resulting graph when plotted
                 neighbor_point = Point(
                     intersection_centroids[neighbor].x,
                     intersection_centroids[neighbor].y)
 
-                # fix edge geometries - make sure they intersect their centroids,
-                # otherwise we may have gaps on the resulting graph when plotted
+                # make sure the resulting geometry intersects this centroid
                 coords = attr['geometry'].coords[:]
                 if not attr['geometry'].intersects(centroid_point):
                     coords = centroid_point.coords[:] + coords
+
+                # make sure the resulting geometry intersects the neighbor's centroid
                 if not attr['geometry'].intersects(neighbor_point):
                     coords = coords + neighbor_point.coords[:]
 
                 # update geometry
                 attr['geometry'] = LineString(coords)
-                # update length
+                # update length based on geometry
                 attr['length'] = attr['geometry'].length
 
-                # is the new length larger than expected?
+                # Is the new length larger than expected? theoretically this
+                # shouldn't happen, but there are a few instances where it does.
+                # For now, we just log these cases
                 if attr['length'] > (length + 2 * tolerance):
                     log("New edge ({},{}) has length larger than expected: {:,.1f} > {:,.1f} + {}."\
                             .format(centroid, neighbor, length, attr['length'], 2*tolerance),
