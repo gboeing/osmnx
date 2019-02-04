@@ -408,8 +408,8 @@ def test_clean_intersections_Newcastle_mainroads():
     ox.plot_graph(new_G, fig_height = 10, fig_width = 14, node_alpha=1, node_zorder=2,
                   node_size = 30, node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
                   filename = "nwc_main_after", save=True, file_format='png')
-    
-    ox.get_undirected(G)
+
+    ox.get_undirected(new_G)
 
 
 def test_clean_intersections_Shattuck_Berkeley():
