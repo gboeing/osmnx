@@ -491,6 +491,8 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
                             if key_counter[key] == 1:
                                 attr[key] = val
                             # Otherwise, append
+                            elif isinstance(val, list):
+                                attr[key].extend(val)
                             else:
                                 attr[key].append(val)
 
