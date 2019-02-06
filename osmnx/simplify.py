@@ -19,6 +19,7 @@ from shapely.geometry import LineString
 from .save_load import graph_to_gdfs
 from .utils import log
 from .utils import count_streets_per_node
+from . import settings
 
 # scipy and sklearn are optional dependencies for faster nearest node search
 try:
@@ -318,7 +319,12 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
     intersects a perpendicular edge. These 4 nodes represent a single
     intersection in the real world. This function cleans them up by buffering
     their points to an arbitrary distance, merging overlapping buffers, and
-    taking their centroid. For best results, the tolerance argument should be
+    taking their centroid. Then, it constructs a new graph with the centroids
+    as nodes. Edges between centroids are calculated such that the new graph
+    remains topologically (approximately) equal to G.
+
+    Cleaning occurs in the graph's current units, but the use of unprojected
+    units is not recommended. For best results, the tolerance argument should be
     adjusted to approximately match street design standards in the specific
     street network.
 
@@ -334,15 +340,14 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
 
     Returns
     ----------
-    G__ : networkx multidigraph
-        a new spatial graph, topologically equal to G (approximately), but with
-        clusters of nodes merged into a single centroid node.
+    G2 : networkx multidigraph
+        the new cleaned graph
     """
 
     start_time = time.time()
 
-    if 'proj' not in G.graph['crs'] and G.graph['proj'] != "utm":
-        log("The provided graph might not have been projected to utm.",
+    if G.graph['crs'] == settings.default_crs:
+        log(("The graph seems to be using unprojected units which is not recommended."),
             level = lg.WARNING)
 
     # Let's make a copy of G
