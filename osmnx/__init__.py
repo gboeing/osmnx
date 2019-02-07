@@ -6,9 +6,9 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-from .buildings import *
-from .elevation import *
 from .core import *
+from .elevation import *
+from .footprints import *
 from .plot import *
 from .pois import *
 from .projection import *
@@ -17,4 +17,4 @@ from .simplify import *
 from .stats import *
 from .utils import *
 
-__version__ = '0.8.2'
+__version__ = '0.10dev'

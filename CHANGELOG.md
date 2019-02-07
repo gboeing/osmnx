@@ -1,5 +1,18 @@
 # Change log
 
+## 0.9 (2019-01-28)
+  
+  - deprecate buildings module and replace with generalized footprints module
+  - improve handling of multipolygon footprints
+  - new function to find nearest edge(s), given coordinates
+  - add "search," "reverse," and "lookup" nominatim queries
+  - use unprojected graphs for figure-ground plotting functions
+  - allow non-integer osmid values for custom data
+  - improve get_route_edge_attributes function
+  - improve color mapping by node/edge attribute value
+  - make bidirectional network types explicit
+  - networkx compatibility fixes to resolve warnings
+
 ## 0.8.2 (2018-09-19)
 
   - add python 3.7 compatibility

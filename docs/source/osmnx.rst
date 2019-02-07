@@ -4,10 +4,10 @@ osmnx package
 Submodules
 ----------
 
-osmnx.buildings module
-----------------------
+osmnx.footprints module
+-----------------------
 
-.. automodule:: osmnx.buildings
+.. automodule:: osmnx.footprints
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,17 +1,17 @@
 ################################################################################
-# Module: buildings.py
-# Description: Download and plot building footprints from OpenStreetMap
+# Module: footprints.py
+# Description: Download and plot footprints from OpenStreetMap
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-import time
 import geopandas as gpd
 import matplotlib.pyplot as plt
+import time
+from descartes import PolygonPatch
 from matplotlib.collections import PatchCollection
 from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
-from descartes import PolygonPatch
 
 from . import settings
 from .core import consolidate_subdivide_geometry
@@ -25,15 +25,17 @@ from .utils import log
 from .utils import geocode
 
 
-def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None,
-                      timeout=180, memory=None, max_query_area_size=50*1000*50*1000):
+
+def osm_footprints_download(polygon=None, north=None, south=None, east=None, west=None,
+                            footprint_type='building', timeout=180, memory=None, 
+                            max_query_area_size=50*1000*50*1000):
     """
-    Download OpenStreetMap building footprint data.
+    Download OpenStreetMap footprint data.
 
     Parameters
     ----------
     polygon : shapely Polygon or MultiPolygon
-        geographic shape to fetch the building footprints within
+        geographic shape to fetch the footprints within
     north : float
         northern latitude of bounding box
     south : float
@@ -42,6 +44,8 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
         eastern longitude of bounding box
     west : float
         western longitude of bounding box
+    footprint_type : string
+        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     timeout : int
         the timeout interval for requests and to pass to API
     memory : int
@@ -87,7 +91,7 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
         # back to lat-long
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, _ = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
-        log('Requesting building footprints data within bounding box from API in {:,} request(s)'.format(len(geometry)))
+        log('Requesting footprints data within bounding box from API in {:,} request(s)'.format(len(geometry)))
         start_time = time.time()
 
         # loop through each polygon rectangle in the geometry (there will only
@@ -97,13 +101,16 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
             # decimal places (ie, within 1 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = ('[out:json][timeout:{timeout}]{maxsize};((way["building"]({south:.8f},'
-                              '{west:.8f},{north:.8f},{east:.8f});(._;>;););(relation["building"]'
-                              '({south:.8f},{west:.8f},{north:.8f},{east:.8f});(._;>;);););out;')
-            query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout, maxsize=maxsize)
+            query_template = ('[out:json][timeout:{timeout}]{maxsize};'
+                              '((way["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
+                              '(._;>;););'
+                              '(relation["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
+                              '(._;>;);););out;')
+            query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout,
+                                              maxsize=maxsize, footprint_type=footprint_type)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        msg = ('Got all building footprints data within bounding box from '
+        msg = ('Got all footprint data within bounding box from '
                'API in {:,} request(s) and {:,.2f} seconds')
         log(msg.format(len(geometry), time.time()-start_time))
 
@@ -114,34 +121,35 @@ def osm_bldg_download(polygon=None, north=None, south=None, east=None, west=None
         geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, _ = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = get_polygons_coordinates(geometry)
-        log('Requesting building footprints data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
+        log('Requesting footprint data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
         start_time = time.time()
 
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
-            query_template = ('[out:json][timeout:{timeout}]{maxsize};(way'
-                              '(poly:"{polygon}")["building"];(._;>;);relation'
-                              '(poly:"{polygon}")["building"];(._;>;););out;')
-            query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize)
+            query_template = ('[out:json][timeout:{timeout}]{maxsize};('
+                              'way(poly:"{polygon}")["{footprint_type}"];(._;>;);'
+                              'relation(poly:"{polygon}")["{footprint_type}"];(._;>;););out;')
+            query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize,
+                                              footprint_type=footprint_type)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        msg = ('Got all building footprints data within polygon from API in '
+        msg = ('Got all footprint data within polygon from API in '
                '{:,} request(s) and {:,.2f} seconds')
         log(msg.format(len(polygon_coord_strs), time.time()-start_time))
 
     return response_jsons
 
 
-def create_buildings_gdf(polygon=None, north=None, south=None, east=None,
-                         west=None, retain_invalid=False):
+def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None, 
+                          footprint_type='building', retain_invalid=False):
     """
-    Get building footprint data from OSM then assemble it into a GeoDataFrame.
+    Get footprint data from OSM then assemble it into a GeoDataFrame.
 
     Parameters
     ----------
     polygon : shapely Polygon or MultiPolygon
-        geographic shape to fetch the building footprints within
+        geographic shape to fetch the footprints within
     north : float
         northern latitude of bounding box
     south : float
@@ -150,15 +158,20 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None,
         eastern longitude of bounding box
     west : float
         western longitude of bounding box
+    footprint_type : string
+        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
-        if False discard any building footprints with an invalid geometry
+        if False discard any footprints with an invalid geometry
 
     Returns
     -------
     GeoDataFrame
     """
 
-    responses = osm_bldg_download(polygon, north, south, east, west)
+    responses = osm_footprints_download(polygon, north, south, east, west, footprint_type)
+
+    # list of polygons to removed at the end of the process
+    pop_list = []
 
     vertices = {}
     for response in responses:
@@ -167,7 +180,7 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None,
                 vertices[result['id']] = {'lat' : result['lat'],
                                           'lon' : result['lon']}
 
-    buildings = {}
+    footprints = {}
     for response in responses:
         for result in response['elements']:
             if 'type' in result and result['type']=='way':
@@ -176,18 +189,23 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None,
                     polygon = Polygon([(vertices[node]['lon'], vertices[node]['lat']) for node in nodes])
                 except Exception:
                     log('Polygon has invalid geometry: {}'.format(nodes))
-                building = {'nodes' : nodes,
+                footprint = {'nodes' : nodes,
                             'geometry' : polygon}
 
                 if 'tags' in result:
                     for tag in result['tags']:
-                        building[tag] = result['tags'][tag]
+                        footprint[tag] = result['tags'][tag]
 
-                buildings[result['id']] = building
+                # if polygons are untagged or not tagged with the footprint_type
+                # add them to pop_list to be removed from the final dictionary
+                if 'tags' not in result:
+                    pop_list.append(result['id'])
+                elif footprint_type not in result['tags']:
+                    pop_list.append(result['id'])
 
-    # Create multipolygon buildings and pop untagged supporting polygons from buildings
-    pop_list = []
+                footprints[result['id']] = footprint
 
+    # Create multipolygon footprints and pop untagged supporting polygons from footprints
     for response in responses:
         for result in response['elements']:
             if 'type' in result and result['type']=='relation':
@@ -201,32 +219,29 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None,
                         outer_polys.append(member['ref'])
                     if 'role' in member and member['role']=='inner':
                         inner_polys.append(member['ref'])
-                    # create a list of untagged supporting polygons
-                    if 'tags' not in member:
-                        pop_list.append(member['ref'])
 
                 # osm allows multiple outer polygons in a relation
                 for outer_poly in outer_polys:
-                    temp_poly=buildings[outer_poly]['geometry']
+                    temp_poly=footprints[outer_poly]['geometry']
 
                     for inner_poly in inner_polys:
-                        temp_poly=temp_poly.difference(buildings[inner_poly]['geometry'])
+                        temp_poly=temp_poly.difference(footprints[inner_poly]['geometry'])
 
                     multipoly.append(temp_poly)
 
-                building = {'geometry' : MultiPolygon(multipoly)}
+                footprint = {'geometry' : MultiPolygon(multipoly)}
 
                 if 'tags' in result:
                     for tag in result['tags']:
-                        building[tag] = result['tags'][tag]
+                        footprint[tag] = result['tags'][tag]
 
-                buildings[result['id']] = building
+                footprints[result['id']] = footprint
 
-    # remove supporting geometry from buildings dictionary
+    # remove supporting geometry from footprints dictionary
     for item in pop_list:
-        buildings.pop(item)
+        footprints.pop(item)
 
-    gdf = gpd.GeoDataFrame(buildings).T
+    gdf = gpd.GeoDataFrame(footprints).T
     gdf.crs = settings.default_crs
 
     if not retain_invalid:
@@ -236,9 +251,9 @@ def create_buildings_gdf(polygon=None, north=None, south=None, east=None,
     return gdf
 
 
-def buildings_from_point(point, distance, retain_invalid=False):
+def footprints_from_point(point, distance, footprint_type='building', retain_invalid=False):
     """
-    Get building footprints within some distance north, south, east, and west of
+    Get footprints within some distance north, south, east, and west of
     a lat-long point.
 
     Parameters
@@ -247,8 +262,10 @@ def buildings_from_point(point, distance, retain_invalid=False):
         a lat-long point
     distance : numeric
         distance in meters
+    footprint_type : string
+        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
-        if False discard any building footprints with an invalid geometry
+        if False discard any footprints with an invalid geometry
 
     Returns
     -------
@@ -257,12 +274,13 @@ def buildings_from_point(point, distance, retain_invalid=False):
 
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
-    return create_buildings_gdf(north=north, south=south, east=east, west=west, retain_invalid=retain_invalid)
+    return create_footprints_gdf(north=north, south=south, east=east, west=west, 
+                                 footprint_type=footprint_type, retain_invalid=retain_invalid)
 
 
-def buildings_from_address(address, distance, retain_invalid=False):
+def footprints_from_address(address, distance, footprint_type='building', retain_invalid=False):
     """
-    Get building footprints within some distance north, south, east, and west of
+    Get footprints within some distance north, south, east, and west of
     an address.
 
     Parameters
@@ -271,8 +289,10 @@ def buildings_from_address(address, distance, retain_invalid=False):
         the address to geocode to a lat-long point
     distance : numeric
         distance in meters
+    footprint_type : string
+        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
-        if False discard any building footprints with an invalid geometry
+        if False discard any footprints with an invalid geometry
 
     Returns
     -------
@@ -282,45 +302,52 @@ def buildings_from_address(address, distance, retain_invalid=False):
     # geocode the address string to a (lat, lon) point
     point = geocode(query=address)
 
-    # get buildings within distance of this point
-    return buildings_from_point(point, distance, retain_invalid=retain_invalid)
+    # get footprints within distance of this point
+    return footprints_from_point(point, distance, footprint_type=footprint_type, 
+                                 retain_invalid=retain_invalid)
 
 
-def buildings_from_polygon(polygon, retain_invalid=False):
+def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=False):
     """
-    Get building footprints within some polygon.
+    Get footprints within some polygon.
 
     Parameters
     ----------
-    polygon : Polygon
-
+    polygon : shapely Polygon or MultiPolygon
+        the shape to get data within. coordinates should be in units of
+        latitude-longitude degrees.
+    footprint_type : string
+        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
-        if False discard any building footprints with an invalid geometry
+        if False discard any footprints with an invalid geometry
 
     Returns
     -------
     GeoDataFrame
     """
 
-    return create_buildings_gdf(polygon=polygon, retain_invalid=retain_invalid)
+    return create_footprints_gdf(polygon=polygon, footprint_type=footprint_type, 
+                                 retain_invalid=retain_invalid)
 
 
-def buildings_from_place(place, retain_invalid=False):
+def footprints_from_place(place, footprint_type='building', retain_invalid=False):
     """
-    Get building footprints within the boundaries of some place.
+    Get footprints within the boundaries of some place.
 
     The query must be geocodable and OSM must have polygon boundaries for the
     geocode result. If OSM does not have a polygon for this place, you can
-    instead get its buildings using the buildings_from_address function, which
-    geocodes the place name to a point and gets the buildings within some distance
+    instead get its footprints using the footprints_from_address function, which
+    geocodes the place name to a point and gets the footprints within some distance
     of that point.
 
     Parameters
     ----------
     place : string
         the query to geocode to get geojson boundary polygon
+    footprint_type : string
+        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
-        if False discard any building footprints with an invalid geometry
+        if False discard any footprints with an invalid geometry
 
     Returns
     -------
@@ -329,23 +356,25 @@ def buildings_from_place(place, retain_invalid=False):
 
     city = gdf_from_place(place)
     polygon = city['geometry'].iloc[0]
-    return create_buildings_gdf(polygon, retain_invalid=retain_invalid)
+    return create_footprints_gdf(polygon, retain_invalid=retain_invalid,
+                                 footprint_type=footprint_type)
 
 
-def plot_buildings(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w', set_bounds=True, bbox=None,
-                   save=False, show=True, close=False, filename='image', file_format='png', dpi=600):
+def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w',
+                   set_bounds=True, bbox=None, save=False, show=True, close=False, 
+                   filename='image', file_format='png', dpi=600):
     """
-    Plot a GeoDataFrame of building footprints.
+    Plot a GeoDataFrame of footprints.
 
     Parameters
     ----------
     gdf : GeoDataFrame
-        building footprints
+        footprints
     fig : figure
     ax : axis
     figsize : tuple
     color : string
-        the color of the building footprints
+        the color of the footprints
     bgcolor : string
         the background color of the plot
     set_bounds : bool

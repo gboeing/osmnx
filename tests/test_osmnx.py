@@ -148,11 +148,12 @@ def test_network_saving_loading():
     ox.save_graphml(G_projected)
     ox.save_graphml(G_projected, filename='gephi.graphml', gephi=True)
     G2 = ox.load_graphml('graph.graphml')
+    G3 = ox.load_graphml('graph.graphml', node_type=str)
 
     # convert graph to node/edge GeoDataFrames and back again
     gdf_edges = ox.graph_to_gdfs(G, nodes=False, edges=True, fill_edge_geometry=False)
     gdf_nodes, gdf_edges = ox.graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True)
-    G3 = ox.gdfs_to_graph(gdf_nodes, gdf_edges)
+    G4 = ox.gdfs_to_graph(gdf_nodes, gdf_edges)
 
     # find graph nodes nearest to some set of points
     X = gdf_nodes['x'].head()
@@ -160,6 +161,11 @@ def test_network_saving_loading():
     nn1 = ox.get_nearest_nodes(G, X, Y)
     nn2 = ox.get_nearest_nodes(G, X, Y, method='kdtree')
     nn3 = ox.get_nearest_nodes(G, X, Y, method='balltree')
+
+    # find graph edges nearest to some set of points
+    ne1 = ox.get_nearest_edges(G, X, Y)
+    ne2 = ox.get_nearest_edges(G, X, Y, method='kdtree')
+    ne3 = ox.get_nearest_edges(G, X, Y, method='kdtree', dist=50)
 
 
 def test_get_network_methods():
@@ -266,12 +272,52 @@ def test_routing_folium():
     route_map = ox.plot_route_folium(G, route)
 
 
-def test_buildings():
+def test_nearest_edge():
 
-    # download building footprints and plot them
-    gdf = ox.buildings_from_place(place='Emeryville, California, USA')
-    gdf = ox.buildings_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
-    fig, ax = ox.plot_buildings(gdf)
+    # test in closest edge section
+    sheik_sayed_dubai = [25.09, 25.06, 55.16, 55.11]
+    location_coordinates = (25.071764, 55.138978)
+    G = ox.graph_from_bbox(*sheik_sayed_dubai, simplify=False, retain_all=True, network_type='drive')
+    geometry, u, v = ox.get_nearest_edge(G, location_coordinates)
+
+
+def test_nearest_edges():
+
+    from pyproj import Proj
+
+    # test in closest edge section
+    sheik_sayed_dubai = [25.09, 25.06, 55.16, 55.11]
+    location_coordinates = (25.071764, 55.138978)
+    G = ox.graph_from_bbox(*sheik_sayed_dubai, simplify=False, retain_all=True, network_type='drive')
+
+    # Unprojected
+    ne1 = ox.get_nearest_edges(G, X=[location_coordinates[1], location_coordinates[1]],
+                                  Y=[location_coordinates[0], location_coordinates[0]], method='balltree', dist=0.0001)
+
+    # Projected
+    G2 = ox.project_graph(G)
+    crs = Proj(G2.graph['crs'])
+
+    projected_point = crs(location_coordinates[1], location_coordinates[0])
+    ne2 = ox.get_nearest_edges(G2, X=[projected_point[0], projected_point[0]],
+                                   Y=[projected_point[1], projected_point[1]], method='kdtree', dist=10)
+    assert (ne1 == ne2).all()
+
+
+def test_footprints():
+
+    # download footprints and plot them
+    gdf = ox.footprints_from_place(place='Emeryville, California, USA')
+    gdf = ox.footprints_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
+    fig, ax = ox.plot_footprints(gdf)
+
+    # test multipolygon footprint
+    # point is the location of known multipolygon building, relation id 1767022
+    point = (51.5276, -0.11)
+    gdf = ox.footprints_from_point(point=point, distance=20, footprint_type='building')
+    assert 1767022 in gdf.index, "relation 1767022 was not returned in the geodataframe"
+    assert gdf.loc[1767022]['geometry'].type=='MultiPolygon', "relation 1767022 is not a multipolygon"
+
 
 def test_pois():
 
@@ -290,6 +336,7 @@ def test_pois():
     # by point and by address
     restaurants = ox.pois_from_point(point=(42.344490, -71.070570), distance=1000, amenities=['restaurant'])
     restaurants = ox.pois_from_address(address='Emeryville, California, USA', distance=1000, amenities=['restaurant'])
+
 
 def test_nominatim():
 
