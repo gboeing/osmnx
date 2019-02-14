@@ -7,12 +7,13 @@
 # >>> docker build -t gboeing/osmnx .
 #
 # Push the built image to hub so others can pull/run it:
-# >>> docker tag gboeing/osmnx gboeing/osmnx
+# >>> docker tag gboeing/osmnx gboeing/osmnx:latest
 # >>> docker login
 # >>> docker push gboeing/osmnx
 #
-# Run bash in this container as root (via -u 0):
+# Run bash in this container and export final conda environment to a yml file:
 # >>> docker run --rm -it -u 0 --name osmnx -v %cd%:/home/jovyan/work gboeing/osmnx /bin/bash
+# >>> conda env export -n base > /home/jovyan/work/environment.yml
 #
 # Run jupyter lab in this container:
 # >>> docker run --rm -it --name osmnx -p 8888:8888 -v %cd%:/home/jovyan/work gboeing/osmnx
