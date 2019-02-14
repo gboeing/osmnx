@@ -44,5 +44,5 @@ RUN conda config --set show_channel_urls true && \
 # launch notebook in the local working directory that we mount
 WORKDIR /home/jovyan/work
 
-# set default command
-CMD ["jupyter", "lab", "--no-browser","--NotebookApp.token=''","--NotebookApp.password=''"]
+# set default command to launch when container is run
+CMD ["jupyter", "lab", "--no-browser", "--NotebookApp.token=''", "--NotebookApp.password=''"]
