@@ -174,10 +174,6 @@ def save_graph_osm(G, node_tags=settings.osm_node_tags,
     gdf_nodes, gdf_edges = graph_to_gdfs(
         G_save, node_geometry=False, fill_edge_geometry=False)
 
-    # convert NaNs to string
-    # gdf_nodes.fillna('', inplace=True)
-    # gdf_edges.fillna('', inplace=True)
-
     # rename columns per osm specification
     gdf_nodes.rename(
         columns={'osmid': 'id', 'x': 'lon', 'y': 'lat'}, inplace=True)
@@ -190,15 +186,6 @@ def save_graph_osm(G, node_tags=settings.osm_node_tags,
         table['version'] = '1'
         table['changeset'] = '1'
         table['timestamp'] = '2017-01-01T00:00:00Z'
-
-    ## add empty columns for required attributes
-    # for attr in node_attrs + node_tags:
-    #     if attr not in gdf_nodes.columns:
-    #         gdf_nodes[attr] = ''
-
-    # for attr in edge_attrs + edge_tags:
-    #     if attr not in gdf_edges.columns:
-    #         gdf_edges[attr] = ''
 
     # convert all datatypes to str
     nodes = gdf_nodes.applymap(str)
