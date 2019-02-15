@@ -16,6 +16,7 @@ import networkx as nx
 from shapely.geometry import Point
 from shapely.geometry import LineString
 from shapely import wkt
+from lxml import etree
 
 from . import settings
 from .utils import log
@@ -141,6 +142,100 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     gdf_nodes.to_file('{}/nodes'.format(folder), encoding=encoding)
     gdf_edges.to_file('{}/edges'.format(folder), encoding=encoding)
     log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, folder, time.time()-start_time))
+
+
+def save_graph_osm(G, node_tags=settings.osm_node_tags,
+                   node_attrs=settings.osm_node_attrs,
+                   edge_tags=settings.osm_way_tags,
+                   edge_attrs=settings.osm_way_attrs,
+                   filename='graph.osm', folder=None):
+    """
+    Save a graph as an OSM XML formatted file
+
+    Parameters
+    __________
+    G : networkx multidigraph
+    filename : string
+        the name of the osm file (including file extension)
+    folder : string
+        the folder to contain the file, if None, use default data folder
+
+    Returns
+    -------
+    None
+    """
+    start_time = time.time()
+    if folder is None:
+        folder = settings.data_folder
+
+    # create a copy to convert all the node/edge attribute values to string
+    G_save = G.copy()
+
+    gdf_nodes, gdf_edges = graph_to_gdfs(
+        G_save, node_geometry=False, fill_edge_geometry=False)
+
+    # convert NaNs to string
+    # gdf_nodes.fillna('', inplace=True)
+    # gdf_edges.fillna('', inplace=True)
+
+    # rename columns per osm specification
+    gdf_nodes.rename(
+        columns={'osmid': 'id', 'x': 'lon', 'y': 'lat'}, inplace=True)
+    gdf_edges = gdf_edges.reset_index().rename(columns={'index': 'id'})
+
+    # add default values for required attributes
+    for table in [gdf_nodes, gdf_edges]:
+        table['uid'] = '1'
+        table['user'] = 'osmnx'
+        table['version'] = '1'
+        table['changeset'] = '1'
+        table['timestamp'] = '2017-01-01T00:00:00Z'
+
+    ## add empty columns for required attributes
+    # for attr in node_attrs + node_tags:
+    #     if attr not in gdf_nodes.columns:
+    #         gdf_nodes[attr] = ''
+
+    # for attr in edge_attrs + edge_tags:
+    #     if attr not in gdf_edges.columns:
+    #         gdf_edges[attr] = ''
+
+    # convert all datatypes to str
+    nodes = gdf_nodes.applymap(str)
+    edges = gdf_edges.applymap(str)
+
+    # misc. string replacements to meet OSM XML spec
+    if 'oneway' in edges.columns:
+        edges['oneway'] = edges['oneway'].str.replace(
+            'False', 'no').replace(
+            'True', 'yes')
+
+    # initialize XML tree with an OSM root element
+    root = etree.Element('osm')
+
+    # append nodes to the XML tree
+    for i, row in nodes.iterrows():
+        node = etree.SubElement(
+            root, 'node', attrib=row[node_attrs].dropna().to_dict())
+        for tag in node_tags:
+            etree.SubElement(
+                node, 'tag', attrib={'k': tag, 'v': row[tag]})
+
+    # append edges to the XML tree
+    for i, row in edges.iterrows():
+        edge = etree.SubElement(
+            root, 'way', attrib=row[edge_attrs].dropna().to_dict())
+        etree.SubElement(edge, 'nd', attrib={'ref': row['u']})
+        etree.SubElement(edge, 'nd', attrib={'ref': row['v']})
+        for tag in edge_tags:
+            etree.SubElement(
+                edge, 'tag', attrib={'k': tag, 'v': row[tag]})
+
+    et = etree.ElementTree(root)
+    et.write(os.path.join(folder, filename), pretty_print=True)
+
+    log('Saved graph "{}" to disk as OSM at "{}" in {:,.2f} seconds'.format(
+        G_save.name, os.path.join(folder, filename), time.time() - start_time))
 
 
 def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
