@@ -148,7 +148,8 @@ def save_graph_osm(G, node_tags=settings.osm_node_tags,
                    node_attrs=settings.osm_node_attrs,
                    edge_tags=settings.osm_way_tags,
                    edge_attrs=settings.osm_way_attrs,
-                   filename='graph.osm', folder=None):
+                   oneway=True, filename='graph.osm',
+                   folder=None):
     """
     Save a graph as an OSM XML formatted file
 
@@ -193,9 +194,10 @@ def save_graph_osm(G, node_tags=settings.osm_node_tags,
 
     # misc. string replacements to meet OSM XML spec
     if 'oneway' in edges.columns:
-        edges['oneway'] = edges['oneway'].str.replace(
-            'False', 'no').replace(
-            'True', 'yes')
+        edges.loc[:, 'oneway'] = oneway
+        edges.loc[:, 'oneway'] = edges['oneway'].astype(str)
+        edges.loc[:, 'oneway'] = edges['oneway'].str.replace(
+            'False', 'no').replace('True', 'yes')
 
     # initialize XML tree with an OSM root element
     root = etree.Element('osm')
