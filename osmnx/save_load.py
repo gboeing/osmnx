@@ -155,7 +155,7 @@ def save_graph_osm(G, node_tags=settings.osm_node_tags,
 
     Parameters
     __________
-    G : networkx multidigraph
+    G : networkx multidigraph or multigraph
     filename : string
         the name of the osm file (including file extension)
     folder : string
@@ -178,7 +178,10 @@ def save_graph_osm(G, node_tags=settings.osm_node_tags,
     # rename columns per osm specification
     gdf_nodes.rename(
         columns={'osmid': 'id', 'x': 'lon', 'y': 'lat'}, inplace=True)
-    gdf_edges = gdf_edges.reset_index().rename(columns={'index': 'id'})
+    if 'uniqueid' in gdf_edges.columns:
+        gdf_edges = gdf_edges.rename(columns={'uniqueid': 'id'})
+    else:
+        gdf_edges = gdf_edges.reset_index().rename(columns={'index': 'id'})
 
     # add default values for required attributes
     for table in [gdf_nodes, gdf_edges]:
