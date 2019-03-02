@@ -8,8 +8,7 @@ python:
 before_install:
   - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
+  - echo ". /home/travis/miniconda/etc/profile.d/conda.sh" >> ~/.bashrc
   - conda config --set always_yes yes --set show_channel_urls true
   - conda create --name TESTENV --override-channels -c conda-forge python=$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt
   - conda activate TESTENV
