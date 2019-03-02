@@ -7,7 +7,7 @@
 # >>> docker build -t gboeing/osmnx .
 #
 # Push the built image to hub so others can pull/run it:
-# >>> docker tag gboeing/osmnx gboeing/osmnx:latest
+# >>> docker tag gboeing/osmnx gboeing/osmnx:v0.0.0
 # >>> docker login
 # >>> docker push gboeing/osmnx
 #
@@ -47,3 +47,6 @@ WORKDIR /home/jovyan/work
 
 # set default command to launch when container is run
 CMD ["jupyter", "lab", "--no-browser", "--NotebookApp.token=''", "--NotebookApp.password=''"]
+
+# to test, import OSMnx and print its version
+RUN python -c "import osmnx; print(osmnx.__version__)"
