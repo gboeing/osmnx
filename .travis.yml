@@ -6,17 +6,13 @@ python:
   - 3.7
 
 before_install:
-  - pip install --upgrade pip
-  - pip install --upgrade wheel
   - wget http://bit.ly/miniconda -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set show_channel_urls true
-  - conda update conda
-  - conda config --add channels conda-forge --force
-  - conda create --quiet --name TESTENV python=$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt
-  - source activate TESTENV
+  - conda create --name TESTENV --override-channels -c conda-forge python=$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt
+  - conda activate TESTENV
   - conda info --all
   - conda list
 
