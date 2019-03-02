@@ -12,7 +12,7 @@ before_install:
   - hash -r
   - conda config --set always_yes yes --set show_channel_urls true
   - conda create --name TESTENV --override-channels -c conda-forge python=$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt
-  - conda activate TESTENV
+  - source activate TESTENV
   - conda info --all
   - conda list
 
