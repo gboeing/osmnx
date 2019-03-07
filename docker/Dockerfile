@@ -35,9 +35,8 @@ USER $NB_UID
 # configure conda and install packages in one RUN to keep image tidy
 RUN conda config --set show_channel_urls true && \
     conda config --prepend channels conda-forge && \
-    conda update --override-channels -c conda-forge --yes -n base conda && \
-    conda update --override-channels -c conda-forge --yes --all && \
-    conda install --override-channels -c conda-forge --yes osmnx python-igraph && \
+    conda update --strict-channel-priority --yes -n base conda && \
+    conda install --strict-channel-priority --yes --update-all osmnx python-igraph && \
     conda clean --yes --all && \
     conda info --all && \
     conda list
