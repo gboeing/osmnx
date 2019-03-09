@@ -12,6 +12,7 @@ osmnx
 pillow
 pip
 psycopg2
+pysal
 python == 3.7.*
 seaborn
 statsmodels
