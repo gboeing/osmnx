@@ -40,7 +40,7 @@ OpenStreetMap's APIs to:
   * Save networks to disk as shapefiles or GraphML
   * Conduct topological and spatial analyses to automatically calculate dozens of indicators
   * Calculate and plot shortest-path routes as a static image or leaflet web map
-  * Map-matching of points, routes, or trajectories to nearest graph edges or nodes
+  * Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes
   * Plot figure-ground diagrams of street networks and/or building footprints
   * Download node elevations and calculate edge grades
   * Visualize travel distance and travel time with isoline and isochrone maps

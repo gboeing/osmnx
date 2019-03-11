@@ -1,6 +1,6 @@
 [![PyPI version](https://badge.fury.io/py/osmnx.svg)](https://badge.fury.io/py/osmnx)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/osmnx/badges/downloads.svg)](https://anaconda.org/conda-forge/osmnx)
-[![Documentation Status](https://readthedocs.org/projects/osmnx/badge/?version=latest)](http://osmnx.readthedocs.io)
+[![Documentation Status](https://readthedocs.org/projects/osmnx/badge/?version=latest)](https://osmnx.readthedocs.io/)
 [![Build Status](https://travis-ci.org/gboeing/osmnx.svg?branch=master)](https://travis-ci.org/gboeing/osmnx)
 [![Coverage Status](https://coveralls.io/repos/github/gboeing/osmnx/badge.svg?branch=master)](https://coveralls.io/github/gboeing/osmnx?branch=master)
 [![Code Health](https://landscape.io/github/gboeing/osmnx/master/landscape.svg?style=flat)](https://landscape.io/github/gboeing/osmnx/master)
@@ -11,9 +11,9 @@
 **Python for street networks**
 
 Retrieve, model, analyze, and visualize street networks from OpenStreetMap:
-[full overview](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
+[full overview](https://geoffboeing.com/2016/11/osmnx-python-street-networks/).
 
-**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](http://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems* 65, 126-139. doi:10.1016/j.compenvurbsys.2017.05.004
+**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](https://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems* 65, 126-139. doi:10.1016/j.compenvurbsys.2017.05.004
 
 ## Overview
 
@@ -48,8 +48,7 @@ data, street bearings/orientations, and network routing.
 
 ## Installation
 
-If you have any trouble with the installation, read
-the [docs](https://osmnx.readthedocs.io/en/stable/#installation).
+If you have any trouble with the installation, read the [docs](https://osmnx.readthedocs.io/).
 
 You can install OSMnx with [conda](https://anaconda.org/conda-forge/osmnx):
 
@@ -59,7 +58,8 @@ conda install -c conda-forge osmnx
 
 Alternatively, you can run OSMnx + Jupyter directly from this
 [docker container](https://hub.docker.com/r/gboeing/osmnx), or you can install 
-OSMnx via [pip](https://pypi.python.org/pypi/OSMnx): `pip install osmnx`
+OSMnx via [pip](https://pypi.python.org/pypi/OSMnx) if you already have OSMnx's
+dependencies installed on your system: `pip install osmnx`
 
 ## Features
 
@@ -76,7 +76,7 @@ OpenStreetMap's APIs to:
   * Save networks to disk as shapefiles or GraphML
   * Conduct topological and spatial analyses to automatically calculate dozens of indicators
   * Calculate and plot shortest-path routes as a static image or leaflet web map
-  * Map-matching of points, routes, or trajectories to nearest graph edges or nodes
+  * Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes
   * Plot figure-ground diagrams of street networks and/or building footprints
   * Download node elevations and calculate edge grades
   * Visualize travel distance and travel time with isoline and isochrone maps
@@ -171,8 +171,8 @@ For examples of analyzing street networks with OSMnx, see [this notebook](https:
 
 ## More info
 
-For a more complete overview of [OSMnx, read this](http://geoffboeing.com/2016/11/osmnx-python-street-networks/).
+For a more complete overview of [OSMnx, read this](https://geoffboeing.com/2016/11/osmnx-python-street-networks/).
 
-Download/cite the [journal article here](http://geoffboeing.com/publications/osmnx-complex-street-networks/).
+Download/cite the [journal article here](https://geoffboeing.com/publications/osmnx-complex-street-networks/).
 
 For more examples, see the [examples repo](https://github.com/gboeing/osmnx-examples).
