@@ -27,9 +27,9 @@ dependencies:
   - click-plugins=1.0.4=py_0
   - cligj=0.5.0=py_0
   - colorama=0.4.1=py_0
-  - coverage=4.5.2=py37hfa6e2cd_1001
+  - coverage=4.5.3=py37hfa6e2cd_0
   - coveralls=1.5.1=py_0
-  - cryptography=2.5=py37h7a1dbc1_0
+  - cryptography=2.6.1=py37h7a1dbc1_0
   - curl=7.64.0=h4496350_2
   - cycler=0.10.0=py_1
   - cython=0.29.6=py37h6538335_0
@@ -107,7 +107,7 @@ dependencies:
   - nbformat=4.4.0=py_1
   - networkx=2.2=py_1
   - nodejs=11.11.0=0
-  - notebook=5.7.5=py37_0
+  - notebook=5.7.6=py37_0
   - numexpr=2.6.9=py37h6538335_1000
   - numpy=1.16.2=py37h19fb1c0_0
   - numpy-base=1.16.2=py37hc3f5095_0
@@ -117,12 +117,12 @@ dependencies:
   - owslib=0.17.1=py_0
   - packaging=19.0=py_0
   - palettable=3.1.1=py_0
-  - pandas=0.24.1=py37h6538335_0
+  - pandas=0.24.2=py37h6538335_0
   - pandoc=2.6=1
   - pandocfilters=1.4.2=py_1
   - parso=0.3.4=py_0
   - patsy=0.5.1=py_0
-  - pcre=8.42=hd6b2f15_0
+  - pcre=8.43=ha925a31_0
   - pickleshare=0.7.5=py37_1000
   - pillow=5.4.1=py37h9a613e6_1000
   - pip=19.0.3=py37_0
@@ -132,7 +132,7 @@ dependencies:
   - prompt_toolkit=2.0.9=py_0
   - psycopg2=2.7.7=py37hb32ad35_1
   - py=1.8.0=py_0
-  - pycparser=2.19=py_0
+  - pycparser=2.19=py37_1
   - pyepsg=0.4.0=py_0
   - pygments=2.3.1=py_0
   - pykdtree=1.3.1=py37h452e1ab_1002
@@ -144,8 +144,8 @@ dependencies:
   - pysal=2.0.0=py_0
   - pyshp=2.1.0=py_0
   - pysocks=1.6.8=py37_1002
-  - pytest=4.3.0=py37_0
-  - python=3.7.1=h9460c21_1002
+  - pytest=4.3.1=py37_0
+  - python=3.7.1=h9460c21_1003
   - python-dateutil=2.8.0=py_0
   - pytz=2018.9=py_0
   - pywinpty=0.5.5=py37_1000
@@ -154,7 +154,7 @@ dependencies:
   - qt=5.9.7=vc14h73c81de_0
   - requests=2.21.0=py37_1000
   - rtree=0.8.3=py37_1000
-  - scikit-learn=0.20.2=py37h343c172_0
+  - scikit-learn=0.20.3=py37h343c172_0
   - scipy=1.2.1=py37h29ff71c_0
   - seaborn=0.9.0=py_0
   - send2trash=1.5.0=py_0
@@ -164,7 +164,7 @@ dependencies:
   - six=1.12.0=py37_1000
   - snowballstemmer=1.2.1=py_1
   - soupsieve=1.8=py37_0
-  - sphinx=1.8.4=py37_0
+  - sphinx=1.8.5=py37_0
   - sphinxcontrib-websupport=1.1.0=py_1
   - sqlite=3.26.0=hfa6e2cd_1001
   - statsmodels=0.9.0=py37hfa6e2cd_1000
