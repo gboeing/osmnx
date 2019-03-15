@@ -1,5 +1,5 @@
 [![PyPI version](https://badge.fury.io/py/osmnx.svg)](https://badge.fury.io/py/osmnx)
-[![PyPI Downloads](https://img.shields.io/pypi/dm/osmnx.svg)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/osmnx.svg)](https://img.shields.io/pypi/dm/osmnx.svg)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/osmnx/badges/downloads.svg)](https://anaconda.org/conda-forge/osmnx)
 [![Documentation Status](https://readthedocs.org/projects/osmnx/badge/?version=latest)](https://osmnx.readthedocs.io/)
 [![Build Status](https://travis-ci.org/gboeing/osmnx.svg?branch=master)](https://travis-ci.org/gboeing/osmnx)
