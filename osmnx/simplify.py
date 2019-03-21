@@ -434,8 +434,7 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
         x = intersection_centroids[centroid].x
         y = intersection_centroids[centroid].y
 
-        osmid = elements[0] if len(elements) == 1 else elements
-        G__.add_node(centroid, osmid = osmid, x = x, y = y)
+        G__.add_node(centroid, osmid = elements[0], osmids = elements, x = x, y = y)
 
     for centroid, elements in centroid_elements.items():
             # get the outgoing edges for all elements in the centroid

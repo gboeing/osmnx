@@ -400,6 +400,9 @@ def test_clean_intersections_Newcastle_mainroads():
 
     ox.get_undirected(new_G)
 
+    gdf_nodes, gdf_edges = ox.graph_to_gdfs(new_G)
+    ox.gdfs_to_graph(gdf_nodes, gdf_edges)
+
 
 def test_clean_intersections_Shattuck_Berkeley():
     # Before and after plots are saved for validation
@@ -417,3 +420,6 @@ def test_clean_intersections_Shattuck_Berkeley():
     ox.plot_graph(new_G, fig_height = 10, node_alpha=1, node_zorder=2, node_size = 30,
                   node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
                   filename = "shattuck_after", save=True, file_format='png')
+
+    gdf_nodes, gdf_edges = ox.graph_to_gdfs(new_G)
+    ox.gdfs_to_graph(gdf_nodes, gdf_edges)
