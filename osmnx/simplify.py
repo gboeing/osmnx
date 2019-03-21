@@ -19,6 +19,7 @@ from shapely.geometry import LineString
 from .save_load import graph_to_gdfs
 from .utils import log
 from .utils import count_streets_per_node
+from .utils import get_nearest_nodes
 from . import settings
 
 # scipy and sklearn are optional dependencies for faster nearest node search
@@ -309,7 +310,7 @@ def simplify_graph(G, strict=True):
     return G
 
 
-def clean_intersections(G, tolerance=15, dead_ends=False):
+def clean_intersections(G, tolerance=15, dead_ends=False, method = 'kdtree'):
     """
     Clean-up intersections comprising clusters of nodes by merging them and
     returning their centroids.
@@ -337,6 +338,13 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
     dead_ends : bool
         if False, discard dead-end nodes to return only street-intersection
         points
+    method : str {None, 'kdtree', 'balltree'}
+        Which method to use for finding nearest node to each point.
+        If None, we manually find each node one at a time using
+        osmnx.utils.get_nearest_node and haversine. If 'kdtree' we use
+        scipy.spatial.cKDTree for very fast euclidean search. If
+        'balltree', we use sklearn.neighbors.BallTree for fast
+        haversine search.
 
     Returns
     ----------
@@ -390,52 +398,41 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
             y2 = G.nodes[v]['y']
             data['geometry'] = LineString([(x1, y1), (x2, y2)])
 
-    # First, we need to find the nearest centroid to each node
-    if cKDTree:
-        # the search is faster if we use a cKDTree
-        # build a k-d tree for euclidean nearest node search
-        centroids = pd.DataFrame({'x' : intersection_centroids.apply(lambda pt: pt.x),
-                                  'y' : intersection_centroids.apply(lambda pt: pt.y)})
-
-        tree = cKDTree(data=centroids, compact_nodes=True, balanced_tree=True)
-
-        X = [ x for node, x in G.nodes(data = 'x') ]
-        Y = [ y for node, y in G.nodes(data = 'y') ]
-
-        # query the tree for nearest centroid to each point
-        points = np.array([X, Y]).T
-        dist, idx = tree.query(points, k=1)
-        nearest_centroid = centroids.iloc[idx].index
-
-        # We build the mapping: osmid -> centroid
-        node_centroids = { osmid : nearest_centroid[i]
-                           for i, osmid in enumerate(G.nodes(data = False))}
-    else:
-        # else a lot slower if scipy is not available
-        nodes_centroids = {
-            osmid : np.argmin([node['geometry'].distance(centroid) \
-                               for centroid in intersection_centroids]) \
-            for osmid, node in gdf_nodes.iterrows()
-        }
-
-    # We also build the reverse mapping: centroid -> osmids
-    centroid_elements = {i : [] for i in range(len(intersection_centroids))}
-    for i, osmid in enumerate(G.nodes(data = False)):
-        centroid = nearest_centroid[i]
-        centroid_elements[centroid].append(osmid)
-
-    # We're ready to start building the new graph
+    # Let's first create the Graph first
     G__ = nx.DiGraph(name = G.graph['name'],
                      crs = G.graph['crs'])
 
-    # Add the nodes first
+    # And add the nodes (without the osmid attributes just yet)
     # The centroids are given new ids = 0 .. total_centroids-1
-    for centroid, elements in centroid_elements.items():
-        x = intersection_centroids[centroid].x
-        y = intersection_centroids[centroid].y
+    for i in range(len(intersection_centroids)):
+        G__.add_node(i,
+                     x = intersection_centroids[i].x,
+                     y = intersection_centroids[i].y)
 
-        G__.add_node(centroid, osmid = elements[0], osmids = elements, x = x, y = y)
+    # We can now run ox.get_nearest_nodes to calculate the closest centroid
+    # to each node
+    osmids = [ osmid for osmid in G.nodes()           ]
+    X      = [ x     for _, x  in G.nodes(data = 'x') ]
+    Y      = [ y     for _, y  in G.nodes(data = 'y') ]
 
+    # Mapping: i -> centroid
+    nearest_centroid = get_nearest_nodes(G__, X, Y, method = method)
+
+    # For ease of use, we build the mappings:
+    # osmid -> centroid
+    nearest_centroid = { osmids[i] : centroid for i, centroid in enumerate(nearest_centroid) }
+
+    # centroid -> osmids
+    centroid_elements = {i : [] for i in range(len(intersection_centroids))}
+    for osmid, centroid in nearest_centroid.items():
+        centroid_elements[centroid].append(osmid)
+
+    # Add osmids as attribute
+    nx.set_node_attributes(G__, centroid_elements, 'osmids')
+    # For compability, set attribute the 'osmid' with a single value
+    nx.set_node_attributes(G__, { centroid : elements[0] for centroid, elements in centroid_elements.items() } , 'osmid')
+
+    # Now we're ready to start adding the edges to the cleaned graph
     for centroid, elements in centroid_elements.items():
             # get the outgoing edges for all elements in the centroid
             out_edges = []
@@ -446,7 +443,7 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
             out_nodes = map(lambda edge: edge[1], out_edges)
 
             # and get the corresponding centroid of each element
-            neighbors = list(map(lambda osmid: node_centroids[osmid],
+            neighbors = list(map(lambda osmid: nearest_centroid[osmid],
                                  out_nodes))
 
             # remove duplicate neighbor centroids
