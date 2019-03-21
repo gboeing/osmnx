@@ -1,5 +1,10 @@
 # Change log
 
+## 0.10 (T.B.D.)
+
+  - remove deprecated buildings module
+  - filter steps ways out of bike queries
+
 ## 0.9 (2019-01-28)
   
   - deprecate buildings module and replace with generalized footprints module

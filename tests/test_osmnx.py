@@ -304,14 +304,6 @@ def test_nearest_edges():
     assert (ne1 == ne2).all()
 
 
-def test_buildings():
-
-    # download building footprints and plot them
-    gdf = ox.buildings_from_place(place='Emeryville, California, USA')
-    gdf = ox.buildings_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
-    fig, ax = ox.plot_buildings(gdf)
-
-
 def test_footprints():
 
     # download footprints and plot them
@@ -319,12 +311,10 @@ def test_footprints():
     gdf = ox.footprints_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
     fig, ax = ox.plot_footprints(gdf)
 
-
-def test_multipolygon_footprint():
-
-    # 'point' is the location of known multipolygon building, relation id 1767022
+    # test multipolygon footprint
+    # point is the location of known multipolygon building, relation id 1767022
     point = (51.5276, -0.11)
-    gdf = ox.footprints_from_point(point=point, distance=20)
+    gdf = ox.footprints_from_point(point=point, distance=20, footprint_type='building')
     assert 1767022 in gdf.index, "relation 1767022 was not returned in the geodataframe"
     assert gdf.loc[1767022]['geometry'].type=='MultiPolygon', "relation 1767022 is not a multipolygon"
 
@@ -381,7 +371,6 @@ def test_nominatim():
         response_json = ox.nominatim_request(
                             params = params,
                             type = "transfer")
-
 
 def test_clean_intersections_Newcastle_mainroads():
     # Before and after plots are saved for validation

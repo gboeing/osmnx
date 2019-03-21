@@ -562,7 +562,7 @@ def get_osm_filter(network_type):
 
     # biking: filter out foot ways, motor ways, private ways, and anything
     # specifying biking=no
-    filters['bike'] = ('["area"!~"yes"]["highway"!~"footway|corridor|motor|proposed|construction|abandoned|platform|raceway"]'
+    filters['bike'] = ('["area"!~"yes"]["highway"!~"footway|steps|corridor|motor|proposed|construction|abandoned|platform|raceway"]'
                        '["bicycle"!~"no"]["service"!~"private"]{}').format(settings.default_access)
 
     # to download all ways, just filter out everything not currently in use or

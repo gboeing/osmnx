@@ -1,0 +1,20 @@
+beautifulsoup4
+bokeh
+bottleneck
+cartopy
+cython
+ipyleaflet
+ipywidgets
+jupyterlab
+nodejs
+numexpr
+osmnx
+pillow
+pip
+psycopg2
+pysal
+python == 3.7.*
+seaborn
+statsmodels
+xlrd
+xlwt

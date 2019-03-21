@@ -409,7 +409,7 @@ def pois_from_address(address, distance, amenities=None):
     # geocode the address string to a (lat, lon) point
     point = geocode(query=address)
 
-    # get buildings within distance of this point
+    # get POIs within distance of this point
     return pois_from_point(point=point, amenities=amenities, distance=distance)
 
 
