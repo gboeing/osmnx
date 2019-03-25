@@ -54,10 +54,10 @@ def config(data_folder=settings.data_folder,
            log_filename=settings.log_filename,
            useful_tags_node=settings.useful_tags_node,
            useful_tags_path=settings.useful_tags_path,
-           osm_node_attrs=settings.osm_node_attrs,
-           osm_node_tags=settings.osm_node_tags,
-           osm_way_attrs=settings.osm_way_attrs,
-           osm_way_tags=settings.osm_way_tags,
+           osm_xml_node_attrs=settings.osm_xml_node_attrs,
+           osm_xml_node_tags=settings.osm_xml_node_tags,
+           osm_xml_way_attrs=settings.osm_xml_way_attrs,
+           osm_xml_way_tags=settings.osm_xml_way_tags,
            default_access=settings.default_access,
            default_crs=settings.default_crs,
            default_user_agent=settings.default_user_agent,
@@ -121,13 +121,13 @@ def config(data_folder=settings.data_folder,
     settings.useful_tags_node = useful_tags_node
     settings.useful_tags_path = useful_tags_path
     settings.useful_tags_node = list(set(
-        useful_tags_node + osm_node_attrs + osm_node_tags))
+        useful_tags_node + osm_xml_node_attrs + osm_xml_node_tags))
     settings.useful_tags_path = list(set(
-        useful_tags_path + osm_way_attrs + osm_way_tags))
-    settings.osm_node_attrs = osm_node_attrs
-    settings.osm_node_tags = osm_node_tags
-    settings.osm_way_attrs = osm_way_attrs
-    settings.osm_way_tags = osm_way_tags
+        useful_tags_path + osm_xml_way_attrs + osm_xml_way_tags))
+    settings.osm_xml_node_attrs = osm_xml_node_attrs
+    settings.osm_xml_node_tags = osm_xml_node_tags
+    settings.osm_xml_way_attrs = osm_xml_way_attrs
+    settings.osm_xml_way_tags = osm_xml_way_tags
     settings.default_access = default_access
     settings.default_crs = default_crs
     settings.default_user_agent = default_user_agent
