@@ -371,3 +371,8 @@ def test_nominatim():
         response_json = ox.nominatim_request(
                             params = params,
                             type = "transfer")
+
+
+def test_osm_xml_output():
+    G = ox.graph_from_place('Piedmont, California, USA')
+    ox.save_graph_osm(G)
