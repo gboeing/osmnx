@@ -1,6 +1,5 @@
 descartes>=1.1
 geopandas>=0.4
-lxml>=4.2
 matplotlib>=2.2
 networkx>=2.2
 numpy>=1.15
