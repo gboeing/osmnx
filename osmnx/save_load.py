@@ -16,7 +16,7 @@ import networkx as nx
 from shapely.geometry import Point
 from shapely.geometry import LineString
 from shapely import wkt
-from lxml import etree
+from xml.etree import ElementTree as etree
 
 from . import settings
 from .utils import log
@@ -144,10 +144,10 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, folder, time.time()-start_time))
 
 
-def save_graph_osm(G, node_tags=settings.osm_node_tags,
-                   node_attrs=settings.osm_node_attrs,
-                   edge_tags=settings.osm_way_tags,
-                   edge_attrs=settings.osm_way_attrs,
+def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
+                   node_attrs=settings.osm_xml_node_attrs,
+                   edge_tags=settings.osm_xml_way_tags,
+                   edge_attrs=settings.osm_xml_way_attrs,
                    oneway=True, filename='graph.osm',
                    folder=None):
     """
@@ -224,7 +224,11 @@ def save_graph_osm(G, node_tags=settings.osm_node_tags,
                 edge, 'tag', attrib={'k': tag, 'v': row[tag]})
 
     et = etree.ElementTree(root)
-    et.write(os.path.join(folder, filename), pretty_print=True)
+
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    et.write(os.path.join(folder, filename))
 
     log('Saved graph "{}" to disk as OSM at "{}" in {:,.2f} seconds'.format(
         G_save.name, os.path.join(folder, filename), time.time() - start_time))
