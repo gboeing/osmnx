@@ -151,7 +151,8 @@ def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
                    oneway=True, filename='graph.osm',
                    folder=None):
     """
-    Save a graph as an OSM XML formatted file
+    Save a graph as an OSM XML formatted file. NOTE: for very large
+    networks this method can take upwards of 30+ minutes to finish.
 
     Parameters
     __________
