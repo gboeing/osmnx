@@ -12,10 +12,9 @@ before_install:
   - hash -r
   - conda config --set always_yes yes --set show_channel_urls true
   - conda update -n base conda
-  - conda init
   - conda config --prepend channels conda-forge
   - conda create -n TEST --strict-channel-priority python=$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt
-  - conda activate TEST
+  - source activate TEST
   - conda info --all
   
 install:
