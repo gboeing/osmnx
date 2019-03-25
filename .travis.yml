@@ -10,7 +10,9 @@ before_install:
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
-  - conda config --prepend channels conda-forge --set always_yes yes --set show_channel_urls true
+  - conda config --set always_yes yes
+  - conda config --set show_channel_urls true
+  - conda config --prepend channels conda-forge
   - conda update -n base conda
   - conda create -n TEST --strict-channel-priority python=$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt
   - conda activate TEST
