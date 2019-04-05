@@ -618,6 +618,40 @@ def get_nearest_nodes(G, X, Y, method=None):
     return np.array(nn)
 
 
+def build_spatial_index(G, X, Y, method, dist=0.0001):
+    # transform graph into DataFrame
+    edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+
+    # transform edges into evenly spaced points
+    edges['points'] = edges.apply(lambda x: redistribute_vertices(x.geometry, dist), axis=1)
+
+    # develop edges data for each created points
+    extended = edges['points'].apply([pd.Series]).stack().reset_index(level=1, drop=True).join(edges).reset_index()
+
+    if method == 'kdtree':
+        # check if we were able to import scipy.spatial.cKDTree successfully
+        if not cKDTree:
+            raise ImportError('The scipy package must be installed to use this optional feature.')
+
+        # Prepare btree arrays
+        nbdata = np.array(list(zip(extended['Series'].apply(lambda x: x.x),
+                                   extended['Series'].apply(lambda x: x.y))))
+
+        # build a k-d tree for euclidean nearest node search
+        tree = cKDTree(data=nbdata, compact_nodes=True, balanced_tree=True)
+
+    elif method == 'balltree':
+        # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
+        nodes = pd.DataFrame({'x': extended['Series'].apply(lambda x: x.x),
+                              'y': extended['Series'].apply(lambda x: x.y)})
+        nodes_rad = np.deg2rad(nodes[['y', 'x']].values.astype(np.float))
+
+        # build a ball tree for haversine nearest node search
+        tree = BallTree(nodes_rad, metric='haversine')
+
+    return tree
+
+
 def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     """
     Return the graph edges nearest to a list of points. Pass in points
