@@ -30,6 +30,8 @@ from shapely.geometry import MultiLineString
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
 
+from abc import ABC, abstractmethod
+
 from . import settings
 
 # scipy and sklearn are optional dependencies for faster nearest node search
@@ -618,41 +620,100 @@ def get_nearest_nodes(G, X, Y, method=None):
     return np.array(nn)
 
 
-def build_spatial_index(G, X, Y, method, dist=0.0001):
-    # transform graph into DataFrame
-    edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+class SpatialIndex(ABC):
+    def __init__(self, G, method, dist=0.0001):
+        self.graph = G
+        self.method = method
+        self.dist = dist
+        self.edges = self._get_edges()
+        self.extended = self._get_extended()
 
-    # transform edges into evenly spaced points
-    edges['points'] = edges.apply(lambda x: redistribute_vertices(x.geometry, dist), axis=1)
+    def _get_edges(self):
+        # transform graph into DataFrame
+        edges = graph_to_gdfs(self.graph, nodes=False, fill_edge_geometry=True)
 
-    # develop edges data for each created points
-    extended = edges['points'].apply([pd.Series]).stack().reset_index(level=1, drop=True).join(edges).reset_index()
+        # transform edges into evenly spaced points
+        edges['points'] = edges.apply(lambda x: redistribute_vertices(x.geometry, self.dist), axis=1)
 
-    if method == 'kdtree':
-        # check if we were able to import scipy.spatial.cKDTree successfully
-        if not cKDTree:
-            raise ImportError('The scipy package must be installed to use this optional feature.')
+        return edges
 
+    def _get_extended(self):
+        # develop edges data for each created points
+        extended = self.edges['points'].apply([pd.Series]).stack().reset_index(level=1, drop=True).join(self.edges).reset_index()
+        return extended
+
+    def _build_kdtree(self):
         # Prepare btree arrays
-        nbdata = np.array(list(zip(extended['Series'].apply(lambda x: x.x),
-                                   extended['Series'].apply(lambda x: x.y))))
+        nbdata = np.array(list(zip(self.extended['Series'].apply(lambda x: x.x),
+                                   self.extended['Series'].apply(lambda x: x.y))))
 
         # build a k-d tree for euclidean nearest node search
         tree = cKDTree(data=nbdata, compact_nodes=True, balanced_tree=True)
+        return tree
 
-    elif method == 'balltree':
+    @abstractmethod
+    def _build_tree(self):
+        pass
+
+    @abstractmethod
+    def get_nearest_edges(self, X, Y):
+        pass
+
+
+class BallTreeIndex(SpatialIndex):
+    def __init__(self, G, method, dist=0.0001):
+        super().__init__(G, method, dist)
+        self.tree = self._build_tree()
+
+    def _build_tree(self):
         # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
-        nodes = pd.DataFrame({'x': extended['Series'].apply(lambda x: x.x),
-                              'y': extended['Series'].apply(lambda x: x.y)})
+        nodes = pd.DataFrame({'x': self.extended['Series'].apply(lambda x: x.x),
+                              'y': self.extended['Series'].apply(lambda x: x.y)})
         nodes_rad = np.deg2rad(nodes[['y', 'x']].values.astype(np.float))
 
         # build a ball tree for haversine nearest node search
         tree = BallTree(nodes_rad, metric='haversine')
+        return tree
 
-    return tree
+    def get_nearest_edges(self, X, Y):
+        points = np.array([Y, X]).T
+        points_rad = np.deg2rad(points)
+
+        # query the tree for nearest node to each point
+        idx = self.tree.query(points_rad, k=1, return_distance=False)
+        eidx = self.extended.loc[idx[:, 0], 'index']
+        ne = self.edges.loc[eidx, ['u', 'v']]
 
 
-def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
+class KDTreeIndex(SpatialIndex):
+    def __init__(self, G, method, dist=0.0001):
+        # check if we were able to import scipy.spatial.cKDTree successfully
+        if not cKDTree:
+            raise ImportError('The scipy package must be installed to use this optional feature.')
+
+        super().__init__(G, method, dist)
+        self.tree = self._build_tree()
+
+    def _build_tree(self):
+        # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
+        nodes = pd.DataFrame({'x': self.extended['Series'].apply(lambda x: x.x),
+                              'y': self.extended['Series'].apply(lambda x: x.y)})
+        nodes_rad = np.deg2rad(nodes[['y', 'x']].values.astype(np.float))
+
+        # build a ball tree for haversine nearest node search
+        tree = BallTree(nodes_rad, metric='haversine')
+        return tree
+
+    def get_nearest_edges(self, X, Y):
+        # query the tree for nearest node to each point
+        points = np.array([X, Y]).T
+        dist, idx = self.tree.query(points, k=1)  # Returns ids of closest point
+        eidx = self.extended.loc[idx, 'index']
+        ne = self.edges.loc[eidx, ['u', 'v']]
+        return ne
+
+
+def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
     """
     Return the graph edges nearest to a list of points. Pass in points
     as separate vectors of X and Y coordinates. The 'kdtree' method
@@ -711,66 +772,17 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         ne = [get_nearest_edge(G, (x, y)) for x, y in zip(X, Y)]
         ne = [(u, v) for _, u, v in ne]
 
-    elif method == 'kdtree':
+    elif spatial_index is None:
+        if method == 'kdtree':
+            spatial_index = KDTreeIndex(G, method, dist)
+        elif method == 'balltree':
+            spatial_index = BallTreeIndex(G, method, dist)
+        else:
+            raise ValueError('You must pass a valid method name, or None.')
 
-        # check if we were able to import scipy.spatial.cKDTree successfully
-        if not cKDTree:
-            raise ImportError('The scipy package must be installed to use this optional feature.')
+    assert isinstance(spatial_index, SpatialIndex)
 
-        # transform graph into DataFrame
-        edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
-
-        # transform edges into evenly spaced points
-        edges['points'] = edges.apply(lambda x: redistribute_vertices(x.geometry, dist), axis=1)
-
-        # develop edges data for each created points
-        extended = edges['points'].apply([pd.Series]).stack().reset_index(level=1, drop=True).join(edges).reset_index()
-
-        # Prepare btree arrays
-        nbdata = np.array(list(zip(extended['Series'].apply(lambda x: x.x),
-                                   extended['Series'].apply(lambda x: x.y))))
-
-        # build a k-d tree for euclidean nearest node search
-        btree = cKDTree(data=nbdata, compact_nodes=True, balanced_tree=True)
-
-        # query the tree for nearest node to each point
-        points = np.array([X, Y]).T
-        dist, idx = btree.query(points, k=1)  # Returns ids of closest point
-        eidx = extended.loc[idx, 'index']
-        ne = edges.loc[eidx, ['u', 'v']]
-
-    elif method == 'balltree':
-
-        # check if we were able to import sklearn.neighbors.BallTree successfully
-        if not BallTree:
-            raise ImportError('The scikit-learn package must be installed to use this optional feature.')
-
-        # transform graph into DataFrame
-        edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
-
-        # transform edges into evenly spaced points
-        edges['points'] = edges.apply(lambda x: redistribute_vertices(x.geometry, dist), axis=1)
-
-        # develop edges data for each created points
-        extended = edges['points'].apply([pd.Series]).stack().reset_index(level=1, drop=True).join(edges).reset_index()
-
-        # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
-        nodes = pd.DataFrame({'x': extended['Series'].apply(lambda x: x.x),
-                              'y': extended['Series'].apply(lambda x: x.y)})
-        nodes_rad = np.deg2rad(nodes[['y', 'x']].values.astype(np.float))
-        points = np.array([Y, X]).T
-        points_rad = np.deg2rad(points)
-
-        # build a ball tree for haversine nearest node search
-        tree = BallTree(nodes_rad, metric='haversine')
-
-        # query the tree for nearest node to each point
-        idx = tree.query(points_rad, k=1, return_distance=False)
-        eidx = extended.loc[idx[:, 0], 'index']
-        ne = edges.loc[eidx, ['u', 'v']]
-
-    else:
-        raise ValueError('You must pass a valid method name, or None.')
+    ne = spatial_index.get_nearest_edges(X, Y)
 
     log('Found nearest edges to {:,} points in {:,.2f} seconds'.format(len(X), time.time() - start_time))
 
