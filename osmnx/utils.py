@@ -767,22 +767,25 @@ def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
     """
     start_time = time.time()
 
+    if method not in ["kdtree", "balltree", None]:
+        raise ValueError('You must pass a valid method name, or None.')
+
     if method is None:
         # calculate nearest edge one at a time for each point
         ne = [get_nearest_edge(G, (x, y)) for x, y in zip(X, Y)]
         ne = [(u, v) for _, u, v in ne]
 
-    elif spatial_index is None:
-        if method == 'kdtree':
-            spatial_index = KDTreeIndex(G, method, dist)
-        elif method == 'balltree':
-            spatial_index = BallTreeIndex(G, method, dist)
-        else:
-            raise ValueError('You must pass a valid method name, or None.')
+    else:
+        # calculate nearest edge using specified method
+        if spatial_index is None:
+            if method == 'kdtree':
+                spatial_index = KDTreeIndex(G, method, dist)
+            elif method == 'balltree':
+                spatial_index = BallTreeIndex(G, method, dist)
 
-    assert isinstance(spatial_index, SpatialIndex)
+        assert isinstance(spatial_index, SpatialIndex)
 
-    ne = spatial_index.get_nearest_edges(X, Y)
+        ne = spatial_index.get_nearest_edges(X, Y)
 
     log('Found nearest edges to {:,} points in {:,.2f} seconds'.format(len(X), time.time() - start_time))
 
