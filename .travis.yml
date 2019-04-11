@@ -6,23 +6,20 @@ python:
   - 3.7
 
 before_install:
-  - pip install --upgrade pip
-  - pip install --upgrade wheel
-  - wget http://bit.ly/miniconda -O miniconda.sh
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set show_channel_urls true
-  - conda update conda
-  - conda config --add channels conda-forge --force
-  - conda create --quiet --name TESTENV python=$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt
-  - source activate TESTENV
+  - conda update -n base conda
+  - conda config --prepend channels conda-forge
+  - conda create -n TEST --strict-channel-priority python=$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt
+  - source activate TEST
   - conda info --all
-  - conda list
-
+  
 install:
-  - pip install .
-  - pip show osmnx
+  - python setup.py install
+  - conda list
 
 script:
   - coverage run --source osmnx -m pytest --verbose
@@ -30,4 +27,3 @@ script:
 after_success:
   - coverage report -m
   - coveralls
-  

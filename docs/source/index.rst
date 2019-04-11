@@ -8,10 +8,10 @@ OSMnx documentation
 
    osmnx
 
-**OSMnx**: retrieve, construct, analyze, and visualize street networks from
+**OSMnx**: retrieve, model, analyze, and visualize street networks from
 OpenStreetMap. OSMnx is a Python package that lets you download spatial
-geometries and construct, project, visualize, and analyze street networks from
-OpenStreetMap's APIs. Users can download and construct walkable, drivable,
+geometries and model, project, visualize, and analyze street networks from
+OpenStreetMap's APIs. Users can download and model walkable, drivable,
 or bikable urban networks with a single line of Python code, and then easily
 analyze and visualize them.
 
@@ -35,11 +35,12 @@ OpenStreetMap's APIs to:
   * Download by city name, polygon, bounding box, or point/address + network distance
   * Download drivable, walkable, bikeable, or all street networks
   * Load street network from a local .osm file
-  * Visualize street network as a static image or leaflet web map
+  * Visualize street network as a static image or interactive leaflet web map
   * Simplify and correct the network's topology to clean and consolidate intersections
   * Save networks to disk as shapefiles or GraphML
   * Conduct topological and spatial analyses to automatically calculate dozens of indicators
   * Calculate and plot shortest-path routes as a static image or leaflet web map
+  * Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes
   * Plot figure-ground diagrams of street networks and/or building footprints
   * Download node elevations and calculate edge grades
   * Visualize travel distance and travel time with isoline and isochrone maps
@@ -52,13 +53,15 @@ More feature development details are in the `change log`_.
 Installation
 ------------
 
-Install OSMnx with conda (easiest):
+You can install OSMnx with conda:
 
 .. code-block:: shell
 
     conda install -c conda-forge osmnx
 
-or with pip:
+Alternatively, you can run OSMnx + Jupyter directly from this `docker container`_,
+or you can install OSMnx via pip (if you already have all of its dependencies
+installed on your system):
 
 .. code-block:: shell
 
@@ -69,8 +72,8 @@ clean `virtual environment`_ using conda and conda-forge:
 
 .. code-block:: shell
 
-    conda create --override-channels -c conda-forge -n OSMNX python=3 osmnx
-    source activate OSMNX
+    conda create -n ox -c conda-forge --strict-channel-priority --yes python=3 osmnx
+    conda activate ox
 
 
 Examples
@@ -102,7 +105,8 @@ Indices and tables
 
 
 .. _change log: https://github.com/gboeing/osmnx/blob/master/CHANGELOG.md
-.. _virtual environment: https://conda.io/docs/using/envs.html
+.. _docker container: https://hub.docker.com/r/gboeing/osmnx
+.. _virtual environment: https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
 .. _examples: https://github.com/gboeing/osmnx-examples
 .. _issue: https://github.com/gboeing/osmnx/issues
 .. _OSMnx GitHub repo: https://github.com/gboeing/osmnx
