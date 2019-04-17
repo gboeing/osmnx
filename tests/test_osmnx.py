@@ -423,3 +423,7 @@ def test_clean_intersections_Shattuck_Berkeley():
 
     gdf_nodes, gdf_edges = ox.graph_to_gdfs(new_G)
     ox.gdfs_to_graph(gdf_nodes, gdf_edges)
+
+def test_osm_xml_output():
+    G = ox.graph_from_place('Piedmont, California, USA')
+    ox.save_graph_osm(G)

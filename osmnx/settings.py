@@ -32,6 +32,14 @@ useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name',
                     'highway', 'maxspeed', 'service', 'access', 'area',
                     'landuse', 'width', 'est_width', 'junction']
 
+# tags and attributes for generating an OSM XML file
+osm_xml_node_attrs = [
+    'id', 'timestamp', 'uid', 'user', 'version', 'changeset', 'lat', 'lon']
+osm_xml_node_tags = ['highway']
+osm_xml_way_attrs = ['id', 'timestamp', 'uid', 'user', 'version', 'changeset']
+osm_xml_way_tags = ['highway', 'lanes', 'maxspeed', 'name', 'oneway']
+
+
 # default filter for OSM "access" key. filtering out "access=no" ways prevents
 # including transit-only bridges like tilikum crossing from appearing in drivable
 # road network (e.g., '["access"!~"private|no"]'). however, some drivable 
