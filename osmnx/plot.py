@@ -444,6 +444,47 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     return fig, ax
 
 
+def node_list_to_coordinate_lines(G, node_list, use_geom=True):
+    """
+    Given a list of nodes, return a list of lines that together follow the path
+    defined by the list of nodes.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    route : list
+        the route as a list of nodes
+    use_geom : bool
+        if True, use the spatial geometry attribute of the edges to draw
+        geographically accurate edges, rather than just lines straight from node
+        to node
+
+    Returns
+    -------
+    lines : list of lines given as pairs ( (x_start, y_start), (x_stop, y_stop) )
+    """
+    edge_nodes = list(zip(node_list[:-1], node_list[1:]))
+    lines = []
+    for u, v in edge_nodes:
+        # if there are parallel edges, select the shortest in length
+        data = min(G.get_edge_data(u, v).values(), key=lambda x: x['length'])
+
+        # if it has a geometry attribute (ie, a list of line segments)
+        if 'geometry' in data and use_geom:
+            # add them to the list of lines to plot
+            xs, ys = data['geometry'].xy
+            lines.append(list(zip(xs, ys)))
+        else:
+            # if it doesn't have a geometry attribute, the edge is a straight
+            # line from node to node
+            x1 = G.nodes[u]['x']
+            y1 = G.nodes[u]['y']
+            x2 = G.nodes[v]['x']
+            y2 = G.nodes[v]['y']
+            line = [(x1, y1), (x2, y2)]
+            lines.append(line)
+    return lines
+
 def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
                      margin=0.02, bgcolor='w', axis_off=True, show=True,
                      save=False, close=True, file_format='png', filename='temp',
@@ -568,26 +609,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
                c=orig_dest_node_color, alpha=orig_dest_node_alpha, edgecolor=node_edgecolor, zorder=4)
 
     # plot the route lines
-    edge_nodes = list(zip(route[:-1], route[1:]))
-    lines = []
-    for u, v in edge_nodes:
-        # if there are parallel edges, select the shortest in length
-        data = min(G.get_edge_data(u, v).values(), key=lambda x: x['length'])
-
-        # if it has a geometry attribute (ie, a list of line segments)
-        if 'geometry' in data and use_geom:
-            # add them to the list of lines to plot
-            xs, ys = data['geometry'].xy
-            lines.append(list(zip(xs, ys)))
-        else:
-            # if it doesn't have a geometry attribute, the edge is a straight
-            # line from node to node
-            x1 = G.nodes[u]['x']
-            y1 = G.nodes[u]['y']
-            x2 = G.nodes[v]['x']
-            y2 = G.nodes[v]['y']
-            line = [(x1, y1), (x2, y2)]
-            lines.append(line)
+    lines = node_list_to_coordinate_lines(G, route, use_geom)
 
     # add the lines to the axis as a linecollection
     lc = LineCollection(lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3)
@@ -728,25 +750,7 @@ def plot_graph_routes(G, routes, bbox=None, fig_height=6, fig_width=None,
     # plot the routes lines
     lines = []
     for route in routes:
-        edge_nodes = list(zip(route[:-1], route[1:]))
-        for u, v in edge_nodes:
-            # if there are parallel edges, select the shortest in length
-            data = min(G.get_edge_data(u, v).values(), key=lambda x: x['length'])
-
-            # if it has a geometry attribute (ie, a list of line segments)
-            if 'geometry' in data and use_geom:
-                # add them to the list of lines to plot
-                xs, ys = data['geometry'].xy
-                lines.append(list(zip(xs, ys)))
-            else:
-                # if it doesn't have a geometry attribute, the edge is a straight
-                # line from node to node
-                x1 = G.nodes[u]['x']
-                y1 = G.nodes[u]['y']
-                x2 = G.nodes[v]['x']
-                y2 = G.nodes[v]['y']
-                line = [(x1, y1), (x2, y2)]
-                lines.append(line)
+        lines.extend(node_list_to_coordinate_lines(G, route, use_geom))
 
     # add the lines to the axis as a linecollection
     lc = LineCollection(lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3)
