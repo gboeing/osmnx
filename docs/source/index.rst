@@ -48,7 +48,7 @@ You can install OSMnx with conda:
 
 .. code-block:: shell
 
-    conda install -c conda-forge osmnx
+    conda create -n ox -c conda-forge python=3 osmnx
 
 Alternatively, you can run OSMnx + Jupyter directly from this `docker container`_, or you can install OSMnx via pip (if you already have all of its dependencies installed on your system):
 
@@ -56,12 +56,12 @@ Alternatively, you can run OSMnx + Jupyter directly from this `docker container`
 
     pip install osmnx
 
-If you have any trouble with the installation, try installing OSMnx in a new, clean `virtual environment`_ using conda and conda-forge:
+If you have any trouble with the installation, try installing OSMnx in a new, clean `conda environment`_ using conda-forge and strict channel priority:
 
 .. code-block:: shell
 
-    conda create -n ox -c conda-forge --strict-channel-priority --yes python=3 osmnx
-    conda activate ox
+    conda config --prepend channels conda-forge
+    conda create -n ox --strict-channel-priority python=3 osmnx
 
 
 Examples
@@ -92,7 +92,7 @@ Indices and tables
 
 .. _change log: https://github.com/gboeing/osmnx/blob/master/CHANGELOG.md
 .. _docker container: https://hub.docker.com/r/gboeing/osmnx
-.. _virtual environment: https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
+.. _conda environment: https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
 .. _examples: https://github.com/gboeing/osmnx-examples
 .. _issue: https://github.com/gboeing/osmnx/issues
 .. _OSMnx GitHub repo: https://github.com/gboeing/osmnx
