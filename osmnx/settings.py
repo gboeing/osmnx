@@ -50,7 +50,7 @@ osm_xml_way_tags = ['highway', 'lanes', 'maxspeed', 'name', 'oneway']
 default_access = '["access"!~"private"]'
 
 # The network types for which a bidirectional graph will be created
-bidirectional_network_types = ["walk"]
+bidirectional_network_types = ['walk']
 
 # default CRS to set when creating graphs
 default_crs = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
