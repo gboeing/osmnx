@@ -242,7 +242,7 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
         try:
             del footprints[item]
         except KeyError:
-            print('{} not in footprints dict'.format(item))
+            log('{} not found in footprints dict'.format(item))
 
     gdf = gpd.GeoDataFrame(footprints).T
     gdf.crs = settings.default_crs
