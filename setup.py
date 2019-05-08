@@ -49,7 +49,7 @@ install_requires = [r.strip() for r in requirements_lines]
 
 # now call setup
 setup(name='osmnx',
-      version='0.10dev',
+      version='0.10',
       description='Retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data',
       long_description=long_description,
       classifiers=classifiers,
