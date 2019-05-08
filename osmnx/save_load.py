@@ -333,7 +333,9 @@ def load_graphml(filename, folder=None, node_type=int):
     G = nx.MultiDiGraph(nx.read_graphml(path, node_type=node_type))
 
     # convert graph crs attribute from saved string to correct dict data type
-    G.graph['crs'] = ast.literal_eval(G.graph['crs'])
+    # if it is a stringified dict rather than a proj4 string
+    if 'crs' in G.graph and G.graph['crs'].startswith('{') and G.graph['crs'].endswith('}'):
+        G.graph['crs'] = ast.literal_eval(G.graph['crs'])
 
     if 'streets_per_node' in G.graph:
         G.graph['streets_per_node'] = ast.literal_eval(G.graph['streets_per_node'])
@@ -358,7 +360,7 @@ def load_graphml(filename, folder=None, node_type=int):
         for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed', 'service', 'access', 'area', 'landuse', 'width', 'est_width']:
             # if this edge has this attribute, and it starts with '[' and ends
             # with ']', then it's a list to be parsed
-            if attr in data and data[attr][0] == '[' and data[attr][-1] == ']':
+            if attr in data and data[attr].startswith('[') and data[attr].endswith(']'):
                 # try to convert the string list to a list type, else leave as
                 # single-value string (and leave as string if error)
                 try:
