@@ -27,7 +27,7 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsi
 
     Parameters
     ----------
-    
+
     north : float
         Northernmost coordinate from bounding box of the search area.
     south : float
@@ -39,7 +39,7 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsi
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area.
     timeout : int
-        Timeout for the API request. 
+        Timeout for the API request.
     """
     if amenities:
         # Overpass QL template
@@ -73,7 +73,7 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
     Parameters
     ----------
     poly : shapely.geometry.Polygon
-        Polygon that will be used to limit the POI search. 
+        Polygon that will be used to limit the POI search.
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area.
 
@@ -110,14 +110,14 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
 def parse_nodes_coords(osm_response):
     """
     Parse node coordinates from OSM response. Some nodes are
-    standalone points of interest, others are vertices in 
+    standalone points of interest, others are vertices in
     polygonal (areal) POIs.
-    
+
     Parameters
     ----------
     osm_response : string
         OSM response JSON string
-    
+
     Returns
     -------
     coords : dict
@@ -162,7 +162,7 @@ def parse_polygonal_poi(coords, response):
 
         except Exception:
             log('Polygon has invalid geometry: {}'.format(nodes))
-    
+
     return None
 
 
@@ -172,8 +172,8 @@ def parse_osm_node(response):
 
     Parameters
     ----------
-    response : JSON 
-        Nodes from OSM response.  
+    response : JSON
+        Nodes from OSM response.
 
     Returns
     -------
@@ -199,7 +199,7 @@ def parse_osm_node(response):
 
 def invalid_multipoly_handler(gdf, relation, way_ids):
     """
-    Handles invalid multipolygon geometries when there exists e.g. a feature without 
+    Handles invalid multipolygon geometries when there exists e.g. a feature without
     geometry (geometry == NaN)
 
     Parameters
@@ -210,7 +210,7 @@ def invalid_multipoly_handler(gdf, relation, way_ids):
     relation : dict
         OSM 'relation' dictionary
     way_ids : list
-        A list of 'way' ids that should be converted into a MultiPolygon object. 
+        A list of 'way' ids that should be converted into a MultiPolygon object.
     """
 
     try:
@@ -225,23 +225,23 @@ def invalid_multipoly_handler(gdf, relation, way_ids):
 
 def parse_osm_relations(relations, osm_way_df):
     """
-    Parses the osm relations (multipolygons) from osm 
-    ways and nodes. See more information about relations 
-    from OSM documentation: http://wiki.openstreetmap.org/wiki/Relation 
-         
+    Parses the osm relations (multipolygons) from osm
+    ways and nodes. See more information about relations
+    from OSM documentation: http://wiki.openstreetmap.org/wiki/Relation
+
     Parameters
     ----------
     relations : list
-        OSM 'relation' items (dictionaries) in a list. 
+        OSM 'relation' items (dictionaries) in a list.
     osm_way_df : gpd.GeoDataFrame
-        OSM 'way' features as a GeoDataFrame that contains all the 
+        OSM 'way' features as a GeoDataFrame that contains all the
         'way' features that will constitute the multipolygon relations.
-     
+
     Returns
     -------
     gpd.GeoDataFrame
-        A GeoDataFrame with MultiPolygon representations of the 
-        relations and the attributes associated with them.   
+        A GeoDataFrame with MultiPolygon representations of the
+        relations and the attributes associated with them.
     """
 
     gdf_relations = gpd.GeoDataFrame()
@@ -295,8 +295,8 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     polygon : shapely Polygon or MultiPolygon
         geographic shape to fetch the POIs within
     amenities: list
-        List of amenities that will be used for finding the POIs from the selected area. 
-        See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity 
+        List of amenities that will be used for finding the POIs from the selected area.
+        See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
     north : float
         northern latitude of bounding box
     south : float
@@ -305,10 +305,10 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
         eastern longitude of bounding box
     west : float
         western longitude of bounding box
-        
+
     Returns
     -------
-    Geopandas GeoDataFrame with POIs and the associated attributes. 
+    Geopandas GeoDataFrame with POIs and the associated attributes.
     """
 
     responses = osm_poi_download(polygon=polygon, amenities=amenities, north=north, south=south, east=east, west=west)
@@ -373,12 +373,12 @@ def pois_from_point(point, distance=None, amenities=None):
     distance : numeric
         distance in meters
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area. 
+        List of amenities that will be used for finding the POIs from the selected area.
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
 
     Returns
     -------
-    GeoDataFrame 
+    GeoDataFrame
     """
 
     bbox = bbox_from_point(point=point, distance=distance)
@@ -398,7 +398,7 @@ def pois_from_address(address, distance, amenities=None):
     distance : numeric
         distance in meters
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area. See available 
+        List of amenities that will be used for finding the POIs from the selected area. See available
         amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
 
     Returns
@@ -420,9 +420,9 @@ def pois_from_polygon(polygon, amenities=None):
     Parameters
     ----------
     polygon : Polygon
-        Polygon where the POIs are search from. 
+        Polygon where the POIs are search from.
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area. 
+        List of amenities that will be used for finding the POIs from the selected area.
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
 
     Returns

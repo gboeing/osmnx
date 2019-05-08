@@ -1319,7 +1319,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional
         if True, return the entire graph even if it is not connected
     bidirectional : bool
         if True, create bidirectional edges for one-way streets
-   
+
 
     Returns
     -------

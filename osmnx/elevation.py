@@ -114,7 +114,7 @@ def add_edge_grades(G, add_absolute=True): # pragma: no cover
     # destination, then divide by edge length
     for u, v, data in G.edges(keys=False, data=True):
         elevation_change = G.nodes[v]['elevation'] - G.nodes[u]['elevation']
-        
+
         # round to ten-thousandths decimal place
         grade = round(elevation_change / data['length'], 4)
         data['grade'] = grade
