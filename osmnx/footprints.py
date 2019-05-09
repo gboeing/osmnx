@@ -238,7 +238,7 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
                 footprints[result['id']] = footprint
 
     # remove supporting geometry from footprints dictionary
-    for item in pop_list:
+    for item in set(pop_list):
         try:
             del footprints[item]
         except KeyError:
