@@ -1,4 +1,4 @@
-name: ox
+name: base
 channels:
   - conda-forge
   - defaults
@@ -19,6 +19,7 @@ dependencies:
   - click=7.0=py_0
   - click-plugins=1.1.1=py_0
   - cligj=0.5.0=py_0
+  - conda=4.6.14=py37_0
   - cryptography=2.6.1=py37h72c5cf5_0
   - curl=7.64.1=hf8cf82a_0
   - cycler=0.10.0=py_1
@@ -104,7 +105,7 @@ dependencies:
   - openblas=0.3.6=h6e990d7_1
   - openjpeg=2.3.1=h58a6597_0
   - openssl=1.1.1b=h14c3975_1
-  - osmnx=0.9=py_1
+  - osmnx=0.10=py_0
   - pandas=0.24.2=py37hf484d3e_0
   - pandoc=2.7.2=0
   - pandocfilters=1.4.2=py_1
@@ -123,8 +124,9 @@ dependencies:
   - pthread-stubs=0.4=h14c3975_1001
   - ptyprocess=0.6.0=py_1001
   - pycairo=1.18.1=py37h438ddbb_0
+  - pycosat=0.6.3=py37h14c3975_1001
   - pycparser=2.19=py37_1
-  - pygments=2.3.1=py_0
+  - pygments=2.4.0=py_0
   - pyopenssl=19.0.0=py37_0
   - pyparsing=2.4.0=py_0
   - pyproj=2.1.3=py37h7bc548f_1
@@ -140,6 +142,7 @@ dependencies:
   - readline=7.0=hf8c457e_1001
   - requests=2.21.0=py37_1000
   - rtree=0.8.3=py37h666c49c_1002
+  - ruamel_yaml=0.15.71=py37h14c3975_1000
   - scipy=1.2.1=py37h09a28d5_1
   - send2trash=1.5.0=py_0
   - setuptools=41.0.1=py37_0
@@ -172,8 +175,9 @@ dependencies:
   - xorg-xextproto=7.3.0=h14c3975_1002
   - xorg-xproto=7.0.31=h14c3975_1007
   - xz=5.2.4=h14c3975_1001
+  - yaml=0.1.7=h14c3975_1001
   - zeromq=4.3.1=hf484d3e_1000
   - zlib=1.2.11=h14c3975_1004
   - zstd=1.3.3=1
-prefix: /opt/conda/envs/ox
+prefix: /opt/conda
 
