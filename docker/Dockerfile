@@ -13,7 +13,7 @@
 #
 # Run bash in this container and export final conda environment to a yml file:
 # >>> docker run --rm -it -v %cd%:/home/jovyan/work gboeing/osmnx /bin/bash
-# >>> conda env export -n ox > /home/jovyan/work/environment.yml
+# >>> conda env export -n base > /home/jovyan/work/environment.yml
 #
 # Run jupyter lab in this container:
 # >>> docker run --rm -it -p 8888:8888 -v %cd%:/home/jovyan/work gboeing/osmnx
