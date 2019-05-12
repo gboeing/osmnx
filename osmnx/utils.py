@@ -738,6 +738,14 @@ def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
         scipy.spatial.cKDTree for very fast euclidean search. Recommended for
         projected graphs. If 'balltree', we use sklearn.neighbors.BallTree for
         fast haversine search. Recommended for unprojected graphs.
+    spatial_index : instantiation of SpatialIndex class (optional)
+        Related to the method parameter. If using 'kdtree' or 'balltree', the
+        user may pass in her own object of class KDTreeIndex or BallTreeIndex
+        to avoid the instantiation of a new spatial index within the function.
+        If a spatial index is not provided and the user specified 'kdtree' or
+        'balltree' as the desired method, then the KDTreeIndex or BallTreeIndex
+        will be constructed inside the function before it is called to find
+        the nearest edges.
 
     dist : float
         spacing length along edges. Units are the same as the geom; Degrees for
@@ -786,7 +794,6 @@ def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
         ne = spatial_index.get_nearest_edges(X, Y)
 
     log('Found nearest edges to {:,} points in {:,.2f} seconds'.format(len(X), time.time() - start_time))
-    print('Found nearest edges to {:,} points in {:,.2f} seconds'.format(len(X), time.time() - start_time))
 
     return np.array(ne)
 
