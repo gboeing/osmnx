@@ -515,6 +515,9 @@ def get_nearest_edge(G, point, spatial_index=None):
     point : tuple
         The (lat, lng) or (y, x) point for which we will find the nearest edge
         in the graph
+    spatial_index : instantiation of SpatialIndex class (optional)
+        The user may pass in her own object of class KDTreeIndex or BallTreeIndex
+        for a faster search of nearest edges.
 
     Returns
     -------
