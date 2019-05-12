@@ -1307,7 +1307,7 @@ def add_paths(G, paths, bidirectional=False):
 
 def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional=False):
     """
-    Create a networkx graph from OSM data.
+    Create a networkx graph from Overpass API HTTP response objects.
 
     Parameters
     ----------
@@ -1319,7 +1319,6 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional
         if True, return the entire graph even if it is not connected
     bidirectional : bool
         if True, create bidirectional edges for one-way streets
-   
 
     Returns
     -------

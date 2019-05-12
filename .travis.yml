@@ -1,7 +1,6 @@
 dist: xenial
 language: python
 python:
-  - 2.7
   - 3.6
   - 3.7
 
@@ -16,7 +15,7 @@ before_install:
   - conda create -n TEST --strict-channel-priority python=$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt
   - source activate TEST
   - conda info --all
-  
+
 install:
   - python setup.py install
   - conda list

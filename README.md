@@ -4,7 +4,6 @@
 [![Documentation Status](https://readthedocs.org/projects/osmnx/badge/?version=latest)](https://osmnx.readthedocs.io/)
 [![Build Status](https://travis-ci.org/gboeing/osmnx.svg?branch=master)](https://travis-ci.org/gboeing/osmnx)
 [![Coverage Status](https://coveralls.io/repos/github/gboeing/osmnx/badge.svg?branch=master)](https://coveralls.io/github/gboeing/osmnx?branch=master)
-[![Code Health](https://landscape.io/github/gboeing/osmnx/master/landscape.svg?style=flat)](https://landscape.io/github/gboeing/osmnx/master)
 
 
 # OSMnx
@@ -58,7 +57,7 @@ conda install -c conda-forge osmnx
 ```
 
 Alternatively, you can run OSMnx + Jupyter directly from this
-[docker container](https://hub.docker.com/r/gboeing/osmnx), or you can install 
+[docker container](https://hub.docker.com/r/gboeing/osmnx), or you can install
 OSMnx via [pip](https://pypi.python.org/pypi/OSMnx) if you already have OSMnx's
 dependencies installed on your system: `pip install osmnx`
 

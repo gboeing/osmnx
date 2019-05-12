@@ -27,7 +27,7 @@ from .utils import geocode
 
 
 def osm_footprints_download(polygon=None, north=None, south=None, east=None, west=None,
-                            footprint_type='building', timeout=180, memory=None, 
+                            footprint_type='building', timeout=180, memory=None,
                             max_query_area_size=50*1000*50*1000):
     """
     Download OpenStreetMap footprint data.
@@ -141,7 +141,7 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
     return response_jsons
 
 
-def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None, 
+def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None,
                           footprint_type='building', retain_invalid=False):
     """
     Get footprint data from OSM then assemble it into a GeoDataFrame.
@@ -274,7 +274,7 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
 
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
-    return create_footprints_gdf(north=north, south=south, east=east, west=west, 
+    return create_footprints_gdf(north=north, south=south, east=east, west=west,
                                  footprint_type=footprint_type, retain_invalid=retain_invalid)
 
 
@@ -303,7 +303,7 @@ def footprints_from_address(address, distance, footprint_type='building', retain
     point = geocode(query=address)
 
     # get footprints within distance of this point
-    return footprints_from_point(point, distance, footprint_type=footprint_type, 
+    return footprints_from_point(point, distance, footprint_type=footprint_type,
                                  retain_invalid=retain_invalid)
 
 
@@ -326,7 +326,7 @@ def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=F
     GeoDataFrame
     """
 
-    return create_footprints_gdf(polygon=polygon, footprint_type=footprint_type, 
+    return create_footprints_gdf(polygon=polygon, footprint_type=footprint_type,
                                  retain_invalid=retain_invalid)
 
 
@@ -361,7 +361,7 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
 
 
 def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w',
-                   set_bounds=True, bbox=None, save=False, show=True, close=False, 
+                   set_bounds=True, bbox=None, save=False, show=True, close=False,
                    filename='image', file_format='png', dpi=600):
     """
     Plot a GeoDataFrame of footprints.
