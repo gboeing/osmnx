@@ -490,7 +490,7 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
         return nearest_node
 
 
-def get_nearest_edge(G, point):
+def get_nearest_edge(G, point, spatial_index=None):
     """
     Return the nearest edge to a pair of coordinates. Pass in a graph and a tuple
     with the coordinates. We first get all the edges in the graph. Secondly we compute
@@ -515,19 +515,23 @@ def get_nearest_edge(G, point):
     """
     start_time = time.time()
 
-    gdf = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
-    graph_edges = gdf[["geometry", "u", "v"]].values.tolist()
+    if spatial_index is None:
+        gdf = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+        graph_edges = gdf[["geometry", "u", "v"]].values.tolist()
 
-    edges_with_distances = [
-        (
-            graph_edge,
-            Point(tuple(reversed(point))).distance(graph_edge[0])
-        )
-        for graph_edge in graph_edges
-    ]
+        edges_with_distances = [
+            (
+                graph_edge,
+                Point(tuple(reversed(point))).distance(graph_edge[0])
+            )
+            for graph_edge in graph_edges
+        ]
 
-    edges_with_distances = sorted(edges_with_distances, key=lambda x: x[1])
-    closest_edge_to_point = edges_with_distances[0][0]
+        edges_with_distances = sorted(edges_with_distances, key=lambda x: x[1])
+        closest_edge_to_point = edges_with_distances[0][0]
+
+    else:
+        closest_edge_to_point = spatial_index.get_nearest_edges(X=list(point[1]), Y=list(point[0]))
 
     geometry, u, v = closest_edge_to_point
 
@@ -640,16 +644,8 @@ class SpatialIndex(ABC):
     def _get_extended(self):
         # develop edges data for each created points
         extended = self.edges['points'].apply([pd.Series]).stack().reset_index(level=1, drop=True).join(self.edges).reset_index()
+
         return extended
-
-    def _build_kdtree(self):
-        # Prepare btree arrays
-        nbdata = np.array(list(zip(self.extended['Series'].apply(lambda x: x.x),
-                                   self.extended['Series'].apply(lambda x: x.y))))
-
-        # build a k-d tree for euclidean nearest node search
-        tree = cKDTree(data=nbdata, compact_nodes=True, balanced_tree=True)
-        return tree
 
     @abstractmethod
     def _build_tree(self):
@@ -683,6 +679,7 @@ class BallTreeIndex(SpatialIndex):
         idx = self.tree.query(points_rad, k=1, return_distance=False)
         eidx = self.extended.loc[idx[:, 0], 'index']
         ne = self.edges.loc[eidx, ['u', 'v']]
+        return ne
 
 
 class KDTreeIndex(SpatialIndex):
@@ -695,14 +692,14 @@ class KDTreeIndex(SpatialIndex):
         self.tree = self._build_tree()
 
     def _build_tree(self):
-        # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
-        nodes = pd.DataFrame({'x': self.extended['Series'].apply(lambda x: x.x),
-                              'y': self.extended['Series'].apply(lambda x: x.y)})
-        nodes_rad = np.deg2rad(nodes[['y', 'x']].values.astype(np.float))
+        # Prepare btree arrays
+        nbdata = np.array(list(zip(self.extended['Series'].apply(lambda x: x.x),
+                                   self.extended['Series'].apply(lambda x: x.y))))
 
-        # build a ball tree for haversine nearest node search
-        tree = BallTree(nodes_rad, metric='haversine')
-        return tree
+        # build a k-d tree for euclidean nearest node search
+        btree = cKDTree(data=nbdata, compact_nodes=True, balanced_tree=True)
+
+        return btree
 
     def get_nearest_edges(self, X, Y):
         # query the tree for nearest node to each point
@@ -778,6 +775,7 @@ def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
     else:
         # calculate nearest edge using specified method
         if spatial_index is None:
+            # construct spatial index object if it is not provided as an argument
             if method == 'kdtree':
                 spatial_index = KDTreeIndex(G, method, dist)
             elif method == 'balltree':
@@ -788,6 +786,7 @@ def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
         ne = spatial_index.get_nearest_edges(X, Y)
 
     log('Found nearest edges to {:,} points in {:,.2f} seconds'.format(len(X), time.time() - start_time))
+    print('Found nearest edges to {:,} points in {:,.2f} seconds'.format(len(X), time.time() - start_time))
 
     return np.array(ne)
 
