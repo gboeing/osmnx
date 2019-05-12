@@ -424,6 +424,7 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     return distance
 
 
+
 def get_nearest_node(G, point, method='haversine', return_dist=False):
     """
     Return the graph node nearest to some specified (lat, lng) or (y, x) point,
@@ -499,6 +500,7 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
         return nearest_node
 
 
+
 def get_nearest_edge(G, point, spatial_index=None):
     """
     Return the nearest edge to a pair of coordinates. Pass in a graph and a tuple
@@ -551,6 +553,7 @@ def get_nearest_edge(G, point, spatial_index=None):
     log('Found nearest edge ({}) to point {} in {:,.2f} seconds'.format((u, v), point, time.time() - start_time))
 
     return geometry, u, v
+
 
 
 def get_nearest_nodes(G, X, Y, method=None):
@@ -637,6 +640,7 @@ def get_nearest_nodes(G, X, Y, method=None):
     return np.array(nn)
 
 
+
 class SpatialIndex(ABC):
     """
     Abstract class that is used to store a spatial index of a graph for quick searches of nearest edges.
@@ -670,7 +674,6 @@ class SpatialIndex(ABC):
     def _get_extended(self):
         """
         Returns edges data for each created point
-        :return:
         """
         extended = self.edges['points'].apply([pd.Series]).stack().reset_index(level=1, drop=True).join(
             self.edges).reset_index()
@@ -683,6 +686,7 @@ class SpatialIndex(ABC):
     @abstractmethod
     def get_nearest_edges(self, X, Y):
         pass
+
 
 
 class BallTreeIndex(SpatialIndex):
@@ -744,6 +748,7 @@ class BallTreeIndex(SpatialIndex):
         return ne
 
 
+
 class KDTreeIndex(SpatialIndex):
     def __init__(self, G, dist=0.0001):
         """
@@ -794,6 +799,7 @@ class KDTreeIndex(SpatialIndex):
         eidx = self.extended.loc[idx, 'index']
         ne = self.edges.loc[eidx, ['geometry', 'u', 'v']].values.tolist()
         return ne
+
 
 
 def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
@@ -884,6 +890,7 @@ def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
     return np.array(ne)
 
 
+
 def redistribute_vertices(geom, dist):
     """
     Redistribute the vertices on a projected LineString or MultiLineString. The distance
@@ -918,6 +925,7 @@ def redistribute_vertices(geom, dist):
         return type(geom)([p for p in parts if not p.is_empty])
     else:
         raise ValueError('unhandled geometry {}'.format(geom.geom_type))
+
 
 
 def get_bearing(origin_point, destination_point):
@@ -955,6 +963,7 @@ def get_bearing(origin_point, destination_point):
     bearing = (initial_bearing + 360) % 360
 
     return bearing
+
 
 
 def add_edge_bearings(G):
