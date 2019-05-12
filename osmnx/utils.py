@@ -130,7 +130,6 @@ def config(data_folder=settings.data_folder,
         log('Configured osmnx')
 
 
-
 def log(message, level=None, name=None, filename=None):
     """
     Write a message to the log file and/or print to the the console.
@@ -414,7 +413,6 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     return distance
 
 
-
 def get_nearest_node(G, point, method='haversine', return_dist=False):
     """
     Return the graph node nearest to some specified (lat, lng) or (y, x) point,
@@ -531,7 +529,8 @@ def get_nearest_edge(G, point, spatial_index=None):
         closest_edge_to_point = edges_with_distances[0][0]
 
     else:
-        closest_edge_to_point = spatial_index.get_nearest_edges(X=list(point[1]), Y=list(point[0]))
+        # use spatial index provided
+        closest_edge_to_point = spatial_index.get_nearest_edges(X=[point[1]], Y=[point[0]])[0]
 
     geometry, u, v = closest_edge_to_point
 
@@ -727,7 +726,7 @@ class BallTreeIndex(SpatialIndex):
         points_rad = np.deg2rad(points)
         idx = self.tree.query(points_rad, k=1, return_distance=False)
         eidx = self.extended.loc[idx[:, 0], 'index']
-        ne = self.edges.loc[eidx, ['u', 'v']]
+        ne = self.edges.loc[eidx, ['geometry', 'u', 'v']].values.tolist()
         return ne
 
 
@@ -779,7 +778,7 @@ class KDTreeIndex(SpatialIndex):
         points = np.array([X, Y]).T
         dist, idx = self.tree.query(points, k=1)  # Returns ids of closest point
         eidx = self.extended.loc[idx, 'index']
-        ne = self.edges.loc[eidx, ['u', 'v']]
+        ne = self.edges.loc[eidx, ['geometry', 'u', 'v']].values.tolist()
         return ne
 
 
@@ -851,7 +850,6 @@ def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
     if method is None:
         # calculate nearest edge one at a time for each point
         ne = [get_nearest_edge(G, (x, y)) for x, y in zip(X, Y)]
-        ne = [(u, v) for _, u, v in ne]
 
     else:
         # calculate nearest edge using specified method
@@ -866,6 +864,7 @@ def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
 
         ne = spatial_index.get_nearest_edges(X, Y)
 
+    ne = [(u, v) for _, u, v in ne]
     log('Found nearest edges to {:,} points in {:,.2f} seconds'.format(len(X), time.time() - start_time))
 
     return np.array(ne)
@@ -942,7 +941,6 @@ def get_bearing(origin_point, destination_point):
     bearing = (initial_bearing + 360) % 360
 
     return bearing
-
 
 
 def add_edge_bearings(G):
