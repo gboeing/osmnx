@@ -625,26 +625,42 @@ def get_nearest_nodes(G, X, Y, method=None):
 
 
 class SpatialIndex(ABC):
-    def __init__(self, G, method, dist=0.0001):
+    """
+    Abstract class that is used to store a spatial index of a graph for quick searches of nearest edges.
+    """
+    def __init__(self, G, dist=0.0001):
+        """
+        Initializes the spatial index
+
+        Parameters
+        ----------
+        G : networkx multidigraph
+        dist : float
+            spacing length along edges. Units are the same as the geom; Degrees for
+            unprojected geometries and meters for projected geometries. The smaller
+            the value, the more points are created.
+        """
         self.graph = G
-        self.method = method
         self.dist = dist
         self.edges = self._get_edges()
         self.extended = self._get_extended()
 
     def _get_edges(self):
-        # transform graph into DataFrame
+        """
+        Returns the edges in the spatial index. Transforms graph into DataFrame then
+        transforms edges into evenly spaced points.
+        """
         edges = graph_to_gdfs(self.graph, nodes=False, fill_edge_geometry=True)
-
-        # transform edges into evenly spaced points
         edges['points'] = edges.apply(lambda x: redistribute_vertices(x.geometry, self.dist), axis=1)
-
         return edges
 
     def _get_extended(self):
-        # develop edges data for each created points
-        extended = self.edges['points'].apply([pd.Series]).stack().reset_index(level=1, drop=True).join(self.edges).reset_index()
-
+        """
+        Returns edges data for each created point
+        :return:
+        """
+        extended = self.edges['points'].apply([pd.Series]).stack().reset_index(level=1, drop=True).join(
+            self.edges).reset_index()
         return extended
 
     @abstractmethod
@@ -657,25 +673,58 @@ class SpatialIndex(ABC):
 
 
 class BallTreeIndex(SpatialIndex):
-    def __init__(self, G, method, dist=0.0001):
-        super().__init__(G, method, dist)
+    """
+    Class that stores a sklearn BallTree spatial index for quick searches of the nearest edge to a point.
+    The get_nearest_edges method use sklearn.neighbors.BallTree for fast haversine search.
+    Recommended for unprojected graphs.
+    """
+    def __init__(self, G, dist=0.0001):
+        """
+        Initializes BallTreeIndex
+
+        Parameters
+        ----------
+        G : networkx multidigraph
+        dist : float
+            spacing length along edges. Units are the same as the geom; Degrees for
+            unprojected geometries and meters for projected geometries. The smaller
+            the value, the more points are created.
+        """
+        # check if we were able to import sklearn.neighbors.BallTree successfully
+        if not BallTree:
+            raise ImportError('The scikit-learn package must be installed to use this optional feature.')
+
+        super().__init__(G, dist)
         self.tree = self._build_tree()
 
     def _build_tree(self):
+        """
+        Build a ball tree for haversine nearest node search
+        """
         # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
         nodes = pd.DataFrame({'x': self.extended['Series'].apply(lambda x: x.x),
                               'y': self.extended['Series'].apply(lambda x: x.y)})
         nodes_rad = np.deg2rad(nodes[['y', 'x']].values.astype(np.float))
-
-        # build a ball tree for haversine nearest node search
         tree = BallTree(nodes_rad, metric='haversine')
         return tree
 
     def get_nearest_edges(self, X, Y):
+        """
+        Query the tree for nearest node to each point
+
+        Parameters
+        ----------
+        X : list-like
+            The vector of longitudes or x's for which we will find the nearest
+            edge in the graph. For projected graphs, use the projected coordinates,
+            usually in meters.
+        Y : list-like
+            The vector of latitudes or y's for which we will find the nearest
+            edge in the graph. For projected graphs, use the projected coordinates,
+            usually in meters.
+        """
         points = np.array([Y, X]).T
         points_rad = np.deg2rad(points)
-
-        # query the tree for nearest node to each point
         idx = self.tree.query(points_rad, k=1, return_distance=False)
         eidx = self.extended.loc[idx[:, 0], 'index']
         ne = self.edges.loc[eidx, ['u', 'v']]
@@ -683,26 +732,50 @@ class BallTreeIndex(SpatialIndex):
 
 
 class KDTreeIndex(SpatialIndex):
-    def __init__(self, G, method, dist=0.0001):
+    def __init__(self, G, dist=0.0001):
+        """
+        Initializes KDTreeIndex
+
+        Parameters
+        ----------
+        G : networkx multidigraph
+        dist : float
+            spacing length along edges. Units are the same as the geom; Degrees for
+            unprojected geometries and meters for projected geometries. The smaller
+            the value, the more points are created.
+        """
         # check if we were able to import scipy.spatial.cKDTree successfully
         if not cKDTree:
             raise ImportError('The scipy package must be installed to use this optional feature.')
 
-        super().__init__(G, method, dist)
+        super().__init__(G, dist)
         self.tree = self._build_tree()
 
     def _build_tree(self):
+        """
+        Build a k-d tree for euclidean nearest node search
+        """
         # Prepare btree arrays
         nbdata = np.array(list(zip(self.extended['Series'].apply(lambda x: x.x),
                                    self.extended['Series'].apply(lambda x: x.y))))
-
-        # build a k-d tree for euclidean nearest node search
         btree = cKDTree(data=nbdata, compact_nodes=True, balanced_tree=True)
-
         return btree
 
     def get_nearest_edges(self, X, Y):
-        # query the tree for nearest node to each point
+        """
+        Query the tree for nearest node to each point
+
+        Parameters
+        ----------
+        X : list-like
+            The vector of longitudes or x's for which we will find the nearest
+            edge in the graph. For projected graphs, use the projected coordinates,
+            usually in meters.
+        Y : list-like
+            The vector of latitudes or y's for which we will find the nearest
+            edge in the graph. For projected graphs, use the projected coordinates,
+            usually in meters.
+        """
         points = np.array([X, Y]).T
         dist, idx = self.tree.query(points, k=1)  # Returns ids of closest point
         eidx = self.extended.loc[idx, 'index']
@@ -785,9 +858,9 @@ def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
         if spatial_index is None:
             # construct spatial index object if it is not provided as an argument
             if method == 'kdtree':
-                spatial_index = KDTreeIndex(G, method, dist)
+                spatial_index = KDTreeIndex(G, dist)
             elif method == 'balltree':
-                spatial_index = BallTreeIndex(G, method, dist)
+                spatial_index = BallTreeIndex(G, dist)
 
         assert isinstance(spatial_index, SpatialIndex)
 
