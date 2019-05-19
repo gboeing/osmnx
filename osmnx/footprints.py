@@ -10,8 +10,8 @@ import matplotlib.pyplot as plt
 import time
 from descartes import PolygonPatch
 from matplotlib.collections import PatchCollection
-from shapely.geometry import Polygon
-from shapely.geometry import MultiPolygon
+from shapely.geometry import LineString, Polygon, MultiPolygon
+from shapely.ops import polygonize
 
 from . import settings
 from .core import consolidate_subdivide_geometry
@@ -141,7 +141,98 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
     return response_jsons
 
 
-def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None, 
+def assemble_complex_footprints(relations, ways_in_relations):
+    """
+    Assemble complex footprints made up of open and closed ways inside relations
+
+    Parameters
+    ----------
+    relations : dictionary
+        dictionary of OSM relations including member ids, roles and tags
+    ways_in_relations : dictionary
+        dictionary of ways that are parts of relations
+
+    Returns
+    -------
+    dictionary
+        dictionary of complex footprints
+    """
+
+    complex_footprints = {}
+
+    # for each relation
+    for relation_id, relation_values in relations.items():
+
+        # create empty lists to hold member geometries
+        outer_polys = []
+        outer_lines = []
+        inner_polys = []
+        inner_lines = []
+
+        # add each members geometry to a list according to its role
+        for member_id, member_role in relation_values['members'].items():
+            if member_role == 'outer':
+                if ways_in_relations[member_id]['geometry'].geom_type == 'Polygon':
+                    outer_polys.append(ways_in_relations[member_id]['geometry'])
+                elif ways_in_relations[member_id]['geometry'].geom_type == 'LineString':
+                    outer_lines.append(ways_in_relations[member_id]['geometry'])
+            elif member_role == 'inner':
+                if ways_in_relations[member_id]['geometry'].geom_type == 'Polygon':
+                    inner_polys.append(ways_in_relations[member_id]['geometry'])
+                elif ways_in_relations[member_id]['geometry'].geom_type == 'LineString':
+                    inner_lines.append(ways_in_relations[member_id]['geometry'])
+
+        # try to polygonize open outer ways and concatenate them to outer_polys
+        if len(outer_lines) > 0:
+            try:
+                result = list(polygonize(outer_lines))
+            except Exception:
+                log("polygonize failed for 'outer' ways in relation: {}".format(relation_id))
+            else:
+                outer_polys += result
+
+        # try to polygonize open inner ways and concatenate them to inner_polys
+        if len(inner_lines) > 0:
+            try:
+                result = list(polygonize(inner_lines))
+            except Exception:
+                log("polygonize failed for 'inner' ways in relation: {}".format(relation_id))
+            else:
+                inner_polys += result
+
+        # filter out relations missing both 'outer' and 'inner' polygons or just 'outer'
+        # process the others to multipolygons
+        if len(outer_polys + inner_polys) == 0:
+            log("Relation {} missing 'outer' and 'inner' closed ways".format(relation_id))
+            continue
+        elif len(outer_polys) == 0:
+            log("Relation {} missing 'outer' closed ways".format(relation_id))
+            continue
+        else:
+            multipoly = []
+            for outer_poly in outer_polys:
+                temp_poly = outer_poly
+                for inner_poly in inner_polys:
+                    if inner_poly.within(outer_poly):
+                        temp_poly=temp_poly.difference(inner_poly)
+                multipoly.append(temp_poly)
+
+        # relations with only one 'outer' way -> Polygon
+        # relations with multiple 'outer' ways -> MultiPolygon
+        if len(multipoly) == 1:
+            relation_values['geometry'] = Polygon(multipoly[0])
+        elif len(multipoly) > 1:    
+            relation_values['geometry'] = MultiPolygon(multipoly)
+        else:
+            log('relation {} could not be converted to a complex footprint'.format(relation_id))
+            continue
+
+        complex_footprints[relation_id] = relation_values
+        
+    return complex_footprints
+
+
+def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None, responses=None, 
                           footprint_type='building', retain_invalid=False):
     """
     Get footprint data from OSM then assemble it into a GeoDataFrame.
@@ -158,6 +249,8 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
         eastern longitude of bounding box
     west : float
         western longitude of bounding box
+    responses : list
+        list of response_json dicts
     footprint_type : string
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
@@ -167,90 +260,95 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
     -------
     GeoDataFrame
     """
+    # allow insertion of pickled responses
+    if responses is None:
+        responses = osm_footprints_download(polygon, north, south, east, west, footprint_type)
 
-    responses = osm_footprints_download(polygon, north, south, east, west, footprint_type)
-
-    # list of polygons to removed at the end of the process
-    pop_list = []
-
+    # create dicts to hold vertices, footprints and relations
+    # and a set to hold way ids found within relations
     vertices = {}
-    for response in responses:
-        for result in response['elements']:
-            if 'type' in result and result['type']=='node':
-                vertices[result['id']] = {'lat' : result['lat'],
-                                          'lon' : result['lon']}
-
     footprints = {}
+    relations = {}
+    way_ids_in_relations = set()
+
+    # add each element in each response to one of the dicts
     for response in responses:
-        for result in response['elements']:
-            if 'type' in result and result['type']=='way':
-                nodes = result['nodes']
-                try:
-                    polygon = Polygon([(vertices[node]['lon'], vertices[node]['lat']) for node in nodes])
-                except Exception:
-                    log('Polygon has invalid geometry: {}'.format(nodes))
-                footprint = {'nodes' : nodes,
-                            'geometry' : polygon}
+        for element in response['elements']:
+            
+            # NODES
+            if 'type' in element and element['type']=='node':
+                vertices[element['id']] = {'lat' : element['lat'],
+                                           'lon' : element['lon']}
+            # WAYS - both open and closed
+            elif 'type' in element and element['type']=='way':
+                footprint = {'nodes' : element['nodes']}
+                if 'tags' in element:
+                    for tag in element['tags']:
+                        footprint[tag] = element['tags'][tag]
+                footprints[element['id']] = footprint
+            # RELATIONS
+            elif 'type' in element and element['type']=='relation':
+                relation = {'members' : {}}
+                for member in element['members']:
+                    if 'type' in member and member['type']=='way':
+                        relation['members'].update({member['ref']:member.get('role')})
+                        # add way id to set of way ids found in relations
+                        way_ids_in_relations.add(member['ref'])
+                if 'tags' in element:
+                    for tag in element['tags']:
+                        relation[tag] = element['tags'][tag]
+                relations[element['id']] = relation
+            # Log any other Elements found in the response
+            else:
+                log('Element {} is not a node, way or relation'.format(element['id']))
 
-                if 'tags' in result:
-                    for tag in result['tags']:
-                        footprint[tag] = result['tags'][tag]
+    # Loop through footprints dict converting closed ways to Shapely Polygons, open ways to LineStrings
+    for fp_key, fp_vals in footprints.items():
+        # CLOSED WAYS
+        if fp_vals['nodes'][0] == fp_vals['nodes'][-1]:
+            try:
+                polygon = Polygon([(vertices[node]['lon'], vertices[node]['lat']) for node in fp_vals['nodes']])
+            except Exception:
+                log('Polygon has invalid geometry: {}'.format(fp_key))
+            else:
+                fp_vals['geometry'] = polygon
+        # OPEN WAYS    
+        else:
+            try:
+                polyline = LineString([(vertices[node]['lon'], vertices[node]['lat']) for node in fp_vals['nodes']])
+            except Exception:
+                log('LineString has invalid geometry: {}'.format(fp_key))
+            else:
+                fp_vals['geometry'] = polyline
 
-                # if polygons are untagged or not tagged with the footprint_type
-                # add them to pop_list to be removed from the final dictionary
-                if 'tags' not in result:
-                    pop_list.append(result['id'])
-                elif footprint_type not in result['tags']:
-                    pop_list.append(result['id'])
-
-                footprints[result['id']] = footprint
-
-    # Create multipolygon footprints and pop untagged supporting polygons from footprints
-    for response in responses:
-        for result in response['elements']:
-            if 'type' in result and result['type']=='relation':
-
-                outer_polys = []
-                inner_polys = []
-                multipoly = []
-
-                for member in result['members']:
-                    if 'role' in member and member['role']=='outer':
-                        outer_polys.append(member['ref'])
-                    if 'role' in member and member['role']=='inner':
-                        inner_polys.append(member['ref'])
-
-                # osm allows multiple outer polygons in a relation
-                for outer_poly in outer_polys:
-                    temp_poly=footprints[outer_poly]['geometry']
-
-                    for inner_poly in inner_polys:
-                        temp_poly=temp_poly.difference(footprints[inner_poly]['geometry'])
-
-                    multipoly.append(temp_poly)
-
-                footprint = {'geometry' : MultiPolygon(multipoly)}
-
-                if 'tags' in result:
-                    for tag in result['tags']:
-                        footprint[tag] = result['tags'][tag]
-
-                footprints[result['id']] = footprint
-
-    # remove supporting geometry from footprints dictionary
-    for item in set(pop_list):
+    # Separate ways that are parts of relations into a separate dictionary
+    ways_in_relations = {}
+    for way_id in way_ids_in_relations:
         try:
-            del footprints[item]
-        except KeyError:
-            log('{} not found in footprints dict'.format(item))
+            ways_in_relations[way_id] = footprints.pop(way_id)
+        except Exception:
+            log('Footprint {} was not found in footprints'.format(way_id))
 
-    gdf = gpd.GeoDataFrame(footprints).T
+    # assemble complex footprints from ways_in_relations and combine them back into footprints
+    footprints.update(assemble_complex_footprints(relations, ways_in_relations))
+
+    # if any ways in relations are directly tagged as the footprint type, output these as well
+    for way in ways_in_relations:
+        if (footprint_type in ways_in_relations[way]):
+            footprints[way] = ways_in_relations[way]
+            log('Way {}, tagged as {} is also part of a relation'.format(way, footprint_type))
+
+    # Convert footprints dictionary to a GeoDataFrame
+    gdf = gpd.GeoDataFrame.from_dict(footprints, orient='index')
     gdf.crs = settings.default_crs
 
-    if not retain_invalid:
-        # drop all invalid geometries
-        gdf = gdf[gdf['geometry'].is_valid]
-
+    # unless invalid geometries are required filter the gdf to only include valid Polygons or MultiPolygons
+    if not retain_invalid:    
+        filter1 = gdf['geometry'].is_valid
+        filter2 = (gdf['geometry'].geom_type == 'Polygon') | (gdf['geometry'].geom_type == 'MultiPolygon')
+        filter = filter1 & filter2
+        gdf = gdf[filter]
+    
     return gdf
 
 
