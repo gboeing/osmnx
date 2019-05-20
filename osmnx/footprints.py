@@ -141,7 +141,7 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
     return response_jsons
 
 
-def assemble_complex_footprints(relations, ways_in_relations):
+def assemble_complex_footprints(relations, footprints):
     """
     Assemble complex footprints made up of open and closed ways inside relations
 
@@ -149,8 +149,8 @@ def assemble_complex_footprints(relations, ways_in_relations):
     ----------
     relations : dictionary
         dictionary of OSM relations including member ids, roles and tags
-    ways_in_relations : dictionary
-        dictionary of ways that are parts of relations
+    footprints : dictionary
+        dictionary of all footprints including ways not directly tagged with footprint_type
 
     Returns
     -------
@@ -172,15 +172,15 @@ def assemble_complex_footprints(relations, ways_in_relations):
         # add each members geometry to a list according to its role
         for member_id, member_role in relation_values['members'].items():
             if member_role == 'outer':
-                if ways_in_relations[member_id]['geometry'].geom_type == 'Polygon':
-                    outer_polys.append(ways_in_relations[member_id]['geometry'])
-                elif ways_in_relations[member_id]['geometry'].geom_type == 'LineString':
-                    outer_lines.append(ways_in_relations[member_id]['geometry'])
+                if footprints[member_id]['geometry'].geom_type == 'Polygon':
+                    outer_polys.append(footprints[member_id]['geometry'])
+                elif footprints[member_id]['geometry'].geom_type == 'LineString':
+                    outer_lines.append(footprints[member_id]['geometry'])
             elif member_role == 'inner':
-                if ways_in_relations[member_id]['geometry'].geom_type == 'Polygon':
-                    inner_polys.append(ways_in_relations[member_id]['geometry'])
-                elif ways_in_relations[member_id]['geometry'].geom_type == 'LineString':
-                    inner_lines.append(ways_in_relations[member_id]['geometry'])
+                if footprints[member_id]['geometry'].geom_type == 'Polygon':
+                    inner_polys.append(footprints[member_id]['geometry'])
+                elif footprints[member_id]['geometry'].geom_type == 'LineString':
+                    inner_lines.append(footprints[member_id]['geometry'])
 
         # try to polygonize open outer ways and concatenate them to outer_polys
         if len(outer_lines) > 0:
@@ -265,11 +265,11 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
         responses = osm_footprints_download(polygon, north, south, east, west, footprint_type)
 
     # create dicts to hold vertices, footprints and relations
-    # and a set to hold way ids found within relations
+    # and a set to hold way ids of ways not individually tagged as footprint_type
     vertices = {}
     footprints = {}
     relations = {}
-    way_ids_in_relations = set()
+    untagged_ways = set()
 
     # add each element in each response to one of the dicts
     for response in responses:
@@ -286,14 +286,15 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
                     for tag in element['tags']:
                         footprint[tag] = element['tags'][tag]
                 footprints[element['id']] = footprint
+                # if way not individually tagged with footprint_type, add to the untagged_way set
+                if ('tags' not in element) or (footprint_type not in element['tags']):
+                    untagged_ways.add(element['id'])
             # RELATIONS
             elif 'type' in element and element['type']=='relation':
                 relation = {'members' : {}}
                 for member in element['members']:
                     if 'type' in member and member['type']=='way':
                         relation['members'].update({member['ref']:member.get('role')})
-                        # add way id to set of way ids found in relations
-                        way_ids_in_relations.add(member['ref'])
                 if 'tags' in element:
                     for tag in element['tags']:
                         relation[tag] = element['tags'][tag]
@@ -321,22 +322,15 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
             else:
                 fp_vals['geometry'] = polyline
 
-    # Separate ways that are parts of relations into a separate dictionary
-    ways_in_relations = {}
-    for way_id in way_ids_in_relations:
+    # assemble complex footprints from relations and combine them back into footprints
+    footprints.update(assemble_complex_footprints(relations, footprints))
+
+    # delete any ways not tagged with footprint_type from the final dictionary
+    for untagged_way in untagged_ways:
         try:
-            ways_in_relations[way_id] = footprints.pop(way_id)
-        except Exception:
-            log('Footprint {} was not found in footprints'.format(way_id))
-
-    # assemble complex footprints from ways_in_relations and combine them back into footprints
-    footprints.update(assemble_complex_footprints(relations, ways_in_relations))
-
-    # if any ways in relations are directly tagged as the footprint type, output these as well
-    for way in ways_in_relations:
-        if (footprint_type in ways_in_relations[way]):
-            footprints[way] = ways_in_relations[way]
-            log('Way {}, tagged as {} is also part of a relation'.format(way, footprint_type))
+            del footprints[untagged_way]
+        except KeyError:
+            log('untagged_way {} not found in footprints dict'.format(untagged_way))
 
     # Convert footprints dictionary to a GeoDataFrame
     gdf = gpd.GeoDataFrame.from_dict(footprints, orient='index')
