@@ -269,7 +269,7 @@ def nominatim_request(params, type = "search", pause_duration=1, timeout=30, err
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
-        domain = re.findall(r'//(?s)(.*?)/', url)[0]
+        domain = re.findall(r'(?s)//(.*?)/', url)[0]
         log('Downloaded {:,.1f}KB from {} in {:,.2f} seconds'.format(size_kb, domain, time.time()-start_time))
 
         try:
@@ -341,7 +341,7 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
-        domain = re.findall(r'//(?s)(.*?)/', url)[0]
+        domain = re.findall(r'(?s)//(.*?)/', url)[0]
         log('Downloaded {:,.1f}KB from {} in {:,.2f} seconds'.format(size_kb, domain, time.time()-start_time))
 
         try:
