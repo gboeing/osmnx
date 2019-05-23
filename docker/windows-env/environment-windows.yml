@@ -41,7 +41,7 @@ dependencies:
   - entrypoints=0.3=py37_1000
   - expat=2.2.5=he025d50_1002
   - fiona=1.8.6=py37hce0be61_3
-  - folium=0.8.3=py_0
+  - folium=0.9.0=py_0
   - freetype=2.10.0=h5db478b_0
   - freexl=1.0.5=hd288d7e_1002
   - gdal=2.4.1=py37hdf5ee75_0
@@ -59,13 +59,14 @@ dependencies:
   - idna=2.8=py37_1000
   - imagesize=1.1.0=py_0
   - intel-openmp=2019.3=203
-  - ipykernel=5.1.0=py37h39e3cac_1002
+  - ipykernel=5.1.1=py37h39e3cac_0
   - ipyleaflet=0.10.2=py37_0
   - ipython=7.5.0=py37h39e3cac_0
   - ipython_genutils=0.2.0=py_1
   - ipywidgets=7.4.2=py_0
   - jedi=0.13.3=py37_0
   - jinja2=2.10.1=py_0
+  - joblib=0.13.2=py_0
   - jpeg=9c=hfa6e2cd_1001
   - jsonschema=3.0.1=py37_0
   - jupyter_client=5.2.4=py_3
@@ -75,17 +76,17 @@ dependencies:
   - kealib=1.4.10=heacb130_1003
   - kiwisolver=1.1.0=py37he980bc4_0
   - krb5=1.16.3=hdd46e55_1001
-  - libblas=3.8.0=8_mkl
-  - libcblas=3.8.0=8_mkl
+  - libblas=3.8.0=10_mkl
+  - libcblas=3.8.0=10_mkl
   - libcurl=7.64.1=h4496350_0
   - libffi=3.2.1=h6538335_1006
   - libgdal=2.4.1=he26aab1_0
   - libiconv=1.15=hfa6e2cd_1005
   - libkml=1.3.0=h4fd0f3b_1009
-  - liblapack=3.8.0=8_mkl
+  - liblapack=3.8.0=10_mkl
   - libnetcdf=4.6.2=h396784b_1001
   - libpng=1.6.37=h7602738_0
-  - libpq=11.2=hb0bdaea_1
+  - libpq=11.3=hb0bdaea_0
   - libsodium=1.0.16=h2fa13f4_1001
   - libspatialindex=1.8.5=he025d50_4
   - libspatialite=4.3.0a=h6a0152f_1026
@@ -105,8 +106,8 @@ dependencies:
   - m2w64-xz=5.2.2=2
   - mapclassify=2.0.1=py_0
   - markupsafe=1.1.1=py37hfa6e2cd_0
-  - matplotlib=3.0.3=py37_1
-  - matplotlib-base=3.0.3=py37h3e3dc42_1
+  - matplotlib=3.1.0=py37_0
+  - matplotlib-base=3.1.0=py37h3e3dc42_0
   - mistune=0.8.4=py37hfa6e2cd_1000
   - mkl=2019.3=203
   - more-itertools=4.3.0=py37_1000
@@ -138,7 +139,7 @@ dependencies:
   - pluggy=0.11.0=py_0
   - poppler=0.67.0=heddaa77_6
   - poppler-data=0.4.9=1
-  - postgresql=11.2=h06f7779_1
+  - postgresql=11.3=h06f7779_0
   - proj4=5.2.0=ha925a31_1
   - prometheus_client=0.6.0=py_0
   - prompt_toolkit=2.0.9=py_0
@@ -150,13 +151,13 @@ dependencies:
   - pykdtree=1.3.1=py37h452e1ab_1002
   - pyopenssl=19.0.0=py37_0
   - pyparsing=2.4.0=py_0
-  - pyproj=1.9.6=py37h1fcc0e4_1000
+  - pyproj=1.9.6=py37hfa6e2cd_1001
   - pyqt=5.9.2=py37h6538335_0
-  - pyrsistent=0.15.1=py37hfa6e2cd_0
+  - pyrsistent=0.15.2=py37hfa6e2cd_0
   - pysal=2.0.0=py_0
   - pyshp=2.1.0=py_0
-  - pysocks=1.6.8=py37_1002
-  - pytest=4.4.2=py37_0
+  - pysocks=1.7.0=py37_0
+  - pytest=4.5.0=py37_0
   - python=3.7.3=hb12ca83_0
   - python-dateutil=2.8.0=py_0
   - pytz=2019.1=py_0
@@ -164,9 +165,9 @@ dependencies:
   - pyyaml=5.1=py37hfa6e2cd_0
   - pyzmq=18.0.1=py37he7828b0_1
   - qt=5.9.7=hc6833c9_1
-  - requests=2.21.0=py37_1000
+  - requests=2.22.0=py37_0
   - rtree=0.8.3=py37h21ff451_1002
-  - scikit-learn=0.20.3=py37h3d241f0_1
+  - scikit-learn=0.21.1=py37h0ff8352_0
   - scipy=1.2.1=py37h29ff71c_0
   - seaborn=0.9.0=py_1
   - send2trash=1.5.0=py_0
@@ -192,13 +193,13 @@ dependencies:
   - tornado=6.0.2=py37hfa6e2cd_0
   - traitlets=4.3.2=py37_1000
   - traittypes=0.2.1=py_1
-  - urllib3=1.24.2=py37_0
+  - urllib3=1.24.3=py37_0
   - vc=14.1=h0510ff6_4
   - vincent=0.4.4=py_1
   - vs2015_runtime=14.15.26706=h3a45250_4
   - wcwidth=0.1.7=py_1
   - webencodings=0.5.1=py_1
-  - wheel=0.33.1=py37_0
+  - wheel=0.33.4=py37_0
   - widgetsnbextension=3.4.2=py37_1000
   - win_inet_pton=1.1.0=py37_0
   - wincertstore=0.2=py37_1002
@@ -213,4 +214,5 @@ dependencies:
   - zlib=1.2.11=h2fa13f4_1004
   - pip:
     - python-igraph==0.7.1.post6
-prefix: G:\Anaconda\envs\ox
+prefix: C:\Anaconda\envs\ox
+
