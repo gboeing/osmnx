@@ -142,8 +142,8 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
     return response_jsons
 
 
-def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None, responses=None, 
-                          footprint_type='building', retain_invalid=False):
+def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None, 
+                          footprint_type='building', retain_invalid=False, responses=None):
     """
     Get footprint (polygon) data from OSM and convert it into a GeoDataFrame.
 
