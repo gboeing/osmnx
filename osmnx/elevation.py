@@ -7,13 +7,13 @@
 ################################################################################
 
 import math
-import time
-import requests
-import pandas as pd
 import networkx as nx
+import pandas as pd
+import requests
+import time
 
-from .core import save_to_cache
 from .core import get_from_cache
+from .core import save_to_cache
 from .utils import log
 
 
@@ -114,9 +114,14 @@ def add_edge_grades(G, add_absolute=True): # pragma: no cover
     # destination, then divide by edge length
     for u, v, data in G.edges(keys=False, data=True):
         elevation_change = G.nodes[v]['elevation'] - G.nodes[u]['elevation']
-        
+
         # round to ten-thousandths decimal place
-        grade = round(elevation_change / data['length'], 4)
+        try:
+            grade = round(elevation_change / data['length'], 4)
+        except ZeroDivisionError:
+            grade = None
+
+        # add grade and (optionally) grade absolute value to the edge data
         data['grade'] = grade
         if add_absolute:
             data['grade_abs'] = abs(grade)

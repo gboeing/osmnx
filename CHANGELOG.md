@@ -1,12 +1,16 @@
 # Change log
 
-## 0.10 (T.B.D.)
+## 0.10 (2019-05-08)
 
+  - drop formal python 2 support
   - remove deprecated buildings module
   - filter steps ways out of bike queries
+  - convert CRS-handling to proj4 strings
+  - save graph to xml-formatted .osm file
+  - minor refactoring
 
 ## 0.9 (2019-01-28)
-  
+
   - deprecate buildings module and replace with generalized footprints module
   - improve handling of multipolygon footprints
   - new function to find nearest edge(s), given coordinates
@@ -166,7 +170,7 @@
   - refactor modules
   - add graph to GDF and GDF to graph functions
   - add encoding argument to save_graph_shapefile
-  - add unit tests and continuous integration  
+  - add unit tests and continuous integration
 
 ## 0.1 (2016-12-19)
 

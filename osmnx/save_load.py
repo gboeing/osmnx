@@ -263,13 +263,13 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
     G_save = G.copy()
 
     if gephi:
-        
+
         gdf_nodes, gdf_edges = graph_to_gdfs(G_save, nodes=True, edges=True, node_geometry=True,
                                              fill_edge_geometry=True)
-        
+
         # turn each edge's key into a unique ID for Gephi compatibility
         gdf_edges['key'] = range(len(gdf_edges))
-        
+
         # gephi doesn't handle node attrs named x and y well, so rename
         gdf_nodes['xcoord'] = gdf_nodes['x']
         gdf_nodes['ycoord'] = gdf_nodes['y']
@@ -293,7 +293,7 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
             else:
                 # convert all the node attribute values to strings
                 data[dict_key] = make_str(data[dict_key])
-    
+
     for _, _, data in G_save.edges(keys=False, data=True):
         for dict_key in data:
             # convert all the edge attribute values to strings
@@ -333,7 +333,9 @@ def load_graphml(filename, folder=None, node_type=int):
     G = nx.MultiDiGraph(nx.read_graphml(path, node_type=node_type))
 
     # convert graph crs attribute from saved string to correct dict data type
-    G.graph['crs'] = ast.literal_eval(G.graph['crs'])
+    # if it is a stringified dict rather than a proj4 string
+    if 'crs' in G.graph and G.graph['crs'].startswith('{') and G.graph['crs'].endswith('}'):
+        G.graph['crs'] = ast.literal_eval(G.graph['crs'])
 
     if 'streets_per_node' in G.graph:
         G.graph['streets_per_node'] = ast.literal_eval(G.graph['streets_per_node'])
@@ -358,7 +360,7 @@ def load_graphml(filename, folder=None, node_type=int):
         for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed', 'service', 'access', 'area', 'landuse', 'width', 'est_width']:
             # if this edge has this attribute, and it starts with '[' and ends
             # with ']', then it's a list to be parsed
-            if attr in data and data[attr][0] == '[' and data[attr][-1] == ']':
+            if attr in data and data[attr].startswith('[') and data[attr].endswith(']'):
                 # try to convert the string list to a list type, else leave as
                 # single-value string (and leave as string if error)
                 try:
@@ -469,9 +471,9 @@ def update_edge_keys(G):
     """
     Update the keys of edges that share a u, v with another edge but differ in
     geometry. For example, two one-way streets from u to v that bow away from
-    each other as separate streets, rather than opposite direction edges of a 
+    each other as separate streets, rather than opposite direction edges of a
     single street.
-    
+
     Parameters
     ----------
     G : networkx multidigraph
@@ -491,10 +493,10 @@ def update_edge_keys(G):
 
     different_streets = []
     groups = dupes[['geometry', 'uvk', 'u', 'v', 'key', 'dupe']].groupby('uvk')
-    
+
     # for each set of duplicate edges
     for label, group in groups:
-        
+
         # if there are more than 2 edges here, make sure to compare all
         if len(group['geometry']) > 2:
             l = group['geometry'].tolist()
@@ -503,7 +505,7 @@ def update_edge_keys(G):
         # otherwise, just compare the first edge to the second edge
         else:
             geom_pairs = [(group['geometry'].iloc[0], group['geometry'].iloc[1])]
-        
+
         # for each pair of edges to compare
         for geom1, geom2 in geom_pairs:
             # if they don't have the same geometry, flag them as different streets
@@ -544,7 +546,7 @@ def get_undirected(G):
     for u, v, k, data in G.edges(keys=True, data=True):
         G.edges[u, v, k]['from'] = u
         G.edges[u, v, k]['to'] = v
-        
+
         # add geometry if it doesn't already exist, to retain parallel
         # edges' distinct geometries
         if 'geometry' not in data:

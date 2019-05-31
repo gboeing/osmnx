@@ -42,18 +42,18 @@ osm_xml_way_tags = ['highway', 'lanes', 'maxspeed', 'name', 'oneway']
 
 # default filter for OSM "access" key. filtering out "access=no" ways prevents
 # including transit-only bridges like tilikum crossing from appearing in drivable
-# road network (e.g., '["access"!~"private|no"]'). however, some drivable 
-# tollroads have "access=no" plus a "access:conditional" key to clarify when 
+# road network (e.g., '["access"!~"private|no"]'). however, some drivable
+# tollroads have "access=no" plus a "access:conditional" key to clarify when
 # it is accessible, so we can't filter out all "access=no" ways by default.
-# best to be permissive here then remove complicated combinations of tags in 
+# best to be permissive here then remove complicated combinations of tags in
 # python after the full graph is downloaded and constructed.
 default_access = '["access"!~"private"]'
 
 # The network types for which a bidirectional graph will be created
-bidirectional_network_types = ["walk"]
+bidirectional_network_types = ['walk']
 
 # default CRS to set when creating graphs
-default_crs = {'init':'epsg:4326'}
+default_crs = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
 
 # default HTTP request headers
 default_user_agent = 'Python OSMnx package (https://github.com/gboeing/osmnx)'

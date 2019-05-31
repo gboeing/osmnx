@@ -290,7 +290,7 @@ def induce_subgraph(G, node_subset):
     # copy nodes into new graph
     G2 = G.__class__()
     G2.add_nodes_from((n, G.nodes[n]) for n in node_subset)
-    
+
     # copy edges to new graph, including parallel edges
     if G2.is_multigraph:
         G2.add_edges_from((n, nbr, key, d)
@@ -301,7 +301,7 @@ def induce_subgraph(G, node_subset):
         G2.add_edges_from((n, nbr, d)
             for n, nbrs in G.adj.items() if n in node_subset
             for nbr, d in nbrs.items() if nbr in node_subset)
-    
+
     # update graph attribute dict, and return graph
     G2.graph.update(G.graph)
     return G2
@@ -332,24 +332,24 @@ def get_largest_component(G, strongly=False):
     if strongly:
         # if the graph is not connected retain only the largest strongly connected component
         if not nx.is_strongly_connected(G):
-            
+
             # get all the strongly connected components in graph then identify the largest
             sccs = nx.strongly_connected_components(G)
             largest_scc = max(sccs, key=len)
             G = induce_subgraph(G, largest_scc)
-            
+
             msg = ('Graph was not connected, retained only the largest strongly '
                    'connected component ({:,} of {:,} total nodes) in {:.2f} seconds')
             log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
     else:
         # if the graph is not connected retain only the largest weakly connected component
         if not nx.is_weakly_connected(G):
-            
+
             # get all the weakly connected components in graph then identify the largest
             wccs = nx.weakly_connected_components(G)
             largest_wcc = max(wccs, key=len)
             G = induce_subgraph(G, largest_wcc)
-            
+
             msg = ('Graph was not connected, retained only the largest weakly '
                    'connected component ({:,} of {:,} total nodes) in {:.2f} seconds')
             log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
@@ -388,7 +388,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     theta2 = np.deg2rad(lng2)
     d_theta = theta2 - theta1
 
-    h = np.sin(d_phi / 2) ** 2 + np.cos(phi1) * np.cos(phi2) * np.sin(d_theta / 2) ** 2 
+    h = np.sin(d_phi / 2) ** 2 + np.cos(phi1) * np.cos(phi2) * np.sin(d_theta / 2) ** 2
     h = np.minimum(1.0, h) # protect against floating point errors
 
     arc = 2 * np.arcsin(np.sqrt(h))
@@ -452,7 +452,7 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
         if euclidean) between the point and nearest node
     """
     start_time = time.time()
-    
+
     if not G or (G.number_of_nodes() == 0):
         raise ValueError('G argument must be not be empty or should contain at least one node')
 
@@ -551,9 +551,9 @@ def get_nearest_nodes(G, X, Y, method=None):
     is by far the fastest with large data sets, but only finds approximate
     nearest nodes if working in unprojected coordinates like lat-lng (it
     precisely finds the nearest node if working in projected coordinates).
-    The 'balltree' method is second fastest with large data sets, but it 
+    The 'balltree' method is second fastest with large data sets, but it
     is precise if working in unprojected coordinates like lat-lng.
-    
+
     Parameters
     ----------
     G : networkx multidigraph
@@ -565,47 +565,47 @@ def get_nearest_nodes(G, X, Y, method=None):
         node in the graph
     method : str {None, 'kdtree', 'balltree'}
         Which method to use for finding nearest node to each point.
-        If None, we manually find each node one at a time using 
-        osmnx.utils.get_nearest_node and haversine. If 'kdtree' we use 
+        If None, we manually find each node one at a time using
+        osmnx.utils.get_nearest_node and haversine. If 'kdtree' we use
         scipy.spatial.cKDTree for very fast euclidean search. If
-        'balltree', we use sklearn.neighbors.BallTree for fast 
+        'balltree', we use sklearn.neighbors.BallTree for fast
         haversine search.
-        
+
     Returns
     -------
     nn : array
         list of nearest node IDs
     """
-    
+
     start_time = time.time()
 
     if method is None:
-        
+
         # calculate nearest node one at a time for each point
         nn = [get_nearest_node(G, (y, x), method='haversine') for x, y in zip(X, Y)]
-    
+
     elif method == 'kdtree':
-        
+
         # check if we were able to import scipy.spatial.cKDTree successfully
         if not cKDTree:
             raise ImportError('The scipy package must be installed to use this optional feature.')
-        
+
         # build a k-d tree for euclidean nearest node search
         nodes = pd.DataFrame({'x':nx.get_node_attributes(G, 'x'),
                               'y':nx.get_node_attributes(G, 'y')})
         tree = cKDTree(data=nodes[['x', 'y']], compact_nodes=True, balanced_tree=True)
-        
+
         # query the tree for nearest node to each point
         points = np.array([X, Y]).T
         dist, idx = tree.query(points, k=1)
         nn = nodes.iloc[idx].index
-        
+
     elif method == 'balltree':
-        
+
         # check if we were able to import sklearn.neighbors.BallTree successfully
         if not BallTree:
             raise ImportError('The scikit-learn package must be installed to use this optional feature.')
-        
+
         # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
         nodes = pd.DataFrame({'x':nx.get_node_attributes(G, 'x'),
                               'y':nx.get_node_attributes(G, 'y')})
@@ -619,7 +619,7 @@ def get_nearest_nodes(G, X, Y, method=None):
         # query the tree for nearest node to each point
         idx = tree.query(points_rad, k=1, return_distance=False)
         nn = nodes.iloc[idx[:,0]].index
-    
+
     else:
         raise ValueError('You must pass a valid method name, or None.')
 
@@ -846,13 +846,13 @@ def add_edge_bearings(G):
         if u == v:
             # a self-loop has an undefined compass bearing
             data['bearing'] = np.nan
-        
+
         else:
             # calculate bearing from edge's origin to its destination
             origin_point = (G.nodes[u]['y'], G.nodes[u]['x'])
             destination_point = (G.nodes[v]['y'], G.nodes[v]['x'])
             bearing = get_bearing(origin_point, destination_point)
-            
+
             # round to thousandth of a degree
             data['bearing'] = round(bearing, 3)
 
@@ -1016,7 +1016,7 @@ def round_polygon_coords(p, precision):
     new_poly : shapely Polygon
         the polygon with rounded coordinates
     """
-    
+
     # round the coordinates of the Polygon exterior
     new_exterior = [[round(x, precision) for x in c] for c in p.exterior.coords]
 
@@ -1024,7 +1024,7 @@ def round_polygon_coords(p, precision):
     new_interiors = []
     for interior in p.interiors:
         new_interiors.append([[round(x, precision) for x in c] for c in interior.coords])
-    
+
     # construct a new Polygon with the rounded coordinates
     # buffer by zero to clean self-touching or self-crossing polygons
     new_poly = Polygon(shell=new_exterior, holes=new_interiors).buffer(0)
@@ -1047,7 +1047,7 @@ def round_multipolygon_coords(mp, precision):
     -------
     MultiPolygon
     """
-    
+
     return MultiPolygon([round_polygon_coords(p, precision) for p in mp])
 
 
@@ -1067,7 +1067,7 @@ def round_point_coords(pt, precision):
     -------
     Point
     """
-    
+
     return Point([round(x, precision) for x in pt.coords[0]])
 
 
@@ -1087,7 +1087,7 @@ def round_multipoint_coords(mpt, precision):
     -------
     MultiPoint
     """
-    
+
     return MultiPoint([round_point_coords(pt, precision) for pt in mpt])
 
 
@@ -1107,7 +1107,7 @@ def round_linestring_coords(ls, precision):
     -------
     LineString
     """
-    
+
     return LineString([[round(x, precision) for x in c] for c in ls.coords])
 
 
@@ -1127,7 +1127,7 @@ def round_multilinestring_coords(mls, precision):
     -------
     MultiLineString
     """
-    
+
     return MultiLineString([round_linestring_coords(ls, precision) for ls in mls])
 
 
@@ -1148,25 +1148,25 @@ def round_shape_coords(shape, precision):
     -------
     shapely geometry
     """
-    
+
     if isinstance(shape, Point):
         return round_point_coords(shape, precision)
-    
+
     elif isinstance(shape, MultiPoint):
         return round_multipoint_coords(shape, precision)
-    
+
     elif isinstance(shape, LineString):
         return round_linestring_coords(shape, precision)
-    
+
     elif isinstance(shape, MultiLineString):
         return round_multilinestring_coords(shape, precision)
-    
+
     elif isinstance(shape, Polygon):
         return round_polygon_coords(shape, precision)
-    
+
     elif isinstance(shape, MultiPolygon):
         return round_multipolygon_coords(shape, precision)
-    
+
     else:
         raise TypeError('cannot round coordinates of unhandled geometry type: {}'.format(type(shape)))
 
@@ -1175,7 +1175,7 @@ def round_shape_coords(shape, precision):
 class OSMContentHandler (xml.sax.handler.ContentHandler):
     """
     SAX content handler for OSM XML.
-    
+
     Used to build an Overpass-like response JSON object in self.object. For format
     notes, see http://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes
     and http://overpass-api.de/output_formats.html#json
@@ -1189,20 +1189,20 @@ class OSMContentHandler (xml.sax.handler.ContentHandler):
         if name == 'osm':
             self.object.update({k: attrs[k] for k in attrs.keys()
                 if k in ('version', 'generator')})
-        
+
         elif name in ('node', 'way'):
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
             self._element.update({k: float(attrs[k]) for k in attrs.keys()
                 if k in ('lat', 'lon')})
             self._element.update({k: int(attrs[k]) for k in attrs.keys()
                 if k in ('id', 'uid', 'version', 'changeset')})
-        
+
         elif name == 'tag':
             self._element['tags'].update({attrs['k']: attrs['v']})
-        
+
         elif name == 'nd':
             self._element['nodes'].append(int(attrs['ref']))
-        
+
         elif name == 'relation':
             # Placeholder for future relation support.
             # Look for nested members and tags.
@@ -1229,14 +1229,14 @@ def overpass_json_from_file(filename):
     """
 
     _, ext = os.path.splitext(filename)
-    
+
     if ext == '.bz2':
         # Use Python 2/3 compatible BZ2File()
         opener = lambda fn: bz2.BZ2File(fn)
     else:
         # Assume an unrecognized file extension is just XML
         opener = lambda fn: open(fn, mode='rb')
-    
+
     with opener(filename) as file:
         handler = OSMContentHandler()
         xml.sax.parse(file, handler)
@@ -1248,7 +1248,7 @@ def bbox_to_poly(north, south, east, west):
     """
     Convenience function to parse bbox -> poly
     """
-    
+
     return Polygon([(west, south), (east, south), (east, north), (west, north)])
 
 
@@ -1257,11 +1257,11 @@ def citation():
     """
     Print the OSMnx package's citation information.
 
-    Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing, 
-    and Visualizing Complex Street Networks. Computers, Environment and Urban 
+    Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing,
+    and Visualizing Complex Street Networks. Computers, Environment and Urban
     Systems, 65(126-139). doi:10.1016/j.compenvurbsys.2017.05.004
     """
-    
+
     cite = ("To cite OSMnx, use:\n\n"
             "Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing, "
             "and Visualizing Complex Street Networks. Computers, Environment and Urban "
