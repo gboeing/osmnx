@@ -159,12 +159,12 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
         eastern longitude of bounding box
     west : float
         western longitude of bounding box
-    responses : list
-        list of response_json dicts
     footprint_type : string
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
+    responses : list
+        list of response_json dicts
 
     Returns
     -------
