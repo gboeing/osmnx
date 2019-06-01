@@ -305,6 +305,7 @@ def test_nearest_edges():
 
 
 def test_footprints():
+    import json
 
     # download footprints and plot them
     gdf = ox.footprints_from_place(place='Emeryville, California, USA')
