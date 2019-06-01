@@ -311,12 +311,20 @@ def test_footprints():
     gdf = ox.footprints_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
     fig, ax = ox.plot_footprints(gdf)
 
-    # test multipolygon footprint
-    # point is the location of known multipolygon building, relation id 1767022
-    point = (51.5276, -0.11)
-    gdf = ox.footprints_from_point(point=point, distance=20, footprint_type='building')
-    assert 1767022 in gdf.index, "relation 1767022 was not returned in the geodataframe"
-    assert gdf.loc[1767022]['geometry'].type=='MultiPolygon', "relation 1767022 is not a multipolygon"
+    # new_river_head.json contains a relation with 1 outer closed way and 2 inner closed ways
+    # One inner way is directly tagged as a building and should create its own polygon
+    with open("tests/input_data/new_river_head.json", "r") as read_file:
+        new_river_head_responses = [json.load(read_file)]
+    new_river_head_gdf = ox.create_footprints_gdf(responses=new_river_head_responses)
+    assert 665593284 in new_river_head_gdf.index, "inner polygon 665593284 was not returned in the geodataframe"
+    assert new_river_head_gdf.loc[9246394]['geometry'].type=='Polygon', "relation 9246394 did not create a polygon"
+    assert len(new_river_head_gdf.loc[9246394,'geometry'].interiors)==2, "relation 9246394 does not have two interior polygons"
+
+    # clapham_common.json contains a relation with 5 outer rings and 1 inner ring. One of the outer rings is a chain of open ways
+    with open("tests/input_data/clapham_common.json", "r") as read_file:
+        clapham_common_responses = [json.load(read_file)]
+    clapham_common_gdf = ox.create_footprints_gdf(footprint_type='leisure', responses=clapham_common_responses)
+    assert clapham_common_gdf.loc[1290065]['geometry'].type=='MultiPolygon', "relation 1290065 did not create a MultiPolygon"
 
 
 def test_pois():

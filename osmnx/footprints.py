@@ -164,7 +164,7 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
     responses : list
-        list of response_json dicts
+        list of response jsons
 
     Returns
     -------
@@ -240,15 +240,15 @@ def responses_to_dicts(responses, footprint_type):
         dictionary of OSM ways including their nodes and tags
     relations
         dictionary of OSM relations including member ids and tags
-    untagged_ways
-        set of ids for supporting geometry not directly tagged with footprint_type
+    untagged_footprints
+        set of ids for ways or relations not directly tagged with footprint_type
     """
     # create dictionaries to hold vertices, footprints and relations
     vertices = {}
     footprints = {}
     relations = {}
     # create a set to hold the ids of ways not directly tagged as footprint_type
-    untagged_ways = set()
+    untagged_footprints = set()
 
     # loop through each response once adding each element to one of the dicts
     for response in responses:
@@ -264,9 +264,9 @@ def responses_to_dicts(responses, footprint_type):
                     for tag in element['tags']:
                         footprint[tag] = element['tags'][tag]
                 footprints[element['id']] = footprint
-                # add ways not individually tagged with footprint_type to the untagged_way set
+                # add ways not individually tagged with footprint_type to the untagged_footprints set
                 if ('tags' not in element) or (footprint_type not in element['tags']):
-                    untagged_ways.add(element['id'])
+                    untagged_footprints.add(element['id'])
             # RELATIONS
             elif 'type' in element and element['type']=='relation':
                 relation = {'members' : {}}
@@ -277,11 +277,14 @@ def responses_to_dicts(responses, footprint_type):
                     for tag in element['tags']:
                         relation[tag] = element['tags'][tag]
                 relations[element['id']] = relation
+                # add relations not individually tagged with footprint_type to the untagged_footprints set
+                if ('tags' not in element) or (footprint_type not in element['tags']):
+                    untagged_footprints.add(element['id'])
             # Log any other Elements found in the response
             else:
                 log('Element {} is not a node, way or relation'.format(element['id']))
 
-    return vertices, footprints, relations, untagged_ways
+    return vertices, footprints, relations, untagged_footprints
 
 
 def create_footprint_geometry(footprint_key, footprint_val, vertices):
