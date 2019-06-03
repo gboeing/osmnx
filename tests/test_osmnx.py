@@ -306,6 +306,10 @@ def test_nearest_edges():
 
 def test_footprints():
     import json
+    import pytest
+
+    with pytest.raises(ValueError):
+        ox.osm_footprints_download()
 
     # download footprints and plot them
     gdf = ox.footprints_from_place(place='Emeryville, California, USA')
@@ -327,6 +331,8 @@ def test_footprints():
     clapham_common_gdf = ox.create_footprints_gdf(footprint_type='leisure', responses=clapham_common_responses)
     assert clapham_common_gdf.loc[1290065]['geometry'].type=='MultiPolygon', "relation 1290065 did not create a MultiPolygon"
 
+    # test plotting multipolygon
+    fig, ax = ox.plot_footprints(clapham_common_gdf)
 
 def test_pois():
 
