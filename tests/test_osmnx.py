@@ -338,6 +338,11 @@ def test_footprints():
         relation_no_outer_responses = [json.load(read_file)]
     ox.create_footprints_gdf(responses=relation_no_outer_responses)
 
+    # inner_chain.json contains a relation with 1 outer rings and several inner rings one of which is a chain of open ways
+    with open("tests/input_data/inner_chain.json", "r") as read_file:
+        inner_chain_responses = [json.load(read_file)]
+    ox.create_footprints_gdf(responses=inner_chain_responses)
+
     # test plotting multipolygon
     fig, ax = ox.plot_footprints(clapham_common_gdf)
 
