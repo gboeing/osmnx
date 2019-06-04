@@ -343,6 +343,11 @@ def test_footprints():
         inner_chain_responses = [json.load(read_file)]
     ox.create_footprints_gdf(responses=inner_chain_responses)
 
+    # mis_tagged_bus_route.json contains a relation with out 'inner' or 'inner' rings
+    with open("tests/input_data/mis_tagged_bus_route.json", "r") as read_file:
+        mis_tagged_bus_route_responses = [json.load(read_file)]
+    ox.create_footprints_gdf(responses=mis_tagged_bus_route_responses)
+
     # test plotting multipolygon
     fig, ax = ox.plot_footprints(clapham_common_gdf)
 
