@@ -307,12 +307,14 @@ def test_nearest_edges():
 def test_footprints():
     import json
     import pytest
+    from shapely.geometry import Polygon
 
     with pytest.raises(ValueError):
         ox.osm_footprints_download()
 
     # download footprints and plot them
     gdf = ox.footprints_from_place(place='Emeryville, California, USA')
+    gdf = ox.footprints_from_polygon(Polygon([(17.574, -4.145), (17.575, -4.144), (17.576, -4.145)]))
     gdf = ox.footprints_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
     fig, ax = ox.plot_footprints(gdf)
 
