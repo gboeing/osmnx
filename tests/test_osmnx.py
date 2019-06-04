@@ -331,6 +331,11 @@ def test_footprints():
     clapham_common_gdf = ox.create_footprints_gdf(footprint_type='leisure', responses=clapham_common_responses)
     assert clapham_common_gdf.loc[1290065]['geometry'].type=='MultiPolygon', "relation 1290065 did not create a MultiPolygon"
 
+    # relation_no_outer.json contains a relation with 0 outer rings and 1 inner ring
+    with open("tests/input_data/relation_no_outer.json", "r") as read_file:
+        relation_no_outer_responses = [json.load(read_file)]
+    ox.create_footprints_gdf(responses=relation_no_outer_responses)
+
     # test plotting multipolygon
     fig, ax = ox.plot_footprints(clapham_common_gdf)
 
