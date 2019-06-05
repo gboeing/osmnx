@@ -330,7 +330,7 @@ def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=F
                                  retain_invalid=retain_invalid)
 
 
-def footprints_from_place(place, footprint_type='building', retain_invalid=False):
+def footprints_from_place(place, footprint_type='building', retain_invalid=False, which_result=1):
     """
     Get footprints within the boundaries of some place.
 
@@ -348,13 +348,15 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
+    which_result : int
+        max number of results to return and which to process upon receipt
 
     Returns
     -------
     GeoDataFrame
     """
 
-    city = gdf_from_place(place)
+    city = gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
     return create_footprints_gdf(polygon, retain_invalid=retain_invalid,
                                  footprint_type=footprint_type)

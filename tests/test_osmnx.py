@@ -306,6 +306,8 @@ def test_nearest_edges():
 
 def test_footprints():
 
+    import pytest
+
     # download footprints and plot them
     gdf = ox.footprints_from_place(place='Emeryville, California, USA')
     gdf = ox.footprints_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
@@ -318,9 +320,17 @@ def test_footprints():
     assert 1767022 in gdf.index, "relation 1767022 was not returned in the geodataframe"
     assert gdf.loc[1767022]['geometry'].type=='MultiPolygon', "relation 1767022 is not a multipolygon"
 
+    # should raise an exception
+    # polygon or -north, south, east, west- should be provided
+    with pytest.raises(ValueError):
+        ox.create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None)
+
+    gdf = ox.footprints_from_place(place='kusatsu, shiga, japan', which_result=2)
+
 
 def test_pois():
 
+    import pytest
     # download all points of interests from place
     gdf = ox.pois_from_place(place='Kamppi, Helsinki, Finland')
 
@@ -336,6 +346,13 @@ def test_pois():
     # by point and by address
     restaurants = ox.pois_from_point(point=(42.344490, -71.070570), distance=1000, amenities=['restaurant'])
     restaurants = ox.pois_from_address(address='Emeryville, California, USA', distance=1000, amenities=['restaurant'])
+
+    # should raise an exception
+    # polygon or -north, south, east, west- should be provided
+    with pytest.raises(ValueError):
+        ox.create_poi_gdf(polygon=None, north=None, south=None, east=None, west=None)
+
+    gdf = ox.pois_from_place(place='kusatsu, shiga, japan', which_result=2)
 
 
 def test_nominatim():
