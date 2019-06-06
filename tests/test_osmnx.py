@@ -372,6 +372,25 @@ def test_nominatim():
                             params = params,
                             type = "transfer")
 
+    # Searching on public nominatim should work even if a key was provided
+    ox.config(
+        nominatim_key="NOT_A_KEY"
+    )
+    response_json = ox.nominatim_request(params = params,
+                                         type = "search")
+
+    # Test changing the endpoint. It should fail because we didn't provide a valid key
+    ox.config(
+        nominatim_endpoint="http://open.mapquestapi.com/nominatim/v1/"
+    )
+    with pytest.raises(Exception):
+        response_json = ox.nominatim_request(params=params,
+                                             type="search")
+
+    ox.config(log_console=True, log_file=True, use_cache=True,
+              data_folder='.temp/data', logs_folder='.temp/logs',
+              imgs_folder='.temp/imgs', cache_folder='.temp/cache')
+
 
 def test_osm_xml_output():
     G = ox.graph_from_place('Piedmont, California, USA')

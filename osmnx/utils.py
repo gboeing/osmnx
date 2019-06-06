@@ -62,7 +62,9 @@ def config(data_folder=settings.data_folder,
            default_crs=settings.default_crs,
            default_user_agent=settings.default_user_agent,
            default_referer=settings.default_referer,
-           default_accept_language=settings.default_accept_language):
+           default_accept_language=settings.default_accept_language,
+           nominatim_endpoint=settings.nominatim_endpoint,
+           nominatim_key=settings.nominatim_key):
     """
     Configure osmnx by setting the default global vars to desired values.
 
@@ -133,6 +135,8 @@ def config(data_folder=settings.data_folder,
     settings.default_user_agent = default_user_agent
     settings.default_referer = default_referer
     settings.default_accept_language = default_accept_language
+    settings.nominatim_endpoint = nominatim_endpoint
+    settings.nominatim_key = nominatim_key
 
     # if logging is turned on, log that we are configured
     if settings.log_file or settings.log_console:
