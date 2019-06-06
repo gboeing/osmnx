@@ -309,9 +309,6 @@ def test_footprints():
     import pytest
     from shapely.geometry import Polygon
 
-    with pytest.raises(ValueError):
-        ox.osm_footprints_download()
-
     # download footprints and plot them
     gdf = ox.footprints_from_place(place='Emeryville, California, USA')
     gdf = ox.footprints_from_polygon(Polygon([(17.574, -4.145), (17.575, -4.144), (17.576, -4.145)]))
@@ -351,8 +348,16 @@ def test_footprints():
     # test plotting multipolygon
     fig, ax = ox.plot_footprints(clapham_common_gdf)
 
+    # should raise an exception
+    # polygon or -north, south, east, west- should be provided
+    with pytest.raises(ValueError):
+        ox.create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None)
+
+    gdf = ox.footprints_from_place(place='kusatsu, shiga, japan', which_result=2)
+
 def test_pois():
 
+    import pytest
     # download all points of interests from place
     gdf = ox.pois_from_place(place='Kamppi, Helsinki, Finland')
 
@@ -368,6 +373,13 @@ def test_pois():
     # by point and by address
     restaurants = ox.pois_from_point(point=(42.344490, -71.070570), distance=1000, amenities=['restaurant'])
     restaurants = ox.pois_from_address(address='Emeryville, California, USA', distance=1000, amenities=['restaurant'])
+
+    # should raise an exception
+    # polygon or -north, south, east, west- should be provided
+    with pytest.raises(ValueError):
+        ox.create_poi_gdf(polygon=None, north=None, south=None, east=None, west=None)
+
+    gdf = ox.pois_from_place(place='kusatsu, shiga, japan', which_result=2)
 
 
 def test_nominatim():
