@@ -204,8 +204,8 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
     if not retain_invalid:    
         filter1 = gdf['geometry'].is_valid
         filter2 = (gdf['geometry'].geom_type == 'Polygon') | (gdf['geometry'].geom_type == 'MultiPolygon')
-        filter = filter1 & filter2
-        gdf = gdf[filter]
+        filter_combined = filter1 & filter2
+        gdf = gdf[filter_combined]
     
     return gdf
 
