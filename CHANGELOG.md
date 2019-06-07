@@ -1,8 +1,11 @@
 # Change log
 
-## 0.10 (2019-05-08)
+## 0.11 (T.B.D.)
 
   - drop formal python 2 support
+
+## 0.10 (2019-05-08)
+
   - remove deprecated buildings module
   - filter steps ways out of bike queries
   - convert CRS-handling to proj4 strings
