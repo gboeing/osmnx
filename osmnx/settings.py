@@ -59,3 +59,6 @@ default_crs = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
 default_user_agent = 'Python OSMnx package (https://github.com/gboeing/osmnx)'
 default_referer = 'Python OSMnx package (https://github.com/gboeing/osmnx)'
 default_accept_language = 'en'
+
+nominatim_endpoint = "https://nominatim.openstreetmap.org/"
+nominatim_key = None
