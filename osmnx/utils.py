@@ -103,6 +103,10 @@ def config(data_folder=settings.data_folder,
         HTTP header referer
     default_accept_language : string
         HTTP header accept-language
+    nominatim_endpoint : string
+        which API endpoint to use for nominatim queries
+    nominatim_key : string
+        your API key, if you are using an endpoint that requires one
 
     Returns
     -------
@@ -122,10 +126,8 @@ def config(data_folder=settings.data_folder,
     settings.log_filename = log_filename
     settings.useful_tags_node = useful_tags_node
     settings.useful_tags_path = useful_tags_path
-    settings.useful_tags_node = list(set(
-        useful_tags_node + osm_xml_node_attrs + osm_xml_node_tags))
-    settings.useful_tags_path = list(set(
-        useful_tags_path + osm_xml_way_attrs + osm_xml_way_tags))
+    settings.useful_tags_node = list(set(useful_tags_node + osm_xml_node_attrs + osm_xml_node_tags))
+    settings.useful_tags_path = list(set(useful_tags_path + osm_xml_way_attrs + osm_xml_way_tags))
     settings.osm_xml_node_attrs = osm_xml_node_attrs
     settings.osm_xml_node_tags = osm_xml_node_tags
     settings.osm_xml_way_attrs = osm_xml_way_attrs
