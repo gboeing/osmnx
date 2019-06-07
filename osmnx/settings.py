@@ -59,3 +59,8 @@ default_crs = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
 default_user_agent = 'Python OSMnx package (https://github.com/gboeing/osmnx)'
 default_referer = 'Python OSMnx package (https://github.com/gboeing/osmnx)'
 default_accept_language = 'en'
+
+# which API endpoint to use for nominatim queries
+# and your API key, if you are using a commercial endpoint that requires it
+nominatim_endpoint = "https://nominatim.openstreetmap.org/"
+nominatim_key = None

@@ -62,7 +62,9 @@ def config(data_folder=settings.data_folder,
            default_crs=settings.default_crs,
            default_user_agent=settings.default_user_agent,
            default_referer=settings.default_referer,
-           default_accept_language=settings.default_accept_language):
+           default_accept_language=settings.default_accept_language,
+           nominatim_endpoint=settings.nominatim_endpoint,
+           nominatim_key=settings.nominatim_key):
     """
     Configure osmnx by setting the default global vars to desired values.
 
@@ -101,6 +103,10 @@ def config(data_folder=settings.data_folder,
         HTTP header referer
     default_accept_language : string
         HTTP header accept-language
+    nominatim_endpoint : string
+        which API endpoint to use for nominatim queries
+    nominatim_key : string
+        your API key, if you are using an endpoint that requires one
 
     Returns
     -------
@@ -120,10 +126,8 @@ def config(data_folder=settings.data_folder,
     settings.log_filename = log_filename
     settings.useful_tags_node = useful_tags_node
     settings.useful_tags_path = useful_tags_path
-    settings.useful_tags_node = list(set(
-        useful_tags_node + osm_xml_node_attrs + osm_xml_node_tags))
-    settings.useful_tags_path = list(set(
-        useful_tags_path + osm_xml_way_attrs + osm_xml_way_tags))
+    settings.useful_tags_node = list(set(useful_tags_node + osm_xml_node_attrs + osm_xml_node_tags))
+    settings.useful_tags_path = list(set(useful_tags_path + osm_xml_way_attrs + osm_xml_way_tags))
     settings.osm_xml_node_attrs = osm_xml_node_attrs
     settings.osm_xml_node_tags = osm_xml_node_tags
     settings.osm_xml_way_attrs = osm_xml_way_attrs
@@ -133,6 +137,8 @@ def config(data_folder=settings.data_folder,
     settings.default_user_agent = default_user_agent
     settings.default_referer = default_referer
     settings.default_accept_language = default_accept_language
+    settings.nominatim_endpoint = nominatim_endpoint
+    settings.nominatim_key = nominatim_key
 
     # if logging is turned on, log that we are configured
     if settings.log_file or settings.log_console:

@@ -250,9 +250,12 @@ def nominatim_request(params, type = "search", pause_duration=1, timeout=30, err
 
     # prepare the Nominatim API URL and see if request already exists in the
     # cache
-    url = 'https://nominatim.openstreetmap.org/{}'.format(type)
+    url = settings.nominatim_endpoint.rstrip('/') + '/{}'.format(type)
     prepared_url = requests.Request('GET', url, params=params).prepare().url
     cached_response_json = get_from_cache(prepared_url)
+
+    if settings.nominatim_key:
+        params['key'] = settings.nominatim_key
 
     if cached_response_json is not None:
         # found this request in the cache, just return it instead of making a

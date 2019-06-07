@@ -69,6 +69,8 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
                      timeout=180, max_query_area_size=50*1000*50*1000):
     """
     Get points of interests (POIs) from OpenStreetMap based on selected amenity types.
+    Note that if a polygon is passed-in, the query will be limited to its bounding box
+    rather than to the shape of the polygon itself.
 
     Parameters
     ----------
@@ -433,7 +435,7 @@ def pois_from_polygon(polygon, amenities=None):
     return create_poi_gdf(polygon=polygon, amenities=amenities)
 
 
-def pois_from_place(place, amenities=None):
+def pois_from_place(place, amenities=None, which_result=1):
     """
     Get points of interest (POIs) within the boundaries of some place.
 
@@ -444,12 +446,14 @@ def pois_from_place(place, amenities=None):
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area.
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+    which_result : int
+        max number of results to return and which to process upon receipt
 
     Returns
     -------
     GeoDataFrame
     """
 
-    city = gdf_from_place(place)
+    city = gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
     return create_poi_gdf(polygon=polygon, amenities=amenities)

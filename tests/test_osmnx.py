@@ -305,22 +305,59 @@ def test_nearest_edges():
 
 
 def test_footprints():
+    import json
+    import pytest
+    from shapely.geometry import Polygon
 
     # download footprints and plot them
     gdf = ox.footprints_from_place(place='Emeryville, California, USA')
+    gdf = ox.footprints_from_polygon(Polygon([(17.574, -4.145), (17.575, -4.144), (17.576, -4.145)]))
     gdf = ox.footprints_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
     fig, ax = ox.plot_footprints(gdf)
 
-    # test multipolygon footprint
-    # point is the location of known multipolygon building, relation id 1767022
-    point = (51.5276, -0.11)
-    gdf = ox.footprints_from_point(point=point, distance=20, footprint_type='building')
-    assert 1767022 in gdf.index, "relation 1767022 was not returned in the geodataframe"
-    assert gdf.loc[1767022]['geometry'].type=='MultiPolygon', "relation 1767022 is not a multipolygon"
+    # new_river_head.json contains a relation with 1 outer closed way and 2 inner closed ways
+    # inner way 665593284 is directly tagged as a building and should create its own polygon
+    with open("tests/input_data/new_river_head.json", "r") as read_file:
+        new_river_head_responses = [json.load(read_file)]
+    new_river_head_gdf = ox.create_footprints_gdf(responses=new_river_head_responses)
+    assert 665593284 in new_river_head_gdf.index
+    assert new_river_head_gdf.loc[9246394]['geometry'].type=='Polygon'
+    assert len(new_river_head_gdf.loc[9246394,'geometry'].interiors)==2
 
+    # clapham_common.json contains a relation with 5 outer rings and 1 inner ring. One of the outer rings is a chain of open ways
+    with open("tests/input_data/clapham_common.json", "r") as read_file:
+        clapham_common_responses = [json.load(read_file)]
+    clapham_common_gdf = ox.create_footprints_gdf(footprint_type='leisure', responses=clapham_common_responses)
+    assert clapham_common_gdf.loc[1290065]['geometry'].type=='MultiPolygon'
+
+    # relation_no_outer.json contains a relation with 0 outer rings and 1 inner ring
+    with open("tests/input_data/relation_no_outer.json", "r") as read_file:
+        relation_no_outer_responses = [json.load(read_file)]
+    ox.create_footprints_gdf(responses=relation_no_outer_responses)
+
+    # inner_chain.json contains a relation with 1 outer rings and several inner rings one of which is a chain of open ways
+    with open("tests/input_data/inner_chain.json", "r") as read_file:
+        inner_chain_responses = [json.load(read_file)]
+    ox.create_footprints_gdf(responses=inner_chain_responses)
+
+    # mis_tagged_bus_route.json contains a relation with out 'inner' or 'inner' rings
+    with open("tests/input_data/mis_tagged_bus_route.json", "r") as read_file:
+        mis_tagged_bus_route_responses = [json.load(read_file)]
+    ox.create_footprints_gdf(responses=mis_tagged_bus_route_responses)
+
+    # test plotting multipolygon
+    fig, ax = ox.plot_footprints(clapham_common_gdf)
+
+    # should raise an exception
+    # polygon or -north, south, east, west- should be provided
+    with pytest.raises(ValueError):
+        ox.create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None)
+
+    gdf = ox.footprints_from_place(place='kusatsu, shiga, japan', which_result=2)
 
 def test_pois():
 
+    import pytest
     # download all points of interests from place
     gdf = ox.pois_from_place(place='Kamppi, Helsinki, Finland')
 
@@ -337,6 +374,12 @@ def test_pois():
     restaurants = ox.pois_from_point(point=(42.344490, -71.070570), distance=1000, amenities=['restaurant'])
     restaurants = ox.pois_from_address(address='Emeryville, California, USA', distance=1000, amenities=['restaurant'])
 
+    # should raise an exception
+    # polygon or -north, south, east, west- should be provided
+    with pytest.raises(ValueError):
+        ox.create_poi_gdf(polygon=None, north=None, south=None, east=None, west=None)
+
+    gdf = ox.pois_from_place(place='kusatsu, shiga, japan', which_result=2)
 
 def test_nominatim():
 
@@ -372,57 +415,24 @@ def test_nominatim():
                             params = params,
                             type = "transfer")
 
-def test_clean_intersections_Newcastle_mainroads():
-    # Before and after plots are saved for validation
+    # Searching on public nominatim should work even if a key was provided
+    ox.config(
+        nominatim_key="NOT_A_KEY"
+    )
+    response_json = ox.nominatim_request(params = params,
+                                         type = "search")
 
-    filter_main_roads = (
-        '["area"!~"yes"]["highway"~"motorway|trunk|primary|secondary"]'
-        '["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private"]')
+    # Test changing the endpoint. It should fail because we didn't provide a valid key
+    ox.config(
+        nominatim_endpoint="http://open.mapquestapi.com/nominatim/v1/"
+    )
+    with pytest.raises(Exception):
+        response_json = ox.nominatim_request(params=params,
+                                             type="search")
 
-    G = ox.graph_from_bbox(
-            north = 55.03899686,
-            south = 54.91690286,
-            east = -1.4955082696000002,
-            west = -1.7714684703999999,
-            custom_filter = filter_main_roads)
-
-    G = ox.project_graph(G)
-
-    ox.plot_graph(G, fig_height = 10, fig_width = 14, node_alpha=1, node_zorder=2,
-                  node_size = 30, node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
-                  filename = "nwc_main_before", save=True, file_format='png')
-
-    new_G = ox.clean_intersections(G, tolerance = 50, dead_ends=False)
-
-    ox.plot_graph(new_G, fig_height = 10, fig_width = 14, node_alpha=1, node_zorder=2,
-                  node_size = 30, node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
-                  filename = "nwc_main_after", save=True, file_format='png')
-
-    ox.get_undirected(new_G)
-
-    gdf_nodes, gdf_edges = ox.graph_to_gdfs(new_G)
-    ox.gdfs_to_graph(gdf_nodes, gdf_edges)
-
-
-def test_clean_intersections_Shattuck_Berkeley():
-    # Before and after plots are saved for validation
-
-    address = '2700 Shattuck Ave, Berkeley, CA'
-    G = ox.graph_from_address(address, network_type='drive', distance=750)
-    G_proj = ox.project_graph(G)
-
-    ox.plot_graph(G, fig_height = 10, node_alpha=1, node_zorder=2, node_size = 30,
-                  node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
-                  filename = "shattuck_before", save=True, file_format='png')
-
-    new_G = ox.clean_intersections(G_proj, tolerance = 15, dead_ends=False)
-
-    ox.plot_graph(new_G, fig_height = 10, node_alpha=1, node_zorder=2, node_size = 30,
-                  node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
-                  filename = "shattuck_after", save=True, file_format='png')
-
-    gdf_nodes, gdf_edges = ox.graph_to_gdfs(new_G)
-    ox.gdfs_to_graph(gdf_nodes, gdf_edges)
+    ox.config(log_console=True, log_file=True, use_cache=True,
+              data_folder='.temp/data', logs_folder='.temp/logs',
+              imgs_folder='.temp/imgs', cache_folder='.temp/cache')
 
 def test_osm_xml_output():
     G = ox.graph_from_place('Piedmont, California, USA')
