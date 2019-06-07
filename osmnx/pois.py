@@ -69,6 +69,8 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
                      timeout=180, max_query_area_size=50*1000*50*1000):
     """
     Get points of interests (POIs) from OpenStreetMap based on selected amenity types.
+    Note that if a polygon is passed-in, the query will be limited to its bounding box
+    rather than to the shape of the polygon itself.
 
     Parameters
     ----------
