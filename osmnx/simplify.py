@@ -309,7 +309,6 @@ def simplify_graph(G, strict=True):
     log(msg.format(initial_node_count, len(list(G.nodes())), initial_edge_count, len(list(G.edges())), time.time()-start_time))
     return G
 
-
 def clean_intersections(G, tolerance=15, dead_ends=False, method = 'kdtree'):
     """
     Clean-up intersections comprising clusters of nodes by merging them and
@@ -385,6 +384,11 @@ def clean_intersections(G, tolerance=15, dead_ends=False, method = 'kdtree'):
     unified_intersections = gpd.GeoSeries(list(buffered_nodes))
     intersection_centroids = unified_intersections.centroid
 
+    log("Removing dead ends and finding centroids (checkpoint 0-1) took {:,.2f} seconds"\
+         .format(time.time()-start_time))
+
+    start_time2 = time.time()
+
     # To make things simpler, every edge should have a geometry
     # (this avoids KeyError later when choosing between several
     #  geometries or when the centroid inherits a geometry directly)
@@ -399,8 +403,8 @@ def clean_intersections(G, tolerance=15, dead_ends=False, method = 'kdtree'):
             data['geometry'] = LineString([(x1, y1), (x2, y2)])
 
     # Let's first create the Graph first
-    G__ = nx.DiGraph(name = G.graph['name'],
-                     crs = G.graph['crs'])
+    G__ = nx.MultiDiGraph(name = G.graph['name'],
+                          crs  = G.graph['crs'])
 
     # And add the nodes (without the osmid attributes just yet)
     # The centroids are given new ids = 0 .. total_centroids-1
@@ -432,6 +436,33 @@ def clean_intersections(G, tolerance=15, dead_ends=False, method = 'kdtree'):
     # For compability, set attribute the 'osmid' with a single value
     nx.set_node_attributes(G__, { centroid : elements[0] for centroid, elements in centroid_elements.items() } , 'osmid')
 
+    log("Getting nearest nodes and computing the mapping and reverse mapping of "
+        "centroid->elements (checkpoint 1-2) took {:,.2f} seconds"\
+        .format(time.time()-start_time2))
+
+    start_time2 = time.time()
+
+    # --------
+    # Independently of the cases below, in the main loop, we need to
+    # fix edge geometries and make sure they intersect their centroids,
+    # otherwise we may have gaps on the resulting graph when plotted.
+    # --------
+    # We define this behavior as an inner function here because it will be
+    # extensively used in the main loop, thus avoiding clutter in the main loop.
+    # --------
+    def fix_geometry(centroid_p, neighbor_p, geom):
+        # make sure the resulting geometry intersects the centroid
+        coords = geom.coords[:]
+        if not geom.intersects(centroid_point):
+            coords = centroid_point.coords[:] + coords
+
+        # make sure the resulting geometry intersects the neighbor's centroid
+        if not geom.intersects(neighbor_point):
+            coords = coords + neighbor_point.coords[:]
+
+        # return updated geometry
+        return LineString(coords)
+
     # Now we're ready to start adding the edges to the cleaned graph
     for centroid, elements in centroid_elements.items():
             # get the outgoing edges for all elements in the centroid
@@ -453,6 +484,8 @@ def clean_intersections(G, tolerance=15, dead_ends=False, method = 'kdtree'):
                 neighbors.remove(centroid)
 
             # helper for fixing geometries
+            # initialised outside the for loop even thoug it's used later on
+            # to avoid multiple redundant calls
             centroid_point = Point(
                 intersection_centroids[centroid].x,
                 intersection_centroids[centroid].y)
@@ -461,15 +494,53 @@ def clean_intersections(G, tolerance=15, dead_ends=False, method = 'kdtree'):
             for neighbor in neighbors:
                 # retrieve the elements of this neighbor
                 neighbor_elements = centroid_elements[neighbor]
+
                 # select the edges (c1,c2) where c1 is an element of this centroid,
                 # and c2 is an element of this neighbor's centroid
                 out_edges_neighbor = set(filter(lambda x: x[1] in neighbor_elements, out_edges))
 
-                if len(out_edges_neighbor) > 1:
-                    # If there are multiple edges that fit this criteria, then we need
-                    # to combine their attributes, except for geometry and length
-                    # for which we need to pick a single value
+                # We're gonna need this to fix any problems with resulting geometries
+                neighbor_point = Point(
+                    intersection_centroids[neighbor].x,
+                    intersection_centroids[neighbor].y)
 
+                # --------
+                # Cases 1 and 2:
+                # --------
+                # This centroid and my neighbor centroid have only one element each,
+                # OR
+                # There are multiple elements in one or both of this centroid and
+                # its neighbor, but only a single edge exists between them.
+                #
+                # This means that we can keep any parallel edges between them and
+                # reuse any existing attributes. Case 2 may still need corrections
+                # for the resulting geometry (see below, after case 3)
+                if (len(elements) == 1 and len(neighbor_elements) == 1) or \
+                   (len(out_edges_neighbor) == 1):
+                   # There is only one edge in either case
+                   u, v = list(out_edges_neighbor)[0]
+                   # Iterate through existing keys
+                   for key in list(G[u][v].keys()):
+                       attr = G.edges[u, v, key]
+                       # Case 1 does not need to fix_geometry but case 2 might.
+                       # fix_geometry does not affect an already correct geometry.
+                       attr['geometry'] = fix_geometry(centroid_point,
+                                                       neighbor_point,
+                                                       attr['geometry'])
+                       # update length based on geometry
+                       attr['length'] = attr['geometry'].length
+                       # Time to add the edge
+                       G__.add_edge(centroid, neighbor, key = key, **attr)
+
+                # --------
+                # Case 3:
+                # --------
+                # There are multiple elements in one or both of this centroid and
+                # its neighbor, and multiple edges between them.
+                # The result is a single edge in the new graph, whose attributes
+                # are combined among the existing edges, except for geometry
+                # and length, whose value must be a single value (and not a list)
+                else:
                     edges_attrs = [ G.edges[edge[0], edge[1], 0] for edge in out_edges_neighbor ]
 
                     # Not every edge has the same set of keys, so we compute the union of the individual
@@ -500,49 +571,20 @@ def clean_intersections(G, tolerance=15, dead_ends=False, method = 'kdtree'):
                     # We pick the geometry with largest length
                     # but, there may be a better way to make this decision
                     whichmax = np.argmax(attr['length'])
-                    attr['length'] = attr['length'][whichmax]
-                    attr['geometry'] = attr['geometry'][whichmax]
-                    length = attr['length']
+                    geom = attr['geometry'][whichmax]
+                    attr['geometry'] = fix_geometry(centroid_point, neighbor_point, geom)
 
-                # If there is only one edge to this centroid, then we can just
-                # reuse the existing attributes
-                else:
-                    edge = list(out_edges_neighbor)[0]
-                    attr = G.edges[edge[0], edge[1], 0]
-                    length = attr['length']
+                    # update length based on geometry
+                    attr['length'] = attr['geometry'].length
 
-                # fix edge geometries - make sure they intersect their centroids,
-                # otherwise we may have gaps on the resulting graph when plotted
-                neighbor_point = Point(
-                    intersection_centroids[neighbor].x,
-                    intersection_centroids[neighbor].y)
+                    # Time to add the edge
+                    G__.add_edge(centroid, neighbor, **attr)
 
-                # make sure the resulting geometry intersects this centroid
-                coords = attr['geometry'].coords[:]
-                if not attr['geometry'].intersects(centroid_point):
-                    coords = centroid_point.coords[:] + coords
-
-                # make sure the resulting geometry intersects the neighbor's centroid
-                if not attr['geometry'].intersects(neighbor_point):
-                    coords = coords + neighbor_point.coords[:]
-
-                # update geometry
-                attr['geometry'] = LineString(coords)
-                # update length based on geometry
-                attr['length'] = attr['geometry'].length
-
-                # Is the new length larger than expected? theoretically this
-                # shouldn't happen, but there are a few instances where it does.
-                # For now, we just log these cases
-                if attr['length'] > (length + 2 * tolerance):
-                    log("New edge ({},{}) has length larger than expected: {:,.1f} > {:,.1f} + {}."\
-                            .format(centroid, neighbor, attr['length'], length, 2*tolerance),
-                        level = lg.WARNING)
-
-                G__.add_edge(centroid, neighbor, **attr)
+    log("Adding edges to the new graph (checkpoint 2-3) took {:,.2f} seconds"\
+        .format(time.time()-start_time2))
 
     msg = 'Cleaned intersections of graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
     log(msg.format(len(list(G.nodes())), len(list(G__.nodes())),
                    len(list(G.edges())), len(list(G__.edges())), time.time()-start_time))
 
-    return nx.MultiDiGraph(G__)
+    return G__
