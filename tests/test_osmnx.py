@@ -458,7 +458,7 @@ def test_clean_intersections_Newcastle_mainroads():
                   node_size = 30, node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
                   filename = "nwc_main_before", save=True, file_format='png')
 
-    new_G = ox.clean_intersections(G, tolerance = 50, dead_ends=False)
+    new_G = ox.clean_intersections(G, rebuild_graph=True, tolerance=50, dead_ends=False)
 
     ox.plot_graph(new_G, fig_height = 10, fig_width = 14, node_alpha=1, node_zorder=2,
                   node_size = 30, node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
@@ -481,7 +481,7 @@ def test_clean_intersections_Shattuck_Berkeley():
                   node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
                   filename = "shattuck_before", save=True, file_format='png')
 
-    new_G = ox.clean_intersections(G_proj, tolerance = 15, dead_ends=False)
+    new_G = ox.clean_intersections(G_proj, rebuild_graph=True, tolerance=15, dead_ends=False)
 
     ox.plot_graph(new_G, fig_height = 10, node_alpha=1, node_zorder=2, node_size = 30,
                   node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
