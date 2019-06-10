@@ -381,7 +381,6 @@ def test_pois():
 
     gdf = ox.pois_from_place(place='kusatsu, shiga, japan', which_result=2)
 
-
 def test_nominatim():
 
     import pytest
@@ -435,7 +434,58 @@ def test_nominatim():
               data_folder='.temp/data', logs_folder='.temp/logs',
               imgs_folder='.temp/imgs', cache_folder='.temp/cache')
 
-
 def test_osm_xml_output():
     G = ox.graph_from_place('Piedmont, California, USA')
     ox.save_graph_osm(G)
+
+def test_clean_intersections_Newcastle_mainroads():
+    # Before and after plots are saved for validation
+
+    filter_main_roads = (
+        '["area"!~"yes"]["highway"~"motorway|trunk|primary|secondary"]'
+        '["motor_vehicle"!~"no"]["motorcar"!~"no"]["access"!~"private"]')
+
+    G = ox.graph_from_bbox(
+            north = 55.03899686,
+            south = 54.91690286,
+            east = -1.4955082696000002,
+            west = -1.7714684703999999,
+            custom_filter = filter_main_roads)
+
+    G = ox.project_graph(G)
+
+    ox.plot_graph(G, fig_height = 10, fig_width = 14, node_alpha=1, node_zorder=2,
+                  node_size = 30, node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
+                  filename = "nwc_main_before", save=True, file_format='png')
+
+    new_G = ox.clean_intersections(G, tolerance = 50, dead_ends=False)
+
+    ox.plot_graph(new_G, fig_height = 10, fig_width = 14, node_alpha=1, node_zorder=2,
+                  node_size = 30, node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
+                  filename = "nwc_main_after", save=True, file_format='png')
+
+    ox.get_undirected(new_G)
+
+    gdf_nodes, gdf_edges = ox.graph_to_gdfs(new_G)
+    ox.gdfs_to_graph(gdf_nodes, gdf_edges)
+
+
+def test_clean_intersections_Shattuck_Berkeley():
+    # Before and after plots are saved for validation
+
+    address = '2700 Shattuck Ave, Berkeley, CA'
+    G = ox.graph_from_address(address, network_type='drive', distance=750)
+    G_proj = ox.project_graph(G)
+
+    ox.plot_graph(G, fig_height = 10, node_alpha=1, node_zorder=2, node_size = 30,
+                  node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
+                  filename = "shattuck_before", save=True, file_format='png')
+
+    new_G = ox.clean_intersections(G_proj, tolerance = 15, dead_ends=False)
+
+    ox.plot_graph(new_G, fig_height = 10, node_alpha=1, node_zorder=2, node_size = 30,
+                  node_color='#66ccff', node_edgecolor='k', edge_linewidth = 1,
+                  filename = "shattuck_after", save=True, file_format='png')
+
+    gdf_nodes, gdf_edges = ox.graph_to_gdfs(new_G)
+    ox.gdfs_to_graph(gdf_nodes, gdf_edges)

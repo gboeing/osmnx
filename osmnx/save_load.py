@@ -701,7 +701,7 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
     attributes = gdf_nodes.to_dict()
     for attribute_name in gdf_nodes.columns:
         # only add this attribute to nodes which have a non-null value for it
-        attribute_values = {k:v for k, v in attributes[attribute_name].items() if pd.notnull(v)}
+        attribute_values = {k:v for k, v in attributes[attribute_name].items() if (isinstance(v, list) or pd.notnull(v))}
         nx.set_node_attributes(G, name=attribute_name, values=attribute_values)
 
     # add the edges and attributes that are not u, v, key (as they're added
