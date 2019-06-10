@@ -310,10 +310,10 @@ def simplify_graph(G, strict=True):
     return G
 
 
-def clean_intersections(G, tolerance=15, dead_ends=False, method='kdtree'):
+def clean_intersections(G, rebuild_graph=False, tolerance=15, dead_ends=False, method='kdtree'):
     """
     Clean-up intersections comprising clusters of nodes by merging them and
-    returning their centroids.
+    returning either their centroids or a rebuilt graph.
 
     Divided roads are represented by separate centerline edges. The intersection
     of two divided roads thus creates 4 nodes, representing where each edge
@@ -332,6 +332,9 @@ def clean_intersections(G, tolerance=15, dead_ends=False, method='kdtree'):
     Parameters
     ----------
     G : networkx multidigraph
+    rebuild_graph : bool
+    	if False, just return the cleaned intersection centroids. if True,
+    	rebuild the graph around the cleaned intersections and return it.
     tolerance : float
         nodes within this distance (in graph's geometry's units) will be
         dissolved into a single intersection
@@ -385,6 +388,13 @@ def clean_intersections(G, tolerance=15, dead_ends=False, method='kdtree'):
     unified_intersections = gpd.GeoSeries(list(buffered_nodes))
     intersection_centroids = unified_intersections.centroid
 
+    # if we are not rebuilding the graph around the cleaned intersections,
+    # just return the intersection_centroids now to exit the function
+    if not rebuild_graph:
+    	log('Calculated/cleaned intersection points in {:,.2f} seconds'.format(time.time()-start_time))
+    	return intersection_centroids
+
+    # THE REMAINDER OF THIS FUNCTION ONLY EXECUTES WHEN rebuild_graph=True
     log('Finding centroids (checkpoint 0-1) took {:,.2f} seconds'\
          .format(time.time()-start_time))
 
