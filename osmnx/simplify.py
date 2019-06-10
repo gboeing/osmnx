@@ -309,7 +309,8 @@ def simplify_graph(G, strict=True):
     log(msg.format(initial_node_count, len(list(G.nodes())), initial_edge_count, len(list(G.edges())), time.time()-start_time))
     return G
 
-def clean_intersections(G, tolerance=15, dead_ends=False, method = 'kdtree'):
+
+def clean_intersections(G, tolerance=15, dead_ends=False, method='kdtree'):
     """
     Clean-up intersections comprising clusters of nodes by merging them and
     returning their centroids.
@@ -384,7 +385,7 @@ def clean_intersections(G, tolerance=15, dead_ends=False, method = 'kdtree'):
     unified_intersections = gpd.GeoSeries(list(buffered_nodes))
     intersection_centroids = unified_intersections.centroid
 
-    log("Removing dead ends and finding centroids (checkpoint 0-1) took {:,.2f} seconds"\
+    log('Finding centroids (checkpoint 0-1) took {:,.2f} seconds'\
          .format(time.time()-start_time))
 
     start_time2 = time.time()
@@ -436,8 +437,8 @@ def clean_intersections(G, tolerance=15, dead_ends=False, method = 'kdtree'):
     # For compability, set attribute the 'osmid' with a single value
     nx.set_node_attributes(G__, { centroid : elements[0] for centroid, elements in centroid_elements.items() } , 'osmid')
 
-    log("Getting nearest nodes and computing the mapping and reverse mapping of "
-        "centroid->elements (checkpoint 1-2) took {:,.2f} seconds"\
+    log('Getting nearest nodes and computing the mapping and reverse mapping of '
+        'centroid->elements (checkpoint 1-2) took {:,.2f} seconds'\
         .format(time.time()-start_time2))
 
     start_time2 = time.time()
@@ -553,7 +554,7 @@ def clean_intersections(G, tolerance=15, dead_ends=False, method = 'kdtree'):
 
                     # If if the key counter is greater than 1, we initialise the new
                     # dictionary with empty lists, so that we can later call append()
-                    attr = {key : [] if count > 1 else "" for key, count in key_counter.items()}
+                    attr = {key : [] if count > 1 else '' for key, count in key_counter.items()}
 
                     for edge_attr in edges_attrs:
                         for key in edge_attr.keys():
@@ -580,7 +581,7 @@ def clean_intersections(G, tolerance=15, dead_ends=False, method = 'kdtree'):
                     # Time to add the edge
                     G__.add_edge(centroid, neighbor, **attr)
 
-    log("Adding edges to the new graph (checkpoint 2-3) took {:,.2f} seconds"\
+    log('Adding edges to the new graph (checkpoint 2-3) took {:,.2f} seconds'\
         .format(time.time()-start_time2))
 
     msg = 'Cleaned intersections of graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
