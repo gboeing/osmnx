@@ -501,7 +501,7 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
 
 
 
-def get_nearest_edge(G, point, spatial_index=None):
+def get_nearest_edge(G, point, spatial_index=None, return_dist=False):
     """
     Return the nearest edge to a pair of coordinates. Pass in a graph and a tuple
     with the coordinates. We first get all the edges in the graph. Secondly we compute
@@ -520,12 +520,17 @@ def get_nearest_edge(G, point, spatial_index=None):
     spatial_index : instantiation of SpatialIndex class (optional)
         The user may pass in her own object of class KDTreeIndex or BallTreeIndex
         for a faster search of nearest edges.
+    return_dist : bool
+        Optionally also return the distance (in meters if haversine, or graph
+        node coordinate units if euclidean) between the point and the nearest
+        node.
 
     Returns
     -------
-    closest_edge_to_point : tuple (shapely.geometry, u, v)
+    closest_edge_to_point : tuple (shapely.geometry, u, v) or (shapely.geometry, u, v, dist)
         A geometry object representing the segment and the coordinates of the two
         nodes that determine the edge section, u and v, the OSM ids of the nodes.
+        If return_dist is True, then the distance is also returned
     """
     start_time = time.time()
 
@@ -542,17 +547,26 @@ def get_nearest_edge(G, point, spatial_index=None):
         ]
 
         edges_with_distances = sorted(edges_with_distances, key=lambda x: x[1])
-        closest_edge_to_point = edges_with_distances[0][0]
+        closest_edge_to_point, edge_dist = edges_with_distances[0]
 
     else:
         # use spatial index provided
-        closest_edge_to_point = spatial_index.get_nearest_edges(X=[point[1]], Y=[point[0]])[0]
+        if isinstance(spatial_index, BallTreeIndex):
+            closest_edge_to_point = spatial_index.get_nearest_edges(
+                X=[point[1]], Y=[point[0]], return_dist=return_dist
+            )[0]
+        else:
+            assert isinstance(spatial_index, KDTreeIndex)
+            closest_edge_to_point = spatial_index.get_nearest_edges(X=[point[1]], Y=[point[0]])[0]
 
     geometry, u, v = closest_edge_to_point
 
     log('Found nearest edge ({}) to point {} in {:,.2f} seconds'.format((u, v), point, time.time() - start_time))
 
-    return geometry, u, v
+    if return_dist:
+        return geometry, u, v, edge_dist
+    else:
+        return geometry, u, v
 
 
 
@@ -725,7 +739,7 @@ class BallTreeIndex(SpatialIndex):
         tree = BallTree(nodes_rad, metric='haversine')
         return tree
 
-    def get_nearest_edges(self, X, Y):
+    def get_nearest_edges(self, X, Y, return_dist=False):
         """
         Query the tree for nearest node to each point
 
@@ -739,13 +753,24 @@ class BallTreeIndex(SpatialIndex):
             The vector of latitudes or y's for which we will find the nearest
             edge in the graph. For projected graphs, use the projected coordinates,
             usually in meters.
+        return_dist : bool
+            Optionally also return the distance (in meters if haversine, or graph
+            node coordinate units if euclidean) between the point and the nearest
+            node.
         """
         points = np.array([Y, X]).T
         points_rad = np.deg2rad(points)
-        idx = self.tree.query(points_rad, k=1, return_distance=False)
+        if return_dist:
+            dist, idx = self.tree.query(points_rad, k=1, return_distance=return_dist)
+            edge_distances = dist.tolist()
+        else:
+            idx = self.tree.query(points_rad, k=1, return_distance=return_dist)
         eidx = self.extended.loc[idx[:, 0], 'index']
         ne = self.edges.loc[eidx, ['geometry', 'u', 'v']].values.tolist()
-        return ne
+        if return_dist:
+            return ne, edge_distances
+        else:
+            return ne
 
 
 
@@ -802,7 +827,7 @@ class KDTreeIndex(SpatialIndex):
 
 
 
-def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
+def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001, return_dist=False):
     """
     Return the graph edges nearest to a list of points. Pass in points
     as separate vectors of X and Y coordinates. The 'kdtree' method
@@ -838,6 +863,10 @@ def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
         'balltree' as the desired method, then the KDTreeIndex or BallTreeIndex
         will be constructed inside the function before it is called to find
         the nearest edges.
+    return_dist : bool
+        Optionally also return the distance (in meters if haversine, or graph
+        node coordinate units if euclidean) between the point and the nearest
+        node.
 
     dist : float
         spacing length along edges. Units are the same as the geom; Degrees for
@@ -848,7 +877,8 @@ def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
     -------
     ne : ndarray
         array of nearest edges represented by their startpoint and endpoint ids,
-        u and v, the OSM ids of the nodes.
+        u and v, the OSM ids of the nodes, and (optionally) the distances to each
+        node if return_dist is True.
 
     Info
     ----
@@ -867,27 +897,45 @@ def get_nearest_edges(G, X, Y, method=None, spatial_index=None, dist=0.0001):
     if method not in ["kdtree", "balltree", None]:
         raise ValueError('You must pass a valid method name, or None.')
 
+    if method == "kdtree" and return_dist:
+        raise NotImplementedError('The kdtree method does not have the option of returning '
+                                  'distances. To return distances, set the method parameter '
+                                  'to "balltree" or None')
+
     if method is None:
         # calculate nearest edge one at a time for each point
-        ne = [get_nearest_edge(G, (x, y)) for x, y in zip(X, Y)]
-
+        if return_dist:
+            ne_with_dist = [get_nearest_edge(G, (x, y), return_dist=True) for x, y in zip(X, Y)]
+            ne = []
+            edge_distances = []
+            for edge in ne_with_dist:
+                _, u, v, edge_dist = edge
+                ne.append((u, v))
+                edge_distances.append(edge_dist)
+        else:
+            ne = [get_nearest_edge(G, (x, y)) for x, y in zip(X, Y)]
+            ne = [(u, v) for _, u, v in ne]
     else:
         # calculate nearest edge using specified method
         if spatial_index is None:
             # construct spatial index object if it is not provided as an argument
             if method == 'kdtree':
                 spatial_index = KDTreeIndex(G, dist)
+                ne = spatial_index.get_nearest_edges(X, Y)
+                ne = [(u, v) for _, u, v in ne]
             elif method == 'balltree':
                 spatial_index = BallTreeIndex(G, dist)
+                if return_dist:
+                    ne, edge_distances = spatial_index.get_nearest_edges(X, Y, return_dist)
+                else:
+                    ne = spatial_index.get_nearest_edges(X, Y)
+                ne = [(u, v) for _, u, v in ne]
 
-        assert isinstance(spatial_index, SpatialIndex)
-
-        ne = spatial_index.get_nearest_edges(X, Y)
-
-    ne = [(u, v) for _, u, v in ne]
     log('Found nearest edges to {:,} points in {:,.2f} seconds'.format(len(X), time.time() - start_time))
-
-    return np.array(ne)
+    if return_dist:
+        return np.array(ne), edge_distances
+    else:
+        return np.array(ne)
 
 
 
