@@ -489,7 +489,7 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
         return gdf
 
 
-def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None):
+def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None, which_results=None):
     """
     Create a GeoDataFrame from a list of place names to query.
 
@@ -503,15 +503,23 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None):
         later)
     buffer_dist : float
         distance to buffer around the place geometry, in meters
+    which_results : list
+        list (with the same size of queries) of max number of results to return
+        and which to process upon receipt
 
     Returns
     -------
     GeoDataFrame
     """
-    # create an empty GeoDataFrame then append each result as a new row
+    # create an empty GeoDataFrame then append each result as a new row, checking for the presence of which_results
     gdf = gpd.GeoDataFrame()
-    for query in queries:
-        gdf = gdf.append(gdf_from_place(query, buffer_dist=buffer_dist))
+    if which_results != None:
+        assert len(queries) == len(which_results), 'Which_results list length must be the same as queries list length'
+        for query, which_result in zip(queries, which_results):
+            gdf = gdf.append(gdf_from_place(query, buffer_dist=buffer_dist, which_result=which_result))
+    else:
+        for query in queries:
+            gdf = gdf.append(gdf_from_place(query, buffer_dist=buffer_dist))
 
     # reset the index, name the GeoDataFrame
     gdf = gdf.reset_index().drop(labels='index', axis=1)
