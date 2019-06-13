@@ -64,3 +64,6 @@ default_accept_language = 'en'
 # and your API key, if you are using a commercial endpoint that requires it
 nominatim_endpoint = "https://nominatim.openstreetmap.org/"
 nominatim_key = None
+
+# which API endpoint to use for overpass queries
+overpass_endpoint = "http://overpass-api.de/api/interpreter"
