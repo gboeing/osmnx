@@ -504,8 +504,8 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None, which_results
     buffer_dist : float
         distance to buffer around the place geometry, in meters
     which_results : list
-        list (with the same size of queries) of max number of results to return
-        and which to process upon receipt
+        if not None, a list of max number of results to return and which to process
+        upon receipt, for each query in queries
 
     Returns
     -------
@@ -513,8 +513,8 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None, which_results
     """
     # create an empty GeoDataFrame then append each result as a new row, checking for the presence of which_results
     gdf = gpd.GeoDataFrame()
-    if which_results != None:
-        assert len(queries) == len(which_results), 'Which_results list length must be the same as queries list length'
+    if which_results is not None:
+        assert len(queries) == len(which_results), 'which_results list length must be the same as queries list length'
         for query, which_result in zip(queries, which_results):
             gdf = gdf.append(gdf_from_place(query, buffer_dist=buffer_dist, which_result=which_result))
     else:
