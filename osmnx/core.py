@@ -544,14 +544,14 @@ def get_osm_filter(network_type):
     # are tagged as providing parking, driveway, private, or emergency-access
     # services
     filters['drive'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
-                        'proposed|construction|bridleway|abandoned|platform|raceway|service"]'
+                        'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway|service"]'
                         '["motor_vehicle"!~"no"]["motorcar"!~"no"]{}'
                         '["service"!~"parking|parking_aisle|driveway|private|emergency_access"]').format(settings.default_access)
 
     # drive+service: allow ways tagged 'service' but filter out certain types of
     # service ways
     filters['drive_service'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
-                                'proposed|construction|bridleway|abandoned|platform|raceway"]'
+                                'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway"]'
                                 '["motor_vehicle"!~"no"]["motorcar"!~"no"]{}'
                                 '["service"!~"parking|parking_aisle|private|emergency_access"]').format(settings.default_access)
 
@@ -565,7 +565,8 @@ def get_osm_filter(network_type):
 
     # biking: filter out foot ways, motor ways, private ways, and anything
     # specifying biking=no
-    filters['bike'] = ('["area"!~"yes"]["highway"!~"footway|steps|corridor|motor|proposed|construction|abandoned|platform|raceway"]'
+    filters['bike'] = ('["area"!~"yes"]["highway"!~"footway|steps|corridor|elevator|escalator|motor|proposed|'
+    				   'construction|abandoned|platform|raceway"]'
                        '["bicycle"!~"no"]["service"!~"private"]{}').format(settings.default_access)
 
     # to download all ways, just filter out everything not currently in use or
