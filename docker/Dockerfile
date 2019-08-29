@@ -7,11 +7,11 @@
 # >>> docker build -t gboeing/osmnx .
 #
 # Run bash in this container and export final conda environment to a yml file:
-# >>> docker run --rm -it -v %cd%:/home/jovyan/work gboeing/osmnx /bin/bash
+# >>> docker run --rm -it -v "%cd%":/home/jovyan/work gboeing/osmnx /bin/bash
 # >>> conda env export -n base > /home/jovyan/work/environment.yml
 #
 # Run jupyter lab in this container:
-# >>> docker run --rm -it -p 8888:8888 -v %cd%:/home/jovyan/work gboeing/osmnx
+# >>> docker run --rm -it -p 8888:8888 -v "%cd%":/home/jovyan/work gboeing/osmnx
 #
 # Push the built image to hub so others can pull/run it:
 # >>> docker tag gboeing/osmnx gboeing/osmnx:v0.0.0
@@ -21,7 +21,7 @@
 # Stop/delete all local docker containers/images:
 # >>> docker stop $(docker ps -aq)
 # >>> docker rm $(docker ps -aq)
-# >>> docker rmi $(docker images -q)
+# >>> docker rmi $(docker images -q) --force
 ########################################################################
 
 FROM continuumio/miniconda3
@@ -34,7 +34,8 @@ RUN conda config --set show_channel_urls true && \
 	conda config --set channel_priority strict && \
     conda config --prepend channels conda-forge && \
     conda update --yes -n base conda && \
-    conda install --update-all --force-reinstall --yes jupyterlab osmnx python-igraph && \
+    conda install --update-all --force-reinstall --yes jupyterlab osmnx pyproj=1.9.6 python-igraph && \
+    python -m ipykernel install --name ox --display-name "Python (ox)" && \
     conda clean --all --yes && \
     conda info --all && \
     conda list
