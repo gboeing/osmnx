@@ -436,14 +436,29 @@ def test_nominatim():
               imgs_folder='.temp/imgs', cache_folder='.temp/cache')
 
 
-def test_overpass():
-    # Test changing the endpoint. It should not fail
-    ox.config(
-        overpass_endpoint="https://overpass.kumi.systems/api/"
-    )
-    G = ox.graph_from_place('Piedmont, California, USA')
-
-
 def test_osm_xml_output():
     G = ox.graph_from_place('Piedmont, California, USA')
     ox.save_graph_osm(G)
+
+
+def test_overpass():
+
+    import pytest
+
+
+    # Test changing the endpoint. It should not fail
+    ox.config(
+        overpass_endpoint="http://overpass.openstreetmap.fr/api/",
+        use_cache=False
+    )
+    G = ox.graph_from_place('Piedmont, California, USA')
+
+    # Test changing the endpoint. This should fail because we didn't provide a valid endpoint
+    ox.config(
+        overpass_endpoint="http://NOT_A_VALID_ENDPOINT/api/"
+    )
+    with pytest.raises(Exception):
+        G = ox.graph_from_place('Piedmont, California, USA')
+
+    ox.config(overpass_endpoint="http://overpass-api.de/api",
+              use_cache=True)
