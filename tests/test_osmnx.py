@@ -445,12 +445,6 @@ def test_overpass():
 
     import pytest
 
-    # Test changing the endpoint. It should not fail
-    ox.config(
-        overpass_endpoint="http://overpass.openstreetmap.fr/api/",
-    )
-    G = ox.graph_from_place('Piedmont, California, USA')
-
     # Test changing the endpoint. This should fail because we didn't provide a valid endpoint
     ox.config(
         overpass_endpoint="http://NOT_A_VALID_ENDPOINT/api/"
