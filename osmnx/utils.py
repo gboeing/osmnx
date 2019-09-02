@@ -64,7 +64,8 @@ def config(data_folder=settings.data_folder,
            default_referer=settings.default_referer,
            default_accept_language=settings.default_accept_language,
            nominatim_endpoint=settings.nominatim_endpoint,
-           nominatim_key=settings.nominatim_key):
+           nominatim_key=settings.nominatim_key,
+           overpass_endpoint=settings.overpass_endpoint):
     """
     Configure osmnx by setting the default global vars to desired values.
 
@@ -107,6 +108,8 @@ def config(data_folder=settings.data_folder,
         which API endpoint to use for nominatim queries
     nominatim_key : string
         your API key, if you are using an endpoint that requires one
+    overpass_endpoint : string
+        which API endpoint to use for overpass queries
 
     Returns
     -------
@@ -139,6 +142,8 @@ def config(data_folder=settings.data_folder,
     settings.default_accept_language = default_accept_language
     settings.nominatim_endpoint = nominatim_endpoint
     settings.nominatim_key = nominatim_key
+    settings.overpass_endpoint = overpass_endpoint
+    
 
     # if logging is turned on, log that we are configured
     if settings.log_file or settings.log_console:
