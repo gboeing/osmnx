@@ -185,13 +185,13 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
     """
 
     try:
-        response = requests.get(settings.overpass_endpoint.replace('interpteter', 'status'), headers=get_http_headers())
+        response = requests.get(settings.overpass_endpoint.replace('interpreter', 'status'), headers=get_http_headers())
         status = response.text.split('\n')[3]
         status_first_token = status.split(' ')[0]
     except Exception:
         # if we cannot reach the status endpoint or parse its output, log an
         # error and return default duration
-        log('Unable to query %s'%settings.overpass_endpoint.replace('interpteter', 'status'), level=lg.ERROR)
+        log('Unable to query %s'%settings.overpass_endpoint.replace('interpreter', 'status'), level=lg.ERROR)
         return default_duration
 
     try:
