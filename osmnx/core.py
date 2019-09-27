@@ -184,13 +184,16 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
     int
     """
     try:
-        response = requests.get('http://overpass-api.de/api/status', headers=get_http_headers())
+        response = requests.get(
+            settings.overpass_endpoint.rstrip('/') + '/status',
+            headers=get_http_headers())
         status = response.text.split('\n')[3]
         status_first_token = status.split(' ')[0]
     except Exception:
         # if we cannot reach the status endpoint or parse its output, log an
         # error and return default duration
-        log('Unable to query http://overpass-api.de/api/status', level=lg.ERROR)
+        log('Unable to query {}/status'.format(
+            settings.overpass_endpoint.rstrip('/'))), level=lg.ERROR)
         return default_duration
 
     try:
@@ -323,7 +326,7 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
 
     # define the Overpass API URL, then construct a GET-style URL as a string to
     # hash to look up/save to cache
-    url = 'http://overpass-api.de/api/interpreter'
+    url = settings.overpass_endpoint.rstrip('/') + '/interpreter'
     prepared_url = requests.Request('GET', url, params=data).prepare().url
     cached_response_json = get_from_cache(prepared_url)
 
