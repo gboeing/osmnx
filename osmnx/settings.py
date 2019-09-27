@@ -68,4 +68,4 @@ nominatim_key = None
 
 # which API endpoint to use for overpass queries
 overpass_endpoint = os.getenv(
-    "OVERPASS_ENDPOINT", "http://overpass-api.de/api/interpreter")
+    "OVERPASS_ENDPOINT", "http://overpass-api.de/api")
