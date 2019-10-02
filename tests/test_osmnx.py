@@ -151,7 +151,6 @@ def test_network_saving_loading():
     G3 = ox.load_graphml('graph.graphml', node_type=str)
 
     # convert graph to node/edge GeoDataFrames and back again
-    gdf_edges = ox.graph_to_gdfs(G, nodes=False, edges=True, fill_edge_geometry=False)
     gdf_nodes, gdf_edges = ox.graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True)
     G4 = ox.gdfs_to_graph(gdf_nodes, gdf_edges)
 
