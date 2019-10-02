@@ -953,7 +953,7 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx multidigraph. must be unprojected.
     address : string
         the address to geocode as the center point if G is not passed in
     point : tuple
