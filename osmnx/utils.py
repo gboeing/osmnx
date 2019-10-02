@@ -108,6 +108,8 @@ def config(data_folder=settings.data_folder,
         which API endpoint to use for nominatim queries
     nominatim_key : string
         your API key, if you are using an endpoint that requires one
+    overpass_endpoint : string
+        which API endpoint to use for overpass queries
 
     Returns
     -------

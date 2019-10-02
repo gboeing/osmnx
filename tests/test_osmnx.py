@@ -438,3 +438,17 @@ def test_nominatim():
 def test_osm_xml_output():
     G = ox.graph_from_place('Piedmont, California, USA')
     ox.save_graph_osm(G)
+
+
+def test_overpass():
+
+    import pytest
+
+    # Test changing the endpoint. This should fail because we didn't provide a valid endpoint
+    ox.config(
+        overpass_endpoint="http://NOT_A_VALID_ENDPOINT/api/"
+    )
+    with pytest.raises(Exception):
+        G = ox.graph_from_place('Piedmont, California, USA')
+
+    ox.config(overpass_endpoint="http://overpass-api.de/api")

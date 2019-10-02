@@ -66,4 +66,4 @@ nominatim_endpoint = "https://nominatim.openstreetmap.org/"
 nominatim_key = None
 
 # which API endpoint to use for overpass queries
-overpass_endpoint = "http://overpass-api.de/api/interpreter"
+overpass_endpoint = "http://overpass-api.de/api" 
