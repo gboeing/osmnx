@@ -143,7 +143,6 @@ def config(data_folder=settings.data_folder,
     settings.nominatim_endpoint = nominatim_endpoint
     settings.nominatim_key = nominatim_key
     settings.overpass_endpoint = overpass_endpoint
-    
 
     # if logging is turned on, log that we are configured
     if settings.log_file or settings.log_console:
