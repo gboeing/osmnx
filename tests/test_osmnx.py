@@ -11,8 +11,10 @@ mpl.use('Agg') #use agg backend so you don't need a display on travis-ci
 import os, shutil
 if os.path.exists('.temp'):
     shutil.rmtree('.temp')
+import networkx as nx
 
 import osmnx as ox
+
 
 # configure OSMnx
 ox.config(log_console=True, log_file=True, use_cache=True,
@@ -452,3 +454,28 @@ def test_overpass():
         G = ox.graph_from_place('Piedmont, California, USA')
 
     ox.config(overpass_endpoint="http://overpass-api.de/api")
+
+def test_coarse_graining():
+    T = nx.MultiDiGraph()
+    T.add_node(1, osmid=1, y=52.528842, x=13.397922)
+    T.add_node(2, osmid=2, y=52.528877, x=13.398594)
+    T.add_node(3, osmid=3, y=52.527467, x=13.399258)
+
+    T.add_edge(1, 2, osmid=100, length=45.5)
+    T.add_edge(2, 3, osmid=101, length=162.82)
+    T.add_edge(1, 3, osmid=102, length=177.60)
+    T.graph['name'] = 'test'
+    T.graph['crs'] = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
+
+    S = ox.simplify.coarse_grain_osm_network(T, tolerance=10)
+    # coarse graining should have no effect since tolerance is too low
+    assert S.number_of_nodes() == 3
+    assert S.number_of_edges() == 3
+    S = ox.simplify.coarse_grain_osm_network(T, tolerance=30)
+    # coarse graining should collapse 1 and 2
+    assert S.number_of_nodes() == 2
+    assert S.number_of_edges() == 1
+    S = ox.simplify.coarse_grain_osm_network(T, tolerance=600)
+    # coarse graining should collapse all edges
+    assert S.number_of_nodes() == 1
+    assert S.number_of_edges() == 0
