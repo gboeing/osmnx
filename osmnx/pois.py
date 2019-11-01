@@ -21,7 +21,8 @@ from .utils import geocode
 from .utils import log
 
 
-def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsize=''):
+def parse_poi_query(north, south, east, west, amenities=None, tags=None,
+                    timeout=180, maxsize=None):
     """
     Parse the Overpass QL query based on the list of amenities.
 
@@ -37,36 +38,116 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsi
     west : float
         Westernmost coordinate of the bounding box of the search area.
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
+        List of amenities that will be used for finding the POIs from the
+        selected area. Results returned are the _union_, not _intersection_ of
+        each individual amenity tag; each result matches at least one tag given.
+        Equivalent to `tags={'amenity': amenities}`. Some POIs don't use the
+        `amenity` key, in which case you should use the `tags` option
+    tags : dict[str, Union[bool, str, List[str]]]
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the _union_, not _intersection_ of each individual tag;
+        each result matches at least one tag given.
+
+        The keys should be the OSM tag key, (i.e. `amenity`, `landuse`,
+        `highway`, etc) and the values should be `True` to retrieve all objects
+        with the given tag, a string to get a single tag-value combination, and
+        a list of strings to get multiple values for the given tag. For example,
+
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'
+            }
+
+        Would return all amenities, `landuse=retail` and `landuse=commercial`,
+        and `highway=bus_stop`. If both `amenities` and `tags` are combined, any
+        `amenity` tags will be combined.
     timeout : int
         Timeout for the API request.
     """
-    if amenities:
-        # Overpass QL template
-        query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"~"{amenities}"]({south:.6f},'
-                          '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"~"{amenities}"]({south:.6f},'
-                          '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"~"{amenities}"]'
-                          '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);););out;')
+    # Convert input into dict of tags
+    _tags = {}
+    if amenities is not None:
+        # Instatiate amenity key
+        _tags['amenity'] = _tags.get('amenity', [])
+        # Add amenities to _tags dict
+        [_tags['amenity'].append(a) for a in amenities]
 
-        # Parse amenties
-        query_str = query_template.format(amenities="|".join(amenities), north=north, south=south, east=east, west=west,
-                                          timeout=timeout, maxsize=maxsize)
-    else:
-        # Overpass QL template
-        query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"]({south:.6f},'
-                          '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"]({south:.6f},'
-                          '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"]'
-                          '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);););out;')
+    if tags is not None:
+        for k, v in tags.items():
+            if type(v) == bool:
+                if v:
+                    # Use None to signal later that the query should be
+                    # ["tag_key"]
+                    # which gets all tags with key `tag_key`
+                    _tags[k] = None
 
-        # Parse amenties
-        query_str = query_template.format(north=north, south=south, east=east, west=west,
-                                          timeout=timeout, maxsize=maxsize)
+                continue
 
-    return query_str
+            if type(v) == list:
+                # Instatiate key
+                _tags[k] = _tags.get(k, [])
+                [_tags[k].append(item) for item in v]
+
+                continue
+
+            if type(v) == str:
+                # Instatiate key
+                _tags[k] = _tags.get(k, [])
+                _tags[k].append(v)
+
+    # List of dictionaries with one key and one value.
+    # Overpass QL doesn't have an OR, so you can't do "amenity"="a|b"
+    # Instead you have to do "amenity"="a" and then also "amenity"="b"
+    _tags_list = []
+    for k, v in _tags.items():
+        if v is None:
+            _tags_list.append({k: None})
+            continue
+
+        for item in v:
+            _tags_list.append({k: item})
+
+    # Create query template
+    # Build query for each tag for each of nodes, ways, and relations.
+
+    # Set query settings: Query settings must all be on the same line. The body
+    # of the query can be over separate lines. See documentation here:
+    # https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Settings
+    query_settings = [
+        '[out:json]',
+        '[timeout:{t}]'.format(t=timeout),
+        '[bbox:{s:.6f},{w:.6f},{n:.6f},{e:.6f}]'.format(s=south, w=west,
+                                                        n=north, e=east)
+    ]
+    if maxsize is not None:
+        query_settings.append('[maxsize:{m}]'.format(m=maxsize))
+
+    query = [
+        ''.join(query_settings) + ';',
+        '('
+    ]
+
+    for d in _tags_list:
+        for k, v in d.items():
+            tag_str = '["{k}"'.format(k=k)
+            if v is not None:
+                tag_str += '="{v}"'.format(v=v)
+            # The `(._; >;);` joins the new result set into the previous result
+            # set: https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Item
+            tag_str += '];(._;>;);'
+
+            for t in ['node', 'way', 'relation']:
+                query.append('({t}{tag_str});'.format(t=t, tag_str=tag_str))
+
+    query.append(');')
+    query.append('out;')
+    return ''.join(query)
 
 
-def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=None, west=None,
-                     timeout=180, max_query_area_size=50*1000*50*1000):
+def osm_poi_download(polygon=None, amenities=None, tags=None, north=None,
+                     south=None, east=None, west=None, timeout=180,
+                     max_query_area_size=50*1000*50*1000):
     """
     Get points of interests (POIs) from OpenStreetMap based on selected amenity types.
     Note that if a polygon is passed-in, the query will be limited to its bounding box
@@ -76,32 +157,51 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
     ----------
     poly : shapely.geometry.Polygon
         Polygon that will be used to limit the POI search.
+    north, south, east, west: float
+        Bounding box used to limit the POI search.
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
+        List of amenities that will be used for finding the POIs from the
+        selected area. Results returned are the _union_, not _intersection_ of
+        each individual amenity tag; each result matches at least one tag given.
+        Equivalent to `tags={'amenity': amenities}`. Some POIs don't use the
+        `amenity` key, in which case you should use the `tags` option
+    tags : dict[str, Union[bool, str, List[str]]]
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the _union_, not _intersection_ of each individual tag;
+        each result matches at least one tag given.
+
+        The keys should be the OSM tag key, (i.e. `amenity`, `landuse`,
+        `highway`, etc) and the values should be `True` to retrieve all objects
+        with the given tag, a string to get a single tag-value combination, and
+        a list of strings to get multiple values for the given tag. For example,
+
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'
+            }
+
+        Would return all amenities, `landuse=retail` and `landuse=commercial`,
+        and `highway=bus_stop`. If both `amenities` and `tags` are combined, any
+        `amenity` tags will be combined.
+    timeout : int
+        Timeout for the API request.
 
     Returns
     -------
-    gdf : geopandas.GeoDataFrame
-        Points of interest and the tags associated with them as geopandas GeoDataFrame.
+    responses : dict
+        JSON response with POIs from Overpass API server.
     """
 
-    if polygon:
-        # Bounds
+    if polygon is not None:
         west, south, east, north = polygon.bounds
 
-        # Parse the Overpass QL query
-        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north)
+    elif not all(isinstance(x, float) for x in [north, south, east, west]):
+        msg = 'You must pass a polygon or north, south, east, and west'
+        raise ValueError(msg)
 
-    elif not (north is None or south is None or east is None or west is None):
-        # TODO: Add functionality for subdividing search area geometry based on max_query_area_size
-        # Parse Polygon from bbox
-        #polygon = bbox_to_poly(north=north, south=south, east=east, west=west)
-
-        # Parse the Overpass QL query
-        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north)
-
-    else:
-        raise ValueError('You must pass a polygon or north, south, east, and west')
+    # Parse the Overpass QL query
+    query = parse_poi_query(amenities=amenities, tags=tags, west=west, south=south, east=east, north=north, maxsize=max_query_area_size)
 
     # Get the POIs
     responses = overpass_request(data={'data': query}, timeout=timeout)
@@ -111,9 +211,8 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
 
 def parse_nodes_coords(osm_response):
     """
-    Parse node coordinates from OSM response. Some nodes are
-    standalone points of interest, others are vertices in
-    polygonal (areal) POIs.
+    Parse node coordinates from OSM response. Some nodes are standalone points
+    of interest, others are vertices in polygonal (areal) POIs.
 
     Parameters
     ----------
@@ -287,10 +386,9 @@ def parse_osm_relations(relations, osm_way_df):
     osm_way_df = osm_way_df.append(gdf_relations, sort=False)
     return osm_way_df
 
-
-def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=None, west=None):
+def create_poi_gdf(polygon=None, amenities=None, tags=None, north=None, south=None, east=None, west=None):
     """
-    Parse GeoDataFrames from POI json that was returned by Overpass API.
+    Create GeoDataFrame from POI json returned by Overpass API.
 
     Parameters
     ----------
@@ -299,6 +397,7 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     amenities: list
         List of amenities that will be used for finding the POIs from the selected area.
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+
     north : float
         northern latitude of bounding box
     south : float
@@ -310,10 +409,12 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
 
     Returns
     -------
-    Geopandas GeoDataFrame with POIs and the associated attributes.
+
+    gdf : geopandas.GeoDataFrame
+        Points of interest and the tags associated with them as geopandas GeoDataFrame.
     """
 
-    responses = osm_poi_download(polygon=polygon, amenities=amenities, north=north, south=south, east=east, west=west)
+    responses = osm_poi_download(polygon=polygon, amenities=amenities, tags=tags, north=north, south=south, east=east, west=west)
 
     # Parse coordinates from all the nodes in the response
     coords = parse_nodes_coords(responses)
