@@ -64,18 +64,16 @@ def add_node_elevations_from_dem(G,
     node_points = node_points.set_index('node')
 
     # Get bounding box of each DEM file in dem_paths
-    extents = get_dem_extents(dem_paths)
+    metadata = get_dem_metadata(dem_paths)
 
-    # For each node, find the files within 6 arc-seconds (this should be
-    # suitable for most elevation DEMs, since they are generally a resolution of
-    # max 1 or 3 arc-second.)
-    # This is additionally scaled by `num_buffer`, to find enough boxes around
-    # the point
+    # For each node, find the files within num_buffer * max resolution of the
+    # files, to find enough lat/lon cells around point
     # So first create a box of this distance around each node, to then intersect
     # with the DEM extents
     # TODO use datset.res to make this exact
     # For example: (9.259259252584599e-05, 9.259259252584599e-05) for 1/3 arcsec
-    dist = 1 / 60 / 60 * 6 * num_buffer
+    res = metadata[['width_res', 'height_res']].max().max()
+    dist = res * num_buffer
     node_boxes = gpd.GeoDataFrame(
         node_points,
         geometry=node_points.apply(lambda r: box(r['lon'] - dist, r[
@@ -84,7 +82,7 @@ def add_node_elevations_from_dem(G,
 
     # Now find the DEMs that intersect each point's bounding box (according to
     # `dist`)
-    intersection = sjoin(node_boxes, extents, how='left')
+    intersection = sjoin(node_boxes, metadata, how='left')
 
     # After the spatial join, there is no longer only one row per index value
     # (node key). Nodes that are near the edge of two DEMs may have two rows. So
@@ -120,7 +118,7 @@ def add_node_elevations_from_dem(G,
     return G
 
 
-def get_dem_extents(dem_paths):
+def get_dem_metadata(dem_paths):
     """Find bounding boxes for each DEM file
 
     Parameters
@@ -134,16 +132,17 @@ def get_dem_extents(dem_paths):
     extents : GeoDataFrame with DEM file path and its bounding box as geometry
     """
     # Create dict with bounding boxes of each file
-    extents = []
+    metadata = []
 
     for dem_path in dem_paths:
         with rasterio.open(dem_path) as dataset:
-            extents.append([dem_path, box(*dataset.bounds)])
+            metadata.append([dem_path, box(*dataset.bounds), *dataset.res])
 
-    extents = gpd.GeoDataFrame(extents,
-                               columns=['path', 'geometry'],
-                               geometry='geometry')
-    return extents
+    metadata = gpd.GeoDataFrame(
+        metadata,
+        columns=['path', 'geometry', 'width_res', 'height_res'],
+        geometry='geometry')
+    return metadata
 
 
 def query_dem(dem_paths, lon, lat, num_buffer=1, interp_kind='linear'):
