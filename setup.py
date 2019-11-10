@@ -49,13 +49,13 @@ install_requires = [r.strip() for r in requirements_lines]
 
 # now call setup
 setup(name='osmnx',
-      version='0.10',
+      version='0.11dev',
       description='Retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data',
       long_description=long_description,
       classifiers=classifiers,
       url='https://github.com/gboeing/osmnx',
       author='Geoff Boeing',
-      author_email='g.boeing@northeastern.edu',
+      author_email='boeing@usc.edu',
       license='MIT',
       platforms='any',
       packages=['osmnx'],

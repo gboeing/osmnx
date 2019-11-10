@@ -3,6 +3,7 @@ bokeh
 bottleneck
 cartopy
 cython
+dill
 ipyleaflet
 ipywidgets
 jupyterlab

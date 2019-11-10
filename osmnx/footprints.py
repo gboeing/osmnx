@@ -410,7 +410,7 @@ def create_relation_geometry(relation_key, relation_val, footprints):
 
     # return relations with one outer way as Polygons, multiple outer ways as MultiPolygons
     if len(multipoly) == 1:
-        return Polygon(multipoly[0])
+        return multipoly[0]
     elif len(multipoly) > 1:    
         return MultiPolygon(multipoly)
     else:

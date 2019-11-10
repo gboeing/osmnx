@@ -53,7 +53,8 @@ If you have any trouble with the installation, read the [docs](https://osmnx.rea
 You can install OSMnx with [conda](https://anaconda.org/conda-forge/osmnx):
 
 ```
-conda install -c conda-forge osmnx
+conda config --prepend channels conda-forge
+conda create -n ox --strict-channel-priority osmnx
 ```
 
 Alternatively, you can run OSMnx + Jupyter directly from this
@@ -88,7 +89,7 @@ More feature development details are in the change log.
 
 ## Documentation
 
-Documentation available at [readthedocs](https://osmnx.readthedocs.io).
+Documentation available at [readthedocs](https://osmnx.readthedocs.io/).
 
 Examples available in the [examples repo](https://github.com/gboeing/osmnx-examples).
 

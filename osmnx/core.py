@@ -183,14 +183,15 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
     -------
     int
     """
+
     try:
-        response = requests.get('http://overpass-api.de/api/status', headers=get_http_headers())
+        response = requests.get(settings.overpass_endpoint.rstrip('/')+'/status', headers=get_http_headers())
         status = response.text.split('\n')[3]
         status_first_token = status.split(' ')[0]
     except Exception:
         # if we cannot reach the status endpoint or parse its output, log an
         # error and return default duration
-        log('Unable to query http://overpass-api.de/api/status', level=lg.ERROR)
+        log('Unable to query {}/status'.format(settings.overpass_endpoint.rstrip('/')), level=lg.ERROR)
         return default_duration
 
     try:
@@ -323,7 +324,7 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
 
     # define the Overpass API URL, then construct a GET-style URL as a string to
     # hash to look up/save to cache
-    url = 'http://overpass-api.de/api/interpreter'
+    url = settings.overpass_endpoint.rstrip('/')+'/interpreter'
     prepared_url = requests.Request('GET', url, params=data).prepare().url
     cached_response_json = get_from_cache(prepared_url)
 
@@ -489,7 +490,7 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
         return gdf
 
 
-def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None):
+def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None, which_results=None):
     """
     Create a GeoDataFrame from a list of place names to query.
 
@@ -503,15 +504,23 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None):
         later)
     buffer_dist : float
         distance to buffer around the place geometry, in meters
+    which_results : list
+        if not None, a list of max number of results to return and which to process
+        upon receipt, for each query in queries
 
     Returns
     -------
     GeoDataFrame
     """
-    # create an empty GeoDataFrame then append each result as a new row
+    # create an empty GeoDataFrame then append each result as a new row, checking for the presence of which_results
     gdf = gpd.GeoDataFrame()
-    for query in queries:
-        gdf = gdf.append(gdf_from_place(query, buffer_dist=buffer_dist))
+    if which_results is not None:
+        assert len(queries) == len(which_results), 'which_results list length must be the same as queries list length'
+        for query, which_result in zip(queries, which_results):
+            gdf = gdf.append(gdf_from_place(query, buffer_dist=buffer_dist, which_result=which_result))
+    else:
+        for query in queries:
+            gdf = gdf.append(gdf_from_place(query, buffer_dist=buffer_dist))
 
     # reset the index, name the GeoDataFrame
     gdf = gdf.reset_index().drop(labels='index', axis=1)
@@ -544,14 +553,14 @@ def get_osm_filter(network_type):
     # are tagged as providing parking, driveway, private, or emergency-access
     # services
     filters['drive'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
-                        'proposed|construction|bridleway|abandoned|platform|raceway|service"]'
+                        'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway|service"]'
                         '["motor_vehicle"!~"no"]["motorcar"!~"no"]{}'
                         '["service"!~"parking|parking_aisle|driveway|private|emergency_access"]').format(settings.default_access)
 
     # drive+service: allow ways tagged 'service' but filter out certain types of
     # service ways
     filters['drive_service'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
-                                'proposed|construction|bridleway|abandoned|platform|raceway"]'
+                                'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway"]'
                                 '["motor_vehicle"!~"no"]["motorcar"!~"no"]{}'
                                 '["service"!~"parking|parking_aisle|private|emergency_access"]').format(settings.default_access)
 
@@ -565,7 +574,8 @@ def get_osm_filter(network_type):
 
     # biking: filter out foot ways, motor ways, private ways, and anything
     # specifying biking=no
-    filters['bike'] = ('["area"!~"yes"]["highway"!~"footway|steps|corridor|motor|proposed|construction|abandoned|platform|raceway"]'
+    filters['bike'] = ('["area"!~"yes"]["highway"!~"footway|steps|corridor|elevator|escalator|motor|proposed|'
+                       'construction|abandoned|platform|raceway"]'
                        '["bicycle"!~"no"]["service"!~"private"]{}').format(settings.default_access)
 
     # to download all ways, just filter out everything not currently in use or

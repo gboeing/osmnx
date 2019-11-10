@@ -151,7 +151,6 @@ def test_network_saving_loading():
     G3 = ox.load_graphml('graph.graphml', node_type=str)
 
     # convert graph to node/edge GeoDataFrames and back again
-    gdf_edges = ox.graph_to_gdfs(G, nodes=False, edges=True, fill_edge_geometry=False)
     gdf_nodes, gdf_edges = ox.graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True)
     G4 = ox.gdfs_to_graph(gdf_nodes, gdf_edges)
 
@@ -439,3 +438,17 @@ def test_nominatim():
 def test_osm_xml_output():
     G = ox.graph_from_place('Piedmont, California, USA')
     ox.save_graph_osm(G)
+
+
+def test_overpass():
+
+    import pytest
+
+    # Test changing the endpoint. This should fail because we didn't provide a valid endpoint
+    ox.config(
+        overpass_endpoint="http://NOT_A_VALID_ENDPOINT/api/"
+    )
+    with pytest.raises(Exception):
+        G = ox.graph_from_place('Piedmont, California, USA')
+
+    ox.config(overpass_endpoint="http://overpass-api.de/api")

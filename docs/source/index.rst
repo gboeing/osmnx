@@ -48,20 +48,14 @@ You can install OSMnx with conda:
 
 .. code-block:: shell
 
-    conda create -n ox -c conda-forge python=3 osmnx
+    conda config --prepend channels conda-forge
+    conda create -n ox --strict-channel-priority osmnx
 
 Alternatively, you can run OSMnx + Jupyter directly from this `docker container`_, or you can install OSMnx via pip (if you already have all of its dependencies installed on your system):
 
 .. code-block:: shell
 
     pip install osmnx
-
-If you have any trouble with the installation, try installing OSMnx in a new, clean `conda environment`_ using conda-forge and strict channel priority:
-
-.. code-block:: shell
-
-    conda config --prepend channels conda-forge
-    conda create -n ox --strict-channel-priority python=3 osmnx
 
 
 Examples
