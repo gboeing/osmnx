@@ -15,6 +15,7 @@ from .projection import *
 from .save_load import *
 from .simplify import *
 from .stats import *
+from .geo_utils import *
 from .utils import *
-
+from .downloader import *
 __version__ = '0.11dev'

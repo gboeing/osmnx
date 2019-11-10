@@ -24,7 +24,7 @@ from .core import gdf_from_place
 from .plot import save_and_show
 from .projection import project_geometry
 from .utils import log
-from .utils import geocode
+from .geo_utils import geocode
 
 
 def osm_footprints_download(polygon=None, north=None, south=None, east=None, west=None,

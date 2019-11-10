@@ -16,8 +16,7 @@ from . import settings
 from .core import bbox_from_point
 from .core import gdf_from_place
 from .core import overpass_request
-from .utils import bbox_to_poly
-from .utils import geocode
+from .geo_utils import geocode, bbox_to_poly
 from .utils import log
 
 

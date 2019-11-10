@@ -14,7 +14,7 @@ from shapely.geometry import LineString
 
 from .save_load import graph_to_gdfs
 from .utils import log
-from .utils import count_streets_per_node
+from .geo_utils import count_streets_per_node
 
 
 def is_endpoint(G, node, strict=True):
