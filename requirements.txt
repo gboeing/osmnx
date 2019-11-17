@@ -4,6 +4,7 @@ matplotlib>=2.2
 networkx>=2.3
 numpy>=1.16
 pandas>=0.24
+rasterio>=1.0
 requests>=2.21
 Rtree>=0.8.3
 Shapely>=1.6
