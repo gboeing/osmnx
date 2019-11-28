@@ -6,6 +6,7 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
+import demquery
 import math
 import networkx as nx
 import pandas as pd
@@ -91,6 +92,58 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
 
     return G
 
+
+def add_node_elevations_from_dem(G, dem_paths, band=1, interp_kind=None):
+    """
+    Get the elevation of each node in the network from DEM files and add it to
+    the node as an attribute.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    dem_paths : list of str or pathlib.Path
+        list of paths to DEM files. DEM files can be any format readable by
+        GDAL.
+    band : int
+        band of DEM file to query data from; 1 by default.
+    interp_kind : None or str
+        one of None, 'linear', 'cubic', 'quintic'. None will do no interpolation
+        and choose the value in the DEM closest to the provided point. linear
+        creates a 3x3 grid and runs linear interpolation; cubic creates a 5x5
+        grid and runs cubic interpolation; quintic creates a 7x7 grid and runs
+        quintic interpolation
+
+    Returns
+    -------
+    G : networkx multidigraph
+    """
+
+    nodes = [(node, data['x'], data['y']) for node, data in G.nodes(data=True)]
+    df = pd.DataFrame(
+        nodes, columns=['node_id', 'lon', 'lat']).set_index('node_id')
+    points = df[['lon', 'lat']].values
+    query = demquery.Query(dem_paths, band=band)
+    elevations = query.query_points(points)
+
+    # sanity check that all our vectors have the same number of elements
+    if not (len(elevations) == len(G.nodes()) == len(df)):
+        raise Exception(
+            'Graph has {} nodes but we received {} results from the elevation API.'
+            .format(len(G.nodes()), len(elevations)))
+    else:
+        log(
+            'Graph has {} nodes and we received {} results from the elevation API.'
+            .format(len(G.nodes()), len(elevations)))
+
+    # add elevation as an attribute to the nodes
+    df['elevation'] = elevations
+    df['elevation'] = df['elevation'].round(3)  # round to millimeter
+
+    nx.set_node_attributes(
+        G, name='elevation', values=df['elevation'].to_dict())
+    log('Added elevation data to all nodes.')
+
+    return G
 
 
 def add_edge_grades(G, add_absolute=True): # pragma: no cover
