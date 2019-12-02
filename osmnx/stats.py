@@ -419,8 +419,9 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     if bc:
         # betweenness centrality of a node is the sum of the fraction of
         # all-pairs shortest paths that pass through node
+        # networkx 2.4+ implementation cannot run on Multi(Di)Graphs, so use DiGraph
         start_time = time.time()
-        betweenness_centrality = nx.betweenness_centrality(G, weight='length')
+        betweenness_centrality = nx.betweenness_centrality(G_dir, weight='length')
         stats['betweenness_centrality'] = betweenness_centrality
         stats['betweenness_centrality_avg'] = sum(betweenness_centrality.values())/len(betweenness_centrality)
         log('Calculated betweenness centrality in {:,.2f} seconds'.format(time.time() - start_time))
