@@ -15,6 +15,7 @@ pip
 psycopg2
 pysal
 python == 3.7.*
+rasterio
 seaborn
 statsmodels
 xlrd
