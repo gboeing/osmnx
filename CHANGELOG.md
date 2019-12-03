@@ -152,7 +152,7 @@
   - clean up docstrings throughout
   - remove network code vestiges from buildings.py
 
-## 0.3 (2016-01-29)
+## 0.3 (2017-01-29)
 
   - add route plotting with folium
   - add downloading and visualization of building footprints
