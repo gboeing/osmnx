@@ -40,12 +40,12 @@ classifiers = ['Development Status :: 5 - Production/Stable',
                'Programming Language :: Python :: 3.6',
                'Programming Language :: Python :: 3.7']
 
-with open('requirements.txt') as f:
-    requirements_lines = f.readlines()
-install_requires = [r.strip() for r in requirements_lines]
-
-if os.environ.get('READTHEDOCS'):
+# read the docs
+if os.getenv('READTHEDOCS', default=False) == "True":
     install_requires = []
+else:
+   with open('requirements.txt') as f:
+      install_requires = [l.strip() for l in f.readlines()]
 
 # now call setup
 setup(name='osmnx',
