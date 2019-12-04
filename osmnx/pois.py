@@ -360,6 +360,9 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     # Combine GeoDataFrames
     gdf = gdf_nodes.append(gdf_ways, sort=False)
 
+    if polygon:
+        gdf = gdf.loc[gdf['geometry'].centroid.within(polygon)==True]
+
     return gdf
 
 
