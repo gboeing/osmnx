@@ -47,6 +47,8 @@ else:
    with open('requirements.txt') as f:
       install_requires = [l.strip() for l in f.readlines()]
 
+print('REQUIRES:', install_requires)
+
 # now call setup
 setup(name='osmnx',
       version='0.11dev',
