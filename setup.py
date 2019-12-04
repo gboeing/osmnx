@@ -41,8 +41,12 @@ CLASSIFIERS = ['Development Status :: 5 - Production/Stable',
                'Programming Language :: Python :: 3.6',
                'Programming Language :: Python :: 3.7']
 
-with open('requirements.txt') as f:
-   INSTALL_REQUIRES = [l.strip() for l in f.readlines()]
+# only specify install_requires if not in RTD environment
+if os.getenv('READTHEDOCS') == 'True':
+   INSTALL_REQUIRES = []
+else:
+   with open('requirements.txt') as f:
+      INSTALL_REQUIRES = [l.strip() for l in f.readlines()]
 
 # now call setup
 setup(name='osmnx',
