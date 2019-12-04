@@ -1,0 +1,9 @@
+version: 2
+formats: []
+conda:
+    environment: docs/environment.yml
+python:
+    version: 3
+    install:
+        - method: pip
+          path: .
