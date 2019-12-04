@@ -25,9 +25,6 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # mock import these packages because readthedocs doesn't have them installed
 autodoc_mock_imports = [
-  'ctypes',
-  'ctypes.CDLL',
-  'ctypes.util',
   'dateutil',
   'descartes',
   'geopandas',
@@ -40,9 +37,7 @@ autodoc_mock_imports = [
   'pandas',
   'requests',
   'rtree',
-  'rtree.core',
   'rtree.index',
-  'rtree.index.Rtree',
   'scipy',
   'scipy.spatial',
   'shapely',
