@@ -7,14 +7,12 @@
 
 import time
 import math
-import numpy as np
 import geopandas as gpd
 import networkx as nx
 from shapely.geometry import Point
 
 from . import settings
 from .utils import log
-from .utils import make_str
 
 
 def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
