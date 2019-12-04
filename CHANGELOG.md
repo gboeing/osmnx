@@ -1,6 +1,6 @@
 # Change log
 
-## 0.11 (T.B.D.)
+## 0.11 (2019-12-04)
   
   - drop formal python 2 support
   - refactor all modules for cleaner package organization
