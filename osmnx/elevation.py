@@ -6,7 +6,6 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-import demquery
 import math
 import networkx as nx
 import pandas as pd
@@ -16,6 +15,11 @@ import time
 from .core import get_from_cache
 from .core import save_to_cache
 from .utils import log
+
+try:
+    import demquery
+except ImportError:
+    demquery = None
 
 
 def add_node_elevations(G, api_key, max_locations_per_batch=350,
@@ -117,6 +121,9 @@ def add_node_elevations_from_dem(G, dem_paths, band=1, interp_kind=None):
     -------
     G : networkx multidigraph
     """
+    if demquery is None:
+        msg = 'The demquery package must be installed to use this optional feature.'
+        raise ImportError(msg)
 
     nodes = [(node, data['x'], data['y']) for node, data in G.nodes(data=True)]
     df = pd.DataFrame(
