@@ -9,12 +9,14 @@ LABEL maintainer="Geoff Boeing <boeing@usc.edu>"
 LABEL url="https://github.com/gboeing/osmnx"
 LABEL description="OSMnx is a Python package to retrieve, model, analyze, and visualize OpenStreetMap networks and other spatial data."
 
+COPY requirements.txt /tmp/
+
 # configure conda and install packages in one RUN to keep image tidy
 RUN conda config --set show_channel_urls true && \
 	conda config --set channel_priority strict && \
     conda config --prepend channels conda-forge && \
     conda update --yes -n base conda && \
-    conda install --update-all --force-reinstall --yes jupyterlab osmnx pyproj=1.9.6 python-igraph && \
+    conda install --update-all --force-reinstall --yes --file /tmp/requirements.txt python-igraph && \
     python -m ipykernel install --name ox --display-name "Python (ox)" && \
     conda clean --all --yes && \
     conda info --all && \
