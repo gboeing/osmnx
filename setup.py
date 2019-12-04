@@ -44,6 +44,9 @@ with open('requirements.txt') as f:
     requirements_lines = f.readlines()
 install_requires = [r.strip() for r in requirements_lines]
 
+if os.getenv('READTHEDOCS'):
+    install_requires.remove('rtree')
+
 # now call setup
 setup(name='osmnx',
       version='0.11dev',
