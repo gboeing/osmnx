@@ -61,6 +61,6 @@ setup(name='osmnx',
       platforms='any',
       packages=['osmnx'],
       install_requires=INSTALL_REQUIRES,
-      extras_require={'folium':['folium>=0.6'],
-                      'kdtree':['scipy>=1.1'],
-                      'balltree':['scikit-learn>=0.19']})
+      extras_require={'folium':['folium>=0.10'],
+                      'kdtree':['scipy>=1.3'],
+                      'balltree':['scikit-learn>=0.22']})
