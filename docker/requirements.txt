@@ -17,6 +17,7 @@ pip
 psycopg2
 pysal
 pytest
+python == 3.7.*
 rasterio
 seaborn
 scikit-learn

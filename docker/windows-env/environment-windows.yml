@@ -235,5 +235,5 @@ dependencies:
     - pyqt5-sip==4.19.18
     - pyqtwebengine==5.12.1
     - python-igraph==0.7.1.post6
-prefix: C:\Anaconda\envs\ox
+prefix: c:\Anaconda\envs\ox
 
