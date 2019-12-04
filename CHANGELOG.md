@@ -1,8 +1,16 @@
 # Change log
 
 ## 0.11 (T.B.D.)
-
+  
   - drop formal python 2 support
+  - refactor all modules for cleaner package organization
+  - make stats betweenness centrality compatible with networkx>=2.4
+  - allow configurable overpass and nominatim endpoints
+  - allow gdf_from_places to take a which_result list argument
+  - handle zero-division in street grade calculation
+  - better footprint relation handling
+  - improve network type queries for better filtering
+  - fix pois_from_polygon returning points outside polygon
 
 ## 0.10 (2019-05-08)
 
