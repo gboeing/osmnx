@@ -44,7 +44,7 @@ with open('requirements.txt') as f:
     requirements_lines = f.readlines()
 install_requires = [r.strip() for r in requirements_lines]
 
-if os.getenv('READTHEDOCS'):
+if os.environ.get('READTHEDOCS'):
     install_requires = []
 
 # now call setup
