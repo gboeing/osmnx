@@ -541,7 +541,7 @@ def create_poi_gdf(polygon=None, amenities=None, tags=None, north=None, south=No
     return gdf
 
 
-def pois_from_point(point, distance=None, amenities=None):
+def pois_from_point(point, distance=None, amenities=None, tags=None):
     """
     Get point of interests (POIs) within some distance north, south, east, and
     west of a lat-long point.
@@ -553,8 +553,34 @@ def pois_from_point(point, distance=None, amenities=None):
     distance : numeric
         distance in meters
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
-        See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+        List of amenities that will be used for finding the POIs from the
+        selected area. Results returned are the _union_, not _intersection_ of
+        each individual amenity tag; each result matches at least one tag given.
+        Equivalent to `tags={'amenity': amenities}`. Some POIs don't use the
+        `amenity` key, in which case you should use the `tags` option.
+
+        OSM amenity docs are here:
+        http://wiki.openstreetmap.org/wiki/Key:amenity
+    tags : dict[str, Union[bool, str, List[str]]]
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the _union_, not _intersection_ of each individual tag;
+        each result matches at least one tag given.
+
+        The keys should be the OSM tag key, (i.e. `amenity`, `landuse`,
+        `highway`, etc) and the values should be `True` to retrieve all objects
+        with the given tag, a string to get a single tag-value combination, and
+        a list of strings to get multiple values for the given tag. For example,
+
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'
+            }
+
+        Would return all amenities, `landuse=retail` and `landuse=commercial`,
+        and `highway=bus_stop`. If both `amenities` and `tags` are combined, any
+        `amenity` tags will be combined. Providing `False` is not currently
+        supported.
 
     Returns
     -------
@@ -563,10 +589,10 @@ def pois_from_point(point, distance=None, amenities=None):
 
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
-    return create_poi_gdf(amenities=amenities, north=north, south=south, east=east, west=west)
+    return create_poi_gdf(amenities=amenities, tags=tags, north=north, south=south, east=east, west=west)
 
 
-def pois_from_address(address, distance, amenities=None):
+def pois_from_address(address, distance, amenities=None, tags=None):
     """
     Get point of interests (POIs) within some distance north, south, east, and
     west of an address.
@@ -578,8 +604,34 @@ def pois_from_address(address, distance, amenities=None):
     distance : numeric
         distance in meters
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area. See available
-        amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+        List of amenities that will be used for finding the POIs from the
+        selected area. Results returned are the _union_, not _intersection_ of
+        each individual amenity tag; each result matches at least one tag given.
+        Equivalent to `tags={'amenity': amenities}`. Some POIs don't use the
+        `amenity` key, in which case you should use the `tags` option.
+
+        OSM amenity docs are here:
+        http://wiki.openstreetmap.org/wiki/Key:amenity
+    tags : dict[str, Union[bool, str, List[str]]]
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the _union_, not _intersection_ of each individual tag;
+        each result matches at least one tag given.
+
+        The keys should be the OSM tag key, (i.e. `amenity`, `landuse`,
+        `highway`, etc) and the values should be `True` to retrieve all objects
+        with the given tag, a string to get a single tag-value combination, and
+        a list of strings to get multiple values for the given tag. For example,
+
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'
+            }
+
+        Would return all amenities, `landuse=retail` and `landuse=commercial`,
+        and `highway=bus_stop`. If both `amenities` and `tags` are combined, any
+        `amenity` tags will be combined. Providing `False` is not currently
+        supported.
 
     Returns
     -------
@@ -590,10 +642,10 @@ def pois_from_address(address, distance, amenities=None):
     point = geocode(query=address)
 
     # get POIs within distance of this point
-    return pois_from_point(point=point, amenities=amenities, distance=distance)
+    return pois_from_point(point=point, amenities=amenities, tags=tags, distance=distance)
 
 
-def pois_from_bbox(north, south, east, west, amenities=None):
+def pois_from_bbox(north, south, east, west, amenities=None, tags=None):
     """
     Get point of interests (POIs) within some bounding box.
 
@@ -608,18 +660,44 @@ def pois_from_bbox(north, south, east, west, amenities=None):
     west : float
         western longitude of bounding box
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area. See available
-        amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+        List of amenities that will be used for finding the POIs from the
+        selected area. Results returned are the _union_, not _intersection_ of
+        each individual amenity tag; each result matches at least one tag given.
+        Equivalent to `tags={'amenity': amenities}`. Some POIs don't use the
+        `amenity` key, in which case you should use the `tags` option.
+
+        OSM amenity docs are here:
+        http://wiki.openstreetmap.org/wiki/Key:amenity
+    tags : dict[str, Union[bool, str, List[str]]]
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the _union_, not _intersection_ of each individual tag;
+        each result matches at least one tag given.
+
+        The keys should be the OSM tag key, (i.e. `amenity`, `landuse`,
+        `highway`, etc) and the values should be `True` to retrieve all objects
+        with the given tag, a string to get a single tag-value combination, and
+        a list of strings to get multiple values for the given tag. For example,
+
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'
+            }
+
+        Would return all amenities, `landuse=retail` and `landuse=commercial`,
+        and `highway=bus_stop`. If both `amenities` and `tags` are combined, any
+        `amenity` tags will be combined. Providing `False` is not currently
+        supported.
 
     Returns
     -------
     GeoDataFrame
     """
 
-    return create_poi_gdf(amenities=amenities, north=north, south=south, east=east, west=west)
+    return create_poi_gdf(amenities=amenities, tags=tags, north=north, south=south, east=east, west=west)
 
 
-def pois_from_polygon(polygon, amenities=None):
+def pois_from_polygon(polygon, amenities=None, tags=None):
     """
     Get point of interests (POIs) within some polygon.
 
@@ -628,18 +706,44 @@ def pois_from_polygon(polygon, amenities=None):
     polygon : Polygon
         Polygon where the POIs are search from.
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
-        See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+        List of amenities that will be used for finding the POIs from the
+        selected area. Results returned are the _union_, not _intersection_ of
+        each individual amenity tag; each result matches at least one tag given.
+        Equivalent to `tags={'amenity': amenities}`. Some POIs don't use the
+        `amenity` key, in which case you should use the `tags` option.
+
+        OSM amenity docs are here:
+        http://wiki.openstreetmap.org/wiki/Key:amenity
+    tags : dict[str, Union[bool, str, List[str]]]
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the _union_, not _intersection_ of each individual tag;
+        each result matches at least one tag given.
+
+        The keys should be the OSM tag key, (i.e. `amenity`, `landuse`,
+        `highway`, etc) and the values should be `True` to retrieve all objects
+        with the given tag, a string to get a single tag-value combination, and
+        a list of strings to get multiple values for the given tag. For example,
+
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'
+            }
+
+        Would return all amenities, `landuse=retail` and `landuse=commercial`,
+        and `highway=bus_stop`. If both `amenities` and `tags` are combined, any
+        `amenity` tags will be combined. Providing `False` is not currently
+        supported.
 
     Returns
     -------
     GeoDataFrame
     """
 
-    return create_poi_gdf(polygon=polygon, amenities=amenities)
+    return create_poi_gdf(polygon=polygon, amenities=amenities, tags=tags)
 
 
-def pois_from_place(place, amenities=None, which_result=1):
+def pois_from_place(place, amenities=None, tags=None, which_result=1):
     """
     Get points of interest (POIs) within the boundaries of some place.
 
@@ -648,8 +752,34 @@ def pois_from_place(place, amenities=None, which_result=1):
     place : string
         the query to geocode to get geojson boundary polygon.
     amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
-        See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+        List of amenities that will be used for finding the POIs from the
+        selected area. Results returned are the _union_, not _intersection_ of
+        each individual amenity tag; each result matches at least one tag given.
+        Equivalent to `tags={'amenity': amenities}`. Some POIs don't use the
+        `amenity` key, in which case you should use the `tags` option.
+
+        OSM amenity docs are here:
+        http://wiki.openstreetmap.org/wiki/Key:amenity
+    tags : dict[str, Union[bool, str, List[str]]]
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the _union_, not _intersection_ of each individual tag;
+        each result matches at least one tag given.
+
+        The keys should be the OSM tag key, (i.e. `amenity`, `landuse`,
+        `highway`, etc) and the values should be `True` to retrieve all objects
+        with the given tag, a string to get a single tag-value combination, and
+        a list of strings to get multiple values for the given tag. For example,
+
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'
+            }
+
+        Would return all amenities, `landuse=retail` and `landuse=commercial`,
+        and `highway=bus_stop`. If both `amenities` and `tags` are combined, any
+        `amenity` tags will be combined. Providing `False` is not currently
+        supported.
     which_result : int
         max number of results to return and which to process upon receipt
 
@@ -660,4 +790,4 @@ def pois_from_place(place, amenities=None, which_result=1):
 
     city = gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
-    return create_poi_gdf(polygon=polygon, amenities=amenities)
+    return create_poi_gdf(polygon=polygon, amenities=amenities, tags=tags)
