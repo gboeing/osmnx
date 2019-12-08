@@ -543,8 +543,8 @@ def create_poi_gdf(polygon=None, amenities=None, tags=None, north=None, south=No
 
 def pois_from_point(point, distance=None, amenities=None):
     """
-    Get point of interests (POIs) within some distance north, south, east, and west of
-    a lat-long point.
+    Get point of interests (POIs) within some distance north, south, east, and
+    west of a lat-long point.
 
     Parameters
     ----------
@@ -568,8 +568,8 @@ def pois_from_point(point, distance=None, amenities=None):
 
 def pois_from_address(address, distance, amenities=None):
     """
-    Get OSM points of Interests within some distance north, south, east, and west of
-    an address.
+    Get point of interests (POIs) within some distance north, south, east, and
+    west of an address.
 
     Parameters
     ----------
@@ -593,9 +593,35 @@ def pois_from_address(address, distance, amenities=None):
     return pois_from_point(point=point, amenities=amenities, distance=distance)
 
 
+def pois_from_bbox(north, south, east, west, amenities=None):
+    """
+    Get point of interests (POIs) within some bounding box.
+
+    Parameters
+    ----------
+    north : float
+        northern latitude of bounding box
+    south : float
+        southern latitude of bounding box
+    east : float
+        eastern longitude of bounding box
+    west : float
+        western longitude of bounding box
+    amenities : list
+        List of amenities that will be used for finding the POIs from the selected area. See available
+        amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+
+    Returns
+    -------
+    GeoDataFrame
+    """
+
+    return create_poi_gdf(amenities=amenities, north=north, south=south, east=east, west=west)
+
+
 def pois_from_polygon(polygon, amenities=None):
     """
-    Get OSM points of interest within some polygon.
+    Get point of interests (POIs) within some polygon.
 
     Parameters
     ----------
