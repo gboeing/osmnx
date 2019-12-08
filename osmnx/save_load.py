@@ -19,8 +19,7 @@ from shapely import wkt
 from xml.etree import ElementTree as etree
 
 from . import settings
-from .utils import log
-from .utils import make_str
+from .utils import make_str, log
 
 
 def save_gdf_shapefile(gdf, filename=None, folder=None):

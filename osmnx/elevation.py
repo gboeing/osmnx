@@ -12,8 +12,8 @@ import pandas as pd
 import requests
 import time
 
-from .core import get_from_cache
-from .core import save_to_cache
+from .downloader import get_from_cache
+from .downloader import save_to_cache
 from .utils import log
 
 

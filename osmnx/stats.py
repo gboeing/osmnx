@@ -13,11 +13,12 @@ import numpy as np
 import pandas as pd
 
 from .simplify import clean_intersections
-from .utils import log
-from .utils import get_largest_component
+from .geo_utils import get_largest_component
 from .utils import great_circle_vec
-from .utils import count_streets_per_node
+from .geo_utils import count_streets_per_node
 from .utils import euclidean_dist_vec
+from .utils import log
+
 
 
 def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
