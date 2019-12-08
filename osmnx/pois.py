@@ -20,10 +20,10 @@ from .geo_utils import geocode, bbox_to_poly
 from .utils import log
 
 
-def parse_poi_query(north, south, east, west, amenities=None, tags=None,
+def create_overpass_query(north, south, east, west, amenities=None, tags=None,
                     timeout=180, maxsize=None):
     """
-    Parse the Overpass QL query based on the list of amenities.
+    Generate the Overpass QL query string given provided amenities and tags.
 
     Parameters
     ----------
@@ -60,59 +60,107 @@ def parse_poi_query(north, south, east, west, amenities=None, tags=None,
 
         Would return all amenities, `landuse=retail` and `landuse=commercial`,
         and `highway=bus_stop`. If both `amenities` and `tags` are combined, any
-        `amenity` tags will be combined.
+        `amenity` tags will be combined. Providing `False` is not currently
+        supported.
     timeout : int
         Timeout for the API request.
     """
-    # Convert input into dict of tags
+    if amenities is None and tags is None:
+        raise ValueError('Either amenities or tags must be provided')
+    if amenities is not None and not isinstance(amenities, list):
+        raise TypeError('amenities must be None or a list of str')
+    if tags is not None and not isinstance(tags, dict):
+        msg = 'tags must be None or a dict of bool, str, or list of str'
+        raise TypeError(msg)
+
+    # Merge `amenities` and `tags` parameters into a single dict (`_tags`).
+    # `amenities` is kept for backwards compatibility.
     _tags = {}
-    if amenities is not None:
-        # Instatiate amenity key
-        _tags['amenity'] = _tags.get('amenity', [])
-        # Add amenities to _tags dict
-        [_tags['amenity'].append(a) for a in amenities]
 
+    # If `tags` is provided, use that as _tags, making sure that every dict
+    # value is either a list of strings or a boolean
     if tags is not None:
-        for k, v in tags.items():
-            if type(v) == bool:
-                if v:
-                    # Use None to signal later that the query should be
-                    # ["tag_key"]
-                    # which gets all tags with key `tag_key`
-                    _tags[k] = None
-
+        for key, value in tags.items():
+            # If value is boolean, set _tags value as boolean
+            if isinstance(value, bool):
+                _tags[key] = value
                 continue
 
-            if type(v) == list:
-                # Instatiate key
-                _tags[k] = _tags.get(k, [])
-                [_tags[k].append(item) for item in v]
-
+            # If value is string, set _tags value as a list containing that str
+            if isinstance(value, str):
+                _tags[key] = [value]
                 continue
 
-            if type(v) == str:
-                # Instatiate key
-                _tags[k] = _tags.get(k, [])
-                _tags[k].append(v)
+            # If value is list, set _tags value as that list
+            # Make sure that every value of the list is a str, to prevent issues
+            # later
+            if isinstance(value, list):
+                if not all(isinstance(s, str) for s in value):
+                    msg = 'If a list is provided as a value of the `tags` dict, it must be a list of strings'
+                    raise TypeError(msg)
+                _tags[key] = value
+                continue
 
-    # List of dictionaries with one key and one value.
-    # Overpass QL doesn't have an OR, so you can't do "amenity"="a|b"
-    # Instead you have to do "amenity"="a" and then also "amenity"="b"
+            # If we've reached here, the value in the key-value combination is
+            # neither a boolean, string, or list, so raise a TypeError
+            raise TypeError('Values of tags dict must be bool, str, or list')
+
+    # If `amenities` is provided, add those values to `tags['amenity']`
+    # Note that if `tags['amenity']` is True, all values of tag `amenity` will
+    # be retrieved, so don't try to add
+    if amenities is not None:
+        existing_val = _tags.get('amenity')
+        # If the `amenity` key already exists and is a list, add `amenities` to
+        # it
+        if isinstance(existing_val, list):
+            _tags['amenity'].extend(amenities)
+        # If the `amenity` key already exists and is a boolean, don't add
+        # `amenities`
+        elif isinstance(existing_val, bool):
+            pass
+        # If the `amenity` key does not already exist, set it as `amenities`
+        elif existing_val is None:
+            _tags['amenity'] = amenities
+
+    # Because Overpass QL doesn't have an OR operand, you can't do
+    # `"amenity"="a|b"` to retrieve all amenities that have either `a` or `b` as
+    # tags. Instead you have to do `"amenity"="a"` and then also `"amenity"="b"`
+    #
+    # To fit this model, here the _tags dictionary, which has either a boolean
+    # or list of str as values, is transformed into a list of dictionaries, each
+    # with a single value.
+    # So
+    # ```
+    # {
+    #     'amenity':True,
+    #     'landuse':['retail','commercial'],
+    #     'highway':'bus_stop'
+    # }
+    # ```
+    # is transformed to
+    # [
+    #     {'amenity': True},
+    #     {'landuse': 'retail'},
+    #     {'landuse': 'commercial'},
+    #     {'highway': 'bus_stop'}
+    # ]
     _tags_list = []
-    for k, v in _tags.items():
-        if v is None:
-            _tags_list.append({k: None})
+    for key, value in _tags.items():
+        if isinstance(value, bool):
+            _tags_list.append({key: value})
             continue
 
-        for item in v:
-            _tags_list.append({k: item})
+        for value_item in value:
+            _tags_list.append({key: value_item})
 
     # Create query template
-    # Build query for each tag for each of nodes, ways, and relations.
+    # Build query for each key-value pair for each of nodes, ways, and
+    # relations.
 
     # Set query settings: Query settings must all be on the same line. The body
     # of the query can be over separate lines. See documentation here:
     # https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Settings
+    # This sets the output format, server timeout, and bounding box
     query_settings = [
         '[out:json]',
         '[timeout:{t}]'.format(t=timeout),
@@ -122,16 +170,24 @@ def parse_poi_query(north, south, east, west, amenities=None, tags=None,
     if maxsize is not None:
         query_settings.append('[maxsize:{m}]'.format(m=maxsize))
 
+    # Start building query string
+    # Keep it as list of str for now; then join at the end
     query = [
         ''.join(query_settings) + ';',
         '('
     ]
 
+    # For each key, value pair in the list of dicts, build
+    # (node["key"="value"];(._;>;);)
+    # (way["key"="value"];(._;>;);)
+    # (relation["key"="value"];(._;>;);)
+    # lines in the query string
     for d in _tags_list:
-        for k, v in d.items():
-            tag_str = '["{k}"'.format(k=k)
-            if v is not None:
-                tag_str += '="{v}"'.format(v=v)
+        for key, value in d.items():
+            tag_str = '["{key}"'.format(key=key)
+
+            if not isinstance(value, bool):
+                tag_str += '="{value}"'.format(value=value)
             # The `(._; >;);` joins the new result set into the previous result
             # set: https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL#Item
             tag_str += '];(._;>;);'
@@ -141,6 +197,29 @@ def parse_poi_query(north, south, east, west, amenities=None, tags=None,
 
     query.append(');')
     query.append('out;')
+    # So for the example of
+    # {
+    #     'amenity':True,
+    #     'landuse':['retail','commercial'],
+    #     'highway':'bus_stop'
+    # }
+    # the query string here is:
+    # ['[out:json][timeout:180][bbox:south,west,north,east];',
+    # '(',
+    # '(node["amenity"];(._;>;););',
+    # '(way["amenity"];(._;>;););',
+    # '(relation["amenity"];(._;>;););',
+    # '(node["landuse"="retail"];(._;>;););',
+    # '(way["landuse"="retail"];(._;>;););',
+    # '(relation["landuse"="retail"];(._;>;););',
+    # '(node["landuse"="commercial"];(._;>;););',
+    # '(way["landuse"="commercial"];(._;>;););',
+    # '(relation["landuse"="commercial"];(._;>;););',
+    # '(node["highway"="bus_stop"];(._;>;););',
+    # '(way["highway"="bus_stop"];(._;>;););',
+    # '(relation["highway"="bus_stop"];(._;>;););',
+    # ');',
+    # 'out;']
     return ''.join(query)
 
 
@@ -200,7 +279,7 @@ def osm_poi_download(polygon=None, amenities=None, tags=None, north=None,
         raise ValueError(msg)
 
     # Parse the Overpass QL query
-    query = parse_poi_query(amenities=amenities, tags=tags, west=west, south=south, east=east, north=north, maxsize=max_query_area_size)
+    query = create_overpass_query(amenities=amenities, tags=tags, west=west, south=south, east=east, north=north, maxsize=max_query_area_size)
 
     # Get the POIs
     responses = overpass_request(data={'data': query}, timeout=timeout)
@@ -323,6 +402,7 @@ def invalid_multipoly_handler(gdf, relation, way_ids):
         relation['id'], str(way_ids)))
         return None
 
+
 def parse_osm_relations(relations, osm_way_df):
     """
     Parses the osm relations (multipolygons) from osm
@@ -384,6 +464,7 @@ def parse_osm_relations(relations, osm_way_df):
     # Merge 'osm_way_df' and the 'gdf_relations'
     osm_way_df = osm_way_df.append(gdf_relations, sort=False)
     return osm_way_df
+
 
 def create_poi_gdf(polygon=None, amenities=None, tags=None, north=None, south=None, east=None, west=None):
     """
