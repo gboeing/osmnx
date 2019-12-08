@@ -6,8 +6,6 @@
 ################################################################################
 
 import geopandas as gpd
-from shapely.geometry import box
-from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
@@ -16,7 +14,7 @@ from . import settings
 from .core import bbox_from_point
 from .core import gdf_from_place
 from .core import overpass_request
-from .geo_utils import geocode, bbox_to_poly
+from .geo_utils import geocode
 from .utils import log
 
 
