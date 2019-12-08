@@ -274,10 +274,6 @@ def osm_poi_download(polygon=None, amenities=None, tags=None, north=None,
     if polygon is not None:
         west, south, east, north = polygon.bounds
 
-    elif not all(isinstance(x, float) for x in [north, south, east, west]):
-        msg = 'You must pass a polygon or north, south, east, and west'
-        raise ValueError(msg)
-
     # Parse the Overpass QL query
     query = create_overpass_query(amenities=amenities, tags=tags, west=west, south=south, east=east, north=north, maxsize=max_query_area_size)
 
