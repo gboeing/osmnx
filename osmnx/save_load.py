@@ -245,7 +245,7 @@ def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
     et.write(os.path.join(folder, filename))
 
     log('Saved graph to disk as OSM at "{}" in {:,.2f} seconds'.format(
-        G_save.name, os.path.join(folder, filename), time.time() - start_time))
+        os.path.join(folder, filename), time.time() - start_time))
 
 
 def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
