@@ -6,6 +6,7 @@
 
 import matplotlib as mpl
 import warnings
+import pandas as pd
 
 mpl.use('Agg')  # use agg backend so you don't need a display on travis-ci
 
@@ -436,6 +437,14 @@ def test_nominatim():
 def test_osm_xml_output():
     G = ox.graph_from_place('Piedmont, California, USA')
     ox.save_graph_osm(G)
+
+
+def test_ordered_nodes_from_way():
+    df = pd.DataFrame({
+        'u': [54, 2, 5, 3, 10, 19, 20],
+        'v': [76, 3, 8, 10, 5, 20, 15]})
+    ordered_nodes = ox.get_unique_nodes_ordered_from_way(df)
+    assert ordered_nodes == [2, 3, 10, 5, 8]
 
 
 def test_overpass():

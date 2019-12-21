@@ -169,14 +169,12 @@ def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
     if folder is None:
         folder = settings.data_folder
 
-    # get undirected graph so we don't generate duplicate nodes
-    H = get_undirected(G)
-
+    # get undirected graph so we don't generate duplicate nodes and
     # create a copy to convert all the node/edge attribute values to string
-    H_save = H.copy()
+    H = get_undirected(G).copy()
 
     gdf_nodes, gdf_edges = graph_to_gdfs(
-        H_save, node_geometry=False, fill_edge_geometry=False)
+        H, node_geometry=False, fill_edge_geometry=False)
 
     # rename columns per osm specification
     gdf_nodes.rename(
