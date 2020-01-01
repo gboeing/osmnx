@@ -1,5 +1,9 @@
 # Change log
 
+## 0.11.1 (2020-01-01)
+
+  - fix get_nearest_edges search when not using a spatial index
+
 ## 0.11 (2019-12-04)
   
   - drop formal python 2 support
