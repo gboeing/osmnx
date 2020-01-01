@@ -342,7 +342,13 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     nearest edges if working in unprojected coordinates like lat-lng (it
     precisely finds the nearest edge if working in projected coordinates).
     The 'balltree' method is second fastest with large data sets, but it
-    is precise if working in unprojected coordinates like lat-lng.
+    is precise if working in unprojected coordinates like lat-lng. As a
+    rule of thumb, if you have a small graph just use method=None. If you 
+    have a large graph with lat-lng coordinates, use method='balltree'.
+    If you have a large graph with projected coordinates, use 
+    method='kdtree'. Note that if you are working in units of lat-lng,
+    the X vector corresponds to longitude and the Y vector corresponds
+    to latitude.
 
     Parameters
     ----------
@@ -389,8 +395,8 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     start_time = time.time()
 
     if method is None:
-        # calculate nearest edge one at a time for each point
-        ne = [get_nearest_edge(G, (x, y)) for x, y in zip(X, Y)]
+        # calculate nearest edge one at a time for each (y, x) point
+        ne = [get_nearest_edge(G, (y, x)) for x, y in zip(X, Y)]
         ne = [(u, v) for _, u, v in ne]
 
     elif method == 'kdtree':
