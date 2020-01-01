@@ -66,7 +66,7 @@ dependencies:
   - importlib_metadata=1.3.0=py37_0
   - intel-openmp=2019.4=245
   - ipykernel=5.1.3=py37h5ca1d4c_0
-  - ipython=7.11.0=py37h5ca1d4c_0
+  - ipython=7.11.1=py37h5ca1d4c_0
   - ipython_genutils=0.2.0=py_1
   - jedi=0.15.2=py37_0
   - jinja2=2.10.3=py_0
