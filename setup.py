@@ -50,7 +50,7 @@ else:
 
 # now call setup
 setup(name='osmnx',
-      version='0.11',
+      version='0.11.1',
       description='Retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data',
       long_description=LONG_DESCRIPTION,
       classifiers=CLASSIFIERS,
