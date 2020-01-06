@@ -630,6 +630,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
         if node_geometry:
             gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
+            gdf_nodes.set_geometry('geometry', inplace=True)
         gdf_nodes.crs = G.graph['crs']
         gdf_nodes.gdf_name = '{}_nodes'.format(G.graph['name'])
 

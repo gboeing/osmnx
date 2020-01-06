@@ -148,6 +148,7 @@ def project_graph(G, to_crs=None):
     gdf_nodes['lon'] = gdf_nodes['x']
     gdf_nodes['lat'] = gdf_nodes['y']
     gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
+    gdf_nodes.set_geometry('geometry', inplace=True)
     log('Created a GeoDataFrame from graph in {:,.2f} seconds'.format(time.time()-start_time))
 
     # project the nodes GeoDataFrame to UTM
