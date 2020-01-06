@@ -449,7 +449,7 @@ def pois_from_place(place, amenities=None, which_result=1):
         List of amenities that will be used for finding the POIs from the selected area.
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
     which_result : int
-        max number of results to return and which to process upon receipt
+        max number of place geocoding results to return and which to process upon receipt
 
     Returns
     -------
