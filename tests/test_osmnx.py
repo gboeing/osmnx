@@ -5,8 +5,8 @@
 ################################################################################
 
 import matplotlib as mpl
-import warnings
 import pandas as pd
+import warnings
 
 mpl.use('Agg')  # use agg backend so you don't need a display on travis-ci
 
