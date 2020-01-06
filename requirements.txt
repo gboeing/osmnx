@@ -4,6 +4,7 @@ matplotlib>=3.1
 networkx>=2.4
 numpy>=1.17
 pandas>=0.25
+pyproj>=2.2
 requests>=2.22
 Rtree>=0.9
 Shapely>=1.6
