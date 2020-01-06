@@ -51,7 +51,8 @@ def config(data_folder=settings.data_folder,
            default_accept_language=settings.default_accept_language,
            nominatim_endpoint=settings.nominatim_endpoint,
            nominatim_key=settings.nominatim_key,
-           overpass_endpoint=settings.overpass_endpoint):
+           overpass_endpoint=settings.overpass_endpoint,
+           all_oneway=settings.all_oneway):
     """
     Configure osmnx by setting the default global vars to desired values.
 
@@ -96,6 +97,9 @@ def config(data_folder=settings.data_folder,
         your API key, if you are using an endpoint that requires one
     overpass_endpoint : string
         which API endpoint to use for overpass queries
+    all_oneway : boolean
+        if True, forces all paths to be loaded as oneway ways, preserving
+        the original order of nodes stored in the OSM way XML.
 
     Returns
     -------
@@ -129,6 +133,7 @@ def config(data_folder=settings.data_folder,
     settings.nominatim_endpoint = nominatim_endpoint
     settings.nominatim_key = nominatim_key
     settings.overpass_endpoint = overpass_endpoint
+    settings.all_oneway = all_oneway
 
     # if logging is turned on, log that we are configured
     if settings.log_file or settings.log_console:
