@@ -915,6 +915,38 @@ def bbox_to_poly(north, south, east, west):
     return Polygon([(west, south), (east, south), (east, north), (west, north)])
 
 
+def citation():
+    """
+    Print the OSMnx package's citation information.
+
+    Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing,
+    and Visualizing Complex Street Networks. Computers, Environment and Urban
+    Systems, 65(126-139). doi:10.1016/j.compenvurbsys.2017.05.004
+    """
+
+    cite = ("To cite OSMnx, use:\n\n"
+            "Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing, "
+            "and Visualizing Complex Street Networks. Computers, Environment and Urban "
+            "Systems, 65(126-139). doi:10.1016/j.compenvurbsys.2017.05.004"
+            "\n\n"
+            "BibTeX entry for LaTeX users:\n\n"
+
+            "@article{boeing_osmnx_2017,\n"
+            "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, {Constructing}, {Analyzing}, and {Visualizing} {Complex} {Street} {Networks}},\n"
+            "    volume = {65},\n"
+            "    doi = {10.1016/j.compenvurbsys.2017.05.004},\n"
+            "    number = {126-139},\n"
+            "    journal = {Computers, Environment and Urban Systems},\n"
+            "    author = {Boeing, G.},\n"
+            "    year = {2017}\n"
+            "}")
+
+    print(cite)
+
+
+from .save_load import graph_to_gdfs
+
+
 def get_unique_nodes_ordered_from_way(way_edges_df):
     """
     Function to recover the original order of nodes from a dataframe
@@ -999,34 +1031,3 @@ def get_unique_nodes_ordered_from_way(way_edges_df):
             len(unique_ordered_nodes), num_unique_nodes))
 
     return unique_ordered_nodes
-
-
-def citation():
-    """
-    Print the OSMnx package's citation information.
-
-    Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing,
-    and Visualizing Complex Street Networks. Computers, Environment and Urban
-    Systems, 65(126-139). doi:10.1016/j.compenvurbsys.2017.05.004
-    """
-
-    cite = ("To cite OSMnx, use:\n\n"
-            "Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing, "
-            "and Visualizing Complex Street Networks. Computers, Environment and Urban "
-            "Systems, 65(126-139). doi:10.1016/j.compenvurbsys.2017.05.004"
-            "\n\n"
-            "BibTeX entry for LaTeX users:\n\n"
-
-            "@article{boeing_osmnx_2017,\n"
-            "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, {Constructing}, {Analyzing}, and {Visualizing} {Complex} {Street} {Networks}},\n"
-            "    volume = {65},\n"
-            "    doi = {10.1016/j.compenvurbsys.2017.05.004},\n"
-            "    number = {126-139},\n"
-            "    journal = {Computers, Environment and Urban Systems},\n"
-            "    author = {Boeing, G.},\n"
-            "    year = {2017}\n"
-            "}")
-
-    print(cite)
-
-from .save_load import graph_to_gdfs
