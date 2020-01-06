@@ -19,7 +19,7 @@ from shapely import wkt
 from xml.etree import ElementTree as etree
 
 from . import settings
-from .utils import make_str, log, get_unique_nodes_ordered_from_way
+from .geo_utils import make_str, log, get_unique_nodes_ordered_from_way
 
 
 def save_gdf_shapefile(gdf, filename=None, folder=None):
