@@ -35,6 +35,7 @@ autodoc_mock_imports = [
   'networkx',
   'numpy',
   'pandas',
+  'pyproj',
   'requests',
   'rtree',
   'rtree.index',
