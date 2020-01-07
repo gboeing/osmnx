@@ -39,7 +39,8 @@ CLASSIFIERS = ['Development Status :: 5 - Production/Stable',
                'Programming Language :: Python :: 3',
                'Programming Language :: Python :: 3.5',
                'Programming Language :: Python :: 3.6',
-               'Programming Language :: Python :: 3.7']
+               'Programming Language :: Python :: 3.7',
+               'Programming Language :: Python :: 3.8']
 
 # only specify install_requires if not in RTD environment
 if os.getenv('READTHEDOCS') == 'True':
@@ -50,7 +51,7 @@ else:
 
 # now call setup
 setup(name='osmnx',
-      version='0.11.1',
+      version='0.11.2',
       description='Retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data',
       long_description=LONG_DESCRIPTION,
       classifiers=CLASSIFIERS,

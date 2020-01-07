@@ -1,5 +1,10 @@
 # Change log
 
+## 0.11.2 (2020-01-07)
+
+  - fix .osm xml output
+  - fix geopandas future compatibility
+
 ## 0.11.1 (2020-01-01)
 
   - fix get_nearest_edges search when not using a spatial index
