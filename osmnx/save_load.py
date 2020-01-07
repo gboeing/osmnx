@@ -19,7 +19,7 @@ from shapely import wkt
 from xml.etree import ElementTree as etree
 
 from . import settings
-from .utils import make_str, log
+from .utils import make_str, log, get_unique_nodes_ordered_from_way
 
 
 def save_gdf_shapefile(gdf, filename=None, folder=None):
@@ -147,7 +147,7 @@ def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
                    node_attrs=settings.osm_xml_node_attrs,
                    edge_tags=settings.osm_xml_way_tags,
                    edge_attrs=settings.osm_xml_way_attrs,
-                   oneway=True, filename='graph.osm',
+                   oneway=False, filename='graph.osm',
                    folder=None):
     """
     Save a graph as an OSM XML formatted file. NOTE: for very large
@@ -169,11 +169,12 @@ def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
     if folder is None:
         folder = settings.data_folder
 
+    # get undirected graph so we don't generate duplicate nodes and
     # create a copy to convert all the node/edge attribute values to string
-    G_save = G.copy()
+    H = get_undirected(G).copy()
 
     gdf_nodes, gdf_edges = graph_to_gdfs(
-        G_save, node_geometry=False, fill_edge_geometry=False)
+        H, node_geometry=False, fill_edge_geometry=False)
 
     # rename columns per osm specification
     gdf_nodes.rename(
@@ -197,13 +198,15 @@ def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
 
     # misc. string replacements to meet OSM XML spec
     if 'oneway' in edges.columns:
-        edges.loc[:, 'oneway'] = oneway
+
+        # fill blank oneway tags with default (False)
+        edges.loc[pd.isnull(edges['oneway']), 'oneway'] = oneway
         edges.loc[:, 'oneway'] = edges['oneway'].astype(str)
         edges.loc[:, 'oneway'] = edges['oneway'].str.replace(
             'False', 'no').replace('True', 'yes')
 
     # initialize XML tree with an OSM root element
-    root = etree.Element('osm')
+    root = etree.Element('osm', attrib={'version': '1', 'generator': 'OSMnx'})
 
     # append nodes to the XML tree
     for i, row in nodes.iterrows():
@@ -214,14 +217,23 @@ def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
                 node, 'tag', attrib={'k': tag, 'v': row[tag]})
 
     # append edges to the XML tree
-    for i, row in edges.iterrows():
+    for e in edges.id.unique():
+        all_way_edges = edges[edges['id'] == e]
+        first = all_way_edges.iloc[0]
         edge = etree.SubElement(
-            root, 'way', attrib=row[edge_attrs].dropna().to_dict())
-        etree.SubElement(edge, 'nd', attrib={'ref': row['u']})
-        etree.SubElement(edge, 'nd', attrib={'ref': row['v']})
+            root, 'way', attrib=first[edge_attrs].dropna().to_dict())
+
+        if len(all_way_edges) == 1:
+            etree.SubElement(edge, 'nd', attrib={'ref': first['u']})
+            etree.SubElement(edge, 'nd', attrib={'ref': first['v']})
+        else:
+            ordered_nodes = get_unique_nodes_ordered_from_way(all_way_edges)
+            for node in ordered_nodes:
+                etree.SubElement(edge, 'nd', attrib={'ref': node})
+
         for tag in edge_tags:
             etree.SubElement(
-                edge, 'tag', attrib={'k': tag, 'v': row[tag]})
+                edge, 'tag', attrib={'k': tag, 'v': first[tag]})
 
     et = etree.ElementTree(root)
 
@@ -230,8 +242,8 @@ def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
 
     et.write(os.path.join(folder, filename))
 
-    log('Saved graph "{}" to disk as OSM at "{}" in {:,.2f} seconds'.format(
-        G_save.name, os.path.join(folder, filename), time.time() - start_time))
+    log('Saved graph to disk as OSM at "{}" in {:,.2f} seconds'.format(
+        os.path.join(folder, filename), time.time() - start_time))
 
 
 def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
