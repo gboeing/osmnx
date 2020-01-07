@@ -807,8 +807,11 @@ def add_path(G, data, one_way):
     del data['nodes']
 
     # set the oneway attribute to the passed-in value, to make it consistent
-    # True/False values
-    data['oneway'] = one_way
+    # True/False values, but only do this if you aren't forcing all edges to
+    # oneway with the all_oneway setting. With the all_oneway setting, you
+    # likely still want to preserve the original OSM oneway attribute.
+    if not settings.all_oneway:
+        data['oneway'] = one_way
 
     # zip together the path nodes so you get tuples like (0,1), (1,2), (2,3)
     # and so on
@@ -846,9 +849,11 @@ def add_paths(G, paths, bidirectional=False):
 
     for data in paths.values():
 
+        if settings.all_oneway is True:
+            add_path(G, data, one_way=True)
         # if this path is tagged as one-way and if it is not a walking network,
         # then we'll add the path in one direction only
-        if ('oneway' in data and data['oneway'] in osm_oneway_values) and not bidirectional:
+        elif ('oneway' in data and data['oneway'] in osm_oneway_values) and not bidirectional:
             if data['oneway'] == '-1':
                 # paths with a one-way value of -1 are one-way, but in the
                 # reverse direction of the nodes' order, see osm documentation

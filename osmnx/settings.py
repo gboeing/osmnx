@@ -52,6 +52,10 @@ default_access = '["access"!~"private"]'
 # The network types for which a bidirectional graph will be created
 bidirectional_network_types = ['walk']
 
+# all one-way mode to maintain original OSM node order
+# when constructing graphs specifically to save to .osm xml file
+all_oneway = False
+
 # default CRS to set when creating graphs
 default_crs = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
 

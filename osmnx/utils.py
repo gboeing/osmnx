@@ -80,7 +80,8 @@ def config(data_folder=settings.data_folder,
            default_accept_language=settings.default_accept_language,
            nominatim_endpoint=settings.nominatim_endpoint,
            nominatim_key=settings.nominatim_key,
-           overpass_endpoint=settings.overpass_endpoint):
+           overpass_endpoint=settings.overpass_endpoint,
+           all_oneway=settings.all_oneway):
     """
     Configure osmnx by setting the default global vars to desired values.
 
@@ -125,6 +126,9 @@ def config(data_folder=settings.data_folder,
         your API key, if you are using an endpoint that requires one
     overpass_endpoint : string
         which API endpoint to use for overpass queries
+    all_oneway : boolean
+        if True, forces all paths to be loaded as oneway ways, preserving
+        the original order of nodes stored in the OSM way XML.
 
     Returns
     -------
@@ -158,6 +162,7 @@ def config(data_folder=settings.data_folder,
     settings.nominatim_endpoint = nominatim_endpoint
     settings.nominatim_key = nominatim_key
     settings.overpass_endpoint = overpass_endpoint
+    settings.all_oneway = all_oneway
 
     # if logging is turned on, log that we are configured
     if settings.log_file or settings.log_console:
@@ -331,3 +336,89 @@ def get_logger(level=None, name=None, filename=None):
         logger.handler_set = True
 
     return logger
+
+
+def get_unique_nodes_ordered_from_way(way_edges_df):
+    """
+    Function to recover the original order of nodes from a dataframe
+    of edges associated with a single OSM way.
+
+    Parameters
+    ----------
+    way_edges_df : pandas.DataFrame()
+        Dataframe containing columns 'u' and 'v' corresponding to
+        origin/desitination nodes.
+
+    Returns
+    -------
+    unique_ordered_nodes : list
+        An ordered list of unique node IDs
+
+    NOTE: If the edges do not all connect (e.g. [(1, 2), (2,3),
+    (10, 11), (11, 12), (12, 13)]), then this method will return
+    only those nodes associated with the FIRST chunk of connected
+    edges, even if subsequent connected chunks are contain more
+    total nodes. I don't believe that we would ever encounter this
+    kind of disconnected structure of nodes within a given way,
+    but as best I could tell it is not explicitly forbidden in the
+    OSM XML design schema. As such, I had to safeguard against it
+    to ensure this method wouldn't get stuck in the while loop if
+    encountered a disconnected structure. I'm using a print
+    statement right now to tell the user whether or not any nodes
+    have been dropped and how many.
+    """
+    all_nodes = list(way_edges_df['u'].values) + \
+        list(way_edges_df['v'].values)
+    num_unique_nodes = len(np.unique(all_nodes))
+    node_pairs = list(way_edges_df[['u', 'v']].values)
+    unique_ordered_nodes = []
+    recycled = []
+
+    while len(node_pairs) > 0:
+
+        pair = node_pairs.pop(0)
+        start = pair[0]
+        end = pair[1]
+        the_rest = [element for p in node_pairs for element in p]
+
+        # first pair
+        if len(unique_ordered_nodes) == 0:
+
+            # if there are subsequent pairs to match on
+            if start in the_rest or end in the_rest:
+                unique_ordered_nodes = list(pair)
+            continue
+
+        # if both nodes are already in the list, we don't need them
+        if (start in unique_ordered_nodes) and (end in unique_ordered_nodes):
+            continue
+
+        # if start node is in the list, add the end node to the right of it
+        if start in unique_ordered_nodes:
+            start_idx = unique_ordered_nodes.index(start)
+            end_idx = start_idx + 1
+            unique_ordered_nodes[end_idx:end_idx] = [end]
+
+        # if end node is in the list, add the start node to the left of it
+        elif end in unique_ordered_nodes:
+            end_idx = unique_ordered_nodes.index(end)
+            start_idx = end_idx
+            unique_ordered_nodes[start_idx:start_idx] = [start]
+
+        else:
+            # if we've already processed this pair and there is still no way
+            # to match it in the list, then we're done
+            if list(pair) in recycled:
+                break
+
+            # if there's no match in the list but there's a match in the
+            # remaining pairs to be processed, recycle it to process again
+            elif start in the_rest or end in the_rest:
+                node_pairs.append(pair)
+                recycled.append(list(pair))
+
+    if len(unique_ordered_nodes) < num_unique_nodes:
+        print('Recovered order for {0} of {1} nodes'.format(
+            len(unique_ordered_nodes), num_unique_nodes))
+
+    return unique_ordered_nodes
