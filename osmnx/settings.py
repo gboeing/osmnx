@@ -53,6 +53,7 @@ default_access = '["access"!~"private"]'
 bidirectional_network_types = ['walk']
 
 # all one-way mode to maintain original OSM node order
+# when constructing graphs specifically to save to .osm xml file
 all_oneway = False
 
 # default CRS to set when creating graphs
