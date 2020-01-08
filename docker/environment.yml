@@ -3,11 +3,11 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - _libgcc_mutex=0.1=main
+  - _libgcc_mutex=0.1=conda_forge
   - affine=2.3.0=py_0
   - alabaster=0.7.12=py_0
   - attrs=19.3.0=py_0
-  - babel=2.7.0=py_0
+  - babel=2.8.0=py_0
   - backcall=0.1.0=py_0
   - beautifulsoup4=4.8.2=py37_0
   - bleach=3.1.0=py_0
@@ -30,7 +30,7 @@ dependencies:
   - cmarkgfm=0.4.2=py37h516909a_2
   - conda=4.8.0=py37_1
   - conda-package-handling=1.6.0=py37h516909a_1
-  - coverage=5.0.1=py37h516909a_0
+  - coverage=5.0.2=py37h516909a_0
   - coveralls=1.10.0=py_0
   - cryptography=2.8=py37h72c5cf5_1
   - curl=7.65.3=hf8cf82a_0
@@ -75,7 +75,7 @@ dependencies:
   - ipython=7.11.1=py37h5ca1d4c_0
   - ipython_genutils=0.2.0=py_1
   - jedi=0.15.2=py37_0
-  - jeepney=0.4.1=py_0
+  - jeepney=0.4.2=py_0
   - jinja2=2.10.3=py_0
   - joblib=0.14.1=py_0
   - jpeg=9c=h14c3975_1001
@@ -93,18 +93,19 @@ dependencies:
   - ld_impl_linux-64=2.33.1=h53a641e_7
   - libblas=3.8.0=14_openblas
   - libcblas=3.8.0=14_openblas
-  - libclang=9.0.0=default_hde54327_4
+  - libclang=9.0.1=default_hde54327_0
   - libcurl=7.65.3=hda55be3_0
   - libdap4=3.20.4=hd3bb157_0
   - libedit=3.1.20170329=hf8c457e_1001
   - libffi=3.2.1=he1b5a44_1006
-  - libgcc-ng=9.2.0=hdf63c60_0
+  - libgcc-ng=9.2.0=h24d8f2e_1
   - libgdal=2.4.3=h2f07a13_9
-  - libgfortran-ng=7.3.0=hdf63c60_2
+  - libgfortran-ng=7.3.0=hdf63c60_3
+  - libgomp=9.2.0=h24d8f2e_1
   - libiconv=1.15=h516909a_1005
   - libkml=1.3.0=h4fcabce_1010
   - liblapack=3.8.0=14_openblas
-  - libllvm9=9.0.0=hc9558a2_3
+  - libllvm9=9.0.1=hc9558a2_0
   - libnetcdf=4.7.1=nompi_h94020b1_102
   - libopenblas=0.3.7=h5ec1e0e_6
   - libpng=1.6.37=hed695b0_0
@@ -113,8 +114,8 @@ dependencies:
   - libspatialindex=1.9.3=he1b5a44_1
   - libspatialite=4.3.0a=h4f6d029_1032
   - libssh2=1.8.2=h22169c7_2
-  - libstdcxx-ng=9.2.0=hdf63c60_0
-  - libtiff=4.1.0=hc3755c2_1
+  - libstdcxx-ng=9.2.0=hdf63c60_1
+  - libtiff=4.1.0=hc3755c2_3
   - libuuid=2.32.1=h14c3975_1000
   - libuv=1.33.1=h516909a_0
   - libxcb=1.13=h14c3975_1002
@@ -130,33 +131,34 @@ dependencies:
   - more-itertools=8.0.2=py_0
   - munch=2.5.0=py_0
   - nbconvert=5.6.1=py37_0
-  - nbformat=4.4.0=py_1
+  - nbformat=5.0.3=py_0
   - ncurses=6.1=hf484d3e_1002
   - networkx=2.4=py_0
   - nodejs=13.0.0=h10a4023_1
   - notebook=6.0.1=py37_0
   - nspr=4.24=he1b5a44_0
   - nss=3.47=he751ad9_0
-  - numexpr=2.7.0=py37hb3f55d8_0
+  - numexpr=2.7.1=py37hb3f55d8_0
   - numpy=1.17.3=py37h95a1406_0
   - olefile=0.46=py_0
   - openjpeg=2.3.1=h981e76c_3
+  - openmp_impl=4.5=0_gnu
   - openssl=1.1.1d=h516909a_0
   - osmnet=0.1.5=py_3
-  - osmnx=0.11.1=py_0
+  - osmnx=0.11.2=py_0
   - owslib=0.19.0=py_2
-  - packaging=19.2=py_0
+  - packaging=20.0=py_0
   - palettable=3.3.0=py_0
   - pandana=0.4.4=py37hb3f55d8_0
   - pandas=0.25.3=py37hb3f55d8_0
-  - pandoc=2.9.1=0
+  - pandoc=2.9.1.1=0
   - pandocfilters=1.4.2=py_1
   - parso=0.5.2=py_0
   - patsy=0.5.1=py_0
   - pcre=8.43=he1b5a44_0
   - pexpect=4.7.0=py37_0
   - pickleshare=0.7.5=py37_1000
-  - pillow=6.2.1=py37hd70f55b_1
+  - pillow=7.0.0=py37hefe7db6_0
   - pip=19.3.1=py37_0
   - pixman=0.38.0=h516909a_1003
   - pkginfo=1.5.0.1=py_0
@@ -181,17 +183,17 @@ dependencies:
   - pyparsing=2.4.6=py_0
   - pyproj=2.4.2.post1=py37h12732c1_0
   - pyqt=5.12.3=py37hcca6a23_1
-  - pyrsistent=0.15.6=py37h516909a_0
+  - pyrsistent=0.15.7=py37h516909a_0
   - pysal=2.1.0=py_0
   - pyshp=2.1.0=py_0
   - pysocks=1.7.1=py37_0
   - pytables=3.6.1=py37h9f153d1_0
   - pytest=5.3.2=py37_0
-  - python=3.7.6=h357f687_1
+  - python=3.7.6=h357f687_2
   - python-dateutil=2.8.1=py_0
   - python-igraph=0.7.1.post7=py37h516909a_0
   - pytz=2019.3=py_0
-  - pyyaml=5.2=py37h516909a_0
+  - pyyaml=5.3=py37h516909a_0
   - pyzmq=18.1.1=py37h1768529_0
   - qt=5.12.5=hd8c4c69_1
   - rasterio=1.1.2=py37hdff7cfa_0
@@ -201,12 +203,12 @@ dependencies:
   - requests-toolbelt=0.9.1=py_0
   - rtree=0.9.3=py37h7b0cdae_0
   - ruamel_yaml=0.15.80=py37h516909a_1000
-  - scikit-learn=0.22=py37hcdab131_1
+  - scikit-learn=0.22.1=py37hcdab131_0
   - scipy=1.4.1=py37h921218d_0
   - seaborn=0.9.0=py_2
   - secretstorage=3.1.1=py37_0
   - send2trash=1.5.0=py_0
-  - setuptools=42.0.2=py37_0
+  - setuptools=44.0.0=py37_0
   - shapely=1.6.4=py37hec07ddf_1006
   - six=1.13.0=py37_0
   - snowballstemmer=2.0.0=py_0
@@ -225,14 +227,14 @@ dependencies:
   - testpath=0.4.4=py_0
   - tk=8.6.10=hed695b0_0
   - tornado=6.0.3=py37h516909a_0
-  - tqdm=4.41.0=py_0
+  - tqdm=4.41.1=py_0
   - traitlets=4.3.3=py37_0
   - twine=3.1.1=py37_0
   - tzcode=2019a=h516909a_1002
   - urbanaccess=0.2.0=py_0
   - urllib3=1.25.7=py37_0
   - vincent=0.4.4=py_1
-  - wcwidth=0.1.7=py_1
+  - wcwidth=0.1.8=py_0
   - webencodings=0.5.1=py_1
   - wheel=0.33.6=py37_0
   - wrapt=1.11.2=py37h516909a_0

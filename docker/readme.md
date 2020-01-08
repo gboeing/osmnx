@@ -22,8 +22,8 @@ conda env export -n base > /home/jovyan/work/environment.yml
 ### Push the built image to hub so others can pull/run it
 
 ```
-docker tag gboeing/osmnx gboeing/osmnx:v0.0.0
 docker login
+docker tag gboeing/osmnx gboeing/osmnx:v0.0.0
 docker push gboeing/osmnx
 ```
 
