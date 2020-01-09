@@ -31,7 +31,6 @@ def is_crs_utm(crs):
     bool
         True if crs is UTM, False otherwise
     """
-    print('here')
     if not crs:
         return False
     crs_obj = CRS.from_user_input(crs)

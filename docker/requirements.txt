@@ -15,6 +15,7 @@ pandana
 pillow
 pip
 psycopg2
+pyproj
 pysal
 pytest
 python == 3.7.*
