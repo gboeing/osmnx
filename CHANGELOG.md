@@ -1,5 +1,9 @@
 # Change log
 
+## 0.11.3 (2020-01-09)
+
+  - fix errant print statement
+
 ## 0.11.2 (2020-01-07)
 
   - fix .osm xml output

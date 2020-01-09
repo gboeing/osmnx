@@ -19,4 +19,4 @@ from .simplify import *
 from .stats import *
 from .utils import *
 
-__version__ = '0.11.2'
+__version__ = '0.11.3'
