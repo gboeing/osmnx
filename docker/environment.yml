@@ -82,7 +82,7 @@ dependencies:
   - json-c=0.13.1=h14c3975_1001
   - json5=0.8.5=py_0
   - jsonschema=3.2.0=py37_0
-  - jupyter_client=5.3.3=py37_1
+  - jupyter_client=5.3.4=py37_0
   - jupyter_core=4.6.1=py37_0
   - jupyterlab=1.2.4=py_0
   - jupyterlab_server=1.0.6=py_0
@@ -117,7 +117,7 @@ dependencies:
   - libstdcxx-ng=9.2.0=hdf63c60_1
   - libtiff=4.1.0=hc3755c2_3
   - libuuid=2.32.1=h14c3975_1000
-  - libuv=1.33.1=h516909a_0
+  - libuv=1.34.0=h516909a_0
   - libxcb=1.13=h14c3975_1002
   - libxkbcommon=0.9.1=hebb1f50_0
   - libxml2=2.9.10=hee79883_0
@@ -134,7 +134,7 @@ dependencies:
   - nbformat=5.0.3=py_0
   - ncurses=6.1=hf484d3e_1002
   - networkx=2.4=py_0
-  - nodejs=13.0.0=h10a4023_1
+  - nodejs=13.6.0=h10a4023_0
   - notebook=6.0.1=py37_0
   - nspr=4.24=he1b5a44_0
   - nss=3.47=he751ad9_0
@@ -145,7 +145,7 @@ dependencies:
   - openmp_impl=4.5=0_gnu
   - openssl=1.1.1d=h516909a_0
   - osmnet=0.1.5=py_3
-  - osmnx=0.11.2=py_0
+  - osmnx=0.11.3=py_0
   - owslib=0.19.0=py_2
   - packaging=20.0=py_0
   - palettable=3.3.0=py_0
@@ -203,10 +203,10 @@ dependencies:
   - requests-toolbelt=0.9.1=py_0
   - rtree=0.9.3=py37h7b0cdae_0
   - ruamel_yaml=0.15.80=py37h516909a_1000
-  - scikit-learn=0.22.1=py37hcdab131_0
+  - scikit-learn=0.22.1=py37hcdab131_1
   - scipy=1.4.1=py37h921218d_0
   - seaborn=0.9.0=py_2
-  - secretstorage=3.1.1=py37_0
+  - secretstorage=3.1.2=py37_0
   - send2trash=1.5.0=py_0
   - setuptools=44.0.0=py37_0
   - shapely=1.6.4=py37hec07ddf_1006
