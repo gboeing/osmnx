@@ -181,7 +181,7 @@ def save_as_osm(
 
     try:
         gdf_nodes, gdf_edges = data
-    except KeyError:
+    except ValueError:
         gdf_nodes, gdf_edges = graph_to_gdfs(
             data, node_geometry=False, fill_edge_geometry=False)
 
