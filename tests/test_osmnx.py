@@ -435,11 +435,13 @@ def test_nominatim():
 
 
 def test_osm_xml_output():
+    ox.settings.all_oneway = True
     G = ox.graph_from_place('Piedmont, California, USA')
     ox.save_as_osm(G)
 
 
 def test_osm_xml_output_from_gdfs():
+    ox.settings.all_oneway = True
     G = ox.graph_from_place('Piedmont, California, USA')
     nodes, edges = ox.graph_to_gdfs(G)
     ox.save_as_osm([nodes, edges])
