@@ -60,7 +60,16 @@ conda create -n ox --strict-channel-priority osmnx
 Alternatively, you can run OSMnx + Jupyter directly from this
 [docker container](https://hub.docker.com/r/gboeing/osmnx), or you can install
 OSMnx via [pip](https://pypi.python.org/pypi/OSMnx) if you already have OSMnx's
-dependencies installed on your system: `pip install osmnx`
+dependencies installed on your system: `pip install osmnx`  
+The necessary requirements can be installed through: 
+```
+pip install geopandas
+pip install rtree
+```
+`rtree` might also need to have `libspatialindex-dev` installed:
+```
+sudo apt install libspatialindex-dev
+```
 
 ## Features
 
