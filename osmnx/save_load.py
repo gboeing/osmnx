@@ -143,19 +143,21 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, folder, time.time()-start_time))
 
 
-def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
-                   node_attrs=settings.osm_xml_node_attrs,
-                   edge_tags=settings.osm_xml_way_tags,
-                   edge_attrs=settings.osm_xml_way_attrs,
-                   oneway=False, filename='graph.osm',
-                   folder=None):
+def save_as_osm(
+        data, node_tags=settings.osm_xml_node_tags,
+        node_attrs=settings.osm_xml_node_attrs,
+        edge_tags=settings.osm_xml_way_tags,
+        edge_attrs=settings.osm_xml_way_attrs,
+        oneway=False, filename='graph.osm',
+        folder=None):
     """
     Save a graph as an OSM XML formatted file. NOTE: for very large
     networks this method can take upwards of 30+ minutes to finish.
 
     Parameters
     __________
-    G : networkx multidigraph or multigraph
+    data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
+        geopandas.GeoDataFrames
     filename : string
         the name of the osm file (including file extension)
     folder : string
@@ -169,16 +171,25 @@ def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
     if folder is None:
         folder = settings.data_folder
 
-    # get undirected graph so we don't generate duplicate nodes and
-    # create a copy to convert all the node/edge attribute values to string
-    H = get_undirected(G).copy()
+    try:
+        assert settings.all_oneway
+    except AssertionError:
+        raise UserWarning(
+            "In order for ox.save_as_osm() to behave properly "
+            "the graph must have been created with the 'all_oneway' "
+            "setting set to True.")
 
-    gdf_nodes, gdf_edges = graph_to_gdfs(
-        H, node_geometry=False, fill_edge_geometry=False)
+    try:
+        gdf_nodes, gdf_edges = data
+    except ValueError:
+        gdf_nodes, gdf_edges = graph_to_gdfs(
+            data, node_geometry=False, fill_edge_geometry=False)
 
     # rename columns per osm specification
     gdf_nodes.rename(
         columns={'osmid': 'id', 'x': 'lon', 'y': 'lat'}, inplace=True)
+    if 'id' in gdf_edges.columns:
+        gdf_edges = gdf_edges[[col for col in gdf_edges if col != 'id']]
     if 'uniqueid' in gdf_edges.columns:
         gdf_edges = gdf_edges.rename(columns={'uniqueid': 'id'})
     else:
@@ -217,7 +228,7 @@ def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
                 node, 'tag', attrib={'k': tag, 'v': row[tag]})
 
     # append edges to the XML tree
-    for e in edges.id.unique():
+    for e in edges['id'].unique():
         all_way_edges = edges[edges['id'] == e]
         first = all_way_edges.iloc[0]
         edge = etree.SubElement(
