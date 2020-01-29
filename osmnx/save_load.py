@@ -293,7 +293,7 @@ def save_as_osm(
         # many ways with the same OSM id. This does not conform to the
         # OSM XML schema standard, however, the data will still comprise a
         # valid network and will be readable by *most* OSM tools.
-        for i, row in tqdm(edges.iterrows(), total=len(edges)):
+        for i, row in edges.iterrows():
             edge = etree.SubElement(
                 root, 'way', attrib=row[edge_attrs].dropna().to_dict())
             etree.SubElement(edge, 'nd', attrib={'ref': row['u']})
