@@ -21,8 +21,6 @@ from xml.etree import ElementTree as etree
 from . import settings
 from .utils import make_str, log, get_unique_nodes_ordered_from_way
 
-from tqdm import tqdm
-
 
 def save_gdf_shapefile(gdf, filename=None, folder=None):
     """
