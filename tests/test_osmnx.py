@@ -437,7 +437,13 @@ def test_nominatim():
 def test_osm_xml_output():
     ox.settings.all_oneway = True
     G = ox.graph_from_place('Piedmont, California, USA')
-    ox.save_as_osm(G)
+    ox.save_as_osm(G, merge_edges=False)
+
+
+def test_osm_xml_output_merge_edges():
+    ox.settings.all_oneway = True
+    G = ox.graph_from_place('Piedmont, California, USA')
+    ox.save_as_osm(G, merge_edges=True, edge_tag_aggs=[('length', 'sum')])
 
 
 def test_osm_xml_output_from_gdfs():
@@ -448,8 +454,8 @@ def test_osm_xml_output_from_gdfs():
 
 
 def test_ordered_nodes_from_way():
-    df = pd.DataFrame({
-        'u': [54, 2, 5, 3, 10, 19, 20],
+    df = pd.DataFrame(
+        {'u':[54, 2, 5, 3, 10, 19, 20],
         'v': [76, 3, 8, 10, 5, 20, 15]})
     ordered_nodes = ox.get_unique_nodes_ordered_from_way(df)
     assert ordered_nodes == [2, 3, 10, 5, 8]
