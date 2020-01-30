@@ -140,7 +140,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     # save the nodes and edges as separate ESRI shapefiles
     gdf_nodes.to_file('{}/nodes'.format(folder), encoding=encoding)
     gdf_edges.to_file('{}/edges'.format(folder), encoding=encoding)
-    log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, folder, time.time()-start_time))
+    log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, folder, time.time() - start_time))
 
 
 def save_as_osm(
@@ -148,8 +148,8 @@ def save_as_osm(
         node_attrs=settings.osm_xml_node_attrs,
         edge_tags=settings.osm_xml_way_tags,
         edge_attrs=settings.osm_xml_way_attrs,
-        oneway=False, filename='graph.osm',
-        folder=None):
+        oneway=False, merge_edges=True, edge_tag_aggs=None,
+        filename='graph.osm', folder=None):
     """
     Save a graph as an OSM XML formatted file. NOTE: for very large
     networks this method can take upwards of 30+ minutes to finish.
@@ -162,6 +162,28 @@ def save_as_osm(
         the name of the osm file (including file extension)
     folder : string
         the folder to contain the file, if None, use default data folder
+    node_attrs: list
+        osm node attributes to include in output OSM XML
+    edge_tags : list
+        osm way tags to include in output OSM XML
+    edge_attrs : list
+        osm way attributes to include in output OSM XML
+    oneway : bool
+        the default oneway value used to fill this tag where missing
+    merge_edges : bool
+        if True merges graph edges such that each OSM way has one entry
+            and one entry only in the OSM XML. Otherwise, every OSM way
+            will have a separate entry for each node pair it contains.
+    edge_tag_aggs : list of length-2 string tuples
+        useful only if merge_edges is True, this argument allows the user
+            to specify edge attributes to aggregate such that the merged
+            OSM way entry tags accurately represent the sum total of
+            their component edge attributes. For example, if the user
+            wants the OSM way to have a "length" attribute, the user must
+            specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
+            this method to aggregate the lengths of the individual
+            component edges. Otherwise, the length attribute will simply
+            reflect the length of the first edge associated with the way.
 
     Returns
     -------
@@ -228,23 +250,57 @@ def save_as_osm(
                 node, 'tag', attrib={'k': tag, 'v': row[tag]})
 
     # append edges to the XML tree
-    for e in edges['id'].unique():
-        all_way_edges = edges[edges['id'] == e]
-        first = all_way_edges.iloc[0]
-        edge = etree.SubElement(
-            root, 'way', attrib=first[edge_attrs].dropna().to_dict())
+    if merge_edges:
+        for e in edges['id'].unique():
+            all_way_edges = edges[edges['id'] == e]
+            first = all_way_edges.iloc[0]
+            edge = etree.SubElement(
+                root, 'way', attrib=first[edge_attrs].dropna().to_dict())
 
-        if len(all_way_edges) == 1:
-            etree.SubElement(edge, 'nd', attrib={'ref': first['u']})
-            etree.SubElement(edge, 'nd', attrib={'ref': first['v']})
-        else:
-            ordered_nodes = get_unique_nodes_ordered_from_way(all_way_edges)
-            for node in ordered_nodes:
-                etree.SubElement(edge, 'nd', attrib={'ref': node})
+            if len(all_way_edges) == 1:
 
-        for tag in edge_tags:
-            etree.SubElement(
-                edge, 'tag', attrib={'k': tag, 'v': first[tag]})
+                etree.SubElement(edge, 'nd', attrib={'ref': first['u']})
+                etree.SubElement(edge, 'nd', attrib={'ref': first['v']})
+
+            else:
+
+                # topological sort
+                ordered_nodes = get_unique_nodes_ordered_from_way(
+                    all_way_edges)
+
+                for node in ordered_nodes:
+                    etree.SubElement(edge, 'nd', attrib={'ref': node})
+
+            if edge_tag_aggs is None:
+                for tag in edge_tags:
+                    etree.SubElement(
+                        edge, 'tag', attrib={'k': tag, 'v': first[tag]})
+            else:
+                for tag in edge_tags:
+                    if tag not in [t for t, agg in edge_tag_aggs]:
+                        etree.SubElement(
+                            edge, 'tag', attrib={'k': tag, 'v': first[tag]})
+
+                for tag, agg in edge_tag_aggs:
+                    etree.SubElement(edge, 'tag', attrib={
+                        'k': tag, 'v': all_way_edges[tag].aggregate(agg)})
+
+    else:
+
+        # NOTE: this will generate separate OSM ways for each network edge,
+        # even if the edges are all part of the same original OSM way. As
+        # such, each way will be comprised of two nodes, and there will be
+        # many ways with the same OSM id. This does not conform to the
+        # OSM XML schema standard, however, the data will still comprise a
+        # valid network and will be readable by *most* OSM tools.
+        for i, row in edges.iterrows():
+            edge = etree.SubElement(
+                root, 'way', attrib=row[edge_attrs].dropna().to_dict())
+            etree.SubElement(edge, 'nd', attrib={'ref': row['u']})
+            etree.SubElement(edge, 'nd', attrib={'ref': row['v']})
+            for tag in edge_tags:
+                etree.SubElement(
+                    edge, 'tag', attrib={'k': tag, 'v': row[tag]})
 
     et = etree.ElementTree(root)
 
