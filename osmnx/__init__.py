@@ -7,8 +7,10 @@
 ################################################################################
 
 from .core import *
+from .downloader import *
 from .elevation import *
 from .footprints import *
+from .geo_utils import *
 from .plot import *
 from .pois import *
 from .projection import *
@@ -17,4 +19,4 @@ from .simplify import *
 from .stats import *
 from .utils import *
 
-__version__ = '0.11dev'
+__version__ = '0.11.3'

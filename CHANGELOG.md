@@ -1,8 +1,29 @@
 # Change log
 
-## 0.11 (T.B.D.)
+## 0.11.3 (2020-01-09)
 
+  - fix errant print statement
+
+## 0.11.2 (2020-01-07)
+
+  - fix .osm xml output
+  - fix geopandas future compatibility
+
+## 0.11.1 (2020-01-01)
+
+  - fix get_nearest_edges search when not using a spatial index
+
+## 0.11 (2019-12-04)
+  
   - drop formal python 2 support
+  - refactor all modules for cleaner package organization
+  - make stats betweenness centrality compatible with networkx>=2.4
+  - allow configurable overpass and nominatim endpoints
+  - allow gdf_from_places to take a which_result list argument
+  - handle zero-division in street grade calculation
+  - better footprint relation handling
+  - improve network type queries for better filtering
+  - fix pois_from_polygon returning points outside polygon
 
 ## 0.10 (2019-05-08)
 
@@ -152,7 +173,7 @@
   - clean up docstrings throughout
   - remove network code vestiges from buildings.py
 
-## 0.3 (2016-01-29)
+## 0.3 (2017-01-29)
 
   - add route plotting with folium
   - add downloading and visualization of building footprints

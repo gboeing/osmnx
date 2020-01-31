@@ -7,14 +7,37 @@
 
 import time
 import math
-import numpy as np
 import geopandas as gpd
 import networkx as nx
+from pyproj import CRS
 from shapely.geometry import Point
 
 from . import settings
 from .utils import log
-from .utils import make_str
+
+
+
+def is_crs_utm(crs):
+    """
+    Determine if a CRS is a UTM CRS
+
+    Parameters
+    ----------
+    crs : dict or string or pyproj.CRS
+        a coordinate reference system
+
+    Returns
+    -------
+    bool
+        True if crs is UTM, False otherwise
+    """
+    if not crs:
+        return False
+    crs_obj = CRS.from_user_input(crs)
+    if crs_obj.coordinate_operation and crs_obj.coordinate_operation.name.upper().startswith('UTM'):
+        return True
+    return False
+
 
 
 def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
@@ -26,10 +49,10 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     ----------
     geometry : shapely Polygon or MultiPolygon
         the geometry to project
-    crs : dict
+    crs : dict or string or pyproj.CRS
         the starting coordinate reference system of the passed-in geometry,
         default value (None) will set settings.default_crs as the CRS
-    to_crs : dict
+    to_crs : dict or string or pyproj.CRS
         if not None, just project to this CRS instead of to UTM
     to_latlong : bool
         if True, project from crs to lat-long, if False, project from crs to
@@ -68,7 +91,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
     ----------
     gdf : GeoDataFrame
         the gdf to be projected
-    to_crs : dict
+    to_crs : dict or string or pyproj.CRS
         if not None, just project to this CRS instead of to UTM
     to_latlong : bool
         if True, projects to latlong instead of to UTM
@@ -99,7 +122,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
         else:
             # else, project the gdf to UTM
             # if GeoDataFrame is already in UTM, just return it
-            if (gdf.crs is not None) and ('+proj=utm ' in gdf.crs):
+            if is_crs_utm(gdf.crs):
                 return gdf
 
             # calculate the centroid of the union of all the geometries in the
@@ -128,7 +151,7 @@ def project_graph(G, to_crs=None):
     ----------
     G : networkx multidigraph
         the networkx graph to be projected
-    to_crs : dict
+    to_crs : dict or string or pyproj.CRS
         if not None, just project to this CRS instead of to UTM
 
     Returns
@@ -150,6 +173,7 @@ def project_graph(G, to_crs=None):
     gdf_nodes['lon'] = gdf_nodes['x']
     gdf_nodes['lat'] = gdf_nodes['y']
     gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
+    gdf_nodes.set_geometry('geometry', inplace=True)
     log('Created a GeoDataFrame from graph in {:,.2f} seconds'.format(time.time()-start_time))
 
     # project the nodes GeoDataFrame to UTM

@@ -16,8 +16,7 @@ from . import settings
 from .core import bbox_from_point
 from .core import gdf_from_place
 from .core import overpass_request
-from .utils import bbox_to_poly
-from .utils import geocode
+from .geo_utils import geocode, bbox_to_poly
 from .utils import log
 
 
@@ -360,6 +359,9 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     # Combine GeoDataFrames
     gdf = gdf_nodes.append(gdf_ways, sort=False)
 
+    if polygon:
+        gdf = gdf.loc[gdf['geometry'].centroid.within(polygon)==True]
+
     return gdf
 
 
@@ -447,7 +449,7 @@ def pois_from_place(place, amenities=None, which_result=1):
         List of amenities that will be used for finding the POIs from the selected area.
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
     which_result : int
-        max number of results to return and which to process upon receipt
+        max number of place geocoding results to return and which to process upon receipt
 
     Returns
     -------

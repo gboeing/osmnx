@@ -13,11 +13,12 @@ import numpy as np
 import pandas as pd
 
 from .simplify import clean_intersections
-from .utils import log
-from .utils import get_largest_component
+from .geo_utils import get_largest_component
 from .utils import great_circle_vec
-from .utils import count_streets_per_node
+from .geo_utils import count_streets_per_node
 from .utils import euclidean_dist_vec
+from .utils import log
+
 
 
 def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
@@ -418,8 +419,9 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     if bc:
         # betweenness centrality of a node is the sum of the fraction of
         # all-pairs shortest paths that pass through node
+        # networkx 2.4+ implementation cannot run on Multi(Di)Graphs, so use DiGraph
         start_time = time.time()
-        betweenness_centrality = nx.betweenness_centrality(G, weight='length')
+        betweenness_centrality = nx.betweenness_centrality(G_dir, weight='length')
         stats['betweenness_centrality'] = betweenness_centrality
         stats['betweenness_centrality_avg'] = sum(betweenness_centrality.values())/len(betweenness_centrality)
         log('Calculated betweenness centrality in {:,.2f} seconds'.format(time.time() - start_time))

@@ -2,26 +2,6 @@
 # OSMnx Dockerfile
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
-#
-# Build an image from the dockerfile:
-# >>> docker build -t gboeing/osmnx .
-#
-# Run bash in this container and export final conda environment to a yml file:
-# >>> docker run --rm -it -v "%cd%":/home/jovyan/work gboeing/osmnx /bin/bash
-# >>> conda env export -n base > /home/jovyan/work/environment.yml
-#
-# Run jupyter lab in this container:
-# >>> docker run --rm -it -p 8888:8888 -v "%cd%":/home/jovyan/work gboeing/osmnx
-#
-# Push the built image to hub so others can pull/run it:
-# >>> docker tag gboeing/osmnx gboeing/osmnx:v0.0.0
-# >>> docker login
-# >>> docker push gboeing/osmnx
-#
-# Stop/delete all local docker containers/images:
-# >>> docker stop $(docker ps -aq)
-# >>> docker rm $(docker ps -aq)
-# >>> docker rmi $(docker images -q) --force
 ########################################################################
 
 FROM continuumio/miniconda3
@@ -29,12 +9,14 @@ LABEL maintainer="Geoff Boeing <boeing@usc.edu>"
 LABEL url="https://github.com/gboeing/osmnx"
 LABEL description="OSMnx is a Python package to retrieve, model, analyze, and visualize OpenStreetMap networks and other spatial data."
 
+COPY requirements.txt /tmp/
+
 # configure conda and install packages in one RUN to keep image tidy
 RUN conda config --set show_channel_urls true && \
 	conda config --set channel_priority strict && \
     conda config --prepend channels conda-forge && \
     conda update --yes -n base conda && \
-    conda install --update-all --force-reinstall --yes jupyterlab osmnx pyproj=1.9.6 python-igraph && \
+    conda install --update-all --force-reinstall --yes --file /tmp/requirements.txt python-igraph && \
     python -m ipykernel install --name ox --display-name "Python (ox)" && \
     conda clean --all --yes && \
     conda info --all && \
