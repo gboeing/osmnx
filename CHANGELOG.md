@@ -1,5 +1,10 @@
 # Change log
 
+## 0.11.4 (2020-01-31)
+
+  - fix OSM XML output 
+  - fix for pandas 1.0
+
 ## 0.11.3 (2020-01-09)
 
   - fix errant print statement
