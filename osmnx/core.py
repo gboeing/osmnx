@@ -724,9 +724,9 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
     G = G.copy()
     log('Identifying all nodes that lie outside the polygon...')
 
-    # get a GeoDataFrame of all the nodes, for spatial analysis
+    # get a GeoDataFrame of all the nodes
     node_geom = [Point(data['x'], data['y']) for _, data in G.nodes(data=True)]
-    gdf_nodes = gpd.GeoDataFrame({'node':pd.Series(G.nodes()), 'geometry':node_geom})
+    gdf_nodes = gpd.GeoDataFrame({'node':list(G.nodes()), 'geometry':node_geom})
     gdf_nodes.crs = G.graph['crs']
 
     # find all the nodes in the graph that lie outside the polygon
