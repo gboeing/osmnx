@@ -845,7 +845,8 @@ def add_paths(G, paths, bidirectional=False):
     """
 
     # the list of values OSM uses in its 'oneway' tag to denote True
-    osm_oneway_values = ['yes', 'true', '1', '-1']
+    # updated list of of values OSM uses based on https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf 
+    osm_oneway_values = ['yes', 'true', '1', '-1', 'T', 'F']
 
     for data in paths.values():
 
@@ -854,9 +855,9 @@ def add_paths(G, paths, bidirectional=False):
         # if this path is tagged as one-way and if it is not a walking network,
         # then we'll add the path in one direction only
         elif ('oneway' in data and data['oneway'] in osm_oneway_values) and not bidirectional:
-            if data['oneway'] == '-1':
-                # paths with a one-way value of -1 are one-way, but in the
-                # reverse direction of the nodes' order, see osm documentation
+            if data['oneway'] == '-1' or data['oneway'] == 'T':
+                # paths with a one-way value of -1 or T are one-way, but in the
+                # reverse direction of the nodes' order, see osm documentation 
                 data['nodes'] = list(reversed(data['nodes']))
             # add this path (in only one direction) to the graph
             add_path(G, data, one_way=True)
