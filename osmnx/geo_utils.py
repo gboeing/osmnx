@@ -497,7 +497,7 @@ def redistribute_vertices(geom, dist):
     elif geom.geom_type == 'MultiLineString':
         parts = [redistribute_vertices(part, dist)
                  for part in geom]
-        return type(geom)([p for p in parts if not p.is_empty])
+        return type(geom)([p for p in parts if not p])
     else:
         raise ValueError('unhandled geometry {}'.format(geom.geom_type))
 
