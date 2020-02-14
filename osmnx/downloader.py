@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import io
 import json
 import hashlib
@@ -9,6 +8,7 @@ import re
 import datetime as dt
 import os
 import logging as lg
+from collections import OrderedDict
 from dateutil import parser as date_parser
 from .errors import *
 from .utils import make_str, log
@@ -263,8 +263,7 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1):
     params = OrderedDict()
     params['format'] = 'json'
     params['limit'] = limit
-    params[
-        'dedupe'] = 0  # this prevents OSM from de-duping results so we're guaranteed to get precisely 'limit' number of results
+    params['dedupe'] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
     params['polygon_geojson'] = polygon_geojson
 
     # add the structured query dict (if provided) to params, otherwise query
