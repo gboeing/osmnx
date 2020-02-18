@@ -111,7 +111,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
 
         # for each edge, add key and all attributes in data dict to the
         # edge_details
-        edge_details = {'key':key}
+        edge_details = {'key': key}
         for attr_key in data:
             edge_details[attr_key] = data[attr_key]
 
@@ -246,8 +246,9 @@ def save_as_osm(
         node = etree.SubElement(
             root, 'node', attrib=row[node_attrs].dropna().to_dict())
         for tag in node_tags:
-            etree.SubElement(
-                node, 'tag', attrib={'k': tag, 'v': row[tag]})
+            if tag in nodes.columns:
+                etree.SubElement(
+                    node, 'tag', attrib={'k': tag, 'v': row[tag]})
 
     # append edges to the XML tree
     if merge_edges:
@@ -273,17 +274,21 @@ def save_as_osm(
 
             if edge_tag_aggs is None:
                 for tag in edge_tags:
-                    etree.SubElement(
-                        edge, 'tag', attrib={'k': tag, 'v': first[tag]})
-            else:
-                for tag in edge_tags:
-                    if tag not in [t for t, agg in edge_tag_aggs]:
+                    if tag in all_way_edges.columns:
                         etree.SubElement(
                             edge, 'tag', attrib={'k': tag, 'v': first[tag]})
+            else:
+                for tag in edge_tags:
+                    if tag in all_way_edges.columns:
+                        if tag not in [t for t, agg in edge_tag_aggs]:
+                            etree.SubElement(
+                                edge, 'tag',
+                                attrib={'k': tag, 'v': first[tag]})
 
                 for tag, agg in edge_tag_aggs:
-                    etree.SubElement(edge, 'tag', attrib={
-                        'k': tag, 'v': all_way_edges[tag].aggregate(agg)})
+                    if tag in all_way_edges.columns:
+                        etree.SubElement(edge, 'tag', attrib={
+                            'k': tag, 'v': all_way_edges[tag].aggregate(agg)})
 
     else:
 
@@ -299,8 +304,9 @@ def save_as_osm(
             etree.SubElement(edge, 'nd', attrib={'ref': row['u']})
             etree.SubElement(edge, 'nd', attrib={'ref': row['v']})
             for tag in edge_tags:
-                etree.SubElement(
-                    edge, 'tag', attrib={'k': tag, 'v': row[tag]})
+                if tag in edges.columns:
+                    etree.SubElement(
+                        edge, 'tag', attrib={'k': tag, 'v': row[tag]})
 
     et = etree.ElementTree(root)
 
