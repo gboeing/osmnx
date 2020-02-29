@@ -19,6 +19,7 @@ import requests
 import time
 import xml.sax
 from collections import Counter
+from collections import OrderedDict
 from itertools import chain
 from shapely.geometry import Point
 from shapely.geometry import MultiPoint
@@ -27,6 +28,7 @@ from shapely.geometry import MultiLineString
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
 
+from .downloader import nominatim_request
 from .osm_content_handler import OSMContentHandler
 from .save_load import graph_to_gdfs
 from .utils import log, great_circle_vec, euclidean_dist_vec
@@ -497,7 +499,7 @@ def redistribute_vertices(geom, dist):
     elif geom.geom_type == 'MultiLineString':
         parts = [redistribute_vertices(part, dist)
                  for part in geom]
-        return type(geom)([p for p in parts if not p.is_empty])
+        return type(geom)([p for p in parts if not p])
     else:
         raise ValueError('unhandled geometry {}'.format(geom.geom_type))
 
@@ -588,16 +590,18 @@ def geocode(query):
         the (lat, lon) coordinates returned by the geocoder
     """
 
-    # send the query to the nominatim geocoder and parse the json response
-    url_template = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q={}'
-    url = url_template.format(query)
-    response = requests.get(url, timeout=60)
-    results = response.json()
+    # define the parameters
+    params = OrderedDict()
+    params['format'] = 'json'
+    params['limit'] = 1
+    params['dedupe'] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
+    params['q'] = query
+    response_json = nominatim_request(params=params, timeout=30)
 
     # if results were returned, parse lat and long out of the result
-    if len(results) > 0 and 'lat' in results[0] and 'lon' in results[0]:
-        lat = float(results[0]['lat'])
-        lon = float(results[0]['lon'])
+    if len(response_json) > 0 and 'lat' in response_json[0] and 'lon' in response_json[0]:
+        lat = float(response_json[0]['lat'])
+        lon = float(response_json[0]['lon'])
         point = (lat, lon)
         log('Geocoded "{}" to {}'.format(query, point))
         return point
