@@ -1003,7 +1003,8 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                     simplify=True, retain_all=False, truncate_by_edge=False,
                     name='unnamed', timeout=180, memory=None,
                     max_query_area_size=50*1000*50*1000, clean_periphery=True,
-                    infrastructure='way["highway"]', custom_filter=None):
+                    infrastructure='way["highway"]', custom_filter=None,
+                    custom_settings=None):
     """
     Create a networkx graph from OSM data within some bounding box.
 
@@ -1044,6 +1045,9 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
         infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
+    custom_settings : string
+        a custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -1064,7 +1068,8 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                                           east=east_buffered, west=west_buffered,
                                           network_type=network_type, timeout=timeout,
                                           memory=memory, max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure, custom_filter=custom_filter)
+                                          infrastructure=infrastructure, custom_filter=custom_filter,
+                                          custom_settings=custom_settings)
         G_buffered = create_graph(response_jsons, name=name, retain_all=retain_all,
                                   bidirectional=network_type in settings.bidirectional_network_types)
         G = truncate_graph_bbox(G_buffered, north, south, east, west, retain_all=True, truncate_by_edge=truncate_by_edge)
@@ -1087,7 +1092,8 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                                           west=west, network_type=network_type,
                                           timeout=timeout, memory=memory,
                                           max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure, custom_filter=custom_filter)
+                                          infrastructure=infrastructure, custom_filter=custom_filter,
+                                          custom_settings=custom_settings)
 
         # create the graph, then truncate to the bounding box
         G = create_graph(response_jsons, name=name, retain_all=retain_all,
