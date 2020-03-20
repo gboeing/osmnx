@@ -1116,7 +1116,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
                      truncate_by_edge=False, name='unnamed', timeout=180,
                      memory=None, max_query_area_size=50*1000*50*1000,
                      clean_periphery=True, infrastructure='way["highway"]',
-                     custom_filter=None):
+                     custom_filter=None, custom_settings=None):
     """
     Create a networkx graph from OSM data within some distance of some (lat,
     lon) center point.
@@ -1159,6 +1159,9 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
         infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
+    custom_settings : string
+        a custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -1177,7 +1180,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
                         retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name,
                         timeout=timeout, memory=memory, max_query_area_size=max_query_area_size,
                         clean_periphery=clean_periphery, infrastructure=infrastructure,
-                        custom_filter=custom_filter)
+                        custom_filter=custom_filter, custom_settings=custom_settings)
 
     # if the network distance_type is network, find the node in the graph
     # nearest to the center point, and truncate the graph by network distance
