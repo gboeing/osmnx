@@ -1272,7 +1272,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
                        timeout=180, memory=None,
                        max_query_area_size=50*1000*50*1000,
                        clean_periphery=True, infrastructure='way["highway"]',
-                       custom_filter=None):
+                       custom_filter=None, custom_settings=None):
     """
     Create a networkx graph from OSM data within the spatial boundaries of the
     passed-in shapely polygon.
@@ -1310,6 +1310,9 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         like power grids (ie, 'way["power"~"line"]'))
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
+    custom_settings : string
+        a custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -1338,7 +1341,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         response_jsons = osm_net_download(polygon=polygon_buffered, network_type=network_type,
                                           timeout=timeout, memory=memory,
                                           max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure, custom_filter=custom_filter)
+                                          infrastructure=infrastructure, custom_filter=custom_filter,
+                                          custom_settings=custom_settings)
         G_buffered = create_graph(response_jsons, name=name, retain_all=True,
                                   bidirectional=network_type in settings.bidirectional_network_types)
         G_buffered = truncate_graph_polygon(G_buffered, polygon_buffered, retain_all=True, truncate_by_edge=truncate_by_edge)
@@ -1363,7 +1367,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         response_jsons = osm_net_download(polygon=polygon, network_type=network_type,
                                           timeout=timeout, memory=memory,
                                           max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure, custom_filter=custom_filter)
+                                          infrastructure=infrastructure, custom_filter=custom_filter,
+                                          custom_settings=custom_settings)
 
         # create the graph from the downloaded data
         G = create_graph(response_jsons, name=name, retain_all=True,
