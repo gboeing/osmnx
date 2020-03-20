@@ -1199,7 +1199,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
                        name='unnamed', timeout=180, memory=None,
                        max_query_area_size=50*1000*50*1000,
                        clean_periphery=True, infrastructure='way["highway"]',
-                       custom_filter=None):
+                       custom_filter=None, custom_settings=None):
     """
     Create a networkx graph from OSM data within some distance of some address.
 
@@ -1245,6 +1245,9 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
         infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
+    custom_settings : string
+        a custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -1261,7 +1264,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
                          name=name, timeout=timeout, memory=memory,
                          max_query_area_size=max_query_area_size,
                          clean_periphery=clean_periphery, infrastructure=infrastructure,
-                         custom_filter=custom_filter)
+                         custom_filter=custom_filter, custom_settings=custom_settings)
     log('graph_from_address() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
 
     if return_coords:
