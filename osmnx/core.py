@@ -191,7 +191,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
-        a custom settings to be used in the overpass query instead of the default
+        custom settings to be used in the overpass query instead of the default
         ones
 
     Returns
@@ -1046,7 +1046,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
-        a custom settings to be used in the overpass query instead of the default
+        custom settings to be used in the overpass query instead of the default
         ones
 
     Returns
@@ -1160,7 +1160,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
-        a custom settings to be used in the overpass query instead of the default
+        custom settings to be used in the overpass query instead of the default
         ones
 
     Returns
@@ -1246,7 +1246,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
-        a custom settings to be used in the overpass query instead of the default
+        custom settings to be used in the overpass query instead of the default
         ones
 
     Returns
@@ -1317,7 +1317,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
-        a custom settings to be used in the overpass query instead of the default
+        custom settings to be used in the overpass query instead of the default
         ones
 
     Returns
@@ -1450,7 +1450,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
-        a custom settings to be used in the overpass query instead of the default
+        custom settings to be used in the overpass query instead of the default
         ones
     Returns
     -------
