@@ -155,7 +155,7 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None, which_results
 def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
                      network_type='all_private', timeout=180, memory=None,
                      max_query_area_size=50*1000*50*1000, infrastructure='way["highway"]',
-                     custom_filter=None):
+                     custom_filter=None, custom_settings=None):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
 
@@ -221,6 +221,11 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     else:
         maxsize = '[maxsize:{}]'.format(memory)
 
+    # use custom settings if delivered, otherwise just the default ones.
+    overpass_settings = '[out:json][timeout:{timeout}]{maxsize}'.format(timeout=timeout, maxsize=maxsize)
+    if custom_settings:
+        overpass_settings = custom_settings
+
     # define the query to send the API
     # specifying way["highway"] means that all ways returned must have a highway
     # key. the {filters} then remove ways by key/value. the '>' makes it recurse
@@ -244,12 +249,12 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
             # decimal places (ie, ~100 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = '[out:json][timeout:{timeout}]{maxsize};({infrastructure}{filters}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;'
+            query_template = '{settings};({infrastructure}{filters}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;'
             query_str = query_template.format(north=north, south=south,
                                               east=east, west=west,
                                               infrastructure=infrastructure,
                                               filters=osm_filter,
-                                              timeout=timeout, maxsize=maxsize)
+                                              settings=overpass_settings)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         log('Got all network data within bounding box from API in {:,} request(s) and {:,.2f} seconds'.format(len(geometry), time.time()-start_time))
@@ -268,8 +273,11 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
-            query_template = '[out:json][timeout:{timeout}]{maxsize};({infrastructure}{filters}(poly:"{polygon}");>;);out;'
-            query_str = query_template.format(polygon=polygon_coord_str, infrastructure=infrastructure, filters=osm_filter, timeout=timeout, maxsize=maxsize)
+            query_template = '{settings};({infrastructure}{filters}(poly:"{polygon}");>;);out;'
+            query_str = query_template.format(polygon=polygon_coord_str,
+                                              infrastructure=infrastructure,
+                                              filters=osm_filter,
+                                              settings=overpass_settings)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         log('Got all network data within polygon from API in {:,} request(s) and {:,.2f} seconds'.format(len(polygon_coord_strs), time.time()-start_time))
