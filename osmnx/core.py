@@ -190,6 +190,9 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         grids, ie, 'way["power"~"line"]'
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
+    custom_settings : string
+        a custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
