@@ -1395,7 +1395,8 @@ def graph_from_place(query, network_type='all_private', simplify=True,
                      retain_all=False, truncate_by_edge=False, name='unnamed',
                      which_result=1, buffer_dist=None, timeout=180, memory=None,
                      max_query_area_size=50*1000*50*1000, clean_periphery=True,
-                     infrastructure='way["highway"]', custom_filter=None):
+                     infrastructure='way["highway"]', custom_filter=None,
+                     custom_settings=None):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some
     geocodable place(s).
@@ -1445,7 +1446,9 @@ def graph_from_place(query, network_type='all_private', simplify=True,
         infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
-
+    custom_settings : string
+        a custom settings to be used in the overpass query instead of the default
+        ones
     Returns
     -------
     networkx multidigraph
@@ -1473,7 +1476,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
                            name=name, timeout=timeout, memory=memory,
                            max_query_area_size=max_query_area_size,
                            clean_periphery=clean_periphery, infrastructure=infrastructure,
-                           custom_filter=custom_filter)
+                           custom_filter=custom_filter, custom_settings=custom_settings)
 
     log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return G
