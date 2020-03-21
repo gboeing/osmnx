@@ -463,7 +463,8 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
                                  custom_settings=custom_settings)
 
 
-def footprints_from_address(address, distance, footprint_type='building', retain_invalid=False):
+def footprints_from_address(address, distance, footprint_type='building', retain_invalid=False,
+                            custom_settings=None):
     """
     Get footprints within some distance north, south, east, and west of
     an address.
@@ -478,6 +479,9 @@ def footprints_from_address(address, distance, footprint_type='building', retain
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -489,7 +493,7 @@ def footprints_from_address(address, distance, footprint_type='building', retain
 
     # get footprints within distance of this point
     return footprints_from_point(point, distance, footprint_type=footprint_type,
-                                 retain_invalid=retain_invalid)
+                                 retain_invalid=retain_invalid, custom_settings=custom_settings)
 
 
 def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=False):
