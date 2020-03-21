@@ -439,7 +439,7 @@ def pois_from_address(address, distance, amenities=None):
     return pois_from_point(point=point, amenities=amenities, distance=distance)
 
 
-def pois_from_polygon(polygon, amenities=None):
+def pois_from_polygon(polygon, amenities=None, custom_settings=None):
     """
     Get OSM points of interest within some polygon.
 
@@ -450,13 +450,15 @@ def pois_from_polygon(polygon, amenities=None):
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area.
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
-
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
     Returns
     -------
     GeoDataFrame
     """
 
-    return create_poi_gdf(polygon=polygon, amenities=amenities)
+    return create_poi_gdf(polygon=polygon, amenities=amenities, custom_settings=custom_settings)
 
 
 def pois_from_place(place, amenities=None, which_result=1, custom_settings=None):
