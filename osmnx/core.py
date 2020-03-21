@@ -228,7 +228,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     if custom_settings:
         overpass_settings = custom_settings
     else:
-        overpass_settings = '[out:json][timeout:{timeout}]{maxsize}'.format(timeout=timeout, maxsize=maxsize)
+        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout, maxsize=maxsize)
 
     # define the query to send the API
     # specifying way["highway"] means that all ways returned must have a highway

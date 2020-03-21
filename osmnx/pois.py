@@ -50,7 +50,7 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsi
     if custom_settings:
         overpass_settings = custom_settings
     else:
-        overpass_settings = '[out:json][timeout:{timeout}]{maxsize}'.format(timeout=timeout, maxsize=maxsize)
+        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout, maxsize=maxsize)
 
     if amenities:
         # Overpass QL template
