@@ -522,7 +522,8 @@ def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=F
                                  retain_invalid=retain_invalid, custom_settings=custom_settings)
 
 
-def footprints_from_place(place, footprint_type='building', retain_invalid=False, which_result=1):
+def footprints_from_place(place, footprint_type='building', retain_invalid=False, which_result=1,
+                          custom_settings=None):
     """
     Get footprints within the boundaries of some place.
 
@@ -542,7 +543,9 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
         if False discard any footprints with an invalid geometry
     which_result : int
         max number of results to return and which to process upon receipt
-
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
     Returns
     -------
     GeoDataFrame
@@ -551,7 +554,7 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
     city = gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
     return create_footprints_gdf(polygon, retain_invalid=retain_invalid,
-                                 footprint_type=footprint_type)
+                                 footprint_type=footprint_type, custom_settings=custom_settings)
 
 
 def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w',
