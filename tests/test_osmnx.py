@@ -201,6 +201,7 @@ def test_get_network_methods():
              '["access"!~"private"]')
     G = ox.graph_from_point(location_point, network_type='walk', custom_filter=filtr)
 
+    # TODO test custom settings
 
 def test_stats():
     # create graph, add bearings, project it
@@ -354,6 +355,7 @@ def test_footprints():
 
     gdf = ox.footprints_from_place(place='kusatsu, shiga, japan', which_result=2)
 
+    #TODO Test custom settings
 
 def test_pois():
     import pytest
@@ -380,6 +382,7 @@ def test_pois():
 
     gdf = ox.pois_from_place(place='kusatsu, shiga, japan', which_result=2)
 
+    # TODO Test custom settings
 
 def test_nominatim():
     import pytest
