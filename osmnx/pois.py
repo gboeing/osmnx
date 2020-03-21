@@ -304,7 +304,8 @@ def parse_osm_relations(relations, osm_way_df):
     return osm_way_df
 
 
-def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=None, west=None):
+def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=None, west=None,
+                   custom_settings=None):
     """
     Parse GeoDataFrames from POI json that was returned by Overpass API.
 
@@ -323,13 +324,17 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
         eastern longitude of bounding box
     west : float
         western longitude of bounding box
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
     Geopandas GeoDataFrame with POIs and the associated attributes.
     """
 
-    responses = osm_poi_download(polygon=polygon, amenities=amenities, north=north, south=south, east=east, west=west)
+    responses = osm_poi_download(polygon=polygon, amenities=amenities, north=north, south=south, east=east, west=west,
+                                 custom_settings=custom_settings)
 
     # Parse coordinates from all the nodes in the response
     coords = parse_nodes_coords(responses)
