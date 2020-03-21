@@ -459,7 +459,7 @@ def pois_from_polygon(polygon, amenities=None):
     return create_poi_gdf(polygon=polygon, amenities=amenities)
 
 
-def pois_from_place(place, amenities=None, which_result=1):
+def pois_from_place(place, amenities=None, which_result=1, custom_settings=None):
     """
     Get points of interest (POIs) within the boundaries of some place.
 
@@ -472,6 +472,9 @@ def pois_from_place(place, amenities=None, which_result=1):
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
     which_result : int
         max number of place geocoding results to return and which to process upon receipt
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -480,4 +483,4 @@ def pois_from_place(place, amenities=None, which_result=1):
 
     city = gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
-    return create_poi_gdf(polygon=polygon, amenities=amenities)
+    return create_poi_gdf(polygon=polygon, amenities=amenities, custom_settings=custom_settings)
