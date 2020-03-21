@@ -20,7 +20,8 @@ from .geo_utils import geocode, bbox_to_poly
 from .utils import log
 
 
-def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsize=''):
+def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsize='',
+                    custom_settings=None):
     """
     Parse the Overpass QL query based on the list of amenities.
 
@@ -39,27 +40,38 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsi
         List of amenities that will be used for finding the POIs from the selected area.
     timeout : int
         Timeout for the API request.
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
+
     """
+
+    # use custom settings if delivered, otherwise just the default ones.
+    if custom_settings:
+        overpass_settings = custom_settings
+    else:
+        overpass_settings = '[out:json][timeout:{timeout}]{maxsize}'.format(timeout=timeout, maxsize=maxsize)
+
     if amenities:
         # Overpass QL template
-        query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"~"{amenities}"]({south:.6f},'
+        query_template = ('{settings};((node["amenity"~"{amenities}"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"~"{amenities}"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"~"{amenities}"]'
                           '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);););out;')
 
         # Parse amenties
         query_str = query_template.format(amenities="|".join(amenities), north=north, south=south, east=east, west=west,
-                                          timeout=timeout, maxsize=maxsize)
+                                          timeout=timeout, maxsize=maxsize, settings=overpass_settings)
     else:
         # Overpass QL template
-        query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"]({south:.6f},'
+        query_template = ('{settings};((node["amenity"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"]'
                           '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);););out;')
 
         # Parse amenties
         query_str = query_template.format(north=north, south=south, east=east, west=west,
-                                          timeout=timeout, maxsize=maxsize)
+                                          timeout=timeout, maxsize=maxsize, settings=overpass_settings)
 
     return query_str
 
