@@ -496,7 +496,8 @@ def footprints_from_address(address, distance, footprint_type='building', retain
                                  retain_invalid=retain_invalid, custom_settings=custom_settings)
 
 
-def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=False):
+def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=False,
+                            custom_settings=None):
     """
     Get footprints within some polygon.
 
@@ -509,14 +510,16 @@ def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=F
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
-
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
     Returns
     -------
     GeoDataFrame
     """
 
     return create_footprints_gdf(polygon=polygon, footprint_type=footprint_type,
-                                 retain_invalid=retain_invalid)
+                                 retain_invalid=retain_invalid, custom_settings=custom_settings)
 
 
 def footprints_from_place(place, footprint_type='building', retain_invalid=False, which_result=1):
