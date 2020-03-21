@@ -431,7 +431,8 @@ def create_relation_geometry(relation_key, relation_val, footprints):
         log('relation {} could not be converted to a complex footprint'.format(relation_key))
 
 
-def footprints_from_point(point, distance, footprint_type='building', retain_invalid=False):
+def footprints_from_point(point, distance, footprint_type='building', retain_invalid=False,
+                          custom_settings=None):
     """
     Get footprints within some distance north, south, east, and west of
     a lat-long point.
@@ -446,6 +447,9 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -455,7 +459,8 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
     return create_footprints_gdf(north=north, south=south, east=east, west=west,
-                                 footprint_type=footprint_type, retain_invalid=retain_invalid)
+                                 footprint_type=footprint_type, retain_invalid=retain_invalid,
+                                 custom_settings=custom_settings)
 
 
 def footprints_from_address(address, distance, footprint_type='building', retain_invalid=False):
