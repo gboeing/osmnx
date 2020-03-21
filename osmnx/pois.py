@@ -77,7 +77,7 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsi
 
 
 def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=None, west=None,
-                     timeout=180, max_query_area_size=50*1000*50*1000):
+                     timeout=180, max_query_area_size=50*1000*50*1000, custom_settings=None):
     """
     Get points of interests (POIs) from OpenStreetMap based on selected amenity types.
     Note that if a polygon is passed-in, the query will be limited to its bounding box
@@ -89,6 +89,9 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
         Polygon that will be used to limit the POI search.
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area.
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -101,7 +104,8 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
         west, south, east, north = polygon.bounds
 
         # Parse the Overpass QL query
-        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north)
+        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north,
+                                custom_settings=custom_settings)
 
     elif not (north is None or south is None or east is None or west is None):
         # TODO: Add functionality for subdividing search area geometry based on max_query_area_size
@@ -109,7 +113,8 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
         #polygon = bbox_to_poly(north=north, south=south, east=east, west=west)
 
         # Parse the Overpass QL query
-        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north)
+        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north,
+                                custom_settings=custom_settings)
 
     else:
         raise ValueError('You must pass a polygon or north, south, east, and west')
