@@ -152,7 +152,8 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
 
 
 def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None,
-                          footprint_type='building', retain_invalid=False, responses=None):
+                          footprint_type='building', retain_invalid=False, responses=None,
+                          custom_settings=None):
     """
     Get footprint (polygon) data from OSM and convert it into a GeoDataFrame.
 
@@ -174,6 +175,9 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
         if False discard any footprints with an invalid geometry
     responses : list
         list of response jsons
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -181,7 +185,8 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
     """
     # allow pickling between downloading footprints and converting them to a GeoDataFrame
     if responses is None:
-        responses = osm_footprints_download(polygon, north, south, east, west, footprint_type)
+        responses = osm_footprints_download(polygon, north, south, east, west, footprint_type,
+                                            custom_settings=custom_settings)
 
     # parse the list of responses into separate dicts of vertices, footprints and relations
     # create a set of ways not directly tagged with footprint_type
