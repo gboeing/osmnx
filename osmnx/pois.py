@@ -412,7 +412,7 @@ def pois_from_point(point, distance=None, amenities=None):
     return create_poi_gdf(amenities=amenities, north=north, south=south, east=east, west=west)
 
 
-def pois_from_address(address, distance, amenities=None):
+def pois_from_address(address, distance, amenities=None, custom_settings=None):
     """
     Get OSM points of Interests within some distance north, south, east, and west of
     an address.
@@ -426,6 +426,9 @@ def pois_from_address(address, distance, amenities=None):
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area. See available
         amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -436,7 +439,7 @@ def pois_from_address(address, distance, amenities=None):
     point = geocode(query=address)
 
     # get POIs within distance of this point
-    return pois_from_point(point=point, amenities=amenities, distance=distance)
+    return pois_from_point(point=point, amenities=amenities, distance=distance, custom_settings=custom_settings)
 
 
 def pois_from_polygon(polygon, amenities=None, custom_settings=None):
