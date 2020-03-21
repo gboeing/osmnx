@@ -387,7 +387,7 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     return gdf
 
 
-def pois_from_point(point, distance=None, amenities=None):
+def pois_from_point(point, distance=None, amenities=None, custom_settings=None):
     """
     Get point of interests (POIs) within some distance north, south, east, and west of
     a lat-long point.
@@ -401,7 +401,9 @@ def pois_from_point(point, distance=None, amenities=None):
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area.
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
-
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
     Returns
     -------
     GeoDataFrame
@@ -409,7 +411,8 @@ def pois_from_point(point, distance=None, amenities=None):
 
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
-    return create_poi_gdf(amenities=amenities, north=north, south=south, east=east, west=west)
+    return create_poi_gdf(amenities=amenities, north=north, south=south, east=east, west=west,
+                          custom_settings=custom_settings)
 
 
 def pois_from_address(address, distance, amenities=None, custom_settings=None):
