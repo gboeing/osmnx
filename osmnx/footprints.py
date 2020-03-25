@@ -214,8 +214,8 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
     gdf = gpd.GeoDataFrame.from_dict(footprints, orient='index')
     gdf.crs = settings.default_crs
 
-    # filter the gdf to only include valid Polygons or MultiPolygons
-    if not retain_invalid:    
+    # filter the gdf to only include valid Polygons/MultiPolygons if retain_invalid is False
+    if not retain_invalid and not gdf.empty:
         filter1 = gdf['geometry'].is_valid
         filter2 = (gdf['geometry'].geom_type == 'Polygon') | (gdf['geometry'].geom_type == 'MultiPolygon')
         filter_combined = filter1 & filter2
