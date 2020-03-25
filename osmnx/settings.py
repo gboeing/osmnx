@@ -52,6 +52,10 @@ default_access = '["access"!~"private"]'
 # The network types for which a bidirectional graph will be created
 bidirectional_network_types = ['walk']
 
+#default settings string schema for overpass queries. Timeout and maxsized needs to
+#be dinamically set where used.
+default_overpass_query_settings = '[out:json][timeout:{timeout}]{maxsize}'
+
 # all one-way mode to maintain original OSM node order
 # when constructing graphs specifically to save to .osm xml file
 all_oneway = False

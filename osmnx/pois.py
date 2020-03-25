@@ -20,7 +20,8 @@ from .geo_utils import geocode, bbox_to_poly
 from .utils import log
 
 
-def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsize=''):
+def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsize='',
+                    custom_settings=None):
     """
     Parse the Overpass QL query based on the list of amenities.
 
@@ -39,33 +40,44 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsi
         List of amenities that will be used for finding the POIs from the selected area.
     timeout : int
         Timeout for the API request.
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
+
     """
+
+    # use custom settings if delivered, otherwise just the default ones.
+    if custom_settings:
+        overpass_settings = custom_settings
+    else:
+        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout, maxsize=maxsize)
+
     if amenities:
         # Overpass QL template
-        query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"~"{amenities}"]({south:.6f},'
+        query_template = ('{settings};((node["amenity"~"{amenities}"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"~"{amenities}"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"~"{amenities}"]'
                           '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);););out;')
 
         # Parse amenties
         query_str = query_template.format(amenities="|".join(amenities), north=north, south=south, east=east, west=west,
-                                          timeout=timeout, maxsize=maxsize)
+                                          timeout=timeout, maxsize=maxsize, settings=overpass_settings)
     else:
         # Overpass QL template
-        query_template = ('[out:json][timeout:{timeout}]{maxsize};((node["amenity"]({south:.6f},'
+        query_template = ('{settings};((node["amenity"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"]'
                           '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);););out;')
 
         # Parse amenties
         query_str = query_template.format(north=north, south=south, east=east, west=west,
-                                          timeout=timeout, maxsize=maxsize)
+                                          timeout=timeout, maxsize=maxsize, settings=overpass_settings)
 
     return query_str
 
 
 def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=None, west=None,
-                     timeout=180, max_query_area_size=50*1000*50*1000):
+                     timeout=180, max_query_area_size=50*1000*50*1000, custom_settings=None):
     """
     Get points of interests (POIs) from OpenStreetMap based on selected amenity types.
     Note that if a polygon is passed-in, the query will be limited to its bounding box
@@ -77,6 +89,9 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
         Polygon that will be used to limit the POI search.
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area.
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -89,7 +104,8 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
         west, south, east, north = polygon.bounds
 
         # Parse the Overpass QL query
-        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north)
+        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north,
+                                custom_settings=custom_settings)
 
     elif not (north is None or south is None or east is None or west is None):
         # TODO: Add functionality for subdividing search area geometry based on max_query_area_size
@@ -97,7 +113,8 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
         #polygon = bbox_to_poly(north=north, south=south, east=east, west=west)
 
         # Parse the Overpass QL query
-        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north)
+        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north,
+                                custom_settings=custom_settings)
 
     else:
         raise ValueError('You must pass a polygon or north, south, east, and west')
@@ -287,7 +304,8 @@ def parse_osm_relations(relations, osm_way_df):
     return osm_way_df
 
 
-def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=None, west=None):
+def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=None, west=None,
+                   custom_settings=None):
     """
     Parse GeoDataFrames from POI json that was returned by Overpass API.
 
@@ -306,13 +324,17 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
         eastern longitude of bounding box
     west : float
         western longitude of bounding box
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
     Geopandas GeoDataFrame with POIs and the associated attributes.
     """
 
-    responses = osm_poi_download(polygon=polygon, amenities=amenities, north=north, south=south, east=east, west=west)
+    responses = osm_poi_download(polygon=polygon, amenities=amenities, north=north, south=south, east=east, west=west,
+                                 custom_settings=custom_settings)
 
     # Parse coordinates from all the nodes in the response
     coords = parse_nodes_coords(responses)
@@ -365,7 +387,7 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     return gdf
 
 
-def pois_from_point(point, distance=None, amenities=None):
+def pois_from_point(point, distance=None, amenities=None, custom_settings=None):
     """
     Get point of interests (POIs) within some distance north, south, east, and west of
     a lat-long point.
@@ -379,7 +401,9 @@ def pois_from_point(point, distance=None, amenities=None):
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area.
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
-
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
     Returns
     -------
     GeoDataFrame
@@ -387,10 +411,11 @@ def pois_from_point(point, distance=None, amenities=None):
 
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
-    return create_poi_gdf(amenities=amenities, north=north, south=south, east=east, west=west)
+    return create_poi_gdf(amenities=amenities, north=north, south=south, east=east, west=west,
+                          custom_settings=custom_settings)
 
 
-def pois_from_address(address, distance, amenities=None):
+def pois_from_address(address, distance, amenities=None, custom_settings=None):
     """
     Get OSM points of Interests within some distance north, south, east, and west of
     an address.
@@ -404,6 +429,9 @@ def pois_from_address(address, distance, amenities=None):
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area. See available
         amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -414,10 +442,10 @@ def pois_from_address(address, distance, amenities=None):
     point = geocode(query=address)
 
     # get POIs within distance of this point
-    return pois_from_point(point=point, amenities=amenities, distance=distance)
+    return pois_from_point(point=point, amenities=amenities, distance=distance, custom_settings=custom_settings)
 
 
-def pois_from_polygon(polygon, amenities=None):
+def pois_from_polygon(polygon, amenities=None, custom_settings=None):
     """
     Get OSM points of interest within some polygon.
 
@@ -428,16 +456,18 @@ def pois_from_polygon(polygon, amenities=None):
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area.
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
-
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
     Returns
     -------
     GeoDataFrame
     """
 
-    return create_poi_gdf(polygon=polygon, amenities=amenities)
+    return create_poi_gdf(polygon=polygon, amenities=amenities, custom_settings=custom_settings)
 
 
-def pois_from_place(place, amenities=None, which_result=1):
+def pois_from_place(place, amenities=None, which_result=1, custom_settings=None):
     """
     Get points of interest (POIs) within the boundaries of some place.
 
@@ -450,6 +480,9 @@ def pois_from_place(place, amenities=None, which_result=1):
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
     which_result : int
         max number of place geocoding results to return and which to process upon receipt
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -458,4 +491,4 @@ def pois_from_place(place, amenities=None, which_result=1):
 
     city = gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
-    return create_poi_gdf(polygon=polygon, amenities=amenities)
+    return create_poi_gdf(polygon=polygon, amenities=amenities, custom_settings=custom_settings)
