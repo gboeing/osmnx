@@ -29,7 +29,7 @@ from .geo_utils import geocode
 
 def osm_footprints_download(polygon=None, north=None, south=None, east=None, west=None,
                             footprint_type='building', timeout=180, memory=None,
-                            max_query_area_size=50*1000*50*1000):
+                            max_query_area_size=50*1000*50*1000, custom_settings= None):
     """
     Download OpenStreetMap footprint data as a list of json responses.
 
@@ -57,6 +57,9 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
         any polygon bigger will get divided up for multiple queries to API
         (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are
         meters))
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -82,6 +85,12 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
     else:
         maxsize = '[maxsize:{}]'.format(memory)
 
+    # use custom settings if delivered, otherwise just the default ones.
+    if custom_settings:
+        overpass_settings = custom_settings
+    else:
+        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout, maxsize=maxsize)
+
     # define the query to send the API
     if by_bbox:
         # turn bbox into a polygon and project to local UTM
@@ -102,13 +111,13 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
             # decimal places (ie, within 1 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = ('[out:json][timeout:{timeout}]{maxsize};'
+            query_template = ('{settings};'
                               '((way["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
                               '(._;>;););'
                               '(relation["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
                               '(._;>;);););out;')
             query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout,
-                                              maxsize=maxsize, footprint_type=footprint_type)
+                                              maxsize=maxsize, footprint_type=footprint_type, settings=overpass_settings)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within bounding box from '
@@ -128,11 +137,11 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
-            query_template = ('[out:json][timeout:{timeout}]{maxsize};('
+            query_template = ('{settings};('
                               'way(poly:"{polygon}")["{footprint_type}"];(._;>;);'
                               'relation(poly:"{polygon}")["{footprint_type}"];(._;>;););out;')
             query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize,
-                                              footprint_type=footprint_type)
+                                              footprint_type=footprint_type, settings=overpass_settings)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within polygon from API in '
@@ -143,7 +152,8 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
 
 
 def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None,
-                          footprint_type='building', retain_invalid=False, responses=None):
+                          footprint_type='building', retain_invalid=False, responses=None,
+                          custom_settings=None):
     """
     Get footprint (polygon) data from OSM and convert it into a GeoDataFrame.
 
@@ -165,6 +175,9 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
         if False discard any footprints with an invalid geometry
     responses : list
         list of response jsons
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -172,7 +185,8 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
     """
     # allow pickling between downloading footprints and converting them to a GeoDataFrame
     if responses is None:
-        responses = osm_footprints_download(polygon, north, south, east, west, footprint_type)
+        responses = osm_footprints_download(polygon, north, south, east, west, footprint_type,
+                                            custom_settings=custom_settings)
 
     # parse the list of responses into separate dicts of vertices, footprints and relations
     # create a set of ways not directly tagged with footprint_type
@@ -417,7 +431,8 @@ def create_relation_geometry(relation_key, relation_val, footprints):
         log('relation {} could not be converted to a complex footprint'.format(relation_key))
 
 
-def footprints_from_point(point, distance, footprint_type='building', retain_invalid=False):
+def footprints_from_point(point, distance, footprint_type='building', retain_invalid=False,
+                          custom_settings=None):
     """
     Get footprints within some distance north, south, east, and west of
     a lat-long point.
@@ -432,6 +447,9 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -441,10 +459,12 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
     return create_footprints_gdf(north=north, south=south, east=east, west=west,
-                                 footprint_type=footprint_type, retain_invalid=retain_invalid)
+                                 footprint_type=footprint_type, retain_invalid=retain_invalid,
+                                 custom_settings=custom_settings)
 
 
-def footprints_from_address(address, distance, footprint_type='building', retain_invalid=False):
+def footprints_from_address(address, distance, footprint_type='building', retain_invalid=False,
+                            custom_settings=None):
     """
     Get footprints within some distance north, south, east, and west of
     an address.
@@ -459,6 +479,9 @@ def footprints_from_address(address, distance, footprint_type='building', retain
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -470,10 +493,11 @@ def footprints_from_address(address, distance, footprint_type='building', retain
 
     # get footprints within distance of this point
     return footprints_from_point(point, distance, footprint_type=footprint_type,
-                                 retain_invalid=retain_invalid)
+                                 retain_invalid=retain_invalid, custom_settings=custom_settings)
 
 
-def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=False):
+def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=False,
+                            custom_settings=None):
     """
     Get footprints within some polygon.
 
@@ -486,17 +510,20 @@ def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=F
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
-
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
     Returns
     -------
     GeoDataFrame
     """
 
     return create_footprints_gdf(polygon=polygon, footprint_type=footprint_type,
-                                 retain_invalid=retain_invalid)
+                                 retain_invalid=retain_invalid, custom_settings=custom_settings)
 
 
-def footprints_from_place(place, footprint_type='building', retain_invalid=False, which_result=1):
+def footprints_from_place(place, footprint_type='building', retain_invalid=False, which_result=1,
+                          custom_settings=None):
     """
     Get footprints within the boundaries of some place.
 
@@ -516,7 +543,9 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
         if False discard any footprints with an invalid geometry
     which_result : int
         max number of results to return and which to process upon receipt
-
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
     Returns
     -------
     GeoDataFrame
@@ -525,7 +554,7 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
     city = gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
     return create_footprints_gdf(polygon, retain_invalid=retain_invalid,
-                                 footprint_type=footprint_type)
+                                 footprint_type=footprint_type, custom_settings=custom_settings)
 
 
 def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w',
