@@ -416,8 +416,10 @@ def create_relation_geometry(relation_key, relation_val, footprints):
     # process the others to multipolygons
     else:
         for outer_poly in outer_polys:
+            outer_poly = outer_poly.buffer(0) #fix invalid geometry if present
             temp_poly = outer_poly
             for inner_poly in inner_polys:
+                inner_poly = inner_poly.buffer(0) #fix invalid geometry if present
                 if inner_poly.within(outer_poly):
                     temp_poly=temp_poly.difference(inner_poly)
             multipoly.append(temp_poly)
