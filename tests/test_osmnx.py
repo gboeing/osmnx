@@ -201,6 +201,8 @@ def test_get_network_methods():
              '["access"!~"private"]')
     G = ox.graph_from_point(location_point, network_type='walk', custom_filter=filtr)
 
+    test_custom_settings = """[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]"""
+    G = ox.graph_from_point(location_point, custom_settings=test_custom_settings)
 
 def test_stats():
     # create graph, add bearings, project it
@@ -354,6 +356,10 @@ def test_footprints():
 
     gdf = ox.footprints_from_place(place='kusatsu, shiga, japan', which_result=2)
 
+    test_custom_settings = """[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]"""
+    gdf = ox.footprints_from_place(place='kusatsu, shiga, japan', which_result=2,
+                                   custom_settings=test_custom_settings)
+
 
 def test_pois():
     import pytest
@@ -380,6 +386,9 @@ def test_pois():
 
     gdf = ox.pois_from_place(place='kusatsu, shiga, japan', which_result=2)
 
+    test_custom_settings = """[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]"""
+    gdf = ox.pois_from_place(place='kusatsu, shiga, japan', which_result=2,
+                             custom_settings=test_custom_settings)
 
 def test_nominatim():
     import pytest
