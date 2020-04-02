@@ -66,6 +66,48 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
     log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.gdf_name, folder_path))
 
 
+def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8'):
+    """
+    Save graph nodes and edges as to disk as layers in a GeoPackage file.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    filename : string
+        the filename of the GeoPackage including file extension
+    folder_path : string
+        the path to the folder to contain the GeoPackage, if None, use default data folder
+    encoding : string
+        the character encoding for the saved files
+
+    Returns
+    -------
+    None
+    """
+
+    # convert undirected graph to geodataframes
+    start_time = time.time()
+    gdf_nodes, gdf_edges = graph_to_gdfs(get_undirected(G))
+
+    # make everything but geometry column a string
+    for col in [c for c in gdf_edges.columns if not c == 'geometry']:
+        gdf_edges[col] = gdf_edges[col].fillna('').map(str)
+
+    # use settings.data_folder if a folder wasn't passed in
+    # if the save folder does not already exist, create it
+    if folder is None:
+        folder = settings.data_folder
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    filepath = '{}/{}'.format(folder, filename)
+
+    # save the nodes and edges as GeoPackage layers
+    gdf_nodes.to_file(filepath, layer='nodes', driver='GPKG', encoding=encoding)
+    gdf_edges.to_file(filepath, layer='edges', driver='GPKG', encoding=encoding)
+    log('Saved graph to disk as GeoPackage at "{}" in {:,.2f} seconds'.format(filepath, time.time() - start_time))
+
+
+
 def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     """
     Save graph nodes and edges as ESRI shapefiles to disk.
