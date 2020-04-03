@@ -4,25 +4,30 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
+# use agg backend so you don't need a display on travis-ci
 import matplotlib as mpl
-import pandas as pd
-import warnings
+mpl.use('Agg')
 
-mpl.use('Agg')  # use agg backend so you don't need a display on travis-ci
+import os
+import pandas as pd
+import shutil
+import warnings
+from networkx.exception import NetworkXNotImplemented
 
 # remove the .temp folder if it already exists so we start fresh with tests
-import os, shutil
-
 if os.path.exists('.temp'):
     shutil.rmtree('.temp')
 
 import osmnx as ox
-from networkx.exception import NetworkXNotImplemented
 
 # configure OSMnx
-ox.config(log_console=True, log_file=True, use_cache=True,
-          data_folder='.temp/data', logs_folder='.temp/logs',
-          imgs_folder='.temp/imgs', cache_folder='.temp/cache')
+ox.config(log_console=True,
+		  log_file=True,
+		  use_cache=True,
+          data_folder='.temp/data',
+          logs_folder='.temp/logs',
+          imgs_folder='.temp/imgs',
+          cache_folder='.temp/cache')
 
 
 def test_imports():
@@ -201,26 +206,10 @@ def test_get_network_methods():
              '["access"!~"private"]')
     G = ox.graph_from_point(location_point, network_type='walk', custom_filter=filtr)
 
-    test_custom_settings = """[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]"""
-    G = ox.graph_from_point(location_point, custom_settings=test_custom_settings)
+    # test custom settings
+    cs = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
+    G = ox.graph_from_point(location_point, custom_settings=cs)
 
-def test_stats():
-    # create graph, add bearings, project it
-    location_point = (37.791427, -122.410018)
-    G = ox.graph_from_point(location_point, distance=500, distance_type='network')
-    G = ox.add_edge_bearings(G)
-    G_proj = ox.project_graph(G)
-
-    # calculate stats
-    stats1 = ox.basic_stats(G)
-    stats2 = ox.basic_stats(G, area=1000)
-    stats3 = ox.basic_stats(G_proj, area=1000, clean_intersects=True, tolerance=15, circuity_dist='euclidean')
-
-    try:
-        stats4 = ox.extended_stats(G, connectivity=True, anc=True, ecc=True, bc=True, cc=True)
-    except NetworkXNotImplemented as e:
-        warnings.warn("Testing coordinates results in a MultiDigraph, and extended stats are not available for it")
-        warnings.warn(e.args)
 
 
 def test_plots():
@@ -424,11 +413,8 @@ def test_nominatim():
             type="transfer")
 
     # Searching on public nominatim should work even if a key was provided
-    ox.config(
-        nominatim_key="NOT_A_KEY"
-    )
-    response_json = ox.nominatim_request(params=params,
-                                         type="search")
+    ox.config(nominatim_key='NOT_A_KEY')
+    response_json = ox.nominatim_request(params=params, type="search")
 
     # Test changing the endpoint. It should fail because we didn't provide a valid key
     ox.config(
@@ -443,26 +429,22 @@ def test_nominatim():
               imgs_folder='.temp/imgs', cache_folder='.temp/cache')
 
 
-def test_osm_xml_output():
+
+def test_osm_xml():
+
+	# test osm xml output
     ox.settings.all_oneway = True
     G = ox.graph_from_place('Piedmont, California, USA')
     ox.save_as_osm(G, merge_edges=False)
 
-
-def test_osm_xml_output_merge_edges():
-    ox.settings.all_oneway = True
-    G = ox.graph_from_place('Piedmont, California, USA')
+	# test osm xml output merge edges
     ox.save_as_osm(G, merge_edges=True, edge_tag_aggs=[('length', 'sum')])
 
-
-def test_osm_xml_output_from_gdfs():
-    ox.settings.all_oneway = True
-    G = ox.graph_from_place('Piedmont, California, USA')
+	# test osm xml output from gdfs
     nodes, edges = ox.graph_to_gdfs(G)
     ox.save_as_osm([nodes, edges])
 
-
-def test_ordered_nodes_from_way():
+	# test ordered nodes from way
     df = pd.DataFrame(
         {'u':[54, 2, 5, 3, 10, 19, 20],
         'v': [76, 3, 8, 10, 5, 20, 15]})
@@ -470,14 +452,34 @@ def test_ordered_nodes_from_way():
     assert ordered_nodes == [2, 3, 10, 5, 8]
 
 
-def test_overpass():
+
+def test_overpass_endpoint():
     import pytest
 
     # Test changing the endpoint. This should fail because we didn't provide a valid endpoint
-    ox.config(
-        overpass_endpoint="http://NOT_A_VALID_ENDPOINT/api/"
-    )
+    ox.config(overpass_endpoint='http://NOT_A_VALID_ENDPOINT/api/')
     with pytest.raises(Exception):
         G = ox.graph_from_place('Piedmont, California, USA')
 
     ox.config(overpass_endpoint="http://overpass-api.de/api")
+
+
+
+def test_stats():
+    # create graph, add bearings, project it
+    location_point = (37.791427, -122.410018)
+    G = ox.graph_from_point(location_point, distance=500, distance_type='network')
+    G = ox.add_edge_bearings(G)
+    G_proj = ox.project_graph(G)
+
+    # calculate stats
+    stats1 = ox.basic_stats(G)
+    stats2 = ox.basic_stats(G, area=1000)
+    stats3 = ox.basic_stats(G_proj, area=1000, clean_intersects=True, tolerance=15, circuity_dist='euclidean')
+
+    # calculate extended stats
+    try:
+        stats4 = ox.extended_stats(G, connectivity=True, anc=True, ecc=True, bc=True, cc=True)
+    except NetworkXNotImplemented as e:
+        warnings.warn("Testing coordinates results in a MultiDigraph, and extended stats are not available for it")
+        warnings.warn(e.args)
