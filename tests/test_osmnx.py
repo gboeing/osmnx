@@ -21,7 +21,7 @@ if os.path.exists('.temp'):
 import osmnx as ox
 
 # configure OSMnx
-ox.config(log_console=True,
+ox.config(log_console=False,
 		  log_file=True,
 		  use_cache=True,
           data_folder='.temp/data',
@@ -307,7 +307,7 @@ def test_footprints():
 
     # new_river_head.json contains a relation with 1 outer closed way and 2 inner closed ways
     # inner way 665593284 is directly tagged as a building and should create its own polygon
-    with open("tests/input_data/new_river_head.json", "r") as read_file:
+    with open('tests/input_data/new_river_head.json', 'r') as read_file:
         new_river_head_responses = [json.load(read_file)]
     new_river_head_gdf = ox.create_footprints_gdf(responses=new_river_head_responses)
     assert 665593284 in new_river_head_gdf.index
@@ -315,23 +315,23 @@ def test_footprints():
     assert len(new_river_head_gdf.loc[9246394, 'geometry'].interiors) == 2
 
     # clapham_common.json contains a relation with 5 outer rings and 1 inner ring. One of the outer rings is a chain of open ways
-    with open("tests/input_data/clapham_common.json", "r") as read_file:
+    with open('tests/input_data/clapham_common.json', 'r') as read_file:
         clapham_common_responses = [json.load(read_file)]
     clapham_common_gdf = ox.create_footprints_gdf(footprint_type='leisure', responses=clapham_common_responses)
     assert clapham_common_gdf.loc[1290065]['geometry'].type == 'MultiPolygon'
 
     # relation_no_outer.json contains a relation with 0 outer rings and 1 inner ring
-    with open("tests/input_data/relation_no_outer.json", "r") as read_file:
+    with open('tests/input_data/relation_no_outer.json', 'r') as read_file:
         relation_no_outer_responses = [json.load(read_file)]
     ox.create_footprints_gdf(responses=relation_no_outer_responses)
 
     # inner_chain.json contains a relation with 1 outer rings and several inner rings one of which is a chain of open ways
-    with open("tests/input_data/inner_chain.json", "r") as read_file:
+    with open('tests/input_data/inner_chain.json', 'r') as read_file:
         inner_chain_responses = [json.load(read_file)]
     ox.create_footprints_gdf(responses=inner_chain_responses)
 
     # mis_tagged_bus_route.json contains a relation with out 'inner' or 'inner' rings
-    with open("tests/input_data/mis_tagged_bus_route.json", "r") as read_file:
+    with open('tests/input_data/mis_tagged_bus_route.json', 'r') as read_file:
         mis_tagged_bus_route_responses = [json.load(read_file)]
     ox.create_footprints_gdf(responses=mis_tagged_bus_route_responses)
 
@@ -345,7 +345,7 @@ def test_footprints():
 
     gdf = ox.footprints_from_place(place='kusatsu, shiga, japan', which_result=2)
 
-    test_custom_settings = """[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]"""
+    test_custom_settings = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
     gdf = ox.footprints_from_place(place='kusatsu, shiga, japan', which_result=2,
                                    custom_settings=test_custom_settings)
 
@@ -360,7 +360,7 @@ def test_pois():
     schools = ox.pois_from_place(place='Emeryville, California, USA', amenities=['school'])
 
     # get all universities from Boston area (with 2 km buffer to cover also Cambridge)
-    boston_q = "Boston, Massachusetts, United States of America"
+    boston_q = 'Boston, Massachusetts, United States of America'
     boston_poly = ox.gdf_from_place(boston_q, buffer_dist=2000)
     universities = ox.pois_from_polygon(boston_poly.geometry.values[0], amenities=['university'])
 
@@ -375,7 +375,7 @@ def test_pois():
 
     gdf = ox.pois_from_place(place='kusatsu, shiga, japan', which_result=2)
 
-    test_custom_settings = """[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]"""
+    test_custom_settings = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
     gdf = ox.pois_from_place(place='kusatsu, shiga, japan', which_result=2,
                              custom_settings=test_custom_settings)
 
@@ -384,45 +384,40 @@ def test_nominatim():
     from collections import OrderedDict
 
     params = OrderedDict()
-    params['format'] = "json"
+    params['format'] = 'json'
     params['address_details'] = 0
 
     # Bad Address - should return an empty response
-    params['q'] = "AAAAAAAAAAA"
-    response_json = ox.nominatim_request(params=params,
-                                         type="search")
+    params['q'] = 'AAAAAAAAAAA'
+    response_json = ox.nominatim_request(params=params, type='search')
 
     # Good Address - should return a valid response with a valid osm_id
-    params['q'] = "Newcastle A186 Westgate Rd"
-    response_json = ox.nominatim_request(params=params,
-                                         type="search")
+    params['q'] = 'Newcastle A186 Westgate Rd'
+    response_json = ox.nominatim_request(params=params, type='search')
 
     # Lookup
     params = OrderedDict()
-    params['format'] = "json"
+    params['format'] = 'json'
     params['address_details'] = 0
-    params['osm_ids'] = "W68876073"
+    params['osm_ids'] = 'W68876073'
 
-    response_json = ox.nominatim_request(params=params,
-                                         type="lookup")
+    response_json = ox.nominatim_request(params=params, type='lookup')
 
     # Invalid nominatim query type
     with pytest.raises(ValueError):
-        response_json = ox.nominatim_request(
-            params=params,
-            type="transfer")
+        response_json = ox.nominatim_request(params=params, type='transfer')
 
     # Searching on public nominatim should work even if a key was provided
     ox.config(nominatim_key='NOT_A_KEY')
-    response_json = ox.nominatim_request(params=params, type="search")
+    response_json = ox.nominatim_request(params=params, type='search')
 
     # Test changing the endpoint. It should fail because we didn't provide a valid key
     ox.config(
-        nominatim_endpoint="http://open.mapquestapi.com/nominatim/v1/"
+        nominatim_endpoint='http://open.mapquestapi.com/nominatim/v1/'
     )
     with pytest.raises(Exception):
         response_json = ox.nominatim_request(params=params,
-                                             type="search")
+                                             type='search')
 
     ox.config(log_console=True, log_file=True, use_cache=True,
               data_folder='.temp/data', logs_folder='.temp/logs',
@@ -461,7 +456,7 @@ def test_overpass_endpoint():
     with pytest.raises(Exception):
         G = ox.graph_from_place('Piedmont, California, USA')
 
-    ox.config(overpass_endpoint="http://overpass-api.de/api")
+    ox.config(overpass_endpoint='http://overpass-api.de/api')
 
 
 
@@ -481,5 +476,5 @@ def test_stats():
     try:
         stats4 = ox.extended_stats(G, connectivity=True, anc=True, ecc=True, bc=True, cc=True)
     except NetworkXNotImplemented as e:
-        warnings.warn("Testing coordinates results in a MultiDigraph, and extended stats are not available for it")
+        warnings.warn('Testing coordinates results in a MultiDigraph, and extended stats are not available for it')
         warnings.warn(e.args)
