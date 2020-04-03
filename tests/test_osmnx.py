@@ -11,8 +11,6 @@ mpl.use('Agg')
 import os
 import pandas as pd
 import shutil
-import warnings
-from networkx.exception import NetworkXNotImplemented
 
 # remove the .temp folder if it already exists so we start fresh with tests
 if os.path.exists('.temp'):
@@ -21,7 +19,7 @@ if os.path.exists('.temp'):
 import osmnx as ox
 
 # configure OSMnx
-ox.config(log_console=False,
+ox.config(log_console=True,
           log_file=True,
           use_cache=True,
           data_folder='.temp/data',
