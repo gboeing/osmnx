@@ -145,12 +145,15 @@ def test_graph_from_file():
 
 
 def test_network_saving_loading():
-    # save/load graph as shapefile and graphml file
+
+    # save graph as shapefile and geopackage
     G = ox.graph_from_place('Piedmont, California, USA')
-    G_projected = ox.project_graph(G)
-    ox.save_graph_shapefile(G_projected)
-    ox.save_graphml(G_projected)
-    ox.save_graphml(G_projected, filename='gephi.graphml', gephi=True)
+    ox.save_graph_shapefile(G)
+    ox.save_graph_geopackage(G)
+
+    # save/load graph as graphml file
+    ox.save_graphml(G)
+    ox.save_graphml(G, filename='gephi.graphml', gephi=True)
     G2 = ox.load_graphml('graph.graphml')
     G3 = ox.load_graphml('graph.graphml', node_type=str)
 
