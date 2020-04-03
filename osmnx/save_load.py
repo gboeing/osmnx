@@ -32,7 +32,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
     gdf : GeoDataFrame
         the gdf to be saved
     filename : string
-        what to call the shapefile (file extensions are added automatically)
+        the name of the shapefiles (not including file extensions)
     folder : string
         where to save the shapefile, if none, then default folder
 
@@ -49,7 +49,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
 
     # give the save folder a filename subfolder to make the full path to the
     # files
-    folder_path = os.path.join(folder, filename)
+    filepath = os.path.join(folder, filename)
 
     # make everything but geometry column a string
     for col in [c for c in gdf.columns if not c == 'geometry']:
@@ -57,13 +57,13 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
 
     # if the save folder does not already exist, create it with a filename
     # subfolder
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    gdf.to_file(folder_path)
+    if not os.path.exists(filepath):
+        os.makedirs(filepath)
+    gdf.to_file(filepath)
 
     if not hasattr(gdf, 'gdf_name'):
         gdf.gdf_name = 'unnamed'
-    log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.gdf_name, folder_path))
+    log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.gdf_name, filepath))
 
 
 def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8'):
@@ -75,7 +75,7 @@ def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8
     G : networkx multidigraph
     filename : string
         the filename of the GeoPackage including file extension
-    folder_path : string
+    folder : string
         the path to the folder to contain the GeoPackage, if None, use default data folder
     encoding : string
         the character encoding for the saved files
@@ -99,7 +99,7 @@ def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8
         folder = settings.data_folder
     if not os.path.exists(folder):
         os.makedirs(folder)
-    filepath = '{}/{}'.format(folder, filename)
+    filepath = os.path.join(folder, filename)
 
     # save the nodes and edges as GeoPackage layers
     gdf_nodes.to_file(filepath, layer='nodes', driver='GPKG', encoding=encoding)
@@ -175,14 +175,14 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
 
     # if the save folder does not already exist, create it with a filename
     # subfolder
-    folder = os.path.join(folder, filename)
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    filepath = os.path.join(folder, filename)
+    if not os.path.exists(filepath):
+        os.makedirs(filepath)
 
     # save the nodes and edges as separate ESRI shapefiles
-    gdf_nodes.to_file('{}/nodes'.format(folder), encoding=encoding)
-    gdf_edges.to_file('{}/edges'.format(folder), encoding=encoding)
-    log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, folder, time.time() - start_time))
+    gdf_nodes.to_file('{}/nodes'.format(filepath), encoding=encoding)
+    gdf_edges.to_file('{}/edges'.format(filepath), encoding=encoding)
+    log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, filepath, time.time() - start_time))
 
 
 def save_as_osm(
@@ -427,9 +427,10 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
 
     if not os.path.exists(folder):
         os.makedirs(folder)
+    filepath = os.path.join(folder, filename)
 
-    nx.write_graphml(G_save, os.path.join(folder, filename))
-    log('Saved graph "{}" to disk as GraphML at "{}" in {:,.2f} seconds'.format(G_save.name, os.path.join(folder, filename), time.time()-start_time))
+    nx.write_graphml(G_save, filepath)
+    log('Saved graph to disk as GraphML at "{}" in {:,.2f} seconds'.format(filepath, time.time()-start_time))
 
 
 def load_graphml(filename, folder=None, node_type=int):
