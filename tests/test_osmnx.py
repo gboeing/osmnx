@@ -22,8 +22,8 @@ import osmnx as ox
 
 # configure OSMnx
 ox.config(log_console=False,
-		  log_file=True,
-		  use_cache=True,
+          log_file=True,
+          use_cache=True,
           data_folder='.temp/data',
           logs_folder='.temp/logs',
           imgs_folder='.temp/imgs',
@@ -117,6 +117,24 @@ def test_gdf_shapefiles():
 
     city = ox.gdf_from_place('Manhattan, New York City, New York, USA', buffer_dist=100)
     ox.plot_shape(city)
+
+
+
+def test_stats():
+    # create graph, add bearings, project it
+    location_point = (37.791427, -122.410018)
+    G = ox.graph_from_point(location_point, distance=500, distance_type='network')
+    G = ox.add_edge_bearings(G)
+    G_proj = ox.project_graph(G)
+
+    # calculate stats
+    stats1 = ox.basic_stats(G)
+    stats2 = ox.basic_stats(G, area=1000)
+    stats3 = ox.basic_stats(G_proj, area=1000, clean_intersects=True, tolerance=15, circuity_dist='euclidean')
+
+    # calculate extended stats
+    stats4 = ox.extended_stats(G, connectivity=True, anc=False, ecc=True, bc=True, cc=True)
+
 
 
 def test_graph_from_file():
@@ -430,19 +448,19 @@ def test_nominatim():
 
 def test_osm_xml():
 
-	# test osm xml output
+    # test osm xml output
     ox.settings.all_oneway = True
     G = ox.graph_from_place('Piedmont, California, USA')
     ox.save_as_osm(G, merge_edges=False)
 
-	# test osm xml output merge edges
+    # test osm xml output merge edges
     ox.save_as_osm(G, merge_edges=True, edge_tag_aggs=[('length', 'sum')])
 
-	# test osm xml output from gdfs
+    # test osm xml output from gdfs
     nodes, edges = ox.graph_to_gdfs(G)
     ox.save_as_osm([nodes, edges])
 
-	# test ordered nodes from way
+    # test ordered nodes from way
     df = pd.DataFrame(
         {'u':[54, 2, 5, 3, 10, 19, 20],
         'v': [76, 3, 8, 10, 5, 20, 15]})
@@ -460,24 +478,3 @@ def test_overpass_endpoint():
         G = ox.graph_from_place('Piedmont, California, USA')
 
     ox.config(overpass_endpoint='http://overpass-api.de/api')
-
-
-
-def test_stats():
-    # create graph, add bearings, project it
-    location_point = (37.791427, -122.410018)
-    G = ox.graph_from_point(location_point, distance=500, distance_type='network')
-    G = ox.add_edge_bearings(G)
-    G_proj = ox.project_graph(G)
-
-    # calculate stats
-    stats1 = ox.basic_stats(G)
-    stats2 = ox.basic_stats(G, area=1000)
-    stats3 = ox.basic_stats(G_proj, area=1000, clean_intersects=True, tolerance=15, circuity_dist='euclidean')
-
-    # calculate extended stats
-    try:
-        stats4 = ox.extended_stats(G, connectivity=True, anc=True, ecc=True, bc=True, cc=True)
-    except NetworkXNotImplemented as e:
-        warnings.warn('Testing coordinates results in a MultiDigraph, and extended stats are not available for it')
-        warnings.warn(e.args)
