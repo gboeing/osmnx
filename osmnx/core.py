@@ -714,7 +714,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
         if True, return the entire graph even if it is not connected
     truncate_by_edge : bool
         if True retain node if it's outside polygon but at least one of node's
-        neighbors are within polygon (NOT CURRENTLY IMPLEMENTED)
+        neighbors are within polygon
     quadrat_width : numeric
         passed on to intersect_index_quadrats: the linear length (in degrees) of
         the quadrats with which to cut up the geometry (default = 0.05, approx
@@ -745,10 +745,20 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
     points_within_geometry = intersect_index_quadrats(gdf_nodes, polygon, quadrat_width=quadrat_width, min_num=min_num, buffer_amount=buffer_amount)
     nodes_outside_polygon = gdf_nodes[~gdf_nodes.index.isin(points_within_geometry.index)]
 
+    if truncate_by_edge:
+        nodes_to_remove = []
+        for node in nodes_outside_polygon['node']:
+            neighbors = pd.Series(list(G.successors(node)) + list(G.predecessors(node)))
+            # check if all the neighbors of this node also lie outside polygon
+            if neighbors.isin(nodes_outside_polygon['node']).all():
+                nodes_to_remove.append(node)
+    else:
+        nodes_to_remove = nodes_outside_polygon['node']
+
     # now remove from the graph all those nodes that lie outside the place
     # polygon
     start_time = time.time()
-    G.remove_nodes_from(nodes_outside_polygon['node'])
+    G.remove_nodes_from(nodes_to_remove)
     log('Removed {:,} nodes outside polygon in {:,.2f} seconds'.format(len(nodes_outside_polygon), time.time()-start_time))
 
     # remove any isolated nodes and retain only the largest component (if retain_all is False)
