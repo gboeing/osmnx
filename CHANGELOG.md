@@ -1,5 +1,17 @@
 # Change log
 
+## 0.12 (2020-04-10)
+
+  - add ability to save graph as geopackage file
+  - add truncate_by_edge implementation in truncate_graph_polygon
+  - allow flexible overpass settings (e.g., to query by date)
+  - better handling of invalid footprint geometries
+  - geocode function now uses nominatim_request function
+  - improve .osm xml output
+  - improve one-way street handling
+  - fix graph projection overwriting original lat/lng
+  - fix redistribute_vertices function for MultiLineStrings
+
 ## 0.11.4 (2020-01-31)
 
   - fix OSM XML output 
