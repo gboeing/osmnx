@@ -1,10 +1,10 @@
-import sys
-import os
 import datetime as dt
-import unicodedata
+import logging as lg
 import networkx as nx
 import numpy as np
-import logging as lg
+import os
+import sys
+import unicodedata
 from . import settings
 
 
@@ -35,6 +35,40 @@ def citation():
             "}")
 
     print(cite)
+
+
+
+def ts(style='datetime', template=None):
+    """
+    Get current timestamp as string
+
+    Parameters
+    ----------
+    style : string
+        format the timestamp with this built-in template. must be one
+        of {'datetime', 'date', 'time'}
+    template : string
+        if not None, format the timestamp with this template
+
+    Returns
+    -------
+    ts : string
+        the string timestamp
+    """
+
+    if template is None:
+        if style == 'datetime':
+            template = '{:%Y-%m-%d %H:%M:%S}'
+        elif style == 'date':
+            template = '{:%Y-%m-%d}'
+        elif style == 'time':
+            template = '{:%H:%M:%S}'
+        else:
+            raise ValueError('unknown timestamp style "{}"'.format(style))
+
+    ts = template.format(dt.datetime.now())
+    return ts
+
 
 
 def make_str(value):
@@ -321,8 +355,7 @@ def get_logger(level=None, name=None, filename=None):
     if not getattr(logger, 'handler_set', None):
 
         # get today's date and construct a log filename
-        todays_date = dt.datetime.today().strftime('%Y_%m_%d')
-        log_filename = os.path.join(settings.logs_folder, '{}_{}.log'.format(filename, todays_date))
+        log_filename = os.path.join(settings.logs_folder, '{}_{}.log'.format(filename, ts(style='date')))
 
         # if the logs folder does not already exist, create it
         if not os.path.exists(settings.logs_folder):
