@@ -109,23 +109,49 @@ def save_to_cache(url, response_json):
     """
     if settings.use_cache:
         if response_json is None:
-            log('Saved nothing to cache because response_json is None')
+            log('Did not save to cache because response_json is None')
         else:
             # create the folder on the disk if it doesn't already exist
             if not os.path.exists(settings.cache_folder):
                 os.makedirs(settings.cache_folder)
 
-            # hash the url (to make filename shorter than the often extremely
-            # long url)
+            # hash the url to make the filename succinct but unique
             filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-            cache_path_filename = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
+            cache_filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
 
             # dump to json, and save to file
             json_str = make_str(json.dumps(response_json))
-            with io.open(cache_path_filename, 'w', encoding='utf-8') as cache_file:
+            with io.open(cache_filepath, 'w', encoding='utf-8') as cache_file:
                 cache_file.write(json_str)
 
-            log('Saved response to cache file "{}"'.format(cache_path_filename))
+            log('Saved response to cache file "{}"'.format(cache_filepath))
+
+
+
+def url_in_cache(url):
+    """
+    Determine if a URL's response exists in the cache.
+
+    Parameters
+    ----------
+    url : string
+        the url to look for in the cache
+
+    Returns
+    -------
+    filepath : string
+        path to cached response for url if it exists in the cache,
+        otherwise None
+    """
+
+    # hash the url to generate the cache filename
+    filename = hashlib.md5(url.encode('utf-8')).hexdigest()
+    filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
+    
+    # if this file exists in the cache, return its full path
+    if os.path.isfile(filepath):
+        return filepath
+
 
 
 def get_from_cache(url):
@@ -140,20 +166,20 @@ def get_from_cache(url):
     Returns
     -------
     response_json : dict
+        cached response for url if it exists in the cache, otherwise None
     """
+
     # if the tool is configured to use the cache
     if settings.use_cache:
-        # determine the filename by hashing the url
-        filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-
-        cache_path_filename = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
-        # open the cache file for this url hash if it already exists, otherwise
-        # return None
-        if os.path.isfile(cache_path_filename):
-            with io.open(cache_path_filename, encoding='utf-8') as cache_file:
+        
+        # return cached response for this url if it exists, otherwise return None
+        cache_filepath = url_in_cache(url)
+        if cache_filepath is not None:
+            with io.open(cache_filepath, encoding='utf-8') as cache_file:
                 response_json = json.load(cache_file)
-            log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_path_filename, url))
+            log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_filepath, url))
             return response_json
+
 
 
 def get_http_headers(user_agent=None, referer=None, accept_language=None):
