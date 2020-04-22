@@ -325,22 +325,24 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     annotate : bool
         if True, annotate the nodes in the figure
     node_color : string
-        the color of the nodes
+        the color of the nodes. color is passed to matplotlib
     node_size : int
         the size of the nodes
     node_alpha : float
-        the opacity of the nodes
+        the opacity of the nodes. if you passed RGBA values to node_color,
+        then set this to None to use the alpha channel in node_color
     node_edgecolor : string
         the color of the node's marker's border
     node_zorder : int
         zorder to plot nodes, edges are always 2, so make node_zorder 1 to plot
         nodes beneath them or 3 to plot nodes atop them
     edge_color : string
-        the color of the edges' lines
+        the color of the edges' lines. color is passed to matplotlib.
     edge_linewidth : float
         the width of the edges' lines
     edge_alpha : float
-        the opacity of the edges' lines
+        the opacity of the edges' lines. if you passed RGBA values to edge_color,
+        then set this to None to use the alpha channel in edge_color
     use_geom : bool
         if True, use the spatial geometry attribute of the edges to draw
         geographically accurate edges, rather than just lines straight from node
