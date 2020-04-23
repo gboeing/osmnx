@@ -266,8 +266,8 @@ def parse_osm_relations(relations, osm_way_df):
 
     # Iterate over relations and extract the items
     for relation in relations:
-        if relation['tags']['type'] == 'multipolygon':
-            try:
+        try:
+            if relation['tags']['type'] == 'multipolygon':
                 # Parse member 'way' ids
                 member_way_ids = [member['ref'] for member in relation['members'] if member['type'] == 'way']
                 # Extract the ways
@@ -296,8 +296,8 @@ def parse_osm_relations(relations, osm_way_df):
                     gdf_relations = gdf_relations.append(geo, sort=False)
                     # Remove such 'ways' from 'osm_way_df' that are part of the 'relation'
                     osm_way_df = osm_way_df.drop(member_way_ids)
-            except Exception:
-                log("Could not handle OSM 'relation': {}".format(relation['id']))
+        except Exception as e:
+            log("Could not parse OSM relation {}".format(relation['id']))
 
     # Merge 'osm_way_df' and the 'gdf_relations'
     osm_way_df = osm_way_df.append(gdf_relations, sort=False)
