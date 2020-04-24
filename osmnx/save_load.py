@@ -474,18 +474,27 @@ def load_graphml(filename, folder=None, node_type=int):
         data['osmid'] = node_type(data['osmid'])
         data['x'] = float(data['x'])
         data['y'] = float(data['y'])
+        if 'elevation' in data:
+            data['elevation'] = float(data['elevation'])
+        if 'elevation_res' in data:
+            data['elevation_res'] = float(data['elevation_res'])
 
-    # convert numeric, bool, and list node tags from string to correct data types
+    # convert numeric, bool, and list edge attributes from string to correct data types
     for _, _, data in G.edges(data=True, keys=False):
 
         # first parse oneway to bool and length to float - they should always
         # have only 1 value each
         data['oneway'] = ast.literal_eval(data['oneway'])
         data['length'] = float(data['length'])
+        if 'grade' in data:
+            data['grade'] = float(data['grade'])
+        if 'grade_abs' in data:
+            data['grade_abs'] = float(data['grade_abs'])
 
         # these attributes might have a single value, or a list if edge's
         # topology was simplified
-        for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed', 'service', 'access', 'area', 'landuse', 'width', 'est_width']:
+        for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed',
+                     'service', 'access', 'area', 'landuse', 'width', 'est_width']:
             # if this edge has this attribute, and it starts with '[' and ends
             # with ']', then it's a list to be parsed
             if attr in data and data[attr].startswith('[') and data[attr].endswith(']'):
