@@ -89,9 +89,10 @@ def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8
     start_time = time.time()
     gdf_nodes, gdf_edges = graph_to_gdfs(get_undirected(G))
 
-    # make everything but geometry column a string
+    # make every non-numeric edge attribute (besides geometry) a string
     for col in [c for c in gdf_edges.columns if not c == 'geometry']:
-        gdf_edges[col] = gdf_edges[col].fillna('').map(str)
+        if not pd.api.types.is_numeric_dtype(gdf_edges[col]):
+            gdf_edges[col] = gdf_edges[col].fillna('').map(str)
 
     # use settings.data_folder if a folder wasn't passed in
     # if the save folder does not already exist, create it
