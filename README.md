@@ -10,7 +10,7 @@
 
 **Python for street networks**
 
-Retrieve, model, analyze, and visualize street networks from OpenStreetMap.
+Retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data.
 
 **Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](https://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems* 65, 126-139. doi:10.1016/j.compenvurbsys.2017.05.004
 
@@ -53,7 +53,7 @@ conda config --prepend channels conda-forge
 conda create -n ox --strict-channel-priority osmnx
 ```
 
-Alternatively, you can run OSMnx + Jupyter directly from this [docker container](https://hub.docker.com/r/gboeing/osmnx), or you can install OSMnx via [pip](https://pypi.python.org/pypi/OSMnx) if you already have OSMnx's dependencies installed on your system.
+Alternatively, you can run OSMnx + Jupyter directly from its official [docker container](https://hub.docker.com/r/gboeing/osmnx), or you can install OSMnx via [pip](https://pypi.python.org/pypi/OSMnx) if you already have OSMnx's dependencies installed on your system.
 
 
 
@@ -77,7 +77,7 @@ For a quick overview of OSMnx, see this [demo notebook](https://github.com/gboei
 
 ### Introduction
 
-Download and model Manhattan's drivable street network in just one line of code, then visualize it in one more:
+Import OSMnx, download and model Manhattan's drivable street network in just one line of code, then visualize it in one more:
 
 ```python
 import osmnx as ox
@@ -102,7 +102,7 @@ You can just as easily download and work with [amenities/points of interest](htt
 
 ### Download and model street networks
 
-OSMnx lets you download street network data and build topologically corrected street networks, project to UTM and plot the networks, and save the street network as SVGs, GraphML files, .osm files, shapefiles, or geopackages for later use. The street networks are directed and preserve one-way directionality. API responses can be cached locally so OSMnx doesn't have to request the same data from the API multiple times - saving bandwidth, increasing speed, and enabling reproducibility.
+OSMnx lets you download street network data and build topologically corrected multidigraphs, project to UTM and plot the networks, and save the street network as SVGs, GraphML files, .osm files, shapefiles, or geopackages for later use. The street networks are directed and preserve one-way directionality. API responses can be cached locally so OSMnx doesn't have to request the same data from the API multiple times - saving bandwidth, increasing speed, and enabling reproducibility.
 
 You can download a street network by providing OSMnx any of the following (demonstrated in the examples):
   - a bounding box
@@ -111,7 +111,7 @@ You can download a street network by providing OSMnx any of the following (demon
   - a place name or list of place names (for OSMnx to automatically geocode and get the boundary of)
   - a polygon of the desired street network's boundaries
 
-You can also specify several different network types:
+You can also specify several different built-in network types:
   - `drive` - get drivable public streets (but not service roads)
   - `drive_service` - get drivable streets, including service roads
   - `walk` - get all streets and paths that pedestrians can use (this network type ignores one-way directionality)
@@ -119,20 +119,13 @@ You can also specify several different network types:
   - `all` - download all non-private OSM streets and paths
   - `all_private` - download all OSM streets and paths, including private-access ones
 
-For example, to download, model, project, and plot Manhattan's drivable street network:
-
-```python
-G = ox.graph_from_place('Manhattan, New York, USA', network_type='drive')
-ox.plot_graph(ox.project_graph(G))
-```
-
 Or you can define your own fine-tuned network type using OSMnx's `infrastructure` parameter (to get railways, powerlines, canals, or other networked infrastructure types) or `custom_filter` parameter (to get only highways, or only walkable + bikeable routes, etc). For an in-depth demonstration of creating street networks, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/03-example-osm-place-network.ipynb).
 
 
 
 ### Analyze and visualize street networks
 
-OSMnx allows you to calculate origin-destination routes along the network and quickly visualize them. You can easily visualize elevation, street grade, one-way streets, culs-de-sac, high/low connectivity intersections, building footprints, etc. OSMnx provides built-in capabilities to quickly calculate spatial network metrics like intersection density, average intersection degree, edge density, average street segment length, clustering coefficients, betweenness centrality, etc.
+OSMnx allows you to calculate origin-destination routes along the network and quickly visualize them. You can easily visualize elevation, street grade, one-way streets, culs-de-sac, high/low connectivity intersections, building footprints, etc. OSMnx provides built-in capabilities to quickly calculate spatial network metrics like intersection density, average intersection degree, edge density, average street segment length, clustering coefficients, betweenness centrality, etc. For better spatial analysis and visualization, OSMnx lets you project your graph either to a CRS of your choice or automatically to UTM for easy meter-based analysis and projected visualization.
 
 You can also calculate shortest paths with different impedances for network routing and trip simulation, calculate street bearings to analyze network orientation, or snap your own data to the network using OSMnx's fast get nearest node and get nearest edge functions. 
 
