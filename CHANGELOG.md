@@ -1,5 +1,16 @@
 # Change log
 
+## 0.12.1 (2020-05-01)
+
+  - fix handling relations with missing type tag
+  - fix save_graph_geopackage handling numeric attributes
+  - fix load_graphml handling elevation and grade attributes
+  - improve edge finding algorithms to return edge key
+  - more informative graph_from_file data load error message
+  - refactor url-in-cache checking
+  - add timestamp helper function
+  - documentation improvements
+
 ## 0.12 (2020-04-10)
 
   - add ability to save graph as geopackage file
