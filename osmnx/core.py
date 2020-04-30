@@ -787,7 +787,7 @@ def add_edge_lengths(G):
 
     # first load all the edges' origin and destination coordinates as a
     # dataframe indexed by u, v, key
-        try:
+    try:
         coords = np.array([[u, v, k, G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in G.edges(keys=True)])
     except KeyError:
         missing_nodes = {str(i) for u, v, _ in G.edges(keys=True) if not(G.nodes[u] or G.nodes[u]) for i in (u, v) if not G.nodes[i]}
