@@ -65,7 +65,7 @@ Examples/tutorials available in the [examples repo](https://github.com/gboeing/o
 
 Examples of projects and blog posts [using OSMnx](https://geoffboeing.com/2018/03/osmnx-features-roundup/).
 
-Cite the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/).
+If you use OSMnx in your work, please cite the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/).
 
 
 
@@ -151,10 +151,10 @@ For examples of saving and loading networks to/from disk, see [this notebook](ht
 
 ## More info
 
-Download/cite the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/).
-
-For a more complete overview of [OSMnx, read this](https://geoffboeing.com/2016/11/osmnx-python-street-networks/).
+If you use OSMnx in your work, please cite the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/).
 
 For complete documentation and code examples, see the [docs](https://osmnx.readthedocs.io/) and the [examples repo](https://github.com/gboeing/osmnx-examples).
+
+For a more complete overview of [OSMnx, read this](https://geoffboeing.com/2016/11/osmnx-python-street-networks/).
 
 Examples of projects and blog posts [using OSMnx](https://geoffboeing.com/2018/03/osmnx-features-roundup/)
