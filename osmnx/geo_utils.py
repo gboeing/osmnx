@@ -215,7 +215,7 @@ def get_nearest_edge(G, point):
     The last step is to sort the edge segments in ascending order based on the distance
     from the coordinates to the edge. In the end, the first element in the list of edges
     will be the closest edge that we will return as a tuple containing the shapely
-    geometry and the u, v nodes.
+    geometry, the u, v nodes, and the edge key.
 
     Parameters
     ----------
@@ -226,14 +226,14 @@ def get_nearest_edge(G, point):
 
     Returns
     -------
-    closest_edge_to_point : tuple (shapely.geometry, u, v)
+    closest_edge_to_point : tuple (shapely.geometry, u, v, key)
         A geometry object representing the segment and the coordinates of the two
-        nodes that determine the edge section, u and v, the OSM ids of the nodes.
+        nodes that determine the edge section, u and v, the OSM ids of the nodes, and the key for the edge.
     """
     start_time = time.time()
 
     gdf = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
-    graph_edges = gdf[["geometry", "u", "v"]].values.tolist()
+    graph_edges = gdf[["geometry", "u", "v","key"]].values.tolist()
 
     edges_with_distances = [
         (
@@ -246,11 +246,11 @@ def get_nearest_edge(G, point):
     edges_with_distances = sorted(edges_with_distances, key=lambda x: x[1])
     closest_edge_to_point = edges_with_distances[0][0]
 
-    geometry, u, v = closest_edge_to_point
+    geometry, u, v,key = closest_edge_to_point
 
-    log('Found nearest edge ({}) to point {} in {:,.2f} seconds'.format((u, v), point, time.time() - start_time))
+    log('Found nearest edge ({}) to point {} in {:,.2f} seconds'.format((u, v, key), point, time.time() - start_time))
 
-    return geometry, u, v
+    return geometry, u, v, key
 
 
 def get_nearest_nodes(G, X, Y, method=None):
@@ -381,7 +381,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     -------
     ne : ndarray
         array of nearest edges represented by their startpoint and endpoint ids,
-        u and v, the OSM ids of the nodes.
+        u and v, the OSM ids of the nodes, and the edge key.
 
     Info
     ----
@@ -400,7 +400,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     if method is None:
         # calculate nearest edge one at a time for each (y, x) point
         ne = [get_nearest_edge(G, (y, x)) for x, y in zip(X, Y)]
-        ne = [(u, v) for _, u, v in ne]
+        ne = [(u, v,k) for _, u, v,k in ne]
 
     elif method == 'kdtree':
 
@@ -428,7 +428,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         points = np.array([X, Y]).T
         dist, idx = btree.query(points, k=1)  # Returns ids of closest point
         eidx = extended.loc[idx, 'index']
-        ne = edges.loc[eidx, ['u', 'v']]
+        ne = edges.loc[eidx, ['u', 'v','key']]
 
     elif method == 'balltree':
 
@@ -458,7 +458,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         # query the tree for nearest node to each point
         idx = tree.query(points_rad, k=1, return_distance=False)
         eidx = extended.loc[idx[:, 0], 'index']
-        ne = edges.loc[eidx, ['u', 'v']]
+        ne = edges.loc[eidx, ['u', 'v','key']]
 
     else:
         raise ValueError('You must pass a valid method name, or None.')

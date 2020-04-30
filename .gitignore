@@ -135,3 +135,6 @@ ENV/
 
 # PyCharm IDE idea files
 .idea
+
+# VSCode IDE idea files
+.vscode
