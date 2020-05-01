@@ -18,7 +18,7 @@ Retrieve, model, analyze, and visualize OpenStreetMap street networks and other 
 
 ## Features
 
-**OSMnx** is a Python package that lets you download spatial geometries and model, project, visualize, and analyze street networks from OpenStreetMap's APIs. Users can download and model walkable, drivable, or bikable urban networks with a single line of Python code, and then easily analyze and visualize them. You can just as easily download and work with amenities/points of interest, building footprints, elevation data, street bearings/orientations, and network routing.
+**OSMnx** is a Python package that lets you download spatial geometries and model, project, visualize, and analyze street networks from OpenStreetMap's APIs. Users can download and model walkable, drivable, or bikeable urban networks with a single line of Python code, and then easily analyze and visualize them. You can just as easily download and work with amenities/points of interest, building footprints, elevation data, street bearings/orientations, and network routing.
 
 OSMnx is built on top of geopandas, networkx, and matplotlib and works with OpenStreetMap's APIs to:
 
