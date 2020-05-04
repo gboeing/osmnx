@@ -70,7 +70,7 @@ def is_endpoint(G, node, strict=True):
 
     # rule 4
     elif not strict:
-        # non-strict mode
+        # non-strict mode: do its incident edges have different OSM IDs?
         osmids = []
 
         # add all the edge OSM IDs for incoming edges
