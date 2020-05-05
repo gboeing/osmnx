@@ -393,7 +393,6 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     if method is None:
         # calculate nearest edge one at a time for each (y, x) point
         ne = [get_nearest_edge(G, (y, x)) for x, y in zip(X, Y)]
-        ne = [(u, v,k) for _, u, v,k in ne]
 
     elif method == 'kdtree':
 
