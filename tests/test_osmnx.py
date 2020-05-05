@@ -288,7 +288,7 @@ def test_nearest_edge():
     sheik_sayed_dubai = [25.09, 25.06, 55.16, 55.11]
     location_coordinates = (25.071764, 55.138978)
     G = ox.graph_from_bbox(*sheik_sayed_dubai, simplify=False, retain_all=True, network_type='drive')
-    geometry, u, v, k = ox.get_nearest_edge(G, location_coordinates)
+    u, v, k, geom, dist = ox.get_nearest_edge(G, location_coordinates, return_geom=True, return_dist=True)
 
 
 def test_nearest_edges():
