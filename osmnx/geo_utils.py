@@ -229,7 +229,7 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
     start_time = time.time()
 
     # get u, v, key, geom from all the graph edges
-    gdf_edges = ox.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+    gdf_edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
     edges = gdf_edges[['u', 'v', 'key', 'geometry']].values
 
     # convert lat-lng point to x-y for shapely distance operation
@@ -240,7 +240,7 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
 
     # the nearest edge minimizes the distance to the point
     (u, v, key, geom), dist = min(edge_distances, key=lambda x: x[1])
-    ox.log('Found nearest edge ({}) to point {} in {:,.2f} seconds'.format((u, v, key), point, time.time() - start_time))
+    log('Found nearest edge ({}) to point {} in {:,.2f} seconds'.format((u, v, key), point, time.time() - start_time))
 
     # return results requested by caller
     if return_dist and return_geom:
