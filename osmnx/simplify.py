@@ -19,14 +19,14 @@ from .geo_utils import count_streets_per_node
 
 def is_endpoint(G, node, strict=True):
     """
-    Return True if the node is a "real" endpoint of an edge in the network, \
-    otherwise False. OSM data includes lots of nodes that exist only as points \
-    to help streets bend around curves. An end point is a node that either: \
-    1) is its own neighbor, ie, it self-loops. \
-    2) or, has no incoming edges or no outgoing edges, ie, all its incident \
-        edges point inward or all its incident edges point outward. \
-    3) or, it does not have exactly two neighbors and degree of 2 or 4. \
-    4) or, if strict mode is false, if its edges have different OSM IDs. \
+    Return True if the node is a "real" endpoint of an edge in the network,
+    otherwise False. OSM data includes lots of nodes that exist only as points
+    to help streets bend around curves. An end point is a node that either:
+    1) is its own neighbor, ie, it self-loops.
+    2) or, has no incoming edges or no outgoing edges, ie, all its incident
+       edges point inward or all its incident edges point outward.
+    3) or, it does not have exactly two neighbors and degree of 2 or 4.
+    4) or, if strict mode is false, if its edges have different OSM IDs.
 
     Parameters
     ----------
@@ -35,7 +35,7 @@ def is_endpoint(G, node, strict=True):
     node : int
         the node to examine
     strict : bool
-        if False, allow nodes to be end points even if they fail all other rules \
+        if False, allow nodes to be end points even if they fail all other rules
         but have edges with different OSM IDs
 
     Returns
@@ -47,15 +47,18 @@ def is_endpoint(G, node, strict=True):
     n = len(neighbors)
     d = G.degree(node)
 
+    # rule 1
     if node in neighbors:
-        # if the node appears in its list of neighbors, it self-loops. this is
-        # always an endpoint.
+        # if the node appears in its list of neighbors, it self-loops
+        # this is always an endpoint.
         return True
 
-    # if node has no incoming edges or no outgoing edges, it must be an endpoint
+    # rule 2
     elif G.out_degree(node)==0 or G.in_degree(node)==0:
+        # if node has no incoming edges or no outgoing edges, it is an endpoint
         return True
 
+    # rule 3
     elif not (n==2 and (d==2 or d==4)):
         # else, if it does NOT have 2 neighbors AND either 2 or 4 directed
         # edges, it is an endpoint. either it has 1 or 3+ neighbors, in which
@@ -65,8 +68,9 @@ def is_endpoint(G, node, strict=True):
         # endpoint
         return True
 
+    # rule 4
     elif not strict:
-        # non-strict mode
+        # non-strict mode: do its incident edges have different OSM IDs?
         osmids = []
 
         # add all the edge OSM IDs for incoming edges
@@ -83,8 +87,8 @@ def is_endpoint(G, node, strict=True):
         # an endpoint, if not, it isn't
         return len(set(osmids)) > 1
 
+    # if none of the preceding rules returned true, then it is not an endpoint
     else:
-        # if none of the preceding rules returned true, then it is not an endpoint
         return False
 
 
