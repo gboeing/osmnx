@@ -18,9 +18,9 @@ from shapely.ops import polygonize
 from . import settings
 from .core import consolidate_subdivide_geometry
 from .core import get_polygons_coordinates
-from .core import overpass_request
 from .core import bbox_from_point
 from .core import gdf_from_place
+from .downloader import overpass_request
 from .plot import save_and_show
 from .projection import project_geometry
 from .utils import log

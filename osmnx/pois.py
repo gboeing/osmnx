@@ -15,8 +15,9 @@ from shapely.geometry import Polygon
 from . import settings
 from .core import bbox_from_point
 from .core import gdf_from_place
-from .core import overpass_request
-from .geo_utils import geocode, bbox_to_poly
+from .downloader import overpass_request
+from .geo_utils import bbox_to_poly
+from .geo_utils import geocode
 from .utils import log
 
 
