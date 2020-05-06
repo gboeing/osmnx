@@ -21,7 +21,7 @@ from .geo_utils import geocode
 from .utils import log
 
 
-def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsize='',
+def parse_poi_query(north, south, east, west, amenities=None, timeout=180, memory=None,
                     custom_settings=None):
     """
     Parse the Overpass QL query based on the list of amenities.
@@ -41,11 +41,23 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsi
         List of amenities that will be used for finding the POIs from the selected area.
     timeout : int
         Timeout for the API request.
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
     custom_settings : string
         custom settings to be used in the overpass query instead of the default
         ones
 
     """
+
+    # pass server memory allocation in bytes for the query to the API
+    # if None, pass nothing so the server will use its default allocation size
+    # otherwise, define the query's maxsize parameter value as whatever the
+    # caller passed in
+    if memory is None:
+        maxsize = ''
+    else:
+        maxsize = '[maxsize:{}]'.format(memory)
 
     # use custom settings if delivered, otherwise just the default ones.
     if custom_settings:
