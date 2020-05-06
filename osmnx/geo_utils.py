@@ -217,6 +217,11 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
     point : tuple
         The (lat, lng) or (y, x) point for which we will find the nearest edge
         in the graph
+    return_geom : bool
+        Optionally return the geometry of the nearest edge
+    return_dist : bool
+        Optionally return the distance in graph's coordinates' units between the 
+        point and the nearest node
 
     Returns
     -------
@@ -244,13 +249,13 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
 
     # return results requested by caller
     if return_dist and return_geom:
-        return (u, v, key, geom, dist)
+        return u, v, key, geom, dist
     elif return_dist:
-        return (u, v, key, dist)
+        return u, v, key, dist
     elif return_geom:
-        return (u, v, key, geom)
+        return u, v, key, geom
     else:
-        return (u, v, key)
+        return u, v, key
 
 
 
