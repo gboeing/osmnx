@@ -207,15 +207,9 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
         return nearest_node
 
 
-def get_nearest_edge(G, point):
+def get_nearest_edge(G, point, return_geom=False, return_dist=False):
     """
-    Return the nearest edge to a pair of coordinates. Pass in a graph and a tuple
-    with the coordinates. We first get all the edges in the graph. Secondly we compute
-    the euclidean distance from the coordinates to the segments determined by each edge.
-    The last step is to sort the edge segments in ascending order based on the distance
-    from the coordinates to the edge. In the end, the first element in the list of edges
-    will be the closest edge that we will return as a tuple containing the shapely
-    geometry, the u, v nodes, and the edge key.
+    Return the nearest edge to a point, by minimum euclidean distance.
 
     Parameters
     ----------
@@ -223,34 +217,46 @@ def get_nearest_edge(G, point):
     point : tuple
         The (lat, lng) or (y, x) point for which we will find the nearest edge
         in the graph
+    return_geom : bool
+        Optionally return the geometry of the nearest edge
+    return_dist : bool
+        Optionally return the distance in graph's coordinates' units between the 
+        point and the nearest node
 
     Returns
     -------
-    closest_edge_to_point : tuple (shapely.geometry, u, v, key)
-        A geometry object representing the segment and the coordinates of the two
-        nodes that determine the edge section, u and v, the OSM ids of the nodes, and the key for the edge.
+    tuple
+        Graph edge unique identifier as a tuple of (u, v, key).
+        Or a tuple of (u, v, key, geom) if return_geom is True.
+        Or a tuple of (u, v, key, dist) if return_dist is True.
+        Or a tuple of (u, v, key, geom, dist) if return_geom and return_dist are True.
     """
     start_time = time.time()
 
-    gdf = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
-    graph_edges = gdf[["geometry", "u", "v","key"]].values.tolist()
+    # get u, v, key, geom from all the graph edges
+    gdf_edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+    edges = gdf_edges[['u', 'v', 'key', 'geometry']].values
 
-    edges_with_distances = [
-        (
-            graph_edge,
-            Point(tuple(reversed(point))).distance(graph_edge[0])
-        )
-        for graph_edge in graph_edges
-    ]
+    # convert lat-lng point to x-y for shapely distance operation
+    xy_point = Point(reversed(point))
 
-    edges_with_distances = sorted(edges_with_distances, key=lambda x: x[1])
-    closest_edge_to_point = edges_with_distances[0][0]
+    # calculate euclidean distance from each edge's geometry to this point
+    edge_distances = [(edge, xy_point.distance(edge[3])) for edge in edges]
 
-    geometry, u, v,key = closest_edge_to_point
-
+    # the nearest edge minimizes the distance to the point
+    (u, v, key, geom), dist = min(edge_distances, key=lambda x: x[1])
     log('Found nearest edge ({}) to point {} in {:,.2f} seconds'.format((u, v, key), point, time.time() - start_time))
 
-    return geometry, u, v, key
+    # return results requested by caller
+    if return_dist and return_geom:
+        return u, v, key, geom, dist
+    elif return_dist:
+        return u, v, key, dist
+    elif return_geom:
+        return u, v, key, geom
+    else:
+        return u, v, key
+
 
 
 def get_nearest_nodes(G, X, Y, method=None):
@@ -351,7 +357,11 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     If you have a large graph with projected coordinates, use 
     method='kdtree'. Note that if you are working in units of lat-lng,
     the X vector corresponds to longitude and the Y vector corresponds
-    to latitude.
+    to latitude. The method creates equally distanced points along the edges 
+    of the network. Then, these points are used in a kdTree or BallTree search
+    to identify which is nearest.Note that this method will not give the exact
+    perpendicular point along the edge, but the smaller the *dist* parameter,
+    the closer the solution will be.
 
     Parameters
     ----------
@@ -382,25 +392,12 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     ne : ndarray
         array of nearest edges represented by their startpoint and endpoint ids,
         u and v, the OSM ids of the nodes, and the edge key.
-
-    Info
-    ----
-    The method creates equally distanced points along the edges of the network.
-    Then, these points are used in a kdTree or BallTree search to identify which
-    is nearest.Note that this method will not give the exact perpendicular point
-    along the edge, but the smaller the *dist* parameter, the closer the solution
-    will be.
-
-    Code is adapted from an answer by JHuw from this original question:
-    https://gis.stackexchange.com/questions/222315/geopandas-find-nearest-point
-    -in-other-dataframe
     """
     start_time = time.time()
 
     if method is None:
         # calculate nearest edge one at a time for each (y, x) point
         ne = [get_nearest_edge(G, (y, x)) for x, y in zip(X, Y)]
-        ne = [(u, v,k) for _, u, v,k in ne]
 
     elif method == 'kdtree':
 
@@ -474,9 +471,6 @@ def redistribute_vertices(geom, dist):
     argument is only approximate since the total distance of the linestring may not be
     a multiple of the preferred distance. This function works on only [Multi]LineString
     geometry types.
-
-    This code is adapted from an answer by Mike T from this original question:
-    https://stackoverflow.com/questions/34906124/interpolating-every-x-distance-along-multiline-in-shapely
 
     Parameters
     ----------
