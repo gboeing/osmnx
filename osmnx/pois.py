@@ -55,24 +55,24 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, maxsi
 
     if amenities:
         # Overpass QL template
-        query_template = ('{settings};((node["amenity"~"{amenities}"]({south:.6f},'
+        query_template = ('{overpass_settings};((node["amenity"~"{amenities}"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"~"{amenities}"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"~"{amenities}"]'
                           '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);););out;')
 
         # Parse amenties
         query_str = query_template.format(amenities="|".join(amenities), north=north, south=south, east=east, west=west,
-                                          timeout=timeout, maxsize=maxsize, settings=overpass_settings)
+                                          timeout=timeout, maxsize=maxsize, overpass_settings=overpass_settings)
     else:
         # Overpass QL template
-        query_template = ('{settings};((node["amenity"]({south:.6f},'
+        query_template = ('{overpass_settings};((node["amenity"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"]({south:.6f},'
                           '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"]'
                           '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);););out;')
 
         # Parse amenties
         query_str = query_template.format(north=north, south=south, east=east, west=west,
-                                          timeout=timeout, maxsize=maxsize, settings=overpass_settings)
+                                          timeout=timeout, maxsize=maxsize, overpass_settings=overpass_settings)
 
     return query_str
 

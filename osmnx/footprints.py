@@ -111,13 +111,13 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
             # decimal places (ie, within 1 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = ('{settings};'
+            query_template = ('{overpass_settings};'
                               '((way["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
                               '(._;>;););'
                               '(relation["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
                               '(._;>;);););out;')
             query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout,
-                                              maxsize=maxsize, footprint_type=footprint_type, settings=overpass_settings)
+                                              maxsize=maxsize, footprint_type=footprint_type, overpass_settings=overpass_settings)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within bounding box from '
@@ -137,11 +137,11 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
-            query_template = ('{settings};('
+            query_template = ('{overpass_settings};('
                               'way(poly:"{polygon}")["{footprint_type}"];(._;>;);'
                               'relation(poly:"{polygon}")["{footprint_type}"];(._;>;););out;')
             query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize,
-                                              footprint_type=footprint_type, settings=overpass_settings)
+                                              footprint_type=footprint_type, overpass_settings=overpass_settings)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within polygon from API in '
