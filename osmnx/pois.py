@@ -90,7 +90,7 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, memor
 
 
 def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=None, west=None,
-                     timeout=180, max_query_area_size=50*1000*50*1000, custom_settings=None):
+                     timeout=180, memory=None, custom_settings=None):
     """
     Get points of interests (POIs) from OpenStreetMap based on selected amenity types.
     Note that if a polygon is passed-in, the query will be limited to its bounding box
@@ -98,10 +98,23 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
 
     Parameters
     ----------
-    poly : shapely.geometry.Polygon
+    polygon : shapely.geometry.Polygon
         Polygon that will be used to limit the POI search.
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area.
+    north : float
+        northern latitude of bounding box
+    south : float
+        southern latitude of bounding box
+    east : float
+        eastern longitude of bounding box
+    west : float
+        western longitude of bounding box
+    timeout : int
+        Timeout for the API request.
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
     custom_settings : string
         custom settings to be used in the overpass query instead of the default
         ones
@@ -117,16 +130,22 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
         west, south, east, north = polygon.bounds
 
         # Parse the Overpass QL query
-        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north,
+        query = parse_poi_query(north=north, south=south, east=east, west=west,
+                                amenities=amenities,
+                                timeout=timeout,
+                                memory=memory,
                                 custom_settings=custom_settings)
 
     elif not (north is None or south is None or east is None or west is None):
-        # TODO: Add functionality for subdividing search area geometry based on max_query_area_size
+        # TODO: add functionality for subdividing search area geometry
         # Parse Polygon from bbox
         #polygon = bbox_to_poly(north=north, south=south, east=east, west=west)
 
         # Parse the Overpass QL query
-        query = parse_poi_query(amenities=amenities, west=west, south=south, east=east, north=north,
+        query = parse_poi_query(north=north, south=south, east=east, west=west,
+                                amenities=amenities,
+                                timeout=timeout,
+                                memory=memory,
                                 custom_settings=custom_settings)
 
     else:
