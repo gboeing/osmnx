@@ -11,20 +11,20 @@ import time
 from descartes import PolygonPatch
 from matplotlib.collections import PatchCollection
 from shapely.geometry import LineString
-from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
+from shapely.geometry import Polygon
 from shapely.ops import polygonize
 
 from . import settings
-from .core import consolidate_subdivide_geometry
-from .core import get_polygons_coordinates
 from .core import bbox_from_point
+from .core import consolidate_subdivide_geometry
 from .core import gdf_from_place
+from .core import get_polygons_coordinates
 from .downloader import overpass_request
+from .geo_utils import geocode
 from .plot import save_and_show
 from .projection import project_geometry
 from .utils import log
-from .geo_utils import geocode
 
 
 def osm_footprints_download(polygon=None, north=None, south=None, east=None, west=None,
