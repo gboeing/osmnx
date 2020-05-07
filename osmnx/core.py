@@ -180,10 +180,8 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max area for any part of the geometry, in the units the geometry is in:
-        any polygon bigger will get divided up for multiple queries to API
-        (default is 50,000 * 50,000 units [ie, 50km x 50km in area, if units are
-        meters])
+        max area for any part of the geometry in meters: any polygon bigger 
+        will get divided up for multiple queries to API (default 50km x 50km)
     infrastructure : string
         download infrastructure of given type. default is streets, ie,
         'way["highway"]') but other infrastructures may be selected like power
@@ -253,12 +251,12 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
             # decimal places (ie, ~100 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = '{settings};({infrastructure}{filters}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;'
+            query_template = '{overpass_settings};({infrastructure}{filters}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;'
             query_str = query_template.format(north=north, south=south,
                                               east=east, west=west,
                                               infrastructure=infrastructure,
                                               filters=osm_filter,
-                                              settings=overpass_settings)
+                                              overpass_settings=overpass_settings)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         log('Got all network data within bounding box from API in {:,} request(s) and {:,.2f} seconds'.format(len(geometry), time.time()-start_time))
@@ -277,11 +275,11 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
-            query_template = '{settings};({infrastructure}{filters}(poly:"{polygon}");>;);out;'
+            query_template = '{overpass_settings};({infrastructure}{filters}(poly:"{polygon}");>;);out;'
             query_str = query_template.format(polygon=polygon_coord_str,
                                               infrastructure=infrastructure,
                                               filters=osm_filter,
-                                              settings=overpass_settings)
+                                              overpass_settings=overpass_settings)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         log('Got all network data within polygon from API in {:,} request(s) and {:,.2f} seconds'.format(len(polygon_coord_strs), time.time()-start_time))
@@ -291,16 +289,16 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
 
 def consolidate_subdivide_geometry(geometry, max_query_area_size):
     """
-    Consolidate a geometry into a convex hull, then subdivide it into smaller sub-polygons if its area exceeds max size (in geometry's units).
+    Consolidate a geometry into a convex hull, then subdivide it into smaller
+    sub-polygons if its area exceeds max size (in geometry's units).
 
     Parameters
     ----------
     geometry : shapely Polygon or MultiPolygon
         the geometry to consolidate and subdivide
     max_query_area_size : float
-        max area for any part of the geometry, in the units the geometry is in.
-        any polygon bigger will get divided up for multiple queries to API (
-        default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
+        max area for any part of the geometry in geometry's units:
+        any polygon bigger will get divided up for multiple queries to API
 
     Returns
     -------
@@ -1050,8 +1048,8 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max size for any part of the geometry, in square degrees: any polygon
-        bigger will get divided up for multiple queries to API
+        max area for any part of the geometry in meters: any polygon bigger 
+        will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
@@ -1164,8 +1162,8 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max size for any part of the geometry, in square degrees: any polygon
-        bigger will get divided up for multiple queries to API
+        max area for any part of the geometry in meters: any polygon bigger 
+        will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool,
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
@@ -1320,8 +1318,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max size for any part of the geometry, in square degrees: any polygon
-        bigger will get divided up for multiple queries to API
+        max area for any part of the geometry in meters: any polygon bigger 
+        will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
@@ -1454,8 +1452,8 @@ def graph_from_place(query, network_type='all_private', simplify=True,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max size for any part of the geometry, in square degrees: any polygon
-        bigger will get divided up for multiple queries to API
+        max area for any part of the geometry in meters: any polygon bigger 
+        will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
