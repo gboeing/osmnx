@@ -190,6 +190,8 @@ def parse_polygonal_poi(coords, response):
     ----------
     coords : dict
         dict of node IDs and their lat, lon coordinates
+    response : string
+        OSM response JSON string
 
     Returns
     -------
@@ -261,6 +263,10 @@ def invalid_multipoly_handler(gdf, relation, way_ids):
         OSM 'relation' dictionary
     way_ids : list
         A list of 'way' ids that should be converted into a MultiPolygon object.
+
+    Returns
+    -------
+    shapely.geometry.MultiPolygon
     """
 
     try:
@@ -289,7 +295,7 @@ def parse_osm_relations(relations, osm_way_df):
 
     Returns
     -------
-    gpd.GeoDataFrame
+    geopandas.GeoDataFrame
         A GeoDataFrame with MultiPolygon representations of the
         relations and the attributes associated with them.
     """
@@ -367,7 +373,8 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
 
     Returns
     -------
-    Geopandas GeoDataFrame with POIs and the associated attributes.
+    geopandas.GeoDataFrame
+        GeoDataFrame with POIs and the associated attributes
     """
 
     responses = osm_poi_download(polygon=polygon, amenities=amenities, north=north, south=south, east=east, west=west,
@@ -446,9 +453,10 @@ def pois_from_point(point, distance=None, amenities=None, timeout=180, memory=No
     custom_settings : string
         custom settings to be used in the overpass query instead of the default
         ones
+
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
 
     bbox = bbox_from_point(point=point, distance=distance)
@@ -482,7 +490,7 @@ def pois_from_address(address, distance, amenities=None, timeout=180, memory=Non
 
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
 
     # geocode the address string to a (lat, lon) point
@@ -512,9 +520,10 @@ def pois_from_polygon(polygon, amenities=None, timeout=180, memory=None, custom_
     custom_settings : string
         custom settings to be used in the overpass query instead of the default
         ones
+        
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
 
     return create_poi_gdf(polygon=polygon, amenities=amenities,
@@ -545,7 +554,7 @@ def pois_from_place(place, amenities=None, which_result=1, timeout=180, memory=N
 
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
 
     city = gdf_from_place(place, which_result=which_result)
