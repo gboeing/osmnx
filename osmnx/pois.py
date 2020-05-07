@@ -337,7 +337,7 @@ def parse_osm_relations(relations, osm_way_df):
 
 
 def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=None, west=None,
-                   custom_settings=None):
+                   timeout=180, memory=None, custom_settings=None):
     """
     Parse GeoDataFrames from POI json that was returned by Overpass API.
 
@@ -356,6 +356,11 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
         eastern longitude of bounding box
     west : float
         western longitude of bounding box
+    timeout : int
+        Timeout for the API request.
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
     custom_settings : string
         custom settings to be used in the overpass query instead of the default
         ones
@@ -366,7 +371,7 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     """
 
     responses = osm_poi_download(polygon=polygon, amenities=amenities, north=north, south=south, east=east, west=west,
-                                 custom_settings=custom_settings)
+                                 timeout=timeout, memory=memory, custom_settings=custom_settings)
 
     # Parse coordinates from all the nodes in the response
     coords = parse_nodes_coords(responses)
@@ -419,7 +424,7 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     return gdf
 
 
-def pois_from_point(point, distance=None, amenities=None, custom_settings=None):
+def pois_from_point(point, distance=None, amenities=None, timeout=180, memory=None, custom_settings=None):
     """
     Get point of interests (POIs) within some distance north, south, east, and west of
     a lat-long point.
@@ -433,6 +438,11 @@ def pois_from_point(point, distance=None, amenities=None, custom_settings=None):
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area.
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+    timeout : int
+        Timeout for the API request.
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
     custom_settings : string
         custom settings to be used in the overpass query instead of the default
         ones
@@ -444,10 +454,10 @@ def pois_from_point(point, distance=None, amenities=None, custom_settings=None):
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
     return create_poi_gdf(amenities=amenities, north=north, south=south, east=east, west=west,
-                          custom_settings=custom_settings)
+                          timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
-def pois_from_address(address, distance, amenities=None, custom_settings=None):
+def pois_from_address(address, distance, amenities=None, timeout=180, memory=None, custom_settings=None):
     """
     Get OSM points of Interests within some distance north, south, east, and west of
     an address.
@@ -461,6 +471,11 @@ def pois_from_address(address, distance, amenities=None, custom_settings=None):
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area. See available
         amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+    timeout : int
+        Timeout for the API request.
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
     custom_settings : string
         custom settings to be used in the overpass query instead of the default
         ones
@@ -474,10 +489,11 @@ def pois_from_address(address, distance, amenities=None, custom_settings=None):
     point = geocode(query=address)
 
     # get POIs within distance of this point
-    return pois_from_point(point=point, amenities=amenities, distance=distance, custom_settings=custom_settings)
+    return pois_from_point(point=point, amenities=amenities, distance=distance,
+                           timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
-def pois_from_polygon(polygon, amenities=None, custom_settings=None):
+def pois_from_polygon(polygon, amenities=None, timeout=180, memory=None, custom_settings=None):
     """
     Get OSM points of interest within some polygon.
 
@@ -488,6 +504,11 @@ def pois_from_polygon(polygon, amenities=None, custom_settings=None):
     amenities : list
         List of amenities that will be used for finding the POIs from the selected area.
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+    timeout : int
+        Timeout for the API request.
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
     custom_settings : string
         custom settings to be used in the overpass query instead of the default
         ones
@@ -496,10 +517,11 @@ def pois_from_polygon(polygon, amenities=None, custom_settings=None):
     GeoDataFrame
     """
 
-    return create_poi_gdf(polygon=polygon, amenities=amenities, custom_settings=custom_settings)
+    return create_poi_gdf(polygon=polygon, amenities=amenities,
+                          timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
-def pois_from_place(place, amenities=None, which_result=1, custom_settings=None):
+def pois_from_place(place, amenities=None, which_result=1, timeout=180, memory=None, custom_settings=None):
     """
     Get points of interest (POIs) within the boundaries of some place.
 
@@ -512,6 +534,11 @@ def pois_from_place(place, amenities=None, which_result=1, custom_settings=None)
         See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
     which_result : int
         max number of place geocoding results to return and which to process upon receipt
+    timeout : int
+        Timeout for the API request.
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
     custom_settings : string
         custom settings to be used in the overpass query instead of the default
         ones
@@ -523,4 +550,5 @@ def pois_from_place(place, amenities=None, which_result=1, custom_settings=None)
 
     city = gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
-    return create_poi_gdf(polygon=polygon, amenities=amenities, custom_settings=custom_settings)
+    return create_poi_gdf(polygon=polygon, amenities=amenities,
+                          timeout=timeout, memory=memory, custom_settings=custom_settings)
