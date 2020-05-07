@@ -184,8 +184,9 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
 
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
+
     # allow pickling between downloading footprints and converting them to a GeoDataFrame
     if responses is None:
         responses = osm_footprints_download(polygon, north, south, east, west, footprint_type,
@@ -251,15 +252,17 @@ def responses_to_dicts(responses, footprint_type):
 
     Returns
     -------
-    vertices
-        dictionary of OSM nodes including their lat, lon coordinates
-    footprints
-        dictionary of OSM ways including their nodes and tags
-    relations
-        dictionary of OSM relations including member ids and tags
-    untagged_footprints
-        set of ids for ways or relations not directly tagged with footprint_type
+    (vertices, footprints, relations, untagged_footprints) : tuple
+        vertices
+            dictionary of OSM nodes including their lat, lon coordinates
+        footprints
+            dictionary of OSM ways including their nodes and tags
+        relations
+            dictionary of OSM relations including member ids and tags
+        untagged_footprints
+            set of ids for ways or relations not directly tagged with footprint_type
     """
+
     # create dictionaries to hold vertices, footprints and relations
     vertices = {}
     footprints = {}
@@ -324,6 +327,7 @@ def create_footprint_geometry(footprint_key, footprint_val, vertices):
     -------
     Shapely Polygon or LineString
     """
+
     # CLOSED WAYS
     if footprint_val['nodes'][0] == footprint_val['nodes'][-1]:
         try:
@@ -365,7 +369,7 @@ def create_relation_geometry(relation_key, relation_val, footprints):
         the id of the relation to process
     relation_val : dict
         members and tags of the relation
-    footprints : dictionary
+    footprints : dict
         dictionary of all footprints (including open and closed ways)
 
     Returns
@@ -463,7 +467,7 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
 
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
 
     bbox = bbox_from_point(point=point, distance=distance)
@@ -494,18 +498,13 @@ def footprints_from_address(address, distance, footprint_type='building', retain
     memory : int
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
     custom_settings : string
         custom settings to be used in the overpass query instead of the default
         ones
 
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
 
     # geocode the address string to a (lat, lon) point
@@ -536,18 +535,13 @@ def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=F
     memory : int
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
     custom_settings : string
         custom settings to be used in the overpass query instead of the default
         ones
 
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
 
     return create_footprints_gdf(polygon=polygon, footprint_type=footprint_type,
@@ -581,18 +575,13 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
     memory : int
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
     custom_settings : string
         custom settings to be used in the overpass query instead of the default
         ones
 
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
 
     city = gdf_from_place(place, which_result=which_result)
@@ -610,8 +599,8 @@ def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcol
 
     Parameters
     ----------
-    gdf : GeoDataFrame
-        footprints
+    gdf : geopandas.GeoDataFrame
+        GeoDataFrame of footprints
     fig : figure
     ax : axis
     figsize : tuple
