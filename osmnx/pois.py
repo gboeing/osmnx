@@ -18,10 +18,10 @@ from .geo_utils import geocode
 from .utils import log
 
 
-def parse_poi_query(north, south, east, west, amenities=None, timeout=180, memory=None,
-                    custom_settings=None):
+def create_poi_query(north, south, east, west, tags,
+                     timeout=180, memory=None, custom_settings=None):
     """
-    Parse the Overpass QL query based on the list of amenities.
+    Create an overpass query string based on passed tags.
 
     Parameters
     ----------
@@ -34,8 +34,11 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, memor
         Easternmost coordinate from bounding box of the search area.
     west : float
         Westernmost coordinate of the bounding box of the search area.
-    amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
+    tags : dict
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. Providing `False` is not
+        currently supported.
     timeout : int
         Timeout for the API request.
     memory : int
@@ -62,6 +65,46 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, memor
     else:
         overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout, maxsize=maxsize)
 
+    tags_dict = {}
+    error_msg = 'tags must be a dict with values of bool, str, or list of str'    
+
+    # make sure every value in dict is bool, str, or list of str
+    if not isinstance(tags, dict):
+        raise TypeError(error_msg)
+
+    for key, value in tags.items():
+        
+        if isinstance(value, bool):
+            tags_dict[key] = value
+
+        elif isinstance(value, str):
+            tags_dict[key] = [value]
+            
+        elif isinstance(value, list):
+            if not all(isinstance(s, str) for s in value):
+                raise TypeError(error_msg)
+            tags_dict[key] = value
+
+        else:
+            raise TypeError(error_msg)
+
+    # convert the tags dict into a list of {tag:value} dicts
+    tags_list = []
+    for key, value in tags_dict.items():
+        if isinstance(value, bool):
+            tags_list.append({key: value})
+        else:
+            for value_item in value:
+                tags_list.append({key: value_item})
+
+    query = ['{overpass_settings};'.format(overpass_settings=overpass_settings)]
+    print(query)
+    
+
+
+
+
+
     if amenities:
         # Overpass QL template
         query_template = ('{overpass_settings};((node["amenity"~"{amenities}"]({south:.6f},'
@@ -86,19 +129,20 @@ def parse_poi_query(north, south, east, west, amenities=None, timeout=180, memor
     return query_str
 
 
-def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=None, west=None,
+def osm_poi_download(tags, polygon=None,
+                     north=None, south=None, east=None, west=None,
                      timeout=180, memory=None, custom_settings=None):
     """
-    Get points of interests (POIs) from OpenStreetMap based on selected amenity types.
-    Note that if a polygon is passed-in, the query will be limited to its bounding box
-    rather than to the shape of the polygon itself.
+    Get points of interests (POIs) from OpenStreetMap based on passed tags
+    Note that if a polygon is passed-in, the query will be limited to its
+    bounding box rather than to the shape of the polygon itself.
 
     Parameters
     ----------
+    tags : dict
+        x
     polygon : shapely.geometry.Polygon
         Polygon that will be used to limit the POI search.
-    amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
     north : float
         northern latitude of bounding box
     south : float
@@ -122,33 +166,21 @@ def osm_poi_download(polygon=None, amenities=None, north=None, south=None, east=
         Points of interest and the tags associated with them as geopandas GeoDataFrame.
     """
 
-    if polygon:
-        # Bounds
+    # TODO: add functionality for subdividing search area geometry
+    # TODO: add functionality for constraining query to poly rather than its bbox
+    if polygon is not None:
         west, south, east, north = polygon.bounds
-
-        # Parse the Overpass QL query
-        query = parse_poi_query(north=north, south=south, east=east, west=west,
-                                amenities=amenities,
-                                timeout=timeout,
-                                memory=memory,
-                                custom_settings=custom_settings)
-
     elif not (north is None or south is None or east is None or west is None):
-        # TODO: add functionality for subdividing search area geometry
-        # Parse Polygon from bbox
-        #polygon = bbox_to_poly(north=north, south=south, east=east, west=west)
-
-        # Parse the Overpass QL query
-        query = parse_poi_query(north=north, south=south, east=east, west=west,
-                                amenities=amenities,
-                                timeout=timeout,
-                                memory=memory,
-                                custom_settings=custom_settings)
-
+        pass
     else:
         raise ValueError('You must pass a polygon or north, south, east, and west')
 
-    # Get the POIs
+    # get the POIs
+    query = create_poi_query(north=north, south=south, east=east, west=west,
+                             tags=tags,
+                             timeout=timeout,
+                             memory=memory,
+                             custom_settings=custom_settings)
     responses = overpass_request(data={'data': query}, timeout=timeout)
 
     return responses
@@ -276,6 +308,7 @@ def invalid_multipoly_handler(gdf, relation, way_ids):
         relation['id'], str(way_ids)))
         return None
 
+
 def parse_osm_relations(relations, osm_way_df):
     """
     Parses the osm relations (multipolygons) from osm
@@ -339,18 +372,17 @@ def parse_osm_relations(relations, osm_way_df):
     return osm_way_df
 
 
-def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=None, west=None,
+def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=None,
                    timeout=180, memory=None, custom_settings=None):
     """
     Parse GeoDataFrames from POI json that was returned by Overpass API.
 
     Parameters
     ----------
+    tags : dict
+        x
     polygon : shapely Polygon or MultiPolygon
         geographic shape to fetch the POIs within
-    amenities: list
-        List of amenities that will be used for finding the POIs from the selected area.
-        See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
     north : float
         northern latitude of bounding box
     south : float
@@ -374,7 +406,8 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
         GeoDataFrame with POIs and the associated attributes
     """
 
-    responses = osm_poi_download(polygon=polygon, amenities=amenities, north=north, south=south, east=east, west=west,
+    responses = osm_poi_download(tags, polygon=polygon,
+                                 north=north, south=south, east=east, west=west,
                                  timeout=timeout, memory=memory, custom_settings=custom_settings)
 
     # Parse coordinates from all the nodes in the response
@@ -428,7 +461,8 @@ def create_poi_gdf(polygon=None, amenities=None, north=None, south=None, east=No
     return gdf
 
 
-def pois_from_point(point, distance=None, amenities=None, timeout=180, memory=None, custom_settings=None):
+def pois_from_point(point, tags, distance=1000,
+                    timeout=180, memory=None, custom_settings=None):
     """
     Get point of interests (POIs) within some distance north, south, east, and west of
     a lat-long point.
@@ -437,11 +471,10 @@ def pois_from_point(point, distance=None, amenities=None, timeout=180, memory=No
     ----------
     point : tuple
         a lat-long point
+    tags : dict
+        x
     distance : numeric
         distance in meters
-    amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
-        See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
     timeout : int
         Timeout for the API request.
     memory : int
@@ -458,11 +491,12 @@ def pois_from_point(point, distance=None, amenities=None, timeout=180, memory=No
 
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
-    return create_poi_gdf(amenities=amenities, north=north, south=south, east=east, west=west,
+    return create_poi_gdf(tags=tags, north=north, south=south, east=east, west=west,
                           timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
-def pois_from_address(address, distance, amenities=None, timeout=180, memory=None, custom_settings=None):
+def pois_from_address(address, tags, distance=1000,
+                      timeout=180, memory=None, custom_settings=None):
     """
     Get OSM points of Interests within some distance north, south, east, and west of
     an address.
@@ -471,11 +505,10 @@ def pois_from_address(address, distance, amenities=None, timeout=180, memory=Non
     ----------
     address : string
         the address to geocode to a lat-long point
+    tags : dict
+        x
     distance : numeric
         distance in meters
-    amenities : list
-        List of amenities that will be used for finding the POIs from the selected area. See available
-        amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
     timeout : int
         Timeout for the API request.
     memory : int
@@ -494,11 +527,12 @@ def pois_from_address(address, distance, amenities=None, timeout=180, memory=Non
     point = geocode(query=address)
 
     # get POIs within distance of this point
-    return pois_from_point(point=point, amenities=amenities, distance=distance,
+    return pois_from_point(point=point, tags=tags, distance=distance,
                            timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
-def pois_from_polygon(polygon, amenities=None, timeout=180, memory=None, custom_settings=None):
+def pois_from_polygon(polygon, tags,
+                      timeout=180, memory=None, custom_settings=None):
     """
     Get OSM points of interest within some polygon.
 
@@ -506,9 +540,8 @@ def pois_from_polygon(polygon, amenities=None, timeout=180, memory=None, custom_
     ----------
     polygon : Polygon
         Polygon where the POIs are search from.
-    amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
-        See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+    tags : dict
+        x
     timeout : int
         Timeout for the API request.
     memory : int
@@ -523,11 +556,12 @@ def pois_from_polygon(polygon, amenities=None, timeout=180, memory=None, custom_
     geopandas.GeoDataFrame
     """
 
-    return create_poi_gdf(polygon=polygon, amenities=amenities,
+    return create_poi_gdf(tags=tags, polygon=polygon,
                           timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
-def pois_from_place(place, amenities=None, which_result=1, timeout=180, memory=None, custom_settings=None):
+def pois_from_place(place, tags, which_result=1,
+                    timeout=180, memory=None, custom_settings=None):
     """
     Get points of interest (POIs) within the boundaries of some place.
 
@@ -535,9 +569,8 @@ def pois_from_place(place, amenities=None, which_result=1, timeout=180, memory=N
     ----------
     place : string
         the query to geocode to get geojson boundary polygon.
-    amenities : list
-        List of amenities that will be used for finding the POIs from the selected area.
-        See available amenities from: http://wiki.openstreetmap.org/wiki/Key:amenity
+    tags : dict
+        x
     which_result : int
         max number of place geocoding results to return and which to process upon receipt
     timeout : int
@@ -556,5 +589,5 @@ def pois_from_place(place, amenities=None, which_result=1, timeout=180, memory=N
 
     city = gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
-    return create_poi_gdf(polygon=polygon, amenities=amenities,
+    return create_poi_gdf(tags=tags, polygon=polygon,
                           timeout=timeout, memory=memory, custom_settings=custom_settings)
