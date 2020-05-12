@@ -37,8 +37,17 @@ def create_poi_query(north, south, east, west, tags,
     tags : dict
         Dict of tags used for finding POIs from the selected area. Results
         returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. Providing `False` is not
-        currently supported.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'}
+        would return all amenities, `landuse=retail`, `landuse=commercial`,
+        and `highway=bus_stop`.
     timeout : int
         Timeout for the API request.
     memory : int
@@ -130,7 +139,19 @@ def osm_poi_download(tags, polygon=None,
     Parameters
     ----------
     tags : dict
-        x
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'}
+        would return all amenities, `landuse=retail`, `landuse=commercial`,
+        and `highway=bus_stop`.
     polygon : shapely.geometry.Polygon
         Polygon that will be used to limit the POI search.
     north : float
@@ -368,7 +389,19 @@ def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=N
     Parameters
     ----------
     tags : dict
-        x
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'}
+        would return all amenities, `landuse=retail`, `landuse=commercial`,
+        and `highway=bus_stop`.
     polygon : shapely Polygon or MultiPolygon
         geographic shape to fetch the POIs within
     north : float
@@ -459,7 +492,19 @@ def pois_from_point(point, tags, distance=1000,
     point : tuple
         a lat-long point
     tags : dict
-        x
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'}
+        would return all amenities, `landuse=retail`, `landuse=commercial`,
+        and `highway=bus_stop`.
     distance : numeric
         distance in meters
     timeout : int
@@ -492,7 +537,19 @@ def pois_from_address(address, tags, distance=1000,
     address : string
         the address to geocode to a lat-long point
     tags : dict
-        x
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'}
+        would return all amenities, `landuse=retail`, `landuse=commercial`,
+        and `highway=bus_stop`.
     distance : numeric
         distance in meters
     timeout : int
@@ -526,7 +583,19 @@ def pois_from_polygon(polygon, tags,
     polygon : Polygon
         Polygon where the POIs are search from.
     tags : dict
-        x
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'}
+        would return all amenities, `landuse=retail`, `landuse=commercial`,
+        and `highway=bus_stop`.
     timeout : int
         Timeout for the API request.
     memory : int
@@ -554,7 +623,19 @@ def pois_from_place(place, tags, which_result=1,
     place : string
         the query to geocode to get geojson boundary polygon.
     tags : dict
-        x
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+            tags = {
+                'amenity':True,
+                'landuse':['retail','commercial'],
+                'highway':'bus_stop'}
+        would return all amenities, `landuse=retail`, `landuse=commercial`,
+        and `highway=bus_stop`.
     which_result : int
         max number of place geocoding results to return and which to process upon receipt
     timeout : int
