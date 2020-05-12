@@ -370,33 +370,26 @@ def test_footprints():
 
 
 def test_pois():
-    import pytest
-    # download all points of interests from place
-    gdf = ox.pois_from_place(place='Kamppi, Helsinki, Finland')
 
-    # get all restaurants and schools from place
-    restaurants = ox.pois_from_place(place='Emeryville, California, USA', amenities=['restaurant'])
-    schools = ox.pois_from_place(place='Emeryville, California, USA', amenities=['school'])
+    tags = {'amenity' : True,
+            'landuse' : ['retail', 'commercial'],
+            'highway' : 'bus_stop'}
 
-    # get all universities from Boston area (with 2 km buffer to cover also Cambridge)
-    boston_q = 'Boston, Massachusetts, United States of America'
-    boston_poly = ox.gdf_from_place(boston_q, buffer_dist=2000)
-    universities = ox.pois_from_polygon(boston_poly.geometry.values[0], amenities=['university'])
+    gdf = ox.pois_from_place(place='Piedmont, California, USA', tags=tags)
 
-    # by point and by address
-    restaurants = ox.pois_from_point(point=(42.344490, -71.070570), distance=1000, amenities=['restaurant'])
-    restaurants = ox.pois_from_address(address='Emeryville, California, USA', distance=1000, amenities=['restaurant'])
+    poly = ox.gdf_from_place('Boston, MA, USA', buffer_dist=2000)
+    gdf = ox.pois_from_polygon(poly['geometry'].iloc[0], tags={'amenity':'university'})
 
-    # should raise an exception
-    # polygon or -north, south, east, west- should be provided
-    with pytest.raises(ValueError):
-        ox.create_poi_gdf(polygon=None, north=None, south=None, east=None, west=None)
+    gdf = ox.pois_from_address(address='Piedmont, California, USA',
+                               tags={'amenity' : 'school'},
+                               custom_settings='[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]')
 
-    gdf = ox.pois_from_place(place='kusatsu, shiga, japan', which_result=2)
+    gdf = ox.pois_from_point(point=(42.344490, -71.070570),
+                             distance=500,
+                             tags={'amenity' : 'restaurant'},
+                             timeout=200,
+                             memory=100000)
 
-    test_custom_settings = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
-    gdf = ox.pois_from_place(place='kusatsu, shiga, japan', which_result=2,
-                             custom_settings=test_custom_settings)
 
 def test_nominatim():
     import pytest
