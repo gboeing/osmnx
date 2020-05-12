@@ -11,25 +11,25 @@ import time
 from descartes import PolygonPatch
 from matplotlib.collections import PatchCollection
 from shapely.geometry import LineString
-from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
+from shapely.geometry import Polygon
 from shapely.ops import polygonize
 
 from . import settings
-from .core import consolidate_subdivide_geometry
-from .core import get_polygons_coordinates
-from .core import overpass_request
 from .core import bbox_from_point
+from .core import consolidate_subdivide_geometry
 from .core import gdf_from_place
+from .core import get_polygons_coordinates
+from .downloader import overpass_request
+from .geo_utils import geocode
 from .plot import save_and_show
 from .projection import project_geometry
 from .utils import log
-from .utils import geocode
 
 
 def osm_footprints_download(polygon=None, north=None, south=None, east=None, west=None,
                             footprint_type='building', timeout=180, memory=None,
-                            max_query_area_size=50*1000*50*1000):
+                            max_query_area_size=50*1000*50*1000, custom_settings= None):
     """
     Download OpenStreetMap footprint data as a list of json responses.
 
@@ -53,10 +53,11 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max area for any part of the geometry, in the units the geometry is in:
-        any polygon bigger will get divided up for multiple queries to API
-        (default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are
-        meters))
+        max area for any part of the geometry in meters: any polygon bigger 
+        will get divided up for multiple queries to API (default 50km x 50km)
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -82,6 +83,12 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
     else:
         maxsize = '[maxsize:{}]'.format(memory)
 
+    # use custom settings if delivered, otherwise just the default ones.
+    if custom_settings:
+        overpass_settings = custom_settings
+    else:
+        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout, maxsize=maxsize)
+
     # define the query to send the API
     if by_bbox:
         # turn bbox into a polygon and project to local UTM
@@ -102,13 +109,13 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
             # decimal places (ie, within 1 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = ('[out:json][timeout:{timeout}]{maxsize};'
+            query_template = ('{overpass_settings};'
                               '((way["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
                               '(._;>;););'
                               '(relation["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
                               '(._;>;);););out;')
             query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout,
-                                              maxsize=maxsize, footprint_type=footprint_type)
+                                              maxsize=maxsize, footprint_type=footprint_type, overpass_settings=overpass_settings)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within bounding box from '
@@ -128,11 +135,11 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
-            query_template = ('[out:json][timeout:{timeout}]{maxsize};('
+            query_template = ('{overpass_settings};('
                               'way(poly:"{polygon}")["{footprint_type}"];(._;>;);'
                               'relation(poly:"{polygon}")["{footprint_type}"];(._;>;););out;')
             query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize,
-                                              footprint_type=footprint_type)
+                                              footprint_type=footprint_type, overpass_settings=overpass_settings)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within polygon from API in '
@@ -143,7 +150,8 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
 
 
 def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None,
-                          footprint_type='building', retain_invalid=False, responses=None):
+                          footprint_type='building', retain_invalid=False, responses=None,
+                          timeout=180, memory=None, custom_settings=None):
     """
     Get footprint (polygon) data from OSM and convert it into a GeoDataFrame.
 
@@ -165,14 +173,24 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
         if False discard any footprints with an invalid geometry
     responses : list
         list of response jsons
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
+
     # allow pickling between downloading footprints and converting them to a GeoDataFrame
     if responses is None:
-        responses = osm_footprints_download(polygon, north, south, east, west, footprint_type)
+        responses = osm_footprints_download(polygon, north, south, east, west, footprint_type,
+                                            timeout=timeout, memory=memory, custom_settings=custom_settings)
 
     # parse the list of responses into separate dicts of vertices, footprints and relations
     # create a set of ways not directly tagged with footprint_type
@@ -200,8 +218,8 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
     gdf = gpd.GeoDataFrame.from_dict(footprints, orient='index')
     gdf.crs = settings.default_crs
 
-    # filter the gdf to only include valid Polygons or MultiPolygons
-    if not retain_invalid:    
+    # filter the gdf to only include valid Polygons/MultiPolygons if retain_invalid is False
+    if not retain_invalid and not gdf.empty:
         filter1 = gdf['geometry'].is_valid
         filter2 = (gdf['geometry'].geom_type == 'Polygon') | (gdf['geometry'].geom_type == 'MultiPolygon')
         filter_combined = filter1 & filter2
@@ -234,15 +252,17 @@ def responses_to_dicts(responses, footprint_type):
 
     Returns
     -------
-    vertices
-        dictionary of OSM nodes including their lat, lon coordinates
-    footprints
-        dictionary of OSM ways including their nodes and tags
-    relations
-        dictionary of OSM relations including member ids and tags
-    untagged_footprints
-        set of ids for ways or relations not directly tagged with footprint_type
+    (vertices, footprints, relations, untagged_footprints) : tuple
+        vertices
+            dictionary of OSM nodes including their lat, lon coordinates
+        footprints
+            dictionary of OSM ways including their nodes and tags
+        relations
+            dictionary of OSM relations including member ids and tags
+        untagged_footprints
+            set of ids for ways or relations not directly tagged with footprint_type
     """
+
     # create dictionaries to hold vertices, footprints and relations
     vertices = {}
     footprints = {}
@@ -307,6 +327,7 @@ def create_footprint_geometry(footprint_key, footprint_val, vertices):
     -------
     Shapely Polygon or LineString
     """
+
     # CLOSED WAYS
     if footprint_val['nodes'][0] == footprint_val['nodes'][-1]:
         try:
@@ -348,7 +369,7 @@ def create_relation_geometry(relation_key, relation_val, footprints):
         the id of the relation to process
     relation_val : dict
         members and tags of the relation
-    footprints : dictionary
+    footprints : dict
         dictionary of all footprints (including open and closed ways)
 
     Returns
@@ -402,8 +423,10 @@ def create_relation_geometry(relation_key, relation_val, footprints):
     # process the others to multipolygons
     else:
         for outer_poly in outer_polys:
+            outer_poly = outer_poly.buffer(0) #fix invalid geometry if present
             temp_poly = outer_poly
             for inner_poly in inner_polys:
+                inner_poly = inner_poly.buffer(0) #fix invalid geometry if present
                 if inner_poly.within(outer_poly):
                     temp_poly=temp_poly.difference(inner_poly)
             multipoly.append(temp_poly)
@@ -417,7 +440,8 @@ def create_relation_geometry(relation_key, relation_val, footprints):
         log('relation {} could not be converted to a complex footprint'.format(relation_key))
 
 
-def footprints_from_point(point, distance, footprint_type='building', retain_invalid=False):
+def footprints_from_point(point, distance, footprint_type='building', retain_invalid=False,
+                          timeout=180, memory=None, custom_settings=None):
     """
     Get footprints within some distance north, south, east, and west of
     a lat-long point.
@@ -432,19 +456,29 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
 
     bbox = bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
     return create_footprints_gdf(north=north, south=south, east=east, west=west,
-                                 footprint_type=footprint_type, retain_invalid=retain_invalid)
+                                 footprint_type=footprint_type, retain_invalid=retain_invalid,
+                                 timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
-def footprints_from_address(address, distance, footprint_type='building', retain_invalid=False):
+def footprints_from_address(address, distance, footprint_type='building', retain_invalid=False,
+                            timeout=180, memory=None, custom_settings=None):
     """
     Get footprints within some distance north, south, east, and west of
     an address.
@@ -459,10 +493,18 @@ def footprints_from_address(address, distance, footprint_type='building', retain
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
 
     # geocode the address string to a (lat, lon) point
@@ -470,10 +512,12 @@ def footprints_from_address(address, distance, footprint_type='building', retain
 
     # get footprints within distance of this point
     return footprints_from_point(point, distance, footprint_type=footprint_type,
-                                 retain_invalid=retain_invalid)
+                                 retain_invalid=retain_invalid, timeout=timeout,
+                                 memory=memory, custom_settings=custom_settings)
 
 
-def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=False):
+def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=False,
+                            timeout=180, memory=None, custom_settings=None):
     """
     Get footprints within some polygon.
 
@@ -486,17 +530,27 @@ def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=F
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
 
     return create_footprints_gdf(polygon=polygon, footprint_type=footprint_type,
-                                 retain_invalid=retain_invalid)
+                                 retain_invalid=retain_invalid, timeout=timeout,
+                                 memory=memory, custom_settings=custom_settings)
 
 
-def footprints_from_place(place, footprint_type='building', retain_invalid=False, which_result=1):
+def footprints_from_place(place, footprint_type='building', retain_invalid=False, which_result=1,
+                          timeout=180, memory=None, custom_settings=None):
     """
     Get footprints within the boundaries of some place.
 
@@ -516,16 +570,25 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
         if False discard any footprints with an invalid geometry
     which_result : int
         max number of results to return and which to process upon receipt
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
-    GeoDataFrame
+    geopandas.GeoDataFrame
     """
 
     city = gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
     return create_footprints_gdf(polygon, retain_invalid=retain_invalid,
-                                 footprint_type=footprint_type)
+                                 footprint_type=footprint_type, timeout=timeout,
+                                 memory=memory, custom_settings=custom_settings)
 
 
 def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w',
@@ -536,8 +599,8 @@ def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcol
 
     Parameters
     ----------
-    gdf : GeoDataFrame
-        footprints
+    gdf : geopandas.GeoDataFrame
+        GeoDataFrame of footprints
     fig : figure
     ax : axis
     figsize : tuple

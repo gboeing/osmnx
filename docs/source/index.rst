@@ -8,11 +8,13 @@ OSMnx documentation
 
    osmnx
 
-**OSMnx**: retrieve, model, analyze, and visualize street networks from OpenStreetMap. OSMnx is a Python package that lets you download spatial geometries and model, project, visualize, and analyze street networks and  other spatial data from OpenStreetMap's APIs. Users can download and model walkable, drivable, or bikable urban networks with a single line of Python code, and then easily analyze and visualize them.
+**OSMnx**: retrieve, model, analyze, and visualize street networks from OpenStreetMap. OSMnx is a Python package that lets you download spatial geometries and model, project, visualize, and analyze street networks from OpenStreetMap's APIs. Users can download and model walkable, drivable, or bikable urban networks with a single line of Python code, and then easily analyze and visualize them. You can just as easily download and work with amenities/points of interest, building footprints, elevation data, street bearings/orientations, and network routing.
 
 
 Citation info
 -------------
+
+If you use OSMnx in your work, please cite the journal article:
 
 Boeing, G. 2017. "`OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks`_." *Computers, Environment and Urban Systems* 65, 126-139. doi:10.1016/j.compenvurbsys.2017.05.004
 
@@ -29,7 +31,7 @@ OSMnx is built on top of geopandas, networkx, and matplotlib and works with Open
   * Load street network from a local .osm file
   * Visualize street network as a static image or interactive leaflet web map
   * Simplify and correct the network's topology to clean and consolidate intersections
-  * Save networks to disk as shapefiles or GraphML
+  * Save networks to disk as shapefiles, geopackages, GraphML, or .osm
   * Conduct topological and spatial analyses to automatically calculate dozens of indicators
   * Calculate and plot shortest-path routes as a static image or leaflet web map
   * Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes
@@ -51,11 +53,7 @@ You can install OSMnx with conda:
     conda config --prepend channels conda-forge
     conda create -n ox --strict-channel-priority osmnx
 
-Alternatively, you can run OSMnx + Jupyter directly from this `docker container`_, or you can install OSMnx via pip (if you already have all of its dependencies installed on your system):
-
-.. code-block:: shell
-
-    pip install osmnx
+Alternatively, you can run OSMnx + Jupyter directly from its official `docker container`_, or you can install OSMnx via pip if you already have all of its dependencies installed on your system.
 
 
 Examples

@@ -19,8 +19,7 @@ from shapely import wkt
 from xml.etree import ElementTree as etree
 
 from . import settings
-from .utils import log
-from .utils import make_str
+from .utils import make_str, log, get_unique_nodes_ordered_from_way
 
 
 def save_gdf_shapefile(gdf, filename=None, folder=None):
@@ -33,7 +32,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
     gdf : GeoDataFrame
         the gdf to be saved
     filename : string
-        what to call the shapefile (file extensions are added automatically)
+        the name of the shapefiles (not including file extensions)
     folder : string
         where to save the shapefile, if none, then default folder
 
@@ -50,7 +49,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
 
     # give the save folder a filename subfolder to make the full path to the
     # files
-    folder_path = os.path.join(folder, filename)
+    filepath = os.path.join(folder, filename)
 
     # make everything but geometry column a string
     for col in [c for c in gdf.columns if not c == 'geometry']:
@@ -58,13 +57,56 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
 
     # if the save folder does not already exist, create it with a filename
     # subfolder
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    gdf.to_file(folder_path)
+    if not os.path.exists(filepath):
+        os.makedirs(filepath)
+    gdf.to_file(filepath)
 
     if not hasattr(gdf, 'gdf_name'):
         gdf.gdf_name = 'unnamed'
-    log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.gdf_name, folder_path))
+    log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.gdf_name, filepath))
+
+
+def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8'):
+    """
+    Save graph nodes and edges as to disk as layers in a GeoPackage file.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    filename : string
+        the filename of the GeoPackage including file extension
+    folder : string
+        the path to the folder to contain the GeoPackage, if None, use default data folder
+    encoding : string
+        the character encoding for the saved files
+
+    Returns
+    -------
+    None
+    """
+
+    # convert undirected graph to geodataframes
+    start_time = time.time()
+    gdf_nodes, gdf_edges = graph_to_gdfs(get_undirected(G))
+
+    # make every non-numeric edge attribute (besides geometry) a string
+    for col in [c for c in gdf_edges.columns if not c == 'geometry']:
+        if not pd.api.types.is_numeric_dtype(gdf_edges[col]):
+            gdf_edges[col] = gdf_edges[col].fillna('').map(str)
+
+    # use settings.data_folder if a folder wasn't passed in
+    # if the save folder does not already exist, create it
+    if folder is None:
+        folder = settings.data_folder
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    filepath = os.path.join(folder, filename)
+
+    # save the nodes and edges as GeoPackage layers
+    gdf_nodes.to_file(filepath, layer='nodes', driver='GPKG', encoding=encoding)
+    gdf_edges.to_file(filepath, layer='edges', driver='GPKG', encoding=encoding)
+    log('Saved graph to disk as GeoPackage at "{}" in {:,.2f} seconds'.format(filepath, time.time() - start_time))
+
 
 
 def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
@@ -112,7 +154,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
 
         # for each edge, add key and all attributes in data dict to the
         # edge_details
-        edge_details = {'key':key}
+        edge_details = {'key': key}
         for attr_key in data:
             edge_details[attr_key] = data[attr_key]
 
@@ -134,33 +176,57 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
 
     # if the save folder does not already exist, create it with a filename
     # subfolder
-    folder = os.path.join(folder, filename)
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    filepath = os.path.join(folder, filename)
+    if not os.path.exists(filepath):
+        os.makedirs(filepath)
 
     # save the nodes and edges as separate ESRI shapefiles
-    gdf_nodes.to_file('{}/nodes'.format(folder), encoding=encoding)
-    gdf_edges.to_file('{}/edges'.format(folder), encoding=encoding)
-    log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, folder, time.time()-start_time))
+    gdf_nodes.to_file('{}/nodes'.format(filepath), encoding=encoding)
+    gdf_edges.to_file('{}/edges'.format(filepath), encoding=encoding)
+    log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, filepath, time.time() - start_time))
 
 
-def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
-                   node_attrs=settings.osm_xml_node_attrs,
-                   edge_tags=settings.osm_xml_way_tags,
-                   edge_attrs=settings.osm_xml_way_attrs,
-                   oneway=True, filename='graph.osm',
-                   folder=None):
+def save_as_osm(
+        data, node_tags=settings.osm_xml_node_tags,
+        node_attrs=settings.osm_xml_node_attrs,
+        edge_tags=settings.osm_xml_way_tags,
+        edge_attrs=settings.osm_xml_way_attrs,
+        oneway=False, merge_edges=True, edge_tag_aggs=None,
+        filename='graph.osm', folder=None):
     """
     Save a graph as an OSM XML formatted file. NOTE: for very large
     networks this method can take upwards of 30+ minutes to finish.
 
     Parameters
     __________
-    G : networkx multidigraph or multigraph
+    data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
+        geopandas.GeoDataFrames
     filename : string
         the name of the osm file (including file extension)
     folder : string
         the folder to contain the file, if None, use default data folder
+    node_attrs: list
+        osm node attributes to include in output OSM XML
+    edge_tags : list
+        osm way tags to include in output OSM XML
+    edge_attrs : list
+        osm way attributes to include in output OSM XML
+    oneway : bool
+        the default oneway value used to fill this tag where missing
+    merge_edges : bool
+        if True merges graph edges such that each OSM way has one entry
+            and one entry only in the OSM XML. Otherwise, every OSM way
+            will have a separate entry for each node pair it contains.
+    edge_tag_aggs : list of length-2 string tuples
+        useful only if merge_edges is True, this argument allows the user
+            to specify edge attributes to aggregate such that the merged
+            OSM way entry tags accurately represent the sum total of
+            their component edge attributes. For example, if the user
+            wants the OSM way to have a "length" attribute, the user must
+            specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
+            this method to aggregate the lengths of the individual
+            component edges. Otherwise, the length attribute will simply
+            reflect the length of the first edge associated with the way.
 
     Returns
     -------
@@ -170,15 +236,25 @@ def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
     if folder is None:
         folder = settings.data_folder
 
-    # create a copy to convert all the node/edge attribute values to string
-    G_save = G.copy()
+    try:
+        assert settings.all_oneway
+    except AssertionError:
+        raise UserWarning(
+            "In order for ox.save_as_osm() to behave properly "
+            "the graph must have been created with the 'all_oneway' "
+            "setting set to True.")
 
-    gdf_nodes, gdf_edges = graph_to_gdfs(
-        G_save, node_geometry=False, fill_edge_geometry=False)
+    try:
+        gdf_nodes, gdf_edges = data
+    except ValueError:
+        gdf_nodes, gdf_edges = graph_to_gdfs(
+            data, node_geometry=False, fill_edge_geometry=False)
 
     # rename columns per osm specification
     gdf_nodes.rename(
         columns={'osmid': 'id', 'x': 'lon', 'y': 'lat'}, inplace=True)
+    if 'id' in gdf_edges.columns:
+        gdf_edges = gdf_edges[[col for col in gdf_edges if col != 'id']]
     if 'uniqueid' in gdf_edges.columns:
         gdf_edges = gdf_edges.rename(columns={'uniqueid': 'id'})
     else:
@@ -198,31 +274,82 @@ def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
 
     # misc. string replacements to meet OSM XML spec
     if 'oneway' in edges.columns:
-        edges.loc[:, 'oneway'] = oneway
+
+        # fill blank oneway tags with default (False)
+        edges.loc[pd.isnull(edges['oneway']), 'oneway'] = oneway
         edges.loc[:, 'oneway'] = edges['oneway'].astype(str)
         edges.loc[:, 'oneway'] = edges['oneway'].str.replace(
             'False', 'no').replace('True', 'yes')
 
     # initialize XML tree with an OSM root element
-    root = etree.Element('osm')
+    root = etree.Element('osm', attrib={'version': '1', 'generator': 'OSMnx'})
 
     # append nodes to the XML tree
     for i, row in nodes.iterrows():
         node = etree.SubElement(
             root, 'node', attrib=row[node_attrs].dropna().to_dict())
         for tag in node_tags:
-            etree.SubElement(
-                node, 'tag', attrib={'k': tag, 'v': row[tag]})
+            if tag in nodes.columns:
+                etree.SubElement(
+                    node, 'tag', attrib={'k': tag, 'v': row[tag]})
 
     # append edges to the XML tree
-    for i, row in edges.iterrows():
-        edge = etree.SubElement(
-            root, 'way', attrib=row[edge_attrs].dropna().to_dict())
-        etree.SubElement(edge, 'nd', attrib={'ref': row['u']})
-        etree.SubElement(edge, 'nd', attrib={'ref': row['v']})
-        for tag in edge_tags:
-            etree.SubElement(
-                edge, 'tag', attrib={'k': tag, 'v': row[tag]})
+    if merge_edges:
+        for e in edges['id'].unique():
+            all_way_edges = edges[edges['id'] == e]
+            first = all_way_edges.iloc[0]
+            edge = etree.SubElement(
+                root, 'way', attrib=first[edge_attrs].dropna().to_dict())
+
+            if len(all_way_edges) == 1:
+
+                etree.SubElement(edge, 'nd', attrib={'ref': first['u']})
+                etree.SubElement(edge, 'nd', attrib={'ref': first['v']})
+
+            else:
+
+                # topological sort
+                ordered_nodes = get_unique_nodes_ordered_from_way(
+                    all_way_edges)
+
+                for node in ordered_nodes:
+                    etree.SubElement(edge, 'nd', attrib={'ref': node})
+
+            if edge_tag_aggs is None:
+                for tag in edge_tags:
+                    if tag in all_way_edges.columns:
+                        etree.SubElement(
+                            edge, 'tag', attrib={'k': tag, 'v': first[tag]})
+            else:
+                for tag in edge_tags:
+                    if tag in all_way_edges.columns:
+                        if tag not in [t for t, agg in edge_tag_aggs]:
+                            etree.SubElement(
+                                edge, 'tag',
+                                attrib={'k': tag, 'v': first[tag]})
+
+                for tag, agg in edge_tag_aggs:
+                    if tag in all_way_edges.columns:
+                        etree.SubElement(edge, 'tag', attrib={
+                            'k': tag, 'v': all_way_edges[tag].aggregate(agg)})
+
+    else:
+
+        # NOTE: this will generate separate OSM ways for each network edge,
+        # even if the edges are all part of the same original OSM way. As
+        # such, each way will be comprised of two nodes, and there will be
+        # many ways with the same OSM id. This does not conform to the
+        # OSM XML schema standard, however, the data will still comprise a
+        # valid network and will be readable by *most* OSM tools.
+        for i, row in edges.iterrows():
+            edge = etree.SubElement(
+                root, 'way', attrib=row[edge_attrs].dropna().to_dict())
+            etree.SubElement(edge, 'nd', attrib={'ref': row['u']})
+            etree.SubElement(edge, 'nd', attrib={'ref': row['v']})
+            for tag in edge_tags:
+                if tag in edges.columns:
+                    etree.SubElement(
+                        edge, 'tag', attrib={'k': tag, 'v': row[tag]})
 
     et = etree.ElementTree(root)
 
@@ -231,8 +358,8 @@ def save_graph_osm(G, node_tags=settings.osm_xml_node_tags,
 
     et.write(os.path.join(folder, filename))
 
-    log('Saved graph "{}" to disk as OSM at "{}" in {:,.2f} seconds'.format(
-        G_save.name, os.path.join(folder, filename), time.time() - start_time))
+    log('Saved graph to disk as OSM at "{}" in {:,.2f} seconds'.format(
+        os.path.join(folder, filename), time.time() - start_time))
 
 
 def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
@@ -301,9 +428,10 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
 
     if not os.path.exists(folder):
         os.makedirs(folder)
+    filepath = os.path.join(folder, filename)
 
-    nx.write_graphml(G_save, os.path.join(folder, filename))
-    log('Saved graph "{}" to disk as GraphML at "{}" in {:,.2f} seconds'.format(G_save.name, os.path.join(folder, filename), time.time()-start_time))
+    nx.write_graphml(G_save, filepath)
+    log('Saved graph to disk as GraphML at "{}" in {:,.2f} seconds'.format(filepath, time.time()-start_time))
 
 
 def load_graphml(filename, folder=None, node_type=int):
@@ -346,18 +474,27 @@ def load_graphml(filename, folder=None, node_type=int):
         data['osmid'] = node_type(data['osmid'])
         data['x'] = float(data['x'])
         data['y'] = float(data['y'])
+        if 'elevation' in data:
+            data['elevation'] = float(data['elevation'])
+        if 'elevation_res' in data:
+            data['elevation_res'] = float(data['elevation_res'])
 
-    # convert numeric, bool, and list node tags from string to correct data types
+    # convert numeric, bool, and list edge attributes from string to correct data types
     for _, _, data in G.edges(data=True, keys=False):
 
         # first parse oneway to bool and length to float - they should always
         # have only 1 value each
         data['oneway'] = ast.literal_eval(data['oneway'])
         data['length'] = float(data['length'])
+        if 'grade' in data:
+            data['grade'] = float(data['grade'])
+        if 'grade_abs' in data:
+            data['grade_abs'] = float(data['grade_abs'])
 
         # these attributes might have a single value, or a list if edge's
         # topology was simplified
-        for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed', 'service', 'access', 'area', 'landuse', 'width', 'est_width']:
+        for attr in ['highway', 'name', 'bridge', 'tunnel', 'lanes', 'ref', 'maxspeed',
+                     'service', 'access', 'area', 'landuse', 'width', 'est_width']:
             # if this edge has this attribute, and it starts with '[' and ends
             # with ']', then it's a list to be parsed
             if attr in data and data[attr].startswith('[') and data[attr].endswith(']'):
@@ -631,6 +768,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
         if node_geometry:
             gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
+            gdf_nodes.set_geometry('geometry', inplace=True)
         gdf_nodes.crs = G.graph['crs']
         gdf_nodes.gdf_name = '{}_nodes'.format(G.graph['name'])
 

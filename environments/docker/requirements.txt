@@ -2,20 +2,30 @@ beautifulsoup4
 bokeh
 bottleneck
 cartopy
+coverage
+coveralls
 cython
 dill
-ipyleaflet
-ipywidgets
+folium
 jupyterlab
 nodejs
 numexpr
 osmnx
+pandana
 pillow
 pip
 psycopg2
+pyproj
 pysal
-python == 3.7.*
+pytest
+python == 3.8.*
+rasterio
 seaborn
+scikit-learn
+scipy
+sphinx
 statsmodels
+twine
+urbanaccess
 xlrd
 xlwt

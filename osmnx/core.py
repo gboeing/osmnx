@@ -6,23 +6,14 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-import datetime as dt
 import geopandas as gpd
-import hashlib
-import io
-import json
 import logging as lg
 import math
 import networkx as nx
 import numpy as np
-import os
 import pandas as pd
-import re
-import requests
 import time
 
-from collections import OrderedDict
-from dateutil import parser as date_parser
 from itertools import groupby
 from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
@@ -34,388 +25,17 @@ from . import settings
 from .projection import project_geometry
 from .projection import project_gdf
 from .simplify import simplify_graph
-from .utils import log
-from .utils import make_str
-from .utils import get_largest_component
+from .utils import make_str, log
+from .geo_utils import get_largest_component
 from .utils import great_circle_vec
-from .utils import get_nearest_node
-from .utils import geocode
-from .utils import count_streets_per_node
-from .utils import overpass_json_from_file
-
-
-class EmptyOverpassResponse(ValueError):
-    def __init__(self,*args,**kwargs):
-        Exception.__init__(self,*args,**kwargs)
-
-
-class InvalidDistanceType(ValueError):
-    def __init__(self,*args,**kwargs):
-        Exception.__init__(self,*args,**kwargs)
-
-
-class UnknownNetworkType(ValueError):
-    def __init__(self,*args,**kwargs):
-        Exception.__init__(self,*args,**kwargs)
-
-
-class InsufficientNetworkQueryArguments(ValueError):
-    def __init__(self,*args,**kwargs):
-        Exception.__init__(self,*args,**kwargs)
-
-
-def save_to_cache(url, response_json):
-    """
-    Save an HTTP response json object to the cache.
-
-    If the request was sent to server via POST instead of GET, then URL should
-    be a GET-style representation of request. Users should always pass
-    OrderedDicts instead of dicts of parameters into request functions, so that
-    the parameters stay in the same order each time, producing the same URL
-    string, and thus the same hash. Otherwise the cache will eventually contain
-    multiple saved responses for the same request because the URL's parameters
-    appeared in a different order each time.
-
-    Parameters
-    ----------
-    url : string
-        the url of the request
-    response_json : dict
-        the json response
-
-    Returns
-    -------
-    None
-    """
-    if settings.use_cache:
-        if response_json is None:
-            log('Saved nothing to cache because response_json is None')
-        else:
-            # create the folder on the disk if it doesn't already exist
-            if not os.path.exists(settings.cache_folder):
-                os.makedirs(settings.cache_folder)
-
-            # hash the url (to make filename shorter than the often extremely
-            # long url)
-            filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-            cache_path_filename = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
-
-            # dump to json, and save to file
-            json_str = make_str(json.dumps(response_json))
-            with io.open(cache_path_filename, 'w', encoding='utf-8') as cache_file:
-                cache_file.write(json_str)
-
-            log('Saved response to cache file "{}"'.format(cache_path_filename))
-
-
-def get_from_cache(url):
-    """
-    Retrieve a HTTP response json object from the cache.
-
-    Parameters
-    ----------
-    url : string
-        the url of the request
-
-    Returns
-    -------
-    response_json : dict
-    """
-    # if the tool is configured to use the cache
-    if settings.use_cache:
-        # determine the filename by hashing the url
-        filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-
-        cache_path_filename = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
-        # open the cache file for this url hash if it already exists, otherwise
-        # return None
-        if os.path.isfile(cache_path_filename):
-            with io.open(cache_path_filename, encoding='utf-8') as cache_file:
-                response_json = json.load(cache_file)
-            log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_path_filename, url))
-            return response_json
-
-
-def get_http_headers(user_agent=None, referer=None, accept_language=None):
-    """
-    Update the default requests HTTP headers with OSMnx info.
-
-    Parameters
-    ----------
-    user_agent : str
-        the user agent string, if None will set with OSMnx default
-    referer : str
-        the referer string, if None will set with OSMnx default
-    accept_language : str
-        make accept-language explicit e.g. for consistent nominatim result sorting
-
-    Returns
-    -------
-    headers : dict
-    """
-
-    if user_agent is None:
-        user_agent = settings.default_user_agent
-    if referer is None:
-        referer = settings.default_referer
-    if accept_language is None:
-        accept_language = settings.default_accept_language
-
-    headers = requests.utils.default_headers()
-    headers.update({'User-Agent': user_agent, 'referer': referer, 'Accept-Language': accept_language})
-    return headers
-
-
-def get_pause_duration(recursive_delay=5, default_duration=10):
-    """
-    Check the Overpass API status endpoint to determine how long to wait until
-    next slot is available.
-
-    Parameters
-    ----------
-    recursive_delay : int
-        how long to wait between recursive calls if server is currently running
-        a query
-    default_duration : int
-        if fatal error, function falls back on returning this value
-
-    Returns
-    -------
-    int
-    """
-
-    try:
-        response = requests.get(settings.overpass_endpoint.rstrip('/')+'/status', headers=get_http_headers())
-        status = response.text.split('\n')[3]
-        status_first_token = status.split(' ')[0]
-    except Exception:
-        # if we cannot reach the status endpoint or parse its output, log an
-        # error and return default duration
-        log('Unable to query {}/status'.format(settings.overpass_endpoint.rstrip('/')), level=lg.ERROR)
-        return default_duration
-
-    try:
-        # if first token is numeric, it's how many slots you have available - no
-        # wait required
-        available_slots = int(status_first_token)
-        pause_duration = 0
-    except Exception:
-        # if first token is 'Slot', it tells you when your slot will be free
-        if status_first_token == 'Slot':
-            utc_time_str = status.split(' ')[3]
-            utc_time = date_parser.parse(utc_time_str).replace(tzinfo=None)
-            pause_duration = math.ceil((utc_time - dt.datetime.utcnow()).total_seconds())
-            pause_duration = max(pause_duration, 1)
-
-        # if first token is 'Currently', it is currently running a query so
-        # check back in recursive_delay seconds
-        elif status_first_token == 'Currently':
-            time.sleep(recursive_delay)
-            pause_duration = get_pause_duration()
-
-        else:
-            # any other status is unrecognized - log an error and return default
-            # duration
-            log('Unrecognized server status: "{}"'.format(status), level=lg.ERROR)
-            return default_duration
-
-    return pause_duration
-
-
-def nominatim_request(params, type = "search", pause_duration=1, timeout=30, error_pause_duration=180):
-    """
-    Send a request to the Nominatim API via HTTP GET and return the JSON
-    response.
-
-    Parameters
-    ----------
-    params : dict or OrderedDict
-        key-value pairs of parameters
-    type : string
-        Type of Nominatim query. One of the following: search, reverse or lookup
-    pause_duration : int
-        how long to pause before requests, in seconds
-    timeout : int
-        the timeout interval for the requests library
-    error_pause_duration : int
-        how long to pause in seconds before re-trying requests if error
-
-    Returns
-    -------
-    response_json : dict
-    """
-
-    known_requests = {"search", "reverse", "lookup"}
-    if type not in known_requests:
-        raise ValueError("The type of Nominatim request is invalid. Please choose one of {{'search', 'reverse', 'lookup'}}")
-
-    # prepare the Nominatim API URL and see if request already exists in the
-    # cache
-    url = settings.nominatim_endpoint.rstrip('/') + '/{}'.format(type)
-    prepared_url = requests.Request('GET', url, params=params).prepare().url
-    cached_response_json = get_from_cache(prepared_url)
-
-    if settings.nominatim_key:
-        params['key'] = settings.nominatim_key
-
-    if cached_response_json is not None:
-        # found this request in the cache, just return it instead of making a
-        # new HTTP call
-        return cached_response_json
-
-    else:
-        # if this URL is not already in the cache, pause, then request it
-        log('Pausing {:,.2f} seconds before making API GET request'.format(pause_duration))
-        time.sleep(pause_duration)
-        start_time = time.time()
-        log('Requesting {} with timeout={}'.format(prepared_url, timeout))
-        response = requests.get(url, params=params, timeout=timeout, headers=get_http_headers())
-
-        # get the response size and the domain, log result
-        size_kb = len(response.content) / 1000.
-        domain = re.findall(r'(?s)//(.*?)/', url)[0]
-        log('Downloaded {:,.1f}KB from {} in {:,.2f} seconds'.format(size_kb, domain, time.time()-start_time))
-
-        try:
-            response_json = response.json()
-            save_to_cache(prepared_url, response_json)
-        except Exception:
-            #429 is 'too many requests' and 504 is 'gateway timeout' from server
-            # overload - handle these errors by recursively calling
-            # nominatim_request until we get a valid response
-            if response.status_code in [429, 504]:
-                # pause for error_pause_duration seconds before re-trying request
-                log('Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(domain,
-                                                                                                                         response.status_code,
-                                                                                                                         error_pause_duration),
-                                                                                                                         level=lg.WARNING)
-                time.sleep(error_pause_duration)
-                response_json = nominatim_request(params=params, pause_duration=pause_duration, timeout=timeout)
-
-            # else, this was an unhandled status_code, throw an exception
-            else:
-                log('Server at {} returned status code {} and no JSON data'.format(domain, response.status_code), level=lg.ERROR)
-                raise Exception('Server returned no JSON data.\n{} {}\n{}'.format(response, response.reason, response.text))
-
-        return response_json
-
-
-def overpass_request(data, pause_duration=None, timeout=180, error_pause_duration=None):
-    """
-    Send a request to the Overpass API via HTTP POST and return the JSON
-    response.
-
-    Parameters
-    ----------
-    data : dict or OrderedDict
-        key-value pairs of parameters to post to the API
-    pause_duration : int
-        how long to pause in seconds before requests, if None, will query API
-        status endpoint to find when next slot is available
-    timeout : int
-        the timeout interval for the requests library
-    error_pause_duration : int
-        how long to pause in seconds before re-trying requests if error
-
-    Returns
-    -------
-    dict
-    """
-
-    # define the Overpass API URL, then construct a GET-style URL as a string to
-    # hash to look up/save to cache
-    url = settings.overpass_endpoint.rstrip('/')+'/interpreter'
-    prepared_url = requests.Request('GET', url, params=data).prepare().url
-    cached_response_json = get_from_cache(prepared_url)
-
-    if cached_response_json is not None:
-        # found this request in the cache, just return it instead of making a
-        # new HTTP call
-        return cached_response_json
-
-    else:
-        # if this URL is not already in the cache, pause, then request it
-        if pause_duration is None:
-            this_pause_duration = get_pause_duration()
-        log('Pausing {:,.2f} seconds before making API POST request'.format(this_pause_duration))
-        time.sleep(this_pause_duration)
-        start_time = time.time()
-        log('Posting to {} with timeout={}, "{}"'.format(url, timeout, data))
-        response = requests.post(url, data=data, timeout=timeout, headers=get_http_headers())
-
-        # get the response size and the domain, log result
-        size_kb = len(response.content) / 1000.
-        domain = re.findall(r'(?s)//(.*?)/', url)[0]
-        log('Downloaded {:,.1f}KB from {} in {:,.2f} seconds'.format(size_kb, domain, time.time()-start_time))
-
-        try:
-            response_json = response.json()
-            if 'remark' in response_json:
-                log('Server remark: "{}"'.format(response_json['remark'], level=lg.WARNING))
-            save_to_cache(prepared_url, response_json)
-        except Exception:
-            #429 is 'too many requests' and 504 is 'gateway timeout' from server
-            # overload - handle these errors by recursively calling
-            # overpass_request until we get a valid response
-            if response.status_code in [429, 504]:
-                # pause for error_pause_duration seconds before re-trying request
-                if error_pause_duration is None:
-                    error_pause_duration = get_pause_duration()
-                log('Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(domain,
-                                                                                                                         response.status_code,
-                                                                                                                         error_pause_duration),
-                                                                                                                         level=lg.WARNING)
-                time.sleep(error_pause_duration)
-                response_json = overpass_request(data=data, pause_duration=pause_duration, timeout=timeout)
-
-            # else, this was an unhandled status_code, throw an exception
-            else:
-                log('Server at {} returned status code {} and no JSON data'.format(domain, response.status_code), level=lg.ERROR)
-                raise Exception('Server returned no JSON data.\n{} {}\n{}'.format(response, response.reason, response.text))
-
-        return response_json
-
-
-def osm_polygon_download(query, limit=1, polygon_geojson=1):
-    """
-    Geocode a place and download its boundary geometry from OSM's Nominatim API.
-
-    Parameters
-    ----------
-    query : string or dict
-        query string or structured query dict to geocode/download
-    limit : int
-        max number of results to return
-    polygon_geojson : int
-        request the boundary geometry polygon from the API, 0=no, 1=yes
-
-    Returns
-    -------
-    dict
-    """
-    # define the parameters
-    params = OrderedDict()
-    params['format'] = 'json'
-    params['limit'] = limit
-    params['dedupe'] = 0 #this prevents OSM from de-duping results so we're guaranteed to get precisely 'limit' number of results
-    params['polygon_geojson'] = polygon_geojson
-
-    # add the structured query dict (if provided) to params, otherwise query
-    # with place name string
-    if isinstance(query, str):
-        params['q'] = query
-    elif isinstance(query, dict):
-        # add the query keys in alphabetical order so the URL is the same string
-        # each time, for caching purposes
-        for key in sorted(list(query.keys())):
-            params[key] = query[key]
-    else:
-        raise TypeError('query must be a dict or a string')
-
-    # request the URL, return the JSON
-    response_json = nominatim_request(params=params, timeout=30)
-    return response_json
-
+from .geo_utils import get_nearest_node
+from .geo_utils import geocode
+from .geo_utils import count_streets_per_node
+from .geo_utils import overpass_json_from_file
+from .downloader import osm_polygon_download
+from .downloader import get_osm_filter
+from .downloader import overpass_request
+from .errors import *
 
 def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
     """
@@ -532,76 +152,10 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None, which_results
     return gdf
 
 
-def get_osm_filter(network_type):
-    """
-    Create a filter to query OSM for the specified network type.
-
-    Parameters
-    ----------
-    network_type : string
-        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private', 'none'}
-        what type of street or other network to get
-
-    Returns
-    -------
-    string
-    """
-    filters = {}
-
-    # driving: filter out un-drivable roads, service roads, private ways, and
-    # anything specifying motor=no. also filter out any non-service roads that
-    # are tagged as providing parking, driveway, private, or emergency-access
-    # services
-    filters['drive'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
-                        'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway|service"]'
-                        '["motor_vehicle"!~"no"]["motorcar"!~"no"]{}'
-                        '["service"!~"parking|parking_aisle|driveway|private|emergency_access"]').format(settings.default_access)
-
-    # drive+service: allow ways tagged 'service' but filter out certain types of
-    # service ways
-    filters['drive_service'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
-                                'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway"]'
-                                '["motor_vehicle"!~"no"]["motorcar"!~"no"]{}'
-                                '["service"!~"parking|parking_aisle|private|emergency_access"]').format(settings.default_access)
-
-    # walking: filter out cycle ways, motor ways, private ways, and anything
-    # specifying foot=no. allow service roads, permitting things like parking
-    # lot lanes, alleys, etc that you *can* walk on even if they're not exactly
-    # pleasant walks. some cycleways may allow pedestrians, but this filter ignores
-    # such cycleways.
-    filters['walk'] = ('["area"!~"yes"]["highway"!~"cycleway|motor|proposed|construction|abandoned|platform|raceway"]'
-                       '["foot"!~"no"]["service"!~"private"]{}').format(settings.default_access)
-
-    # biking: filter out foot ways, motor ways, private ways, and anything
-    # specifying biking=no
-    filters['bike'] = ('["area"!~"yes"]["highway"!~"footway|steps|corridor|elevator|escalator|motor|proposed|'
-                       'construction|abandoned|platform|raceway"]'
-                       '["bicycle"!~"no"]["service"!~"private"]{}').format(settings.default_access)
-
-    # to download all ways, just filter out everything not currently in use or
-    # that is private-access only
-    filters['all'] = ('["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
-                      '["service"!~"private"]{}').format(settings.default_access)
-
-    # to download all ways, including private-access ones, just filter out
-    # everything not currently in use
-    filters['all_private'] = '["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
-
-    # no filter, needed for infrastructures other than "highway"
-    filters['none'] = ''
-
-    if network_type in filters:
-        osm_filter = filters[network_type]
-    else:
-        raise UnknownNetworkType('unknown network_type "{}"'.format(network_type))
-
-    return osm_filter
-
-
 def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
                      network_type='all_private', timeout=180, memory=None,
                      max_query_area_size=50*1000*50*1000, infrastructure='way["highway"]',
-                     custom_filter=None):
+                     custom_filter=None, custom_settings=None):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
 
@@ -626,16 +180,17 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max area for any part of the geometry, in the units the geometry is in:
-        any polygon bigger will get divided up for multiple queries to API
-        (default is 50,000 * 50,000 units [ie, 50km x 50km in area, if units are
-        meters])
+        max area for any part of the geometry in meters: any polygon bigger 
+        will get divided up for multiple queries to API (default 50km x 50km)
     infrastructure : string
         download infrastructure of given type. default is streets, ie,
         'way["highway"]') but other infrastructures may be selected like power
         grids, ie, 'way["power"~"line"]'
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -667,6 +222,12 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     else:
         maxsize = '[maxsize:{}]'.format(memory)
 
+    # use custom settings if delivered, otherwise just the default ones.
+    if custom_settings:
+        overpass_settings = custom_settings
+    else:
+        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout, maxsize=maxsize)
+
     # define the query to send the API
     # specifying way["highway"] means that all ways returned must have a highway
     # key. the {filters} then remove ways by key/value. the '>' makes it recurse
@@ -690,12 +251,12 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
             # decimal places (ie, ~100 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = '[out:json][timeout:{timeout}]{maxsize};({infrastructure}{filters}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;'
+            query_template = '{overpass_settings};({infrastructure}{filters}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;'
             query_str = query_template.format(north=north, south=south,
                                               east=east, west=west,
                                               infrastructure=infrastructure,
                                               filters=osm_filter,
-                                              timeout=timeout, maxsize=maxsize)
+                                              overpass_settings=overpass_settings)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         log('Got all network data within bounding box from API in {:,} request(s) and {:,.2f} seconds'.format(len(geometry), time.time()-start_time))
@@ -714,8 +275,11 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
-            query_template = '[out:json][timeout:{timeout}]{maxsize};({infrastructure}{filters}(poly:"{polygon}");>;);out;'
-            query_str = query_template.format(polygon=polygon_coord_str, infrastructure=infrastructure, filters=osm_filter, timeout=timeout, maxsize=maxsize)
+            query_template = '{overpass_settings};({infrastructure}{filters}(poly:"{polygon}");>;);out;'
+            query_str = query_template.format(polygon=polygon_coord_str,
+                                              infrastructure=infrastructure,
+                                              filters=osm_filter,
+                                              overpass_settings=overpass_settings)
             response_json = overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         log('Got all network data within polygon from API in {:,} request(s) and {:,.2f} seconds'.format(len(polygon_coord_strs), time.time()-start_time))
@@ -725,16 +289,16 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
 
 def consolidate_subdivide_geometry(geometry, max_query_area_size):
     """
-    Consolidate a geometry into a convex hull, then subdivide it into smaller sub-polygons if its area exceeds max size (in geometry's units).
+    Consolidate a geometry into a convex hull, then subdivide it into smaller
+    sub-polygons if its area exceeds max size (in geometry's units).
 
     Parameters
     ----------
     geometry : shapely Polygon or MultiPolygon
         the geometry to consolidate and subdivide
     max_query_area_size : float
-        max area for any part of the geometry, in the units the geometry is in.
-        any polygon bigger will get divided up for multiple queries to API (
-        default is 50,000 * 50,000 units (ie, 50km x 50km in area, if units are meters))
+        max area for any part of the geometry in geometry's units:
+        any polygon bigger will get divided up for multiple queries to API
 
     Returns
     -------
@@ -1148,7 +712,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
         if True, return the entire graph even if it is not connected
     truncate_by_edge : bool
         if True retain node if it's outside polygon but at least one of node's
-        neighbors are within polygon (NOT CURRENTLY IMPLEMENTED)
+        neighbors are within polygon
     quadrat_width : numeric
         passed on to intersect_index_quadrats: the linear length (in degrees) of
         the quadrats with which to cut up the geometry (default = 0.05, approx
@@ -1170,19 +734,29 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
     G = G.copy()
     log('Identifying all nodes that lie outside the polygon...')
 
-    # get a GeoDataFrame of all the nodes, for spatial analysis
+    # get a GeoDataFrame of all the nodes
     node_geom = [Point(data['x'], data['y']) for _, data in G.nodes(data=True)]
-    gdf_nodes = gpd.GeoDataFrame({'node':pd.Series(G.nodes()), 'geometry':node_geom})
+    gdf_nodes = gpd.GeoDataFrame({'node':list(G.nodes()), 'geometry':node_geom})
     gdf_nodes.crs = G.graph['crs']
 
     # find all the nodes in the graph that lie outside the polygon
     points_within_geometry = intersect_index_quadrats(gdf_nodes, polygon, quadrat_width=quadrat_width, min_num=min_num, buffer_amount=buffer_amount)
     nodes_outside_polygon = gdf_nodes[~gdf_nodes.index.isin(points_within_geometry.index)]
 
+    if truncate_by_edge:
+        nodes_to_remove = []
+        for node in nodes_outside_polygon['node']:
+            neighbors = pd.Series(list(G.successors(node)) + list(G.predecessors(node)))
+            # check if all the neighbors of this node also lie outside polygon
+            if neighbors.isin(nodes_outside_polygon['node']).all():
+                nodes_to_remove.append(node)
+    else:
+        nodes_to_remove = nodes_outside_polygon['node']
+
     # now remove from the graph all those nodes that lie outside the place
     # polygon
     start_time = time.time()
-    G.remove_nodes_from(nodes_outside_polygon['node'])
+    G.remove_nodes_from(nodes_to_remove)
     log('Removed {:,} nodes outside polygon in {:,.2f} seconds'.format(len(nodes_outside_polygon), time.time()-start_time))
 
     # remove any isolated nodes and retain only the largest component (if retain_all is False)
@@ -1211,7 +785,11 @@ def add_edge_lengths(G):
 
     # first load all the edges' origin and destination coordinates as a
     # dataframe indexed by u, v, key
-    coords = np.array([[u, v, k, G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in G.edges(keys=True)])
+    try:
+        coords = np.array([[u, v, k, G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in G.edges(keys=True)])
+    except KeyError:
+        missing_nodes = {str(i) for u, v, _ in G.edges(keys=True) if not(G.nodes[u] or G.nodes[u]) for i in (u, v) if not G.nodes[i]}
+        raise TypeError('Edge(s) with missing nodes {} possibly due to a clipping issue'.format(', '.join(missing_nodes)))
     df_coords = pd.DataFrame(coords, columns=['u', 'v', 'k', 'u_y', 'u_x', 'v_y', 'v_x'])
     df_coords[['u', 'v', 'k']] = df_coords[['u', 'v', 'k']].astype(np.int64)
     df_coords = df_coords.set_index(['u', 'v', 'k'])
@@ -1253,8 +831,11 @@ def add_path(G, data, one_way):
     del data['nodes']
 
     # set the oneway attribute to the passed-in value, to make it consistent
-    # True/False values
-    data['oneway'] = one_way
+    # True/False values, but only do this if you aren't forcing all edges to
+    # oneway with the all_oneway setting. With the all_oneway setting, you
+    # likely still want to preserve the original OSM oneway attribute.
+    if not settings.all_oneway:
+        data['oneway'] = one_way
 
     # zip together the path nodes so you get tuples like (0,1), (1,2), (2,3)
     # and so on
@@ -1288,16 +869,19 @@ def add_paths(G, paths, bidirectional=False):
     """
 
     # the list of values OSM uses in its 'oneway' tag to denote True
-    osm_oneway_values = ['yes', 'true', '1', '-1']
+    # updated list of of values OSM uses based on https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf 
+    osm_oneway_values = ['yes', 'true', '1', '-1', 'T', 'F']
 
     for data in paths.values():
 
+        if settings.all_oneway is True:
+            add_path(G, data, one_way=True)
         # if this path is tagged as one-way and if it is not a walking network,
         # then we'll add the path in one direction only
-        if ('oneway' in data and data['oneway'] in osm_oneway_values) and not bidirectional:
-            if data['oneway'] == '-1':
-                # paths with a one-way value of -1 are one-way, but in the
-                # reverse direction of the nodes' order, see osm documentation
+        elif ('oneway' in data and data['oneway'] in osm_oneway_values) and not bidirectional:
+            if data['oneway'] == '-1' or data['oneway'] == 'T':
+                # paths with a one-way value of -1 or T are one-way, but in the
+                # reverse direction of the nodes' order, see osm documentation 
                 data['nodes'] = list(reversed(data['nodes']))
             # add this path (in only one direction) to the graph
             add_path(G, data, one_way=True)
@@ -1432,7 +1016,8 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                     simplify=True, retain_all=False, truncate_by_edge=False,
                     name='unnamed', timeout=180, memory=None,
                     max_query_area_size=50*1000*50*1000, clean_periphery=True,
-                    infrastructure='way["highway"]', custom_filter=None):
+                    infrastructure='way["highway"]', custom_filter=None,
+                    custom_settings=None):
     """
     Create a networkx graph from OSM data within some bounding box.
 
@@ -1463,8 +1048,8 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max size for any part of the geometry, in square degrees: any polygon
-        bigger will get divided up for multiple queries to API
+        max area for any part of the geometry in meters: any polygon bigger 
+        will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
@@ -1473,6 +1058,9 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
         infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -1493,7 +1081,8 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                                           east=east_buffered, west=west_buffered,
                                           network_type=network_type, timeout=timeout,
                                           memory=memory, max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure, custom_filter=custom_filter)
+                                          infrastructure=infrastructure, custom_filter=custom_filter,
+                                          custom_settings=custom_settings)
         G_buffered = create_graph(response_jsons, name=name, retain_all=retain_all,
                                   bidirectional=network_type in settings.bidirectional_network_types)
         G = truncate_graph_bbox(G_buffered, north, south, east, west, retain_all=True, truncate_by_edge=truncate_by_edge)
@@ -1516,7 +1105,8 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                                           west=west, network_type=network_type,
                                           timeout=timeout, memory=memory,
                                           max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure, custom_filter=custom_filter)
+                                          infrastructure=infrastructure, custom_filter=custom_filter,
+                                          custom_settings=custom_settings)
 
         # create the graph, then truncate to the bounding box
         G = create_graph(response_jsons, name=name, retain_all=retain_all,
@@ -1539,7 +1129,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
                      truncate_by_edge=False, name='unnamed', timeout=180,
                      memory=None, max_query_area_size=50*1000*50*1000,
                      clean_periphery=True, infrastructure='way["highway"]',
-                     custom_filter=None):
+                     custom_filter=None, custom_settings=None):
     """
     Create a networkx graph from OSM data within some distance of some (lat,
     lon) center point.
@@ -1572,8 +1162,8 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max size for any part of the geometry, in square degrees: any polygon
-        bigger will get divided up for multiple queries to API
+        max area for any part of the geometry in meters: any polygon bigger 
+        will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool,
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
@@ -1582,6 +1172,9 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
         infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -1600,7 +1193,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
                         retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name,
                         timeout=timeout, memory=memory, max_query_area_size=max_query_area_size,
                         clean_periphery=clean_periphery, infrastructure=infrastructure,
-                        custom_filter=custom_filter)
+                        custom_filter=custom_filter, custom_settings=custom_settings)
 
     # if the network distance_type is network, find the node in the graph
     # nearest to the center point, and truncate the graph by network distance
@@ -1619,7 +1212,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
                        name='unnamed', timeout=180, memory=None,
                        max_query_area_size=50*1000*50*1000,
                        clean_periphery=True, infrastructure='way["highway"]',
-                       custom_filter=None):
+                       custom_filter=None, custom_settings=None):
     """
     Create a networkx graph from OSM data within some distance of some address.
 
@@ -1665,6 +1258,9 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
         infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -1681,7 +1277,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
                          name=name, timeout=timeout, memory=memory,
                          max_query_area_size=max_query_area_size,
                          clean_periphery=clean_periphery, infrastructure=infrastructure,
-                         custom_filter=custom_filter)
+                         custom_filter=custom_filter, custom_settings=custom_settings)
     log('graph_from_address() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
 
     if return_coords:
@@ -1695,7 +1291,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
                        timeout=180, memory=None,
                        max_query_area_size=50*1000*50*1000,
                        clean_periphery=True, infrastructure='way["highway"]',
-                       custom_filter=None):
+                       custom_filter=None, custom_settings=None):
     """
     Create a networkx graph from OSM data within the spatial boundaries of the
     passed-in shapely polygon.
@@ -1722,8 +1318,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max size for any part of the geometry, in square degrees: any polygon
-        bigger will get divided up for multiple queries to API
+        max area for any part of the geometry in meters: any polygon bigger 
+        will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
@@ -1733,6 +1329,9 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         like power grids (ie, 'way["power"~"line"]'))
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
 
     Returns
     -------
@@ -1761,7 +1360,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         response_jsons = osm_net_download(polygon=polygon_buffered, network_type=network_type,
                                           timeout=timeout, memory=memory,
                                           max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure, custom_filter=custom_filter)
+                                          infrastructure=infrastructure, custom_filter=custom_filter,
+                                          custom_settings=custom_settings)
         G_buffered = create_graph(response_jsons, name=name, retain_all=True,
                                   bidirectional=network_type in settings.bidirectional_network_types)
         G_buffered = truncate_graph_polygon(G_buffered, polygon_buffered, retain_all=True, truncate_by_edge=truncate_by_edge)
@@ -1786,7 +1386,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         response_jsons = osm_net_download(polygon=polygon, network_type=network_type,
                                           timeout=timeout, memory=memory,
                                           max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure, custom_filter=custom_filter)
+                                          infrastructure=infrastructure, custom_filter=custom_filter,
+                                          custom_settings=custom_settings)
 
         # create the graph from the downloaded data
         G = create_graph(response_jsons, name=name, retain_all=True,
@@ -1810,7 +1411,8 @@ def graph_from_place(query, network_type='all_private', simplify=True,
                      retain_all=False, truncate_by_edge=False, name='unnamed',
                      which_result=1, buffer_dist=None, timeout=180, memory=None,
                      max_query_area_size=50*1000*50*1000, clean_periphery=True,
-                     infrastructure='way["highway"]', custom_filter=None):
+                     infrastructure='way["highway"]', custom_filter=None,
+                     custom_settings=None):
     """
     Create a networkx graph from OSM data within the spatial boundaries of some
     geocodable place(s).
@@ -1850,8 +1452,8 @@ def graph_from_place(query, network_type='all_private', simplify=True,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max size for any part of the geometry, in square degrees: any polygon
-        bigger will get divided up for multiple queries to API
+        max area for any part of the geometry in meters: any polygon bigger 
+        will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
@@ -1860,7 +1462,9 @@ def graph_from_place(query, network_type='all_private', simplify=True,
         infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
-
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
     Returns
     -------
     networkx multidigraph
@@ -1888,7 +1492,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
                            name=name, timeout=timeout, memory=memory,
                            max_query_area_size=max_query_area_size,
                            clean_periphery=clean_periphery, infrastructure=infrastructure,
-                           custom_filter=custom_filter)
+                           custom_filter=custom_filter, custom_settings=custom_settings)
 
     log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return G

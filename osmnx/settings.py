@@ -52,6 +52,14 @@ default_access = '["access"!~"private"]'
 # The network types for which a bidirectional graph will be created
 bidirectional_network_types = ['walk']
 
+# default settings string for overpass queries: timeout and maxsize need to
+# be dynamically set where used
+default_overpass_query_settings = '[out:json][timeout:{timeout}]{maxsize}'
+
+# all one-way mode to maintain original OSM node order
+# when constructing graphs specifically to save to .osm xml file
+all_oneway = False
+
 # default CRS to set when creating graphs
 default_crs = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
 
@@ -62,8 +70,8 @@ default_accept_language = 'en'
 
 # which API endpoint to use for nominatim queries
 # and your API key, if you are using a commercial endpoint that requires it
-nominatim_endpoint = "https://nominatim.openstreetmap.org/"
+nominatim_endpoint = 'https://nominatim.openstreetmap.org/'
 nominatim_key = None
 
 # which API endpoint to use for overpass queries
-overpass_endpoint = "http://overpass-api.de/api" 
+overpass_endpoint = 'http://overpass-api.de/api'

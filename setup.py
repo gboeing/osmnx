@@ -1,10 +1,11 @@
 # OSMnx
 # See full license in LICENSE.txt
 
+import os
 from setuptools import setup
 
 # provide a long description using reStructuredText
-long_description = """
+LONG_DESCRIPTION = """
 **OSMnx** is a package to easily download, model, project, visualize, and
 analyze complex street networks from OpenStreetMap in Python with NetworkX.
 
@@ -25,7 +26,7 @@ See the examples and demos on `GitHub`_ or read more about `OSMnx`_.
 """
 
 # list of classifiers from the PyPI classifiers trove
-classifiers = ['Development Status :: 5 - Production/Stable',
+CLASSIFIERS = ['Development Status :: 5 - Production/Stable',
                'License :: OSI Approved :: MIT License',
                'Operating System :: OS Independent',
                'Intended Audience :: Science/Research',
@@ -35,31 +36,32 @@ classifiers = ['Development Status :: 5 - Production/Stable',
                'Topic :: Scientific/Engineering :: Mathematics',
                'Topic :: Scientific/Engineering :: Information Analysis',
                'Programming Language :: Python',
-               'Programming Language :: Python :: 2',
-               'Programming Language :: Python :: 2.7',
                'Programming Language :: Python :: 3',
-               'Programming Language :: Python :: 3.4',
                'Programming Language :: Python :: 3.5',
                'Programming Language :: Python :: 3.6',
-               'Programming Language :: Python :: 3.7']
+               'Programming Language :: Python :: 3.7',
+               'Programming Language :: Python :: 3.8']
 
-with open('requirements.txt') as f:
-    requirements_lines = f.readlines()
-install_requires = [r.strip() for r in requirements_lines]
+# only specify install_requires if not in RTD environment
+if os.getenv('READTHEDOCS') == 'True':
+   INSTALL_REQUIRES = []
+else:
+   with open('requirements.txt') as f:
+      INSTALL_REQUIRES = [l.strip() for l in f.readlines()]
 
 # now call setup
 setup(name='osmnx',
-      version='0.11dev',
+      version='0.12.1',
       description='Retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data',
-      long_description=long_description,
-      classifiers=classifiers,
+      long_description=LONG_DESCRIPTION,
+      classifiers=CLASSIFIERS,
       url='https://github.com/gboeing/osmnx',
       author='Geoff Boeing',
       author_email='boeing@usc.edu',
       license='MIT',
       platforms='any',
       packages=['osmnx'],
-      install_requires=install_requires,
-      extras_require={'folium':['folium>=0.6'],
-                      'kdtree':['scipy>=1.1'],
-                      'balltree':['scikit-learn>=0.19']})
+      install_requires=INSTALL_REQUIRES,
+      extras_require={'folium':['folium>=0.10'],
+                      'kdtree':['scipy>=1.3'],
+                      'balltree':['scikit-learn>=0.22']})

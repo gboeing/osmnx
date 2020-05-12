@@ -4,14 +4,6 @@ osmnx package
 Submodules
 ----------
 
-osmnx.footprints module
------------------------
-
-.. automodule:: osmnx.footprints
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 osmnx.core module
 -----------------
 
@@ -20,10 +12,50 @@ osmnx.core module
     :undoc-members:
     :show-inheritance:
 
+osmnx.downloader module
+-----------------------
+
+.. automodule:: osmnx.downloader
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 osmnx.elevation module
 ----------------------
 
 .. automodule:: osmnx.elevation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+osmnx.errors module
+-------------------
+
+.. automodule:: osmnx.errors
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+osmnx.footprints module
+-----------------------
+
+.. automodule:: osmnx.footprints
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+osmnx.geo_utils module
+----------------------
+
+.. automodule:: osmnx.geo_utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+osmnx.osm_content_handler module
+--------------------------------
+
+.. automodule:: osmnx.osm_content_handler
     :members:
     :undoc-members:
     :show-inheritance:
