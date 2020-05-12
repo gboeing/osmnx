@@ -11,6 +11,7 @@ import geopandas as gpd
 from shapely.geometry import Polygon
 from shapely.geometry import Point
 from shapely.geometry import LineString
+import networkx as nx
 
 from .save_load import graph_to_gdfs
 from .utils import log
@@ -359,3 +360,58 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
     unified_intersections = gpd.GeoSeries(list(buffered_nodes))
     intersection_centroids = unified_intersections.centroid
     return intersection_centroids
+
+def coarse_grain_osm_network(G, tolerance=10):
+    """
+    Accepts an (unprojected) osmnx graph and coarse grains it, i.e.
+    creates a new graph H with less nodes and edges. H is constructed
+    as follows:
+    1. Draws a circle of radius tolerance (meters) around each node of G.
+    2. If the circles of two (or more) nodes (say u1, u2) have an overlap, they
+    are collapsed into a single node v1 in H.
+    3. For each edge (u1, u2) in G, if u1 and u2 has been collapsed into a
+    single node in H, H gets no edge corresponding to (u1, u2). Otherwise, an
+    edge is added in H between the corresponding nodes of u1 and u2.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    tolerance : float
+        nodes within this distance (in graph's geometry's units) will be
+        dissolved into a single node
+
+    Returns
+    ----------
+    networkx.Graph
+    """
+    G_proj = project_graph(G)
+    gdf_nodes = graph_to_gdfs(G_proj, edges=False)
+    buffered_nodes = gdf_nodes.buffer(tolerance).unary_union
+    old2new = dict()
+
+    if not hasattr(buffered_nodes, '__iter__'):
+        # if tolerance is very high, buffered_nodes won't be an iterable of Point's 
+        # but a single point. To take care of this case, we make it into a list.
+        buffered_nodes = [buffered_nodes]
+
+    for node, data in G_proj.nodes(data=True):
+        x, y = data['x'], data['y']
+        lon, lat = data['lon'], data['lat']
+        osm_id = data['osmid']
+        for poly_idx, polygon in enumerate(buffered_nodes):
+            if polygon.contains(Point(x,y)):
+                poly_centroid = polygon.centroid
+                old2new[node] = dict(label=poly_idx, x=poly_centroid.x, y=poly_centroid.y)
+                break
+
+    H = nx.Graph()
+    for node in G_proj.nodes():
+        new_node_data = old2new[node]
+        new_label = new_node_data['label']
+        H.add_node(new_label, **new_node_data)
+    for u,v  in G_proj.edges():
+        u2,v2 = old2new[u]['label'], old2new[v]['label']
+        if u2 != v2:
+            H.add_edge(u2, v2)
+    H.graph['crs'] = G.graph['crs']
+    return H
