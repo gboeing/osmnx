@@ -5,17 +5,18 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-import time
-import logging as lg
 import geopandas as gpd
+import logging as lg
+import networkx as nx
+import time
 from shapely.geometry import Polygon
 from shapely.geometry import Point
 from shapely.geometry import LineString
-import networkx as nx
 
+from .geo_utils import count_streets_per_node
+from .projection import project_graph
 from .save_load import graph_to_gdfs
 from .utils import log
-from .geo_utils import count_streets_per_node
 
 
 def is_endpoint(G, node, strict=True):
