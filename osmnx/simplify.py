@@ -319,6 +319,7 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
     Parameters
     ----------
     G : networkx multidigraph
+    	for best results, pass a projected graph
     tolerance : float
         nodes within this distance (in graph's geometry's units) will be
         dissolved into a single intersection
@@ -345,13 +346,11 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
         G = G.copy()
         G.remove_nodes_from(dead_end_nodes)
 
-    # create a GeoDataFrame of nodes, buffer to passed-in distance, merge
-    # overlaps
+    # create a GeoDataFrame of nodes, buffer to passed-in distance, merge overlaps
     gdf_nodes = graph_to_gdfs(G, edges=False)
     buffered_nodes = gdf_nodes.buffer(tolerance).unary_union
     if isinstance(buffered_nodes, Polygon):
-        # if only a single node results, make it iterable so we can turn it into
-        # a GeoSeries
+        # if only a single node results, make iterable so we can conver to GeoSeries
         buffered_nodes = [buffered_nodes]
 
     # get the centroids of the merged intersection polygons
@@ -362,8 +361,9 @@ def clean_intersections(G, tolerance=15, dead_ends=False):
 def coarse_grain_osm_network(G, tolerance=10):
     """
     Accepts an (unprojected) osmnx graph and coarse grains it, i.e.
-    creates a new graph H with less nodes and edges. H is constructed
-    as follows:
+    creates a new graph H with less nodes and edges.
+
+    H is constructed as follows:
     1. Draws a circle of radius tolerance (meters) around each node of G.
     2. If the circles of two (or more) nodes (say u1, u2) have an overlap, they
     are collapsed into a single node v1 in H.
@@ -374,25 +374,25 @@ def coarse_grain_osm_network(G, tolerance=10):
     Parameters
     ----------
     G : networkx multidigraph
+    	for best results, pass a projected graph
     tolerance : float
         nodes within this distance (in graph's geometry's units) will be
         dissolved into a single node
 
     Returns
     ----------
-    networkx.Graph
+    networkx.MultiDiGraph
     """
-    G_proj = project_graph(G)
-    gdf_nodes = graph_to_gdfs(G_proj, edges=False)
+    
+    # create a GeoDataFrame of nodes, buffer to passed-in distance, merge overlaps
+    gdf_nodes = graph_to_gdfs(G, edges=False)
     buffered_nodes = gdf_nodes.buffer(tolerance).unary_union
-    old2new = dict()
-
-    if not hasattr(buffered_nodes, '__iter__'):
-        # if tolerance is very high, buffered_nodes won't be an iterable of Point's 
-        # but a single point. To take care of this case, we make it into a list.
+    if isinstance(buffered_nodes, Polygon):
+        # if only a single node results, make iterable so we can conver to GeoSeries
         buffered_nodes = [buffered_nodes]
 
-    for node, data in G_proj.nodes(data=True):
+    old2new = dict()
+    for node, data in G.nodes(data=True):
         x, y = data['x'], data['y']
         lon, lat = data['lon'], data['lat']
         osm_id = data['osmid']
@@ -402,14 +402,17 @@ def coarse_grain_osm_network(G, tolerance=10):
                 old2new[node] = dict(label=poly_idx, x=poly_centroid.x, y=poly_centroid.y)
                 break
 
-    H = nx.Graph()
-    for node in G_proj.nodes():
+    H = nx.MultiDiGraph()
+    for node in G.nodes():
         new_node_data = old2new[node]
         new_label = new_node_data['label']
         H.add_node(new_label, **new_node_data)
-    for u,v  in G_proj.edges():
+    for u,v  in G.edges():
         u2,v2 = old2new[u]['label'], old2new[v]['label']
         if u2 != v2:
             H.add_edge(u2, v2)
-    H.graph['crs'] = G.graph['crs']
+    
+    # add other graph data
+    H.graph = G.graph
+
     return H
