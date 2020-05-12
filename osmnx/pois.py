@@ -74,15 +74,16 @@ def create_poi_query(north, south, east, west, tags,
     if custom_settings:
         overpass_settings = custom_settings
     else:
-        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout, maxsize=maxsize)
+        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout,
+                                                                            maxsize=maxsize)
 
-    tags_dict = {}
-    error_msg = 'tags must be a dict with values of bool, str, or list of str'    
 
     # make sure every value in dict is bool, str, or list of str
+    error_msg = 'tags must be a dict with values of bool, str, or list of str'    
     if not isinstance(tags, dict):
         raise TypeError(error_msg)
 
+    tags_dict = {}
     for key, value in tags.items():
         
         if isinstance(value, bool):
@@ -108,19 +109,25 @@ def create_poi_query(north, south, east, west, tags,
             for value_item in value:
                 tags_list.append({key: value_item})
 
+    # create query bounding box
     bbox = '({s:.6f},{w:.6f},{n:.6f},{e:.6f})'.format(s=south, w=west, n=north, e=east)
+    
+    # add node/way/relation query components one at a time
     components = []
     for d in tags_list:
         for key, value in d.items():
 
             if isinstance(value, bool):
+                # if bool (ie, True) just pass the key, no value
                 tag_str = '["{key}"]{bbox};(._;>;);'.format(key=key, bbox=bbox)
             else:
+                # otherwise, pass "key"="value"
                 tag_str = '["{key}"="{value}"]{bbox};(._;>;);'.format(key=key, value=value, bbox=bbox)
 
             for kind in ['node', 'way', 'relation']:
                 components.append('({kind}{tag_str});'.format(kind=kind, tag_str=tag_str))
 
+    # finalize query and return
     components = ''.join(components)
     query = '{overpass_settings};({components});out;'
     query = query.format(overpass_settings=overpass_settings, components=components)
@@ -273,10 +280,9 @@ def parse_osm_node(response):
     try:
         point = Point(response['lon'], response['lat'])
 
-        poi = {
-            'osmid': response['id'],
-            'geometry': point
-        }
+        poi = {'osmid': response['id'],
+               'geometry': point}
+
         if 'tags' in response:
             for tag in response['tags']:
                 poi[tag] = response['tags'][tag]
@@ -313,8 +319,8 @@ def invalid_multipoly_handler(gdf, relation, way_ids):
         return multipoly
 
     except Exception:
-        log("Invalid geometry at relation id %s.\nWay-ids of the invalid MultiPolygon:" % (
-        relation['id'], str(way_ids)))
+        msg = 'Invalid geometry at relation "{}". Way IDs of the invalid MultiPolygon: {}'
+        log(msg.format(relation['id'], way_ids))
         return None
 
 
@@ -374,7 +380,7 @@ def parse_osm_relations(relations, osm_way_df):
                     # Remove such 'ways' from 'osm_way_df' that are part of the 'relation'
                     osm_way_df = osm_way_df.drop(member_way_ids)
         except Exception as e:
-            log("Could not parse OSM relation {}".format(relation['id']))
+            log('Could not parse OSM relation {}'.format(relation['id']))
 
     # Merge 'osm_way_df' and the 'gdf_relations'
     osm_way_df = osm_way_df.append(gdf_relations, sort=False)
@@ -484,8 +490,8 @@ def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=N
 def pois_from_point(point, tags, distance=1000,
                     timeout=180, memory=None, custom_settings=None):
     """
-    Get point of interests (POIs) within some distance north, south, east, and west of
-    a lat-long point.
+    Get point of interests (POIs) within some distance north, south, east, and
+    west of a lat-long point.
 
     Parameters
     ----------
@@ -508,7 +514,7 @@ def pois_from_point(point, tags, distance=1000,
     distance : numeric
         distance in meters
     timeout : int
-        Timeout for the API request.
+        timeout for the API request
     memory : int
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
@@ -553,7 +559,7 @@ def pois_from_address(address, tags, distance=1000,
     distance : numeric
         distance in meters
     timeout : int
-        Timeout for the API request.
+        timeout for the API request
     memory : int
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
@@ -597,7 +603,7 @@ def pois_from_polygon(polygon, tags,
         would return all amenities, `landuse=retail`, `landuse=commercial`,
         and `highway=bus_stop`.
     timeout : int
-        Timeout for the API request.
+        timeout for the API request
     memory : int
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
@@ -621,7 +627,7 @@ def pois_from_place(place, tags, which_result=1,
     Parameters
     ----------
     place : string
-        the query to geocode to get geojson boundary polygon.
+        the query to geocode to get boundary polygon.
     tags : dict
         Dict of tags used for finding POIs from the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -637,9 +643,9 @@ def pois_from_place(place, tags, which_result=1,
         would return all amenities, `landuse=retail`, `landuse=commercial`,
         and `highway=bus_stop`.
     which_result : int
-        max number of place geocoding results to return and which to process upon receipt
+        max number of geocoding results to return and which to process
     timeout : int
-        Timeout for the API request.
+        timeout for the API request
     memory : int
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
