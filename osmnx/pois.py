@@ -45,9 +45,11 @@ def create_poi_query(north, south, east, west, tags,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
-
+        custom settings to be used in the overpass query instead of defaults
+    
+    Returns
+    -------
+    query : string
     """
 
     # pass server memory allocation in bytes for the query to the API
@@ -97,36 +99,24 @@ def create_poi_query(north, south, east, west, tags,
             for value_item in value:
                 tags_list.append({key: value_item})
 
-    query = ['{overpass_settings};'.format(overpass_settings=overpass_settings)]
-    print(query)
+    bbox = '({s:.6f},{w:.6f},{n:.6f},{e:.6f})'.format(s=south, w=west, n=north, e=east)
+    components = []
+    for d in tags_list:
+        for key, value in d.items():
+
+            if isinstance(value, bool):
+                tag_str = '["{key}"]{bbox};(._;>;);'.format(key=key, bbox=bbox)
+            else:
+                tag_str = '["{key}"="{value}"]{bbox};(._;>;);'.format(key=key, value=value, bbox=bbox)
+
+            for kind in ['node', 'way', 'relation']:
+                components.append('({kind}{tag_str});'.format(kind=kind, tag_str=tag_str))
+
+    components = ''.join(components)
+    query = '{overpass_settings};({components});out;'
+    query = query.format(overpass_settings=overpass_settings, components=components)
     
-
-
-
-
-
-    if amenities:
-        # Overpass QL template
-        query_template = ('{overpass_settings};((node["amenity"~"{amenities}"]({south:.6f},'
-                          '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"~"{amenities}"]({south:.6f},'
-                          '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"~"{amenities}"]'
-                          '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);););out;')
-
-        # Parse amenties
-        query_str = query_template.format(amenities="|".join(amenities), north=north, south=south, east=east, west=west,
-                                          timeout=timeout, maxsize=maxsize, overpass_settings=overpass_settings)
-    else:
-        # Overpass QL template
-        query_template = ('{overpass_settings};((node["amenity"]({south:.6f},'
-                          '{west:.6f},{north:.6f},{east:.6f});(._;>;););(way["amenity"]({south:.6f},'
-                          '{west:.6f},{north:.6f},{east:.6f});(._;>;););(relation["amenity"]'
-                          '({south:.6f},{west:.6f},{north:.6f},{east:.6f});(._;>;);););out;')
-
-        # Parse amenties
-        query_str = query_template.format(north=north, south=south, east=east, west=west,
-                                          timeout=timeout, maxsize=maxsize, overpass_settings=overpass_settings)
-
-    return query_str
+    return query
 
 
 def osm_poi_download(tags, polygon=None,
@@ -157,13 +147,12 @@ def osm_poi_download(tags, polygon=None,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in the overpass query instead of defaults
 
     Returns
     -------
-    gdf : geopandas.GeoDataFrame
-        Points of interest and the tags associated with them as geopandas GeoDataFrame.
+    responses : dict
+        JSON response with POIs from Overpass API server
     """
 
     # TODO: add functionality for subdividing search area geometry
@@ -188,9 +177,8 @@ def osm_poi_download(tags, polygon=None,
 
 def parse_nodes_coords(osm_response):
     """
-    Parse node coordinates from OSM response. Some nodes are
-    standalone points of interest, others are vertices in
-    polygonal (areal) POIs.
+    Parse node coordinates from OSM response. Some nodes are standalone points
+    of interest, others are vertices in polygonal (areal) POIs.
 
     Parameters
     ----------
@@ -375,7 +363,7 @@ def parse_osm_relations(relations, osm_way_df):
 def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=None,
                    timeout=180, memory=None, custom_settings=None):
     """
-    Parse GeoDataFrames from POI json that was returned by Overpass API.
+    Create GeoDataFrame from POI json returned by Overpass API
 
     Parameters
     ----------
@@ -397,13 +385,12 @@ def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=N
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in the overpass query instead of defaults
 
     Returns
     -------
     geopandas.GeoDataFrame
-        GeoDataFrame with POIs and the associated attributes
+        POIs and their associated tags
     """
 
     responses = osm_poi_download(tags, polygon=polygon,
@@ -481,8 +468,7 @@ def pois_from_point(point, tags, distance=1000,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in the overpass query instead of defaults
 
     Returns
     -------
@@ -498,8 +484,8 @@ def pois_from_point(point, tags, distance=1000,
 def pois_from_address(address, tags, distance=1000,
                       timeout=180, memory=None, custom_settings=None):
     """
-    Get OSM points of Interests within some distance north, south, east, and west of
-    an address.
+    Get point of interests (POIs) within some distance north, south, east, and
+    west of an address.
 
     Parameters
     ----------
@@ -515,8 +501,7 @@ def pois_from_address(address, tags, distance=1000,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in the overpass query instead of defaults
 
     Returns
     -------
@@ -534,7 +519,7 @@ def pois_from_address(address, tags, distance=1000,
 def pois_from_polygon(polygon, tags,
                       timeout=180, memory=None, custom_settings=None):
     """
-    Get OSM points of interest within some polygon.
+    Get point of interests (POIs) within some polygon.
 
     Parameters
     ----------
@@ -548,8 +533,7 @@ def pois_from_polygon(polygon, tags,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in the overpass query instead of defaults
         
     Returns
     -------
@@ -579,8 +563,7 @@ def pois_from_place(place, tags, which_result=1,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in the overpass query instead of defaults
 
     Returns
     -------
