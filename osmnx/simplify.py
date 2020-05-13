@@ -304,13 +304,21 @@ def simplify_graph(G, strict=True):
 
 
 
-def clean_intersections(G, tolerance=10, dead_ends=False):
+def clean_intersections(G, tolerance=10, dead_ends=False,
+                        rebuild_graph=False, update_edge_lengths=False):
     """
+    Deprecated pass-through function that calls consolidate_intersections.
+    Will be removed in future release.
+
+    Parameters
+    ----------
     G : networkx.MultiDiGraph
     tolerance : float
     dead_ends : bool
 
-    Deprecated pass-through function that calls consolidate_intersections
+    Returns
+    ----------
+    networkx.MultiDiGraph or geopandas.GeoSeries
     """
     from warnings import warn
     msg = 'The `clean_intersections` function has been deprecated and will be ' \
