@@ -361,7 +361,7 @@ def clean_intersections(G, tolerance=10, rebuild_graph=True, dead_ends=False,
 
     if rebuild_graph:
         return clean_intersections_rebuild_graph(G=G, tolerance=tolerance)
-        
+
     else:
         # create a GeoDataFrame of nodes, buffer to passed-in distance, merge overlaps
         gdf_nodes = graph_to_gdfs(G, edges=False)
@@ -468,8 +468,10 @@ def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True)
 
     # STEP 5
     # create a new node for each cluster of merged nodes
+    # regroup now that we potentially have new cluster labels from step 3
+    groups = gdf.groupby('cluster')
     for cluster_label, nodes_subset in groups:
-        
+
         osmids = nodes_subset.index.to_list()
         if len(osmids) == 1:
             # if cluster is a single node, add that node to new graph
@@ -501,16 +503,17 @@ def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True)
 
 
     # STEP 7
-    # for every group of merged with more than 1 node in it
-    # extend the edge geometries to the new node point
+    # for every group of merged nodes with more than 1 node in it,
+    # extend the edge geometries to reach the new node point
     new_edges = graph_to_gdfs(H, nodes=False)
     for cluster_label, nodes_subset in groups:
         
-        # only if there were multiple nodes merged together here
+        # but only if there were multiple nodes merged together,
         # otherwise it's the same old edge as in original graph
         if len(nodes_subset) > 1:
             
-            # get coords of merged nodes point centroid
+            # get coords of merged nodes point centroid to prepend or
+            # append to the old edge geom's coords
             x = H.nodes[cluster_label]['x']
             y = H.nodes[cluster_label]['y']
             xy = [(x, y)]
