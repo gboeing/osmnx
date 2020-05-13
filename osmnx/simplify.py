@@ -361,12 +361,13 @@ def clean_intersections(G, tolerance=10, rebuild_graph=True, dead_ends=False,
 
     if rebuild_graph:
         return clean_intersections_rebuild_graph(G=G, tolerance=tolerance)
+        
     else:
         # create a GeoDataFrame of nodes, buffer to passed-in distance, merge overlaps
         gdf_nodes = graph_to_gdfs(G, edges=False)
         buffered_nodes = gdf_nodes.buffer(tolerance).unary_union
         if isinstance(buffered_nodes, Polygon):
-            # if only a single node results, make iterable so we can conver to GeoSeries
+            # if only a single node results, make iterable to convert to GeoSeries
             buffered_nodes = [buffered_nodes]
 
         # get the centroids of the merged intersection polygons
@@ -414,7 +415,7 @@ def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True)
     gdf_edges = gdf_edges.set_index(['u', 'v', 'key'])
     buffered_nodes = gdf_nodes.buffer(tolerance).unary_union
     if isinstance(buffered_nodes, Polygon):
-        # if only a single node results, make iterable so we can convert to GeoSeries
+        # if only a single node results, make iterable to convert to GeoSeries
         buffered_nodes = [buffered_nodes]
 
 
@@ -430,7 +431,7 @@ def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True)
     node_clusters['x'] = centroids.x
     node_clusters['y'] = centroids.y
 
-    # then spatial join
+    # then spatial join to give each node the label of cluster it's within
     gdf = gpd.sjoin(node_points, node_clusters, how='left', op='within')
     gdf = gdf.drop(columns='geometry').rename(columns={'index_right':'cluster'})
 
@@ -469,12 +470,13 @@ def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True)
     # create a new node for each cluster of merged nodes
     for cluster_label, nodes_subset in groups:
         
-        osmids = nodes_subset['cluster'].index.to_list()
+        osmids = nodes_subset.index.to_list()
         if len(osmids) == 1:
             # if cluster is a single node, add that node to new graph
             H.add_node(cluster_label, **G.nodes[osmids[0]])
         else:
-            # if cluster is multiple merged nodes, create one new node to represent them
+            # if cluster is multiple merged nodes, create one new node to 
+            # represent them
             H.add_node(cluster_label,
                        osmid=str(osmids),
                        x=nodes_subset['x'].iloc[0],
