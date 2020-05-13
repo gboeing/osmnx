@@ -424,33 +424,39 @@ def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True)
     node_points = gdf_nodes[['geometry']]
 
     # then turn buffered nodes into gdf and get centroids of each cluster as x, y
-    clusters = gpd.GeoDataFrame(geometry=list(buffered_nodes), crs=node_points.crs)
-    centroids = clusters.centroid
-    clusters['x'] = centroids.x
-    clusters['y'] = centroids.y
+    node_clusters = gpd.GeoDataFrame(geometry=list(buffered_nodes),
+    	                             crs=node_points.crs)
+    centroids = node_clusters.centroid
+    node_clusters['x'] = centroids.x
+    node_clusters['y'] = centroids.y
 
     # then spatial join
-    gdf = gpd.sjoin(node_points, clusters, how='left', op='within')
+    gdf = gpd.sjoin(node_points, node_clusters, how='left', op='within')
     gdf = gdf.drop(columns='geometry').rename(columns={'index_right':'cluster'})
 
 
     # STEP 3
-    # if some node in this cluster does not connect to any other node
-    # in the cluster, add this node separately and don't connect it to cluster
-    nodes_disconnected_from_cluster = []
+    # if some node in the cluster does not connect to any other node in the cluster,
+    # move that node to its own new cluster (otherwise you end up with dead-ends due
+    # to traffic bollards, for example, getting falsely connected to other nodes they
+    # are close to)
+    ndfc = [] # list to accumulate nodes disconnected from their cluster
     groups = gdf.groupby('cluster')
-    for cluster, nodes in groups:
+    for cluster_label, nodes_subset in groups:
         
-        if len(nodes) > 1:
-            for osmid in nodes.index:
+        if len(nodes_subset) > 1:
+            for osmid in nodes_subset.index:
                 neighbors = set(list(G.predecessors(osmid)) + list(G.successors(osmid)))
-                neighbors_in_cluster = [n for n in nodes.index if n in neighbors]
+                neighbors_in_cluster = [n for n in nodes_subset.index if n in neighbors]
                 if len(neighbors_in_cluster) == 0:
-                    nodes_disconnected_from_cluster.append(osmid)
+                    ndfc.append(osmid)
 
-    gdf2 = gdf.loc[nodes_disconnected_from_cluster]
-    gdf2['cluster'] = gdf2['cluster'].astype(str) + '-' + pd.Series(range(len(gdf2)), index=gdf2.index).astype(str)
-    gdf.loc[nodes_disconnected_from_cluster] = gdf2
+    # move each the node that does not belong to its cluster into its own
+    # new cluster, by appending '-number' to its cluster label
+    gdf_tmp = gdf.loc[ndfc, 'cluster']
+    gdf_tmp = gdf_tmp.astype(str) + '-' + pd.Series(data=range(len(gdf_tmp)),
+    	                                            index=gdf_tmp.index).astype(str)
+    gdf.loc[ndfc, 'cluster'] = gdf_tmp
 
 
     # STEP 4
@@ -461,19 +467,18 @@ def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True)
 
     # STEP 5
     # create a new node for each cluster of merged nodes
-    groups = gdf.groupby('cluster')
-    for cluster, nodes in groups:
+    for cluster_label, nodes_subset in groups:
         
-        osmids = nodes['cluster'].index.to_list()
+        osmids = nodes_subset['cluster'].index.to_list()
         if len(osmids) == 1:
             # if cluster is a single node, add that node to new graph
-            H.add_node(cluster, **G.nodes[osmids[0]])
+            H.add_node(cluster_label, **G.nodes[osmids[0]])
         else:
             # if cluster is multiple merged nodes, create one new node to represent them
-            H.add_node(cluster,
+            H.add_node(cluster_label,
                        osmid=str(osmids),
-                       x=nodes['x'].iloc[0],
-                       y=nodes['y'].iloc[0])
+                       x=nodes_subset['x'].iloc[0],
+                       y=nodes_subset['y'].iloc[0])
     
 
     # STEP 6
@@ -497,23 +502,23 @@ def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True)
     # for every group of merged with more than 1 node in it
     # extend the edge geometries to the new node point
     new_edges = graph_to_gdfs(H, nodes=False)
-    for label, group in groups:
+    for cluster_label, nodes_subset in groups:
         
         # only if there were multiple nodes merged together here
         # otherwise it's the same old edge as in original graph
-        if len(group) > 1:
+        if len(nodes_subset) > 1:
             
             # get coords of merged nodes point centroid
-            x = H.nodes[label]['x']
-            y = H.nodes[label]['y']
+            x = H.nodes[cluster_label]['x']
+            y = H.nodes[cluster_label]['y']
             xy = [(x, y)]
             
-            # for each edge that connects to this new merged node, update
-            # its geometry to extend to the new node's point coords
-            mask = (new_edges['u']==label) | (new_edges['v']==label)
+            # for each edge incident to this new merged node, update
+            # its geometry to extend to/from the new node's point coords
+            mask = (new_edges['u']==cluster_label) | (new_edges['v']==cluster_label)
             for _, (u, v, k) in new_edges.loc[mask, ['u', 'v', 'key']].iterrows():
                 old_coords = list(H.edges[u, v, k]['geometry'].coords)
-                new_coords = xy + old_coords if label == u else old_coords + xy
+                new_coords = xy + old_coords if cluster_label == u else old_coords + xy
                 new_geom = LineString(new_coords)
                 H.edges[u, v, k]['geometry'] = new_geom
                 
