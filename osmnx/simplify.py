@@ -344,8 +344,8 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
         nodes within this distance (in graph's geometry's units) will be
         dissolved into a single intersection
     rebuild_graph : bool
-        if True, use clean_intersections_rebuild_graph to consolidate the
-        intersections and rebuild the graph, then return as
+        if True, use consolidate_intersections_rebuild_graph to consolidate 
+        the intersections and rebuild the graph, then return as
         networkx.MultiDiGraph. if False, just return the consolidated
         intersection points as a geopandas.GeoSeries (faster than rebuilding
         graph)
@@ -353,7 +353,7 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
         if False, discard dead-end nodes to return only street-intersection
         points
     update_edge_lengths : bool
-        just passed to clean_intersections_rebuild_graph.
+        just passed to consolidate_intersections_rebuild_graph.
         if True, update the length attribute of edges reconnected to a new
         merged node; if False, just retain the original edge length.
 
