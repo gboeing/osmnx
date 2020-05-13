@@ -420,14 +420,16 @@ def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True)
 
     # STEP 2
     # attach each node to its cluster of merged nodes
-    # first turn buffered nodes into gdf then get centroids of each cluster as x, y
+    # first get the original graph's node points
+    node_points = gdf_nodes[['geometry']]
+
+    # then turn buffered nodes into gdf and get centroids of each cluster as x, y
     clusters = gpd.GeoDataFrame(geometry=list(buffered_nodes), crs=node_points.crs)
     centroids = clusters.centroid
     clusters['x'] = centroids.x
     clusters['y'] = centroids.y
 
-    # get the original graph's node points, then spatially join
-    node_points = gdf_nodes[['geometry']]
+    # then spatial join
     gdf = gpd.sjoin(node_points, clusters, how='left', op='within')
     gdf = gdf.drop(columns='geometry').rename(columns={'index_right':'cluster'})
 
