@@ -303,8 +303,26 @@ def simplify_graph(G, strict=True):
     return G
 
 
-def clean_intersections(G, tolerance=10, rebuild_graph=True, dead_ends=False,
-	                    update_edge_lengths=True):
+
+def clean_intersections(G, tolerance=10, dead_ends=False):
+    """
+    G : networkx.MultiDiGraph
+    tolerance : float
+    dead_ends : bool
+
+    Deprecated pass-through function that calls consolidate_intersections
+    """
+    from warnings import warn
+    msg = 'The `clean_intersections` function has been deprecated and will be ' \
+          'removed in the next release. Use the new `consolidate_intersections` ' \
+          'function instead.'
+    warn(msg)
+    return consolidate_intersections(G, tolerance=tolerance, dead_ends=dead_ends)
+
+
+
+def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
+                              dead_ends=False, update_edge_lengths=True):
     """
     Consolidate intersections comprising clusters of nodes by merging them and
     returning their centroids.
@@ -320,7 +338,7 @@ def clean_intersections(G, tolerance=10, rebuild_graph=True, dead_ends=False,
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
         for best results, pass a projected graph
     tolerance : float
         nodes within this distance (in graph's geometry's units) will be
@@ -335,9 +353,9 @@ def clean_intersections(G, tolerance=10, rebuild_graph=True, dead_ends=False,
         if False, discard dead-end nodes to return only street-intersection
         points
     update_edge_lengths : bool
-		if True, update the length attribute of edges reconnected to a new
-		merged node; if False, just retain the original edge length.
-		passed to clean_intersections_rebuild_graph if rebuild_graph=True.
+        just passed to clean_intersections_rebuild_graph.
+        if True, update the length attribute of edges reconnected to a new
+        merged node; if False, just retain the original edge length.
 
     Returns
     ----------
@@ -360,7 +378,9 @@ def clean_intersections(G, tolerance=10, rebuild_graph=True, dead_ends=False,
         G.remove_nodes_from(dead_end_nodes)
 
     if rebuild_graph:
-        return clean_intersections_rebuild_graph(G=G, tolerance=tolerance)
+        return consolidate_intersections_rebuild_graph(G=G,
+                                                       tolerance=tolerance,
+                                                       update_edge_lengths=update_edge_lengths)
 
     else:
         # create a GeoDataFrame of nodes, buffer to passed-in distance, merge overlaps
@@ -376,7 +396,9 @@ def clean_intersections(G, tolerance=10, rebuild_graph=True, dead_ends=False,
         return intersection_centroids
 
 
-def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True):
+
+def consolidate_intersections_rebuild_graph(G, tolerance=10,
+                                            update_edge_lengths=True):
     """
     Consolidate intersections comprising clusters of nodes by merging them
     and returning a rebuilt graph with consolidated intersections and
@@ -399,8 +421,8 @@ def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True)
         dissolved into a single node, with edges reconnected to this new
         node
     update_edge_lengths : bool
-		if True, update the length attribute of edges reconnected to a new
-		merged node; if False, just retain the original edge length
+        if True, update the length attribute of edges reconnected to a new
+        merged node; if False, just retain the original edge length
 
     Returns
     ----------
@@ -426,7 +448,7 @@ def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True)
 
     # then turn buffered nodes into gdf and get centroids of each cluster as x, y
     node_clusters = gpd.GeoDataFrame(geometry=list(buffered_nodes),
-    	                             crs=node_points.crs)
+                                     crs=node_points.crs)
     centroids = node_clusters.centroid
     node_clusters['x'] = centroids.x
     node_clusters['y'] = centroids.y
@@ -456,7 +478,7 @@ def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True)
     # new cluster, by appending '-number' to its cluster label
     gdf_tmp = gdf.loc[ndfc, 'cluster']
     gdf_tmp = gdf_tmp.astype(str) + '-' + pd.Series(data=range(len(gdf_tmp)),
-    	                                            index=gdf_tmp.index).astype(str)
+                                                    index=gdf_tmp.index).astype(str)
     gdf.loc[ndfc, 'cluster'] = gdf_tmp
 
 
@@ -530,6 +552,6 @@ def clean_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True)
                 # update the edge length attribute if parameterized to do so
                 # otherwise just keep using the original edge length
                 if update_edge_lengths:
-                	H.edges[u, v, k]['length'] = new_geom.length
+                    H.edges[u, v, k]['length'] = new_geom.length
 
     return H
