@@ -110,7 +110,7 @@ def get_largest_component(G, strongly=False):
 
             msg = (f'Graph was not connected, retained only the largest weakly '
                    f'connected component ({len(G)} of {original_len} total nodes)')
-            utils.log()
+            utils.log(msg)
 
     return G
 
