@@ -11,9 +11,8 @@ import networkx as nx
 import time
 from pyproj import CRS
 from shapely.geometry import Point
-
 from . import settings
-from .utils import log
+from . import utils
 
 
 
@@ -118,7 +117,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
             # if to_latlong is True, project the gdf to latlong
             latlong_crs = settings.default_crs
             projected_gdf = gdf.to_crs(latlong_crs)
-            log('Projected the GeoDataFrame "{}" to default_crs in {:,.2f} seconds'.format(gdf.gdf_name, time.time()-start_time))
+            utils.log('Projected the GeoDataFrame "{}" to default_crs in {:,.2f} seconds'.format(gdf.gdf_name, time.time()-start_time))
         else:
             # else, project the gdf to UTM
             # if GeoDataFrame is already in UTM, just return it
@@ -136,7 +135,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
 
             # project the GeoDataFrame to the UTM CRS
             projected_gdf = gdf.to_crs(utm_crs)
-            log('Projected the GeoDataFrame "{}" to UTM-{} in {:,.2f} seconds'.format(gdf.gdf_name, utm_zone, time.time()-start_time))
+            utils.log('Projected the GeoDataFrame "{}" to UTM-{} in {:,.2f} seconds'.format(gdf.gdf_name, utm_zone, time.time()-start_time))
 
     projected_gdf.gdf_name = gdf.gdf_name
     return projected_gdf
@@ -177,7 +176,7 @@ def project_graph(G, to_crs=None):
     # create a geometry column from x/y columns
     gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
     gdf_nodes.set_geometry('geometry', inplace=True)
-    log('Created a GeoDataFrame from graph in {:,.2f} seconds'.format(time.time()-start_time))
+    utils.log('Created a GeoDataFrame from graph in {:,.2f} seconds'.format(time.time()-start_time))
 
     # project the nodes GeoDataFrame to UTM
     gdf_nodes_utm = project_gdf(gdf_nodes, to_crs=to_crs)
@@ -203,7 +202,7 @@ def project_graph(G, to_crs=None):
     gdf_nodes_utm['x'] = gdf_nodes_utm['geometry'].map(lambda point: point.x)
     gdf_nodes_utm['y'] = gdf_nodes_utm['geometry'].map(lambda point: point.y)
     gdf_nodes_utm = gdf_nodes_utm.drop('geometry', axis=1)
-    log('Extracted projected node geometries from GeoDataFrame in {:,.2f} seconds'.format(time.time()-start_time))
+    utils.log('Extracted projected node geometries from GeoDataFrame in {:,.2f} seconds'.format(time.time()-start_time))
 
     # clear the graph to make it a blank slate for the projected data
     start_time = time.time()
@@ -233,5 +232,5 @@ def project_graph(G, to_crs=None):
     G_proj.graph['name'] = '{}_UTM'.format(graph_name)
     if 'streets_per_node' in G.graph:
         G_proj.graph['streets_per_node'] = G.graph['streets_per_node']
-    log('Rebuilt projected graph in {:,.2f} seconds'.format(time.time()-start_time))
+    utils.log('Rebuilt projected graph in {:,.2f} seconds'.format(time.time()-start_time))
     return G_proj

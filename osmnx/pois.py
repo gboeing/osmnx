@@ -9,13 +9,11 @@ import geopandas as gpd
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
-
+from . import core
+from . import downloader
 from . import settings
-from .utils_geo import bbox_from_point
-from .core import gdf_from_place
-from .downloader import overpass_request
-from .utils import log
-from .utils_geo import geocode
+from . import utils
+from . import utils_geo
 
 
 def create_poi_query(north, south, east, west, tags,
@@ -198,7 +196,7 @@ def osm_poi_download(tags, polygon=None,
                              timeout=timeout,
                              memory=memory,
                              custom_settings=custom_settings)
-    responses = overpass_request(data={'data': query}, timeout=timeout)
+    responses = downloader.overpass_request(data={'data': query}, timeout=timeout)
 
     return responses
 
@@ -258,7 +256,7 @@ def parse_polygonal_poi(coords, response):
             return poi
 
         except Exception:
-            log('Polygon has invalid geometry: {}'.format(nodes))
+            utils.log('Polygon has invalid geometry: {}'.format(nodes))
 
     return None
 
@@ -288,7 +286,7 @@ def parse_osm_node(response):
                 poi[tag] = response['tags'][tag]
 
     except Exception:
-        log('Point has invalid geometry: {}'.format(response['id']))
+        utils.log('Point has invalid geometry: {}'.format(response['id']))
 
     return poi
 
@@ -320,7 +318,7 @@ def invalid_multipoly_handler(gdf, relation, way_ids):
 
     except Exception:
         msg = 'Invalid geometry at relation "{}". Way IDs of the invalid MultiPolygon: {}'
-        log(msg.format(relation['id'], way_ids))
+        utils.log(msg.format(relation['id'], way_ids))
         return None
 
 
@@ -380,7 +378,7 @@ def parse_osm_relations(relations, osm_way_df):
                     # Remove such 'ways' from 'osm_way_df' that are part of the 'relation'
                     osm_way_df = osm_way_df.drop(member_way_ids)
         except Exception as e:
-            log('Could not parse OSM relation {}'.format(relation['id']))
+            utils.log('Could not parse OSM relation {}'.format(relation['id']))
 
     # Merge 'osm_way_df' and the 'gdf_relations'
     osm_way_df = osm_way_df.append(gdf_relations, sort=False)
@@ -526,7 +524,7 @@ def pois_from_point(point, tags, distance=1000,
     geopandas.GeoDataFrame
     """
 
-    bbox = bbox_from_point(point=point, distance=distance)
+    bbox = utils_geo.bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
     return create_poi_gdf(tags=tags, north=north, south=south, east=east, west=west,
                           timeout=timeout, memory=memory, custom_settings=custom_settings)
@@ -572,7 +570,7 @@ def pois_from_address(address, tags, distance=1000,
     """
 
     # geocode the address string to a (lat, lon) point
-    point = geocode(query=address)
+    point = utils_geo.geocode(query=address)
 
     # get POIs within distance of this point
     return pois_from_point(point=point, tags=tags, distance=distance,
@@ -657,7 +655,7 @@ def pois_from_place(place, tags, which_result=1,
     geopandas.GeoDataFrame
     """
 
-    city = gdf_from_place(place, which_result=which_result)
+    city = core.gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
     return create_poi_gdf(tags=tags, polygon=polygon,
                           timeout=timeout, memory=memory, custom_settings=custom_settings)
