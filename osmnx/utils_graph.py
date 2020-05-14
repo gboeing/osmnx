@@ -5,33 +5,18 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-import bz2
-import datetime as dt
-import io
-import logging as lg
-import math
-import os
 import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
-import requests
 import time
-import xml.sax
 from collections import Counter
-from collections import OrderedDict
 from itertools import chain
-from shapely.geometry import Point
-from shapely.geometry import MultiPoint
 from shapely.geometry import LineString
-from shapely.geometry import MultiLineString
-from shapely.geometry import MultiPolygon
-from shapely.geometry import Polygon
+from shapely.geometry import Point
 
-from .downloader import nominatim_request
-from .osm_content_handler import OSMContentHandler
-from .utils import log
 from . import settings
+from .utils import log
 
 # scipy and sklearn are optional dependencies for faster nearest node search
 try:
@@ -239,7 +224,7 @@ def count_streets_per_node(G, nodes=None):
     return streets_per_node
 
 
-    
+
 
 
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):

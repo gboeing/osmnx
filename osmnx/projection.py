@@ -5,10 +5,10 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-import time
-import math
 import geopandas as gpd
+import math
 import networkx as nx
+import time
 from pyproj import CRS
 from shapely.geometry import Point
 

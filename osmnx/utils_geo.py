@@ -5,33 +5,22 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-import bz2
-import datetime as dt
-import io
-import logging as lg
 import math
-import os
-import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
-import requests
 import time
-import xml.sax
-from collections import Counter
 from collections import OrderedDict
-from itertools import chain
-from shapely.geometry import Point
-from shapely.geometry import MultiPoint
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
+from shapely.geometry import MultiPoint
 from shapely.geometry import MultiPolygon
+from shapely.geometry import Point
 from shapely.geometry import Polygon
 
 from .downloader import nominatim_request
-from .osm_content_handler import OSMContentHandler
 from .utils import log
-from . import settings
+from .utils_graph import graph_to_gdfs
 
 # scipy and sklearn are optional dependencies for faster nearest node search
 try:
@@ -81,7 +70,7 @@ def geocode(query):
         raise Exception('Nominatim geocoder returned no results for query "{}"'.format(query))
 
 
-        
+
 def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     """
     Vectorized function to calculate the great-circle distance between two

@@ -14,10 +14,9 @@ from shapely.geometry import LineString
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 
-from .utils_graph import count_streets_per_node
-from .projection import project_graph
-from .utils_graph import graph_to_gdfs
 from .utils import log
+from .utils_graph import count_streets_per_node
+from .utils_graph import graph_to_gdfs
 
 
 def is_endpoint(G, node, strict=True):

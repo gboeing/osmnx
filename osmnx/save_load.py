@@ -5,21 +5,26 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-import re
-import time
-import os
 import ast
+import bz2
+import geopandas as gpd
+import os
+import networkx as nx
 import numpy as np
 import pandas as pd
-import geopandas as gpd
-import networkx as nx
-from shapely.geometry import Point
-from shapely.geometry import LineString
+import re
+import time
+import xml
+import xml.sax
 from shapely import wkt
+from shapely.geometry import LineString
+from shapely.geometry import Point
 from xml.etree import ElementTree as etree
 
 from . import settings
-from .utils_graph import gdfs_to_graph, graph_to_gdfs
+from .utils_graph import gdfs_to_graph
+from .utils_graph import get_largest_component
+from .utils_graph import graph_to_gdfs
 from .utils import log
 
 
@@ -830,3 +835,45 @@ def overpass_json_from_file(filename):
         handler = OSMContentHandler()
         xml.sax.parse(file, handler)
         return handler.object
+
+
+
+class OSMContentHandler(xml.sax.handler.ContentHandler):
+    """
+    SAX content handler for OSM XML.
+
+    Used to build an Overpass-like response JSON object in self.object. For format
+    notes, see http://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes
+    and http://overpass-api.de/output_formats.html#json
+    """
+
+    def __init__(self):
+        self._element = None
+        self.object = {'elements': []}
+
+    def startElement(self, name, attrs):
+        if name == 'osm':
+            self.object.update({k: attrs[k] for k in attrs.keys()
+                                if k in ('version', 'generator')})
+
+        elif name in ('node', 'way'):
+            self._element = dict(type=name, tags={}, nodes=[], **attrs)
+            self._element.update({k: float(attrs[k]) for k in attrs.keys()
+                                  if k in ('lat', 'lon')})
+            self._element.update({k: int(attrs[k]) for k in attrs.keys()
+                                  if k in ('id', 'uid', 'version', 'changeset')})
+
+        elif name == 'tag':
+            self._element['tags'].update({attrs['k']: attrs['v']})
+
+        elif name == 'nd':
+            self._element['nodes'].append(int(attrs['ref']))
+
+        elif name == 'relation':
+            # Placeholder for future relation support.
+            # Look for nested members and tags.
+            pass
+
+    def endElement(self, name):
+        if name in ('node', 'way'):
+            self.object['elements'].append(self._element)
