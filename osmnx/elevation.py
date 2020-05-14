@@ -1,7 +1,6 @@
 ################################################################################
 # Module: elevation.py
-# Description: Get node elevations and edge grades from the Google Maps
-#              Elevation API
+# Description: Get node elevations and calculate edge grades
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################

@@ -1,6 +1,6 @@
 ################################################################################
 # Module: projection.py
-# Description: Project spatial geometries and street networks to/from UTM
+# Description: Project spatial geometries and street networks
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################

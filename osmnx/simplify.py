@@ -1,6 +1,6 @@
 ################################################################################
 # Module: simplify.py
-# Description: Simplify and correct network topology
+# Description: Simplify, correct, and consolidate network topology
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################

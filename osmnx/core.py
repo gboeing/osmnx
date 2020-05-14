@@ -1,7 +1,6 @@
 ################################################################################
 # Module: core.py
-# Description: Retrieve and construct spatial geometries and street networks
-#              from OpenStreetMap
+# Description: Core functions of OSMnx.
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################

@@ -1,7 +1,6 @@
 ################################################################################
 # Module: stats.py
-# Description: Calculate graph-theoretic topological and metric measures for a
-#              network
+# Description: Calculate graph-theoretic network measures
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################

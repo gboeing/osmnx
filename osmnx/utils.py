@@ -1,3 +1,10 @@
+################################################################################
+# Module: utils.py
+# Description: General utility functions
+# License: MIT, see full license in LICENSE.txt
+# Web: https://github.com/gboeing/osmnx
+################################################################################
+
 import datetime as dt
 import logging as lg
 import networkx as nx

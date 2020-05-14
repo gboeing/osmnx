@@ -1,6 +1,6 @@
 ################################################################################
 # Module: pois.py
-# Description: Download and plot points of interests (POIs) from OpenStreetMap
+# Description: Download points of interests (POIs) from OpenStreetMap
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################

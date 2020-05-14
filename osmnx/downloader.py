@@ -1,3 +1,10 @@
+################################################################################
+# Module: downloader.py
+# Description: Interact with the API.
+# License: MIT, see full license in LICENSE.txt
+# Web: https://github.com/gboeing/osmnx
+################################################################################
+
 import io
 import json
 import hashlib

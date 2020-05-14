@@ -1,7 +1,6 @@
 ################################################################################
 # Module: geo_utils.py
-# Description: Utility functions for configuration, logging, geocoding,
-#              geospatial analysis, etc.
+# Description: Geospatial utility functions.
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################

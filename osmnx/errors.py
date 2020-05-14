@@ -1,3 +1,9 @@
+################################################################################
+# Module: errors.py
+# Description: Custom errors.
+# License: MIT, see full license in LICENSE.txt
+# Web: https://github.com/gboeing/osmnx
+################################################################################
 
 class UnknownNetworkType(ValueError):
     def __init__(self,*args,**kwargs):
