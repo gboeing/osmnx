@@ -368,7 +368,7 @@ def get_polygons_coordinates(geometry):
     return polygon_coord_strs
 
 
-def get_node(element):
+def convert_node(element):
     """
     Convert an OSM node element into the format for a networkx node.
 
@@ -393,7 +393,7 @@ def get_node(element):
     return node
 
 
-def get_path(element):
+def convert_path(element):
     """
     Convert an OSM way element into the format for a networkx graph path.
 
@@ -441,10 +441,10 @@ def parse_osm_nodes_paths(osm_data):
     for element in osm_data['elements']:
         if element['type'] == 'node':
             key = element['id']
-            nodes[key] = get_node(element)
+            nodes[key] = convert_node(element)
         elif element['type'] == 'way': #osm calls network paths 'ways'
             key = element['id']
-            paths[key] = get_path(element)
+            paths[key] = convert_path(element)
 
     return nodes, paths
 
