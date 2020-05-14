@@ -1,6 +1,6 @@
 ################################################################################
 # Module: geo_utils.py
-# Description: Geospatial utility functions.
+# Description: Geospatial and network utility functions.
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################

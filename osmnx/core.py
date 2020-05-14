@@ -26,7 +26,7 @@ from .projection import project_gdf
 from .simplify import simplify_graph
 from .utils import log
 from .geo_utils import get_largest_component
-from .utils import great_circle_vec
+from .geo_utils import great_circle_vec
 from .geo_utils import get_nearest_node
 from .geo_utils import geocode
 from .geo_utils import count_streets_per_node

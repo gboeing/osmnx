@@ -13,9 +13,9 @@ import pandas as pd
 
 from .simplify import clean_intersections
 from .geo_utils import get_largest_component
-from .utils import great_circle_vec
+from .geo_utils import great_circle_vec
 from .geo_utils import count_streets_per_node
-from .utils import euclidean_dist_vec
+from .geo_utils import euclidean_dist_vec
 from .utils import log
 
 
