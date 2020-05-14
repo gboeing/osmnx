@@ -30,7 +30,7 @@ from shapely.geometry import Polygon
 from .downloader import nominatim_request
 from .osm_content_handler import OSMContentHandler
 from .save_load import graph_to_gdfs
-from .utils import log, great_circle_vec, euclidean_dist_vec
+from .utils import log
 from . import settings
 
 # scipy and sklearn are optional dependencies for faster nearest node search
