@@ -17,12 +17,9 @@ from shapely import wkt
 from shapely.geometry import LineString
 from shapely.geometry import Point
 from xml.etree import ElementTree as etree
-
 from . import settings
-from .utils_graph import gdfs_to_graph
-from .utils_graph import get_largest_component
-from .utils_graph import graph_to_gdfs
-from .utils import log
+from . import utils
+from . import utils_graph
 
 
 def save_gdf_shapefile(gdf, filename=None, folder=None):
@@ -66,7 +63,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
 
     if not hasattr(gdf, 'gdf_name'):
         gdf.gdf_name = 'unnamed'
-    log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.gdf_name, filepath))
+    utils.log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.gdf_name, filepath))
 
 
 def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8'):
@@ -90,7 +87,7 @@ def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8
 
     # convert undirected graph to geodataframes
     start_time = time.time()
-    gdf_nodes, gdf_edges = graph_to_gdfs(get_undirected(G))
+    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(get_undirected(G))
 
     # make every non-numeric edge attribute (besides geometry) a string
     for col in [c for c in gdf_edges.columns if not c == 'geometry']:
@@ -108,7 +105,7 @@ def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8
     # save the nodes and edges as GeoPackage layers
     gdf_nodes.to_file(filepath, layer='nodes', driver='GPKG', encoding=encoding)
     gdf_edges.to_file(filepath, layer='edges', driver='GPKG', encoding=encoding)
-    log('Saved graph to disk as GeoPackage at "{}" in {:,.2f} seconds'.format(filepath, time.time() - start_time))
+    utils.log('Saved graph to disk as GeoPackage at "{}" in {:,.2f} seconds'.format(filepath, time.time() - start_time))
 
 
 
@@ -186,7 +183,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     # save the nodes and edges as separate ESRI shapefiles
     gdf_nodes.to_file('{}/nodes'.format(filepath), encoding=encoding)
     gdf_edges.to_file('{}/edges'.format(filepath), encoding=encoding)
-    log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, filepath, time.time() - start_time))
+    utils.log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, filepath, time.time() - start_time))
 
 
 def save_as_osm(
@@ -243,14 +240,14 @@ def save_as_osm(
         assert settings.all_oneway
     except AssertionError:
         raise UserWarning(
-            "In order for ox.save_as_osm() to behave properly "
+            "In order for save_as_osm to behave properly "
             "the graph must have been created with the 'all_oneway' "
             "setting set to True.")
 
     try:
         gdf_nodes, gdf_edges = data
     except ValueError:
-        gdf_nodes, gdf_edges = graph_to_gdfs(
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(
             data, node_geometry=False, fill_edge_geometry=False)
 
     # rename columns per osm specification
@@ -361,7 +358,7 @@ def save_as_osm(
 
     et.write(os.path.join(folder, filename))
 
-    log('Saved graph to disk as OSM at "{}" in {:,.2f} seconds'.format(
+    utils.log('Saved graph to disk as OSM at "{}" in {:,.2f} seconds'.format(
         os.path.join(folder, filename), time.time() - start_time))
 
 
@@ -403,12 +400,12 @@ def get_unique_nodes_ordered_from_way(way_edges_df):
     G.add_edges_from(way_edges_df[['u', 'v']].values)
 
     # copy nodes into new graph
-    G2 = get_largest_component(G, strongly=False)
+    G2 = utils_graph.get_largest_component(G, strongly=False)
     unique_ordered_nodes = list(nx.topological_sort(G2))
     num_unique_nodes = len(np.unique(all_nodes))
 
     if len(unique_ordered_nodes) < num_unique_nodes:
-        log('Recovered order for {0} of {1} nodes'.format(
+        utils.log('Recovered order for {0} of {1} nodes'.format(
             len(unique_ordered_nodes), num_unique_nodes))
 
     return unique_ordered_nodes
@@ -444,7 +441,7 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
 
     if gephi:
 
-        gdf_nodes, gdf_edges = graph_to_gdfs(G_save, nodes=True, edges=True, node_geometry=True,
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G_save, nodes=True, edges=True, node_geometry=True,
                                              fill_edge_geometry=True)
 
         # turn each edge's key into a unique ID for Gephi compatibility
@@ -453,7 +450,7 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
         # gephi doesn't handle node attrs named x and y well, so rename
         gdf_nodes['xcoord'] = gdf_nodes['x']
         gdf_nodes['ycoord'] = gdf_nodes['y']
-        G_save = gdfs_to_graph(gdf_nodes, gdf_edges)
+        G_save = utils_graph.gdfs_to_graph(gdf_nodes, gdf_edges)
 
         # remove graph attributes as Gephi only accepts node and edge attrs
         G_save.graph = {}
@@ -484,7 +481,7 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
     filepath = os.path.join(folder, filename)
 
     nx.write_graphml(G_save, filepath)
-    log('Saved graph to disk as GraphML at "{}" in {:,.2f} seconds'.format(filepath, time.time()-start_time))
+    utils.log('Saved graph to disk as GraphML at "{}" in {:,.2f} seconds'.format(filepath, time.time()-start_time))
 
 
 def load_graphml(filename, folder=None, node_type=int):
@@ -522,7 +519,7 @@ def load_graphml(filename, folder=None, node_type=int):
         G.graph['streets_per_node'] = ast.literal_eval(G.graph['streets_per_node'])
 
     # convert numeric node tags from string to numeric data types
-    log('Converting node and edge attribute data types')
+    utils.log('Converting node and edge attribute data types')
     for _, data in G.nodes(data=True):
         data['osmid'] = node_type(data['osmid'])
         data['x'] = float(data['x'])
@@ -578,7 +575,7 @@ def load_graphml(filename, folder=None, node_type=int):
     if 'edge_default' in G.graph:
         del G.graph['edge_default']
 
-    log('Loaded graph with {:,} nodes and {:,} edges in {:,.2f} seconds from "{}"'.format(len(list(G.nodes())),
+    utils.log('Loaded graph with {:,} nodes and {:,} edges in {:,.2f} seconds from "{}"'.format(len(list(G.nodes())),
                                                                                           len(list(G.edges())),
                                                                                           time.time()-start_time,
                                                                                           path))
@@ -676,7 +673,7 @@ def update_edge_keys(G):
     # identify all the edges that are duplicates based on a sorted combination
     # of their origin, destination, and key. that is, edge uv will match edge vu
     # as a duplicate, but only if they have the same key
-    edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
+    edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
     edges['uvk'] = edges.apply(lambda row: '_'.join(sorted([str(row['u']), str(row['v'])]) + [str(row['key'])]), axis=1)
     edges['dupe'] = edges['uvk'].duplicated(keep=False)
     dupes = edges[edges['dupe']==True].dropna(subset=['geometry'])
@@ -780,7 +777,7 @@ def get_undirected(G):
                         duplicate_edges.append((u, v, key_other))
 
     H.remove_edges_from(duplicate_edges)
-    log('Made undirected graph in {:,.2f} seconds'.format(time.time() - start_time))
+    utils.log('Made undirected graph in {:,.2f} seconds'.format(time.time() - start_time))
 
     return H
 

@@ -19,13 +19,10 @@ from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 from shapely.ops import unary_union
-
-from .downloader import nominatim_request
-from .projection import project_geometry
-from .utils import log
-from .utils_graph import get_largest_component
-from .utils_graph import graph_to_gdfs
-from .utils_graph import remove_isolated_nodes
+from . import downloader
+from . import projection
+from . import utils
+from . import utils_graph
 
 # scipy and sklearn are optional dependencies for faster nearest node search
 try:
@@ -62,14 +59,14 @@ def geocode(query):
     params['limit'] = 1
     params['dedupe'] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
     params['q'] = query
-    response_json = nominatim_request(params=params, timeout=30)
+    response_json = downloader.nominatim_request(params=params, timeout=30)
 
     # if results were returned, parse lat and long out of the result
     if len(response_json) > 0 and 'lat' in response_json[0] and 'lon' in response_json[0]:
         lat = float(response_json[0]['lat'])
         lon = float(response_json[0]['lon'])
         point = (lat, lon)
-        log('Geocoded "{}" to {}'.format(query, point))
+        utils.log('Geocoded "{}" to {}'.format(query, point))
         return point
     else:
         raise Exception('Nominatim geocoder returned no results for query "{}"'.format(query))
@@ -205,7 +202,7 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
 
     # nearest node's ID is the index label of the minimum distance
     nearest_node = distances.idxmin()
-    log('Found nearest node ({}) to point {} in {:,.2f} seconds'.format(nearest_node, point, time.time()-start_time))
+    utils.log('Found nearest node ({}) to point {} in {:,.2f} seconds'.format(nearest_node, point, time.time()-start_time))
 
     # if caller requested return_dist, return distance between the point and the
     # nearest node as well
@@ -243,7 +240,7 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
     start_time = time.time()
 
     # get u, v, key, geom from all the graph edges
-    gdf_edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
     edges = gdf_edges[['u', 'v', 'key', 'geometry']].values
 
     # convert lat-lng point to x-y for shapely distance operation
@@ -254,7 +251,7 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
 
     # the nearest edge minimizes the distance to the point
     (u, v, key, geom), dist = min(edge_distances, key=lambda x: x[1])
-    log('Found nearest edge ({}) to point {} in {:,.2f} seconds'.format((u, v, key), point, time.time() - start_time))
+    utils.log('Found nearest edge ({}) to point {} in {:,.2f} seconds'.format((u, v, key), point, time.time() - start_time))
 
     # return results requested by caller
     if return_dist and return_geom:
@@ -290,7 +287,7 @@ def get_nearest_nodes(G, X, Y, method=None):
     method : str {None, 'kdtree', 'balltree'}
         Which method to use for finding nearest node to each point.
         If None, we manually find each node one at a time using
-        osmnx.utils.get_nearest_node and haversine. If 'kdtree' we use
+        utils.get_nearest_node and haversine. If 'kdtree' we use
         scipy.spatial.cKDTree for very fast euclidean search. If
         'balltree', we use sklearn.neighbors.BallTree for fast
         haversine search.
@@ -347,7 +344,7 @@ def get_nearest_nodes(G, X, Y, method=None):
     else:
         raise ValueError('You must pass a valid method name, or None.')
 
-    log('Found nearest nodes to {:,} points in {:,.2f} seconds'.format(len(X), time.time()-start_time))
+    utils.log('Found nearest nodes to {:,} points in {:,.2f} seconds'.format(len(X), time.time()-start_time))
 
     return np.array(nn)
 
@@ -386,7 +383,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     method : str {None, 'kdtree', 'balltree'}
         Which method to use for finding nearest edge to each point.
         If None, we manually find each edge one at a time using
-        osmnx.utils.get_nearest_edge. If 'kdtree' we use
+        get_nearest_edge. If 'kdtree' we use
         scipy.spatial.cKDTree for very fast euclidean search. Recommended for
         projected graphs. If 'balltree', we use sklearn.neighbors.BallTree for
         fast haversine search. Recommended for unprojected graphs.
@@ -415,7 +412,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
             raise ImportError('The scipy package must be installed to use this optional feature.')
 
         # transform graph into DataFrame
-        edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+        edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
 
         # transform edges into evenly spaced points
         edges['points'] = edges.apply(lambda x: redistribute_vertices(x.geometry, dist), axis=1)
@@ -443,7 +440,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
             raise ImportError('The scikit-learn package must be installed to use this optional feature.')
 
         # transform graph into DataFrame
-        edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+        edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
 
         # transform edges into evenly spaced points
         edges['points'] = edges.apply(lambda x: redistribute_vertices(x.geometry, dist), axis=1)
@@ -469,7 +466,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     else:
         raise ValueError('You must pass a valid method name, or None.')
 
-    log('Found nearest edges to {:,} points in {:,.2f} seconds'.format(len(X), time.time() - start_time))
+    utils.log('Found nearest edges to {:,} points in {:,.2f} seconds'.format(len(X), time.time() - start_time))
 
     return np.array(ne)
 
@@ -926,7 +923,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffe
     # create an r-tree spatial index for the nodes (ie, points)
     start_time = time.time()
     sindex = gdf['geometry'].sindex
-    log('Created r-tree spatial index for {:,} points in {:,.2f} seconds'.format(len(gdf), time.time()-start_time))
+    utils.log('Created r-tree spatial index for {:,} points in {:,.2f} seconds'.format(len(gdf), time.time()-start_time))
 
     # loop through each chunk of the geometry to find approximate and then
     # precisely intersecting points
@@ -957,7 +954,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffe
         # so throw error
         raise Exception('There are no nodes within the requested geometry')
 
-    log('Identified {:,} nodes inside polygon in {:,.2f} seconds'.format(len(points_within_geometry), time.time()-start_time))
+    utils.log('Identified {:,} nodes inside polygon in {:,.2f} seconds'.format(len(points_within_geometry), time.time()-start_time))
     return points_within_geometry
 
 
@@ -989,18 +986,18 @@ def bbox_from_point(point, distance=1000, project_utm=False, return_crs=False):
     # reverse the order of the (lat,lng) point so it is (x,y) for shapely, then
     # project to UTM and buffer in meters
     lat, lng = point
-    point_proj, crs_proj = project_geometry(Point((lng, lat)))
+    point_proj, crs_proj = projection.project_geometry(Point((lng, lat)))
     buffer_proj = point_proj.buffer(distance)
 
     if project_utm:
         west, south, east, north = buffer_proj.bounds
-        log('Created bounding box {} meters in each direction from {} and projected it: {},{},{},{}'.format(distance, point, north, south, east, west))
+        utils.log('Created bounding box {} meters in each direction from {} and projected it: {},{},{},{}'.format(distance, point, north, south, east, west))
     else:
         # if project_utm is False, project back to lat-long then get the
         # bounding coordinates
-        buffer_latlong, _ = project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
+        buffer_latlong, _ = projection.project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
         west, south, east, north = buffer_latlong.bounds
-        log('Created bounding box {} meters in each direction from {}: {},{},{},{}'.format(distance, point, north, south, east, west))
+        utils.log('Created bounding box {} meters in each direction from {}: {},{},{},{}'.format(distance, point, north, south, east, west))
 
     if return_crs:
         return north, south, east, west, crs_proj
@@ -1045,7 +1042,7 @@ def add_edge_lengths(G):
     gc_distances = gc_distances.fillna(value=0).round(3)
     nx.set_edge_attributes(G, name='length', values=gc_distances.to_dict())
 
-    log('Added edge lengths to graph in {:,.2f} seconds'.format(time.time()-start_time))
+    utils.log('Added edge lengths to graph in {:,.2f} seconds'.format(time.time()-start_time))
     return G
 
 
@@ -1081,13 +1078,13 @@ def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', reta
     distances = nx.shortest_path_length(G, source=source_node, weight=weight)
     distant_nodes = {key:value for key, value in dict(distances).items() if value > max_distance}
     G.remove_nodes_from(distant_nodes.keys())
-    log('Truncated graph by weighted network distance in {:,.2f} seconds'.format(time.time()-start_time))
+    utils.log('Truncated graph by weighted network distance in {:,.2f} seconds'.format(time.time()-start_time))
 
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
     if not retain_all:
-        G = remove_isolated_nodes(G)
-        G = get_largest_component(G)
+        G = utils_graph.remove_isolated_nodes(G)
+        G = utils_graph.get_largest_component(G)
 
     return G
 
@@ -1151,13 +1148,13 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
                     nodes_outside_bbox.append(node)
 
     G.remove_nodes_from(nodes_outside_bbox)
-    log('Truncated graph by bounding box in {:,.2f} seconds'.format(time.time()-start_time))
+    utils.log('Truncated graph by bounding box in {:,.2f} seconds'.format(time.time()-start_time))
 
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
     if not retain_all:
-        G = remove_isolated_nodes(G)
-        G = get_largest_component(G)
+        G = utils_graph.remove_isolated_nodes(G)
+        G = utils_graph.get_largest_component(G)
 
     return G
 
@@ -1200,7 +1197,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
 
     start_time = time.time()
     G = G.copy()
-    log('Identifying all nodes that lie outside the polygon...')
+    utils.log('Identifying all nodes that lie outside the polygon...')
 
     # get a GeoDataFrame of all the nodes
     node_geom = [Point(data['x'], data['y']) for _, data in G.nodes(data=True)]
@@ -1225,11 +1222,11 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
     # polygon
     start_time = time.time()
     G.remove_nodes_from(nodes_to_remove)
-    log('Removed {:,} nodes outside polygon in {:,.2f} seconds'.format(len(nodes_outside_polygon), time.time()-start_time))
+    utils.log('Removed {:,} nodes outside polygon in {:,.2f} seconds'.format(len(nodes_outside_polygon), time.time()-start_time))
 
     # remove any isolated nodes and retain only the largest component (if retain_all is False)
     if not retain_all:
-        G = remove_isolated_nodes(G)
-        G = get_largest_component(G)
+        G = utils_graph.remove_isolated_nodes(G)
+        G = utils_graph.get_largest_component(G)
 
     return G

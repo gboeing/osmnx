@@ -14,9 +14,8 @@ from collections import Counter
 from itertools import chain
 from shapely.geometry import LineString
 from shapely.geometry import Point
-
 from . import settings
-from .utils import log
+from . import utils
 
 # scipy and sklearn are optional dependencies for faster nearest node search
 try:
@@ -100,7 +99,7 @@ def get_largest_component(G, strongly=False):
 
             msg = ('Graph was not connected, retained only the largest strongly '
                    'connected component ({:,} of {:,} total nodes) in {:.2f} seconds')
-            log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
+            utils.log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
     else:
         # if the graph is not connected retain only the largest weakly connected component
         if not nx.is_weakly_connected(G):
@@ -112,7 +111,7 @@ def get_largest_component(G, strongly=False):
 
             msg = ('Graph was not connected, retained only the largest weakly '
                    'connected component ({:,} of {:,} total nodes) in {:.2f} seconds')
-            log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
+            utils.log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
 
     return G
 
@@ -220,7 +219,7 @@ def count_streets_per_node(G, nodes=None):
     streets_per_node = {node:counts[node] for node in nodes}
     msg = ('Got the counts of undirected street segments incident to each node '
            '(before removing peripheral edges) in {:,.2f} seconds')
-    log(msg.format(time.time()-start_time))
+    utils.log(msg.format(time.time()-start_time))
     return streets_per_node
 
 
@@ -268,7 +267,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         gdf_nodes.gdf_name = '{}_nodes'.format(G.graph['name'])
 
         to_return.append(gdf_nodes)
-        log('Created GeoDataFrame "{}" from graph in {:,.2f} seconds'.format(gdf_nodes.gdf_name, time.time()-start_time))
+        utils.log('Created GeoDataFrame "{}" from graph in {:,.2f} seconds'.format(gdf_nodes.gdf_name, time.time()-start_time))
 
     if edges:
 
@@ -303,7 +302,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         gdf_edges.gdf_name = '{}_edges'.format(G.graph['name'])
 
         to_return.append(gdf_edges)
-        log('Created GeoDataFrame "{}" from graph in {:,.2f} seconds'.format(gdf_edges.gdf_name, time.time()-start_time))
+        utils.log('Created GeoDataFrame "{}" from graph in {:,.2f} seconds'.format(gdf_edges.gdf_name, time.time()-start_time))
 
     if len(to_return) > 1:
         return tuple(to_return)
@@ -368,7 +367,7 @@ def remove_isolated_nodes(G):
 
     isolated_nodes = [node for node, degree in dict(G.degree()).items() if degree < 1]
     G.remove_nodes_from(isolated_nodes)
-    log('Removed {:,} isolated nodes'.format(len(isolated_nodes)))
+    utils.log('Removed {:,} isolated nodes'.format(len(isolated_nodes)))
     return G
 
 
