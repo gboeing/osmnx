@@ -25,7 +25,7 @@ from . import settings
 from .projection import project_geometry
 from .projection import project_gdf
 from .simplify import simplify_graph
-from .utils import make_str, log
+from .utils import log
 from .geo_utils import get_largest_component
 from .utils import great_circle_vec
 from .geo_utils import get_nearest_node
