@@ -22,7 +22,7 @@ from .core import graph_from_address
 from .core import graph_from_point
 from .core import bbox_from_point
 from .projection import project_graph
-from .geo_utils import graph_to_gdfs
+from .utils_graph import graph_to_gdfs
 from .simplify import simplify_graph
 from .utils import log
 

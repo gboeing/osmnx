@@ -14,9 +14,9 @@ from shapely.geometry import LineString
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 
-from .geo_utils import count_streets_per_node
+from .utils_graph import count_streets_per_node
 from .projection import project_graph
-from .geo_utils import graph_to_gdfs
+from .utils_graph import graph_to_gdfs
 from .utils import log
 
 

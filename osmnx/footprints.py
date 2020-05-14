@@ -21,7 +21,7 @@ from .core import consolidate_subdivide_geometry
 from .core import gdf_from_place
 from .core import get_polygons_coordinates
 from .downloader import overpass_request
-from .geo_utils import geocode
+from .utils_geo import geocode
 from .plot import save_and_show
 from .projection import project_geometry
 from .utils import log

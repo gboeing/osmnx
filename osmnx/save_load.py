@@ -19,8 +19,7 @@ from shapely import wkt
 from xml.etree import ElementTree as etree
 
 from . import settings
-from .geo_utils import get_unique_nodes_ordered_from_way
-from .geo_utils import gdfs_to_graph, graph_to_gdfs
+from .utils_graph import gdfs_to_graph, graph_to_gdfs
 from .utils import log
 
 
@@ -362,6 +361,56 @@ def save_as_osm(
 
     log('Saved graph to disk as OSM at "{}" in {:,.2f} seconds'.format(
         os.path.join(folder, filename), time.time() - start_time))
+
+
+
+def get_unique_nodes_ordered_from_way(way_edges_df):
+    """
+    Function to recover the original order of nodes from a dataframe
+    of edges associated with a single OSM way.
+
+    Parameters
+    ----------
+    way_edges_df : pandas.DataFrame()
+        Dataframe containing columns 'u' and 'v' corresponding to
+        origin/desitination nodes.
+
+    Returns
+    -------
+    unique_ordered_nodes : list
+        An ordered list of unique node IDs
+
+    NOTE: If the edges do not all connect (e.g. [(1, 2), (2,3),
+    (10, 11), (11, 12), (12, 13)]), then this method will return
+    only those nodes associated with the largest component of
+    connected edges, even if subsequent connected chunks are contain
+    more total nodes. This is done to ensure a proper topological
+    representation of nodes in the XML way records because if there
+    are unconnected components, the sorting algorithm cannot recover
+    their original order. I don't believe that we would ever encounter
+    this kind of disconnected structure of nodes within a given way,
+    but as best I could tell it is not explicitly forbidden in the
+    OSM XML design schema.
+    """
+
+    G = nx.MultiDiGraph()
+    all_nodes = list(way_edges_df['u'].values) + \
+        list(way_edges_df['v'].values)
+
+    G.add_nodes_from(all_nodes)
+    G.add_edges_from(way_edges_df[['u', 'v']].values)
+
+    # copy nodes into new graph
+    G2 = get_largest_component(G, strongly=False)
+    unique_ordered_nodes = list(nx.topological_sort(G2))
+    num_unique_nodes = len(np.unique(all_nodes))
+
+    if len(unique_ordered_nodes) < num_unique_nodes:
+        log('Recovered order for {0} of {1} nodes'.format(
+            len(unique_ordered_nodes), num_unique_nodes))
+
+    return unique_ordered_nodes
+
 
 
 def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
@@ -751,3 +800,33 @@ def make_shp_filename(place_name):
     filename = '-'.join(name_pieces).lower().replace(' ','_')
     filename = re.sub('[^0-9a-zA-Z_-]+', '', filename)
     return filename
+
+
+
+def overpass_json_from_file(filename):
+    """
+    Read OSM XML from input filename and return Overpass-like JSON.
+
+    Parameters
+    ----------
+    filename : string
+        name of file containing OSM XML data
+
+    Returns
+    -------
+    OSMContentHandler object
+    """
+
+    _, ext = os.path.splitext(filename)
+
+    if ext == '.bz2':
+        # Use Python 2/3 compatible BZ2File()
+        opener = lambda fn: bz2.BZ2File(fn)
+    else:
+        # Assume an unrecognized file extension is just XML
+        opener = lambda fn: open(fn, mode='rb')
+
+    with opener(filename) as file:
+        handler = OSMContentHandler()
+        xml.sax.parse(file, handler)
+        return handler.object
