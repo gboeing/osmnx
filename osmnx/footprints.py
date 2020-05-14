@@ -49,7 +49,7 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max area for any part of the geometry in meters: any polygon bigger 
+        max area for any part of the geometry in meters: any polygon bigger
         will get divided up for multiple queries to API (default 50km x 50km)
     custom_settings : string
         custom settings to be used in the overpass query instead of the default
@@ -197,7 +197,7 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
     # create a complex Shapely Polygon or MultiPolygon for each relation
     for relation_key, relation_val in relations.items():
         relation_val['geometry'] = create_relation_geometry(relation_key, relation_val, footprints)
-    
+
     # merge relations into the footprints dictionary
     footprints.update(relations)
 
@@ -218,7 +218,7 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
         filter2 = (gdf['geometry'].geom_type == 'Polygon') | (gdf['geometry'].geom_type == 'MultiPolygon')
         filter_combined = filter1 & filter2
         gdf = gdf[filter_combined]
-    
+
     return gdf
 
 
@@ -327,7 +327,7 @@ def create_footprint_geometry(footprint_key, footprint_val, vertices):
             footprint_geometry = Polygon([(vertices[node]['lon'], vertices[node]['lat']) for node in footprint_val['nodes']])
         except Exception:
             utils.log('Polygon has invalid geometry: {}'.format(footprint_key))
-    # OPEN WAYS    
+    # OPEN WAYS
     else:
         try:
             footprint_geometry = LineString([(vertices[node]['lon'], vertices[node]['lat']) for node in footprint_val['nodes']])
@@ -343,12 +343,12 @@ def create_relation_geometry(relation_key, relation_val, footprints):
 
     OSM relations are used to define complex polygons - polygons with holes or
     multi-polygons. The polygons' outer and inner rings may be made up of chains
-    of LineStrings. https://wiki.openstreetmap.org/wiki/Relation:multipolygon 
+    of LineStrings. https://wiki.openstreetmap.org/wiki/Relation:multipolygon
     requires that multipolygon rings have an outer or inner 'role'.
-    
-    OSM's data model allows a polygon type tag e.g. 'building' to be added to 
+
+    OSM's data model allows a polygon type tag e.g. 'building' to be added to
     any OSM element. This can include non-polygon relations e.g. bus routes.
-    Relations that do not have at least one closed ring with an outer role 
+    Relations that do not have at least one closed ring with an outer role
     are filtered out.
 
     Inner rings that are tagged with the footprint type in their own right e.g.
@@ -427,7 +427,7 @@ def create_relation_geometry(relation_key, relation_val, footprints):
     # return relations with one outer way as Polygons, multiple outer ways as MultiPolygons
     if len(multipoly) == 1:
         return multipoly[0]
-    elif len(multipoly) > 1:    
+    elif len(multipoly) > 1:
         return MultiPolygon(multipoly)
     else:
         utils.log('relation {} could not be converted to a complex footprint'.format(relation_key))

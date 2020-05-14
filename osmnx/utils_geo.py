@@ -1,6 +1,6 @@
 ################################################################################
 # Module: utils_geo.py
-# Description: Geospatial utility functions.
+# Description: Geospatial utility functions
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
@@ -224,7 +224,7 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
     return_geom : bool
         Optionally return the geometry of the nearest edge
     return_dist : bool
-        Optionally return the distance in graph's coordinates' units between the 
+        Optionally return the distance in graph's coordinates' units between the
         point and the nearest node
 
     Returns
@@ -353,12 +353,12 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     precisely finds the nearest edge if working in projected coordinates).
     The 'balltree' method is second fastest with large data sets, but it
     is precise if working in unprojected coordinates like lat-lng. As a
-    rule of thumb, if you have a small graph just use method=None. If you 
+    rule of thumb, if you have a small graph just use method=None. If you
     have a large graph with lat-lng coordinates, use method='balltree'.
-    If you have a large graph with projected coordinates, use 
+    If you have a large graph with projected coordinates, use
     method='kdtree'. Note that if you are working in units of lat-lng,
     the X vector corresponds to longitude and the Y vector corresponds
-    to latitude. The method creates equally distanced points along the edges 
+    to latitude. The method creates equally distanced points along the edges
     of the network. Then, these points are used in a kdTree or BallTree search
     to identify which is nearest.Note that this method will not give the exact
     perpendicular point along the edge, but the smaller the *dist* parameter,

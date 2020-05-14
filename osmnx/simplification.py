@@ -329,14 +329,14 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
                               dead_ends=False, update_edge_lengths=True):
     """
     Consolidate intersections comprising clusters of nodes by merging them
-    and returning either their centroids or a rebuilt graph with consolidated 
+    and returning either their centroids or a rebuilt graph with consolidated
     intersections and reconnected edge geometries.
 
     The tolerance argument should be adjusted to approximately match street
     design standards in the specific street network, and you should always use
     a projected graph to work in meaningful and consistent units like meters.
 
-    Divided roads are often represented by separate centerline edges. The 
+    Divided roads are often represented by separate centerline edges. The
     intersection of two divided roads thus creates 4 nodes, representing where
     each edge intersects a perpendicular edge. These 4 nodes represent a single
     intersection in the real world. This function consolidates them up by
@@ -353,7 +353,7 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
         nodes within this distance (in graph's geometry's units) will be
         dissolved into a single intersection
     rebuild_graph : bool
-        if True, use consolidate_intersections_rebuild_graph to consolidate 
+        if True, use consolidate_intersections_rebuild_graph to consolidate
         the intersections and rebuild the graph, then return as
         networkx.MultiDiGraph. if False, just return the consolidated
         intersection points as a geopandas.GeoSeries (faster than rebuilding
@@ -370,7 +370,7 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
     ----------
     networkx.MultiDiGraph or geopandas.GeoSeries
         if rebuild_graph=True, returns MultiDiGraph with consolidated
-        intersections & reconnected edge geometries. if rebuild_graph=False, 
+        intersections & reconnected edge geometries. if rebuild_graph=False,
         returns GeoSeries of shapely Points representing the centroids of
         street intersections
     """
@@ -439,7 +439,7 @@ def consolidate_intersections_rebuild_graph(G, tolerance=10,
         the rebuilt graph with consolidated intersections and reconnected
         edge geometries
     """
-    
+
     # STEP 1
     # buffer nodes to passed-in distance, merge overlaps
     gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
@@ -507,13 +507,13 @@ def consolidate_intersections_rebuild_graph(G, tolerance=10,
             # if cluster is a single node, add that node to new graph
             H.add_node(cluster_label, **G.nodes[osmids[0]])
         else:
-            # if cluster is multiple merged nodes, create one new node to 
+            # if cluster is multiple merged nodes, create one new node to
             # represent them
             H.add_node(cluster_label,
                        osmid=str(osmids),
                        x=nodes_subset['x'].iloc[0],
                        y=nodes_subset['y'].iloc[0])
-    
+
 
     # STEP 6
     # create a new edge for each edge in original graph
@@ -521,7 +521,7 @@ def consolidate_intersections_rebuild_graph(G, tolerance=10,
     for u, v, k, data  in G.edges(keys=True, data=True):
         u2 = gdf.loc[u, 'cluster']
         v2 = gdf.loc[v, 'cluster']
-        
+
         # only create the edge if we're not connecting the cluster
         # to itself, but always add original self-loops
         if (u2 != v2) or (u == v):
@@ -537,17 +537,17 @@ def consolidate_intersections_rebuild_graph(G, tolerance=10,
     # extend the edge geometries to reach the new node point
     new_edges = utils_graph.graph_to_gdfs(H, nodes=False)
     for cluster_label, nodes_subset in groups:
-        
+
         # but only if there were multiple nodes merged together,
         # otherwise it's the same old edge as in original graph
         if len(nodes_subset) > 1:
-            
+
             # get coords of merged nodes point centroid to prepend or
             # append to the old edge geom's coords
             x = H.nodes[cluster_label]['x']
             y = H.nodes[cluster_label]['y']
             xy = [(x, y)]
-            
+
             # for each edge incident to this new merged node, update
             # its geometry to extend to/from the new node's point coords
             mask = (new_edges['u']==cluster_label) | (new_edges['v']==cluster_label)
@@ -556,7 +556,7 @@ def consolidate_intersections_rebuild_graph(G, tolerance=10,
                 new_coords = xy + old_coords if cluster_label == u else old_coords + xy
                 new_geom = LineString(new_coords)
                 H.edges[u, v, k]['geometry'] = new_geom
-                
+
                 # update the edge length attribute if parameterized to do so
                 # otherwise just keep using the original edge length
                 if update_edge_lengths:

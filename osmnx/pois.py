@@ -53,7 +53,7 @@ def create_poi_query(north, south, east, west, tags,
         will use its default allocation size
     custom_settings : string
         custom settings to be used in the overpass query instead of defaults
-    
+
     Returns
     -------
     query : string
@@ -77,19 +77,19 @@ def create_poi_query(north, south, east, west, tags,
 
 
     # make sure every value in dict is bool, str, or list of str
-    error_msg = 'tags must be a dict with values of bool, str, or list of str'    
+    error_msg = 'tags must be a dict with values of bool, str, or list of str'
     if not isinstance(tags, dict):
         raise TypeError(error_msg)
 
     tags_dict = {}
     for key, value in tags.items():
-        
+
         if isinstance(value, bool):
             tags_dict[key] = value
 
         elif isinstance(value, str):
             tags_dict[key] = [value]
-            
+
         elif isinstance(value, list):
             if not all(isinstance(s, str) for s in value):
                 raise TypeError(error_msg)
@@ -109,7 +109,7 @@ def create_poi_query(north, south, east, west, tags,
 
     # create query bounding box
     bbox = '({s:.6f},{w:.6f},{n:.6f},{e:.6f})'.format(s=south, w=west, n=north, e=east)
-    
+
     # add node/way/relation query components one at a time
     components = []
     for d in tags_list:
@@ -129,7 +129,7 @@ def create_poi_query(north, south, east, west, tags,
     components = ''.join(components)
     query = '{overpass_settings};({components});out;'
     query = query.format(overpass_settings=overpass_settings, components=components)
-    
+
     return query
 
 
@@ -463,7 +463,7 @@ def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=N
                 poi_ways[result['id']] = poi_area
 
         elif result['type'] == 'relation':
-            # Add relation to a relation list (needs to be parsed after 
+            # Add relation to a relation list (needs to be parsed after
             # all nodes and ways have been parsed)
             relations.append(result)
 
@@ -610,7 +610,7 @@ def pois_from_polygon(polygon, tags,
         will use its default allocation size
     custom_settings : string
         custom settings to be used in the overpass query instead of defaults
-        
+
     Returns
     -------
     geopandas.GeoDataFrame

@@ -1,6 +1,6 @@
 ################################################################################
 # Module: downloader.py
-# Description: Interact with the API
+# Description: Interact with the APIs
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
@@ -154,7 +154,7 @@ def url_in_cache(url):
     # hash the url to generate the cache filename
     filename = hashlib.md5(url.encode('utf-8')).hexdigest()
     filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
-    
+
     # if this file exists in the cache, return its full path
     if os.path.isfile(filepath):
         return filepath
@@ -178,7 +178,7 @@ def get_from_cache(url):
 
     # if the tool is configured to use the cache
     if settings.use_cache:
-        
+
         # return cached response for this url if it exists, otherwise return None
         cache_filepath = url_in_cache(url)
         if cache_filepath is not None:
@@ -443,7 +443,7 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
             if 'remark' in response_json:
                 utils.log('Server remark: "{}"'.format(response_json['remark'], level=lg.WARNING))
             save_to_cache(prepared_url, response_json)
-        
+
         # 429 is 'too many requests' and 504 is 'gateway timeout' from server
         # overload - handle these errors by recursively calling overpass_request
         # after a pause until we get a valid response

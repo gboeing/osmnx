@@ -170,7 +170,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max area for any part of the geometry in meters: any polygon bigger 
+        max area for any part of the geometry in meters: any polygon bigger
         will get divided up for multiple queries to API (default 50km x 50km)
     infrastructure : string
         download infrastructure of given type. default is streets, ie,
@@ -421,7 +421,7 @@ def add_paths(G, paths, bidirectional=False):
     """
 
     # the list of values OSM uses in its 'oneway' tag to denote True
-    # updated list of of values OSM uses based on https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf 
+    # updated list of of values OSM uses based on https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf
     osm_oneway_values = ['yes', 'true', '1', '-1', 'T', 'F']
 
     for data in paths.values():
@@ -433,7 +433,7 @@ def add_paths(G, paths, bidirectional=False):
         elif ('oneway' in data and data['oneway'] in osm_oneway_values) and not bidirectional:
             if data['oneway'] == '-1' or data['oneway'] == 'T':
                 # paths with a one-way value of -1 or T are one-way, but in the
-                # reverse direction of the nodes' order, see osm documentation 
+                # reverse direction of the nodes' order, see osm documentation
                 data['nodes'] = list(reversed(data['nodes']))
             # add this path (in only one direction) to the graph
             add_path(G, data, one_way=True)
@@ -555,7 +555,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max area for any part of the geometry in meters: any polygon bigger 
+        max area for any part of the geometry in meters: any polygon bigger
         will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than
@@ -669,7 +669,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max area for any part of the geometry in meters: any polygon bigger 
+        max area for any part of the geometry in meters: any polygon bigger
         will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool,
         if True (and simplify=True), buffer 0.5km to get a graph larger than
@@ -825,7 +825,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max area for any part of the geometry in meters: any polygon bigger 
+        max area for any part of the geometry in meters: any polygon bigger
         will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than
@@ -959,7 +959,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     max_query_area_size : float
-        max area for any part of the geometry in meters: any polygon bigger 
+        max area for any part of the geometry in meters: any polygon bigger
         will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than

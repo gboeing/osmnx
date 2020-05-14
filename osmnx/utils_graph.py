@@ -1,6 +1,6 @@
 ################################################################################
 # Module: utils_graph.py
-# Description: Nnetwork utility functions.
+# Description: Network utility functions
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################

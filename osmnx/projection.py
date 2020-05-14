@@ -169,7 +169,7 @@ def project_graph(G, to_crs=None):
     if 'lon' not in gdf_nodes.columns or 'lat' not in gdf_nodes.columns:
         gdf_nodes['lon'] = gdf_nodes['x']
         gdf_nodes['lat'] = gdf_nodes['y']
-    
+
     # create a geometry column from x/y columns
     gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
     gdf_nodes.set_geometry('geometry', inplace=True)
