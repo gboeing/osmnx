@@ -332,12 +332,17 @@ def clean_intersections(G, tolerance=10, dead_ends=False,
 def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
                               dead_ends=False, update_edge_lengths=True):
     """
-    Consolidate intersections comprising clusters of nodes by merging them and
-    returning their centroids.
+    Consolidate intersections comprising clusters of nodes by merging them
+    and returning either their centroids or a rebuilt graph with consolidated 
+    intersections and reconnected edge geometries.
 
-    Divided roads are represented by separate centerline edges. The intersection
-    of two divided roads thus creates 4 nodes, representing where each edge
-    intersects a perpendicular edge. These 4 nodes represent a single
+    The tolerance argument should be adjusted to approximately match street
+    design standards in the specific street network, and you should always use
+    a projected graph to work in meaningful and consistent units like meters.
+
+    Divided roads are often represented by separate centerline edges. The 
+    intersection of two divided roads thus creates 4 nodes, representing where
+    each edge intersects a perpendicular edge. These 4 nodes represent a single
     intersection in the real world. This function consolidates them up by
     buffering them to an arbitrary distance, merging overlapping buffers, and
     taking their centroid. For best results, the tolerance argument should be
@@ -347,7 +352,7 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        for best results, pass a projected graph
+        a projected graph
     tolerance : float
         nodes within this distance (in graph's geometry's units) will be
         dissolved into a single intersection
@@ -423,7 +428,7 @@ def consolidate_intersections_rebuild_graph(G, tolerance=10,
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        for best results, pass a projected graph
+        a projected graph
     tolerance : float
         nodes within this distance (in graph's geometry's units) will be
         dissolved into a single node, with edges reconnected to this new
