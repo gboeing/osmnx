@@ -8,19 +8,28 @@
 import matplotlib as mpl
 mpl.use('Agg')
 
+import bz2
+import json
+import logging as lg
+import networkx as nx
 import os
 import pandas as pd
+import pytest
 import shutil
+import tempfile
+from collections import OrderedDict
+from shapely import wkt
+from shapely.geometry import Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon
 
-# remove the .temp folder if it already exists so we start fresh with tests
+# remove the .temp folder and .coverage file if they already
+# exist so we start fresh with these tests
 if os.path.exists('.temp'):
     shutil.rmtree('.temp')
-import networkx as nx
+if os.path.exists('.coverage'):
+    os.remove('.coverage')
 
+# import and configure OSMnx
 import osmnx as ox
-
-
-# configure OSMnx
 ox.config(log_console=True,
           log_file=True,
           use_cache=True,
@@ -28,6 +37,14 @@ ox.config(log_console=True,
           logs_folder='.temp/logs',
           imgs_folder='.temp/imgs',
           cache_folder='.temp/cache')
+
+
+# define queries to use throughout tests
+location_point = (37.791427, -122.410018)
+address = '600 Montgomery St, San Francisco, California, USA'
+place1 = 'Piedmont, California, USA'
+place2 = {'neighborhood':'Financial District', 'city':'Los Angeles', 'state':'California'}
+polygon = wkt.loads('POLYGON ((-122.262 37.869, -122.255 37.869, -122.255 37.874, -122.262 37.874, -122.262 37.869))')
 
 
 def test_imports():
@@ -73,7 +90,6 @@ def test_imports():
 
 def test_logging():
     # test OSMnx's logger
-    import logging as lg
     ox.log('test a fake debug', level=lg.DEBUG)
     ox.log('test a fake info', level=lg.INFO)
     ox.log('test a fake warning', level=lg.WARNING)
@@ -84,8 +100,6 @@ def test_logging():
 
 def test_geometry_coords_rounding():
     # test the rounding of geometry coordinates
-    from shapely.geometry import Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon
-
     precision = 3
 
     shape1 = Point(1.123456, 2.123456)
@@ -111,39 +125,17 @@ def test_geometry_coords_rounding():
 
 def test_gdf_shapefiles():
     # test loading spatial boundaries, saving as shapefile, and plotting
-    city = ox.gdf_from_place('Manhattan, New York City, New York, USA')
+    city = ox.gdf_from_place(place1)
     city_projected = ox.project_gdf(city, to_crs={'init': 'epsg:3395'})
     ox.save_gdf_shapefile(city_projected)
 
-    city = ox.gdf_from_place('Manhattan, New York City, New York, USA', buffer_dist=100)
+    city = ox.gdf_from_place(place1, buffer_dist=100)
     ox.plot_shape(city)
-
-
-
-def test_stats():
-    # create graph, add bearings, project it
-    location_point = (37.791427, -122.410018)
-    G = ox.graph_from_point(location_point, distance=500, distance_type='network')
-    G = ox.add_edge_bearings(G)
-    G_proj = ox.project_graph(G)
-
-    # calculate stats
-    stats1 = ox.basic_stats(G)
-    stats2 = ox.basic_stats(G, area=1000)
-    stats3 = ox.basic_stats(G_proj, area=1000, clean_intersects=True, tolerance=15, circuity_dist='euclidean')
-
-    # calculate extended stats
-    stats4 = ox.extended_stats(G, connectivity=True, anc=False, ecc=True, bc=True, cc=True)
-
-    # test cleaning and rebuilding graph
-    G_clean = ox.clean_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
 
 
 
 def test_graph_from_file():
     # test loading a graph from a local .osm file
-    import bz2, tempfile
-
     node_id = 53098262
     neighbor_ids = 53092170, 53060438, 53027353, 667744075
 
@@ -165,120 +157,20 @@ def test_graph_from_file():
     os.remove(temp_filename)
 
 
-def test_network_saving_loading():
-
-    # save graph as shapefile and geopackage
-    G = ox.graph_from_place('Piedmont, California, USA')
-    ox.save_graph_shapefile(G)
-    ox.save_graph_geopackage(G)
-
-    # save/load graph as graphml file
-    ox.save_graphml(G)
-    ox.save_graphml(G, filename='gephi.graphml', gephi=True)
-    G2 = ox.load_graphml('graph.graphml')
-    G3 = ox.load_graphml('graph.graphml', node_type=str)
-
-    # convert graph to node/edge GeoDataFrames and back again
-    gdf_nodes, gdf_edges = ox.graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True)
-    G4 = ox.gdfs_to_graph(gdf_nodes, gdf_edges)
-
-    # find graph nodes nearest to some set of points
-    X = gdf_nodes['x'].head()
-    Y = gdf_nodes['y'].head()
-    nn1 = ox.get_nearest_nodes(G, X, Y)
-    nn2 = ox.get_nearest_nodes(G, X, Y, method='kdtree')
-    nn3 = ox.get_nearest_nodes(G, X, Y, method='balltree')
-
-    # find graph edges nearest to some set of points
-    ne1 = ox.get_nearest_edges(G, X, Y)
-    ne2 = ox.get_nearest_edges(G, X, Y, method='kdtree')
-    ne3 = ox.get_nearest_edges(G, X, Y, method='kdtree', dist=50)
-
-
-def test_get_network_methods():
-    from shapely import wkt
-
-    # graph from bounding box
-    north, south, east, west = 37.79, 37.78, -122.41, -122.43
-    G1 = ox.graph_from_bbox(north, south, east, west, network_type='drive_service')
-    G1 = ox.graph_from_bbox(north, south, east, west, network_type='drive_service', truncate_by_edge=True)
-
-    # graph from point
-    location_point = (37.791427, -122.410018)
-    bbox = ox.bbox_from_point(location_point, project_utm=True)
-    G2 = ox.graph_from_point(location_point, distance=750, distance_type='bbox', network_type='drive')
-    G3 = ox.graph_from_point(location_point, distance=500, distance_type='network')
-
-    # graph from address
-    G4 = ox.graph_from_address(address='350 5th Ave, New York, NY', distance=1000, distance_type='network',
-                               network_type='bike')
-
-    # graph from list of places
-    places = ['Los Altos, California, USA', {'city': 'Los Altos Hills', 'state': 'California'}, 'Loyola, California']
-    G5 = ox.graph_from_place(places, network_type='all', clean_periphery=False)
-
-    # graph from polygon
-    polygon = wkt.loads(
-        'POLYGON ((-122.418083 37.754154, -122.418082 37.766028, -122.410909 37.766028, -122.410908 37.754154, -122.418083 37.754154))')
-    G6 = ox.graph_from_polygon(polygon, network_type='walk')
-
-    # test custom query filter
-    filtr = ('["area"!~"yes"]'
-             '["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
-             '["foot"!~"no"]'
-             '["service"!~"private"]'
-             '["access"!~"private"]')
-    G = ox.graph_from_point(location_point, network_type='walk', custom_filter=filtr)
-
-    # test custom settings
-    cs = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
-    G = ox.graph_from_point(location_point, custom_settings=cs)
-
-
-
-def test_plots():
-    G = ox.graph_from_place('Piedmont, California, USA', network_type='drive', simplify=False)
-    G2 = ox.simplify_graph(G, strict=False)
-
-    # test getting colors
-    co = ox.get_colors(n=5, return_hex=True)
-    nc = ox.get_node_colors_by_attr(G2, 'osmid')
-    ec = ox.get_edge_colors_by_attr(G2, 'length')
-
-    # save a plot to disk as png
-    fig, ax = ox.plot_graph(G, save=True, file_format='png')
-
-    # save a plot to disk as svg
-    G_simplified = ox.simplify_graph(G)
-    fig, ax = ox.plot_graph(G_simplified, show=False, save=True, close=True, file_format='svg')
-
-    G_projected = ox.project_graph(G_simplified)
-    fig, ax = ox.plot_graph(G_projected)
-
-    fig, ax = ox.plot_graph(G_projected, fig_height=5, fig_width=5, margin=0.05, axis_off=False, bgcolor='y',
-                            file_format='png', filename='x', dpi=180, annotate=True, node_color='k', node_size=5,
-                            node_alpha=0.1, node_edgecolor='b', node_zorder=5, edge_color='r', edge_linewidth=2,
-                            edge_alpha=0.1, use_geom=False, show=False, save=True, close=True)
-
-    fig, ax = ox.plot_figure_ground(G=G_simplified, file_format='png')
-    fig, ax = ox.plot_figure_ground(point=(33.694981, -117.841375), file_format='png')
-    fig, ax = ox.plot_figure_ground(address='Denver, Colorado, USA', file_format='png')
-
 
 def test_routing_folium():
     # calculate shortest path and plot as static image and leaflet web map
-    import networkx as nx
-    G = ox.graph_from_address('398 N. Sicily Pl., Chandler, Arizona', distance=800, network_type='drive')
-    origin = (33.307792, -111.894940)
-    destination = (33.312994, -111.894998)
-    origin_node = ox.get_nearest_node(G, origin)
-    destination_node = ox.get_nearest_node(G, destination, method='euclidean')
-    route = nx.shortest_path(G, origin_node, destination_node)
+    G = ox.graph_from_address(address=address, distance=500, distance_type='bbox', network_type='bike')
+    orig_node = list(G.nodes())[5]
+    dest_node = list(G.nodes())[-5]
+    orig_pt = (G.nodes[orig_node]['y'], G.nodes[orig_node]['x'])
+    dest_pt = (G.nodes[dest_node]['y'], G.nodes[dest_node]['x'])
+    route = nx.shortest_path(G, orig_node, dest_node)
 
     attributes = ox.get_route_edge_attributes(G, route, 'length')
 
     fig, ax = ox.plot_graph_route(G, route, save=True, filename='route', file_format='png')
-    fig, ax = ox.plot_graph_route(G, route, origin_point=origin, destination_point=destination,
+    fig, ax = ox.plot_graph_route(G, route, origin_point=orig_pt, destination_point=dest_pt,
                                   save=True, filename='route', file_format='png')
 
     # test multiple routes
@@ -288,45 +180,229 @@ def test_routing_folium():
     route_map = ox.plot_route_folium(G, route)
 
 
-def test_nearest_edge():
-    # test in closest edge section
-    sheik_sayed_dubai = [25.09, 25.06, 55.16, 55.11]
-    location_coordinates = (25.071764, 55.138978)
-    G = ox.graph_from_bbox(*sheik_sayed_dubai, simplify=False, retain_all=True, network_type='drive')
-    u, v, k, geom, dist = ox.get_nearest_edge(G, location_coordinates, return_geom=True, return_dist=True)
+
+def test_plots():
+    G = ox.graph_from_point(location_point, distance=500, network_type='drive')
+
+    # test getting colors
+    co = ox.get_colors(n=5, return_hex=True)
+    nc = ox.get_node_colors_by_attr(G, 'osmid')
+    ec = ox.get_edge_colors_by_attr(G, 'length')
+
+    # plot and save to disk
+    fig, ax = ox.plot_graph(G, save=True, file_format='png')
+    fig, ax = ox.plot_graph(G, show=False, save=True, close=True, file_format='svg')
+    fig, ax = ox.plot_graph(ox.project_graph(G), fig_height=5, fig_width=5, margin=0.05, axis_off=False, bgcolor='y',
+                            file_format='png', filename='x', dpi=180, annotate=True, node_color='k', node_size=5,
+                            node_alpha=0.1, node_edgecolor='b', node_zorder=5, edge_color='r', edge_linewidth=2,
+                            edge_alpha=0.1, use_geom=False, show=False, save=True, close=True)
+
+    # figure-ground plots
+    fig, ax = ox.plot_figure_ground(G=G, file_format='png')
+    fig, ax = ox.plot_figure_ground(point=location_point, dist=500, network_type='drive', file_format='png')
+    fig, ax = ox.plot_figure_ground(address=address, dist=500, network_type='bike', file_format='png')
 
 
-def test_nearest_edges():
-    from pyproj import Proj
 
-    # test in closest edge section
-    sheik_sayed_dubai = [25.09, 25.06, 55.16, 55.11]
-    location_coordinates = (25.071764, 55.138978)
-    G = ox.graph_from_bbox(*sheik_sayed_dubai, simplify=False, retain_all=True, network_type='drive')
+def test_find_nearest():
 
-    # Unprojected
-    ne1 = ox.get_nearest_edges(G, X=[location_coordinates[1], location_coordinates[1]],
-                               Y=[location_coordinates[0], location_coordinates[0]], method='balltree', dist=0.0001)
+    # get graph
+    G = ox.graph_from_point(location_point, distance=500, network_type='drive')
 
-    # Projected
-    G2 = ox.project_graph(G)
-    crs = Proj(G2.graph['crs'])
+    # convert graph to node/edge GeoDataFrames and back again
+    gdf_nodes, gdf_edges = ox.graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True)
+    assert len(gdf_nodes) == len(G.nodes())
+    assert len(gdf_edges) == len(G.edges(keys=True))
+    G = ox.gdfs_to_graph(gdf_nodes, gdf_edges)
+    assert len(gdf_nodes) == len(G.nodes())
+    assert len(gdf_edges) == len(G.edges(keys=True))
 
-    projected_point = crs(location_coordinates[1], location_coordinates[0])
-    ne2 = ox.get_nearest_edges(G2, X=[projected_point[0], projected_point[0]],
-                               Y=[projected_point[1], projected_point[1]], method='kdtree', dist=10)
-    assert (ne1 == ne2).all()
+    # get nearest node
+    nn, d = ox.get_nearest_node(G, location_point, method='euclidean', return_dist=True)
+
+    # get nearest nodes: haversine, kdtree, balltree
+    X = gdf_nodes['x'].head()
+    Y = gdf_nodes['y'].head()
+    nn1 = ox.get_nearest_nodes(G, X, Y)
+    nn2 = ox.get_nearest_nodes(G, X, Y, method='kdtree')
+    nn3 = ox.get_nearest_nodes(G, X, Y, method='balltree')
+
+    # get nearest edge
+    u, v, k, g, d = ox.get_nearest_edge(G, location_point, return_geom=True, return_dist=True)
+
+    # get nearest edges: haversine, kdtree, balltree
+    ne1 = ox.get_nearest_edges(G, X, Y)
+    ne2 = ox.get_nearest_edges(G, X, Y, method='kdtree')
+    ne3 = ox.get_nearest_edges(G, X, Y, method='balltree', dist=0.0001)
+
+
+
+def test_pois():
+
+    tags = {'amenity' : True,
+            'landuse' : ['retail', 'commercial'],
+            'highway' : 'bus_stop'}
+
+    gdf = ox.pois_from_place(place1, tags=tags)
+
+    gdf = ox.pois_from_polygon(polygon, tags={'amenity':'library'})
+
+    gdf = ox.pois_from_address(address,
+                               tags={'amenity' : 'school'},
+                               custom_settings='[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]')
+
+    gdf = ox.pois_from_point(location_point,
+                             distance=500,
+                             tags={'amenity' : 'restaurant'},
+                             timeout=200,
+                             memory=100000)
+
+
+def test_api_endpoints():
+
+    params = OrderedDict()
+    params['format'] = 'json'
+    params['address_details'] = 0
+
+    # Bad Address - should return an empty response
+    params['q'] = 'AAAAAAAAAAA'
+    response_json = ox.nominatim_request(params=params, type='search')
+
+    # Good Address - should return a valid response with a valid osm_id
+    params['q'] = 'Newcastle A186 Westgate Rd'
+    response_json = ox.nominatim_request(params=params, type='search')
+
+    # Lookup
+    params = OrderedDict()
+    params['format'] = 'json'
+    params['address_details'] = 0
+    params['osm_ids'] = 'W68876073'
+
+    response_json = ox.nominatim_request(params=params, type='lookup')
+
+    # Invalid nominatim query type
+    with pytest.raises(ValueError):
+        response_json = ox.nominatim_request(params=params, type='xyz')
+
+    default_key = ox.settings.nominatim_key
+    default_nominatim_endpoint = ox.settings.nominatim_endpoint
+    default_overpass_endpoint = ox.settings.overpass_endpoint
+
+    # Searching on public nominatim should work even if a key was provided
+    ox.settings.nominatim_key='NOT_A_KEY'
+    response_json = ox.nominatim_request(params=params, type='search')
+
+    # Test changing the endpoint. It should fail because we didn't provide a valid key
+    ox.settings.nominatim_endpoint='http://open.mapquestapi.com/nominatim/v1/'
+    with pytest.raises(Exception):
+        response_json = ox.nominatim_request(params=params,
+                                             type='search')
+
+    # Test changing the endpoint. This should fail because we didn't provide a valid endpoint
+    ox.settings.overpass_endpoint='http://NOT_A_VALID_ENDPOINT/api/'
+    with pytest.raises(Exception):
+        G = ox.graph_from_place(place1, network_type='drive')
+
+    ox.settings.nominatim_key = default_key
+    ox.settings.nominatim_endpoint = default_nominatim_endpoint
+    ox.settings.overpass_endpoint = default_overpass_endpoint
+
+
+
+
+def test_network_saving_loading():
+
+    # save graph as shapefile and geopackage
+    G = ox.graph_from_place(place1, network_type='drive')
+    ox.save_graph_shapefile(G)
+    ox.save_graph_geopackage(G)
+
+    # save/load graph as graphml file
+    ox.save_graphml(G)
+    ox.save_graphml(G, filename='gephi.graphml', gephi=True)
+    G = ox.load_graphml('graph.graphml')
+    G = ox.load_graphml('graph.graphml', node_type=str)
+
+    # test osm xml output
+    default_all_oneway = ox.settings.all_oneway
+    ox.settings.all_oneway = True
+    G = ox.graph_from_point(location_point, distance=500, network_type='drive')
+    ox.save_as_osm(G, merge_edges=False)
+
+    # test osm xml output merge edges
+    ox.save_as_osm(G, merge_edges=True, edge_tag_aggs=[('length', 'sum')])
+
+    # test osm xml output from gdfs
+    nodes, edges = ox.graph_to_gdfs(G)
+    ox.save_as_osm([nodes, edges])
+
+    # test ordered nodes from way
+    df = pd.DataFrame(
+        {'u':[54, 2, 5, 3, 10, 19, 20],
+        'v': [76, 3, 8, 10, 5, 20, 15]})
+    ordered_nodes = ox.get_unique_nodes_ordered_from_way(df)
+    assert ordered_nodes == [2, 3, 10, 5, 8]
+
+    ox.settings.all_oneway = default_all_oneway
+
+
+
+def test_get_network_methods():
+
+    # graph from bounding box
+    north, south, east, west = ox.bbox_from_point(location_point, distance=500)
+    G = ox.graph_from_bbox(north, south, east, west, network_type='drive')
+    G = ox.graph_from_bbox(north, south, east, west, network_type='drive_service', truncate_by_edge=True)
+
+    # graph from address
+    G = ox.graph_from_address(address=address, distance=500, distance_type='bbox', network_type='bike')
+
+    # graph from list of places
+    G = ox.graph_from_place([place1], network_type='drive', clean_periphery=False)
+
+    # graph from polygon
+    G = ox.graph_from_polygon(polygon, network_type='walk')
+
+    # test custom query filter
+    cf = ('["area"!~"yes"]'
+             '["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
+             '["foot"!~"no"]'
+             '["service"!~"private"]'
+             '["access"!~"private"]')
+    G = ox.graph_from_point(location_point, distance=500, custom_filter=cf,
+                            distance_type='bbox', network_type='all')
+
+    # test custom settings
+    cs = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
+    G = ox.graph_from_point(location_point, distance=500, custom_settings=cs,
+                            distance_type='network', network_type='all_private')
+
+
+
+def test_stats():
+    # create graph, add bearings, project it
+    G = ox.graph_from_point(location_point, distance=500, network_type='drive')
+    G = ox.add_edge_bearings(G)
+    G_proj = ox.project_graph(G)
+
+    # calculate stats
+    stats = ox.basic_stats(G, area=1000)
+    stats = ox.basic_stats(G_proj, area=1000, clean_intersects=True, tolerance=15, circuity_dist='euclidean')
+
+    # calculate extended stats
+    stats = ox.extended_stats(G, connectivity=True, anc=False, ecc=True, bc=True, cc=True)
+
+    # test cleaning and rebuilding graph
+    G_clean = ox.clean_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
 
 
 def test_footprints():
-    import json
-    import pytest
-    from shapely.geometry import Polygon
-
+    
     # download footprints and plot them
-    gdf = ox.footprints_from_place(place='Emeryville, California, USA')
-    gdf = ox.footprints_from_polygon(Polygon([(17.574, -4.145), (17.575, -4.144), (17.576, -4.145)]))
-    gdf = ox.footprints_from_address(address='600 Montgomery St, San Francisco, California, USA', distance=300)
+    cs = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
+    gdf = ox.footprints_from_place(place2, custom_settings=cs)
+    gdf = ox.footprints_from_polygon(polygon)
+    gdf = ox.footprints_from_address(address, distance=300)
     fig, ax = ox.plot_footprints(gdf)
 
     # new_river_head.json contains a relation with 1 outer closed way and 2 inner closed ways
@@ -366,117 +442,3 @@ def test_footprints():
     # polygon or -north, south, east, west- should be provided
     with pytest.raises(ValueError):
         ox.create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None)
-
-    gdf = ox.footprints_from_place(place='kusatsu, shiga, japan', which_result=2)
-
-    test_custom_settings = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
-    gdf = ox.footprints_from_place(place='kusatsu, shiga, japan', which_result=2,
-                                   custom_settings=test_custom_settings)
-
-
-def test_pois():
-
-    tags = {'amenity' : True,
-            'landuse' : ['retail', 'commercial'],
-            'highway' : 'bus_stop'}
-
-    gdf = ox.pois_from_place(place='Piedmont, California, USA', tags=tags)
-
-    poly = ox.gdf_from_place('Boston, MA, USA', buffer_dist=2000)
-    gdf = ox.pois_from_polygon(poly['geometry'].iloc[0], tags={'amenity':'university'})
-
-    gdf = ox.pois_from_address(address='Piedmont, California, USA',
-                               tags={'amenity' : 'school'},
-                               custom_settings='[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]')
-
-    gdf = ox.pois_from_point(point=(42.344490, -71.070570),
-                             distance=500,
-                             tags={'amenity' : 'restaurant'},
-                             timeout=200,
-                             memory=100000)
-
-
-def test_nominatim():
-    import pytest
-    from collections import OrderedDict
-
-    params = OrderedDict()
-    params['format'] = 'json'
-    params['address_details'] = 0
-
-    # Bad Address - should return an empty response
-    params['q'] = 'AAAAAAAAAAA'
-    response_json = ox.nominatim_request(params=params, type='search')
-
-    # Good Address - should return a valid response with a valid osm_id
-    params['q'] = 'Newcastle A186 Westgate Rd'
-    response_json = ox.nominatim_request(params=params, type='search')
-
-    # Lookup
-    params = OrderedDict()
-    params['format'] = 'json'
-    params['address_details'] = 0
-    params['osm_ids'] = 'W68876073'
-
-    response_json = ox.nominatim_request(params=params, type='lookup')
-
-    # Invalid nominatim query type
-    with pytest.raises(ValueError):
-        response_json = ox.nominatim_request(params=params, type='transfer')
-
-    # Searching on public nominatim should work even if a key was provided
-    ox.config(nominatim_key='NOT_A_KEY')
-    response_json = ox.nominatim_request(params=params, type='search')
-
-    # Test changing the endpoint. It should fail because we didn't provide a valid key
-    ox.config(
-        nominatim_endpoint='http://open.mapquestapi.com/nominatim/v1/'
-    )
-    with pytest.raises(Exception):
-        response_json = ox.nominatim_request(params=params,
-                                             type='search')
-
-    ox.config(log_console=True, log_file=True, use_cache=True,
-              data_folder='.temp/data', logs_folder='.temp/logs',
-              imgs_folder='.temp/imgs', cache_folder='.temp/cache')
-
-
-
-def test_osm_xml():
-
-    # test osm xml output
-    ox.settings.all_oneway = True
-    G = ox.graph_from_place('Piedmont, California, USA')
-    ox.save_as_osm(G, merge_edges=False)
-
-    # test osm xml output merge edges
-    ox.save_as_osm(G, merge_edges=True, edge_tag_aggs=[('length', 'sum')])
-
-    # test osm xml output from gdfs
-    nodes, edges = ox.graph_to_gdfs(G)
-    ox.save_as_osm([nodes, edges])
-
-    # test ordered nodes from way
-    df = pd.DataFrame(
-        {'u':[54, 2, 5, 3, 10, 19, 20],
-        'v': [76, 3, 8, 10, 5, 20, 15]})
-    ordered_nodes = ox.get_unique_nodes_ordered_from_way(df)
-    assert ordered_nodes == [2, 3, 10, 5, 8]
-
-
-
-def test_overpass_endpoint():
-    import pytest
-
-    # Test changing the endpoint. This should fail because we didn't provide a valid endpoint
-    ox.config(overpass_endpoint='http://NOT_A_VALID_ENDPOINT/api/')
-    with pytest.raises(Exception):
-        G = ox.graph_from_place('Piedmont, California, USA')
-
-    ox.config(overpass_endpoint='http://overpass-api.de/api')
-
-
-
-# all done, remove temp directory
-if os.path.exists('.temp'):
-    shutil.rmtree('.temp')
