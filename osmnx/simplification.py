@@ -159,7 +159,7 @@ def get_paths_to_simplify(G, strict=True):
 
     # first identify all the nodes that are endpoints
     endpoints = set([node for node in G.nodes() if is_endpoint(G, node, strict=strict)])
-    utils.log('Identified {:,} edge endpoints'.format(len(endpoints)))
+    utils.log(f'Identified {len(endpoints)} edge endpoints')
 
     paths_to_simplify = []
 
@@ -249,7 +249,7 @@ def simplify_graph(G, strict=True):
 
             # there shouldn't be multiple edges between interstitial nodes
             if not G.number_of_edges(u, v) == 1:
-                utils.log('Multiple edges between "{}" and "{}" found when simplifying'.format(u, v), level=lg.WARNING)
+                utils.log(f'Multiple edges between "{u}" and "{v}" found when simplifying', level=lg.WARNING)
 
             # the only element in this list as long as above check is True
             # (MultiGraphs use keys (the 0 here), indexed with ints from 0 and
@@ -295,8 +295,8 @@ def simplify_graph(G, strict=True):
 
     G.graph['simplified'] = True
 
-    msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges)'
-    utils.log(msg.format(initial_node_count, len(list(G.nodes())), initial_edge_count, len(list(G.edges()))))
+    msg = f'Simplified graph from {initial_node_count} to {len(G)} nodes and from {initial_edge_count} to {len(G.edges())} edges'
+    utils.log(msg)
     return G
 
 
@@ -491,7 +491,7 @@ def consolidate_intersections_rebuild_graph(G, tolerance=10,
                     gdf.loc[wcc, 'x'] = subcluster_centroid.x
                     gdf.loc[wcc, 'y'] = subcluster_centroid.y
                     # move to subcluster by appending suffix to nodes cluster label
-                    gdf.loc[wcc, 'cluster'] = '{}-{}'.format(cluster_label, suffix)
+                    gdf.loc[wcc, 'cluster'] = f'{cluster_label}-{suffix}'
                     suffix += 1
 
 
