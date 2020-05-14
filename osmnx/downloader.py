@@ -11,7 +11,7 @@ import logging as lg
 from collections import OrderedDict
 from dateutil import parser as date_parser
 from .errors import *
-from .utils import make_str, log
+from .utils import log
 
 from . import settings
 
@@ -120,7 +120,7 @@ def save_to_cache(url, response_json):
             cache_filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
 
             # dump to json, and save to file
-            json_str = make_str(json.dumps(response_json))
+            json_str = str(json.dumps(response_json))
             with io.open(cache_filepath, 'w', encoding='utf-8') as cache_file:
                 cache_file.write(json_str)
 
