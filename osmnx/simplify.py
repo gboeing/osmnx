@@ -467,27 +467,26 @@ def consolidate_intersections_rebuild_graph(G, tolerance=10,
 
 
     # STEP 3
-    # if some node in the cluster does not connect to any other node in the cluster,
-    # move that node to its own new cluster (otherwise you end up with dead-ends due
-    # to traffic bollards, for example, getting falsely connected to other nodes they
-    # are close to)
-    ndfc = [] # list to accumulate nodes disconnected from their cluster
+    # if a cluster contains multiple components (i.e., it's not connected)
+    # move each component to its own cluster (otherwise you will connect
+    # nodes together that are not truly connected, e.g., nearby deadends or
+    # surface streets with bridge).
     groups = gdf.groupby('cluster')
     for cluster_label, nodes_subset in groups:
-        
         if len(nodes_subset) > 1:
-            for osmid in nodes_subset.index:
-                neighbors = set(list(G.predecessors(osmid)) + list(G.successors(osmid)))
-                neighbors_in_cluster = [n for n in nodes_subset.index if n in neighbors]
-                if len(neighbors_in_cluster) == 0:
-                    ndfc.append(osmid)
-
-    # move each the node that does not belong to its cluster into its own
-    # new cluster, by appending '-number' to its cluster label
-    gdf_tmp = gdf.loc[ndfc, 'cluster']
-    gdf_tmp = gdf_tmp.astype(str) + '-' + pd.Series(data=range(len(gdf_tmp)),
-                                                    index=gdf_tmp.index).astype(str)
-    gdf.loc[ndfc, 'cluster'] = gdf_tmp
+            # identify all the (weakly connected) component in cluster
+            wccs = list(nx.weakly_connected_components(G.subgraph(nodes_subset.index)))
+            if len(wccs) > 1:
+                # if there are multiple components in this cluster
+                suffix = 0
+                for wcc in wccs:
+                    # set subcluster xy to the centroid of just these nodes
+                    subcluster_centroid = node_points.loc[wcc].unary_union.centroid
+                    gdf.loc[wcc, 'x'] = subcluster_centroid.x
+                    gdf.loc[wcc, 'y'] = subcluster_centroid.y
+                    # move to subcluster by appending suffix to nodes cluster label
+                    gdf.loc[wcc, 'cluster'] = '{}-{}'.format(cluster_label, suffix)
+                    suffix += 1
 
 
     # STEP 4
