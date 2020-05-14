@@ -108,7 +108,7 @@ def rgb_color_list_to_hex(color_list):
     color_list_hex : list
     """
     color_list_rgb = [[int(x*255) for x in c[0:3]] for c in color_list]
-    color_list_hex = ['#{:02X}{:02X}{:02X}'.format(rgb[0], rgb[1], rgb[2]) for rgb in color_list_rgb]
+    color_list_hex = [f'#{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X}' for rgb in color_list_rgb]
     return color_list_hex
 
 
@@ -1096,7 +1096,7 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
 
     # create a filename if one was not passed
     if filename is None and save:
-        filename = 'figure_ground_{}_{}'.format(point, network_type)
+        filename = 'figure_ground'
 
     # plot the figure
     fig, ax = plot_graph(G_undir, bbox=bbox, fig_height=fig_length,

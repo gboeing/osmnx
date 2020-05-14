@@ -42,42 +42,40 @@ def get_osm_filter(network_type):
     # anything specifying motor=no. also filter out any non-service roads that
     # are tagged as providing parking, driveway, private, or emergency-access
     # services
-    filters['drive'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
-                        'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway|service"]'
-                        '["motor_vehicle"!~"no"]["motorcar"!~"no"]{}'
-                        '["service"!~"parking|parking_aisle|driveway|private|emergency_access"]').format(
-        settings.default_access)
+    filters['drive'] = (f'["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
+                        f'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway|service"]'
+                        f'["motor_vehicle"!~"no"]["motorcar"!~"no"]{settings.default_access}'
+                        f'["service"!~"parking|parking_aisle|driveway|private|emergency_access"]')
 
     # drive+service: allow ways tagged 'service' but filter out certain types of
     # service ways
-    filters['drive_service'] = ('["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
-                                'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway"]'
-                                '["motor_vehicle"!~"no"]["motorcar"!~"no"]{}'
-                                '["service"!~"parking|parking_aisle|private|emergency_access"]').format(
-        settings.default_access)
+    filters['drive_service'] = (f'["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
+                                f'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway"]'
+                                f'["motor_vehicle"!~"no"]["motorcar"!~"no"]{settings.default_access}'
+                                f'["service"!~"parking|parking_aisle|private|emergency_access"]')
 
     # walking: filter out cycle ways, motor ways, private ways, and anything
     # specifying foot=no. allow service roads, permitting things like parking
     # lot lanes, alleys, etc that you *can* walk on even if they're not exactly
     # pleasant walks. some cycleways may allow pedestrians, but this filter ignores
     # such cycleways.
-    filters['walk'] = ('["area"!~"yes"]["highway"!~"cycleway|motor|proposed|construction|abandoned|platform|raceway"]'
-                       '["foot"!~"no"]["service"!~"private"]{}').format(settings.default_access)
+    filters['walk'] = (f'["area"!~"yes"]["highway"!~"cycleway|motor|proposed|construction|abandoned|platform|raceway"]'
+                       f'["foot"!~"no"]["service"!~"private"]{settings.default_access}')
 
     # biking: filter out foot ways, motor ways, private ways, and anything
     # specifying biking=no
-    filters['bike'] = ('["area"!~"yes"]["highway"!~"footway|steps|corridor|elevator|escalator|motor|proposed|'
-                       'construction|abandoned|platform|raceway"]'
-                       '["bicycle"!~"no"]["service"!~"private"]{}').format(settings.default_access)
+    filters['bike'] = (f'["area"!~"yes"]["highway"!~"footway|steps|corridor|elevator|escalator|motor|proposed|'
+                       f'construction|abandoned|platform|raceway"]'
+                       f'["bicycle"!~"no"]["service"!~"private"]{settings.default_access}')
 
     # to download all ways, just filter out everything not currently in use or
     # that is private-access only
-    filters['all'] = ('["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
-                      '["service"!~"private"]{}').format(settings.default_access)
+    filters['all'] = (f'["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
+                      f'["service"!~"private"]{settings.default_access}')
 
     # to download all ways, including private-access ones, just filter out
     # everything not currently in use
-    filters['all_private'] = '["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
+    filters['all_private'] = f'["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
 
     # no filter, needed for infrastructures other than "highway"
     filters['none'] = ''
@@ -85,7 +83,7 @@ def get_osm_filter(network_type):
     if network_type in filters:
         osm_filter = filters[network_type]
     else:
-        raise UnknownNetworkType('unknown network_type "{}"'.format(network_type))
+        raise UnknownNetworkType(f'unknown network_type "{network_type}"')
 
     return osm_filter
 
@@ -131,7 +129,7 @@ def save_to_cache(url, response_json):
             with open(cache_filepath, 'w', encoding='utf-8') as cache_file:
                 cache_file.write(json_str)
 
-            utils.log('Saved response to cache file "{}"'.format(cache_filepath))
+            utils.log(f'Saved response to cache file "{cache_filepath}"')
 
 
 
@@ -184,7 +182,7 @@ def get_from_cache(url):
         if cache_filepath is not None:
             with open(cache_filepath, encoding='utf-8') as cache_file:
                 response_json = json.load(cache_file)
-            utils.log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_filepath, url))
+            utils.log(f'Retrieved response from cache file "{cache_filepath}" for URL "{url}"')
             return response_json
 
 
@@ -239,13 +237,14 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
     """
 
     try:
-        response = requests.get(settings.overpass_endpoint.rstrip('/') + '/status', headers=get_http_headers())
+        url = settings.overpass_endpoint.rstrip('/') + '/status'
+        response = requests.get(url, headers=get_http_headers())
         status = response.text.split('\n')[3]
         status_first_token = status.split(' ')[0]
     # if we cannot reach the status endpoint or parse its output, log an
     # error and return default duration
     except Exception:
-        utils.log('Unable to query {}/status'.format(settings.overpass_endpoint.rstrip('/')), level=lg.ERROR)
+        utils.log(f'Unable to query {url}', level=lg.ERROR)
         return default_duration
 
     try:
@@ -268,7 +267,7 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
             time.sleep(recursive_delay)
             pause_duration = get_pause_duration()
         else:
-            utils.log('Unrecognized server status: "{}"'.format(status), level=lg.ERROR)
+            utils.log(f'Unrecognized server status: "{status}"', level=lg.ERROR)
             return default_duration
 
     return pause_duration
@@ -317,7 +316,7 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1):
 
 
 
-def nominatim_request(params, type="search", pause_duration=1, timeout=30, error_pause_duration=180):
+def nominatim_request(params, request_type='search', pause_duration=1, timeout=30, error_pause_duration=180):
     """
     Send a request to the Nominatim API via HTTP GET and return the JSON
     response.
@@ -326,8 +325,8 @@ def nominatim_request(params, type="search", pause_duration=1, timeout=30, error
     ----------
     params : dict or OrderedDict
         key-value pairs of parameters
-    type : string
-        Type of Nominatim query. One of the following: search, reverse or lookup
+    request_type : string
+        Type of Nominatim query. One of: search, reverse, or lookup
     pause_duration : int
         how long to pause before requests, in seconds
     timeout : int
@@ -340,14 +339,13 @@ def nominatim_request(params, type="search", pause_duration=1, timeout=30, error
     response_json : dict
     """
 
-    known_requests = {"search", "reverse", "lookup"}
-    if type not in known_requests:
-        raise ValueError(
-            "The type of Nominatim request is invalid. Please choose one of {{'search', 'reverse', 'lookup'}}")
+    known_requests = {'search', 'reverse', 'lookup'}
+    if request_type not in known_requests:
+        raise ValueError('Nominatim request_type must be "search", "reverse", or "lookup"')
 
     # prepare the Nominatim API URL and see if request already exists in the
     # cache
-    url = settings.nominatim_endpoint.rstrip('/') + '/{}'.format(type)
+    url = settings.nominatim_endpoint.rstrip('/') + '/' + request_type
     prepared_url = requests.Request('GET', url, params=params).prepare().url
     cached_response_json = get_from_cache(prepared_url)
 
@@ -361,15 +359,15 @@ def nominatim_request(params, type="search", pause_duration=1, timeout=30, error
 
     else:
         # if this URL is not already in the cache, pause, then request it
-        utils.log('Pausing {:,.2f} seconds before making API GET request'.format(pause_duration))
+        utils.log(f'Pausing {pause_duration} seconds before making API GET request')
         time.sleep(pause_duration)
-        utils.log('Requesting {} with timeout={}'.format(prepared_url, timeout))
+        utils.log(f'Requesting {prepared_url} with timeout={timeout}')
         response = requests.get(url, params=params, timeout=timeout, headers=get_http_headers())
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
         domain = re.findall(r'(?s)//(.*?)/', url)[0]
-        utils.log('Downloaded {:,.1f}KB from {}'.format(size_kb, domain))
+        utils.log(f'Downloaded {size_kb:,.1f}KB from {domain}')
 
         try:
             response_json = response.json()
@@ -380,16 +378,14 @@ def nominatim_request(params, type="search", pause_duration=1, timeout=30, error
             # nominatim_request until we get a valid response
             if response.status_code in [429, 504]:
                 # pause for error_pause_duration seconds before re-trying request
-                utils.log('Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(domain, response.status_code, error_pause_duration), level=lg.WARNING)
+                utils.log(f'Server at {domain} returned status {response.status_code} and no JSON data: retrying in {error_pause_duration:.2f} seconds', level=lg.WARNING)
                 time.sleep(error_pause_duration)
                 response_json = nominatim_request(params=params, pause_duration=pause_duration, timeout=timeout)
 
             # else, this was an unhandled status_code, throw an exception
             else:
-                utils.log('Server at {} returned status code {} and no JSON data'.format(domain, response.status_code),
-                    level=lg.ERROR)
-                raise Exception(
-                    'Server returned no JSON data.\n{} {}\n{}'.format(response, response.reason, response.text))
+                utils.log(f'Server at {domain} returned status code {response.status_code} and no JSON data', level=lg.ERROR)
+                raise Exception(f'Server returned no JSON data\n{response} {response.reason}\n{response.text}')
 
         return response_json
 
@@ -432,20 +428,20 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
         # if this URL is not already in the cache, pause, then request it
         if pause_duration is None:
             this_pause_duration = get_pause_duration()
-        utils.log('Pausing {:,.2f} seconds before making API POST request'.format(this_pause_duration))
+        utils.log(f'Pausing {this_pause_duration} seconds before making API POST request')
         time.sleep(this_pause_duration)
-        utils.log('Posting to {} with timeout={}, "{}"'.format(url, timeout, data))
+        utils.log(f'Posting to {url} with timeout={timeout}, "{data}"')
         response = requests.post(url, data=data, timeout=timeout, headers=get_http_headers())
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
         domain = re.findall(r'(?s)//(.*?)/', url)[0]
-        utils.log('Downloaded {:,.1f}KB from {}'.format(size_kb, domain))
+        utils.log(f'Downloaded {size_kb:,.1f}KB from {domain}')
 
         try:
             response_json = response.json()
             if 'remark' in response_json:
-                utils.log('Server remark: "{}"'.format(response_json['remark'], level=lg.WARNING))
+                utils.log(f'Server remark: "{response_json["remark"]}"', level=lg.WARNING)
             save_to_cache(prepared_url, response_json)
 
         # 429 is 'too many requests' and 504 is 'gateway timeout' from server
@@ -455,13 +451,12 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
             if response.status_code in [429, 504]:
                 if error_pause_duration is None:
                     error_pause_duration = get_pause_duration()
-                utils.log('Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(domain, response.status_code, error_pause_duration), level=lg.WARNING)
+                utils.log(f'Server at {domain} returned status {response.status_code} and no JSON data: retrying in {error_pause_duration} seconds.', level=lg.WARNING)
                 time.sleep(error_pause_duration)
                 response_json = overpass_request(data=data, pause_duration=pause_duration, timeout=timeout)
             # else, this was an unhandled status_code, throw an exception
             else:
-                utils.log('Server at {} returned status code {} and no JSON data'.format(domain, response.status_code), level=lg.ERROR)
-                raise Exception(
-                    'Server returned no JSON data.\n{} {}\n{}'.format(response, response.reason, response.text))
+                utils.log(f'Server at {domain} returned status code {response.status_code} and no JSON data', level=lg.ERROR)
+                raise Exception(f'Server returned no JSON data\n{response} {response.reason}\n{response.text}')
 
         return response_json
