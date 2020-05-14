@@ -1,6 +1,6 @@
 ################################################################################
 # Module: core.py
-# Description: Core functions of OSMnx.
+# Description: Core functions of OSMnx
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
@@ -8,21 +8,13 @@
 import bz2
 import geopandas as gpd
 import logging as lg
-import math
 import networkx as nx
-import numpy as np
 import os
-import pandas as pd
 import time
-import xml
 import xml.sax
-
 from itertools import groupby
-from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
-from shapely.geometry import Point
 from shapely.geometry import Polygon
-
 from . import downloader
 from . import projection
 from . import settings

@@ -7,8 +7,6 @@
 
 import datetime as dt
 import logging as lg
-import networkx as nx
-import numpy as np
 import os
 import sys
 import unicodedata

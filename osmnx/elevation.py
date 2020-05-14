@@ -10,10 +10,8 @@ import networkx as nx
 import pandas as pd
 import requests
 import time
-
-from .downloader import get_from_cache
-from .downloader import save_to_cache
-from .utils import log
+from . import downloader
+from . import utils
 
 
 def add_node_elevations(G, api_key, max_locations_per_batch=350,
@@ -46,7 +44,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
     # round coorindates to 5 decimal places (approx 1 meter) to be able to fit
     # in more locations per API call
     node_points = pd.Series({node:'{:.5f},{:.5f}'.format(data['y'], data['x']) for node, data in G.nodes(data=True)})
-    log('Requesting node elevations from the API in {} calls.'.format(math.ceil(len(node_points) / max_locations_per_batch)))
+    utils.log('Requesting node elevations from the API in {} calls.'.format(math.ceil(len(node_points) / max_locations_per_batch)))
 
     # break the series of coordinates into chunks of size max_locations_per_batch
     # API format is locations=lat,lng|lat,lng|lat,lng|lat,lng...
@@ -57,20 +55,20 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
         url = url_template.format(locations, api_key)
 
         # check if this request is already in the cache (if global use_cache=True)
-        cached_response_json = get_from_cache(url)
+        cached_response_json = downloader.get_from_cache(url)
         if cached_response_json is not None:
             response_json = cached_response_json
         else:
             try:
                 # request the elevations from the API
-                log('Requesting node elevations: {}'.format(url))
+                utils.log('Requesting node elevations: {}'.format(url))
                 time.sleep(pause_duration)
                 response = requests.get(url)
                 response_json = response.json()
-                save_to_cache(url, response_json)
+                downloader.save_to_cache(url, response_json)
             except Exception as e:
-                log(e)
-                log('Server responded with {}: {}'.format(response.status_code, response.reason))
+                utils.log(e)
+                utils.log('Server responded with {}: {}'.format(response.status_code, response.reason))
 
         # append these elevation results to the list of all results
         results.extend(response_json['results'])
@@ -79,14 +77,14 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
     if not (len(results) == len(G.nodes()) == len(node_points)):
         raise Exception('Graph has {} nodes but we received {} results from the elevation API.'.format(len(G.nodes()), len(results)))
     else:
-        log('Graph has {} nodes and we received {} results from the elevation API.'.format(len(G.nodes()), len(results)))
+        utils.log('Graph has {} nodes and we received {} results from the elevation API.'.format(len(G.nodes()), len(results)))
 
     # add elevation as an attribute to the nodes
     df = pd.DataFrame(node_points, columns=['node_points'])
     df['elevation'] = [result['elevation'] for result in results]
     df['elevation'] = df['elevation'].round(3) # round to millimeter
     nx.set_node_attributes(G, name='elevation', values=df['elevation'].to_dict())
-    log('Added elevation data to all nodes.')
+    utils.log('Added elevation data to all nodes.')
 
     return G
 
@@ -125,5 +123,5 @@ def add_edge_grades(G, add_absolute=True): # pragma: no cover
         if add_absolute:
             data['grade_abs'] = abs(grade)
 
-    log('Added grade data to all edges.')
+    utils.log('Added grade data to all edges.')
     return G
