@@ -12,7 +12,6 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import re
-import time
 from shapely import wkt
 from shapely.geometry import LineString
 from shapely.geometry import Point
@@ -86,7 +85,6 @@ def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8
     """
 
     # convert undirected graph to geodataframes
-    start_time = time.time()
     gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(get_undirected(G))
 
     # make every non-numeric edge attribute (besides geometry) a string
@@ -105,7 +103,7 @@ def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8
     # save the nodes and edges as GeoPackage layers
     gdf_nodes.to_file(filepath, layer='nodes', driver='GPKG', encoding=encoding)
     gdf_edges.to_file(filepath, layer='edges', driver='GPKG', encoding=encoding)
-    utils.log('Saved graph to disk as GeoPackage at "{}" in {:,.2f} seconds'.format(filepath, time.time() - start_time))
+    utils.log('Saved graph to disk as GeoPackage at "{}"'.format(filepath))
 
 
 
@@ -128,7 +126,6 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     None
     """
 
-    start_time = time.time()
     if folder is None:
         folder = settings.data_folder
 
@@ -183,7 +180,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     # save the nodes and edges as separate ESRI shapefiles
     gdf_nodes.to_file('{}/nodes'.format(filepath), encoding=encoding)
     gdf_edges.to_file('{}/edges'.format(filepath), encoding=encoding)
-    utils.log('Saved graph "{}" to disk as shapefiles at "{}" in {:,.2f} seconds'.format(G_save.name, filepath, time.time() - start_time))
+    utils.log('Saved graph "{}" to disk as shapefiles at "{}"'.format(G_save.name, filepath))
 
 
 def save_as_osm(
@@ -232,7 +229,6 @@ def save_as_osm(
     -------
     None
     """
-    start_time = time.time()
     if folder is None:
         folder = settings.data_folder
 
@@ -358,8 +354,7 @@ def save_as_osm(
 
     et.write(os.path.join(folder, filename))
 
-    utils.log('Saved graph to disk as OSM at "{}" in {:,.2f} seconds'.format(
-        os.path.join(folder, filename), time.time() - start_time))
+    utils.log('Saved graph to disk as OSM at "{}"'.format(os.path.join(folder, filename)))
 
 
 
@@ -432,7 +427,6 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
     None
     """
 
-    start_time = time.time()
     if folder is None:
         folder = settings.data_folder
 
@@ -481,7 +475,7 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
     filepath = os.path.join(folder, filename)
 
     nx.write_graphml(G_save, filepath)
-    utils.log('Saved graph to disk as GraphML at "{}" in {:,.2f} seconds'.format(filepath, time.time()-start_time))
+    utils.log('Saved graph to disk as GraphML at "{}"'.format(filepath))
 
 
 def load_graphml(filename, folder=None, node_type=int):
@@ -502,7 +496,6 @@ def load_graphml(filename, folder=None, node_type=int):
     -------
     networkx multidigraph
     """
-    start_time = time.time()
 
     # read the graph from disk
     if folder is None:
@@ -575,10 +568,9 @@ def load_graphml(filename, folder=None, node_type=int):
     if 'edge_default' in G.graph:
         del G.graph['edge_default']
 
-    utils.log('Loaded graph with {:,} nodes and {:,} edges in {:,.2f} seconds from "{}"'.format(len(list(G.nodes())),
-                                                                                          len(list(G.edges())),
-                                                                                          time.time()-start_time,
-                                                                                          path))
+    utils.log('Loaded graph with {:,} nodes and {:,} edges from "{}"'.format(len(list(G.nodes())),
+                                                                             len(list(G.edges())),
+                                                                             path))
     return G
 
 
@@ -726,8 +718,6 @@ def get_undirected(G):
     networkx multigraph
     """
 
-    start_time = time.time()
-
     # set from/to nodes before making graph undirected
     G = G.copy()
     for u, v, k, data in G.edges(keys=True, data=True):
@@ -777,7 +767,7 @@ def get_undirected(G):
                         duplicate_edges.append((u, v, key_other))
 
     H.remove_edges_from(duplicate_edges)
-    utils.log('Made undirected graph in {:,.2f} seconds'.format(time.time() - start_time))
+    utils.log('Made undirected graph')
 
     return H
 

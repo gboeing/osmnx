@@ -53,7 +53,8 @@ def ts(style='datetime', template=None):
         format the timestamp with this built-in template. must be one
         of {'datetime', 'date', 'time'}
     template : string
-        if not None, format the timestamp with this template
+        if not None, format the timestamp with this template instead of
+        one of the built-in styles
 
     Returns
     -------
@@ -102,7 +103,7 @@ def config(data_folder=settings.data_folder,
            overpass_endpoint=settings.overpass_endpoint,
            all_oneway=settings.all_oneway):
     """
-    Configure osmnx by setting the default global vars to desired values.
+    Configure osmnx by setting the default global settings' values.
 
     Parameters
     ---------
@@ -191,12 +192,12 @@ def config(data_folder=settings.data_folder,
 
 def log(message, level=None, name=None, filename=None):
     """
-    Write a message to the log file and/or print to the the console.
+    Write a message to the log file and/or print to the console.
 
     Parameters
     ----------
     message : string
-        the content of the message to log
+        the message to log
     level : int
         one of the logger.level constants
     name : string
@@ -230,17 +231,18 @@ def log(message, level=None, name=None, filename=None):
         elif level == lg.ERROR:
             logger.error(message)
 
-    # if logging to console is turned on, convert message to ascii and print to
-    # the console
+    # if logging to console, convert message to ascii and print to console
     if settings.log_console:
         # capture current stdout, then switch it to the console, print the
         # message, then switch back to what had been the stdout. this prevents
-        # logging to notebook - instead, it goes to console
+        # logging to notebook in jupyter: instead, it goes to terminal
         standard_out = sys.stdout
         sys.stdout = sys.__stdout__
 
-        # convert message to ascii for console display so it doesn't break
-        # windows terminals
+        # prepend timestamp
+        message = '{} {}'.format(ts(), message)
+
+        # convert to ascii so it doesn't break windows terminals
         message = unicodedata.normalize('NFKD', str(message)).encode('ascii', errors='replace').decode()
         print(message)
         sys.stdout = standard_out

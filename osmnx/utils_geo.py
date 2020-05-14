@@ -10,7 +10,6 @@ import math
 import networkx as nx
 import numpy as np
 import pandas as pd
-import time
 from collections import OrderedDict
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
@@ -165,7 +164,6 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
         the distance (in meters if haversine, or graph node coordinate units
         if euclidean) between the point and nearest node
     """
-    start_time = time.time()
 
     if not G or (G.number_of_nodes() == 0):
         raise ValueError('G argument must be not be empty or should contain at least one node')
@@ -202,7 +200,7 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
 
     # nearest node's ID is the index label of the minimum distance
     nearest_node = distances.idxmin()
-    utils.log('Found nearest node ({}) to point {} in {:,.2f} seconds'.format(nearest_node, point, time.time()-start_time))
+    utils.log('Found nearest node ({}) to point {}'.format(nearest_node, point))
 
     # if caller requested return_dist, return distance between the point and the
     # nearest node as well
@@ -237,7 +235,6 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
         Or a tuple of (u, v, key, dist) if return_dist is True.
         Or a tuple of (u, v, key, geom, dist) if return_geom and return_dist are True.
     """
-    start_time = time.time()
 
     # get u, v, key, geom from all the graph edges
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
@@ -251,7 +248,7 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
 
     # the nearest edge minimizes the distance to the point
     (u, v, key, geom), dist = min(edge_distances, key=lambda x: x[1])
-    utils.log('Found nearest edge ({}) to point {} in {:,.2f} seconds'.format((u, v, key), point, time.time() - start_time))
+    utils.log('Found nearest edge ({}) to point {}'.format((u, v, key), point))
 
     # return results requested by caller
     if return_dist and return_geom:
@@ -298,8 +295,6 @@ def get_nearest_nodes(G, X, Y, method=None):
         list of nearest node IDs
     """
 
-    start_time = time.time()
-
     if method is None:
 
         # calculate nearest node one at a time for each point
@@ -344,7 +339,7 @@ def get_nearest_nodes(G, X, Y, method=None):
     else:
         raise ValueError('You must pass a valid method name, or None.')
 
-    utils.log('Found nearest nodes to {:,} points in {:,.2f} seconds'.format(len(X), time.time()-start_time))
+    utils.log('Found nearest nodes to {:,} points'.format(len(X)))
 
     return np.array(nn)
 
@@ -399,7 +394,6 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         array of nearest edges represented by their startpoint and endpoint ids,
         u and v, the OSM ids of the nodes, and the edge key.
     """
-    start_time = time.time()
 
     if method is None:
         # calculate nearest edge one at a time for each (y, x) point
@@ -466,7 +460,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     else:
         raise ValueError('You must pass a valid method name, or None.')
 
-    utils.log('Found nearest edges to {:,} points in {:,.2f} seconds'.format(len(X), time.time() - start_time))
+    utils.log('Found nearest edges to {:,} points'.format(len(X)))
 
     return np.array(ne)
 
@@ -921,13 +915,11 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffe
     multipoly = quadrat_cut_geometry(geometry, quadrat_width=quadrat_width, buffer_amount=buffer_amount, min_num=min_num)
 
     # create an r-tree spatial index for the nodes (ie, points)
-    start_time = time.time()
     sindex = gdf['geometry'].sindex
-    utils.log('Created r-tree spatial index for {:,} points in {:,.2f} seconds'.format(len(gdf), time.time()-start_time))
+    utils.log('Created r-tree spatial index for {:,} points'.format(len(gdf)))
 
     # loop through each chunk of the geometry to find approximate and then
     # precisely intersecting points
-    start_time = time.time()
     for poly in multipoly:
 
         # buffer by the tiny distance to account for any space lost in the
@@ -954,7 +946,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffe
         # so throw error
         raise Exception('There are no nodes within the requested geometry')
 
-    utils.log('Identified {:,} nodes inside polygon in {:,.2f} seconds'.format(len(points_within_geometry), time.time()-start_time))
+    utils.log('Identified {:,} nodes inside polygon'.format(len(points_within_geometry)))
     return points_within_geometry
 
 
@@ -1019,8 +1011,6 @@ def add_edge_lengths(G):
     G : networkx multidigraph
     """
 
-    start_time = time.time()
-
     # first load all the edges' origin and destination coordinates as a
     # dataframe indexed by u, v, key
     try:
@@ -1042,7 +1032,7 @@ def add_edge_lengths(G):
     gc_distances = gc_distances.fillna(value=0).round(3)
     nx.set_edge_attributes(G, name='length', values=gc_distances.to_dict())
 
-    utils.log('Added edge lengths to graph in {:,.2f} seconds'.format(time.time()-start_time))
+    utils.log('Added edge lengths to graph')
     return G
 
 
@@ -1073,12 +1063,11 @@ def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', reta
 
     # get the shortest distance between the node and every other node, then
     # remove every node further than max_distance away
-    start_time = time.time()
     G = G.copy()
     distances = nx.shortest_path_length(G, source=source_node, weight=weight)
     distant_nodes = {key:value for key, value in dict(distances).items() if value > max_distance}
     G.remove_nodes_from(distant_nodes.keys())
-    utils.log('Truncated graph by weighted network distance in {:,.2f} seconds'.format(time.time()-start_time))
+    utils.log('Truncated graph by weighted network distance')
 
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
@@ -1119,7 +1108,6 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
     networkx multidigraph
     """
 
-    start_time = time.time()
     G = G.copy()
     nodes_outside_bbox = []
 
@@ -1148,7 +1136,7 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
                     nodes_outside_bbox.append(node)
 
     G.remove_nodes_from(nodes_outside_bbox)
-    utils.log('Truncated graph by bounding box in {:,.2f} seconds'.format(time.time()-start_time))
+    utils.log('Truncated graph by bounding box')
 
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
@@ -1195,7 +1183,6 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
     networkx multidigraph
     """
 
-    start_time = time.time()
     G = G.copy()
     utils.log('Identifying all nodes that lie outside the polygon...')
 
@@ -1220,9 +1207,8 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
 
     # now remove from the graph all those nodes that lie outside the place
     # polygon
-    start_time = time.time()
     G.remove_nodes_from(nodes_to_remove)
-    utils.log('Removed {:,} nodes outside polygon in {:,.2f} seconds'.format(len(nodes_outside_polygon), time.time()-start_time))
+    utils.log('Removed {:,} nodes outside polygon'.format(len(nodes_outside_polygon)))
 
     # remove any isolated nodes and retain only the largest component (if retain_all is False)
     if not retain_all:

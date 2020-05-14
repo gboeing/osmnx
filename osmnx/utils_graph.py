@@ -9,7 +9,6 @@ import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
-import time
 from collections import Counter
 from itertools import chain
 from shapely.geometry import LineString
@@ -85,7 +84,6 @@ def get_largest_component(G, strongly=False):
         the largest connected component subgraph from the original graph
     """
 
-    start_time = time.time()
     original_len = len(list(G.nodes()))
 
     if strongly:
@@ -98,8 +96,8 @@ def get_largest_component(G, strongly=False):
             G = induce_subgraph(G, largest_scc)
 
             msg = ('Graph was not connected, retained only the largest strongly '
-                   'connected component ({:,} of {:,} total nodes) in {:.2f} seconds')
-            utils.log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
+                   'connected component ({:,} of {:,} total nodes)')
+            utils.log(msg.format(len(list(G.nodes())), original_len))
     else:
         # if the graph is not connected retain only the largest weakly connected component
         if not nx.is_weakly_connected(G):
@@ -110,8 +108,8 @@ def get_largest_component(G, strongly=False):
             G = induce_subgraph(G, largest_wcc)
 
             msg = ('Graph was not connected, retained only the largest weakly '
-                   'connected component ({:,} of {:,} total nodes) in {:.2f} seconds')
-            utils.log(msg.format(len(list(G.nodes())), original_len, time.time()-start_time))
+                   'connected component ({:,} of {:,} total nodes)')
+            utils.log(msg.format(len(list(G.nodes())), original_len))
 
     return G
 
@@ -175,8 +173,6 @@ def count_streets_per_node(G, nodes=None):
         counts of how many streets emanate from each node with keys=node id and values=count
     """
 
-    start_time = time.time()
-
     # to calculate the counts, get undirected representation of the graph. for
     # each node, get the list of the set of unique u,v,key edges, including
     # parallel edges but excluding self-loop parallel edges (this is necessary
@@ -218,8 +214,8 @@ def count_streets_per_node(G, nodes=None):
     counts = Counter(edges_flat)
     streets_per_node = {node:counts[node] for node in nodes}
     msg = ('Got the counts of undirected street segments incident to each node '
-           '(before removing peripheral edges) in {:,.2f} seconds')
-    utils.log(msg.format(time.time()-start_time))
+           '(before removing peripheral edges)')
+    utils.log(msg)
     return streets_per_node
 
 
@@ -256,8 +252,6 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
     if nodes:
 
-        start_time = time.time()
-
         nodes, data = zip(*G.nodes(data=True))
         gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
         if node_geometry:
@@ -267,11 +261,9 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         gdf_nodes.gdf_name = '{}_nodes'.format(G.graph['name'])
 
         to_return.append(gdf_nodes)
-        utils.log('Created GeoDataFrame "{}" from graph in {:,.2f} seconds'.format(gdf_nodes.gdf_name, time.time()-start_time))
+        utils.log('Created GeoDataFrame "{}" from graph'.format(gdf_nodes.gdf_name))
 
     if edges:
-
-        start_time = time.time()
 
         # create a list to hold our edges, then loop through each edge in the
         # graph
@@ -302,7 +294,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         gdf_edges.gdf_name = '{}_edges'.format(G.graph['name'])
 
         to_return.append(gdf_edges)
-        utils.log('Created GeoDataFrame "{}" from graph in {:,.2f} seconds'.format(gdf_edges.gdf_name, time.time()-start_time))
+        utils.log('Created GeoDataFrame "{}" from graph'.format(gdf_edges.gdf_name))
 
     if len(to_return) > 1:
         return tuple(to_return)

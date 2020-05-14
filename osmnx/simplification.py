@@ -8,7 +8,6 @@
 import geopandas as gpd
 import logging as lg
 import networkx as nx
-import time
 from shapely.geometry import LineString
 from shapely.geometry import Point
 from shapely.geometry import Polygon
@@ -156,11 +155,9 @@ def get_paths_to_simplify(G, strict=True):
     """
 
     # first identify all the nodes that are endpoints
-    start_time = time.time()
     endpoints = set([node for node in G.nodes() if is_endpoint(G, node, strict=strict)])
-    utils.log('Identified {:,} edge endpoints in {:,.2f} seconds'.format(len(endpoints), time.time()-start_time))
+    utils.log('Identified {:,} edge endpoints'.format(len(endpoints)))
 
-    start_time = time.time()
     paths_to_simplify = []
 
     # for each endpoint node, look at each of its successor nodes
@@ -181,7 +178,7 @@ def get_paths_to_simplify(G, strict=True):
                     # handle it by just ignoring that component and letting its
                     # topology remain intact (this should be a rare occurrence)
 
-    utils.log('Constructed all paths to simplify in {:,.2f} seconds'.format(time.time()-start_time))
+    utils.log('Constructed all paths to simplify')
     return paths_to_simplify
 
 
@@ -238,7 +235,6 @@ def simplify_graph(G, strict=True):
     # construct a list of all the paths that need to be simplified
     paths = get_paths_to_simplify(G, strict=strict)
 
-    start_time = time.time()
     for path in paths:
 
         # add the interstitial edges we're removing to a list so we can retain
@@ -294,8 +290,8 @@ def simplify_graph(G, strict=True):
 
     G.graph['simplified'] = True
 
-    msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
-    utils.log(msg.format(initial_node_count, len(list(G.nodes())), initial_edge_count, len(list(G.edges())), time.time()-start_time))
+    msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges)'
+    utils.log(msg.format(initial_node_count, len(list(G.nodes())), initial_edge_count, len(list(G.edges()))))
     return G
 
 

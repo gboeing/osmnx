@@ -362,14 +362,13 @@ def nominatim_request(params, type="search", pause_duration=1, timeout=30, error
         # if this URL is not already in the cache, pause, then request it
         utils.log('Pausing {:,.2f} seconds before making API GET request'.format(pause_duration))
         time.sleep(pause_duration)
-        start_time = time.time()
         utils.log('Requesting {} with timeout={}'.format(prepared_url, timeout))
         response = requests.get(url, params=params, timeout=timeout, headers=get_http_headers())
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
         domain = re.findall(r'(?s)//(.*?)/', url)[0]
-        utils.log('Downloaded {:,.1f}KB from {} in {:,.2f} seconds'.format(size_kb, domain, time.time() - start_time))
+        utils.log('Downloaded {:,.1f}KB from {}'.format(size_kb, domain))
 
         try:
             response_json = response.json()
@@ -438,14 +437,13 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
             this_pause_duration = get_pause_duration()
         utils.log('Pausing {:,.2f} seconds before making API POST request'.format(this_pause_duration))
         time.sleep(this_pause_duration)
-        start_time = time.time()
         utils.log('Posting to {} with timeout={}, "{}"'.format(url, timeout, data))
         response = requests.post(url, data=data, timeout=timeout, headers=get_http_headers())
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
         domain = re.findall(r'(?s)//(.*?)/', url)[0]
-        utils.log('Downloaded {:,.1f}KB from {} in {:,.2f} seconds'.format(size_kb, domain, time.time() - start_time))
+        utils.log('Downloaded {:,.1f}KB from {}'.format(size_kb, domain))
 
         try:
             response_json = response.json()

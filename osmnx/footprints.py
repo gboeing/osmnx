@@ -7,7 +7,6 @@
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
-import time
 from descartes import PolygonPatch
 from matplotlib.collections import PatchCollection
 from shapely.geometry import LineString
@@ -97,7 +96,6 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
         geometry_proj_consolidated_subdivided = utils_geo.consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, _ = projection.project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         utils.log('Requesting footprints data within bounding box from API in {:,} request(s)'.format(len(geometry)))
-        start_time = time.time()
 
         # loop through each polygon rectangle in the geometry (there will only
         # be one if original bbox didn't exceed max area size)
@@ -116,8 +114,8 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
             response_json = downloader.overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within bounding box from '
-               'API in {:,} request(s) and {:,.2f} seconds')
-        utils.log(msg.format(len(geometry), time.time()-start_time))
+               'API in {:,} request(s)')
+        utils.log(msg.format(len(geometry)))
 
     elif by_poly:
         # project to utm, divide polygon up into sub-polygons if area exceeds a
@@ -127,7 +125,6 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
         geometry, _ = projection.project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = utils_geo.get_polygons_coordinates(geometry)
         utils.log('Requesting footprint data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
-        start_time = time.time()
 
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
@@ -140,8 +137,8 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
             response_json = downloader.overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within polygon from API in '
-               '{:,} request(s) and {:,.2f} seconds')
-        utils.log(msg.format(len(polygon_coord_strs), time.time()-start_time))
+               '{:,} request(s)')
+        utils.log(msg.format(len(polygon_coord_strs)))
 
     return response_jsons
 

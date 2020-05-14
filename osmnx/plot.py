@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
-import time
 from descartes import PolygonPatch
 from matplotlib.collections import LineCollection
 from shapely.geometry import MultiPolygon
@@ -241,8 +240,6 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
     """
     # save the figure if specified
     if save:
-        start_time = time.time()
-
         # create the save folder if it doesn't already exist
         if not os.path.exists(settings.imgs_folder):
             os.makedirs(settings.imgs_folder)
@@ -263,13 +260,12 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
             else:
                 extent = 'tight'
             fig.savefig(path_filename, dpi=dpi, bbox_inches=extent, format=file_format, facecolor=fig.get_facecolor(), transparent=True)
-        utils.log('Saved the figure to disk in {:,.2f} seconds'.format(time.time()-start_time))
+        utils.log('Saved the figure to disk')
 
     # show the figure if specified
     if show:
-        start_time = time.time()
         plt.show()
-        utils.log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
+        utils.log('Showed the plot')
     # if show=False, close the figure if close=True to prevent display
     elif close:
         plt.close()
@@ -372,7 +368,6 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     ax.set_facecolor(bgcolor)
 
     # draw the edges as lines from node to node
-    start_time = time.time()
     lines = []
     for u, v, data in G.edges(keys=False, data=True):
         if 'geometry' in data and use_geom:
@@ -393,7 +388,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     # add the lines to the axis as a linecollection
     lc = LineCollection(lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=2)
     ax.add_collection(lc)
-    utils.log('Drew the graph edges in {:,.2f} seconds'.format(time.time()-start_time))
+    utils.log('Drew the graph edges')
 
     # scatter plot the nodes
     ax.scatter(node_Xs, node_Ys, s=node_size, c=node_color, alpha=node_alpha, edgecolor=node_edgecolor, zorder=node_zorder)

@@ -10,7 +10,6 @@ import geopandas as gpd
 import logging as lg
 import networkx as nx
 import os
-import time
 import xml.sax
 from itertools import groupby
 from shapely.geometry import MultiPolygon
@@ -234,7 +233,6 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         geometry_proj_consolidated_subdivided = utils_geo.consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, _ = projection.project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         utils.log('Requesting network data within bounding box from API in {:,} request(s)'.format(len(geometry)))
-        start_time = time.time()
 
         # loop through each polygon rectangle in the geometry (there will only
         # be one if original bbox didn't exceed max area size)
@@ -251,7 +249,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
                                               overpass_settings=overpass_settings)
             response_json = downloader.overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        utils.log('Got all network data within bounding box from API in {:,} request(s) and {:,.2f} seconds'.format(len(geometry), time.time()-start_time))
+        utils.log('Got all network data within bounding box from API in {:,} request(s)'.format(len(geometry)))
 
     elif by_poly:
         # project to utm, divide polygon up into sub-polygons if area exceeds a
@@ -262,7 +260,6 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         geometry, _ = projection.project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = utils_geo.get_polygons_coordinates(geometry)
         utils.log('Requesting network data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
-        start_time = time.time()
 
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
@@ -274,7 +271,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
                                               overpass_settings=overpass_settings)
             response_json = downloader.overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        utils.log('Got all network data within polygon from API in {:,} request(s) and {:,.2f} seconds'.format(len(polygon_coord_strs), time.time()-start_time))
+        utils.log('Got all network data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
 
     return response_jsons
 
@@ -479,7 +476,6 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional
     """
 
     utils.log('Creating networkx graph from downloaded OSM data...')
-    start_time = time.time()
 
     # make sure we got data back from the server requests
     elements = []
@@ -513,7 +509,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional
     if not retain_all:
         G = utils_graph.get_largest_component(G)
 
-    utils.log('Created graph with {:,} nodes and {:,} edges in {:,.2f} seconds'.format(len(list(G.nodes())), len(list(G.edges())), time.time()-start_time))
+    utils.log('Created graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
 
     # add length (great circle distance between nodes) attribute to each edge to
     # use as weight
