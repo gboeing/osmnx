@@ -14,8 +14,8 @@ from . import settings
 from .core import bbox_from_point
 from .core import gdf_from_place
 from .downloader import overpass_request
-from .utils_geo import geocode
 from .utils import log
+from .utils_geo import geocode
 
 
 def create_poi_query(north, south, east, west, tags,
