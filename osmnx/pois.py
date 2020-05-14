@@ -463,7 +463,8 @@ def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=N
                 poi_ways[result['id']] = poi_area
 
         elif result['type'] == 'relation':
-            # Add relation to a relation list (needs to be parsed after all nodes and ways have been parsed)
+            # Add relation to a relation list (needs to be parsed after 
+            # all nodes and ways have been parsed)
             relations.append(result)
 
     # Create GeoDataFrames
@@ -479,7 +480,9 @@ def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=N
     # Combine GeoDataFrames
     gdf = gdf_nodes.append(gdf_ways, sort=False)
 
-    if polygon:
+    # if caller requested pois within a polygon, only retain those that
+    # fall within the polygon
+    if polygon and len(gdf) > 0:
         gdf = gdf.loc[gdf['geometry'].centroid.within(polygon)==True]
 
     return gdf
