@@ -294,7 +294,6 @@ def responses_to_dicts(responses, footprint_type):
                 # add relations not individually tagged with footprint_type to the untagged_footprints set
                 if ('tags' not in element) or (footprint_type not in element['tags']):
                     untagged_footprints.add(element['id'])
-            # Log any other Elements found in the response
             else:
                 utils.log('Element {} is not a node, way or relation'.format(element['id']))
 

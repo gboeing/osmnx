@@ -12,6 +12,7 @@ import bz2
 import json
 import logging as lg
 import networkx as nx
+import numpy as np
 import os
 import pandas as pd
 import pytest
@@ -96,6 +97,8 @@ def test_logging():
     ox.log('test a fake error', level=lg.ERROR)
 
     ox.citation()
+    ox.ts(style='date')
+    ox.ts(style='time')
 
 
 def test_geometry_coords_rounding():
@@ -159,8 +162,16 @@ def test_graph_from_file():
 
 
 def test_routing_folium():
+    
     # calculate shortest path and plot as static image and leaflet web map
     G = ox.graph_from_address(address=address, distance=500, distance_type='bbox', network_type='bike')
+    
+    # give each node a random elevation then calculate edge grades
+    rando = np.random.random(size=len(G.nodes()))
+    elevs = {n:e for n, e in zip(G.nodes(), rando)}
+    nx.set_node_attributes(G, name='elevation', values=elevs)
+    G = ox.add_edge_grades(G, add_absolute=True)
+
     orig_node = list(G.nodes())[5]
     dest_node = list(G.nodes())[-5]
     orig_pt = (G.nodes[orig_node]['y'], G.nodes[orig_node]['x'])
@@ -361,7 +372,7 @@ def test_get_network_methods():
     G = ox.graph_from_place([place1], network_type='drive', clean_periphery=False)
 
     # graph from polygon
-    G = ox.graph_from_polygon(polygon, network_type='walk')
+    G = ox.graph_from_polygon(polygon, network_type='walk', truncate_by_edge=True)
 
     # test custom query filter
     cf = ('["area"!~"yes"]'
@@ -386,6 +397,7 @@ def test_stats():
     G_proj = ox.project_graph(G)
 
     # calculate stats
+    stats = ox.basic_stats(G)
     stats = ox.basic_stats(G, area=1000)
     stats = ox.basic_stats(G_proj, area=1000, clean_intersects=True, tolerance=15, circuity_dist='euclidean')
 

@@ -305,8 +305,7 @@ def save_as_osm(
             else:
 
                 # topological sort
-                ordered_nodes = get_unique_nodes_ordered_from_way(
-                    all_way_edges)
+                ordered_nodes = get_unique_nodes_ordered_from_way(all_way_edges)
 
                 for node in ordered_nodes:
                     etree.SubElement(edge, 'nd', attrib={'ref': node})

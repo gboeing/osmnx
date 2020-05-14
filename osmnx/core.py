@@ -93,8 +93,7 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
         utils.log('Created GeoDataFrame with {} row for query "{}"'.format(len(gdf), query))
         return gdf
     else:
-        # if there was no data returned (or fewer results than which_result
-        # specified)
+        # if no data returned (or fewer results than which_result)
         utils.log('OSM returned no results (or fewer than which_result) for query "{}"'.format(query), level=lg.WARNING)
         gdf = gpd.GeoDataFrame()
         gdf.gdf_name = gdf_name

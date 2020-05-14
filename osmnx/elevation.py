@@ -90,7 +90,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
 
 
 
-def add_edge_grades(G, add_absolute=True): # pragma: no cover
+def add_edge_grades(G, add_absolute=True):
     """
     Get the directed grade (ie, rise over run) for each edge in the network and
     add it to the edge as an attribute. Nodes must have elevation attributes to

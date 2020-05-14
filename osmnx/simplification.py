@@ -317,7 +317,11 @@ def clean_intersections(G, tolerance=10, dead_ends=False,
           'removed in the next release. Use the new `consolidate_intersections` ' \
           'function instead.'
     warn(msg)
-    return consolidate_intersections(G, tolerance=tolerance, dead_ends=dead_ends)
+    return consolidate_intersections(G,
+                                     tolerance=tolerance,
+                                     dead_ends=dead_ends,
+                                     rebuild_graph=rebuild_graph,
+                                     update_edge_lengths=update_edge_lengths)
 
 
 

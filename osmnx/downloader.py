@@ -241,9 +241,9 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
         response = requests.get(settings.overpass_endpoint.rstrip('/') + '/status', headers=get_http_headers())
         status = response.text.split('\n')[3]
         status_first_token = status.split(' ')[0]
+    # if we cannot reach the status endpoint or parse its output, log an
+    # error and return default duration
     except Exception:
-        # if we cannot reach the status endpoint or parse its output, log an
-        # error and return default duration
         utils.log('Unable to query {}/status'.format(settings.overpass_endpoint.rstrip('/')), level=lg.ERROR)
         return default_duration
 
@@ -261,14 +261,12 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
             pause_duration = max(pause_duration, 1)
 
         # if first token is 'Currently', it is currently running a query so
-        # check back in recursive_delay seconds
+        # check back in recursive_delay seconds. any other status is unrecognized,
+        # log an error and return default duration
         elif status_first_token == 'Currently':
             time.sleep(recursive_delay)
             pause_duration = get_pause_duration()
-
         else:
-            # any other status is unrecognized - log an error and return default
-            # duration
             utils.log('Unrecognized server status: "{}"'.format(status), level=lg.ERROR)
             return default_duration
 
@@ -379,12 +377,7 @@ def nominatim_request(params, type="search", pause_duration=1, timeout=30, error
             # nominatim_request until we get a valid response
             if response.status_code in [429, 504]:
                 # pause for error_pause_duration seconds before re-trying request
-                utils.log(
-                    'Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(
-                        domain,
-                        response.status_code,
-                        error_pause_duration),
-                    level=lg.WARNING)
+                utils.log('Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(domain, response.status_code, error_pause_duration), level=lg.WARNING)
                 time.sleep(error_pause_duration)
                 response_json = nominatim_request(params=params, pause_duration=pause_duration, timeout=timeout)
 
@@ -450,27 +443,20 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
             if 'remark' in response_json:
                 utils.log('Server remark: "{}"'.format(response_json['remark'], level=lg.WARNING))
             save_to_cache(prepared_url, response_json)
+        
+        # 429 is 'too many requests' and 504 is 'gateway timeout' from server
+        # overload - handle these errors by recursively calling overpass_request
+        # after a pause until we get a valid response
         except Exception:
-            # 429 is 'too many requests' and 504 is 'gateway timeout' from server
-            # overload - handle these errors by recursively calling
-            # overpass_request until we get a valid response
             if response.status_code in [429, 504]:
-                # pause for error_pause_duration seconds before re-trying request
                 if error_pause_duration is None:
                     error_pause_duration = get_pause_duration()
-                utils.log(
-                    'Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(
-                        domain,
-                        response.status_code,
-                        error_pause_duration),
-                    level=lg.WARNING)
+                utils.log('Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(domain, response.status_code, error_pause_duration), level=lg.WARNING)
                 time.sleep(error_pause_duration)
                 response_json = overpass_request(data=data, pause_duration=pause_duration, timeout=timeout)
-
             # else, this was an unhandled status_code, throw an exception
             else:
-                utils.log('Server at {} returned status code {} and no JSON data'.format(domain, response.status_code),
-                    level=lg.ERROR)
+                utils.log('Server at {} returned status code {} and no JSON data'.format(domain, response.status_code), level=lg.ERROR)
                 raise Exception(
                     'Server returned no JSON data.\n{} {}\n{}'.format(response, response.reason, response.text))
 
