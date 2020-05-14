@@ -19,7 +19,7 @@ from shapely import wkt
 from xml.etree import ElementTree as etree
 
 from . import settings
-from .utils import make_str, log, get_unique_nodes_ordered_from_way
+from .utils import log, get_unique_nodes_ordered_from_way
 
 
 def save_gdf_shapefile(gdf, filename=None, folder=None):
@@ -53,7 +53,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
 
     # make everything but geometry column a string
     for col in [c for c in gdf.columns if not c == 'geometry']:
-        gdf[col] = gdf[col].fillna('').map(make_str)
+        gdf[col] = gdf[col].fillna('').astype(str)
 
     # if the save folder does not already exist, create it with a filename
     # subfolder
@@ -146,7 +146,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
 
     # make everything but geometry column a string
     for col in [c for c in gdf_nodes.columns if not c == 'geometry']:
-        gdf_nodes[col] = gdf_nodes[col].fillna('').map(make_str)
+        gdf_nodes[col] = gdf_nodes[col].fillna('').astype(str)
 
     # create a list to hold our edges, then loop through each edge in the graph
     edges = []
@@ -172,7 +172,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
 
     # make everything but geometry column a string
     for col in [c for c in gdf_edges.columns if not c == 'geometry']:
-        gdf_edges[col] = gdf_edges[col].fillna('').map(make_str)
+        gdf_edges[col] = gdf_edges[col].fillna('').astype(str)
 
     # if the save folder does not already exist, create it with a filename
     # subfolder
@@ -409,7 +409,7 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
         # if not gephi, keep graph attrs and stringify them
         for dict_key in G_save.graph:
             # convert all the graph attribute values to strings
-            G_save.graph[dict_key] = make_str(G_save.graph[dict_key])
+            G_save.graph[dict_key] = str(G_save.graph[dict_key])
 
     # stringify node and edge attributes
     for _, data in G_save.nodes(data=True):
@@ -419,12 +419,12 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
                 continue
             else:
                 # convert all the node attribute values to strings
-                data[dict_key] = make_str(data[dict_key])
+                data[dict_key] = str(data[dict_key])
 
     for _, _, data in G_save.edges(keys=False, data=True):
         for dict_key in data:
             # convert all the edge attribute values to strings
-            data[dict_key] = make_str(data[dict_key])
+            data[dict_key] = str(data[dict_key])
 
     if not os.path.exists(folder):
         os.makedirs(folder)
