@@ -37,7 +37,7 @@ dependencies:
   - cython=0.29.17=py38h7ae7562_0
   - decorator=4.4.2=py_0
   - defusedxml=0.6.0=py_0
-  - deprecated=1.2.8=pyh9f0ad1d_0
+  - deprecated=1.2.10=pyh9f0ad1d_0
   - descartes=1.1.0=py_4
   - dill=0.3.1.1=py38h32f6830_1
   - docopt=0.6.2=py_1
@@ -46,13 +46,13 @@ dependencies:
   - expat=2.2.9=he025d50_2
   - fiona=1.8.13=py38h41bf4fa_1
   - folium=0.11.0=py_0
-  - freetype=2.10.1=ha9979f8_0
+  - freetype=2.10.2=hd328e21_0
   - freexl=1.0.5=hd288d7e_1002
   - future=0.18.2=py38h32f6830_1
   - gdal=3.0.4=py38h3ba59e7_9
   - geographiclib=1.50=py_0
   - geopandas=0.7.0=py_1
-  - geopy=1.21.0=py_0
+  - geopy=1.22.0=pyh9f0ad1d_0
   - geos=3.8.1=he025d50_0
   - geotiff=1.5.1=h3d29ae3_10
   - gettext=0.19.8.1=hb01d8f6_1002
@@ -184,11 +184,11 @@ dependencies:
   - requests=2.23.0=pyh8c360ce_2
   - requests-toolbelt=0.9.1=py_0
   - rtree=0.9.4=py38h7ad75cc_1
-  - scikit-learn=0.22.2.post1=py38h7208079_0
+  - scikit-learn=0.23.0=py38ha1d60b4_0
   - scipy=1.3.2=py38h582fac2_0
   - seaborn=0.10.1=py_0
   - send2trash=1.5.0=py_0
-  - setuptools=46.2.0=py38h32f6830_0
+  - setuptools=46.3.0=py38h32f6830_0
   - shapely=1.7.0=py38hbf43935_3
   - six=1.14.0=py_1
   - snowballstemmer=2.0.0=py_0
@@ -206,6 +206,7 @@ dependencies:
   - tbb=2018.0.5=he980bc4_0
   - terminado=0.8.3=py38h32f6830_1
   - testpath=0.4.4=py_0
+  - threadpoolctl=2.0.0=pyh5ca1d4c_0
   - tiledb=1.7.7=h0b90766_1
   - tk=8.6.10=hfa6e2cd_0
   - tornado=6.0.4=py38hfa6e2cd_0
@@ -238,5 +239,5 @@ dependencies:
     - pyqtchart==5.12
     - pyqtwebengine==5.12.1
     - python-igraph==0.7.1.post6
-prefix: C:\Users\Geoff\miniconda3\envs\ox
+prefix: C:\Anaconda\envs\ox
 
