@@ -40,30 +40,30 @@ def induce_subgraph(G, node_subset):
 
     Returns
     -------
-    G2 : networkx multidigraph
+    H : networkx multidigraph
         the subgraph of G induced by node_subset
     """
 
     node_subset = set(node_subset)
 
     # copy nodes into new graph
-    G2 = G.__class__()
-    G2.add_nodes_from((n, G.nodes[n]) for n in node_subset)
+    H = G.__class__()
+    H.add_nodes_from((n, G.nodes[n]) for n in node_subset)
 
     # copy edges to new graph, including parallel edges
-    if G2.is_multigraph:
-        G2.add_edges_from((n, nbr, key, d)
+    if H.is_multigraph:
+        H.add_edges_from((n, nbr, key, d)
             for n, nbrs in G.adj.items() if n in node_subset
             for nbr, keydict in nbrs.items() if nbr in node_subset
             for key, d in keydict.items())
     else:
-        G2.add_edges_from((n, nbr, d)
+        H.add_edges_from((n, nbr, d)
             for n, nbrs in G.adj.items() if n in node_subset
             for nbr, d in nbrs.items() if nbr in node_subset)
 
     # update graph attribute dict, and return graph
-    G2.graph.update(G.graph)
-    return G2
+    H.graph.update(G.graph)
+    return H
 
 
 

@@ -63,7 +63,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
 
     if not hasattr(gdf, 'gdf_name'):
         gdf.gdf_name = 'unnamed'
-    utils.log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.gdf_name, filepath))
+    utils.log(f'Saved GeoDataFrame as shapefile "{filepath}"')
 
 
 
@@ -105,7 +105,7 @@ def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8
     # save the nodes and edges as GeoPackage layers
     gdf_nodes.to_file(filepath, layer='nodes', driver='GPKG', encoding=encoding)
     gdf_edges.to_file(filepath, layer='edges', driver='GPKG', encoding=encoding)
-    utils.log('Saved graph to disk as GeoPackage at "{}"'.format(filepath))
+    utils.log(f'Saved graph as GeoPackage "{filepath}"')
 
 
 
@@ -180,9 +180,9 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
         os.makedirs(filepath)
 
     # save the nodes and edges as separate ESRI shapefiles
-    gdf_nodes.to_file('{}/nodes'.format(filepath), encoding=encoding)
-    gdf_edges.to_file('{}/edges'.format(filepath), encoding=encoding)
-    utils.log('Saved graph "{}" to disk as shapefiles at "{}"'.format(G_save.name, filepath))
+    gdf_nodes.to_file(f'{filepath}/nodes', encoding=encoding)
+    gdf_edges.to_file(f'{filepath}/edges', encoding=encoding)
+    utils.log(f'Saved graph as shapefiles "{filepath}"')
 
 
 
@@ -354,9 +354,9 @@ def save_as_osm(
     if not os.path.exists(folder):
         os.makedirs(folder)
 
-    et.write(os.path.join(folder, filename))
-
-    utils.log('Saved graph to disk as OSM at "{}"'.format(os.path.join(folder, filename)))
+    filepath = os.path.join(folder, filename)
+    et.write(filepath)
+    utils.log(f'Saved graph to disk as .osm file "{filepath}"')
 
 
 
@@ -397,13 +397,12 @@ def get_unique_nodes_ordered_from_way(way_edges_df):
     G.add_edges_from(way_edges_df[['u', 'v']].values)
 
     # copy nodes into new graph
-    G2 = utils_graph.get_largest_component(G, strongly=False)
-    unique_ordered_nodes = list(nx.topological_sort(G2))
+    H = utils_graph.get_largest_component(G, strongly=False)
+    unique_ordered_nodes = list(nx.topological_sort(H))
     num_unique_nodes = len(np.unique(all_nodes))
 
     if len(unique_ordered_nodes) < num_unique_nodes:
-        utils.log('Recovered order for {0} of {1} nodes'.format(
-            len(unique_ordered_nodes), num_unique_nodes))
+        utils.log(f'Recovered order for {len(unique_ordered_nodes)} of {num_unique_nodes} nodes')
 
     return unique_ordered_nodes
 
@@ -477,7 +476,7 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
     filepath = os.path.join(folder, filename)
 
     nx.write_graphml(G_save, filepath)
-    utils.log('Saved graph to disk as GraphML at "{}"'.format(filepath))
+    utils.log(f'Saved graph as GraphML "{filepath}"')
 
 
 
@@ -571,9 +570,7 @@ def load_graphml(filename, folder=None, node_type=int):
     if 'edge_default' in G.graph:
         del G.graph['edge_default']
 
-    utils.log('Loaded graph with {:,} nodes and {:,} edges from "{}"'.format(len(list(G.nodes())),
-                                                                             len(list(G.edges())),
-                                                                             path))
+    utils.log(f'Loaded graph with {len(G)} nodes and {len(G.edges())} edges from "{path}"')
     return G
 
 

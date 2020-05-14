@@ -67,7 +67,7 @@ def create_poi_query(north, south, east, west, tags,
     if memory is None:
         maxsize = ''
     else:
-        maxsize = '[maxsize:{}]'.format(memory)
+        maxsize = f'[maxsize:{memory}]'
 
     # use custom settings if delivered, otherwise just the default ones.
     if custom_settings:
@@ -109,7 +109,7 @@ def create_poi_query(north, south, east, west, tags,
                 tags_list.append({key: value_item})
 
     # create query bounding box
-    bbox = '({s:.6f},{w:.6f},{n:.6f},{e:.6f})'.format(s=south, w=west, n=north, e=east)
+    bbox = f'({south:.6f},{west:.6f},{north:.6f},{east:.6f})'
 
     # add node/way/relation query components one at a time
     components = []
@@ -118,18 +118,17 @@ def create_poi_query(north, south, east, west, tags,
 
             if isinstance(value, bool):
                 # if bool (ie, True) just pass the key, no value
-                tag_str = '["{key}"]{bbox};(._;>;);'.format(key=key, bbox=bbox)
+                tag_str = f'["{key}"]{bbox};(._;>;);'
             else:
                 # otherwise, pass "key"="value"
-                tag_str = '["{key}"="{value}"]{bbox};(._;>;);'.format(key=key, value=value, bbox=bbox)
+                tag_str = f'["{key}"="{value}"]{bbox};(._;>;);'
 
             for kind in ['node', 'way', 'relation']:
-                components.append('({kind}{tag_str});'.format(kind=kind, tag_str=tag_str))
+                components.append(f'({kind}{tag_str});')
 
     # finalize query and return
     components = ''.join(components)
-    query = '{overpass_settings};({components});out;'
-    query = query.format(overpass_settings=overpass_settings, components=components)
+    query = f'{overpass_settings};({components});out;'
 
     return query
 
@@ -260,7 +259,7 @@ def parse_polygonal_poi(coords, response):
             return poi
 
         except Exception:
-            utils.log('Polygon has invalid geometry: {}'.format(nodes))
+            utils.log(f'Polygon has invalid geometry: {nodes}')
 
     return None
 
@@ -291,7 +290,7 @@ def parse_osm_node(response):
                 poi[tag] = response['tags'][tag]
 
     except Exception:
-        utils.log('Point has invalid geometry: {}'.format(response['id']))
+        utils.log(f'Point has invalid geometry: {response["id"]}')
 
     return poi
 
@@ -323,8 +322,7 @@ def invalid_multipoly_handler(gdf, relation, way_ids):
         return multipoly
 
     except Exception:
-        msg = 'Invalid geometry at relation "{}". Way IDs of the invalid MultiPolygon: {}'
-        utils.log(msg.format(relation['id'], way_ids))
+        msg = f'Invalid geometry at relation "{relation["id"]}", way IDs: {way_ids}'
         return None
 
 
@@ -385,9 +383,9 @@ def parse_osm_relations(relations, osm_way_df):
                     # Remove such 'ways' from 'osm_way_df' that are part of the 'relation'
                     osm_way_df = osm_way_df.drop(member_way_ids)
         except Exception as e:
-            utils.log('Could not parse OSM relation {}'.format(relation['id']))
+            utils.log(f'Could not parse OSM relation {relation["id"]}')
 
-    # Merge 'osm_way_df' and the 'gdf_relations'
+    # Merge osm_way_df and the gdf_relations
     osm_way_df = osm_way_df.append(gdf_relations, sort=False)
     return osm_way_df
 

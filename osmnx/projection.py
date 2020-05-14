@@ -116,7 +116,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
             # if to_latlong is True, project the gdf to latlong
             latlong_crs = settings.default_crs
             projected_gdf = gdf.to_crs(latlong_crs)
-            utils.log('Projected the GeoDataFrame "{}" to default_crs'.format(gdf.gdf_name))
+            utils.log('Projected GeoDataFrame to settings.default_crs')
         else:
             # else, project the gdf to UTM
             # if GeoDataFrame is already in UTM, just return it
@@ -130,11 +130,11 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
             # calculate the UTM zone from this avg longitude and define the UTM
             # CRS to project
             utm_zone = int(math.floor((avg_longitude + 180) / 6.) + 1)
-            utm_crs = '+proj=utm +zone={} +ellps=WGS84 +datum=WGS84 +units=m +no_defs'.format(utm_zone)
+            utm_crs = f'+proj=utm +zone={utm_zone} +ellps=WGS84 +datum=WGS84 +units=m +no_defs'
 
             # project the GeoDataFrame to the UTM CRS
             projected_gdf = gdf.to_crs(utm_crs)
-            utils.log('Projected the GeoDataFrame "{}" to UTM-{}'.format(gdf.gdf_name, utm_zone))
+            utils.log(f'Projected GeoDataFrame to UTM-{utm_zone}')
 
     projected_gdf.gdf_name = gdf.gdf_name
     return projected_gdf
@@ -164,7 +164,7 @@ def project_graph(G, to_crs=None):
     nodes, data = zip(*G_proj.nodes(data=True))
     gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
     gdf_nodes.crs = G_proj.graph['crs']
-    gdf_nodes.gdf_name = '{}_nodes'.format(G_proj.name)
+    gdf_nodes.gdf_name = f'{G_proj.name}_nodes'
 
     # create new lat/lon columns just to save that data for later reference
     # if they do not already exist (i.e., don't overwrite in subsequent re-projections)
@@ -193,7 +193,7 @@ def project_graph(G, to_crs=None):
     if len(edges_with_geom) > 0:
         gdf_edges = gpd.GeoDataFrame(edges_with_geom)
         gdf_edges.crs = G_proj.graph['crs']
-        gdf_edges.gdf_name = '{}_edges'.format(G_proj.name)
+        gdf_edges.gdf_name = f'{G_proj.name}_edges'
         gdf_edges_utm = project_gdf(gdf_edges, to_crs=to_crs)
 
     # extract projected x and y values from the nodes' geometry column
@@ -226,7 +226,7 @@ def project_graph(G, to_crs=None):
     # set the graph's CRS attribute to the new, projected CRS and return the
     # projected graph
     G_proj.graph['crs'] = gdf_nodes_utm.crs
-    G_proj.graph['name'] = '{}_UTM'.format(graph_name)
+    G_proj.graph['name'] = f'{graph_name}_proj'
     if 'streets_per_node' in G.graph:
         G_proj.graph['streets_per_node'] = G.graph['streets_per_node']
     utils.log('Rebuilt projected graph')
