@@ -474,3 +474,9 @@ def test_overpass_endpoint():
         G = ox.graph_from_place('Piedmont, California, USA')
 
     ox.config(overpass_endpoint='http://overpass-api.de/api')
+
+
+
+# all done, remove temp directory
+if os.path.exists('.temp'):
+    shutil.rmtree('.temp')
