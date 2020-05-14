@@ -14,17 +14,14 @@ from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
 from shapely.ops import polygonize
-
+from . import core
+from . import downloader
+from . import plot
+from . import projection
 from . import settings
-from .utils_geo import bbox_from_point
-from .utils_geo import consolidate_subdivide_geometry
-from .core import gdf_from_place
-from .utils_geo import get_polygons_coordinates
-from .downloader import overpass_request
-from .utils_geo import geocode
-from .plot import save_and_show
-from .projection import project_geometry
-from .utils import log
+from . import utils
+from . import utils_geo
+
 
 
 def osm_footprints_download(polygon=None, north=None, south=None, east=None, west=None,
@@ -93,13 +90,13 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
     if by_bbox:
         # turn bbox into a polygon and project to local UTM
         polygon = Polygon([(west, south), (east, south), (east, north), (west, north)])
-        geometry_proj, crs_proj = project_geometry(polygon)
+        geometry_proj, crs_proj = projection.project_geometry(polygon)
 
         # subdivide it if it exceeds the max area size (in meters), then project
         # back to lat-long
-        geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
-        geometry, _ = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
-        log('Requesting footprints data within bounding box from API in {:,} request(s)'.format(len(geometry)))
+        geometry_proj_consolidated_subdivided = utils_geo.consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        geometry, _ = projection.project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
+        utils.log('Requesting footprints data within bounding box from API in {:,} request(s)'.format(len(geometry)))
         start_time = time.time()
 
         # loop through each polygon rectangle in the geometry (there will only
@@ -116,20 +113,20 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
                               '(._;>;);););out;')
             query_str = query_template.format(north=north, south=south, east=east, west=west, timeout=timeout,
                                               maxsize=maxsize, footprint_type=footprint_type, overpass_settings=overpass_settings)
-            response_json = overpass_request(data={'data':query_str}, timeout=timeout)
+            response_json = downloader.overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within bounding box from '
                'API in {:,} request(s) and {:,.2f} seconds')
-        log(msg.format(len(geometry), time.time()-start_time))
+        utils.log(msg.format(len(geometry), time.time()-start_time))
 
     elif by_poly:
         # project to utm, divide polygon up into sub-polygons if area exceeds a
         # max size (in meters), project back to lat-long, then get a list of polygon(s) exterior coordinates
-        geometry_proj, crs_proj = project_geometry(polygon)
-        geometry_proj_consolidated_subdivided = consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
-        geometry, _ = project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
-        polygon_coord_strs = get_polygons_coordinates(geometry)
-        log('Requesting footprint data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
+        geometry_proj, crs_proj = projection.project_geometry(polygon)
+        geometry_proj_consolidated_subdivided = utils_geo.consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        geometry, _ = projection.project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
+        polygon_coord_strs = utils_geo.get_polygons_coordinates(geometry)
+        utils.log('Requesting footprint data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
         start_time = time.time()
 
         # pass each polygon exterior coordinates in the list to the API, one at
@@ -140,11 +137,11 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
                               'relation(poly:"{polygon}")["{footprint_type}"];(._;>;););out;')
             query_str = query_template.format(polygon=polygon_coord_str, timeout=timeout, maxsize=maxsize,
                                               footprint_type=footprint_type, overpass_settings=overpass_settings)
-            response_json = overpass_request(data={'data':query_str}, timeout=timeout)
+            response_json = downloader.overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
         msg = ('Got all footprint data within polygon from API in '
                '{:,} request(s) and {:,.2f} seconds')
-        log(msg.format(len(polygon_coord_strs), time.time()-start_time))
+        utils.log(msg.format(len(polygon_coord_strs), time.time()-start_time))
 
     return response_jsons
 
@@ -212,7 +209,7 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
         try:
             del footprints[untagged_way]
         except KeyError:
-            log('untagged_way {} not found in footprints dict'.format(untagged_way))
+            utils.log('untagged_way {} not found in footprints dict'.format(untagged_way))
 
     # Convert footprints dictionary to a GeoDataFrame
     gdf = gpd.GeoDataFrame.from_dict(footprints, orient='index')
@@ -302,7 +299,7 @@ def responses_to_dicts(responses, footprint_type):
                     untagged_footprints.add(element['id'])
             # Log any other Elements found in the response
             else:
-                log('Element {} is not a node, way or relation'.format(element['id']))
+                utils.log('Element {} is not a node, way or relation'.format(element['id']))
 
     return vertices, footprints, relations, untagged_footprints
 
@@ -333,13 +330,13 @@ def create_footprint_geometry(footprint_key, footprint_val, vertices):
         try:
             footprint_geometry = Polygon([(vertices[node]['lon'], vertices[node]['lat']) for node in footprint_val['nodes']])
         except Exception:
-            log('Polygon has invalid geometry: {}'.format(footprint_key))
+            utils.log('Polygon has invalid geometry: {}'.format(footprint_key))
     # OPEN WAYS    
     else:
         try:
             footprint_geometry = LineString([(vertices[node]['lon'], vertices[node]['lat']) for node in footprint_val['nodes']])
         except Exception:
-            log('LineString has invalid geometry: {}'.format(footprint_key))
+            utils.log('LineString has invalid geometry: {}'.format(footprint_key))
 
     return footprint_geometry
 
@@ -402,7 +399,7 @@ def create_relation_geometry(relation_key, relation_val, footprints):
         try:
             result = list(polygonize(outer_lines))
         except Exception:
-            log("polygonize failed for 'outer' ways in relation: {}".format(relation_key))
+            utils.log("polygonize failed for 'outer' ways in relation: {}".format(relation_key))
         else:
             outer_polys += result
 
@@ -411,15 +408,15 @@ def create_relation_geometry(relation_key, relation_val, footprints):
         try:
             result = list(polygonize(inner_lines))
         except Exception:
-            log("polygonize failed for 'inner' ways in relation: {}".format(relation_key))
+            utils.log("polygonize failed for 'inner' ways in relation: {}".format(relation_key))
         else:
             inner_polys += result
 
     # filter out relations missing both 'outer' and 'inner' polygons or just 'outer'
     if len(outer_polys + inner_polys) == 0:
-        log("Relation {} missing 'outer' and 'inner' closed ways".format(relation_key))
+        utils.log("Relation {} missing 'outer' and 'inner' closed ways".format(relation_key))
     elif len(outer_polys) == 0:
-        log("Relation {} missing 'outer' closed ways".format(relation_key))
+        utils.log("Relation {} missing 'outer' closed ways".format(relation_key))
     # process the others to multipolygons
     else:
         for outer_poly in outer_polys:
@@ -437,7 +434,7 @@ def create_relation_geometry(relation_key, relation_val, footprints):
     elif len(multipoly) > 1:    
         return MultiPolygon(multipoly)
     else:
-        log('relation {} could not be converted to a complex footprint'.format(relation_key))
+        utils.log('relation {} could not be converted to a complex footprint'.format(relation_key))
 
 
 def footprints_from_point(point, distance, footprint_type='building', retain_invalid=False,
@@ -470,7 +467,7 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
     geopandas.GeoDataFrame
     """
 
-    bbox = bbox_from_point(point=point, distance=distance)
+    bbox = utils_geo.bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
     return create_footprints_gdf(north=north, south=south, east=east, west=west,
                                  footprint_type=footprint_type, retain_invalid=retain_invalid,
@@ -508,7 +505,7 @@ def footprints_from_address(address, distance, footprint_type='building', retain
     """
 
     # geocode the address string to a (lat, lon) point
-    point = geocode(query=address)
+    point = utils_geo.geocode(query=address)
 
     # get footprints within distance of this point
     return footprints_from_point(point, distance, footprint_type=footprint_type,
@@ -584,7 +581,7 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
     geopandas.GeoDataFrame
     """
 
-    city = gdf_from_place(place, which_result=which_result)
+    city = core.gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
     return create_footprints_gdf(polygon, retain_invalid=retain_invalid,
                                  footprint_type=footprint_type, timeout=timeout,
@@ -667,7 +664,7 @@ def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcol
     ax.set_aspect('equal')
     fig.canvas.draw()
 
-    fig, ax = save_and_show(fig=fig, ax=ax, save=save, show=show, close=close,
+    fig, ax = plot.save_and_show(fig=fig, ax=ax, save=save, show=show, close=close,
                             filename=filename, file_format=file_format, dpi=dpi, axis_off=True)
 
     return fig, ax

@@ -5,27 +5,23 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-import time
-import os
 import json
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-from matplotlib.collections import LineCollection
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+import pandas as pd
+import time
 from descartes import PolygonPatch
-from shapely.geometry import Polygon
+from matplotlib.collections import LineCollection
 from shapely.geometry import MultiPolygon
-
+from shapely.geometry import Polygon
+from . import core
 from . import settings
-from .core import graph_from_address
-from .core import graph_from_point
-from .utils_geo import bbox_from_point
-from .projection import project_graph
-from .utils_graph import graph_to_gdfs
-from .simplification import simplify_graph
-from .utils import log
-
+from . import simplification
+from . import utils
+from . import utils_geo
+from . import utils_graph
 
 # folium is an optional dependency for the folium plotting functions
 try:
@@ -267,13 +263,13 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
             else:
                 extent = 'tight'
             fig.savefig(path_filename, dpi=dpi, bbox_inches=extent, format=file_format, facecolor=fig.get_facecolor(), transparent=True)
-        log('Saved the figure to disk in {:,.2f} seconds'.format(time.time()-start_time))
+        utils.log('Saved the figure to disk in {:,.2f} seconds'.format(time.time()-start_time))
 
     # show the figure if specified
     if show:
         start_time = time.time()
         plt.show()
-        log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
+        utils.log('Showed the plot in {:,.2f} seconds'.format(time.time()-start_time))
     # if show=False, close the figure if close=True to prevent display
     elif close:
         plt.close()
@@ -353,14 +349,14 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     fig, ax : tuple
     """
 
-    log('Begin plotting the graph...')
+    utils.log('Begin plotting the graph...')
     node_Xs = [float(x) for _, x in G.nodes(data='x')]
     node_Ys = [float(y) for _, y in G.nodes(data='y')]
 
     # get north, south, east, west values either from bbox parameter or from the
     # spatial extent of the edges' geometries
     if bbox is None:
-        edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+        edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
         west, south, east, north = edges.total_bounds
     else:
         north, south, east, west = bbox
@@ -397,7 +393,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     # add the lines to the axis as a linecollection
     lc = LineCollection(lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=2)
     ax.add_collection(lc)
-    log('Drew the graph edges in {:,.2f} seconds'.format(time.time()-start_time))
+    utils.log('Drew the graph edges in {:,.2f} seconds'.format(time.time()-start_time))
 
     # scatter plot the nodes
     ax.scatter(node_Xs, node_Ys, s=node_size, c=node_color, alpha=node_alpha, edgecolor=node_edgecolor, zorder=node_zorder)
@@ -850,7 +846,7 @@ def plot_graph_folium(G, graph_map=None, popup_attribute=None,
         raise ImportError('The folium package must be installed to use this optional feature.')
 
     # create gdf of the graph edges
-    gdf_edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
 
     # get graph centroid
     x, y = gdf_edges.unary_union.centroid.xy
@@ -914,7 +910,7 @@ def plot_route_folium(G, route, route_map=None, popup_attribute=None,
         raise ImportError('The folium package must be installed to use this optional feature.')
 
     # create gdf of the route edges
-    gdf_edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
     route_nodes = list(zip(route[:-1], route[1:]))
     index = [gdf_edges[(gdf_edges['u']==u) & (gdf_edges['v']==v)].index[0] for u, v in route_nodes]
     gdf_route_edges = gdf_edges.loc[index]
@@ -1002,7 +998,7 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
     # if G was passed-in, use this graph in the plot, centered on the centroid
     # of its nodes
     if G is not None:
-        gdf_nodes = graph_to_gdfs(G, edges=False, node_geometry=True)
+        gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=True)
         lnglat_point = gdf_nodes.unary_union.centroid.coords[0]
         point = tuple(reversed(lnglat_point))
 
@@ -1011,13 +1007,13 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
     # enough network. simplify in non-strict mode to not combine multiple street
     # types into single edge
     elif address is not None:
-        G, point = graph_from_address(address, distance=dist*multiplier, distance_type='bbox', network_type=network_type,
+        G, point = core.graph_from_address(address, distance=dist*multiplier, distance_type='bbox', network_type=network_type,
                                       simplify=False, truncate_by_edge=True, return_coords=True)
-        G = simplify_graph(G, strict=False)
+        G = simplification.simplify_graph(G, strict=False)
     elif point is not None:
-        G = graph_from_point(point, distance=dist*multiplier, distance_type='bbox', network_type=network_type,
+        G = core.graph_from_point(point, distance=dist*multiplier, distance_type='bbox', network_type=network_type,
                              simplify=False, truncate_by_edge=True)
-        G = simplify_graph(G, strict=False)
+        G = simplification.simplify_graph(G, strict=False)
     else:
         raise ValueError('You must pass an address or lat-long point or graph.')
 
@@ -1084,7 +1080,7 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
 
     # define the spatial extents of the plotting figure to make it square, in
     # projected units, and cropped to the desired area
-    bbox = bbox_from_point(point, dist, project_utm=False)
+    bbox = utils_geo.bbox_from_point(point, dist, project_utm=False)
 
     # create a filename if one was not passed
     if filename is None and save:
