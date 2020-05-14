@@ -16,7 +16,7 @@ from shapely.geometry import Polygon
 
 from .geo_utils import count_streets_per_node
 from .projection import project_graph
-from .save_load import graph_to_gdfs
+from .geo_utils import graph_to_gdfs
 from .utils import log
 
 
