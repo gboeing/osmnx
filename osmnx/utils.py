@@ -13,6 +13,7 @@ import unicodedata
 from . import settings
 
 
+
 def citation():
     """
     Print the OSMnx package's citation information.
@@ -246,6 +247,7 @@ def log(message, level=None, name=None, filename=None):
         message = unicodedata.normalize('NFKD', str(message)).encode('ascii', errors='replace').decode()
         print(message)
         sys.stdout = standard_out
+
 
 
 def get_logger(level=None, name=None, filename=None):

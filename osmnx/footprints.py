@@ -143,6 +143,7 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
     return response_jsons
 
 
+
 def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None,
                           footprint_type='building', retain_invalid=False, responses=None,
                           timeout=180, memory=None, custom_settings=None):
@@ -220,6 +221,7 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
         gdf = gdf[filter_combined]
 
     return gdf
+
 
 
 def responses_to_dicts(responses, footprint_type):
@@ -300,6 +302,7 @@ def responses_to_dicts(responses, footprint_type):
     return vertices, footprints, relations, untagged_footprints
 
 
+
 def create_footprint_geometry(footprint_key, footprint_val, vertices):
     """
     Create Shapely geometry for open or closed ways in the initial footprints dictionary.
@@ -335,6 +338,7 @@ def create_footprint_geometry(footprint_key, footprint_val, vertices):
             utils.log('LineString has invalid geometry: {}'.format(footprint_key))
 
     return footprint_geometry
+
 
 
 def create_relation_geometry(relation_key, relation_val, footprints):
@@ -433,6 +437,7 @@ def create_relation_geometry(relation_key, relation_val, footprints):
         utils.log('relation {} could not be converted to a complex footprint'.format(relation_key))
 
 
+
 def footprints_from_point(point, distance, footprint_type='building', retain_invalid=False,
                           timeout=180, memory=None, custom_settings=None):
     """
@@ -468,6 +473,7 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
     return create_footprints_gdf(north=north, south=south, east=east, west=west,
                                  footprint_type=footprint_type, retain_invalid=retain_invalid,
                                  timeout=timeout, memory=memory, custom_settings=custom_settings)
+
 
 
 def footprints_from_address(address, distance, footprint_type='building', retain_invalid=False,
@@ -509,6 +515,7 @@ def footprints_from_address(address, distance, footprint_type='building', retain
                                  memory=memory, custom_settings=custom_settings)
 
 
+
 def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=False,
                             timeout=180, memory=None, custom_settings=None):
     """
@@ -540,6 +547,7 @@ def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=F
     return create_footprints_gdf(polygon=polygon, footprint_type=footprint_type,
                                  retain_invalid=retain_invalid, timeout=timeout,
                                  memory=memory, custom_settings=custom_settings)
+
 
 
 def footprints_from_place(place, footprint_type='building', retain_invalid=False, which_result=1,
@@ -582,6 +590,7 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
     return create_footprints_gdf(polygon, retain_invalid=retain_invalid,
                                  footprint_type=footprint_type, timeout=timeout,
                                  memory=memory, custom_settings=custom_settings)
+
 
 
 def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w',

@@ -228,6 +228,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
     return stats
 
 
+
 def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=False):
     """
     Calculate extended topological stats and metrics for a graph.

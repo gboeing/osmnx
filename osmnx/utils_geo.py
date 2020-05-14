@@ -35,8 +35,6 @@ except ImportError as e:
 
 
 
-
-
 def geocode(query):
     """
     Geocode a query string to (lat, lon) with the Nominatim geocoder.
@@ -110,6 +108,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     # return distance in units of earth_radius
     distance = arc * earth_radius
     return distance
+
 
 
 def euclidean_dist_vec(y1, x1, y2, x2):
@@ -344,6 +343,7 @@ def get_nearest_nodes(G, X, Y, method=None):
     return np.array(nn)
 
 
+
 def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     """
     Return the graph edges nearest to a list of points. Pass in points
@@ -465,6 +465,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     return np.array(ne)
 
 
+
 def redistribute_vertices(geom, dist):
     """
     Redistribute the vertices on a projected LineString or MultiLineString. The distance
@@ -496,6 +497,7 @@ def redistribute_vertices(geom, dist):
         return type(geom)([p for p in parts if not p])
     else:
         raise ValueError('unhandled geometry {}'.format(geom.geom_type))
+
 
 
 def get_bearing(origin_point, destination_point):
@@ -566,8 +568,6 @@ def add_edge_bearings(G):
             data['bearing'] = round(bearing, 3)
 
     return G
-
-
 
 
 
@@ -792,6 +792,7 @@ def consolidate_subdivide_geometry(geometry, max_query_area_size):
     return geometry
 
 
+
 def get_polygons_coordinates(geometry):
     """
     Extract exterior coordinates from polygon(s) to pass to OSM in a query by
@@ -832,9 +833,6 @@ def get_polygons_coordinates(geometry):
         polygon_coord_strs.append(s.strip(separator))
 
     return polygon_coord_strs
-
-
-
 
 
 
@@ -881,6 +879,7 @@ def quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9)
     multipoly = geometry.difference(quadrats)
 
     return multipoly
+
 
 
 def intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
@@ -951,7 +950,6 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffe
 
 
 
-
 def bbox_from_point(point, distance=1000, project_utm=False, return_crs=False):
     """
     Create a bounding box some distance in each direction (north, south, east,
@@ -997,6 +995,7 @@ def bbox_from_point(point, distance=1000, project_utm=False, return_crs=False):
         return north, south, east, west
 
 
+
 def add_edge_lengths(G):
     """
     Add length (meters) attribute to each edge by great circle distance between
@@ -1034,6 +1033,7 @@ def add_edge_lengths(G):
 
     utils.log('Added edge lengths to graph')
     return G
+
 
 
 def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', retain_all=False):
@@ -1076,6 +1076,7 @@ def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', reta
         G = utils_graph.get_largest_component(G)
 
     return G
+
 
 
 def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, retain_all=False):
@@ -1145,9 +1146,6 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
         G = utils_graph.get_largest_component(G)
 
     return G
-
-
-
 
 
 

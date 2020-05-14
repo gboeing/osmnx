@@ -66,6 +66,7 @@ def induce_subgraph(G, node_subset):
     return G2
 
 
+
 def get_largest_component(G, strongly=False):
     """
     Return a subgraph of the largest weakly or strongly connected component
@@ -220,8 +221,6 @@ def count_streets_per_node(G, nodes=None):
 
 
 
-
-
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
     """
     Convert a graph into node and/or edge GeoDataFrames
@@ -302,6 +301,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         return to_return[0]
 
 
+
 def gdfs_to_graph(gdf_nodes, gdf_edges):
     """
     Convert node and edge GeoDataFrames into a graph
@@ -341,7 +341,6 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
 
 
 
-
 def remove_isolated_nodes(G):
     """
     Remove from a graph all the nodes that have no incident edges (ie, node
@@ -361,11 +360,3 @@ def remove_isolated_nodes(G):
     G.remove_nodes_from(isolated_nodes)
     utils.log('Removed {:,} isolated nodes'.format(len(isolated_nodes)))
     return G
-
-
-
-
-
-
-
-

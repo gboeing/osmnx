@@ -76,6 +76,7 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     return geometry_proj, gdf_proj.crs
 
 
+
 def project_gdf(gdf, to_crs=None, to_latlong=False):
     """
     Project a GeoDataFrame to the UTM zone appropriate for its geometries'
@@ -137,6 +138,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
 
     projected_gdf.gdf_name = gdf.gdf_name
     return projected_gdf
+
 
 
 def project_graph(G, to_crs=None):

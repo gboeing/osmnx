@@ -22,7 +22,6 @@ from .errors import UnknownNetworkType
 
 
 
-
 def get_osm_filter(network_type):
     """
     Create a filter to query OSM for the specified network type.
@@ -89,6 +88,7 @@ def get_osm_filter(network_type):
         raise UnknownNetworkType('unknown network_type "{}"'.format(network_type))
 
     return osm_filter
+
 
 
 def save_to_cache(url, response_json):
@@ -219,6 +219,7 @@ def get_http_headers(user_agent=None, referer=None, accept_language=None):
     return headers
 
 
+
 def get_pause_duration(recursive_delay=5, default_duration=10):
     """
     Check the Overpass API status endpoint to determine how long to wait until
@@ -273,6 +274,7 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
     return pause_duration
 
 
+
 def osm_polygon_download(query, limit=1, polygon_geojson=1):
     """
     Geocode a place and download its boundary geometry from OSM's Nominatim API.
@@ -312,6 +314,7 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1):
     # request the URL, return the JSON
     response_json = nominatim_request(params=params, timeout=30)
     return response_json
+
 
 
 def nominatim_request(params, type="search", pause_duration=1, timeout=30, error_pause_duration=180):
@@ -391,6 +394,7 @@ def nominatim_request(params, type="search", pause_duration=1, timeout=30, error
         return response_json
 
 
+
 def overpass_request(data, pause_duration=None, timeout=180, error_pause_duration=None):
     """
     Send a request to the Overpass API via HTTP POST and return the JSON
@@ -461,6 +465,3 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
                     'Server returned no JSON data.\n{} {}\n{}'.format(response, response.reason, response.text))
 
         return response_json
-
-
-

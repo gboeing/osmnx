@@ -29,6 +29,7 @@ except ImportError as e:
     folium = None
 
 
+
 def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1,
                figsize=(6,6), margin=0.02, axis_off=True):
     """
@@ -92,6 +93,7 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1,
     return fig, ax
 
 
+
 def rgb_color_list_to_hex(color_list):
     """
     Convert a list of RGBa colors to a list of hexadecimal color codes.
@@ -108,6 +110,7 @@ def rgb_color_list_to_hex(color_list):
     color_list_rgb = [[int(x*255) for x in c[0:3]] for c in color_list]
     color_list_hex = ['#{:02X}{:02X}{:02X}'.format(rgb[0], rgb[1], rgb[2]) for rgb in color_list_rgb]
     return color_list_hex
+
 
 
 def get_colors(n, cmap='viridis', start=0., stop=1., alpha=1., return_hex=False):
@@ -138,6 +141,7 @@ def get_colors(n, cmap='viridis', start=0., stop=1., alpha=1., return_hex=False)
     if return_hex:
         colors = rgb_color_list_to_hex(colors)
     return colors
+
 
 
 def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, stop=1, na_color='none'):
@@ -175,6 +179,7 @@ def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, sto
     return node_colors
 
 
+
 def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1, na_color='none'):
     """
     Get a list of edge colors by binning some continuous-variable attribute into
@@ -208,6 +213,7 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1
     colors = get_colors(num_bins, cmap, start, stop)
     edge_colors = [colors[int(cat)] if pd.notnull(cat) else na_color for cat in cats]
     return edge_colors
+
 
 
 def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off):
@@ -271,6 +277,7 @@ def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_o
         plt.close()
 
     return fig, ax
+
 
 
 def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
@@ -437,6 +444,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     return fig, ax
 
 
+
 def node_list_to_coordinate_lines(G, node_list, use_geom=True):
     """
     Given a list of nodes, return a list of lines that together follow the path
@@ -477,6 +485,8 @@ def node_list_to_coordinate_lines(G, node_list, use_geom=True):
             line = [(x1, y1), (x2, y2)]
             lines.append(line)
     return lines
+
+
 
 def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
                      margin=0.02, bgcolor='w', axis_off=True, show=True,
@@ -611,6 +621,8 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
     # save and show the figure as specified
     fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
     return fig, ax
+
+
 
 def plot_graph_routes(G, routes, bbox=None, fig_height=6, fig_width=None,
                       margin=0.02, bgcolor='w', axis_off=True, show=True,
@@ -753,6 +765,8 @@ def plot_graph_routes(G, routes, bbox=None, fig_height=6, fig_width=None,
     fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
     return fig, ax
 
+
+
 def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attribute=None):
 
     """
@@ -800,6 +814,7 @@ def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attri
     pl = folium.PolyLine(locations=locations, popup=popup,
                          color=edge_color, weight=edge_width, opacity=edge_opacity)
     return pl
+
 
 
 def plot_graph_folium(G, graph_map=None, popup_attribute=None,
@@ -867,6 +882,7 @@ def plot_graph_folium(G, graph_map=None, popup_attribute=None,
     return graph_map
 
 
+
 def plot_route_folium(G, route, route_map=None, popup_attribute=None,
                       tiles='cartodbpositron', zoom=1, fit_bounds=True,
                       route_color='#cc0000', route_width=5, route_opacity=1):
@@ -932,6 +948,7 @@ def plot_route_folium(G, route, route_map=None, popup_attribute=None,
         route_map.fit_bounds(bounds)
 
     return route_map
+
 
 
 def plot_figure_ground(G=None, address=None, point=None, dist=805,

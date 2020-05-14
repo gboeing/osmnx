@@ -21,6 +21,7 @@ from . import utils
 from . import utils_graph
 
 
+
 def save_gdf_shapefile(gdf, filename=None, folder=None):
     """
     Save a GeoDataFrame of place shapes or footprints as an ESRI
@@ -63,6 +64,7 @@ def save_gdf_shapefile(gdf, filename=None, folder=None):
     if not hasattr(gdf, 'gdf_name'):
         gdf.gdf_name = 'unnamed'
     utils.log('Saved the GeoDataFrame "{}" as shapefile "{}"'.format(gdf.gdf_name, filepath))
+
 
 
 def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8'):
@@ -181,6 +183,7 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     gdf_nodes.to_file('{}/nodes'.format(filepath), encoding=encoding)
     gdf_edges.to_file('{}/edges'.format(filepath), encoding=encoding)
     utils.log('Saved graph "{}" to disk as shapefiles at "{}"'.format(G_save.name, filepath))
+
 
 
 def save_as_osm(
@@ -477,6 +480,7 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
     utils.log('Saved graph to disk as GraphML at "{}"'.format(filepath))
 
 
+
 def load_graphml(filename, folder=None, node_type=int):
     """
     Load a GraphML file from disk and convert the node/edge attributes to
@@ -573,6 +577,7 @@ def load_graphml(filename, folder=None, node_type=int):
     return G
 
 
+
 def is_duplicate_edge(data, data_other):
     """
     Check if two edge data dictionaries are the same based on OSM ID and
@@ -612,6 +617,7 @@ def is_duplicate_edge(data, data_other):
             pass
 
     return is_dupe
+
 
 
 def is_same_geometry(ls1, ls2):
@@ -769,6 +775,7 @@ def get_undirected(G):
     utils.log('Made undirected graph')
 
     return H
+
 
 
 def make_shp_filename(place_name):

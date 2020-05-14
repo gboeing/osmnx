@@ -16,6 +16,7 @@ from . import utils
 from . import utils_geo
 
 
+
 def create_poi_query(north, south, east, west, tags,
                      timeout=180, memory=None, custom_settings=None):
     """
@@ -133,6 +134,7 @@ def create_poi_query(north, south, east, west, tags,
     return query
 
 
+
 def osm_poi_download(tags, polygon=None,
                      north=None, south=None, east=None, west=None,
                      timeout=180, memory=None, custom_settings=None):
@@ -201,6 +203,7 @@ def osm_poi_download(tags, polygon=None,
     return responses
 
 
+
 def parse_nodes_coords(osm_response):
     """
     Parse node coordinates from OSM response. Some nodes are standalone points
@@ -223,6 +226,7 @@ def parse_nodes_coords(osm_response):
             coords[result['id']] = {'lat': result['lat'],
                                     'lon': result['lon']}
     return coords
+
 
 
 def parse_polygonal_poi(coords, response):
@@ -261,6 +265,7 @@ def parse_polygonal_poi(coords, response):
     return None
 
 
+
 def parse_osm_node(response):
     """
     Parse points from OSM nodes.
@@ -289,6 +294,7 @@ def parse_osm_node(response):
         utils.log('Point has invalid geometry: {}'.format(response['id']))
 
     return poi
+
 
 
 def invalid_multipoly_handler(gdf, relation, way_ids):
@@ -320,6 +326,7 @@ def invalid_multipoly_handler(gdf, relation, way_ids):
         msg = 'Invalid geometry at relation "{}". Way IDs of the invalid MultiPolygon: {}'
         utils.log(msg.format(relation['id'], way_ids))
         return None
+
 
 
 def parse_osm_relations(relations, osm_way_df):
@@ -383,6 +390,7 @@ def parse_osm_relations(relations, osm_way_df):
     # Merge 'osm_way_df' and the 'gdf_relations'
     osm_way_df = osm_way_df.append(gdf_relations, sort=False)
     return osm_way_df
+
 
 
 def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=None,
@@ -488,6 +496,7 @@ def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=N
     return gdf
 
 
+
 def pois_from_point(point, tags, distance=1000,
                     timeout=180, memory=None, custom_settings=None):
     """
@@ -531,6 +540,7 @@ def pois_from_point(point, tags, distance=1000,
     north, south, east, west = bbox
     return create_poi_gdf(tags=tags, north=north, south=south, east=east, west=west,
                           timeout=timeout, memory=memory, custom_settings=custom_settings)
+
 
 
 def pois_from_address(address, tags, distance=1000,
@@ -580,6 +590,7 @@ def pois_from_address(address, tags, distance=1000,
                            timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
+
 def pois_from_polygon(polygon, tags,
                       timeout=180, memory=None, custom_settings=None):
     """
@@ -618,6 +629,7 @@ def pois_from_polygon(polygon, tags,
 
     return create_poi_gdf(tags=tags, polygon=polygon,
                           timeout=timeout, memory=memory, custom_settings=custom_settings)
+
 
 
 def pois_from_place(place, tags, which_result=1,

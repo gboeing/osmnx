@@ -15,6 +15,7 @@ from . import utils
 from . import utils_graph
 
 
+
 def is_endpoint(G, node, strict=True):
     """
     Return True if the node is a "real" endpoint of an edge in the network,
@@ -90,6 +91,7 @@ def is_endpoint(G, node, strict=True):
         return False
 
 
+
 def build_path(G, node, endpoints, path):
     """
     Recursively build a path of nodes until you hit an endpoint node.
@@ -131,6 +133,7 @@ def build_path(G, node, endpoints, path):
         path.append(path[0])
 
     return path
+
 
 
 def get_paths_to_simplify(G, strict=True):
@@ -182,6 +185,7 @@ def get_paths_to_simplify(G, strict=True):
     return paths_to_simplify
 
 
+
 def is_simplified(G):
     """
     Determine if a graph has already had its topology simplified.
@@ -199,6 +203,7 @@ def is_simplified(G):
     """
 
     return 'simplified' in G.graph and G.graph['simplified']
+
 
 
 def simplify_graph(G, strict=True):

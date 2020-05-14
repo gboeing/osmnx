@@ -27,7 +27,6 @@ from .errors import InvalidDistanceType
 
 
 
-
 def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
     """
     Create a GeoDataFrame from a single place name query.
@@ -100,6 +99,7 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
         return gdf
 
 
+
 def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None, which_results=None):
     """
     Create a GeoDataFrame from a list of place names to query.
@@ -140,6 +140,7 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None, which_results
     gdf.crs = settings.default_crs
     utils.log('Finished creating GeoDataFrame with {} rows from {} queries'.format(len(gdf), len(queries)))
     return gdf
+
 
 
 def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
@@ -276,8 +277,6 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
 
 
 
-
-
 def convert_node(element):
     """
     Convert an OSM node element into the format for a networkx node.
@@ -301,6 +300,7 @@ def convert_node(element):
             if useful_tag in element['tags']:
                 node[useful_tag] = element['tags'][useful_tag]
     return node
+
 
 
 def convert_path(element):
@@ -329,6 +329,7 @@ def convert_path(element):
             if useful_tag in element['tags']:
                 path[useful_tag] = element['tags'][useful_tag]
     return path
+
 
 
 def parse_osm_nodes_paths(osm_data):
@@ -402,6 +403,7 @@ def add_path(G, data, one_way):
         G.add_edges_from(path_edges_opposite_direction, **data)
 
 
+
 def add_paths(G, paths, bidirectional=False):
     """
     Add a collection of paths to the graph.
@@ -452,6 +454,7 @@ def add_paths(G, paths, bidirectional=False):
             add_path(G, data, one_way=False)
 
     return G
+
 
 
 def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional=False):
@@ -631,6 +634,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
     return  G
 
 
+
 def graph_from_point(center_point, distance=1000, distance_type='bbox',
                      network_type='all_private', simplify=True, retain_all=False,
                      truncate_by_edge=False, name='unnamed', timeout=180,
@@ -713,6 +717,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
     return G
 
 
+
 def graph_from_address(address, distance=1000, distance_type='bbox',
                        network_type='all_private', simplify=True, retain_all=False,
                        truncate_by_edge=False, return_coords=False,
@@ -791,6 +796,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
         return G, point
     else:
         return G
+
 
 
 def graph_from_polygon(polygon, network_type='all_private', simplify=True,
@@ -914,6 +920,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
     return G
 
 
+
 def graph_from_place(query, network_type='all_private', simplify=True,
                      retain_all=False, truncate_by_edge=False, name='unnamed',
                      which_result=1, buffer_dist=None, timeout=180, memory=None,
@@ -1003,6 +1010,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
 
     utils.log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
     return G
+
 
 
 def graph_from_file(filename, bidirectional=False, simplify=True,
