@@ -5,7 +5,7 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-class UnknownNetworkType(ValueError):
+class EmptyOverpassResponse(ValueError):
     def __init__(self,*args,**kwargs):
         Exception.__init__(self,*args,**kwargs)
 
@@ -15,13 +15,12 @@ class InsufficientNetworkQueryArguments(ValueError):
         Exception.__init__(self,*args,**kwargs)
 
 
-class EmptyOverpassResponse(ValueError):
-    def __init__(self,*args,**kwargs):
-        Exception.__init__(self,*args,**kwargs)
-
-
 class InvalidDistanceType(ValueError):
     def __init__(self,*args,**kwargs):
         Exception.__init__(self,*args,**kwargs)
 
-
+      
+class UnknownNetworkType(ValueError):
+    def __init__(self,*args,**kwargs):
+        Exception.__init__(self,*args,**kwargs)
+        

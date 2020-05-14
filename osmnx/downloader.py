@@ -17,7 +17,7 @@ import os
 import logging as lg
 from collections import OrderedDict
 from dateutil import parser as date_parser
-from .errors import *
+from .errors import UnknownNetworkType
 from .utils import log
 
 from . import settings

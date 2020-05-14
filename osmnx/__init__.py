@@ -13,7 +13,7 @@ from .plot import *
 from .pois import *
 from .projection import *
 from .save_load import *
-from .simplify import *
+from .simplification import *
 from .stats import *
 from .utils import *
 from .utils_geo import *

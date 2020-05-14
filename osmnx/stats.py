@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import time
 
-from .simplify import clean_intersections
+from .simplification import clean_intersections
 from .utils import log
 from .utils_geo import euclidean_dist_vec
 from .utils_geo import great_circle_vec
