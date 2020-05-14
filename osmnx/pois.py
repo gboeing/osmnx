@@ -11,7 +11,7 @@ from shapely.geometry import Point
 from shapely.geometry import Polygon
 
 from . import settings
-from .core import bbox_from_point
+from .utils_geo import bbox_from_point
 from .core import gdf_from_place
 from .downloader import overpass_request
 from .utils import log

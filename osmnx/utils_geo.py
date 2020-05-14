@@ -5,6 +5,7 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
+import geopandas as gpd
 import math
 import networkx as nx
 import numpy as np
@@ -17,10 +18,14 @@ from shapely.geometry import MultiPoint
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
+from shapely.ops import unary_union
 
 from .downloader import nominatim_request
+from .projection import project_geometry
 from .utils import log
+from .utils_graph import get_largest_component
 from .utils_graph import graph_to_gdfs
+from .utils_graph import remove_isolated_nodes
 
 # scipy and sklearn are optional dependencies for faster nearest node search
 try:
@@ -756,3 +761,475 @@ def bbox_to_poly(north, south, east, west):
 
 
 
+def consolidate_subdivide_geometry(geometry, max_query_area_size):
+    """
+    Consolidate a geometry into a convex hull, then subdivide it into smaller
+    sub-polygons if its area exceeds max size (in geometry's units).
+
+    Parameters
+    ----------
+    geometry : shapely Polygon or MultiPolygon
+        the geometry to consolidate and subdivide
+    max_query_area_size : float
+        max area for any part of the geometry in geometry's units:
+        any polygon bigger will get divided up for multiple queries to API
+
+    Returns
+    -------
+    geometry : Polygon or MultiPolygon
+    """
+
+    # let the linear length of the quadrats (with which to subdivide the
+    # geometry) be the square root of max area size
+    quadrat_width = math.sqrt(max_query_area_size)
+
+    if not isinstance(geometry, (Polygon, MultiPolygon)):
+        raise TypeError('Geometry must be a shapely Polygon or MultiPolygon')
+
+    # if geometry is a MultiPolygon OR a single Polygon whose area exceeds the
+    # max size, get the convex hull around the geometry
+    if isinstance(geometry, MultiPolygon) or (isinstance(geometry, Polygon) and geometry.area > max_query_area_size):
+        geometry = geometry.convex_hull
+
+    # if geometry area exceeds max size, subdivide it into smaller sub-polygons
+    if geometry.area > max_query_area_size:
+        geometry = quadrat_cut_geometry(geometry, quadrat_width=quadrat_width)
+
+    if isinstance(geometry, Polygon):
+        geometry = MultiPolygon([geometry])
+
+    return geometry
+
+
+def get_polygons_coordinates(geometry):
+    """
+    Extract exterior coordinates from polygon(s) to pass to OSM in a query by
+    polygon. Ignore the interior ("holes") coordinates.
+
+    Parameters
+    ----------
+    geometry : shapely Polygon or MultiPolygon
+        the geometry to extract exterior coordinates from
+
+    Returns
+    -------
+    polygon_coord_strs : list
+    """
+
+    # extract the exterior coordinates of the geometry to pass to the API later
+    polygons_coords = []
+    if isinstance(geometry, Polygon):
+        x, y = geometry.exterior.xy
+        polygons_coords.append(list(zip(x, y)))
+    elif isinstance(geometry, MultiPolygon):
+        for polygon in geometry:
+            x, y = polygon.exterior.xy
+            polygons_coords.append(list(zip(x, y)))
+    else:
+        raise TypeError('Geometry must be a shapely Polygon or MultiPolygon')
+
+    # convert the exterior coordinates of the polygon(s) to the string format
+    # the API expects
+    polygon_coord_strs = []
+    for coords in polygons_coords:
+        s = ''
+        separator = ' '
+        for coord in list(coords):
+            # round floating point lats and longs to 6 decimal places (ie, ~100 mm),
+            # so we can hash and cache strings consistently
+            s = '{}{}{:.6f}{}{:.6f}'.format(s, separator, coord[1], separator, coord[0])
+        polygon_coord_strs.append(s.strip(separator))
+
+    return polygon_coord_strs
+
+
+
+
+
+
+def quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9):
+    """
+    Split a Polygon or MultiPolygon up into sub-polygons of a specified size,
+    using quadrats.
+
+    Parameters
+    ----------
+    geometry : shapely Polygon or MultiPolygon
+        the geometry to split up into smaller sub-polygons
+    quadrat_width : numeric
+        the linear width of the quadrats with which to cut up the geometry (in
+        the units the geometry is in)
+    min_num : int
+        the minimum number of linear quadrat lines (e.g., min_num=3 would
+        produce a quadrat grid of 4 squares)
+    buffer_amount : numeric
+        buffer the quadrat grid lines by quadrat_width times buffer_amount
+
+    Returns
+    -------
+    shapely MultiPolygon
+    """
+
+    # create n evenly spaced points between the min and max x and y bounds
+    west, south, east, north = geometry.bounds
+    x_num = math.ceil((east-west) / quadrat_width) + 1
+    y_num = math.ceil((north-south) / quadrat_width) + 1
+    x_points = np.linspace(west, east, num=max(x_num, min_num))
+    y_points = np.linspace(south, north, num=max(y_num, min_num))
+
+    # create a quadrat grid of lines at each of the evenly spaced points
+    vertical_lines = [LineString([(x, y_points[0]), (x, y_points[-1])]) for x in x_points]
+    horizont_lines = [LineString([(x_points[0], y), (x_points[-1], y)]) for y in y_points]
+    lines = vertical_lines + horizont_lines
+
+    # buffer each line to distance of the quadrat width divided by 1 billion,
+    # take their union, then cut geometry into pieces by these quadrats
+    buffer_size = quadrat_width * buffer_amount
+    lines_buffered = [line.buffer(buffer_size) for line in lines]
+    quadrats = unary_union(lines_buffered)
+    multipoly = geometry.difference(quadrats)
+
+    return multipoly
+
+
+def intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
+    """
+    Intersect points with a polygon, using an r-tree spatial index and cutting
+    the polygon up into smaller sub-polygons for r-tree acceleration.
+
+    Parameters
+    ----------
+    gdf : GeoDataFrame
+        the set of points to intersect
+    geometry : shapely Polygon or MultiPolygon
+        the geometry to intersect with the points
+    quadrat_width : numeric
+        the linear length (in degrees) of the quadrats with which to cut up the
+        geometry (default = 0.05, approx 4km at NYC's latitude)
+    min_num : int
+        the minimum number of linear quadrat lines (e.g., min_num=3 would
+        produce a quadrat grid of 4 squares)
+    buffer_amount : numeric
+        buffer the quadrat grid lines by quadrat_width times buffer_amount
+
+    Returns
+    -------
+    GeoDataFrame
+    """
+
+    # create an empty dataframe to append matches to
+    points_within_geometry = pd.DataFrame()
+
+    # cut the geometry into chunks for r-tree spatial index intersecting
+    multipoly = quadrat_cut_geometry(geometry, quadrat_width=quadrat_width, buffer_amount=buffer_amount, min_num=min_num)
+
+    # create an r-tree spatial index for the nodes (ie, points)
+    start_time = time.time()
+    sindex = gdf['geometry'].sindex
+    log('Created r-tree spatial index for {:,} points in {:,.2f} seconds'.format(len(gdf), time.time()-start_time))
+
+    # loop through each chunk of the geometry to find approximate and then
+    # precisely intersecting points
+    start_time = time.time()
+    for poly in multipoly:
+
+        # buffer by the tiny distance to account for any space lost in the
+        # quadrat cutting, otherwise may miss point(s) that lay directly on
+        # quadrat line
+        buffer_size = quadrat_width * buffer_amount
+        poly = poly.buffer(buffer_size).buffer(0)
+
+        # find approximate matches with r-tree, then precise matches from those
+        # approximate ones
+        if poly.is_valid and poly.area > 0:
+            possible_matches_index = list(sindex.intersection(poly.bounds))
+            possible_matches = gdf.iloc[possible_matches_index]
+            precise_matches = possible_matches[possible_matches.intersects(poly)]
+            points_within_geometry = points_within_geometry.append(precise_matches)
+
+    if len(points_within_geometry) > 0:
+        # drop duplicate points, if buffered poly caused an overlap on point(s)
+        # that lay directly on a quadrat line
+        points_within_geometry = points_within_geometry.drop_duplicates(subset='node')
+    else:
+        # after simplifying the graph, and given the requested network type,
+        # there are no nodes inside the polygon - can't create graph from that
+        # so throw error
+        raise Exception('There are no nodes within the requested geometry')
+
+    log('Identified {:,} nodes inside polygon in {:,.2f} seconds'.format(len(points_within_geometry), time.time()-start_time))
+    return points_within_geometry
+
+
+
+
+def bbox_from_point(point, distance=1000, project_utm=False, return_crs=False):
+    """
+    Create a bounding box some distance in each direction (north, south, east,
+    and west) from some (lat, lng) point.
+
+    Parameters
+    ----------
+    point : tuple
+        the (lat, lon) point to create the bounding box around
+    distance : int
+        how many meters the north, south, east, and west sides of the box should
+        each be from the point
+    project_utm : bool
+        if True return bbox as UTM coordinates
+    return_crs : bool
+        if True and project_utm=True, return the projected CRS
+
+    Returns
+    -------
+    north, south, east, west : tuple, if return_crs=False
+    north, south, east, west, crs_proj : tuple, if return_crs=True
+    """
+
+    # reverse the order of the (lat,lng) point so it is (x,y) for shapely, then
+    # project to UTM and buffer in meters
+    lat, lng = point
+    point_proj, crs_proj = project_geometry(Point((lng, lat)))
+    buffer_proj = point_proj.buffer(distance)
+
+    if project_utm:
+        west, south, east, north = buffer_proj.bounds
+        log('Created bounding box {} meters in each direction from {} and projected it: {},{},{},{}'.format(distance, point, north, south, east, west))
+    else:
+        # if project_utm is False, project back to lat-long then get the
+        # bounding coordinates
+        buffer_latlong, _ = project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
+        west, south, east, north = buffer_latlong.bounds
+        log('Created bounding box {} meters in each direction from {}: {},{},{},{}'.format(distance, point, north, south, east, west))
+
+    if return_crs:
+        return north, south, east, west, crs_proj
+    else:
+        return north, south, east, west
+
+
+def add_edge_lengths(G):
+    """
+    Add length (meters) attribute to each edge by great circle distance between
+    nodes u and v.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+
+    Returns
+    -------
+    G : networkx multidigraph
+    """
+
+    start_time = time.time()
+
+    # first load all the edges' origin and destination coordinates as a
+    # dataframe indexed by u, v, key
+    try:
+        coords = np.array([[u, v, k, G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in G.edges(keys=True)])
+    except KeyError:
+        missing_nodes = {str(i) for u, v, _ in G.edges(keys=True) if not(G.nodes[u] or G.nodes[u]) for i in (u, v) if not G.nodes[i]}
+        raise TypeError('Edge(s) with missing nodes {} possibly due to a clipping issue'.format(', '.join(missing_nodes)))
+    df_coords = pd.DataFrame(coords, columns=['u', 'v', 'k', 'u_y', 'u_x', 'v_y', 'v_x'])
+    df_coords[['u', 'v', 'k']] = df_coords[['u', 'v', 'k']].astype(np.int64)
+    df_coords = df_coords.set_index(['u', 'v', 'k'])
+
+    # then calculate the great circle distance with the vectorized function
+    gc_distances = great_circle_vec(lat1=df_coords['u_y'],
+                                    lng1=df_coords['u_x'],
+                                    lat2=df_coords['v_y'],
+                                    lng2=df_coords['v_x'])
+
+    # fill nulls with zeros and round to the millimeter
+    gc_distances = gc_distances.fillna(value=0).round(3)
+    nx.set_edge_attributes(G, name='length', values=gc_distances.to_dict())
+
+    log('Added edge lengths to graph in {:,.2f} seconds'.format(time.time()-start_time))
+    return G
+
+
+def truncate_graph_dist(G, source_node, max_distance=1000, weight='length', retain_all=False):
+    """
+    Remove everything further than some network distance from a specified node
+    in graph.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    source_node : int
+        the node in the graph from which to measure network distances to other
+        nodes
+    max_distance : int
+        remove every node in the graph greater than this distance from the
+        source_node
+    weight : string
+        how to weight the graph when measuring distance (default 'length' is
+        how many meters long the edge is)
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+
+    Returns
+    -------
+    networkx multidigraph
+    """
+
+    # get the shortest distance between the node and every other node, then
+    # remove every node further than max_distance away
+    start_time = time.time()
+    G = G.copy()
+    distances = nx.shortest_path_length(G, source=source_node, weight=weight)
+    distant_nodes = {key:value for key, value in dict(distances).items() if value > max_distance}
+    G.remove_nodes_from(distant_nodes.keys())
+    log('Truncated graph by weighted network distance in {:,.2f} seconds'.format(time.time()-start_time))
+
+    # remove any isolated nodes and retain only the largest component (if
+    # retain_all is True)
+    if not retain_all:
+        G = remove_isolated_nodes(G)
+        G = get_largest_component(G)
+
+    return G
+
+
+def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, retain_all=False):
+    """
+    Remove every node in graph that falls outside a bounding box.
+
+    Needed because overpass returns entire ways that also include nodes outside
+    the bbox if the way (that is, a way with a single OSM ID) has a node inside
+    the bbox at some point.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    north : float
+        northern latitude of bounding box
+    south : float
+        southern latitude of bounding box
+    east : float
+        eastern longitude of bounding box
+    west : float
+        western longitude of bounding box
+    truncate_by_edge : bool
+        if True retain node if it's outside bbox but at least one of node's
+        neighbors are within bbox
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+
+    Returns
+    -------
+    networkx multidigraph
+    """
+
+    start_time = time.time()
+    G = G.copy()
+    nodes_outside_bbox = []
+
+    for node, data in G.nodes(data=True):
+        if data['y'] > north or data['y'] < south or data['x'] > east or data['x'] < west:
+            # this node is outside the bounding box
+            if not truncate_by_edge:
+                # if we're not truncating by edge, add node to list of nodes
+                # outside the bounding box
+                nodes_outside_bbox.append(node)
+            else:
+                # if we're truncating by edge, see if any of node's neighbors
+                # are within bounding box
+                any_neighbors_in_bbox = False
+                neighbors = list(G.successors(node)) + list(G.predecessors(node))
+                for neighbor in neighbors:
+                    x = G.nodes[neighbor]['x']
+                    y = G.nodes[neighbor]['y']
+                    if y < north and y > south and x < east and x > west:
+                        any_neighbors_in_bbox = True
+                        break
+
+                # if none of its neighbors are within the bounding box, add node
+                # to list of nodes outside the bounding box
+                if not any_neighbors_in_bbox:
+                    nodes_outside_bbox.append(node)
+
+    G.remove_nodes_from(nodes_outside_bbox)
+    log('Truncated graph by bounding box in {:,.2f} seconds'.format(time.time()-start_time))
+
+    # remove any isolated nodes and retain only the largest component (if
+    # retain_all is True)
+    if not retain_all:
+        G = remove_isolated_nodes(G)
+        G = get_largest_component(G)
+
+    return G
+
+
+
+
+
+
+def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
+    """
+    Remove every node in graph that falls outside some shapely Polygon or
+    MultiPolygon.
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+    polygon : Polygon or MultiPolygon
+        only retain nodes in graph that lie within this geometry
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool
+        if True retain node if it's outside polygon but at least one of node's
+        neighbors are within polygon
+    quadrat_width : numeric
+        passed on to intersect_index_quadrats: the linear length (in degrees) of
+        the quadrats with which to cut up the geometry (default = 0.05, approx
+        4km at NYC's latitude)
+    min_num : int
+        passed on to intersect_index_quadrats: the minimum number of linear
+        quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4
+        squares)
+    buffer_amount : numeric
+        passed on to intersect_index_quadrats: buffer the quadrat grid lines by
+        quadrat_width times buffer_amount
+
+    Returns
+    -------
+    networkx multidigraph
+    """
+
+    start_time = time.time()
+    G = G.copy()
+    log('Identifying all nodes that lie outside the polygon...')
+
+    # get a GeoDataFrame of all the nodes
+    node_geom = [Point(data['x'], data['y']) for _, data in G.nodes(data=True)]
+    gdf_nodes = gpd.GeoDataFrame({'node':list(G.nodes()), 'geometry':node_geom})
+    gdf_nodes.crs = G.graph['crs']
+
+    # find all the nodes in the graph that lie outside the polygon
+    points_within_geometry = intersect_index_quadrats(gdf_nodes, polygon, quadrat_width=quadrat_width, min_num=min_num, buffer_amount=buffer_amount)
+    nodes_outside_polygon = gdf_nodes[~gdf_nodes.index.isin(points_within_geometry.index)]
+
+    if truncate_by_edge:
+        nodes_to_remove = []
+        for node in nodes_outside_polygon['node']:
+            neighbors = pd.Series(list(G.successors(node)) + list(G.predecessors(node)))
+            # check if all the neighbors of this node also lie outside polygon
+            if neighbors.isin(nodes_outside_polygon['node']).all():
+                nodes_to_remove.append(node)
+    else:
+        nodes_to_remove = nodes_outside_polygon['node']
+
+    # now remove from the graph all those nodes that lie outside the place
+    # polygon
+    start_time = time.time()
+    G.remove_nodes_from(nodes_to_remove)
+    log('Removed {:,} nodes outside polygon in {:,.2f} seconds'.format(len(nodes_outside_polygon), time.time()-start_time))
+
+    # remove any isolated nodes and retain only the largest component (if retain_all is False)
+    if not retain_all:
+        G = remove_isolated_nodes(G)
+        G = get_largest_component(G)
+
+    return G

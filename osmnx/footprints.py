@@ -16,10 +16,10 @@ from shapely.geometry import Polygon
 from shapely.ops import polygonize
 
 from . import settings
-from .core import bbox_from_point
-from .core import consolidate_subdivide_geometry
+from .utils_geo import bbox_from_point
+from .utils_geo import consolidate_subdivide_geometry
 from .core import gdf_from_place
-from .core import get_polygons_coordinates
+from .utils_geo import get_polygons_coordinates
 from .downloader import overpass_request
 from .utils_geo import geocode
 from .plot import save_and_show

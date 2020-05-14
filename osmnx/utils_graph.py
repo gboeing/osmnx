@@ -347,3 +347,34 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
         G.add_edge(row['u'], row['v'], key=row['key'], **attrs)
 
     return G
+
+
+
+
+def remove_isolated_nodes(G):
+    """
+    Remove from a graph all the nodes that have no incident edges (ie, node
+    degree = 0).
+
+    Parameters
+    ----------
+    G : networkx multidigraph
+        the graph from which to remove nodes
+
+    Returns
+    -------
+    networkx multidigraph
+    """
+
+    isolated_nodes = [node for node, degree in dict(G.degree()).items() if degree < 1]
+    G.remove_nodes_from(isolated_nodes)
+    log('Removed {:,} isolated nodes'.format(len(isolated_nodes)))
+    return G
+
+
+
+
+
+
+
+
