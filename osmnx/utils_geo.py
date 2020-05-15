@@ -63,10 +63,10 @@ def geocode(query):
         lat = float(response_json[0]['lat'])
         lon = float(response_json[0]['lon'])
         point = (lat, lon)
-        utils.log('Geocoded "{}" to {}'.format(query, point))
+        utils.log(f'Geocoded "{query}" to {point}')
         return point
     else:
-        raise Exception('Nominatim geocoder returned no results for query "{}"'.format(query))
+        raise Exception(f'Nominatim geocoder returned no results for query "{query}"')
 
 
 
@@ -199,7 +199,7 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
 
     # nearest node's ID is the index label of the minimum distance
     nearest_node = distances.idxmin()
-    utils.log('Found nearest node ({}) to point {}'.format(nearest_node, point))
+    utils.log(f'Found nearest node ({nearest_node}) to point {point}')
 
     # if caller requested return_dist, return distance between the point and the
     # nearest node as well
@@ -247,7 +247,7 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
 
     # the nearest edge minimizes the distance to the point
     (u, v, key, geom), dist = min(edge_distances, key=lambda x: x[1])
-    utils.log('Found nearest edge ({}) to point {}'.format((u, v, key), point))
+    utils.log(f'Found nearest edge ({u, v, key}) to point {point}')
 
     # return results requested by caller
     if return_dist and return_geom:
@@ -338,8 +338,7 @@ def get_nearest_nodes(G, X, Y, method=None):
     else:
         raise ValueError('You must pass a valid method name, or None.')
 
-    utils.log('Found nearest nodes to {:,} points'.format(len(X)))
-
+    utils.log(f'Found nearest nodes to {len(X)} points')
     return np.array(nn)
 
 
@@ -460,7 +459,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     else:
         raise ValueError('You must pass a valid method name, or None.')
 
-    utils.log('Found nearest edges to {:,} points'.format(len(X)))
+    utils.log(f'Found nearest edges to {len(X)} points')
 
     return np.array(ne)
 
@@ -496,7 +495,7 @@ def redistribute_vertices(geom, dist):
                  for part in geom]
         return type(geom)([p for p in parts if not p])
     else:
-        raise ValueError('unhandled geometry {}'.format(geom.geom_type))
+        raise ValueError(f'unhandled geometry {geom.geom_type}')
 
 
 
@@ -739,7 +738,7 @@ def round_shape_coords(shape, precision):
         return round_multipolygon_coords(shape, precision)
 
     else:
-        raise TypeError('cannot round coordinates of unhandled geometry type: {}'.format(type(shape)))
+        raise TypeError(f'cannot round coordinates of unhandled geometry type: {type(shape)}')
 
 
 
@@ -829,7 +828,7 @@ def get_polygons_coordinates(geometry):
         for coord in list(coords):
             # round floating point lats and longs to 6 decimal places (ie, ~100 mm),
             # so we can hash and cache strings consistently
-            s = '{}{}{:.6f}{}{:.6f}'.format(s, separator, coord[1], separator, coord[0])
+            s = f'{s}{separator}{coord[1]:.6f}{separator}{coord[0]:.6f}'
         polygon_coord_strs.append(s.strip(separator))
 
     return polygon_coord_strs
@@ -915,7 +914,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffe
 
     # create an r-tree spatial index for the nodes (ie, points)
     sindex = gdf['geometry'].sindex
-    utils.log('Created r-tree spatial index for {:,} points'.format(len(gdf)))
+    utils.log(f'Created r-tree spatial index for {len(gdf)} points')
 
     # loop through each chunk of the geometry to find approximate and then
     # precisely intersecting points
@@ -945,7 +944,7 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffe
         # so throw error
         raise Exception('There are no nodes within the requested geometry')
 
-    utils.log('Identified {:,} nodes inside polygon'.format(len(points_within_geometry)))
+    utils.log(f'Identified {len(points_within_geometry)} nodes inside polygon')
     return points_within_geometry
 
 
@@ -981,13 +980,13 @@ def bbox_from_point(point, distance=1000, project_utm=False, return_crs=False):
 
     if project_utm:
         west, south, east, north = buffer_proj.bounds
-        utils.log('Created bounding box {} meters in each direction from {} and projected it: {},{},{},{}'.format(distance, point, north, south, east, west))
+        utils.log(f'Created bounding box {distance} meters in each direction from {point} and projected it: {north},{south},{east},{west}')
     else:
         # if project_utm is False, project back to lat-long then get the
         # bounding coordinates
         buffer_latlong, _ = projection.project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
         west, south, east, north = buffer_latlong.bounds
-        utils.log('Created bounding box {} meters in each direction from {}: {},{},{},{}'.format(distance, point, north, south, east, west))
+        utils.log(f'Created bounding box {distance} meters in each direction from {point}: {north},{south},{east},{west}')
 
     if return_crs:
         return north, south, east, west, crs_proj
@@ -1016,7 +1015,8 @@ def add_edge_lengths(G):
         coords = np.array([[u, v, k, G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in G.edges(keys=True)])
     except KeyError:
         missing_nodes = {str(i) for u, v, _ in G.edges(keys=True) if not(G.nodes[u] or G.nodes[u]) for i in (u, v) if not G.nodes[i]}
-        raise TypeError('Edge(s) with missing nodes {} possibly due to a clipping issue'.format(', '.join(missing_nodes)))
+        missing_nodes_str = ', '.join(missing_nodes)
+        raise TypeError(f'Edge(s) with missing nodes {missing_nodes_str} possibly due to a clipping issue')
     df_coords = pd.DataFrame(coords, columns=['u', 'v', 'k', 'u_y', 'u_x', 'v_y', 'v_x'])
     df_coords[['u', 'v', 'k']] = df_coords[['u', 'v', 'k']].astype(np.int64)
     df_coords = df_coords.set_index(['u', 'v', 'k'])
@@ -1206,7 +1206,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
     # now remove from the graph all those nodes that lie outside the place
     # polygon
     G.remove_nodes_from(nodes_to_remove)
-    utils.log('Removed {:,} nodes outside polygon'.format(len(nodes_outside_polygon)))
+    utils.log(f'Removed {len(nodes_outside_polygon)} nodes outside polygon')
 
     # remove any isolated nodes and retain only the largest component (if retain_all is False)
     if not retain_all:
