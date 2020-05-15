@@ -107,7 +107,7 @@ def get_largest_component(G, strongly=False):
 
 
 def get_route_edge_attributes(G, route, attribute=None, minimize_key='length',
-	                          retrieve_default=None):
+                              retrieve_default=None):
     """
     Get a list of attribute values for each edge in a path.
 

@@ -170,7 +170,7 @@ def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, sto
     list
     """
     if num_bins is None:
-        num_bins=len(G.nodes())
+        num_bins=len(G)
     bin_labels = range(num_bins)
     attr_values = pd.Series([data[attr] for node, data in G.nodes(data=True)])
     cats = pd.qcut(x=attr_values, q=num_bins, labels=bin_labels)
