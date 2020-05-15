@@ -247,7 +247,6 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
             gdf_nodes.set_geometry('geometry', inplace=True)
         gdf_nodes.crs = G.graph['crs']
-        gdf_nodes.gdf_name = f'{G.graph["name"]}_nodes'
 
         to_return.append(gdf_nodes)
         utils.log('Created nodes GeoDataFrame from graph')
@@ -280,7 +279,6 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         # create a GeoDataFrame from the list of edges and set the CRS
         gdf_edges = gpd.GeoDataFrame(edges)
         gdf_edges.crs = G.graph['crs']
-        gdf_edges.gdf_name = f'{G.graph["name"]}_edges'
 
         to_return.append(gdf_edges)
         utils.log('Created edges GeoDataFrame from graph')
@@ -308,7 +306,6 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
 
     G = nx.MultiDiGraph()
     G.graph['crs'] = gdf_nodes.crs
-    G.graph['name'] = gdf_nodes.gdf_name.rstrip('_nodes')
 
     # add the nodes and their attributes to the graph
     G.add_nodes_from(gdf_nodes.index)
