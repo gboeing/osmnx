@@ -1013,7 +1013,7 @@ def add_edge_lengths(G):
     # dataframe indexed by u, v, key
     try:
         coords = np.array([[u, v, k, G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in G.edges(keys=True)])
-    except KeyError:
+    except KeyError: # pragma: no cover
         missing_nodes = {str(i) for u, v, _ in G.edges(keys=True) if not(G.nodes[u] or G.nodes[u]) for i in (u, v) if not G.nodes[i]}
         missing_nodes_str = ', '.join(missing_nodes)
         raise TypeError(f'Edge(s) with missing nodes {missing_nodes_str} possibly due to a clipping issue')

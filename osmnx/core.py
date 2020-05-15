@@ -27,7 +27,7 @@ from .errors import InvalidDistanceType
 
 
 
-def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
+def gdf_from_place(query, which_result=1, buffer_dist=None):
     """
     Create a GeoDataFrame from a single place name query.
 
@@ -35,9 +35,6 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
     ----------
     query : string or dict
         query string or structured query dict to geocode/download
-    gdf_name : string
-        name attribute metadata for GeoDataFrame (this is used to save shapefile
-        later)
     which_result : int
         max number of results to return and which to process upon receipt
     buffer_dist : float
@@ -47,12 +44,9 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
     -------
     GeoDataFrame
     """
-    # if no gdf_name is passed, just use the query
+
+    # ensure query type
     assert (isinstance(query, dict) or isinstance(query, str)), 'query must be a dict or a string'
-    if (gdf_name is None) and isinstance(query, dict):
-        gdf_name = ', '.join(list(query.values()))
-    elif (gdf_name is None) and isinstance(query, str):
-        gdf_name = query
 
     # get the data from OSM
     data = downloader.osm_polygon_download(query, limit=which_result)
@@ -77,7 +71,6 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
 
         # create the GeoDataFrame, name it, and set its original CRS to default_crs
         gdf = gpd.GeoDataFrame.from_features(features)
-        gdf.gdf_name = gdf_name
         gdf.crs = settings.default_crs
 
         # if buffer_dist was passed in, project the geometry to UTM, buffer it
@@ -94,35 +87,31 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
     else:
         # if no data returned (or fewer results than which_result)
         utils.log(f'OSM returned no results (or fewer than which_result) for query "{query}"', level=lg.WARNING)
-        gdf = gpd.GeoDataFrame()
-        gdf.gdf_name = gdf_name
-        return gdf
+        return gpd.GeoDataFrame()
 
 
 
-def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None, which_results=None):
+def gdf_from_places(queries, which_results=None, buffer_dist=None):
     """
     Create a GeoDataFrame from a list of place names to query.
 
     Parameters
     ----------
     queries : list
-        list of query strings or structured query dicts to geocode/download, one
-        at a time
-    gdf_name : string
-        name attribute metadata for GeoDataFrame (this is used to save shapefile
-        later)
+        list of query strings or structured query dicts to geocode/download,
+        one at a time
+    which_results : list
+        if not None, a list of max number of results to return and which to
+        process upon receipt, for each query in queries
     buffer_dist : float
         distance to buffer around the place geometry, in meters
-    which_results : list
-        if not None, a list of max number of results to return and which to process
-        upon receipt, for each query in queries
 
     Returns
     -------
     GeoDataFrame
     """
-    # create an empty GeoDataFrame then append each result as a new row, checking for the presence of which_results
+    # create an empty GeoDataFrame then append each result as a new row,
+    # checking for the presence of which_results
     gdf = gpd.GeoDataFrame()
     if which_results is not None:
         assert len(queries) == len(which_results), 'which_results list length must be the same as queries list length'
@@ -132,9 +121,8 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None, which_results
         for query in queries:
             gdf = gdf.append(gdf_from_place(query, buffer_dist=buffer_dist))
 
-    # reset the index, name the GeoDataFrame
-    gdf = gdf.reset_index().drop(labels='index', axis=1)
-    gdf.gdf_name = gdf_name
+    # reset the index
+    gdf = gdf.reset_index(drop=True)
 
     # set the original CRS of the GeoDataFrame to default_crs, and return it
     gdf.crs = settings.default_crs

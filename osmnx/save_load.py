@@ -22,51 +22,6 @@ from . import utils_graph
 
 
 
-def save_gdf_shapefile(gdf, filename=None, folder=None):
-    """
-    Save a GeoDataFrame of place shapes or footprints as an ESRI
-    shapefile.
-
-    Parameters
-    ----------
-    gdf : GeoDataFrame
-        the gdf to be saved
-    filename : string
-        the name of the shapefiles (not including file extensions)
-    folder : string
-        where to save the shapefile, if none, then default folder
-
-    Returns
-    -------
-    None
-    """
-
-    if folder is None:
-        folder = settings.data_folder
-
-    if filename is None:
-        filename = make_shp_filename(gdf.gdf_name)
-
-    # give the save folder a filename subfolder to make the full path to the
-    # files
-    filepath = os.path.join(folder, filename)
-
-    # make everything but geometry column a string
-    for col in [c for c in gdf.columns if not c == 'geometry']:
-        gdf[col] = gdf[col].fillna('').astype(str)
-
-    # if the save folder does not already exist, create it with a filename
-    # subfolder
-    if not os.path.exists(filepath):
-        os.makedirs(filepath)
-    gdf.to_file(filepath)
-
-    if not hasattr(gdf, 'gdf_name'):
-        gdf.gdf_name = 'unnamed'
-    utils.log(f'Saved GeoDataFrame as shapefile "{filepath}"')
-
-
-
 def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8'):
     """
     Save graph nodes and edges as to disk as layers in a GeoPackage file.
@@ -772,23 +727,3 @@ def get_undirected(G):
     utils.log('Made undirected graph')
 
     return H
-
-
-
-def make_shp_filename(place_name):
-    """
-    Create a filename string in a consistent format from a place name string.
-
-    Parameters
-    ----------
-    place_name : string
-        place name to convert into a filename
-
-    Returns
-    -------
-    string
-    """
-    name_pieces = list(reversed(place_name.split(', ')))
-    filename = '-'.join(name_pieces).lower().replace(' ','_')
-    filename = re.sub('[^0-9a-zA-Z_-]+', '', filename)
-    return filename

@@ -5,21 +5,21 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-class EmptyOverpassResponse(ValueError):
+class EmptyOverpassResponse(ValueError): # pragma: no cover
     def __init__(self,*args,**kwargs):
         Exception.__init__(self,*args,**kwargs)
 
 
-class InsufficientNetworkQueryArguments(ValueError):
+class InsufficientNetworkQueryArguments(ValueError): # pragma: no cover
     def __init__(self,*args,**kwargs):
         Exception.__init__(self,*args,**kwargs)
 
 
-class InvalidDistanceType(ValueError):
+class InvalidDistanceType(ValueError): # pragma: no cover
     def __init__(self,*args,**kwargs):
         Exception.__init__(self,*args,**kwargs)
 
 
-class UnknownNetworkType(ValueError):
+class UnknownNetworkType(ValueError): # pragma: no cover
     def __init__(self,*args,**kwargs):
         Exception.__init__(self,*args,**kwargs)
