@@ -55,7 +55,7 @@ def save_graph_geopackage(G, filepath=None, encoding='utf-8'):
     # make every non-numeric edge attribute (besides geometry) a string
     for col in [c for c in gdf_edges.columns if not c == 'geometry']:
         if not pd.api.types.is_numeric_dtype(gdf_edges[col]):
-            gdf_edges[col] = gdf_edges[col].fillna('').map(str)
+            gdf_edges[col] = gdf_edges[col].fillna('').astype(str)
 
     # save the nodes and edges as GeoPackage layers
     gdf_nodes.to_file(filepath, layer='nodes', driver='GPKG', encoding=encoding)
@@ -93,47 +93,18 @@ def save_graph_shapefile(G, filepath=None, encoding='utf-8'):
     filepath_nodes = os.path.join(filepath, 'nodes.shp')
     filepath_edges = os.path.join(filepath, 'edges.shp')
 
-    # convert directed graph G to an undirected graph for saving as a shapefile
-    G_save = get_undirected(G.copy())
+    # convert undirected graph to geodataframes
+    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(get_undirected(G))
 
-    # create a GeoDataFrame of the nodes and set CRS
-    nodes, data = zip(*G_save.nodes(data=True))
-    gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
-    gdf_nodes.crs = G_save.graph['crs']
-
-    # create a geometry column then drop the x and y columns
-    gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
-    gdf_nodes = gdf_nodes.drop(['x', 'y'], axis=1)
-
-    # make everything but geometry column a string
-    for col in [c for c in gdf_nodes.columns if not c == 'geometry']:
-        gdf_nodes[col] = gdf_nodes[col].fillna('').astype(str)
-
-    # create a list to hold our edges, then loop through each edge in the graph
-    edges = []
-    for u, v, key, data in G_save.edges(keys=True, data=True):
-
-        # for each edge, add key and all attributes in data dict to the
-        # edge_details
-        edge_details = {'key': key}
-        for attr_key in data:
-            edge_details[attr_key] = data[attr_key]
-
-        # if edge doesn't already have a geometry attribute, create one now
-        if 'geometry' not in data:
-            point_u = Point((G_save.nodes[u]['x'], G_save.nodes[u]['y']))
-            point_v = Point((G_save.nodes[v]['x'], G_save.nodes[v]['y']))
-            edge_details['geometry'] = LineString([point_u, point_v])
-
-        edges.append(edge_details)
-
-    # create a geodataframe from the list of edges and set the CRS
-    gdf_edges = gpd.GeoDataFrame(edges)
-    gdf_edges.crs = G_save.graph['crs']
-
-    # make everything but geometry column a string
+    # make every non-numeric edge attribute (besides geometry) a string
     for col in [c for c in gdf_edges.columns if not c == 'geometry']:
-        gdf_edges[col] = gdf_edges[col].fillna('').astype(str)
+        if not pd.api.types.is_numeric_dtype(gdf_edges[col]):
+            gdf_edges[col] = gdf_edges[col].fillna('').astype(str)
+
+    # make every non-numeric node attribute (besides geometry) a string
+    for col in [c for c in gdf_nodes.columns if not c == 'geometry']:
+    	if not pd.api.types.is_numeric_dtype(gdf_nodes[col]):
+        	gdf_nodes[col] = gdf_nodes[col].fillna('').astype(str)
 
     # save the nodes and edges as separate ESRI shapefiles
     gdf_nodes.to_file(filepath_nodes, encoding=encoding)
