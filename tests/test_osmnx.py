@@ -162,10 +162,10 @@ def test_graph_from_file():
 
 
 def test_routing_folium():
-    
+
     # calculate shortest path and plot as static image and leaflet web map
     G = ox.graph_from_address(address=address, distance=500, distance_type='bbox', network_type='bike')
-    
+
     # give each node a random elevation then calculate edge grades
     rando = np.random.random(size=len(G.nodes()))
     elevs = {n:e for n, e in zip(G.nodes(), rando)}
@@ -277,11 +277,11 @@ def test_api_endpoints():
 
     # Bad Address - should return an empty response
     params['q'] = 'AAAAAAAAAAA'
-    response_json = ox.nominatim_request(params=params, type='search')
+    response_json = ox.nominatim_request(params=params, request_type='search')
 
     # Good Address - should return a valid response with a valid osm_id
     params['q'] = 'Newcastle A186 Westgate Rd'
-    response_json = ox.nominatim_request(params=params, type='search')
+    response_json = ox.nominatim_request(params=params, request_type='search')
 
     # Lookup
     params = OrderedDict()
@@ -289,11 +289,11 @@ def test_api_endpoints():
     params['address_details'] = 0
     params['osm_ids'] = 'W68876073'
 
-    response_json = ox.nominatim_request(params=params, type='lookup')
+    response_json = ox.nominatim_request(params=params, request_type='lookup')
 
     # Invalid nominatim query type
     with pytest.raises(ValueError):
-        response_json = ox.nominatim_request(params=params, type='xyz')
+        response_json = ox.nominatim_request(params=params, request_type='xyz')
 
     default_key = ox.settings.nominatim_key
     default_nominatim_endpoint = ox.settings.nominatim_endpoint
@@ -301,13 +301,12 @@ def test_api_endpoints():
 
     # Searching on public nominatim should work even if a key was provided
     ox.settings.nominatim_key='NOT_A_KEY'
-    response_json = ox.nominatim_request(params=params, type='search')
+    response_json = ox.nominatim_request(params=params, request_type='search')
 
     # Test changing the endpoint. It should fail because we didn't provide a valid key
     ox.settings.nominatim_endpoint='http://open.mapquestapi.com/nominatim/v1/'
     with pytest.raises(Exception):
-        response_json = ox.nominatim_request(params=params,
-                                             type='search')
+        response_json = ox.nominatim_request(params=params, request_type='search')
 
     # Test changing the endpoint. This should fail because we didn't provide a valid endpoint
     ox.settings.overpass_endpoint='http://NOT_A_VALID_ENDPOINT/api/'
@@ -409,7 +408,7 @@ def test_stats():
 
 
 def test_footprints():
-    
+
     # download footprints and plot them
     cs = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
     gdf = ox.footprints_from_place(place2, custom_settings=cs)

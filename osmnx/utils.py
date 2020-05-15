@@ -71,7 +71,7 @@ def ts(style='datetime', template=None):
         elif style == 'time':
             template = '{:%H:%M:%S}'
         else:
-            raise ValueError('unknown timestamp style "{}"'.format(style))
+            raise ValueError(f'unrecognized timestamp style "{style}"')
 
     ts = template.format(dt.datetime.now())
     return ts
@@ -241,7 +241,7 @@ def log(message, level=None, name=None, filename=None):
         sys.stdout = sys.__stdout__
 
         # prepend timestamp
-        message = '{} {}'.format(ts(), message)
+        message = f'{ts()} {message}'
 
         # convert to ascii so it doesn't break windows terminals
         message = unicodedata.normalize('NFKD', str(message)).encode('ascii', errors='replace').decode()
@@ -281,7 +281,7 @@ def get_logger(level=None, name=None, filename=None):
     if not getattr(logger, 'handler_set', None):
 
         # get today's date and construct a log filename
-        log_filename = os.path.join(settings.logs_folder, '{}_{}.log'.format(filename, ts(style='date')))
+        log_filename = os.path.join(settings.logs_folder, f'{filename}_{ts(style="date")}.log')
 
         # if the logs folder does not already exist, create it
         if not os.path.exists(settings.logs_folder):

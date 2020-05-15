@@ -40,30 +40,30 @@ def induce_subgraph(G, node_subset):
 
     Returns
     -------
-    G2 : networkx multidigraph
+    H : networkx multidigraph
         the subgraph of G induced by node_subset
     """
 
     node_subset = set(node_subset)
 
     # copy nodes into new graph
-    G2 = G.__class__()
-    G2.add_nodes_from((n, G.nodes[n]) for n in node_subset)
+    H = G.__class__()
+    H.add_nodes_from((n, G.nodes[n]) for n in node_subset)
 
     # copy edges to new graph, including parallel edges
-    if G2.is_multigraph:
-        G2.add_edges_from((n, nbr, key, d)
+    if H.is_multigraph:
+        H.add_edges_from((n, nbr, key, d)
             for n, nbrs in G.adj.items() if n in node_subset
             for nbr, keydict in nbrs.items() if nbr in node_subset
             for key, d in keydict.items())
     else:
-        G2.add_edges_from((n, nbr, d)
+        H.add_edges_from((n, nbr, d)
             for n, nbrs in G.adj.items() if n in node_subset
             for nbr, d in nbrs.items() if nbr in node_subset)
 
     # update graph attribute dict, and return graph
-    G2.graph.update(G.graph)
-    return G2
+    H.graph.update(G.graph)
+    return H
 
 
 
@@ -96,9 +96,9 @@ def get_largest_component(G, strongly=False):
             largest_scc = max(sccs, key=len)
             G = induce_subgraph(G, largest_scc)
 
-            msg = ('Graph was not connected, retained only the largest strongly '
-                   'connected component ({:,} of {:,} total nodes)')
-            utils.log(msg.format(len(list(G.nodes())), original_len))
+            msg = (f'Graph was not connected, retained only the largest strongly '
+                   f'connected component ({len(G)} of {original_len} total nodes)')
+            utils.log(msg)
     else:
         # if the graph is not connected retain only the largest weakly connected component
         if not nx.is_weakly_connected(G):
@@ -108,9 +108,9 @@ def get_largest_component(G, strongly=False):
             largest_wcc = max(wccs, key=len)
             G = induce_subgraph(G, largest_wcc)
 
-            msg = ('Graph was not connected, retained only the largest weakly '
-                   'connected component ({:,} of {:,} total nodes)')
-            utils.log(msg.format(len(list(G.nodes())), original_len))
+            msg = (f'Graph was not connected, retained only the largest weakly '
+                   f'connected component ({len(G)} of {original_len} total nodes)')
+            utils.log(msg)
 
     return G
 
@@ -257,10 +257,10 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
             gdf_nodes.set_geometry('geometry', inplace=True)
         gdf_nodes.crs = G.graph['crs']
-        gdf_nodes.gdf_name = '{}_nodes'.format(G.graph['name'])
+        gdf_nodes.gdf_name = f'{G.graph["name"]}_nodes'
 
         to_return.append(gdf_nodes)
-        utils.log('Created GeoDataFrame "{}" from graph'.format(gdf_nodes.gdf_name))
+        utils.log('Created nodes GeoDataFrame from graph')
 
     if edges:
 
@@ -290,10 +290,10 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         # create a GeoDataFrame from the list of edges and set the CRS
         gdf_edges = gpd.GeoDataFrame(edges)
         gdf_edges.crs = G.graph['crs']
-        gdf_edges.gdf_name = '{}_edges'.format(G.graph['name'])
+        gdf_edges.gdf_name = f'{G.graph["name"]}_edges'
 
         to_return.append(gdf_edges)
-        utils.log('Created GeoDataFrame "{}" from graph'.format(gdf_edges.gdf_name))
+        utils.log('Created edges GeoDataFrame from graph')
 
     if len(to_return) > 1:
         return tuple(to_return)
@@ -358,5 +358,5 @@ def remove_isolated_nodes(G):
 
     isolated_nodes = [node for node, degree in dict(G.degree()).items() if degree < 1]
     G.remove_nodes_from(isolated_nodes)
-    utils.log('Removed {:,} isolated nodes'.format(len(isolated_nodes)))
+    utils.log(f'Removed {len(isolated_nodes)} isolated nodes')
     return G

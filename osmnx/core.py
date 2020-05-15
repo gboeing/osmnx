@@ -73,7 +73,7 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
 
         # if we got an unexpected geometry type (like a point), log a warning
         if geometry['type'] not in ['Polygon', 'MultiPolygon']:
-            utils.log('OSM returned a {} as the geometry.'.format(geometry['type']), level=lg.WARNING)
+            utils.log(f'OSM returned a {geometry["type"]} as the geometry', level=lg.WARNING)
 
         # create the GeoDataFrame, name it, and set its original CRS to default_crs
         gdf = gpd.GeoDataFrame.from_features(features)
@@ -86,14 +86,14 @@ def gdf_from_place(query, gdf_name=None, which_result=1, buffer_dist=None):
             gdf_utm = projection.project_gdf(gdf)
             gdf_utm['geometry'] = gdf_utm['geometry'].buffer(buffer_dist)
             gdf = projection.project_gdf(gdf_utm, to_latlong=True)
-            utils.log('Buffered the GeoDataFrame "{}" to {} meters'.format(gdf.gdf_name, buffer_dist))
+            utils.log(f'Buffered GeoDataFrame to {buffer_dist} meters')
 
         # return the gdf
-        utils.log('Created GeoDataFrame with {} row for query "{}"'.format(len(gdf), query))
+        utils.log(f'Created GeoDataFrame with {len(gdf)} row for query "{query}"')
         return gdf
     else:
         # if no data returned (or fewer results than which_result)
-        utils.log('OSM returned no results (or fewer than which_result) for query "{}"'.format(query), level=lg.WARNING)
+        utils.log(f'OSM returned no results (or fewer than which_result) for query "{query}"', level=lg.WARNING)
         gdf = gpd.GeoDataFrame()
         gdf.gdf_name = gdf_name
         return gdf
@@ -138,7 +138,7 @@ def gdf_from_places(queries, gdf_name='unnamed', buffer_dist=None, which_results
 
     # set the original CRS of the GeoDataFrame to default_crs, and return it
     gdf.crs = settings.default_crs
-    utils.log('Finished creating GeoDataFrame with {} rows from {} queries'.format(len(gdf), len(queries)))
+    utils.log(f'Finished creating GeoDataFrame with {len(gdf)} rows from {len(queries)} queries')
     return gdf
 
 
@@ -211,7 +211,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     if memory is None:
         maxsize = ''
     else:
-        maxsize = '[maxsize:{}]'.format(memory)
+        maxsize = f'[maxsize:{memory}]'
 
     # use custom settings if delivered, otherwise just the default ones.
     if custom_settings:
@@ -232,7 +232,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         # back to lat-long
         geometry_proj_consolidated_subdivided = utils_geo.consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, _ = projection.project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
-        utils.log('Requesting network data within bounding box from API in {:,} request(s)'.format(len(geometry)))
+        utils.log(f'Requesting network data within bounding box from API in {len(geometry)} request(s)')
 
         # loop through each polygon rectangle in the geometry (there will only
         # be one if original bbox didn't exceed max area size)
@@ -241,15 +241,10 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
             # decimal places (ie, ~100 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_template = '{overpass_settings};({infrastructure}{filters}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;'
-            query_str = query_template.format(north=north, south=south,
-                                              east=east, west=west,
-                                              infrastructure=infrastructure,
-                                              filters=osm_filter,
-                                              overpass_settings=overpass_settings)
+            query_str = f'{overpass_settings};({infrastructure}{osm_filter}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;'
             response_json = downloader.overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        utils.log('Got all network data within bounding box from API in {:,} request(s)'.format(len(geometry)))
+        utils.log(f'Got all network data within bounding box from API in {len(geometry)} request(s)')
 
     elif by_poly:
         # project to utm, divide polygon up into sub-polygons if area exceeds a
@@ -259,19 +254,15 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         geometry_proj_consolidated_subdivided = utils_geo.consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, _ = projection.project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = utils_geo.get_polygons_coordinates(geometry)
-        utils.log('Requesting network data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
+        utils.log(f'Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)')
 
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
-            query_template = '{overpass_settings};({infrastructure}{filters}(poly:"{polygon}");>;);out;'
-            query_str = query_template.format(polygon=polygon_coord_str,
-                                              infrastructure=infrastructure,
-                                              filters=osm_filter,
-                                              overpass_settings=overpass_settings)
+            query_str = f'{overpass_settings};({infrastructure}{osm_filter}(poly:"{polygon_coord_str}");>;);out;'
             response_json = downloader.overpass_request(data={'data':query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        utils.log('Got all network data within polygon from API in {:,} request(s)'.format(len(polygon_coord_strs)))
+        utils.log(f'Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)')
 
     return response_jsons
 
@@ -511,7 +502,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional
     if not retain_all:
         G = utils_graph.get_largest_component(G)
 
-    utils.log('Created graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
+    utils.log(f'Created graph with {len(G)} nodes and {len(G.edges())} edges')
 
     # add length (great circle distance between nodes) attribute to each edge to
     # use as weight
@@ -630,7 +621,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
         if simplify:
             G = simplification.simplify_graph(G)
 
-    utils.log('graph_from_bbox() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
+    utils.log(f'graph_from_bbox returned graph with {len(G)} nodes and {len(G.edges())} edges')
     return  G
 
 
@@ -713,7 +704,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
         centermost_node = utils_geo.get_nearest_node(G, center_point)
         G = utils_geo.truncate_graph_dist(G, centermost_node, max_distance=distance)
 
-    utils.log('graph_from_point() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
+    utils.log(f'graph_from_point returned graph with {len(G)} nodes and {len(G.edges())} edges')
     return G
 
 
@@ -790,7 +781,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
                          max_query_area_size=max_query_area_size,
                          clean_periphery=clean_periphery, infrastructure=infrastructure,
                          custom_filter=custom_filter, custom_settings=custom_settings)
-    utils.log('graph_from_address() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
+    utils.log(f'graph_from_address returned graph with {len(G)} nodes and {len(G.edges())} edges')
 
     if return_coords:
         return G, point
@@ -916,7 +907,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         if simplify:
             G = simplification.simplify_graph(G)
 
-    utils.log('graph_from_polygon() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
+    utils.log(f'graph_from_polygon returned graph with {len(G)} nodes and {len(G.edges())} edges')
     return G
 
 
@@ -1008,7 +999,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
                            clean_periphery=clean_periphery, infrastructure=infrastructure,
                            custom_filter=custom_filter, custom_settings=custom_settings)
 
-    utils.log('graph_from_place() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
+    utils.log(f'graph_from_place returned graph with {len(G)} nodes and {len(G.edges())} edges')
     return G
 
 
@@ -1046,7 +1037,7 @@ def graph_from_file(filename, bidirectional=False, simplify=True,
     if simplify:
         G = simplification.simplify_graph(G)
 
-    utils.log('graph_from_file() returning graph with {:,} nodes and {:,} edges'.format(len(list(G.nodes())), len(list(G.edges()))))
+    utils.log(f'graph_from_file returned graph with {len(G)} nodes and {len(G.edges())} edges')
     return G
 
 
