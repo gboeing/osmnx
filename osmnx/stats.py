@@ -144,7 +144,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
 
     # calculate clean intersection counts
     if clean_intersects:
-        clean_intersection_points = clean_intersections(G, tolerance=tolerance, dead_ends=False )
+        clean_intersection_points = clean_intersections(G, tolerance=tolerance, rebuild_graph=False, dead_ends=False)
         clean_intersection_count = len(clean_intersection_points)
     else:
         clean_intersection_count = None

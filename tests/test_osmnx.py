@@ -15,8 +15,10 @@ import shutil
 # remove the .temp folder if it already exists so we start fresh with tests
 if os.path.exists('.temp'):
     shutil.rmtree('.temp')
+import networkx as nx
 
 import osmnx as ox
+
 
 # configure OSMnx
 ox.config(log_console=True,
@@ -132,6 +134,9 @@ def test_stats():
 
     # calculate extended stats
     stats4 = ox.extended_stats(G, connectivity=True, anc=False, ecc=True, bc=True, cc=True)
+
+    # test cleaning and rebuilding graph
+    G_clean = ox.clean_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
 
 
 
