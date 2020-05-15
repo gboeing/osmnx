@@ -336,14 +336,14 @@ def test_network_saving_loading():
     default_all_oneway = ox.settings.all_oneway
     ox.settings.all_oneway = True
     G = ox.graph_from_point(location_point, distance=500, network_type='drive')
-    ox.save_as_osm(G, merge_edges=False)
+    ox.save_graph_osm(G, merge_edges=False)
 
     # test osm xml output merge edges
-    ox.save_as_osm(G, merge_edges=True, edge_tag_aggs=[('length', 'sum')])
+    ox.save_graph_osm(G, merge_edges=True, edge_tag_aggs=[('length', 'sum')])
 
     # test osm xml output from gdfs
     nodes, edges = ox.graph_to_gdfs(G)
-    ox.save_as_osm([nodes, edges])
+    ox.save_graph_osm([nodes, edges])
 
     # test ordered nodes from way
     df = pd.DataFrame(

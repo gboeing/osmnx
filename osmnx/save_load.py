@@ -142,25 +142,24 @@ def save_graph_shapefile(G, filepath=None, encoding='utf-8'):
 
 
 
-def save_as_osm(
-        data, node_tags=settings.osm_xml_node_tags,
-        node_attrs=settings.osm_xml_node_attrs,
-        edge_tags=settings.osm_xml_way_tags,
-        edge_attrs=settings.osm_xml_way_attrs,
-        oneway=False, merge_edges=True, edge_tag_aggs=None,
-        filename='graph.osm', folder=None):
+def save_graph_osm(data, filepath=None,
+	               node_tags=settings.osm_xml_node_tags,
+			       node_attrs=settings.osm_xml_node_attrs,
+			       edge_tags=settings.osm_xml_way_tags,
+			       edge_attrs=settings.osm_xml_way_attrs,
+			       oneway=False, merge_edges=True, edge_tag_aggs=None):
     """
-    Save a graph as an OSM XML formatted file. NOTE: for very large
-    networks this method can take upwards of 30+ minutes to finish.
+    Save a graph as a .osm XML formatted file. Note: for very large
+    networks this function can take a long time to finish.
 
     Parameters
-    __________
+    ----------
     data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
         geopandas.GeoDataFrames
-    filename : string
-        the name of the osm file (including file extension)
-    folder : string
-        the folder to contain the file, if None, use default data folder
+    filepath : string
+        path to the .osm file including extension
+    node_tags : list
+    	osm node tags to include in output OSM XML
     node_attrs: list
         osm node attributes to include in output OSM XML
     edge_tags : list
@@ -171,33 +170,39 @@ def save_as_osm(
         the default oneway value used to fill this tag where missing
     merge_edges : bool
         if True merges graph edges such that each OSM way has one entry
-            and one entry only in the OSM XML. Otherwise, every OSM way
-            will have a separate entry for each node pair it contains.
+        and one entry only in the OSM XML. Otherwise, every OSM way
+        will have a separate entry for each node pair it contains.
     edge_tag_aggs : list of length-2 string tuples
         useful only if merge_edges is True, this argument allows the user
-            to specify edge attributes to aggregate such that the merged
-            OSM way entry tags accurately represent the sum total of
-            their component edge attributes. For example, if the user
-            wants the OSM way to have a "length" attribute, the user must
-            specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
-            this method to aggregate the lengths of the individual
-            component edges. Otherwise, the length attribute will simply
-            reflect the length of the first edge associated with the way.
+        to specify edge attributes to aggregate such that the merged
+        OSM way entry tags accurately represent the sum total of
+        their component edge attributes. For example, if the user
+        wants the OSM way to have a "length" attribute, the user must
+        specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
+        this method to aggregate the lengths of the individual
+        component edges. Otherwise, the length attribute will simply
+        reflect the length of the first edge associated with the way.
 
     Returns
     -------
     None
     """
-    if folder is None:
-        folder = settings.data_folder
+
+    # default filepath if none was provided
+    if filepath is None:
+        filepath = os.path.join(settings.data_folder, 'graph.osm')
+
+    # if save folder does not already exist, create it
+    folder, filename = os.path.split(filepath)
+    if not folder == '' and not os.path.exists(folder):
+        os.makedirs(folder)
 
     try:
         assert settings.all_oneway
     except AssertionError:
-        raise UserWarning(
-            "In order for save_as_osm to behave properly "
-            "the graph must have been created with the 'all_oneway' "
-            "setting set to True.")
+        raise UserWarning('In order for save_graph_osm to behave properly '
+                          'the graph must have been created with the '
+                          '`all_oneway` setting set to True.')
 
     try:
         gdf_nodes, gdf_edges = data
@@ -306,13 +311,8 @@ def save_as_osm(
                         edge, 'tag', attrib={'k': tag, 'v': row[tag]})
 
     et = etree.ElementTree(root)
-
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
-    filepath = os.path.join(folder, filename)
     et.write(filepath)
-    utils.log(f'Saved graph to disk as .osm file "{filepath}"')
+    utils.log(f'Saved graph as .osm file at "{filepath}"')
 
 
 
