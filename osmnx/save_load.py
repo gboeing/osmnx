@@ -22,7 +22,7 @@ from . import utils_graph
 
 
 
-def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8'):
+def save_graph_geopackage(G, filepath=None, encoding='utf-8'):
     """
     Save graph nodes and edges as to disk as layers in a GeoPackage file.
 
@@ -30,9 +30,8 @@ def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8
     ----------
     G : networkx multidigraph
     filename : string
-        the filename of the GeoPackage including file extension
-    folder : string
-        the path to the folder to contain the GeoPackage, if None, use default data folder
+        path to the GeoPackage file including extension. if None, use
+        default data folder + graph.gpkg
     encoding : string
         the character encoding for the saved files
 
@@ -41,6 +40,15 @@ def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8
     None
     """
 
+    # default filepath if none was provided
+    if filepath is None:
+        filepath = os.path.join(settings.data_folder, 'graph.gpkg')
+
+    # if save folder does not already exist, create it
+    folder, filename = os.path.split(filepath)
+    if not folder == '' and not os.path.exists(folder):
+        os.makedirs(folder)
+
     # convert undirected graph to geodataframes
     gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(get_undirected(G))
 
@@ -48,14 +56,6 @@ def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8
     for col in [c for c in gdf_edges.columns if not c == 'geometry']:
         if not pd.api.types.is_numeric_dtype(gdf_edges[col]):
             gdf_edges[col] = gdf_edges[col].fillna('').map(str)
-
-    # use settings.data_folder if a folder wasn't passed in
-    # if the save folder does not already exist, create it
-    if folder is None:
-        folder = settings.data_folder
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    filepath = os.path.join(folder, filename)
 
     # save the nodes and edges as GeoPackage layers
     gdf_nodes.to_file(filepath, layer='nodes', driver='GPKG', encoding=encoding)
