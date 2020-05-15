@@ -16,16 +16,6 @@ from shapely.geometry import Point
 from . import settings
 from . import utils
 
-# scipy and sklearn are optional dependencies for faster nearest node search
-try:
-    from scipy.spatial import cKDTree
-except ImportError as e:
-    cKDTree = None
-try:
-    from sklearn.neighbors import BallTree
-except ImportError as e:
-    BallTree = None
-
 
 
 def induce_subgraph(G, node_subset):
