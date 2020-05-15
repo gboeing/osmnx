@@ -29,7 +29,7 @@ def save_graph_geopackage(G, filepath=None, encoding='utf-8'):
     Parameters
     ----------
     G : networkx multidigraph
-    filename : string
+    filepath : string
         path to the GeoPackage file including extension. if None, use
         default data folder + graph.gpkg
     encoding : string
@@ -60,31 +60,38 @@ def save_graph_geopackage(G, filepath=None, encoding='utf-8'):
     # save the nodes and edges as GeoPackage layers
     gdf_nodes.to_file(filepath, layer='nodes', driver='GPKG', encoding=encoding)
     gdf_edges.to_file(filepath, layer='edges', driver='GPKG', encoding=encoding)
-    utils.log(f'Saved graph as GeoPackage "{filepath}"')
+    utils.log(f'Saved graph as GeoPackage at "{filepath}"')
 
 
 
-def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
+def save_graph_shapefile(G, filepath=None, encoding='utf-8'):
     """
-    Save graph nodes and edges as ESRI shapefiles to disk.
+    Save graph nodes and edges to disk as ESRI shapefiles.
 
     Parameters
     ----------
     G : networkx multidigraph
-    filename : string
-        the name of the shapefiles (not including file extensions)
-    folder : string
-        the folder to contain the shapefiles, if None, use default data folder
+    filepath : string
+        path to the shapefiles folder (no file extension). if None,
+        use default data folder
     encoding : string
-        the character encoding for the saved shapefiles
+        the character encoding for the saved files
 
     Returns
     -------
     None
     """
 
-    if folder is None:
-        folder = settings.data_folder
+    # default filepath if none was provided
+    if filepath is None:
+        filepath = settings.data_folder
+
+    # if save folder does not already exist, create it (shapefiles
+    # get saved as set of files)
+    if not filepath == '' and not os.path.exists(filepath):
+        os.makedirs(filepath)
+    filepath_nodes = os.path.join(filepath, 'nodes.shp')
+    filepath_edges = os.path.join(filepath, 'edges.shp')
 
     # convert directed graph G to an undirected graph for saving as a shapefile
     G_save = get_undirected(G.copy())
@@ -128,16 +135,10 @@ def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
     for col in [c for c in gdf_edges.columns if not c == 'geometry']:
         gdf_edges[col] = gdf_edges[col].fillna('').astype(str)
 
-    # if the save folder does not already exist, create it with a filename
-    # subfolder
-    filepath = os.path.join(folder, filename)
-    if not os.path.exists(filepath):
-        os.makedirs(filepath)
-
     # save the nodes and edges as separate ESRI shapefiles
-    gdf_nodes.to_file(f'{filepath}/nodes', encoding=encoding)
-    gdf_edges.to_file(f'{filepath}/edges', encoding=encoding)
-    utils.log(f'Saved graph as shapefiles "{filepath}"')
+    gdf_nodes.to_file(filepath_nodes, encoding=encoding)
+    gdf_edges.to_file(filepath_edges, encoding=encoding)
+    utils.log(f'Saved graph as shapefiles at "{filepath}"')
 
 
 
