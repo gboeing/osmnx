@@ -44,22 +44,6 @@ osmnx.footprints module
     :undoc-members:
     :show-inheritance:
 
-osmnx.geo_utils module
-----------------------
-
-.. automodule:: osmnx.geo_utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-osmnx.osm_content_handler module
---------------------------------
-
-.. automodule:: osmnx.osm_content_handler
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 osmnx.plot module
 -----------------
 
@@ -100,10 +84,10 @@ osmnx.settings module
     :undoc-members:
     :show-inheritance:
 
-osmnx.simplify module
----------------------
+osmnx.simplification module
+---------------------------
 
-.. automodule:: osmnx.simplify
+.. automodule:: osmnx.simplification
     :members:
     :undoc-members:
     :show-inheritance:
@@ -124,6 +108,21 @@ osmnx.utils module
     :undoc-members:
     :show-inheritance:
 
+osmnx.utils_geo module
+----------------------
+
+.. automodule:: osmnx.utils_geo
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+osmnx.utils_graph module
+------------------------
+
+.. automodule:: osmnx.utils_graph
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Module contents
 ---------------
