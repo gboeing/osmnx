@@ -28,12 +28,12 @@ def save_graph_geopackage(G, filepath=None, encoding='utf-8'):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     filepath : string
         path to the GeoPackage file including extension. if None, use
         default data folder + graph.gpkg
     encoding : string
-        the character encoding for the saved files
+        the character encoding for the saved file
 
     Returns
     -------
@@ -70,7 +70,7 @@ def save_graph_shapefile(G, filepath=None, encoding='utf-8'):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     filepath : string
         path to the shapefiles folder (no file extension). if None,
         use default data folder
@@ -323,7 +323,7 @@ def get_unique_nodes_ordered_from_way(way_edges_df):
 
     Parameters
     ----------
-    way_edges_df : pandas.DataFrame()
+    way_edges_df : pandas.DataFrame
         Dataframe containing columns 'u' and 'v' corresponding to
         origin/desitination nodes.
 
@@ -364,36 +364,45 @@ def get_unique_nodes_ordered_from_way(way_edges_df):
 
 
 
-def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
+def save_graphml(G, filepath=None, gephi=False, encoding='utf-8'):
     """
-    Save graph as GraphML file to disk.
+    Save graph to disk as GraphML file.
 
     Parameters
     ----------
-    G : networkx multidigraph
-    filename : string
-        the name of the graphml file (including file extension)
-    folder : string
-        the folder to contain the file, if None, use default data folder
+    G : networkx.MultiDiGraph
+    filepath : string
+        path to the GraphML file including extension
     gephi : bool
         if True, give each edge a unique key to work around Gephi's
         restrictive interpretation of the GraphML specification
+	encoding : string
+        the character encoding for the saved file
 
     Returns
     -------
     None
     """
 
-    if folder is None:
-        folder = settings.data_folder
+    # default filepath if none was provided
+    if filepath is None:
+        filepath = os.path.join(settings.data_folder, 'graph.graphml')
+
+    # if save folder does not already exist, create it
+    folder, filename = os.path.split(filepath)
+    if not folder == '' and not os.path.exists(folder):
+        os.makedirs(folder)
 
     # create a copy to convert all the node/edge attribute values to string
     G_save = G.copy()
 
     if gephi:
 
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G_save, nodes=True, edges=True, node_geometry=True,
-                                             fill_edge_geometry=True)
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G_save,
+        	                                             nodes=True,
+        	                                             edges=True,
+        	                                             node_geometry=True,
+                                                         fill_edge_geometry=True)
 
         # turn each edge's key into a unique ID for Gephi compatibility
         gdf_edges['key'] = range(len(gdf_edges))
@@ -427,39 +436,32 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
             # convert all the edge attribute values to strings
             data[dict_key] = str(data[dict_key])
 
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    filepath = os.path.join(folder, filename)
-
-    nx.write_graphml(G_save, filepath)
-    utils.log(f'Saved graph as GraphML "{filepath}"')
+    nx.write_graphml(G_save, path=filepath, encoding=encoding)
+    utils.log(f'Saved graph as GraphML file at "{filepath}"')
 
 
 
-def load_graphml(filename, folder=None, node_type=int):
+def load_graphml(filepath, node_type=int):
     """
-    Load a GraphML file from disk and convert the node/edge attributes to
-    correct data types.
+    Load an OSMnx-saved GraphML file from disk and convert the node/edge
+    attributes to appropriate data types.
 
     Parameters
     ----------
-    filename : string
+    filepath : string
         the name of the graphml file (including file extension)
     folder : string
         the folder containing the file, if None, use default data folder
     node_type : type
-        (Python type (default: int)) - Convert node ids to this type
+        convert node ids to this type
 
     Returns
     -------
-    networkx multidigraph
+    networkx.MultiDiGraph
     """
 
     # read the graph from disk
-    if folder is None:
-        folder = settings.data_folder
-    path = os.path.join(folder, filename)
-    G = nx.MultiDiGraph(nx.read_graphml(path, node_type=node_type))
+    G = nx.MultiDiGraph(nx.read_graphml(filepath, node_type=node_type))
 
     # convert graph crs attribute from saved string to correct dict data type
     # if it is a stringified dict rather than a proj4 string
@@ -526,7 +528,7 @@ def load_graphml(filename, folder=None, node_type=int):
     if 'edge_default' in G.graph:
         del G.graph['edge_default']
 
-    utils.log(f'Loaded graph with {len(G)} nodes and {len(G.edges())} edges from "{path}"')
+    utils.log(f'Loaded graph with {len(G)} nodes and {len(G.edges())} edges from "{filepath}"')
     return G
 
 

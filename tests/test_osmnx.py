@@ -126,8 +126,8 @@ def test_geometry_coords_rounding():
     shape2 = ox.round_shape_coords(shape1, precision)
 
 
-def test_gdf_shapefiles():
-    # test loading spatial boundaries, saving as shapefile, and plotting
+def test_gdf_from_place():
+    # test loading spatial boundaries and plotting
     city = ox.gdf_from_place(place1)
     city_projected = ox.project_gdf(city, to_crs='epsg:3395')
 
@@ -327,10 +327,10 @@ def test_network_saving_loading():
     ox.save_graph_geopackage(G)
 
     # save/load graph as graphml file
-    ox.save_graphml(G)
-    ox.save_graphml(G, filename='gephi.graphml', gephi=True)
-    G = ox.load_graphml('graph.graphml')
-    G = ox.load_graphml('graph.graphml', node_type=str)
+    ox.save_graphml(G, gephi=False)
+    ox.save_graphml(G, gephi=True)
+    filepath = os.path.join(ox.settings.data_folder, 'graph.graphml')
+    G = ox.load_graphml(filepath, node_type=str)
 
     # test osm xml output
     default_all_oneway = ox.settings.all_oneway
