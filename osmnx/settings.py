@@ -1,7 +1,6 @@
 ################################################################################
 # Module: settings.py
-# Description: Global settings, can be configured by user by passing values to
-#              utils.config()
+# Description: Global settings, can be configured by user with utils.config()
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################

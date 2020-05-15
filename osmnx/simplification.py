@@ -1,6 +1,6 @@
 ################################################################################
-# Module: simplify.py
-# Description: Simplify and correct network topology
+# Module: simplification.py
+# Description: Simplify, correct, and consolidate network topology
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
@@ -8,16 +8,12 @@
 import geopandas as gpd
 import logging as lg
 import networkx as nx
-import pandas as pd
-import time
 from shapely.geometry import LineString
 from shapely.geometry import Point
 from shapely.geometry import Polygon
+from . import utils
+from . import utils_graph
 
-from .geo_utils import count_streets_per_node
-from .projection import project_graph
-from .save_load import graph_to_gdfs
-from .utils import log
 
 
 def is_endpoint(G, node, strict=True):
@@ -95,6 +91,7 @@ def is_endpoint(G, node, strict=True):
         return False
 
 
+
 def build_path(G, node, endpoints, path):
     """
     Recursively build a path of nodes until you hit an endpoint node.
@@ -138,6 +135,7 @@ def build_path(G, node, endpoints, path):
     return path
 
 
+
 def get_paths_to_simplify(G, strict=True):
     """
     Create a list of all the paths to be simplified between endpoint nodes.
@@ -160,11 +158,9 @@ def get_paths_to_simplify(G, strict=True):
     """
 
     # first identify all the nodes that are endpoints
-    start_time = time.time()
     endpoints = set([node for node in G.nodes() if is_endpoint(G, node, strict=strict)])
-    log('Identified {:,} edge endpoints in {:,.2f} seconds'.format(len(endpoints), time.time()-start_time))
+    utils.log('Identified {:,} edge endpoints'.format(len(endpoints)))
 
-    start_time = time.time()
     paths_to_simplify = []
 
     # for each endpoint node, look at each of its successor nodes
@@ -177,7 +173,7 @@ def get_paths_to_simplify(G, strict=True):
                     path = build_path(G, successor, endpoints, path=[node, successor])
                     paths_to_simplify.append(path)
                 except RecursionError:
-                    log('Recursion error: exceeded max depth, moving on to next endpoint successor', level=lg.WARNING)
+                    utils.log('Recursion error: exceeded max depth, moving on to next endpoint successor', level=lg.WARNING)
                     # recursion errors occur if some connected component is a
                     # self-contained ring in which all nodes are not end points.
                     # could also occur in extremely long street segments (eg, in
@@ -185,8 +181,9 @@ def get_paths_to_simplify(G, strict=True):
                     # handle it by just ignoring that component and letting its
                     # topology remain intact (this should be a rare occurrence)
 
-    log('Constructed all paths to simplify in {:,.2f} seconds'.format(time.time()-start_time))
+    utils.log('Constructed all paths to simplify')
     return paths_to_simplify
+
 
 
 def is_simplified(G):
@@ -206,6 +203,7 @@ def is_simplified(G):
     """
 
     return 'simplified' in G.graph and G.graph['simplified']
+
 
 
 def simplify_graph(G, strict=True):
@@ -232,7 +230,7 @@ def simplify_graph(G, strict=True):
     if is_simplified(G):
         raise Exception('This graph has already been simplified, cannot simplify it again.')
 
-    log('Begin topologically simplifying the graph...')
+    utils.log('Begin topologically simplifying the graph...')
     G = G.copy()
     initial_node_count = len(list(G.nodes()))
     initial_edge_count = len(list(G.edges()))
@@ -242,7 +240,6 @@ def simplify_graph(G, strict=True):
     # construct a list of all the paths that need to be simplified
     paths = get_paths_to_simplify(G, strict=strict)
 
-    start_time = time.time()
     for path in paths:
 
         # add the interstitial edges we're removing to a list so we can retain
@@ -252,7 +249,7 @@ def simplify_graph(G, strict=True):
 
             # there shouldn't be multiple edges between interstitial nodes
             if not G.number_of_edges(u, v) == 1:
-                log('Multiple edges between "{}" and "{}" found when simplifying'.format(u, v), level=lg.WARNING)
+                utils.log('Multiple edges between "{}" and "{}" found when simplifying'.format(u, v), level=lg.WARNING)
 
             # the only element in this list as long as above check is True
             # (MultiGraphs use keys (the 0 here), indexed with ints from 0 and
@@ -298,8 +295,8 @@ def simplify_graph(G, strict=True):
 
     G.graph['simplified'] = True
 
-    msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges) in {:,.2f} seconds'
-    log(msg.format(initial_node_count, len(list(G.nodes())), initial_edge_count, len(list(G.edges())), time.time()-start_time))
+    msg = 'Simplified graph (from {:,} to {:,} nodes and from {:,} to {:,} edges)'
+    utils.log(msg.format(initial_node_count, len(list(G.nodes())), initial_edge_count, len(list(G.edges()))))
     return G
 
 
@@ -325,7 +322,11 @@ def clean_intersections(G, tolerance=10, dead_ends=False,
           'removed in the next release. Use the new `consolidate_intersections` ' \
           'function instead.'
     warn(msg)
-    return consolidate_intersections(G, tolerance=tolerance, dead_ends=dead_ends)
+    return consolidate_intersections(G,
+                                     tolerance=tolerance,
+                                     dead_ends=dead_ends,
+                                     rebuild_graph=rebuild_graph,
+                                     update_edge_lengths=update_edge_lengths)
 
 
 
@@ -333,14 +334,14 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
                               dead_ends=False, update_edge_lengths=True):
     """
     Consolidate intersections comprising clusters of nodes by merging them
-    and returning either their centroids or a rebuilt graph with consolidated 
+    and returning either their centroids or a rebuilt graph with consolidated
     intersections and reconnected edge geometries.
 
     The tolerance argument should be adjusted to approximately match street
     design standards in the specific street network, and you should always use
     a projected graph to work in meaningful and consistent units like meters.
 
-    Divided roads are often represented by separate centerline edges. The 
+    Divided roads are often represented by separate centerline edges. The
     intersection of two divided roads thus creates 4 nodes, representing where
     each edge intersects a perpendicular edge. These 4 nodes represent a single
     intersection in the real world. This function consolidates them up by
@@ -357,7 +358,7 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
         nodes within this distance (in graph's geometry's units) will be
         dissolved into a single intersection
     rebuild_graph : bool
-        if True, use consolidate_intersections_rebuild_graph to consolidate 
+        if True, use consolidate_intersections_rebuild_graph to consolidate
         the intersections and rebuild the graph, then return as
         networkx.MultiDiGraph. if False, just return the consolidated
         intersection points as a geopandas.GeoSeries (faster than rebuilding
@@ -374,7 +375,7 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
     ----------
     networkx.MultiDiGraph or geopandas.GeoSeries
         if rebuild_graph=True, returns MultiDiGraph with consolidated
-        intersections & reconnected edge geometries. if rebuild_graph=False, 
+        intersections & reconnected edge geometries. if rebuild_graph=False,
         returns GeoSeries of shapely Points representing the centroids of
         street intersections
     """
@@ -384,7 +385,7 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
         if 'streets_per_node' in G.graph:
             streets_per_node = G.graph['streets_per_node']
         else:
-            streets_per_node = count_streets_per_node(G)
+            streets_per_node = utils_graph.count_streets_per_node(G)
 
         dead_end_nodes = [node for node, count in streets_per_node.items() if count <= 1]
         G = G.copy()
@@ -397,7 +398,7 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
 
     else:
         # create a GeoDataFrame of nodes, buffer to passed-in distance, merge overlaps
-        gdf_nodes = graph_to_gdfs(G, edges=False)
+        gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False)
         buffered_nodes = gdf_nodes.buffer(tolerance).unary_union
         if isinstance(buffered_nodes, Polygon):
             # if only a single node results, make iterable to convert to GeoSeries
@@ -443,10 +444,10 @@ def consolidate_intersections_rebuild_graph(G, tolerance=10,
         the rebuilt graph with consolidated intersections and reconnected
         edge geometries
     """
-    
+
     # STEP 1
     # buffer nodes to passed-in distance, merge overlaps
-    gdf_nodes, gdf_edges = graph_to_gdfs(G)
+    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
     gdf_edges = gdf_edges.set_index(['u', 'v', 'key'])
     buffered_nodes = gdf_nodes.buffer(tolerance).unary_union
     if isinstance(buffered_nodes, Polygon):
@@ -511,13 +512,13 @@ def consolidate_intersections_rebuild_graph(G, tolerance=10,
             # if cluster is a single node, add that node to new graph
             H.add_node(cluster_label, **G.nodes[osmids[0]])
         else:
-            # if cluster is multiple merged nodes, create one new node to 
+            # if cluster is multiple merged nodes, create one new node to
             # represent them
             H.add_node(cluster_label,
                        osmid=str(osmids),
                        x=nodes_subset['x'].iloc[0],
                        y=nodes_subset['y'].iloc[0])
-    
+
 
     # STEP 6
     # create a new edge for each edge in original graph
@@ -525,7 +526,7 @@ def consolidate_intersections_rebuild_graph(G, tolerance=10,
     for u, v, k, data  in G.edges(keys=True, data=True):
         u2 = gdf.loc[u, 'cluster']
         v2 = gdf.loc[v, 'cluster']
-        
+
         # only create the edge if we're not connecting the cluster
         # to itself, but always add original self-loops
         if (u2 != v2) or (u == v):
@@ -539,19 +540,19 @@ def consolidate_intersections_rebuild_graph(G, tolerance=10,
     # STEP 7
     # for every group of merged nodes with more than 1 node in it,
     # extend the edge geometries to reach the new node point
-    new_edges = graph_to_gdfs(H, nodes=False)
+    new_edges = utils_graph.graph_to_gdfs(H, nodes=False)
     for cluster_label, nodes_subset in groups:
-        
+
         # but only if there were multiple nodes merged together,
         # otherwise it's the same old edge as in original graph
         if len(nodes_subset) > 1:
-            
+
             # get coords of merged nodes point centroid to prepend or
             # append to the old edge geom's coords
             x = H.nodes[cluster_label]['x']
             y = H.nodes[cluster_label]['y']
             xy = [(x, y)]
-            
+
             # for each edge incident to this new merged node, update
             # its geometry to extend to/from the new node's point coords
             mask = (new_edges['u']==cluster_label) | (new_edges['v']==cluster_label)
@@ -560,7 +561,7 @@ def consolidate_intersections_rebuild_graph(G, tolerance=10,
                 new_coords = xy + old_coords if cluster_label == u else old_coords + xy
                 new_geom = LineString(new_coords)
                 H.edges[u, v, k]['geometry'] = new_geom
-                
+
                 # update the edge length attribute if parameterized to do so
                 # otherwise just keep using the original edge length
                 if update_edge_lengths:

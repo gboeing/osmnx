@@ -1,19 +1,25 @@
-import io
-import json
+################################################################################
+# Module: downloader.py
+# Description: Interact with the APIs
+# License: MIT, see full license in LICENSE.txt
+# Web: https://github.com/gboeing/osmnx
+################################################################################
+
+import datetime as dt
 import hashlib
+import json
+import logging as lg
 import math
+import os
+import re
 import requests
 import time
-import re
-import datetime as dt
-import os
-import logging as lg
 from collections import OrderedDict
 from dateutil import parser as date_parser
-from .errors import *
-from .utils import make_str, log
-
 from . import settings
+from . import utils
+from .errors import UnknownNetworkType
+
 
 
 def get_osm_filter(network_type):
@@ -84,6 +90,7 @@ def get_osm_filter(network_type):
     return osm_filter
 
 
+
 def save_to_cache(url, response_json):
     """
     Save an HTTP response json object to the cache.
@@ -109,7 +116,7 @@ def save_to_cache(url, response_json):
     """
     if settings.use_cache:
         if response_json is None:
-            log('Did not save to cache because response_json is None')
+            utils.log('Did not save to cache because response_json is None')
         else:
             # create the folder on the disk if it doesn't already exist
             if not os.path.exists(settings.cache_folder):
@@ -120,11 +127,11 @@ def save_to_cache(url, response_json):
             cache_filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
 
             # dump to json, and save to file
-            json_str = make_str(json.dumps(response_json))
-            with io.open(cache_filepath, 'w', encoding='utf-8') as cache_file:
+            json_str = str(json.dumps(response_json))
+            with open(cache_filepath, 'w', encoding='utf-8') as cache_file:
                 cache_file.write(json_str)
 
-            log('Saved response to cache file "{}"'.format(cache_filepath))
+            utils.log('Saved response to cache file "{}"'.format(cache_filepath))
 
 
 
@@ -147,7 +154,7 @@ def url_in_cache(url):
     # hash the url to generate the cache filename
     filename = hashlib.md5(url.encode('utf-8')).hexdigest()
     filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
-    
+
     # if this file exists in the cache, return its full path
     if os.path.isfile(filepath):
         return filepath
@@ -171,13 +178,13 @@ def get_from_cache(url):
 
     # if the tool is configured to use the cache
     if settings.use_cache:
-        
+
         # return cached response for this url if it exists, otherwise return None
         cache_filepath = url_in_cache(url)
         if cache_filepath is not None:
-            with io.open(cache_filepath, encoding='utf-8') as cache_file:
+            with open(cache_filepath, encoding='utf-8') as cache_file:
                 response_json = json.load(cache_file)
-            log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_filepath, url))
+            utils.log('Retrieved response from cache file "{}" for URL "{}"'.format(cache_filepath, url))
             return response_json
 
 
@@ -212,6 +219,7 @@ def get_http_headers(user_agent=None, referer=None, accept_language=None):
     return headers
 
 
+
 def get_pause_duration(recursive_delay=5, default_duration=10):
     """
     Check the Overpass API status endpoint to determine how long to wait until
@@ -234,10 +242,10 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
         response = requests.get(settings.overpass_endpoint.rstrip('/') + '/status', headers=get_http_headers())
         status = response.text.split('\n')[3]
         status_first_token = status.split(' ')[0]
+    # if we cannot reach the status endpoint or parse its output, log an
+    # error and return default duration
     except Exception:
-        # if we cannot reach the status endpoint or parse its output, log an
-        # error and return default duration
-        log('Unable to query {}/status'.format(settings.overpass_endpoint.rstrip('/')), level=lg.ERROR)
+        utils.log('Unable to query {}/status'.format(settings.overpass_endpoint.rstrip('/')), level=lg.ERROR)
         return default_duration
 
     try:
@@ -254,18 +262,17 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
             pause_duration = max(pause_duration, 1)
 
         # if first token is 'Currently', it is currently running a query so
-        # check back in recursive_delay seconds
+        # check back in recursive_delay seconds. any other status is unrecognized,
+        # log an error and return default duration
         elif status_first_token == 'Currently':
             time.sleep(recursive_delay)
             pause_duration = get_pause_duration()
-
         else:
-            # any other status is unrecognized - log an error and return default
-            # duration
-            log('Unrecognized server status: "{}"'.format(status), level=lg.ERROR)
+            utils.log('Unrecognized server status: "{}"'.format(status), level=lg.ERROR)
             return default_duration
 
     return pause_duration
+
 
 
 def osm_polygon_download(query, limit=1, polygon_geojson=1):
@@ -307,6 +314,7 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1):
     # request the URL, return the JSON
     response_json = nominatim_request(params=params, timeout=30)
     return response_json
+
 
 
 def nominatim_request(params, type="search", pause_duration=1, timeout=30, error_pause_duration=180):
@@ -353,16 +361,15 @@ def nominatim_request(params, type="search", pause_duration=1, timeout=30, error
 
     else:
         # if this URL is not already in the cache, pause, then request it
-        log('Pausing {:,.2f} seconds before making API GET request'.format(pause_duration))
+        utils.log('Pausing {:,.2f} seconds before making API GET request'.format(pause_duration))
         time.sleep(pause_duration)
-        start_time = time.time()
-        log('Requesting {} with timeout={}'.format(prepared_url, timeout))
+        utils.log('Requesting {} with timeout={}'.format(prepared_url, timeout))
         response = requests.get(url, params=params, timeout=timeout, headers=get_http_headers())
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
         domain = re.findall(r'(?s)//(.*?)/', url)[0]
-        log('Downloaded {:,.1f}KB from {} in {:,.2f} seconds'.format(size_kb, domain, time.time() - start_time))
+        utils.log('Downloaded {:,.1f}KB from {}'.format(size_kb, domain))
 
         try:
             response_json = response.json()
@@ -373,23 +380,19 @@ def nominatim_request(params, type="search", pause_duration=1, timeout=30, error
             # nominatim_request until we get a valid response
             if response.status_code in [429, 504]:
                 # pause for error_pause_duration seconds before re-trying request
-                log(
-                    'Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(
-                        domain,
-                        response.status_code,
-                        error_pause_duration),
-                    level=lg.WARNING)
+                utils.log('Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(domain, response.status_code, error_pause_duration), level=lg.WARNING)
                 time.sleep(error_pause_duration)
                 response_json = nominatim_request(params=params, pause_duration=pause_duration, timeout=timeout)
 
             # else, this was an unhandled status_code, throw an exception
             else:
-                log('Server at {} returned status code {} and no JSON data'.format(domain, response.status_code),
+                utils.log('Server at {} returned status code {} and no JSON data'.format(domain, response.status_code),
                     level=lg.ERROR)
                 raise Exception(
                     'Server returned no JSON data.\n{} {}\n{}'.format(response, response.reason, response.text))
 
         return response_json
+
 
 
 def overpass_request(data, pause_duration=None, timeout=180, error_pause_duration=None):
@@ -429,47 +432,36 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
         # if this URL is not already in the cache, pause, then request it
         if pause_duration is None:
             this_pause_duration = get_pause_duration()
-        log('Pausing {:,.2f} seconds before making API POST request'.format(this_pause_duration))
+        utils.log('Pausing {:,.2f} seconds before making API POST request'.format(this_pause_duration))
         time.sleep(this_pause_duration)
-        start_time = time.time()
-        log('Posting to {} with timeout={}, "{}"'.format(url, timeout, data))
+        utils.log('Posting to {} with timeout={}, "{}"'.format(url, timeout, data))
         response = requests.post(url, data=data, timeout=timeout, headers=get_http_headers())
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
         domain = re.findall(r'(?s)//(.*?)/', url)[0]
-        log('Downloaded {:,.1f}KB from {} in {:,.2f} seconds'.format(size_kb, domain, time.time() - start_time))
+        utils.log('Downloaded {:,.1f}KB from {}'.format(size_kb, domain))
 
         try:
             response_json = response.json()
             if 'remark' in response_json:
-                log('Server remark: "{}"'.format(response_json['remark'], level=lg.WARNING))
+                utils.log('Server remark: "{}"'.format(response_json['remark'], level=lg.WARNING))
             save_to_cache(prepared_url, response_json)
+
+        # 429 is 'too many requests' and 504 is 'gateway timeout' from server
+        # overload - handle these errors by recursively calling overpass_request
+        # after a pause until we get a valid response
         except Exception:
-            # 429 is 'too many requests' and 504 is 'gateway timeout' from server
-            # overload - handle these errors by recursively calling
-            # overpass_request until we get a valid response
             if response.status_code in [429, 504]:
-                # pause for error_pause_duration seconds before re-trying request
                 if error_pause_duration is None:
                     error_pause_duration = get_pause_duration()
-                log(
-                    'Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(
-                        domain,
-                        response.status_code,
-                        error_pause_duration),
-                    level=lg.WARNING)
+                utils.log('Server at {} returned status code {} and no JSON data. Re-trying request in {:.2f} seconds.'.format(domain, response.status_code, error_pause_duration), level=lg.WARNING)
                 time.sleep(error_pause_duration)
                 response_json = overpass_request(data=data, pause_duration=pause_duration, timeout=timeout)
-
             # else, this was an unhandled status_code, throw an exception
             else:
-                log('Server at {} returned status code {} and no JSON data'.format(domain, response.status_code),
-                    level=lg.ERROR)
+                utils.log('Server at {} returned status code {} and no JSON data'.format(domain, response.status_code), level=lg.ERROR)
                 raise Exception(
                     'Server returned no JSON data.\n{} {}\n{}'.format(response, response.reason, response.text))
 
         return response_json
-
-
-

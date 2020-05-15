@@ -1,23 +1,17 @@
 ################################################################################
 # Module: stats.py
-# Description: Calculate graph-theoretic topological and metric measures for a
-#              network
+# Description: Calculate graph-theoretic network measures
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-from __future__ import division
-import time
 import networkx as nx
 import numpy as np
 import pandas as pd
-
-from .simplify import clean_intersections
-from .geo_utils import get_largest_component
-from .utils import great_circle_vec
-from .geo_utils import count_streets_per_node
-from .utils import euclidean_dist_vec
-from .utils import log
+from . import simplification
+from . import utils
+from . import utils_geo
+from . import utils_graph
 
 
 
@@ -42,7 +36,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
         provided)
     tolerance : numeric
         tolerance value passed along if clean_intersects=True, see
-        clean_intersections() function documentation for details and usage
+        clean_intersections function documentation for details and usage
     circuity_dist : str
         'gc' or 'euclidean', how to calculate straight-line distances for
         circuity measurement; use former for lat-lng networks and latter for
@@ -111,7 +105,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
         streets_per_node = G.graph['streets_per_node']
     else:
         # count how many street segments emanate from each node in this graph
-        streets_per_node = count_streets_per_node(G)
+        streets_per_node = utils_graph.count_streets_per_node(G)
 
     # count number of intersections in graph, as nodes with >1 street emanating
     # from them
@@ -144,7 +138,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
 
     # calculate clean intersection counts
     if clean_intersects:
-        clean_intersection_points = clean_intersections(G, tolerance=tolerance, rebuild_graph=False, dead_ends=False)
+        clean_intersection_points = simplification.clean_intersections(G, tolerance=tolerance, rebuild_graph=False, dead_ends=False)
         clean_intersection_count = len(clean_intersection_points)
     else:
         clean_intersection_count = None
@@ -185,12 +179,12 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
     coords = np.array([[G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in G.edges(keys=True)])
     df_coords = pd.DataFrame(coords, columns=['u_y', 'u_x', 'v_y', 'v_x'])
     if circuity_dist == 'gc':
-        gc_distances = great_circle_vec(lat1=df_coords['u_y'],
+        gc_distances = utils_geo.great_circle_vec(lat1=df_coords['u_y'],
                                         lng1=df_coords['u_x'],
                                         lat2=df_coords['v_y'],
                                         lng2=df_coords['v_x'])
     elif circuity_dist == 'euclidean':
-        gc_distances = euclidean_dist_vec(y1=df_coords['u_y'],
+        gc_distances = utils_geo.euclidean_dist_vec(y1=df_coords['u_y'],
                                           x1=df_coords['u_x'],
                                           y2=df_coords['v_y'],
                                           x2=df_coords['v_x'])
@@ -232,6 +226,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
 
     # return the results
     return stats
+
 
 
 def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=False):
@@ -296,7 +291,6 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     """
 
     stats = {}
-    full_start_time = time.time()
 
     # create a DiGraph from the MultiDiGraph, for those metrics that require it
     G_dir = nx.DiGraph(G)
@@ -307,7 +301,7 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
 
     # get the largest strongly connected component, for those metrics that
     # require strongly connected graphs
-    G_strong = get_largest_component(G, strongly=True)
+    G_strong = utils_graph.get_largest_component(G, strongly=True)
 
     # average degree of the neighborhood of each node, and average for the graph
     avg_neighbor_degree = nx.average_neighbor_degree(G)
@@ -354,7 +348,6 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
 
     # if True, calculate node and edge connectivity
     if connectivity:
-        start_time = time.time()
 
         # node connectivity is the minimum number of nodes that must be removed
         # to disconnect G or render it trivial
@@ -363,26 +356,24 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
         # edge connectivity is equal to the minimum number of edges that must be
         # removed to disconnect G or render it trivial
         stats['edge_connectivity'] = nx.edge_connectivity(G_strong)
-        log('Calculated node and edge connectivity in {:,.2f} seconds'.format(time.time() - start_time))
+        utils.log('Calculated node and edge connectivity')
 
     # if True, calculate average node connectivity
     if anc:
         # mean number of internally node-disjoint paths between each pair of
         # nodes in G, i.e., the expected number of nodes that must be removed to
         # disconnect a randomly selected pair of non-adjacent nodes
-        start_time = time.time()
         stats['node_connectivity_avg'] = nx.average_node_connectivity(G)
-        log('Calculated average node connectivity in {:,.2f} seconds'.format(time.time() - start_time))
+        utils.log('Calculated average node connectivity')
 
     # if True, calculate shortest paths, eccentricity, and topological metrics
     # that use eccentricity
     if ecc:
         # precompute shortest paths between all nodes for eccentricity-based
         # stats
-        start_time = time.time()
         sp = {source:dict(nx.single_source_dijkstra_path_length(G_strong, source, weight='length')) for source in G_strong.nodes()}
 
-        log('Calculated shortest path lengths in {:,.2f} seconds'.format(time.time() - start_time))
+        utils.log('Calculated shortest path lengths')
 
         # eccentricity of a node v is the maximum distance from v to all other
         # nodes in G
@@ -409,22 +400,20 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     if cc:
         # closeness centrality of a node is the reciprocal of the sum of the
         # shortest path distances from u to all other nodes
-        start_time = time.time()
         closeness_centrality = nx.closeness_centrality(G, distance='length')
         stats['closeness_centrality'] = closeness_centrality
         stats['closeness_centrality_avg'] = sum(closeness_centrality.values())/len(closeness_centrality)
-        log('Calculated closeness centrality in {:,.2f} seconds'.format(time.time() - start_time))
+        utils.log('Calculated closeness centrality')
 
     # if True, calculate node betweenness centrality
     if bc:
         # betweenness centrality of a node is the sum of the fraction of
         # all-pairs shortest paths that pass through node
         # networkx 2.4+ implementation cannot run on Multi(Di)Graphs, so use DiGraph
-        start_time = time.time()
         betweenness_centrality = nx.betweenness_centrality(G_dir, weight='length')
         stats['betweenness_centrality'] = betweenness_centrality
         stats['betweenness_centrality_avg'] = sum(betweenness_centrality.values())/len(betweenness_centrality)
-        log('Calculated betweenness centrality in {:,.2f} seconds'.format(time.time() - start_time))
+        utils.log('Calculated betweenness centrality')
 
-    log('Calculated extended stats in {:,.2f} seconds'.format(time.time()-full_start_time))
+    utils.log('Calculated extended stats')
     return stats
