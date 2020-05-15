@@ -296,7 +296,7 @@ def parse_osm_node(response):
 
 
 
-def invalid_multipoly_handler(gdf, relation, way_ids):
+def invalid_multipoly_handler(gdf, relation, way_ids): # pragma: no cover
     """
     Handles invalid multipolygon geometries when there exists e.g. a feature without
     geometry (geometry == NaN)
