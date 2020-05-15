@@ -103,8 +103,8 @@ def save_graph_shapefile(G, filepath=None, encoding='utf-8'):
 
     # make every non-numeric node attribute (besides geometry) a string
     for col in [c for c in gdf_nodes.columns if not c == 'geometry']:
-    	if not pd.api.types.is_numeric_dtype(gdf_nodes[col]):
-        	gdf_nodes[col] = gdf_nodes[col].fillna('').astype(str)
+        if not pd.api.types.is_numeric_dtype(gdf_nodes[col]):
+            gdf_nodes[col] = gdf_nodes[col].fillna('').astype(str)
 
     # save the nodes and edges as separate ESRI shapefiles
     gdf_nodes.to_file(filepath_nodes, encoding=encoding)
@@ -114,11 +114,11 @@ def save_graph_shapefile(G, filepath=None, encoding='utf-8'):
 
 
 def save_graph_osm(data, filepath=None,
-	               node_tags=settings.osm_xml_node_tags,
-			       node_attrs=settings.osm_xml_node_attrs,
-			       edge_tags=settings.osm_xml_way_tags,
-			       edge_attrs=settings.osm_xml_way_attrs,
-			       oneway=False, merge_edges=True, edge_tag_aggs=None):
+                   node_tags=settings.osm_xml_node_tags,
+                   node_attrs=settings.osm_xml_node_attrs,
+                   edge_tags=settings.osm_xml_way_tags,
+                   edge_attrs=settings.osm_xml_way_attrs,
+                   oneway=False, merge_edges=True, edge_tag_aggs=None):
     """
     Save a graph as a .osm XML formatted file. Note: for very large
     networks this function can take a long time to finish.
@@ -130,7 +130,7 @@ def save_graph_osm(data, filepath=None,
     filepath : string
         path to the .osm file including extension
     node_tags : list
-    	osm node tags to include in output OSM XML
+        osm node tags to include in output OSM XML
     node_attrs: list
         osm node attributes to include in output OSM XML
     edge_tags : list
@@ -347,7 +347,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding='utf-8'):
     gephi : bool
         if True, give each edge a unique key to work around Gephi's
         restrictive interpretation of the GraphML specification
-	encoding : string
+    encoding : string
         the character encoding for the saved file
 
     Returns
@@ -370,9 +370,9 @@ def save_graphml(G, filepath=None, gephi=False, encoding='utf-8'):
     if gephi:
 
         gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G_save,
-        	                                             nodes=True,
-        	                                             edges=True,
-        	                                             node_geometry=True,
+                                                         nodes=True,
+                                                         edges=True,
+                                                         node_geometry=True,
                                                          fill_edge_geometry=True)
 
         # turn each edge's key into a unique ID for Gephi compatibility
