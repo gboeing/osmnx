@@ -130,7 +130,6 @@ def test_gdf_shapefiles():
     # test loading spatial boundaries, saving as shapefile, and plotting
     city = ox.gdf_from_place(place1)
     city_projected = ox.project_gdf(city, to_crs={'init': 'epsg:3395'})
-    ox.save_gdf_shapefile(city_projected)
 
     city = ox.gdf_from_place(place1, buffer_dist=100)
     ox.plot_shape(city)
