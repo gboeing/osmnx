@@ -1,6 +1,6 @@
 ################################################################################
 # Module: api.py
-# Description: The OSMnx API
+# Description: Expose the OSMnx API
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
