@@ -301,19 +301,17 @@ def get_unique_nodes_ordered_from_way(way_edges_df):
     Returns
     -------
     unique_ordered_nodes : list
-        An ordered list of unique node IDs
-
-    NOTE: If the edges do not all connect (e.g. [(1, 2), (2,3),
-    (10, 11), (11, 12), (12, 13)]), then this method will return
-    only those nodes associated with the largest component of
-    connected edges, even if subsequent connected chunks are contain
-    more total nodes. This is done to ensure a proper topological
-    representation of nodes in the XML way records because if there
-    are unconnected components, the sorting algorithm cannot recover
-    their original order. I don't believe that we would ever encounter
-    this kind of disconnected structure of nodes within a given way,
-    but as best I could tell it is not explicitly forbidden in the
-    OSM XML design schema.
+        An ordered list of unique node IDs.
+        Note: If the edges do not all connect (e.g. [(1, 2), (2,3),
+        (10, 11), (11, 12), (12, 13)]), then this method will return
+        only those nodes associated with the largest component of
+        connected edges, even if subsequent connected chunks are contain
+        more total nodes. This is done to ensure a proper topological
+        representation of nodes in the XML way records because if there
+        are unconnected components, the sorting algorithm cannot recover
+        their original order. We would not likely ever encounter this
+        kind of disconnected structure of nodes within a given way, but
+        it is not explicitly forbidden in the OSM XML design schema.
     """
 
     G = nx.MultiDiGraph()
