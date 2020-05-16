@@ -513,12 +513,9 @@ def pois_from_point(point, tags, distance=1000,
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-            tags = {
-                'amenity':True,
-                'landuse':['retail','commercial'],
-                'highway':'bus_stop'}
-        would return all amenities, `landuse=retail`, `landuse=commercial`,
-        and `highway=bus_stop`.
+        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, landuse=retail,
+        landuse=commercial, and highway=bus_stop.
     distance : numeric
         distance in meters
     timeout : int
@@ -559,12 +556,9 @@ def pois_from_address(address, tags, distance=1000,
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-            tags = {
-                'amenity':True,
-                'landuse':['retail','commercial'],
-                'highway':'bus_stop'}
-        would return all amenities, `landuse=retail`, `landuse=commercial`,
-        and `highway=bus_stop`.
+        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, landuse=retail,
+        landuse=commercial, and highway=bus_stop.
     distance : numeric
         distance in meters
     timeout : int
@@ -606,12 +600,9 @@ def pois_from_polygon(polygon, tags,
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-            tags = {
-                'amenity':True,
-                'landuse':['retail','commercial'],
-                'highway':'bus_stop'}
-        would return all amenities, `landuse=retail`, `landuse=commercial`,
-        and `highway=bus_stop`.
+        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, landuse=retail,
+        landuse=commercial, and highway=bus_stop.
     timeout : int
         timeout for the API request
     memory : int
@@ -647,12 +638,9 @@ def pois_from_place(place, tags, which_result=1,
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-            tags = {
-                'amenity':True,
-                'landuse':['retail','commercial'],
-                'highway':'bus_stop'}
-        would return all amenities, `landuse=retail`, `landuse=commercial`,
-        and `highway=bus_stop`.
+        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, landuse=retail,
+        landuse=commercial, and highway=bus_stop.
     which_result : int
         max number of geocoding results to return and which to process
     timeout : int
