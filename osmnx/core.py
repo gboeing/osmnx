@@ -436,7 +436,7 @@ def _add_paths(G, paths, bidirectional=False):
 
 
 
-def _create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional=False):
+def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     """
     Create a networkx graph from Overpass API HTTP response objects.
 
@@ -444,8 +444,6 @@ def _create_graph(response_jsons, name='unnamed', retain_all=False, bidirectiona
     ----------
     response_jsons : list
         list of dicts of JSON responses from from the Overpass API
-    name : string
-        the name of the graph
     retain_all : bool
         if True, return the entire graph even if it is not connected
     bidirectional : bool
@@ -466,7 +464,7 @@ def _create_graph(response_jsons, name='unnamed', retain_all=False, bidirectiona
         raise EmptyOverpassResponse('There are no data elements in the response JSON objects')
 
     # create the graph as a MultiDiGraph and set the original CRS to default_crs
-    G = nx.MultiDiGraph(name=name, crs=settings.default_crs)
+    G = nx.MultiDiGraph(crs=settings.default_crs)
 
     # extract nodes and paths from the downloaded osm data
     nodes = {}
@@ -503,7 +501,7 @@ def _create_graph(response_jsons, name='unnamed', retain_all=False, bidirectiona
 
 def graph_from_bbox(north, south, east, west, network_type='all_private',
                     simplify=True, retain_all=False, truncate_by_edge=False,
-                    name='unnamed', timeout=180, memory=None,
+                    timeout=180, memory=None,
                     max_query_area_size=50*1000*50*1000, clean_periphery=True,
                     infrastructure='way["highway"]', custom_filter=None,
                     custom_settings=None):
@@ -529,8 +527,6 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
     truncate_by_edge : bool
         if True retain node if it's outside bbox but at least one of node's
         neighbors are within bbox
-    name : string
-        the name of the graph
     timeout : int
         the timeout interval for requests and to pass to API
     memory : int
@@ -572,7 +568,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                                            memory=memory, max_query_area_size=max_query_area_size,
                                            infrastructure=infrastructure, custom_filter=custom_filter,
                                            custom_settings=custom_settings)
-        G_buffered = _create_graph(response_jsons, name=name,
+        G_buffered = _create_graph(response_jsons,
                                    retain_all=retain_all,
                                    bidirectional=network_type in settings.bidirectional_network_types)
         G = utils_geo.truncate_graph_bbox(G_buffered, north, south, east, west, retain_all=True, truncate_by_edge=truncate_by_edge)
@@ -599,7 +595,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                                            custom_settings=custom_settings)
 
         # create the graph, then truncate to the bounding box
-        G = _create_graph(response_jsons, name=name,
+        G = _create_graph(response_jsons,
                           retain_all=retain_all,
                           bidirectional=network_type in settings.bidirectional_network_types)
         G = utils_geo.truncate_graph_bbox(G, north, south, east, west, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
@@ -618,7 +614,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
 
 def graph_from_point(center_point, distance=1000, distance_type='bbox',
                      network_type='all_private', simplify=True, retain_all=False,
-                     truncate_by_edge=False, name='unnamed', timeout=180,
+                     truncate_by_edge=False, timeout=180,
                      memory=None, max_query_area_size=50*1000*50*1000,
                      clean_periphery=True, infrastructure='way["highway"]',
                      custom_filter=None, custom_settings=None):
@@ -646,8 +642,6 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
     truncate_by_edge : bool
         if True retain node if it's outside bbox but at least one of node's
         neighbors are within bbox
-    name : string
-        the name of the graph
     timeout : int
         the timeout interval for requests and to pass to API
     memory : int
@@ -682,7 +676,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
 
     # create a graph from the bounding box
     G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify,
-                        retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name,
+                        retain_all=retain_all, truncate_by_edge=truncate_by_edge,
                         timeout=timeout, memory=memory, max_query_area_size=max_query_area_size,
                         clean_periphery=clean_periphery, infrastructure=infrastructure,
                         custom_filter=custom_filter, custom_settings=custom_settings)
@@ -702,7 +696,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
 def graph_from_address(address, distance=1000, distance_type='bbox',
                        network_type='all_private', simplify=True, retain_all=False,
                        truncate_by_edge=False, return_coords=False,
-                       name='unnamed', timeout=180, memory=None,
+                       timeout=180, memory=None,
                        max_query_area_size=50*1000*50*1000,
                        clean_periphery=True, infrastructure='way["highway"]',
                        custom_filter=None, custom_settings=None):
@@ -733,8 +727,6 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
         neighbors are within bbox
     return_coords : bool
         optionally also return the geocoded coordinates of the address
-    name : string
-        the name of the graph
     timeout : int
         the timeout interval for requests and to pass to API
     memory : int
@@ -767,7 +759,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
     # then create a graph from this point
     G = graph_from_point(point, distance, distance_type, network_type=network_type,
                          simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge,
-                         name=name, timeout=timeout, memory=memory,
+                         timeout=timeout, memory=memory,
                          max_query_area_size=max_query_area_size,
                          clean_periphery=clean_periphery, infrastructure=infrastructure,
                          custom_filter=custom_filter, custom_settings=custom_settings)
@@ -781,7 +773,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
 
 
 def graph_from_polygon(polygon, network_type='all_private', simplify=True,
-                       retain_all=False, truncate_by_edge=False, name='unnamed',
+                       retain_all=False, truncate_by_edge=False,
                        timeout=180, memory=None,
                        max_query_area_size=50*1000*50*1000,
                        clean_periphery=True, infrastructure='way["highway"]',
@@ -804,8 +796,6 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
     truncate_by_edge : bool
         if True retain node if it's outside bbox but at least one of node's
         neighbors are within bbox
-    name : string
-        the name of the graph
     timeout : int
         the timeout interval for requests and to pass to API
     memory : int
@@ -856,7 +846,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
                                            max_query_area_size=max_query_area_size,
                                            infrastructure=infrastructure, custom_filter=custom_filter,
                                            custom_settings=custom_settings)
-        G_buffered = _create_graph(response_jsons, name=name,
+        G_buffered = _create_graph(response_jsons,
                                    retain_all=True,
                                    bidirectional=network_type in settings.bidirectional_network_types)
         G_buffered = utils_geo.truncate_graph_polygon(G_buffered, polygon_buffered, retain_all=True, truncate_by_edge=truncate_by_edge)
@@ -885,7 +875,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
                                            custom_settings=custom_settings)
 
         # create the graph from the downloaded data
-        G = _create_graph(response_jsons, name=name,
+        G = _create_graph(response_jsons,
                           retain_all=True,
                           bidirectional=network_type in settings.bidirectional_network_types)
 
@@ -905,7 +895,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
 
 
 def graph_from_place(query, network_type='all_private', simplify=True,
-                     retain_all=False, truncate_by_edge=False, name='unnamed',
+                     retain_all=False, truncate_by_edge=False,
                      which_result=1, buffer_dist=None, timeout=180, memory=None,
                      max_query_area_size=50*1000*50*1000, clean_periphery=True,
                      infrastructure='way["highway"]', custom_filter=None,
@@ -937,8 +927,6 @@ def graph_from_place(query, network_type='all_private', simplify=True,
     truncate_by_edge : bool
         if True retain node if it's outside bbox but at least one of node's
         neighbors are within bbox
-    name : string
-        the name of the graph
     which_result : int
         max number of results to return and which to process upon receipt
     buffer_dist : float
@@ -972,7 +960,6 @@ def graph_from_place(query, network_type='all_private', simplify=True,
         # if it is a string (place name) or dict (structured place query), then
         # it is a single place
         gdf_place = gdf_from_place(query, which_result=which_result, buffer_dist=buffer_dist)
-        name = query
     elif isinstance(query, list):
         # if it is a list, it contains multiple places to get
         gdf_place = gdf_from_places(query, buffer_dist=buffer_dist)
@@ -986,7 +973,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
     # create graph using this polygon(s) geometry
     G = graph_from_polygon(polygon, network_type=network_type, simplify=simplify,
                            retain_all=retain_all, truncate_by_edge=truncate_by_edge,
-                           name=name, timeout=timeout, memory=memory,
+                           timeout=timeout, memory=memory,
                            max_query_area_size=max_query_area_size,
                            clean_periphery=clean_periphery, infrastructure=infrastructure,
                            custom_filter=custom_filter, custom_settings=custom_settings)
@@ -997,7 +984,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
 
 
 def graph_from_file(filename, bidirectional=False, simplify=True,
-                    retain_all=False, name='unnamed'):
+                    retain_all=False):
     """
     Create a networkx graph from OSM data in an XML file.
 
@@ -1011,8 +998,6 @@ def graph_from_file(filename, bidirectional=False, simplify=True,
         if True, simplify the graph topology
     retain_all : bool
         if True, return the entire graph even if it is not connected
-    name : string
-        the name of the graph
 
     Returns
     -------
@@ -1023,7 +1008,7 @@ def graph_from_file(filename, bidirectional=False, simplify=True,
 
     # create graph using this response JSON
     G = _create_graph(response_jsons, bidirectional=bidirectional,
-                      retain_all=retain_all, name=name)
+                      retain_all=retain_all)
 
     # simplify the graph topology as the last step.
     if simplify:
