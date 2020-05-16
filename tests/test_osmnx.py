@@ -126,8 +126,8 @@ def test_geometry_coords_rounding():
     shape2 = ox.round_shape_coords(shape1, precision)
 
 
-def test_gdf_shapefiles():
-    # test loading spatial boundaries, saving as shapefile, and plotting
+def test_gdf_from_place():
+    # test loading spatial boundaries and plotting
     city = ox.gdf_from_place(place1)
     city_projected = ox.project_gdf(city, to_crs='epsg:3395')
 
@@ -327,23 +327,23 @@ def test_network_saving_loading():
     ox.save_graph_geopackage(G)
 
     # save/load graph as graphml file
-    ox.save_graphml(G)
-    ox.save_graphml(G, filename='gephi.graphml', gephi=True)
-    G = ox.load_graphml('graph.graphml')
-    G = ox.load_graphml('graph.graphml', node_type=str)
+    ox.save_graphml(G, gephi=False)
+    ox.save_graphml(G, gephi=True)
+    filepath = os.path.join(ox.settings.data_folder, 'graph.graphml')
+    G = ox.load_graphml(filepath, node_type=str)
 
     # test osm xml output
     default_all_oneway = ox.settings.all_oneway
     ox.settings.all_oneway = True
     G = ox.graph_from_point(location_point, distance=500, network_type='drive')
-    ox.save_as_osm(G, merge_edges=False)
+    ox.save_graph_osm(G, merge_edges=False)
 
     # test osm xml output merge edges
-    ox.save_as_osm(G, merge_edges=True, edge_tag_aggs=[('length', 'sum')])
+    ox.save_graph_osm(G, merge_edges=True, edge_tag_aggs=[('length', 'sum')])
 
     # test osm xml output from gdfs
     nodes, edges = ox.graph_to_gdfs(G)
-    ox.save_as_osm([nodes, edges])
+    ox.save_graph_osm([nodes, edges])
 
     # test ordered nodes from way
     df = pd.DataFrame(

@@ -22,17 +22,58 @@ from . import utils_graph
 
 
 
-def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8'):
+def save_graph_geopackage(G, filepath=None, encoding='utf-8'):
     """
     Save graph nodes and edges as to disk as layers in a GeoPackage file.
 
     Parameters
     ----------
-    G : networkx multidigraph
-    filename : string
-        the filename of the GeoPackage including file extension
-    folder : string
-        the path to the folder to contain the GeoPackage, if None, use default data folder
+    G : networkx.MultiDiGraph
+    filepath : string
+        path to the GeoPackage file including extension. if None, use
+        default data folder + graph.gpkg
+    encoding : string
+        the character encoding for the saved file
+
+    Returns
+    -------
+    None
+    """
+
+    # default filepath if none was provided
+    if filepath is None:
+        filepath = os.path.join(settings.data_folder, 'graph.gpkg')
+
+    # if save folder does not already exist, create it
+    folder, filename = os.path.split(filepath)
+    if not folder == '' and not os.path.exists(folder):
+        os.makedirs(folder)
+
+    # convert undirected graph to geodataframes
+    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
+
+    # make every non-numeric edge attribute (besides geometry) a string
+    for col in [c for c in gdf_edges.columns if not c == 'geometry']:
+        if not pd.api.types.is_numeric_dtype(gdf_edges[col]):
+            gdf_edges[col] = gdf_edges[col].fillna('').astype(str)
+
+    # save the nodes and edges as GeoPackage layers
+    gdf_nodes.to_file(filepath, layer='nodes', driver='GPKG', encoding=encoding)
+    gdf_edges.to_file(filepath, layer='edges', driver='GPKG', encoding=encoding)
+    utils.log(f'Saved graph as GeoPackage at "{filepath}"')
+
+
+
+def save_graph_shapefile(G, filepath=None, encoding='utf-8'):
+    """
+    Save graph nodes and edges to disk as ESRI shapefiles.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+    filepath : string
+        path to the shapefiles folder (no file extension). if None,
+        use default data folder
     encoding : string
         the character encoding for the saved files
 
@@ -41,125 +82,55 @@ def save_graph_geopackage(G, filename='graph.gpkg', folder=None, encoding='utf-8
     None
     """
 
+    # default filepath if none was provided
+    if filepath is None:
+        filepath = settings.data_folder
+
+    # if save folder does not already exist, create it (shapefiles
+    # get saved as set of files)
+    if not filepath == '' and not os.path.exists(filepath):
+        os.makedirs(filepath)
+    filepath_nodes = os.path.join(filepath, 'nodes.shp')
+    filepath_edges = os.path.join(filepath, 'edges.shp')
+
     # convert undirected graph to geodataframes
-    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(get_undirected(G))
+    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
 
     # make every non-numeric edge attribute (besides geometry) a string
     for col in [c for c in gdf_edges.columns if not c == 'geometry']:
         if not pd.api.types.is_numeric_dtype(gdf_edges[col]):
-            gdf_edges[col] = gdf_edges[col].fillna('').map(str)
+            gdf_edges[col] = gdf_edges[col].fillna('').astype(str)
 
-    # use settings.data_folder if a folder wasn't passed in
-    # if the save folder does not already exist, create it
-    if folder is None:
-        folder = settings.data_folder
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    filepath = os.path.join(folder, filename)
+    # make every non-numeric node attribute (besides geometry) a string
+    for col in [c for c in gdf_nodes.columns if not c == 'geometry']:
+        if not pd.api.types.is_numeric_dtype(gdf_nodes[col]):
+            gdf_nodes[col] = gdf_nodes[col].fillna('').astype(str)
 
-    # save the nodes and edges as GeoPackage layers
-    gdf_nodes.to_file(filepath, layer='nodes', driver='GPKG', encoding=encoding)
-    gdf_edges.to_file(filepath, layer='edges', driver='GPKG', encoding=encoding)
-    utils.log(f'Saved graph as GeoPackage "{filepath}"')
+    # save the nodes and edges as separate ESRI shapefiles
+    gdf_nodes.to_file(filepath_nodes, encoding=encoding)
+    gdf_edges.to_file(filepath_edges, encoding=encoding)
+    utils.log(f'Saved graph as shapefiles at "{filepath}"')
 
 
 
-def save_graph_shapefile(G, filename='graph', folder=None, encoding='utf-8'):
+def save_graph_osm(data, filepath=None,
+                   node_tags=settings.osm_xml_node_tags,
+                   node_attrs=settings.osm_xml_node_attrs,
+                   edge_tags=settings.osm_xml_way_tags,
+                   edge_attrs=settings.osm_xml_way_attrs,
+                   oneway=False, merge_edges=True, edge_tag_aggs=None):
     """
-    Save graph nodes and edges as ESRI shapefiles to disk.
+    Save a graph as a .osm XML formatted file. Note: for very large
+    networks this function can take a long time to finish.
 
     Parameters
     ----------
-    G : networkx multidigraph
-    filename : string
-        the name of the shapefiles (not including file extensions)
-    folder : string
-        the folder to contain the shapefiles, if None, use default data folder
-    encoding : string
-        the character encoding for the saved shapefiles
-
-    Returns
-    -------
-    None
-    """
-
-    if folder is None:
-        folder = settings.data_folder
-
-    # convert directed graph G to an undirected graph for saving as a shapefile
-    G_save = get_undirected(G.copy())
-
-    # create a GeoDataFrame of the nodes and set CRS
-    nodes, data = zip(*G_save.nodes(data=True))
-    gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
-    gdf_nodes.crs = G_save.graph['crs']
-
-    # create a geometry column then drop the x and y columns
-    gdf_nodes['geometry'] = gdf_nodes.apply(lambda row: Point(row['x'], row['y']), axis=1)
-    gdf_nodes = gdf_nodes.drop(['x', 'y'], axis=1)
-
-    # make everything but geometry column a string
-    for col in [c for c in gdf_nodes.columns if not c == 'geometry']:
-        gdf_nodes[col] = gdf_nodes[col].fillna('').astype(str)
-
-    # create a list to hold our edges, then loop through each edge in the graph
-    edges = []
-    for u, v, key, data in G_save.edges(keys=True, data=True):
-
-        # for each edge, add key and all attributes in data dict to the
-        # edge_details
-        edge_details = {'key': key}
-        for attr_key in data:
-            edge_details[attr_key] = data[attr_key]
-
-        # if edge doesn't already have a geometry attribute, create one now
-        if 'geometry' not in data:
-            point_u = Point((G_save.nodes[u]['x'], G_save.nodes[u]['y']))
-            point_v = Point((G_save.nodes[v]['x'], G_save.nodes[v]['y']))
-            edge_details['geometry'] = LineString([point_u, point_v])
-
-        edges.append(edge_details)
-
-    # create a geodataframe from the list of edges and set the CRS
-    gdf_edges = gpd.GeoDataFrame(edges)
-    gdf_edges.crs = G_save.graph['crs']
-
-    # make everything but geometry column a string
-    for col in [c for c in gdf_edges.columns if not c == 'geometry']:
-        gdf_edges[col] = gdf_edges[col].fillna('').astype(str)
-
-    # if the save folder does not already exist, create it with a filename
-    # subfolder
-    filepath = os.path.join(folder, filename)
-    if not os.path.exists(filepath):
-        os.makedirs(filepath)
-
-    # save the nodes and edges as separate ESRI shapefiles
-    gdf_nodes.to_file(f'{filepath}/nodes', encoding=encoding)
-    gdf_edges.to_file(f'{filepath}/edges', encoding=encoding)
-    utils.log(f'Saved graph as shapefiles "{filepath}"')
-
-
-
-def save_as_osm(
-        data, node_tags=settings.osm_xml_node_tags,
-        node_attrs=settings.osm_xml_node_attrs,
-        edge_tags=settings.osm_xml_way_tags,
-        edge_attrs=settings.osm_xml_way_attrs,
-        oneway=False, merge_edges=True, edge_tag_aggs=None,
-        filename='graph.osm', folder=None):
-    """
-    Save a graph as an OSM XML formatted file. NOTE: for very large
-    networks this method can take upwards of 30+ minutes to finish.
-
-    Parameters
-    __________
     data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
         geopandas.GeoDataFrames
-    filename : string
-        the name of the osm file (including file extension)
-    folder : string
-        the folder to contain the file, if None, use default data folder
+    filepath : string
+        path to the .osm file including extension
+    node_tags : list
+        osm node tags to include in output OSM XML
     node_attrs: list
         osm node attributes to include in output OSM XML
     edge_tags : list
@@ -170,33 +141,39 @@ def save_as_osm(
         the default oneway value used to fill this tag where missing
     merge_edges : bool
         if True merges graph edges such that each OSM way has one entry
-            and one entry only in the OSM XML. Otherwise, every OSM way
-            will have a separate entry for each node pair it contains.
+        and one entry only in the OSM XML. Otherwise, every OSM way
+        will have a separate entry for each node pair it contains.
     edge_tag_aggs : list of length-2 string tuples
         useful only if merge_edges is True, this argument allows the user
-            to specify edge attributes to aggregate such that the merged
-            OSM way entry tags accurately represent the sum total of
-            their component edge attributes. For example, if the user
-            wants the OSM way to have a "length" attribute, the user must
-            specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
-            this method to aggregate the lengths of the individual
-            component edges. Otherwise, the length attribute will simply
-            reflect the length of the first edge associated with the way.
+        to specify edge attributes to aggregate such that the merged
+        OSM way entry tags accurately represent the sum total of
+        their component edge attributes. For example, if the user
+        wants the OSM way to have a "length" attribute, the user must
+        specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
+        this method to aggregate the lengths of the individual
+        component edges. Otherwise, the length attribute will simply
+        reflect the length of the first edge associated with the way.
 
     Returns
     -------
     None
     """
-    if folder is None:
-        folder = settings.data_folder
+
+    # default filepath if none was provided
+    if filepath is None:
+        filepath = os.path.join(settings.data_folder, 'graph.osm')
+
+    # if save folder does not already exist, create it
+    folder, filename = os.path.split(filepath)
+    if not folder == '' and not os.path.exists(folder):
+        os.makedirs(folder)
 
     try:
         assert settings.all_oneway
     except AssertionError:
-        raise UserWarning(
-            "In order for save_as_osm to behave properly "
-            "the graph must have been created with the 'all_oneway' "
-            "setting set to True.")
+        raise UserWarning('In order for save_graph_osm to behave properly '
+                          'the graph must have been created with the '
+                          '`all_oneway` setting set to True.')
 
     try:
         gdf_nodes, gdf_edges = data
@@ -305,13 +282,8 @@ def save_as_osm(
                         edge, 'tag', attrib={'k': tag, 'v': row[tag]})
 
     et = etree.ElementTree(root)
-
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
-    filepath = os.path.join(folder, filename)
     et.write(filepath)
-    utils.log(f'Saved graph to disk as .osm file "{filepath}"')
+    utils.log(f'Saved graph as .osm file at "{filepath}"')
 
 
 
@@ -322,7 +294,7 @@ def get_unique_nodes_ordered_from_way(way_edges_df):
 
     Parameters
     ----------
-    way_edges_df : pandas.DataFrame()
+    way_edges_df : pandas.DataFrame
         Dataframe containing columns 'u' and 'v' corresponding to
         origin/desitination nodes.
 
@@ -363,36 +335,45 @@ def get_unique_nodes_ordered_from_way(way_edges_df):
 
 
 
-def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
+def save_graphml(G, filepath=None, gephi=False, encoding='utf-8'):
     """
-    Save graph as GraphML file to disk.
+    Save graph to disk as GraphML file.
 
     Parameters
     ----------
-    G : networkx multidigraph
-    filename : string
-        the name of the graphml file (including file extension)
-    folder : string
-        the folder to contain the file, if None, use default data folder
+    G : networkx.MultiDiGraph
+    filepath : string
+        path to the GraphML file including extension
     gephi : bool
         if True, give each edge a unique key to work around Gephi's
         restrictive interpretation of the GraphML specification
+    encoding : string
+        the character encoding for the saved file
 
     Returns
     -------
     None
     """
 
-    if folder is None:
-        folder = settings.data_folder
+    # default filepath if none was provided
+    if filepath is None:
+        filepath = os.path.join(settings.data_folder, 'graph.graphml')
+
+    # if save folder does not already exist, create it
+    folder, filename = os.path.split(filepath)
+    if not folder == '' and not os.path.exists(folder):
+        os.makedirs(folder)
 
     # create a copy to convert all the node/edge attribute values to string
     G_save = G.copy()
 
     if gephi:
 
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G_save, nodes=True, edges=True, node_geometry=True,
-                                             fill_edge_geometry=True)
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G_save,
+                                                         nodes=True,
+                                                         edges=True,
+                                                         node_geometry=True,
+                                                         fill_edge_geometry=True)
 
         # turn each edge's key into a unique ID for Gephi compatibility
         gdf_edges['key'] = range(len(gdf_edges))
@@ -426,39 +407,32 @@ def save_graphml(G, filename='graph.graphml', folder=None, gephi=False):
             # convert all the edge attribute values to strings
             data[dict_key] = str(data[dict_key])
 
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    filepath = os.path.join(folder, filename)
-
-    nx.write_graphml(G_save, filepath)
-    utils.log(f'Saved graph as GraphML "{filepath}"')
+    nx.write_graphml(G_save, path=filepath, encoding=encoding)
+    utils.log(f'Saved graph as GraphML file at "{filepath}"')
 
 
 
-def load_graphml(filename, folder=None, node_type=int):
+def load_graphml(filepath, node_type=int):
     """
-    Load a GraphML file from disk and convert the node/edge attributes to
-    correct data types.
+    Load an OSMnx-saved GraphML file from disk and convert the node/edge
+    attributes to appropriate data types.
 
     Parameters
     ----------
-    filename : string
+    filepath : string
         the name of the graphml file (including file extension)
     folder : string
         the folder containing the file, if None, use default data folder
     node_type : type
-        (Python type (default: int)) - Convert node ids to this type
+        convert node ids to this type
 
     Returns
     -------
-    networkx multidigraph
+    networkx.MultiDiGraph
     """
 
     # read the graph from disk
-    if folder is None:
-        folder = settings.data_folder
-    path = os.path.join(folder, filename)
-    G = nx.MultiDiGraph(nx.read_graphml(path, node_type=node_type))
+    G = nx.MultiDiGraph(nx.read_graphml(filepath, node_type=node_type))
 
     # convert graph crs attribute from saved string to correct dict data type
     # if it is a stringified dict rather than a proj4 string
@@ -525,205 +499,5 @@ def load_graphml(filename, folder=None, node_type=int):
     if 'edge_default' in G.graph:
         del G.graph['edge_default']
 
-    utils.log(f'Loaded graph with {len(G)} nodes and {len(G.edges())} edges from "{path}"')
+    utils.log(f'Loaded graph with {len(G)} nodes and {len(G.edges())} edges from "{filepath}"')
     return G
-
-
-
-def is_duplicate_edge(data, data_other):
-    """
-    Check if two edge data dictionaries are the same based on OSM ID and
-    geometry.
-
-    Parameters
-    ----------
-    data : dict
-        the first edge's data
-    data_other : dict
-        the second edge's data
-
-    Returns
-    -------
-    is_dupe : bool
-    """
-
-    is_dupe = False
-
-    # if either edge's OSM ID contains multiple values (due to simplification), we want
-    # to compare as sets so they are order-invariant, otherwise uv does not match vu
-    osmid = set(data['osmid']) if isinstance(data['osmid'], list) else data['osmid']
-    osmid_other = set(data_other['osmid']) if isinstance(data_other['osmid'], list) else data_other['osmid']
-
-    if osmid == osmid_other:
-        # if they contain the same OSM ID or set of OSM IDs (due to simplification)
-        if ('geometry' in data) and ('geometry' in data_other):
-            # if both edges have a geometry attribute
-            if is_same_geometry(data['geometry'], data_other['geometry']):
-                # if their edge geometries have the same coordinates
-                is_dupe = True
-        elif ('geometry' in data) and ('geometry' in data_other):
-            # if neither edge has a geometry attribute
-            is_dupe = True
-        else:
-            # if one edge has geometry attribute but the other doesn't, keep it
-            pass
-
-    return is_dupe
-
-
-
-def is_same_geometry(ls1, ls2):
-    """
-    Check if LineString geometries in two edges are the same, in
-    normal or reversed order of points.
-
-    Parameters
-    ----------
-    ls1 : LineString
-        the first edge's geometry
-    ls2 : LineString
-        the second edge's geometry
-
-    Returns
-    -------
-    bool
-    """
-
-    # extract geometries from each edge data dict
-    geom1 = [list(coords) for coords in ls1.xy]
-    geom2 = [list(coords) for coords in ls2.xy]
-
-    # reverse the first edge's list of x's and y's to look for a match in
-    # either order
-    geom1_r = [list(reversed(list(coords))) for coords in ls1.xy]
-
-    # if the edge's geometry matches its reverse's geometry in either order,
-    # return True
-    return (geom1 == geom2 or geom1_r == geom2)
-
-
-
-def update_edge_keys(G):
-    """
-    Update the keys of edges that share a u, v with another edge but differ in
-    geometry. For example, two one-way streets from u to v that bow away from
-    each other as separate streets, rather than opposite direction edges of a
-    single street.
-
-    Parameters
-    ----------
-    G : networkx multidigraph
-
-    Returns
-    -------
-    networkx multigraph
-    """
-
-    # identify all the edges that are duplicates based on a sorted combination
-    # of their origin, destination, and key. that is, edge uv will match edge vu
-    # as a duplicate, but only if they have the same key
-    edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
-    edges['uvk'] = edges.apply(lambda row: '_'.join(sorted([str(row['u']), str(row['v'])]) + [str(row['key'])]), axis=1)
-    edges['dupe'] = edges['uvk'].duplicated(keep=False)
-    dupes = edges[edges['dupe']==True].dropna(subset=['geometry'])
-
-    different_streets = []
-    groups = dupes[['geometry', 'uvk', 'u', 'v', 'key', 'dupe']].groupby('uvk')
-
-    # for each set of duplicate edges
-    for label, group in groups:
-
-        # if there are more than 2 edges here, make sure to compare all
-        if len(group['geometry']) > 2:
-            l = group['geometry'].tolist()
-            l.append(l[0])
-            geom_pairs = list(zip(l[:-1], l[1:]))
-        # otherwise, just compare the first edge to the second edge
-        else:
-            geom_pairs = [(group['geometry'].iloc[0], group['geometry'].iloc[1])]
-
-        # for each pair of edges to compare
-        for geom1, geom2 in geom_pairs:
-            # if they don't have the same geometry, flag them as different streets
-            if not is_same_geometry(geom1, geom2):
-                # add edge uvk, but not edge vuk, otherwise we'll iterate both their keys
-                # and they'll still duplicate each other at the end of this process
-                different_streets.append((group['u'].iloc[0], group['v'].iloc[0], group['key'].iloc[0]))
-
-    # for each unique different street, iterate its key + 1 so it's unique
-    for u, v, k in set(different_streets):
-        # filter out key if it appears in data dict as we'll pass it explicitly
-        attributes = {k:v for k, v in G[u][v][k].items() if k != 'key'}
-        G.add_edge(u, v, key=k+1, **attributes)
-        G.remove_edge(u, v, key=k)
-
-    return G
-
-
-
-def get_undirected(G):
-    """
-    Convert a directed graph to an undirected graph that maintains parallel
-    edges if geometries differ.
-
-    Parameters
-    ----------
-    G : networkx multidigraph
-
-    Returns
-    -------
-    networkx multigraph
-    """
-
-    # set from/to nodes before making graph undirected
-    G = G.copy()
-    for u, v, k, data in G.edges(keys=True, data=True):
-        G.edges[u, v, k]['from'] = u
-        G.edges[u, v, k]['to'] = v
-
-        # add geometry if it doesn't already exist, to retain parallel
-        # edges' distinct geometries
-        if 'geometry' not in data:
-            point_u = Point((G.nodes[u]['x'], G.nodes[u]['y']))
-            point_v = Point((G.nodes[v]['x'], G.nodes[v]['y']))
-            data['geometry'] = LineString([point_u, point_v])
-
-    # update edge keys so we don't retain only one edge of sets of parallel edges
-    # when we convert from a multidigraph to a multigraph
-    G = update_edge_keys(G)
-
-    # now convert multidigraph to a multigraph, retaining all edges in both
-    # directions for now, as well as all graph attributes
-    H = nx.MultiGraph()
-    H.add_nodes_from(G.nodes(data=True))
-    H.add_edges_from(G.edges(keys=True, data=True))
-    H.graph = G.graph
-    H.name = G.name
-
-    # the previous operation added all directed edges from G as undirected
-    # edges in H. this means we have duplicate edges for every bi-directional
-    # street. so, look through the edges and remove any duplicates
-    duplicate_edges = []
-    for u, v, key, data in H.edges(keys=True, data=True):
-
-        # if we haven't already flagged this edge as a duplicate
-        if not (u, v, key) in duplicate_edges:
-
-            # look at every other edge between u and v, one at a time
-            for key_other in H[u][v]:
-
-                # don't compare this edge to itself
-                if not key_other == key:
-
-                    # compare the first edge's data to the second's to see if
-                    # they are duplicates
-                    data_other = H.edges[u, v, key_other]
-                    if is_duplicate_edge(data, data_other):
-
-                        # if they match up, flag the duplicate for removal
-                        duplicate_edges.append((u, v, key_other))
-
-    H.remove_edges_from(duplicate_edges)
-    utils.log('Made undirected graph')
-
-    return H
