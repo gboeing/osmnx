@@ -21,9 +21,9 @@ from . import simplification
 from . import utils
 from . import utils_geo
 from . import utils_graph
-from .errors import EmptyOverpassResponse
-from .errors import InsufficientNetworkQueryArguments
-from .errors import InvalidDistanceType
+from ._errors import EmptyOverpassResponse
+from ._errors import InsufficientNetworkQueryArguments
+from ._errors import InvalidDistanceType
 
 
 

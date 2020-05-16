@@ -23,9 +23,9 @@ from . import utils_geo
 
 
 
-def osm_footprints_download(polygon=None, north=None, south=None, east=None, west=None,
-                            footprint_type='building', timeout=180, memory=None,
-                            max_query_area_size=50*1000*50*1000, custom_settings= None):
+def _osm_footprints_download(polygon=None, north=None, south=None, east=None, west=None,
+                             footprint_type='building', timeout=180, memory=None,
+                             max_query_area_size=50*1000*50*1000, custom_settings= None):
     """
     Download OpenStreetMap footprint data as a list of json responses.
 
@@ -136,9 +136,9 @@ def osm_footprints_download(polygon=None, north=None, south=None, east=None, wes
 
 
 
-def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None,
-                          footprint_type='building', retain_invalid=False, responses=None,
-                          timeout=180, memory=None, custom_settings=None):
+def _create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None,
+                           footprint_type='building', retain_invalid=False, responses=None,
+                           timeout=180, memory=None, custom_settings=None):
     """
     Get footprint (polygon) data from OSM and convert it into a GeoDataFrame.
 
@@ -176,20 +176,20 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
 
     # allow pickling between downloading footprints and converting them to a GeoDataFrame
     if responses is None:
-        responses = osm_footprints_download(polygon, north, south, east, west, footprint_type,
-                                            timeout=timeout, memory=memory, custom_settings=custom_settings)
+        responses = _osm_footprints_download(polygon, north, south, east, west, footprint_type,
+                                             timeout=timeout, memory=memory, custom_settings=custom_settings)
 
     # parse the list of responses into separate dicts of vertices, footprints and relations
     # create a set of ways not directly tagged with footprint_type
-    vertices, footprints, relations, untagged_ways = responses_to_dicts(responses, footprint_type)
+    vertices, footprints, relations, untagged_ways = _responses_to_dicts(responses, footprint_type)
 
     # create simple Shapely geometries (Polygon or LineString) for all of the ways in footprints
     for footprint_key, footprint_val in footprints.items():
-        footprint_val['geometry'] = create_footprint_geometry(footprint_key, footprint_val, vertices)
+        footprint_val['geometry'] = _create_footprint_geometry(footprint_key, footprint_val, vertices)
 
     # create a complex Shapely Polygon or MultiPolygon for each relation
     for relation_key, relation_val in relations.items():
-        relation_val['geometry'] = create_relation_geometry(relation_key, relation_val, footprints)
+        relation_val['geometry'] = _create_relation_geometry(relation_key, relation_val, footprints)
 
     # merge relations into the footprints dictionary
     footprints.update(relations)
@@ -216,7 +216,7 @@ def create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=
 
 
 
-def responses_to_dicts(responses, footprint_type):
+def _responses_to_dicts(responses, footprint_type):
     """
     Parse a list of json responses into dictionaries of vertices, footprints, and relations.
 
@@ -295,7 +295,7 @@ def responses_to_dicts(responses, footprint_type):
 
 
 
-def create_footprint_geometry(footprint_key, footprint_val, vertices):
+def _create_footprint_geometry(footprint_key, footprint_val, vertices):
     """
     Create Shapely geometry for open or closed ways in the initial footprints dictionary.
 
@@ -333,7 +333,7 @@ def create_footprint_geometry(footprint_key, footprint_val, vertices):
 
 
 
-def create_relation_geometry(relation_key, relation_val, footprints):
+def _create_relation_geometry(relation_key, relation_val, footprints):
     """
     Create Shapely geometry for relations - Polygons with holes or MultiPolygons
 
@@ -462,9 +462,9 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
 
     bbox = utils_geo.bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
-    return create_footprints_gdf(north=north, south=south, east=east, west=west,
-                                 footprint_type=footprint_type, retain_invalid=retain_invalid,
-                                 timeout=timeout, memory=memory, custom_settings=custom_settings)
+    return _create_footprints_gdf(north=north, south=south, east=east, west=west,
+                                  footprint_type=footprint_type, retain_invalid=retain_invalid,
+                                  timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
 
@@ -536,9 +536,9 @@ def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=F
     geopandas.GeoDataFrame
     """
 
-    return create_footprints_gdf(polygon=polygon, footprint_type=footprint_type,
-                                 retain_invalid=retain_invalid, timeout=timeout,
-                                 memory=memory, custom_settings=custom_settings)
+    return _create_footprints_gdf(polygon=polygon, footprint_type=footprint_type,
+                                  retain_invalid=retain_invalid, timeout=timeout,
+                                  memory=memory, custom_settings=custom_settings)
 
 
 
@@ -579,9 +579,9 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
 
     city = core.gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
-    return create_footprints_gdf(polygon, retain_invalid=retain_invalid,
-                                 footprint_type=footprint_type, timeout=timeout,
-                                 memory=memory, custom_settings=custom_settings)
+    return _create_footprints_gdf(polygon, retain_invalid=retain_invalid,
+                                  footprint_type=footprint_type, timeout=timeout,
+                                  memory=memory, custom_settings=custom_settings)
 
 
 
@@ -661,7 +661,8 @@ def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcol
     ax.set_aspect('equal')
     fig.canvas.draw()
 
-    fig, ax = plot.save_and_show(fig=fig, ax=ax, save=save, show=show, close=close,
-                            filename=filename, file_format=file_format, dpi=dpi, axis_off=True)
+    fig, ax = plot._save_and_show(fig=fig, ax=ax, save=save, show=show, close=close,
+                                 filename=filename, file_format=file_format, dpi=dpi,
+                                 axis_off=True)
 
     return fig, ax

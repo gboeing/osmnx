@@ -5,6 +5,6 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-from .api import *
+from ._api import *
 
 __version__ = '0.13dev'

@@ -16,7 +16,7 @@ from . import utils_graph
 
 
 
-def is_endpoint(G, node, strict=True):
+def _is_endpoint(G, node, strict=True):
     """
     Return True if the node is a "real" endpoint of an edge in the network,
     otherwise False. OSM data includes lots of nodes that exist only as points
@@ -92,7 +92,7 @@ def is_endpoint(G, node, strict=True):
 
 
 
-def build_path(G, node, endpoints, path):
+def _build_path(G, node, endpoints, path):
     """
     Recursively build a path of nodes until you hit an endpoint node.
 
@@ -119,7 +119,7 @@ def build_path(G, node, endpoints, path):
             if successor not in endpoints:
                 # if this successor is not an endpoint, recursively call
                 # build_path until you find an endpoint
-                path = build_path(G, successor, endpoints, path)
+                path = _build_path(G, successor, endpoints, path)
             else:
                 # if this successor is an endpoint, we've completed the path,
                 # so return it
@@ -136,7 +136,7 @@ def build_path(G, node, endpoints, path):
 
 
 
-def get_paths_to_simplify(G, strict=True):
+def _get_paths_to_simplify(G, strict=True):
     """
     Create a list of all the paths to be simplified between endpoint nodes.
 
@@ -158,7 +158,7 @@ def get_paths_to_simplify(G, strict=True):
     """
 
     # first identify all the nodes that are endpoints
-    endpoints = set([node for node in G.nodes() if is_endpoint(G, node, strict=strict)])
+    endpoints = set([node for node in G.nodes() if _is_endpoint(G, node, strict=strict)])
     utils.log(f'Identified {len(endpoints)} edge endpoints')
 
     paths_to_simplify = []
@@ -170,7 +170,7 @@ def get_paths_to_simplify(G, strict=True):
                 # if the successor is not an endpoint, build a path from the
                 # endpoint node to the next endpoint node
                 try:
-                    path = build_path(G, successor, endpoints, path=[node, successor])
+                    path = _build_path(G, successor, endpoints, path=[node, successor])
                     paths_to_simplify.append(path)
                 except RecursionError:
                     utils.log('Recursion error: exceeded max depth, moving on to next endpoint successor', level=lg.WARNING)
@@ -238,7 +238,7 @@ def simplify_graph(G, strict=True):
     all_edges_to_add = []
 
     # construct a list of all the paths that need to be simplified
-    paths = get_paths_to_simplify(G, strict=strict)
+    paths = _get_paths_to_simplify(G, strict=strict)
 
     for path in paths:
 
@@ -392,9 +392,9 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
         G.remove_nodes_from(dead_end_nodes)
 
     if rebuild_graph:
-        return consolidate_intersections_rebuild_graph(G=G,
-                                                       tolerance=tolerance,
-                                                       update_edge_lengths=update_edge_lengths)
+        return _consolidate_intersections_rebuild_graph(G=G,
+                                                        tolerance=tolerance,
+                                                        update_edge_lengths=update_edge_lengths)
 
     else:
         # create a GeoDataFrame of nodes, buffer to passed-in distance, merge overlaps
@@ -411,8 +411,8 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
 
 
 
-def consolidate_intersections_rebuild_graph(G, tolerance=10,
-                                            update_edge_lengths=True):
+def _consolidate_intersections_rebuild_graph(G, tolerance=10,
+                                             update_edge_lengths=True):
     """
     Consolidate intersections comprising clusters of nodes by merging them
     and returning a rebuilt graph with consolidated intersections and

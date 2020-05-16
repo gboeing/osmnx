@@ -216,7 +216,7 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1
 
 
 
-def save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off):
+def _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off):
     """
     Save a figure to disk and show it, as specified.
 
@@ -440,7 +440,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
             ax.annotate(node, xy=(data['x'], data['y']))
 
     # save and show the figure as specified
-    fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
+    fig, ax = _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
     return fig, ax
 
 
@@ -619,7 +619,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
     ax.add_collection(lc)
 
     # save and show the figure as specified
-    fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
+    fig, ax = _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
     return fig, ax
 
 
@@ -762,7 +762,7 @@ def plot_graph_routes(G, routes, bbox=None, fig_height=6, fig_width=None,
     ax.add_collection(lc)
 
     # save and show the figure as specified
-    fig, ax = save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
+    fig, ax = _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
     return fig, ax
 
 

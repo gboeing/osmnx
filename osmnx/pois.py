@@ -17,8 +17,8 @@ from . import utils_geo
 
 
 
-def create_poi_query(north, south, east, west, tags,
-                     timeout=180, memory=None, custom_settings=None):
+def _create_poi_query(north, south, east, west, tags,
+                      timeout=180, memory=None, custom_settings=None):
     """
     Create an overpass query string based on passed tags.
 
@@ -134,7 +134,7 @@ def create_poi_query(north, south, east, west, tags,
 
 
 
-def osm_poi_download(tags, polygon=None,
+def _osm_poi_download(tags, polygon=None,
                      north=None, south=None, east=None, west=None,
                      timeout=180, memory=None, custom_settings=None):
     """
@@ -192,7 +192,7 @@ def osm_poi_download(tags, polygon=None,
         raise ValueError('You must pass a polygon or north, south, east, and west')
 
     # get the POIs
-    query = create_poi_query(north=north, south=south, east=east, west=west,
+    query = _create_poi_query(north=north, south=south, east=east, west=west,
                              tags=tags,
                              timeout=timeout,
                              memory=memory,
@@ -203,7 +203,7 @@ def osm_poi_download(tags, polygon=None,
 
 
 
-def parse_nodes_coords(osm_response):
+def _parse_nodes_coords(osm_response):
     """
     Parse node coordinates from OSM response. Some nodes are standalone points
     of interest, others are vertices in polygonal (areal) POIs.
@@ -228,7 +228,7 @@ def parse_nodes_coords(osm_response):
 
 
 
-def parse_polygonal_poi(coords, response):
+def _parse_polygonal_poi(coords, response):
     """
     Parse areal POI way polygons from OSM node coords.
 
@@ -265,7 +265,7 @@ def parse_polygonal_poi(coords, response):
 
 
 
-def parse_osm_node(response):
+def _parse_osm_node(response):
     """
     Parse points from OSM nodes.
 
@@ -296,7 +296,7 @@ def parse_osm_node(response):
 
 
 
-def invalid_multipoly_handler(gdf, relation, way_ids): # pragma: no cover
+def _invalid_multipoly_handler(gdf, relation, way_ids): # pragma: no cover
     """
     Handles invalid multipolygon geometries when there exists e.g. a feature without
     geometry (geometry == NaN)
@@ -327,7 +327,7 @@ def invalid_multipoly_handler(gdf, relation, way_ids): # pragma: no cover
 
 
 
-def parse_osm_relations(relations, osm_way_df):
+def _parse_osm_relations(relations, osm_way_df):
     """
     Parses the osm relations (multipolygons) from osm
     ways and nodes. See more information about relations
@@ -364,7 +364,7 @@ def parse_osm_relations(relations, osm_way_df):
                     # Create MultiPolygon from geometries (exclude NaNs)
                     multipoly = MultiPolygon(list(member_ways['geometry']))
                 except Exception:
-                    multipoly = invalid_multipoly_handler(gdf=member_ways, relation=relation, way_ids=member_way_ids)
+                    multipoly = _invalid_multipoly_handler(gdf=member_ways, relation=relation, way_ids=member_way_ids)
 
                 if multipoly:
                     # Create GeoDataFrame with the tags and the MultiPolygon and its 'ways' (ids), and the 'nodes' of those ways
@@ -391,8 +391,8 @@ def parse_osm_relations(relations, osm_way_df):
 
 
 
-def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=None,
-                   timeout=180, memory=None, custom_settings=None):
+def _create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=None,
+                    timeout=180, memory=None, custom_settings=None):
     """
     Create GeoDataFrame from POI json returned by Overpass API
 
@@ -436,12 +436,12 @@ def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=N
         POIs and their associated tags
     """
 
-    responses = osm_poi_download(tags, polygon=polygon,
+    responses = _osm_poi_download(tags, polygon=polygon,
                                  north=north, south=south, east=east, west=west,
                                  timeout=timeout, memory=memory, custom_settings=custom_settings)
 
     # Parse coordinates from all the nodes in the response
-    coords = parse_nodes_coords(responses)
+    coords = _parse_nodes_coords(responses)
 
     # POI nodes
     poi_nodes = {}
@@ -454,14 +454,14 @@ def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=N
 
     for result in responses['elements']:
         if result['type'] == 'node' and 'tags' in result:
-            poi = parse_osm_node(response=result)
+            poi = _parse_osm_node(response=result)
             # Add element_type
             poi['element_type'] = 'node'
             # Add to 'pois'
             poi_nodes[result['id']] = poi
         elif result['type'] == 'way':
             # Parse POI area Polygon
-            poi_area = parse_polygonal_poi(coords=coords, response=result)
+            poi_area = _parse_polygonal_poi(coords=coords, response=result)
             if poi_area:
                 # Add element_type
                 poi_area['element_type'] = 'way'
@@ -481,7 +481,7 @@ def create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=N
     gdf_ways.crs = settings.default_crs
 
     # Parse relations (MultiPolygons) from 'ways'
-    gdf_ways = parse_osm_relations(relations=relations, osm_way_df=gdf_ways)
+    gdf_ways = _parse_osm_relations(relations=relations, osm_way_df=gdf_ways)
 
     # Combine GeoDataFrames
     gdf = gdf_nodes.append(gdf_ways, sort=False)
@@ -536,7 +536,7 @@ def pois_from_point(point, tags, distance=1000,
 
     bbox = utils_geo.bbox_from_point(point=point, distance=distance)
     north, south, east, west = bbox
-    return create_poi_gdf(tags=tags, north=north, south=south, east=east, west=west,
+    return _create_poi_gdf(tags=tags, north=north, south=south, east=east, west=west,
                           timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
@@ -625,7 +625,7 @@ def pois_from_polygon(polygon, tags,
     geopandas.GeoDataFrame
     """
 
-    return create_poi_gdf(tags=tags, polygon=polygon,
+    return _create_poi_gdf(tags=tags, polygon=polygon,
                           timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
@@ -670,5 +670,5 @@ def pois_from_place(place, tags, which_result=1,
 
     city = core.gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
-    return create_poi_gdf(tags=tags, polygon=polygon,
+    return _create_poi_gdf(tags=tags, polygon=polygon,
                           timeout=timeout, memory=memory, custom_settings=custom_settings)

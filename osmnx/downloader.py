@@ -18,7 +18,7 @@ from collections import OrderedDict
 from dateutil import parser as date_parser
 from . import settings
 from . import utils
-from .errors import UnknownNetworkType
+from ._errors import UnknownNetworkType
 
 
 
