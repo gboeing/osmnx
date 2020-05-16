@@ -22,7 +22,7 @@ from ._errors import UnknownNetworkType
 
 
 
-def get_osm_filter(network_type):
+def _get_osm_filter(network_type):
     """
     Create a filter to query OSM for the specified network type.
 
@@ -89,7 +89,7 @@ def get_osm_filter(network_type):
 
 
 
-def save_to_cache(url, response_json):
+def _save_to_cache(url, response_json):
     """
     Save an HTTP response json object to the cache.
 
@@ -133,7 +133,7 @@ def save_to_cache(url, response_json):
 
 
 
-def url_in_cache(url):
+def _url_in_cache(url):
     """
     Determine if a URL's response exists in the cache.
 
@@ -159,7 +159,7 @@ def url_in_cache(url):
 
 
 
-def get_from_cache(url):
+def _get_from_cache(url):
     """
     Retrieve a HTTP response json object from the cache.
 
@@ -178,7 +178,7 @@ def get_from_cache(url):
     if settings.use_cache:
 
         # return cached response for this url if it exists, otherwise return None
-        cache_filepath = url_in_cache(url)
+        cache_filepath = _url_in_cache(url)
         if cache_filepath is not None:
             with open(cache_filepath, encoding='utf-8') as cache_file:
                 response_json = json.load(cache_file)
@@ -187,7 +187,7 @@ def get_from_cache(url):
 
 
 
-def get_http_headers(user_agent=None, referer=None, accept_language=None):
+def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     """
     Update the default requests HTTP headers with OSMnx info.
 
@@ -218,7 +218,7 @@ def get_http_headers(user_agent=None, referer=None, accept_language=None):
 
 
 
-def get_pause_duration(recursive_delay=5, default_duration=10):
+def _get_pause_duration(recursive_delay=5, default_duration=10):
     """
     Check the Overpass API status endpoint to determine how long to wait until
     next slot is available.
@@ -238,7 +238,7 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
 
     try:
         url = settings.overpass_endpoint.rstrip('/') + '/status'
-        response = requests.get(url, headers=get_http_headers())
+        response = requests.get(url, headers=_get_http_headers())
         status = response.text.split('\n')[3]
         status_first_token = status.split(' ')[0]
     # if we cannot reach the status endpoint or parse its output, log an
@@ -265,7 +265,7 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
         # log an error and return default duration
         elif status_first_token == 'Currently':
             time.sleep(recursive_delay)
-            pause_duration = get_pause_duration()
+            pause_duration = _get_pause_duration()
         else:
             utils.log(f'Unrecognized server status: "{status}"', level=lg.ERROR)
             return default_duration
@@ -274,7 +274,7 @@ def get_pause_duration(recursive_delay=5, default_duration=10):
 
 
 
-def osm_polygon_download(query, limit=1, polygon_geojson=1):
+def _osm_polygon_download(query, limit=1, polygon_geojson=1):
     """
     Geocode a place and download its boundary geometry from OSM's Nominatim API.
 
@@ -289,7 +289,7 @@ def osm_polygon_download(query, limit=1, polygon_geojson=1):
 
     Returns
     -------
-    dict
+    response_json : dict
     """
     # define the parameters
     params = OrderedDict()
@@ -347,7 +347,7 @@ def nominatim_request(params, request_type='search', pause_duration=1, timeout=3
     # cache
     url = settings.nominatim_endpoint.rstrip('/') + '/' + request_type
     prepared_url = requests.Request('GET', url, params=params).prepare().url
-    cached_response_json = get_from_cache(prepared_url)
+    cached_response_json = _get_from_cache(prepared_url)
 
     if settings.nominatim_key:
         params['key'] = settings.nominatim_key
@@ -362,7 +362,7 @@ def nominatim_request(params, request_type='search', pause_duration=1, timeout=3
         utils.log(f'Pausing {pause_duration} seconds before making API GET request')
         time.sleep(pause_duration)
         utils.log(f'Requesting {prepared_url} with timeout={timeout}')
-        response = requests.get(url, params=params, timeout=timeout, headers=get_http_headers())
+        response = requests.get(url, params=params, timeout=timeout, headers=_get_http_headers())
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
@@ -371,7 +371,7 @@ def nominatim_request(params, request_type='search', pause_duration=1, timeout=3
 
         try:
             response_json = response.json()
-            save_to_cache(prepared_url, response_json)
+            _save_to_cache(prepared_url, response_json)
         except Exception:
             # 429 is 'too many requests' and 504 is 'gateway timeout' from server
             # overload - handle these errors by recursively calling
@@ -417,7 +417,7 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
     # hash to look up/save to cache
     url = settings.overpass_endpoint.rstrip('/') + '/interpreter'
     prepared_url = requests.Request('GET', url, params=data).prepare().url
-    cached_response_json = get_from_cache(prepared_url)
+    cached_response_json = _get_from_cache(prepared_url)
 
     if cached_response_json is not None:
         # found this request in the cache, just return it instead of making a
@@ -427,11 +427,11 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
     else:
         # if this URL is not already in the cache, pause, then request it
         if pause_duration is None:
-            this_pause_duration = get_pause_duration()
+            this_pause_duration = _get_pause_duration()
         utils.log(f'Pausing {this_pause_duration} seconds before making API POST request')
         time.sleep(this_pause_duration)
         utils.log(f'Posting to {url} with timeout={timeout}, "{data}"')
-        response = requests.post(url, data=data, timeout=timeout, headers=get_http_headers())
+        response = requests.post(url, data=data, timeout=timeout, headers=_get_http_headers())
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.
@@ -442,7 +442,7 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
             response_json = response.json()
             if 'remark' in response_json:
                 utils.log(f'Server remark: "{response_json["remark"]}"', level=lg.WARNING)
-            save_to_cache(prepared_url, response_json)
+            _save_to_cache(prepared_url, response_json)
 
         # 429 is 'too many requests' and 504 is 'gateway timeout' from server
         # overload - handle these errors by recursively calling overpass_request
@@ -450,7 +450,7 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
         except Exception:
             if response.status_code in [429, 504]:
                 if error_pause_duration is None:
-                    error_pause_duration = get_pause_duration()
+                    error_pause_duration = _get_pause_duration()
                 utils.log(f'Server at {domain} returned status {response.status_code} and no JSON data: retrying in {error_pause_duration} seconds.', level=lg.WARNING)
                 time.sleep(error_pause_duration)
                 response_json = overpass_request(data=data, pause_duration=pause_duration, timeout=timeout)

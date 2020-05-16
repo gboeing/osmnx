@@ -93,7 +93,7 @@ def _osm_footprints_download(polygon=None, north=None, south=None, east=None, we
 
         # subdivide it if it exceeds the max area size (in meters), then project
         # back to lat-long
-        gpcs = utils_geo.consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
         utils.log(f'Requesting footprints within bounding box from API in {len(geometry)} request(s)')
 
@@ -117,9 +117,9 @@ def _osm_footprints_download(polygon=None, north=None, south=None, east=None, we
         # project to utm, divide polygon up into sub-polygons if area exceeds a
         # max size (in meters), project back to lat-long, then get a list of polygon(s) exterior coordinates
         geometry_proj, crs_proj = projection.project_geometry(polygon)
-        gpcs = utils_geo.consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
-        polygon_coord_strs = utils_geo.get_polygons_coordinates(geometry)
+        polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
         utils.log(f'Requesting footprints within polygon from API in {len(polygon_coord_strs)} request(s)')
 
         # pass each polygon exterior coordinates in the list to the API, one at
