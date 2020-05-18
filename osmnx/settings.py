@@ -60,7 +60,7 @@ default_overpass_query_settings = '[out:json][timeout:{timeout}]{maxsize}'
 all_oneway = False
 
 # default CRS to set when creating graphs
-default_crs = '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs'
+default_crs = 'epsg:4326'
 
 # default HTTP request headers
 default_user_agent = 'Python OSMnx package (https://github.com/gboeing/osmnx)'
