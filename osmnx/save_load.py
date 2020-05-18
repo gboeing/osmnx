@@ -24,7 +24,7 @@ from . import utils_graph
 
 def save_graph_geopackage(G, filepath=None, encoding='utf-8'):
     """
-    Save graph nodes and edges as to disk as layers in a GeoPackage file.
+    Save graph nodes and edges to disk as layers in a GeoPackage file.
 
     Parameters
     ----------
