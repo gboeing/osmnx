@@ -1,5 +1,22 @@
 # Change log
 
+## 0.13 (TBD)
+
+  - major refactor of entire package
+  - clean up API and namespace
+  - new consolidate_intersections function with topological option
+  - deprecate old clean_intersections function
+  - generalize POIs module to query with a flexible tags dict
+  - all graph saving functions now take a filepath argument
+  - now save shapefiles in single folder containing both nodes and edges
+  - optionally return distance and/or geometry in nearest edge search
+  - expose timeout and memory parameters in pois and footprints modules
+  - define default crs via epsg code instead of proj4 string
+  - update and simplify logging with timestamps
+  - graph metadata: add creation date and version, remove name
+  - remove old save_gdf_shapefile function
+  - drop support for python 3.5 and lower
+
 ## 0.12.1 (2020-05-01)
 
   - fix handling relations with missing type tag
@@ -25,7 +42,7 @@
 
 ## 0.11.4 (2020-01-31)
 
-  - fix OSM XML output 
+  - fix .osm xml output
   - fix for pandas 1.0
 
 ## 0.11.3 (2020-01-09)
@@ -42,7 +59,7 @@
   - fix get_nearest_edges search when not using a spatial index
 
 ## 0.11 (2019-12-04)
-  
+
   - drop formal python 2 support
   - refactor all modules for cleaner package organization
   - make stats betweenness centrality compatible with networkx>=2.4
