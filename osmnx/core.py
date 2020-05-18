@@ -24,6 +24,7 @@ from . import utils_graph
 from ._errors import EmptyOverpassResponse
 from ._errors import InsufficientNetworkQueryArguments
 from ._errors import InvalidDistanceType
+from ._version import __version__
 
 
 
@@ -463,8 +464,10 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     if len(elements) < 1:
         raise EmptyOverpassResponse('There are no data elements in the response JSON objects')
 
-    # create the graph as a MultiDiGraph and set the original CRS to default_crs
-    G = nx.MultiDiGraph(crs=settings.default_crs)
+    # create the graph as a MultiDiGraph and set its meta-attributes
+    G = nx.MultiDiGraph(created_date=utils.ts(),
+                        created_with=f'OSMnx {__version__}',
+                        crs=settings.default_crs)
 
     # extract nodes and paths from the downloaded osm data
     nodes = {}
