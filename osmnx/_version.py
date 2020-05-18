@@ -1,9 +1,8 @@
 ################################################################################
-# Module: __init__.py
-# Description: OSMnx init
+# Module: version.py
+# Description: OSMnx package version
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-from ._api import *
-from ._version import __version__
+__version__ = '0.13dev'
