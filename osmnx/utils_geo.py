@@ -477,8 +477,9 @@ def redistribute_vertices(geom, dist):
     geom : LineString or MultiLineString
         a Shapely geometry
     dist : float
-        spacing length along edges. Units are the same as the geom; Degrees for unprojected geometries and meters
-        for projected geometries. The smaller the value, the more points are created.
+        spacing length along edges. Units are the same as the geom; Degrees for
+        unprojected geometries and meters for projected geometries. The smaller
+        the value, the more points are created.
 
     Returns
     -------
@@ -751,7 +752,7 @@ def bbox_to_poly(north, south, east, west):
 
 
 
-def consolidate_subdivide_geometry(geometry, max_query_area_size):
+def _consolidate_subdivide_geometry(geometry, max_query_area_size):
     """
     Consolidate a geometry into a convex hull, then subdivide it into smaller
     sub-polygons if its area exceeds max size (in geometry's units).
@@ -783,7 +784,7 @@ def consolidate_subdivide_geometry(geometry, max_query_area_size):
 
     # if geometry area exceeds max size, subdivide it into smaller sub-polygons
     if geometry.area > max_query_area_size:
-        geometry = quadrat_cut_geometry(geometry, quadrat_width=quadrat_width)
+        geometry = _quadrat_cut_geometry(geometry, quadrat_width=quadrat_width)
 
     if isinstance(geometry, Polygon):
         geometry = MultiPolygon([geometry])
@@ -792,7 +793,7 @@ def consolidate_subdivide_geometry(geometry, max_query_area_size):
 
 
 
-def get_polygons_coordinates(geometry):
+def _get_polygons_coordinates(geometry):
     """
     Extract exterior coordinates from polygon(s) to pass to OSM in a query by
     polygon. Ignore the interior ("holes") coordinates.
@@ -835,7 +836,7 @@ def get_polygons_coordinates(geometry):
 
 
 
-def quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9):
+def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9):
     """
     Split a Polygon or MultiPolygon up into sub-polygons of a specified size,
     using quadrats.
@@ -881,7 +882,7 @@ def quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9)
 
 
 
-def intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
+def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
     """
     Intersect points with a polygon, using an r-tree spatial index and cutting
     the polygon up into smaller sub-polygons for r-tree acceleration.
@@ -910,7 +911,10 @@ def intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffe
     points_within_geometry = pd.DataFrame()
 
     # cut the geometry into chunks for r-tree spatial index intersecting
-    multipoly = quadrat_cut_geometry(geometry, quadrat_width=quadrat_width, buffer_amount=buffer_amount, min_num=min_num)
+    multipoly = _quadrat_cut_geometry(geometry,
+                                      quadrat_width=quadrat_width,
+                                      buffer_amount=buffer_amount,
+                                      min_num=min_num)
 
     # create an r-tree spatial index for the nodes (ie, points)
     sindex = gdf['geometry'].sindex
@@ -1190,7 +1194,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
     gdf_nodes.crs = G.graph['crs']
 
     # find all the nodes in the graph that lie outside the polygon
-    points_within_geometry = intersect_index_quadrats(gdf_nodes, polygon, quadrat_width=quadrat_width, min_num=min_num, buffer_amount=buffer_amount)
+    points_within_geometry = _intersect_index_quadrats(gdf_nodes, polygon, quadrat_width=quadrat_width, min_num=min_num, buffer_amount=buffer_amount)
     nodes_outside_polygon = gdf_nodes[~gdf_nodes.index.isin(points_within_geometry.index)]
 
     if truncate_by_edge:

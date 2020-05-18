@@ -222,7 +222,7 @@ def log(message, level=None, name=None, filename=None):
     if settings.log_file:
         # get the current logger (or create a new one, if none), then log
         # message at requested level
-        logger = get_logger(level=level, name=name, filename=filename)
+        logger = _get_logger(level=level, name=name, filename=filename)
         if level == lg.DEBUG:
             logger.debug(message)
         elif level == lg.INFO:
@@ -250,7 +250,7 @@ def log(message, level=None, name=None, filename=None):
 
 
 
-def get_logger(level=None, name=None, filename=None):
+def _get_logger(level=None, name=None, filename=None):
     """
     Create a logger or return the current one if already instantiated.
 

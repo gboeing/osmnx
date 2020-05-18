@@ -15,7 +15,7 @@ from . import utils
 
 
 
-def is_crs_utm(crs):
+def _is_crs_utm(crs):
     """
     Determine if a CRS is a UTM CRS
 
@@ -115,7 +115,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
         else:
             # else, project the gdf to UTM
             # if GeoDataFrame is already in UTM, just return it
-            if is_crs_utm(gdf.crs):
+            if _is_crs_utm(gdf.crs):
                 return gdf
 
             # calculate the centroid of the union of all the geometries in the

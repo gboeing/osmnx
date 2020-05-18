@@ -353,7 +353,7 @@ def remove_isolated_nodes(G):
 
 
 
-def is_duplicate_edge(data, data_other):
+def _is_duplicate_edge(data, data_other):
     """
     Check if two edge data dictionaries are the same based on OSM ID and
     geometry.
@@ -381,7 +381,7 @@ def is_duplicate_edge(data, data_other):
         # if they contain the same OSM ID or set of OSM IDs (due to simplification)
         if ('geometry' in data) and ('geometry' in data_other):
             # if both edges have a geometry attribute
-            if is_same_geometry(data['geometry'], data_other['geometry']):
+            if _is_same_geometry(data['geometry'], data_other['geometry']):
                 # if their edge geometries have the same coordinates
                 is_dupe = True
         elif ('geometry' in data) and ('geometry' in data_other):
@@ -395,7 +395,7 @@ def is_duplicate_edge(data, data_other):
 
 
 
-def is_same_geometry(ls1, ls2):
+def _is_same_geometry(ls1, ls2):
     """
     Check if LineString geometries in two edges are the same, in
     normal or reversed order of points.
@@ -426,7 +426,7 @@ def is_same_geometry(ls1, ls2):
 
 
 
-def update_edge_keys(G):
+def _update_edge_keys(G):
     """
     Update the keys of edges that share a u, v with another edge but differ in
     geometry. For example, two one-way streets from u to v that bow away from
@@ -468,7 +468,7 @@ def update_edge_keys(G):
         # for each pair of edges to compare
         for geom1, geom2 in geom_pairs:
             # if they don't have the same geometry, flag them as different streets
-            if not is_same_geometry(geom1, geom2):
+            if not _is_same_geometry(geom1, geom2):
                 # add edge uvk, but not edge vuk, otherwise we'll iterate both their keys
                 # and they'll still duplicate each other at the end of this process
                 different_streets.append((group['u'].iloc[0], group['v'].iloc[0], group['key'].iloc[0]))
@@ -513,7 +513,7 @@ def get_undirected(G):
 
     # update edge keys so we don't retain only one edge of sets of parallel edges
     # when we convert from a multidigraph to a multigraph
-    G = update_edge_keys(G)
+    G = _update_edge_keys(G)
 
     # now convert multidigraph to a multigraph, retaining all edges in both
     # directions for now, as well as all graph attributes
@@ -541,7 +541,7 @@ def get_undirected(G):
                     # compare the first edge's data to the second's to see if
                     # they are duplicates
                     data_other = H.edges[u, v, key_other]
-                    if is_duplicate_edge(data, data_other):
+                    if _is_duplicate_edge(data, data_other):
 
                         # if they match up, flag the duplicate for removal
                         duplicate_edges.append((u, v, key_other))

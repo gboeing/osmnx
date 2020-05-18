@@ -240,7 +240,7 @@ def save_graph_osm(data, filepath=None,
             else:
 
                 # topological sort
-                ordered_nodes = get_unique_nodes_ordered_from_way(all_way_edges)
+                ordered_nodes = _get_unique_nodes_ordered_from_way(all_way_edges)
 
                 for node in ordered_nodes:
                     etree.SubElement(edge, 'nd', attrib={'ref': node})
@@ -287,7 +287,7 @@ def save_graph_osm(data, filepath=None,
 
 
 
-def get_unique_nodes_ordered_from_way(way_edges_df):
+def _get_unique_nodes_ordered_from_way(way_edges_df):
     """
     Function to recover the original order of nodes from a dataframe
     of edges associated with a single OSM way.

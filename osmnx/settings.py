@@ -32,8 +32,8 @@ useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name',
                     'landuse', 'width', 'est_width', 'junction']
 
 # tags and attributes for generating an OSM XML file
-osm_xml_node_attrs = [
-    'id', 'timestamp', 'uid', 'user', 'version', 'changeset', 'lat', 'lon']
+osm_xml_node_attrs = ['id', 'timestamp', 'uid', 'user', 'version', 'changeset',
+                      'lat', 'lon']
 osm_xml_node_tags = ['highway']
 osm_xml_way_attrs = ['id', 'timestamp', 'uid', 'user', 'version', 'changeset']
 osm_xml_way_tags = ['highway', 'lanes', 'maxspeed', 'name', 'oneway']

@@ -28,14 +28,6 @@ osmnx.elevation module
     :undoc-members:
     :show-inheritance:
 
-osmnx.errors module
--------------------
-
-.. automodule:: osmnx.errors
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 osmnx.footprints module
 -----------------------
 

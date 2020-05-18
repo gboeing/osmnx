@@ -21,9 +21,9 @@ from . import simplification
 from . import utils
 from . import utils_geo
 from . import utils_graph
-from .errors import EmptyOverpassResponse
-from .errors import InsufficientNetworkQueryArguments
-from .errors import InvalidDistanceType
+from ._errors import EmptyOverpassResponse
+from ._errors import InsufficientNetworkQueryArguments
+from ._errors import InvalidDistanceType
 
 
 
@@ -49,7 +49,7 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
     assert (isinstance(query, dict) or isinstance(query, str)), 'query must be a dict or a string'
 
     # get the data from OSM
-    data = downloader.osm_polygon_download(query, limit=which_result)
+    data = downloader._osm_polygon_download(query, limit=which_result)
     if len(data) >= which_result:
 
         # extract data elements from the JSON response
@@ -131,10 +131,10 @@ def gdf_from_places(queries, which_results=None, buffer_dist=None):
 
 
 
-def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
-                     network_type='all_private', timeout=180, memory=None,
-                     max_query_area_size=50*1000*50*1000, infrastructure='way["highway"]',
-                     custom_filter=None, custom_settings=None):
+def _osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
+                      network_type='all_private', timeout=180, memory=None,
+                      max_query_area_size=50*1000*50*1000, infrastructure='way["highway"]',
+                      custom_filter=None, custom_settings=None):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
 
@@ -189,7 +189,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
     if custom_filter:
         osm_filter = custom_filter
     else:
-        osm_filter = downloader.get_osm_filter(network_type)
+        osm_filter = downloader._get_osm_filter(network_type)
     response_jsons = []
 
     # pass server memory allocation in bytes for the query to the API
@@ -218,8 +218,8 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
 
         # subdivide it if it exceeds the max area size (in meters), then project
         # back to lat-long
-        geometry_proj_consolidated_subdivided = utils_geo.consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
-        geometry, _ = projection.project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
+        gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
         utils.log(f'Requesting network data within bounding box from API in {len(geometry)} request(s)')
 
         # loop through each polygon rectangle in the geometry (there will only
@@ -239,9 +239,9 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
         # max size (in meters), project back to lat-long, then get a list of
         # polygon(s) exterior coordinates
         geometry_proj, crs_proj = projection.project_geometry(polygon)
-        geometry_proj_consolidated_subdivided = utils_geo.consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
-        geometry, _ = projection.project_geometry(geometry_proj_consolidated_subdivided, crs=crs_proj, to_latlong=True)
-        polygon_coord_strs = utils_geo.get_polygons_coordinates(geometry)
+        gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
+        polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
         utils.log(f'Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)')
 
         # pass each polygon exterior coordinates in the list to the API, one at
@@ -256,7 +256,7 @@ def osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
 
 
 
-def convert_node(element):
+def _convert_node(element):
     """
     Convert an OSM node element into the format for a networkx node.
 
@@ -282,7 +282,7 @@ def convert_node(element):
 
 
 
-def convert_path(element):
+def _convert_path(element):
     """
     Convert an OSM way element into the format for a networkx graph path.
 
@@ -311,7 +311,7 @@ def convert_path(element):
 
 
 
-def parse_osm_nodes_paths(osm_data):
+def _parse_osm_nodes_paths(osm_data):
     """
     Construct dicts of nodes and paths with key=osmid and value=dict of
     attributes.
@@ -331,16 +331,16 @@ def parse_osm_nodes_paths(osm_data):
     for element in osm_data['elements']:
         if element['type'] == 'node':
             key = element['id']
-            nodes[key] = convert_node(element)
+            nodes[key] = _convert_node(element)
         elif element['type'] == 'way': #osm calls network paths 'ways'
             key = element['id']
-            paths[key] = convert_path(element)
+            paths[key] = _convert_path(element)
 
     return nodes, paths
 
 
 
-def add_path(G, data, one_way):
+def _add_path(G, data, one_way):
     """
     Add a path to the graph.
 
@@ -383,7 +383,7 @@ def add_path(G, data, one_way):
 
 
 
-def add_paths(G, paths, bidirectional=False):
+def _add_paths(G, paths, bidirectional=False):
     """
     Add a collection of paths to the graph.
 
@@ -408,7 +408,7 @@ def add_paths(G, paths, bidirectional=False):
     for data in paths.values():
 
         if settings.all_oneway is True:
-            add_path(G, data, one_way=True)
+            _add_path(G, data, one_way=True)
         # if this path is tagged as one-way and if it is not a walking network,
         # then we'll add the path in one direction only
         elif ('oneway' in data and data['oneway'] in osm_oneway_values) and not bidirectional:
@@ -417,11 +417,11 @@ def add_paths(G, paths, bidirectional=False):
                 # reverse direction of the nodes' order, see osm documentation
                 data['nodes'] = list(reversed(data['nodes']))
             # add this path (in only one direction) to the graph
-            add_path(G, data, one_way=True)
+            _add_path(G, data, one_way=True)
 
         elif ('junction' in data and data['junction'] == 'roundabout') and not bidirectional:
             # roundabout are also oneway but not tagged as is
-            add_path(G, data, one_way=True)
+            _add_path(G, data, one_way=True)
 
         # else, this path is not tagged as one-way or it is a walking network
         # (you can walk both directions on a one-way street)
@@ -430,13 +430,13 @@ def add_paths(G, paths, bidirectional=False):
             # 'oneway' attribute to False. if this is a walking network, this
             # may very well be a one-way street (as cars/bikes go), but in a
             # walking-only network it is a bi-directional edge
-            add_path(G, data, one_way=False)
+            _add_path(G, data, one_way=False)
 
     return G
 
 
 
-def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional=False):
+def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     """
     Create a networkx graph from Overpass API HTTP response objects.
 
@@ -444,8 +444,6 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional
     ----------
     response_jsons : list
         list of dicts of JSON responses from from the Overpass API
-    name : string
-        the name of the graph
     retain_all : bool
         if True, return the entire graph even if it is not connected
     bidirectional : bool
@@ -466,13 +464,13 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional
         raise EmptyOverpassResponse('There are no data elements in the response JSON objects')
 
     # create the graph as a MultiDiGraph and set the original CRS to default_crs
-    G = nx.MultiDiGraph(name=name, crs=settings.default_crs)
+    G = nx.MultiDiGraph(crs=settings.default_crs)
 
     # extract nodes and paths from the downloaded osm data
     nodes = {}
     paths = {}
     for osm_data in response_jsons:
-        nodes_temp, paths_temp = parse_osm_nodes_paths(osm_data)
+        nodes_temp, paths_temp = _parse_osm_nodes_paths(osm_data)
         for key, value in nodes_temp.items():
             nodes[key] = value
         for key, value in paths_temp.items():
@@ -483,7 +481,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional
         G.add_node(node, **data)
 
     # add each osm way (aka, path) to the graph
-    G = add_paths(G, paths, bidirectional=bidirectional)
+    G = _add_paths(G, paths, bidirectional=bidirectional)
 
     # retain only the largest connected component, if caller did not
     # set retain_all=True
@@ -503,7 +501,7 @@ def create_graph(response_jsons, name='unnamed', retain_all=False, bidirectional
 
 def graph_from_bbox(north, south, east, west, network_type='all_private',
                     simplify=True, retain_all=False, truncate_by_edge=False,
-                    name='unnamed', timeout=180, memory=None,
+                    timeout=180, memory=None,
                     max_query_area_size=50*1000*50*1000, clean_periphery=True,
                     infrastructure='way["highway"]', custom_filter=None,
                     custom_settings=None):
@@ -529,8 +527,6 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
     truncate_by_edge : bool
         if True retain node if it's outside bbox but at least one of node's
         neighbors are within bbox
-    name : string
-        the name of the graph
     timeout : int
         the timeout interval for requests and to pass to API
     memory : int
@@ -566,14 +562,15 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
         west_buffered, south_buffered, east_buffered, north_buffered = polygon_buff.bounds
 
         # get the network data from OSM then create the graph
-        response_jsons = osm_net_download(north=north_buffered, south=south_buffered,
-                                          east=east_buffered, west=west_buffered,
-                                          network_type=network_type, timeout=timeout,
-                                          memory=memory, max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure, custom_filter=custom_filter,
-                                          custom_settings=custom_settings)
-        G_buffered = create_graph(response_jsons, name=name, retain_all=retain_all,
-                                  bidirectional=network_type in settings.bidirectional_network_types)
+        response_jsons = _osm_net_download(north=north_buffered, south=south_buffered,
+                                           east=east_buffered, west=west_buffered,
+                                           network_type=network_type, timeout=timeout,
+                                           memory=memory, max_query_area_size=max_query_area_size,
+                                           infrastructure=infrastructure, custom_filter=custom_filter,
+                                           custom_settings=custom_settings)
+        G_buffered = _create_graph(response_jsons,
+                                   retain_all=retain_all,
+                                   bidirectional=network_type in settings.bidirectional_network_types)
         G = utils_geo.truncate_graph_bbox(G_buffered, north, south, east, west, retain_all=True, truncate_by_edge=truncate_by_edge)
 
         # simplify the graph topology
@@ -590,16 +587,17 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
 
     else:
         # get the network data from OSM
-        response_jsons = osm_net_download(north=north, south=south, east=east,
-                                          west=west, network_type=network_type,
-                                          timeout=timeout, memory=memory,
-                                          max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure, custom_filter=custom_filter,
-                                          custom_settings=custom_settings)
+        response_jsons = _osm_net_download(north=north, south=south, east=east,
+                                           west=west, network_type=network_type,
+                                           timeout=timeout, memory=memory,
+                                           max_query_area_size=max_query_area_size,
+                                           infrastructure=infrastructure, custom_filter=custom_filter,
+                                           custom_settings=custom_settings)
 
         # create the graph, then truncate to the bounding box
-        G = create_graph(response_jsons, name=name, retain_all=retain_all,
-                         bidirectional=network_type in settings.bidirectional_network_types)
+        G = _create_graph(response_jsons,
+                          retain_all=retain_all,
+                          bidirectional=network_type in settings.bidirectional_network_types)
         G = utils_geo.truncate_graph_bbox(G, north, south, east, west, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
 
         # simplify the graph topology as the last step. don't truncate after
@@ -616,7 +614,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
 
 def graph_from_point(center_point, distance=1000, distance_type='bbox',
                      network_type='all_private', simplify=True, retain_all=False,
-                     truncate_by_edge=False, name='unnamed', timeout=180,
+                     truncate_by_edge=False, timeout=180,
                      memory=None, max_query_area_size=50*1000*50*1000,
                      clean_periphery=True, infrastructure='way["highway"]',
                      custom_filter=None, custom_settings=None):
@@ -644,8 +642,6 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
     truncate_by_edge : bool
         if True retain node if it's outside bbox but at least one of node's
         neighbors are within bbox
-    name : string
-        the name of the graph
     timeout : int
         the timeout interval for requests and to pass to API
     memory : int
@@ -680,7 +676,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
 
     # create a graph from the bounding box
     G = graph_from_bbox(north, south, east, west, network_type=network_type, simplify=simplify,
-                        retain_all=retain_all, truncate_by_edge=truncate_by_edge, name=name,
+                        retain_all=retain_all, truncate_by_edge=truncate_by_edge,
                         timeout=timeout, memory=memory, max_query_area_size=max_query_area_size,
                         clean_periphery=clean_periphery, infrastructure=infrastructure,
                         custom_filter=custom_filter, custom_settings=custom_settings)
@@ -700,7 +696,7 @@ def graph_from_point(center_point, distance=1000, distance_type='bbox',
 def graph_from_address(address, distance=1000, distance_type='bbox',
                        network_type='all_private', simplify=True, retain_all=False,
                        truncate_by_edge=False, return_coords=False,
-                       name='unnamed', timeout=180, memory=None,
+                       timeout=180, memory=None,
                        max_query_area_size=50*1000*50*1000,
                        clean_periphery=True, infrastructure='way["highway"]',
                        custom_filter=None, custom_settings=None):
@@ -731,8 +727,6 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
         neighbors are within bbox
     return_coords : bool
         optionally also return the geocoded coordinates of the address
-    name : string
-        the name of the graph
     timeout : int
         the timeout interval for requests and to pass to API
     memory : int
@@ -765,7 +759,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
     # then create a graph from this point
     G = graph_from_point(point, distance, distance_type, network_type=network_type,
                          simplify=simplify, retain_all=retain_all, truncate_by_edge=truncate_by_edge,
-                         name=name, timeout=timeout, memory=memory,
+                         timeout=timeout, memory=memory,
                          max_query_area_size=max_query_area_size,
                          clean_periphery=clean_periphery, infrastructure=infrastructure,
                          custom_filter=custom_filter, custom_settings=custom_settings)
@@ -779,7 +773,7 @@ def graph_from_address(address, distance=1000, distance_type='bbox',
 
 
 def graph_from_polygon(polygon, network_type='all_private', simplify=True,
-                       retain_all=False, truncate_by_edge=False, name='unnamed',
+                       retain_all=False, truncate_by_edge=False,
                        timeout=180, memory=None,
                        max_query_area_size=50*1000*50*1000,
                        clean_periphery=True, infrastructure='way["highway"]',
@@ -802,8 +796,6 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
     truncate_by_edge : bool
         if True retain node if it's outside bbox but at least one of node's
         neighbors are within bbox
-    name : string
-        the name of the graph
     timeout : int
         the timeout interval for requests and to pass to API
     memory : int
@@ -849,13 +841,14 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
 
         # get the network data from OSM,  create the buffered graph, then
         # truncate it to the buffered polygon
-        response_jsons = osm_net_download(polygon=polygon_buffered, network_type=network_type,
-                                          timeout=timeout, memory=memory,
-                                          max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure, custom_filter=custom_filter,
-                                          custom_settings=custom_settings)
-        G_buffered = create_graph(response_jsons, name=name, retain_all=True,
-                                  bidirectional=network_type in settings.bidirectional_network_types)
+        response_jsons = _osm_net_download(polygon=polygon_buffered, network_type=network_type,
+                                           timeout=timeout, memory=memory,
+                                           max_query_area_size=max_query_area_size,
+                                           infrastructure=infrastructure, custom_filter=custom_filter,
+                                           custom_settings=custom_settings)
+        G_buffered = _create_graph(response_jsons,
+                                   retain_all=True,
+                                   bidirectional=network_type in settings.bidirectional_network_types)
         G_buffered = utils_geo.truncate_graph_polygon(G_buffered, polygon_buffered, retain_all=True, truncate_by_edge=truncate_by_edge)
 
         # simplify the graph topology
@@ -875,15 +868,16 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
 
     else:
         # download a list of API responses for the polygon/multipolygon
-        response_jsons = osm_net_download(polygon=polygon, network_type=network_type,
-                                          timeout=timeout, memory=memory,
-                                          max_query_area_size=max_query_area_size,
-                                          infrastructure=infrastructure, custom_filter=custom_filter,
-                                          custom_settings=custom_settings)
+        response_jsons = _osm_net_download(polygon=polygon, network_type=network_type,
+                                           timeout=timeout, memory=memory,
+                                           max_query_area_size=max_query_area_size,
+                                           infrastructure=infrastructure, custom_filter=custom_filter,
+                                           custom_settings=custom_settings)
 
         # create the graph from the downloaded data
-        G = create_graph(response_jsons, name=name, retain_all=True,
-                         bidirectional=network_type in settings.bidirectional_network_types)
+        G = _create_graph(response_jsons,
+                          retain_all=True,
+                          bidirectional=network_type in settings.bidirectional_network_types)
 
         # truncate the graph to the extent of the polygon
         G = utils_geo.truncate_graph_polygon(G, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
@@ -901,7 +895,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
 
 
 def graph_from_place(query, network_type='all_private', simplify=True,
-                     retain_all=False, truncate_by_edge=False, name='unnamed',
+                     retain_all=False, truncate_by_edge=False,
                      which_result=1, buffer_dist=None, timeout=180, memory=None,
                      max_query_area_size=50*1000*50*1000, clean_periphery=True,
                      infrastructure='way["highway"]', custom_filter=None,
@@ -933,8 +927,6 @@ def graph_from_place(query, network_type='all_private', simplify=True,
     truncate_by_edge : bool
         if True retain node if it's outside bbox but at least one of node's
         neighbors are within bbox
-    name : string
-        the name of the graph
     which_result : int
         max number of results to return and which to process upon receipt
     buffer_dist : float
@@ -968,7 +960,6 @@ def graph_from_place(query, network_type='all_private', simplify=True,
         # if it is a string (place name) or dict (structured place query), then
         # it is a single place
         gdf_place = gdf_from_place(query, which_result=which_result, buffer_dist=buffer_dist)
-        name = query
     elif isinstance(query, list):
         # if it is a list, it contains multiple places to get
         gdf_place = gdf_from_places(query, buffer_dist=buffer_dist)
@@ -982,7 +973,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
     # create graph using this polygon(s) geometry
     G = graph_from_polygon(polygon, network_type=network_type, simplify=simplify,
                            retain_all=retain_all, truncate_by_edge=truncate_by_edge,
-                           name=name, timeout=timeout, memory=memory,
+                           timeout=timeout, memory=memory,
                            max_query_area_size=max_query_area_size,
                            clean_periphery=clean_periphery, infrastructure=infrastructure,
                            custom_filter=custom_filter, custom_settings=custom_settings)
@@ -993,7 +984,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
 
 
 def graph_from_file(filename, bidirectional=False, simplify=True,
-                    retain_all=False, name='unnamed'):
+                    retain_all=False):
     """
     Create a networkx graph from OSM data in an XML file.
 
@@ -1007,19 +998,17 @@ def graph_from_file(filename, bidirectional=False, simplify=True,
         if True, simplify the graph topology
     retain_all : bool
         if True, return the entire graph even if it is not connected
-    name : string
-        the name of the graph
 
     Returns
     -------
     networkx multidigraph
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [overpass_json_from_file(filename)]
+    response_jsons = [_overpass_json_from_file(filename)]
 
     # create graph using this response JSON
-    G = create_graph(response_jsons, bidirectional=bidirectional,
-                     retain_all=retain_all, name=name)
+    G = _create_graph(response_jsons, bidirectional=bidirectional,
+                      retain_all=retain_all)
 
     # simplify the graph topology as the last step.
     if simplify:
@@ -1030,7 +1019,7 @@ def graph_from_file(filename, bidirectional=False, simplify=True,
 
 
 
-def overpass_json_from_file(filename):
+def _overpass_json_from_file(filename):
     """
     Read OSM XML from input filename and return Overpass-like JSON.
 
@@ -1054,13 +1043,13 @@ def overpass_json_from_file(filename):
         opener = lambda fn: open(fn, mode='rb')
 
     with opener(filename) as file:
-        handler = OSMContentHandler()
+        handler = _OSMContentHandler()
         xml.sax.parse(file, handler)
         return handler.object
 
 
 
-class OSMContentHandler(xml.sax.handler.ContentHandler):
+class _OSMContentHandler(xml.sax.handler.ContentHandler):
     """
     SAX content handler for OSM XML.
 

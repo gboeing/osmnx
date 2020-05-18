@@ -67,7 +67,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
                 time.sleep(pause_duration)
                 response = requests.get(url)
                 response_json = response.json()
-                downloader.save_to_cache(url, response_json)
+                downloader._save_to_cache(url, response_json)
             except Exception as e:
                 utils.log(e)
                 utils.log(f'Server responded with {response.status_code}: {response.reason}')
