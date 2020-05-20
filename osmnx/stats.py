@@ -8,9 +8,9 @@
 import networkx as nx
 import numpy as np
 import pandas as pd
+from . import distance
 from . import simplification
 from . import utils
-from . import utils_geo
 from . import utils_graph
 
 
@@ -179,15 +179,15 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
     coords = np.array([[G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in G.edges(keys=True)])
     df_coords = pd.DataFrame(coords, columns=['u_y', 'u_x', 'v_y', 'v_x'])
     if circuity_dist == 'gc':
-        gc_distances = utils_geo.great_circle_vec(lat1=df_coords['u_y'],
-                                        lng1=df_coords['u_x'],
-                                        lat2=df_coords['v_y'],
-                                        lng2=df_coords['v_x'])
+        gc_distances = distance.great_circle_vec(lat1=df_coords['u_y'],
+                                                 lng1=df_coords['u_x'],
+                                                 lat2=df_coords['v_y'],
+                                                 lng2=df_coords['v_x'])
     elif circuity_dist == 'euclidean':
-        gc_distances = utils_geo.euclidean_dist_vec(y1=df_coords['u_y'],
-                                          x1=df_coords['u_x'],
-                                          y2=df_coords['v_y'],
-                                          x2=df_coords['v_x'])
+        gc_distances = distance.euclidean_dist_vec(y1=df_coords['u_y'],
+                                                   x1=df_coords['u_x'],
+                                                   y2=df_coords['v_y'],
+                                                   x2=df_coords['v_x'])
     else:
         raise ValueError('circuity_dist must be "gc" or "euclidean"')
 

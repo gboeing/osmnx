@@ -163,7 +163,7 @@ def test_graph_from_file():
 def test_routing_folium():
 
     # calculate shortest path and plot as static image and leaflet web map
-    G = ox.graph_from_address(address=address, distance=500, distance_type='bbox', network_type='bike')
+    G = ox.graph_from_address(address=address, dist=500, dist_type='bbox', network_type='bike')
 
     # give each node a random elevation then calculate edge grades
     rando = np.random.random(size=len(G.nodes()))
@@ -192,7 +192,7 @@ def test_routing_folium():
 
 
 def test_plots():
-    G = ox.graph_from_point(location_point, distance=500, network_type='drive')
+    G = ox.graph_from_point(location_point, dist=500, network_type='drive')
 
     # test getting colors
     co = ox.plot.get_colors(n=5, return_hex=True)
@@ -217,7 +217,7 @@ def test_plots():
 def test_find_nearest():
 
     # get graph
-    G = ox.graph_from_point(location_point, distance=500, network_type='drive')
+    G = ox.graph_from_point(location_point, dist=500, network_type='drive')
 
     # convert graph to node/edge GeoDataFrames and back again
     gdf_nodes, gdf_edges = ox.graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True)
@@ -262,7 +262,7 @@ def test_pois():
                                custom_settings='[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]')
 
     gdf = ox.pois_from_point(location_point,
-                             distance=500,
+                             dist=500,
                              tags={'amenity' : 'restaurant'},
                              timeout=200,
                              memory=100000)
@@ -335,7 +335,7 @@ def test_network_saving_loading():
     # test osm xml output
     default_all_oneway = ox.settings.all_oneway
     ox.settings.all_oneway = True
-    G = ox.graph_from_point(location_point, distance=500, network_type='drive')
+    G = ox.graph_from_point(location_point, dist=500, network_type='drive')
     ox.save_graph_osm(G, merge_edges=False)
 
     # test osm xml output merge edges
@@ -359,12 +359,12 @@ def test_network_saving_loading():
 def test_get_network_methods():
 
     # graph from bounding box
-    north, south, east, west = ox.utils_geo.bbox_from_point(location_point, distance=500)
+    north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
     G = ox.graph_from_bbox(north, south, east, west, network_type='drive')
     G = ox.graph_from_bbox(north, south, east, west, network_type='drive_service', truncate_by_edge=True)
 
     # graph from address
-    G = ox.graph_from_address(address=address, distance=500, distance_type='bbox', network_type='bike')
+    G = ox.graph_from_address(address=address, dist=500, dist_type='bbox', network_type='bike')
 
     # graph from list of places
     G = ox.graph_from_place([place1], network_type='drive', clean_periphery=False)
@@ -378,19 +378,19 @@ def test_get_network_methods():
              '["foot"!~"no"]'
              '["service"!~"private"]'
              '["access"!~"private"]')
-    G = ox.graph_from_point(location_point, distance=500, custom_filter=cf,
-                            distance_type='bbox', network_type='all')
+    G = ox.graph_from_point(location_point, dist=500, custom_filter=cf,
+                            dist_type='bbox', network_type='all')
 
     # test custom settings
     cs = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
-    G = ox.graph_from_point(location_point, distance=500, custom_settings=cs,
-                            distance_type='network', network_type='all_private')
+    G = ox.graph_from_point(location_point, dist=500, custom_settings=cs,
+                            dist_type='network', network_type='all_private')
 
 
 
 def test_stats():
     # create graph, add bearings, project it
-    G = ox.graph_from_point(location_point, distance=500, network_type='drive')
+    G = ox.graph_from_point(location_point, dist=500, network_type='drive')
     G = ox.add_edge_bearings(G)
     G_proj = ox.project_graph(G)
 
@@ -412,7 +412,7 @@ def test_footprints():
     cs = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
     gdf = ox.footprints_from_place(place2, custom_settings=cs)
     gdf = ox.footprints_from_polygon(polygon)
-    gdf = ox.footprints_from_address(address, distance=300)
+    gdf = ox.footprints_from_address(address, dist=300)
     fig, ax = ox.plot_footprints(gdf)
 
     # new_river_head.json contains a relation with 1 outer closed way and 2 inner closed ways

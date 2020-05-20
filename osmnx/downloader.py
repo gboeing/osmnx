@@ -1,6 +1,6 @@
 ################################################################################
 # Module: downloader.py
-# Description: Interact with the APIs
+# Description: Interact with the OSM APIs
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
@@ -16,8 +16,12 @@ import requests
 import time
 from collections import OrderedDict
 from dateutil import parser as date_parser
+from shapely.geometry import Polygon
+from . import projection
 from . import settings
 from . import utils
+from . import utils_geo
+from ._errors import InsufficientNetworkQueryArguments
 from ._errors import UnknownNetworkType
 
 
@@ -271,6 +275,131 @@ def _get_pause_duration(recursive_delay=5, default_duration=10):
             return default_duration
 
     return pause_duration
+
+
+
+def _osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
+                      network_type='all_private', timeout=180, memory=None,
+                      max_query_area_size=50*1000*50*1000, infrastructure='way["highway"]',
+                      custom_filter=None, custom_settings=None):
+    """
+    Download OSM ways and nodes within some bounding box from the Overpass API.
+
+    Parameters
+    ----------
+    polygon : shapely Polygon or MultiPolygon
+        geographic shape to fetch the street network within
+    north : float
+        northern latitude of bounding box
+    south : float
+        southern latitude of bounding box
+    east : float
+        eastern longitude of bounding box
+    west : float
+        western longitude of bounding box
+    network_type : string
+        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what
+        type of street network to get
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
+    max_query_area_size : float
+        max area for any part of the geometry in meters: any polygon bigger
+        will get divided up for multiple queries to API (default 50km x 50km)
+    infrastructure : string
+        download infrastructure of given type. default is streets, ie,
+        'way["highway"]') but other infrastructures may be selected like power
+        grids, ie, 'way["power"~"line"]'
+    custom_filter : string
+        a custom network filter to be used instead of the network_type presets
+    custom_settings : string
+        custom settings to be used in the overpass query instead of the default
+        ones
+
+    Returns
+    -------
+    response_jsons : list
+    """
+
+    # check if we're querying by polygon or by bounding box based on which
+    # argument(s) where passed into this function
+    by_poly = polygon is not None
+    by_bbox = not (north is None or south is None or east is None or west is None)
+    if not (by_poly or by_bbox):
+        raise InsufficientNetworkQueryArguments(
+            'You must pass a polygon or north, south, east, and west')
+
+    # create a filter to exclude certain kinds of ways based on the requested
+    # network_type
+    if custom_filter:
+        osm_filter = custom_filter
+    else:
+        osm_filter = _get_osm_filter(network_type)
+    response_jsons = []
+
+    # pass server memory allocation in bytes for the query to the API
+    # if None, pass nothing so the server will use its default allocation size
+    # otherwise, define the query's maxsize parameter value as whatever the
+    # caller passed in
+    if memory is None:
+        maxsize = ''
+    else:
+        maxsize = f'[maxsize:{memory}]'
+
+    # use custom settings if delivered, otherwise just the default ones.
+    if custom_settings:
+        overpass_settings = custom_settings
+    else:
+        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout, maxsize=maxsize)
+
+    # define the query to send the API
+    # specifying way["highway"] means that all ways returned must have a highway
+    # key. the {filters} then remove ways by key/value. the '>' makes it recurse
+    # so we get ways and way nodes. maxsize is in bytes.
+    if by_bbox:
+        # turn bbox into a polygon and project to local UTM
+        polygon = Polygon([(west, south), (east, south), (east, north), (west, north)])
+        geometry_proj, crs_proj = projection.project_geometry(polygon)
+
+        # subdivide it if it exceeds the max area size (in meters), then project
+        # back to lat-long
+        gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
+        utils.log(f'Requesting network data within bounding box from API in {len(geometry)} request(s)')
+
+        # loop through each polygon rectangle in the geometry (there will only
+        # be one if original bbox didn't exceed max area size)
+        for poly in geometry:
+            # represent bbox as south,west,north,east and round lat-longs to 6
+            # decimal places (ie, ~100 mm) so URL strings aren't different
+            # due to float rounding issues (for consistent caching)
+            west, south, east, north = poly.bounds
+            query_str = f'{overpass_settings};({infrastructure}{osm_filter}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;'
+            response_json = overpass_request(data={'data':query_str}, timeout=timeout)
+            response_jsons.append(response_json)
+        utils.log(f'Got all network data within bounding box from API in {len(geometry)} request(s)')
+
+    elif by_poly:
+        # project to utm, divide polygon up into sub-polygons if area exceeds a
+        # max size (in meters), project back to lat-long, then get a list of
+        # polygon(s) exterior coordinates
+        geometry_proj, crs_proj = projection.project_geometry(polygon)
+        gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
+        polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
+        utils.log(f'Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)')
+
+        # pass each polygon exterior coordinates in the list to the API, one at
+        # a time
+        for polygon_coord_str in polygon_coord_strs:
+            query_str = f'{overpass_settings};({infrastructure}{osm_filter}(poly:"{polygon_coord_str}");>;);out;'
+            response_json = overpass_request(data={'data':query_str}, timeout=timeout)
+            response_jsons.append(response_json)
+        utils.log(f'Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)')
+
+    return response_jsons
 
 
 
