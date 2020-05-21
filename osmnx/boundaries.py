@@ -101,6 +101,7 @@ def gdf_from_places(queries, which_results=None, buffer_dist=None):
     -------
     geopandas.GeoDataFrame
     """
+
     # create an empty GeoDataFrame then append each result as a new row,
     # checking for the presence of which_results
     gdf = gpd.GeoDataFrame()

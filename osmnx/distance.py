@@ -42,8 +42,8 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
 
     Returns
     -------
-    dist : float or vector of floats
-        distance or vector of distances from (lat1, lng1) to (lat2, lng2) in
+    dist : float or np.array of floats
+        distance or array of distances from (lat1, lng1) to (lat2, lng2) in
         units of earth_radius
     """
 
@@ -69,18 +69,18 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
 def euclidean_dist_vec(y1, x1, y2, x2):
     """
     Vectorized function to calculate the euclidean distance between two points
-    or between vectors of points.
+    or between arrays of points.
 
     Parameters
     ----------
-    y1 : float or array of float
-    x1 : float or array of float
-    y2 : float or array of float
-    x2 : float or array of float
+    y1 : float or np.array of float
+    x1 : float or np.array of float
+    y2 : float or np.array of float
+    x2 : float or np.array of float
 
     Returns
     -------
-    dist : float or array of float
+    dist : float or np.array of float
         distance or vector of distances from (x1, y1) to (x2, y2) in graph units
     """
 
@@ -98,7 +98,7 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     point : tuple
         The (lat, lng) or (y, x) point for which we will find the nearest node
         in the graph
@@ -171,7 +171,7 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     point : tuple
         The (lat, lng) or (y, x) point for which we will find the nearest edge
         in the graph
@@ -245,7 +245,7 @@ def get_nearest_nodes(G, X, Y, method=None):
 
     Returns
     -------
-    nn : array
+    nn : np.array
         list of nearest node IDs
     """
 
@@ -344,7 +344,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
 
     Returns
     -------
-    ne : ndarray
+    ne : np.array
         array of nearest edges represented by their startpoint and endpoint ids,
         u and v, the OSM ids of the nodes, and the edge key.
     """

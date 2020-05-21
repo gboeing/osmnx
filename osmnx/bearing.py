@@ -50,16 +50,17 @@ def get_bearing(origin_point, destination_point):
 
 def add_edge_bearings(G):
     """
-    Calculate the compass bearing from origin node to destination node for each
-    edge in the directed graph then add each bearing as a new edge attribute.
+    Calculate the compass bearing from origin node to destination
+    node for each edge in the directed graph then add each bearing
+    as a new edge attribute.
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
 
     Returns
     -------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     """
 
     for u, v, data in G.edges(keys=False, data=True):
