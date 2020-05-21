@@ -489,12 +489,12 @@ def graph_from_place(query, network_type='all_private', simplify=True,
         # if it is a string (place name) or dict (structured place query), then
         # it is a single place
         gdf_place = boundaries.gdf_from_place(query,
-        	                                  which_result=which_result,
-        	                                  buffer_dist=buffer_dist)
+                                              which_result=which_result,
+                                              buffer_dist=buffer_dist)
     elif isinstance(query, list):
         # if it is a list, it contains multiple places to get
         gdf_place = boundaries.gdf_from_places(query,
-        	                                   buffer_dist=buffer_dist)
+                                               buffer_dist=buffer_dist)
     else:
         raise TypeError('query must be a string or a list of query strings')
 
