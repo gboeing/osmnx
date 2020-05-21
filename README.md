@@ -23,19 +23,19 @@ Retrieve, model, analyze, and visualize OpenStreetMap street networks and other 
 OSMnx is built on top of geopandas, networkx, and matplotlib and works with OpenStreetMap's APIs to:
 
   * Download street networks anywhere in the world with a single line of code
-  * Download other infrastructure network types, place polygons, building footprints, and points of interest
+  * Download other infrastructure types, place boundaries, building footprints, and points of interest
   * Download by city name, polygon, bounding box, or point/address + network distance
   * Download drivable, walkable, bikeable, or all street networks
-  * Load street network from a local .osm file
+  * Save/load street network to/from a local .osm xml file
   * Visualize street network as a static image or interactive leaflet web map
-  * Simplify and correct the network's topology to clean and consolidate intersections
-  * Save networks to disk as shapefiles, geopackages, GraphML, or .osm
+  * Simplify and correct the network's topology to clean-up nodes and consolidate intersections
+  * Save networks to disk as shapefiles, geopackages, and GraphML
   * Conduct topological and spatial analyses to automatically calculate dozens of indicators
+  * Download node elevations and calculate edge grades (inclines)
   * Calculate and plot shortest-path routes as a static image or leaflet web map
+  * Visualize travel distance and travel time with isoline and isochrone maps
   * Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes
   * Plot figure-ground diagrams of street networks and/or building footprints
-  * Download node elevations and calculate edge grades
-  * Visualize travel distance and travel time with isoline and isochrone maps
   * Calculate and visualize street bearings and orientations
 
 Examples and demonstrations of these features are in the [examples repo](https://github.com/gboeing/osmnx-examples). More feature development details are in the change log.
@@ -127,7 +127,7 @@ Or you can define your own fine-tuned network type using OSMnx's `infrastructure
 
 OSMnx allows you to calculate origin-destination routes along the network and quickly visualize them. You can easily visualize elevation, street grade, one-way streets, culs-de-sac, high/low connectivity intersections, building footprints, etc. OSMnx provides built-in capabilities to quickly calculate spatial network metrics like intersection density, average intersection degree, edge density, average street segment length, clustering coefficients, betweenness centrality, etc. For better spatial analysis and visualization, OSMnx lets you project your graph either to a CRS of your choice or automatically to UTM for easy meter-based analysis and projected visualization.
 
-You can also calculate shortest paths with different impedances for network routing and trip simulation, calculate street bearings to analyze network orientation, or snap your own data to the network using OSMnx's fast get nearest node and get nearest edge functions. 
+You can also calculate shortest paths with different impedances for network routing and trip simulation, calculate street bearings to analyze network orientation, or snap your own data to the network using OSMnx's fast get nearest node and get nearest edge functions.
 
 For examples of analyzing street networks with OSMnx, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/06-example-osmnx-networkx.ipynb).
 
