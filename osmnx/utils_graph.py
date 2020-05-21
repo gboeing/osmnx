@@ -230,7 +230,7 @@ def get_route_edge_attributes(G, route, attribute=None, minimize_key='length',
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     route : list
         list of nodes in the path
     attribute : string
@@ -560,11 +560,11 @@ def add_edge_lengths(G):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
 
     Returns
     -------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     """
 
     # first load all the edges' origin and destination coordinates as a

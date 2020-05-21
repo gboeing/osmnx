@@ -142,14 +142,14 @@ def project_graph(G, to_crs=None):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
         the networkx graph to be projected
     to_crs : dict or string or pyproj.CRS
         if not None, just project to this CRS instead of to UTM
 
     Returns
     -------
-    networkx multidigraph
+    networkx.MultiDiGraph
     """
 
     G_proj = G.copy()

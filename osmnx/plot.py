@@ -144,7 +144,7 @@ def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, sto
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     attr : string
         the name of the attribute
     num_bins : int
@@ -180,7 +180,7 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     attr : string
         the name of the continuous-variable attribute
     num_bins : int
@@ -285,7 +285,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     bbox : tuple
         bounding box as north,south,east,west - if None will calculate from
         spatial extents of data. if passing a bbox, you probably also want to
@@ -445,7 +445,7 @@ def _node_list_to_coordinate_lines(G, node_list, use_geom=True):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     route : list
         the route as a list of nodes
     use_geom : bool
@@ -497,7 +497,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     route : list
         the route as a list of nodes
     bbox : tuple
@@ -633,7 +633,7 @@ def plot_graph_routes(G, routes, bbox=None, fig_height=6, fig_width=None,
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     routes : list
         the routes as a list of lists of nodes
     bbox : tuple
@@ -772,7 +772,7 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
 
     Parameters
     ----------
-    G : networkx multidigraph. must be unprojected.
+    G : networkx.MultiDiGraph. must be unprojected.
     address : string
         the address to geocode as the center point if G is not passed in
     point : tuple

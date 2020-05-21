@@ -228,7 +228,7 @@ def get_nearest_nodes(G, X, Y, method=None):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     X : list-like
         The vector of longitudes or x's for which we will find the nearest
         node in the graph
@@ -320,7 +320,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     X : list-like
         The vector of longitudes or x's for which we will find the nearest
         edge in the graph. For projected graphs, use the projected coordinates,

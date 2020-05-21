@@ -78,7 +78,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
 
     Returns
     -------
-    networkx multidigraph
+    networkx.MultiDiGraph
     """
 
     if clean_periphery and simplify:
@@ -193,7 +193,7 @@ def graph_from_point(center_point, dist=1000, dist_type='bbox',
 
     Returns
     -------
-    networkx multidigraph
+    networkx.MultiDiGraph
     """
 
     if dist_type not in ['bbox', 'network']:
@@ -278,7 +278,7 @@ def graph_from_address(address, dist=1000, dist_type='bbox',
 
     Returns
     -------
-    networkx multidigraph or tuple
+    networkx.MultiDiGraph or tuple
         multidigraph or optionally (multidigraph, tuple)
     """
 
@@ -348,7 +348,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
 
     Returns
     -------
-    networkx multidigraph
+    networkx.MultiDiGraph
     """
 
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
@@ -481,7 +481,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
         ones
     Returns
     -------
-    networkx multidigraph
+    networkx.MultiDiGraph
     """
 
     # create a GeoDataFrame with the spatial boundaries of the place(s)
@@ -533,7 +533,7 @@ def graph_from_file(filename, bidirectional=False, simplify=True,
 
     Returns
     -------
-    networkx multidigraph
+    networkx.MultiDiGraph
     """
     # transmogrify file of OSM XML data into JSON
     response_jsons = [_overpass_json_from_file(filename)]
@@ -596,7 +596,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
 
     Returns
     -------
-    networkx multidigraph
+    networkx.MultiDiGraph
     """
 
     utils.log('Creating networkx graph from downloaded OSM data...')
@@ -736,7 +736,7 @@ def _add_path(G, data, one_way):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     data : dict
         the attributes of the path
     one_way : bool
@@ -779,7 +779,7 @@ def _add_paths(G, paths, bidirectional=False):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     paths : dict
         the paths from OSM
     bidirectional : bool

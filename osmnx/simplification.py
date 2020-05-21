@@ -29,7 +29,7 @@ def _is_endpoint(G, node, strict=True):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
 
     node : int
         the node to examine
@@ -98,7 +98,7 @@ def _build_path(G, node, endpoints, path):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     node : int
         the current node to start from
     endpoints : set
@@ -147,7 +147,7 @@ def _get_paths_to_simplify(G, strict=True):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     strict : bool
         if False, allow nodes to be end points even if they fail all other rules
         but have edges with different OSM IDs
@@ -195,7 +195,7 @@ def is_simplified(G):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
 
     Returns
     -------
@@ -217,14 +217,14 @@ def simplify_graph(G, strict=True):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     strict : bool
         if False, allow nodes to be end points even if they fail all other rules
         but have edges with different OSM IDs
 
     Returns
     -------
-    networkx multidigraph
+    networkx.MultiDiGraph
     """
 
     if is_simplified(G):

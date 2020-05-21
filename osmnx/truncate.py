@@ -22,13 +22,13 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight='length',
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     source_node : int
         the node in the graph from which to measure network distances to other
         nodes
     max_dist : int
         remove every node in the graph greater than this distance from the
-        source_node
+        source_node (along the network)
     weight : string
         how to weight the graph when measuring distance (default 'length' is
         how many meters long the edge is)
@@ -37,7 +37,7 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight='length',
 
     Returns
     -------
-    networkx multidigraph
+    networkx.MultiDiGraph
     """
 
     # get the shortest distance between the node and every other node, then
@@ -69,7 +69,7 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False,
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     north : float
         northern latitude of bounding box
     south : float
@@ -86,7 +86,7 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False,
 
     Returns
     -------
-    networkx multidigraph
+    networkx.MultiDiGraph
     """
 
     G = G.copy()
@@ -137,8 +137,8 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
 
     Parameters
     ----------
-    G : networkx multidigraph
-    polygon : Polygon or MultiPolygon
+    G : networkx.MultiDiGraph
+    polygon : shapely Polygon or MultiPolygon
         only retain nodes in graph that lie within this geometry
     retain_all : bool
         if True, return the entire graph even if it is not connected
@@ -159,7 +159,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
 
     Returns
     -------
-    networkx multidigraph
+    networkx.MultiDiGraph
     """
 
     G = G.copy()

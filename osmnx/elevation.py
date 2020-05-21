@@ -23,7 +23,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     api_key : string
         your google maps elevation API key
     max_locations_per_batch : int
@@ -35,7 +35,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
 
     Returns
     -------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     """
 
     # google maps elevation API endpoint
@@ -100,13 +100,13 @@ def add_edge_grades(G, add_absolute=True):
 
     Parameters
     ----------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     add_absolute : bool
         if True, also add the absolute value of the grade as an edge attribute
 
     Returns
     -------
-    G : networkx multidigraph
+    G : networkx.MultiDiGraph
     """
 
     # for each edge, calculate the difference in elevation from origin to
