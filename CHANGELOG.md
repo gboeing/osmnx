@@ -14,6 +14,7 @@
   - define default crs via epsg code instead of proj4 string
   - update and simplify logging with timestamps
   - graph metadata: add creation date and version, remove name
+  - replace inconsistent distance parameters with consistent dist parameters
   - remove old save_gdf_shapefile function
   - drop support for python 3.5 and lower
 
