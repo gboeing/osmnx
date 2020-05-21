@@ -4,7 +4,7 @@ OSMnx documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Reference
 
    osmnx
 
@@ -59,7 +59,7 @@ Alternatively, you can run OSMnx + Jupyter directly from its official `docker co
 Examples
 --------
 
-For examples and demos, see the `examples`_ GitHub repo.
+For code and usage examples/demos, see the `examples`_ GitHub repo.
 
 
 Support
