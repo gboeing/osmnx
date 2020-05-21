@@ -1,9 +1,6 @@
 osmnx package
 =============
 
-Submodules
-----------
-
 osmnx.bearing module
 --------------------
 
