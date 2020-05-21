@@ -6,15 +6,11 @@
 ################################################################################
 
 import ast
-import geopandas as gpd
 import os
 import networkx as nx
 import numpy as np
 import pandas as pd
-import re
 from shapely import wkt
-from shapely.geometry import LineString
-from shapely.geometry import Point
 from xml.etree import ElementTree as etree
 from . import settings
 from . import utils

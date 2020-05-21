@@ -14,7 +14,6 @@ from itertools import chain
 from shapely.geometry import LineString
 from shapely.geometry import Point
 from . import distance
-from . import settings
 from . import utils
 
 

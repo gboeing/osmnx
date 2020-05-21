@@ -5,7 +5,6 @@
 # Web: https://github.com/gboeing/osmnx
 ################################################################################
 
-import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
