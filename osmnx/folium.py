@@ -16,7 +16,7 @@ except ImportError as e:
 
 
 
-def make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attribute=None):
+def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attribute=None):
 
     """
     Turn a row from the gdf_edges GeoDataFrame into a folium PolyLine with
@@ -117,8 +117,8 @@ def plot_graph_folium(G, graph_map=None, popup_attribute=None,
 
     # add each graph edge to the map
     for _, row in gdf_edges.iterrows():
-        pl = make_folium_polyline(edge=row, edge_color=edge_color, edge_width=edge_width,
-                                  edge_opacity=edge_opacity, popup_attribute=popup_attribute)
+        pl = _make_folium_polyline(edge=row, edge_color=edge_color, edge_width=edge_width,
+                                   edge_opacity=edge_opacity, popup_attribute=popup_attribute)
         pl.add_to(graph_map)
 
     # if fit_bounds is True, fit the map to the bounds of the route by passing
@@ -185,8 +185,8 @@ def plot_route_folium(G, route, route_map=None, popup_attribute=None,
 
     # add each route edge to the map
     for _, row in gdf_route_edges.iterrows():
-        pl = make_folium_polyline(edge=row, edge_color=route_color, edge_width=route_width,
-                                  edge_opacity=route_opacity, popup_attribute=popup_attribute)
+        pl = _make_folium_polyline(edge=row, edge_color=route_color, edge_width=route_width,
+                                   edge_opacity=route_opacity, popup_attribute=popup_attribute)
         pl.add_to(route_map)
 
     # if fit_bounds is True, fit the map to the bounds of the route by passing
