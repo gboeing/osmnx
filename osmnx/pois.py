@@ -9,7 +9,7 @@ import geopandas as gpd
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
-from . import core
+from . import boundaries
 from . import downloader
 from . import settings
 from . import utils
@@ -495,7 +495,7 @@ def _create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=
 
 
 
-def pois_from_point(point, tags, distance=1000,
+def pois_from_point(point, tags, dist=1000,
                     timeout=180, memory=None, custom_settings=None):
     """
     Get point of interests (POIs) within some distance north, south, east, and
@@ -516,7 +516,7 @@ def pois_from_point(point, tags, distance=1000,
         `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
-    distance : numeric
+    dist : numeric
         distance in meters
     timeout : int
         timeout for the API request
@@ -531,14 +531,14 @@ def pois_from_point(point, tags, distance=1000,
     geopandas.GeoDataFrame
     """
 
-    bbox = utils_geo.bbox_from_point(point=point, distance=distance)
+    bbox = utils_geo.bbox_from_point(point=point, dist=dist)
     north, south, east, west = bbox
     return _create_poi_gdf(tags=tags, north=north, south=south, east=east, west=west,
                           timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
 
-def pois_from_address(address, tags, distance=1000,
+def pois_from_address(address, tags, dist=1000,
                       timeout=180, memory=None, custom_settings=None):
     """
     Get point of interests (POIs) within some distance north, south, east, and
@@ -559,7 +559,7 @@ def pois_from_address(address, tags, distance=1000,
         `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
-    distance : numeric
+    dist : numeric
         distance in meters
     timeout : int
         timeout for the API request
@@ -578,7 +578,7 @@ def pois_from_address(address, tags, distance=1000,
     point = utils_geo.geocode(query=address)
 
     # get POIs within distance of this point
-    return pois_from_point(point=point, tags=tags, distance=distance,
+    return pois_from_point(point=point, tags=tags, dist=dist,
                            timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
@@ -656,7 +656,7 @@ def pois_from_place(place, tags, which_result=1,
     geopandas.GeoDataFrame
     """
 
-    city = core.gdf_from_place(place, which_result=which_result)
+    city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
     return _create_poi_gdf(tags=tags, polygon=polygon,
                           timeout=timeout, memory=memory, custom_settings=custom_settings)

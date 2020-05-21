@@ -1,6 +1,7 @@
 coverage
 coveralls
 folium
+pylint
 pytest
 scikit-learn
 scipy

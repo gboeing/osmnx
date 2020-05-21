@@ -4,10 +4,26 @@ osmnx package
 Submodules
 ----------
 
-osmnx.core module
------------------
+osmnx.bearing module
+--------------------
 
-.. automodule:: osmnx.core
+.. automodule:: osmnx.bearing
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+osmnx.boundaries module
+-----------------------
+
+.. automodule:: osmnx.boundaries
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+osmnx.distance module
+---------------------
+
+.. automodule:: osmnx.distance
     :members:
     :undoc-members:
     :show-inheritance:
@@ -28,10 +44,26 @@ osmnx.elevation module
     :undoc-members:
     :show-inheritance:
 
+osmnx.folium module
+-------------------
+
+.. automodule:: osmnx.folium
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 osmnx.footprints module
 -----------------------
 
 .. automodule:: osmnx.footprints
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+osmnx.graph module
+------------------
+
+.. automodule:: osmnx.graph
     :members:
     :undoc-members:
     :show-inheritance:
@@ -92,6 +124,14 @@ osmnx.stats module
     :undoc-members:
     :show-inheritance:
 
+osmnx.truncate module
+---------------------
+
+.. automodule:: osmnx.truncate
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 osmnx.utils module
 ------------------
 
@@ -112,14 +152,6 @@ osmnx.utils_graph module
 ------------------------
 
 .. automodule:: osmnx.utils_graph
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: osmnx
     :members:
     :undoc-members:
     :show-inheritance:

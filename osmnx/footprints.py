@@ -13,7 +13,7 @@ from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
 from shapely.ops import polygonize
-from . import core
+from . import boundaries
 from . import downloader
 from . import plot
 from . import projection
@@ -430,7 +430,7 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
 
 
 
-def footprints_from_point(point, distance, footprint_type='building', retain_invalid=False,
+def footprints_from_point(point, dist, footprint_type='building', retain_invalid=False,
                           timeout=180, memory=None, custom_settings=None):
     """
     Get footprints within some distance north, south, east, and west of
@@ -440,7 +440,7 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
     ----------
     point : tuple
         a lat-long point
-    distance : numeric
+    dist : numeric
         distance in meters
     footprint_type : string
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
@@ -460,7 +460,7 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
     geopandas.GeoDataFrame
     """
 
-    bbox = utils_geo.bbox_from_point(point=point, distance=distance)
+    bbox = utils_geo.bbox_from_point(point=point, dist=dist)
     north, south, east, west = bbox
     return _create_footprints_gdf(north=north, south=south, east=east, west=west,
                                   footprint_type=footprint_type, retain_invalid=retain_invalid,
@@ -468,7 +468,7 @@ def footprints_from_point(point, distance, footprint_type='building', retain_inv
 
 
 
-def footprints_from_address(address, distance, footprint_type='building', retain_invalid=False,
+def footprints_from_address(address, dist, footprint_type='building', retain_invalid=False,
                             timeout=180, memory=None, custom_settings=None):
     """
     Get footprints within some distance north, south, east, and west of
@@ -478,7 +478,7 @@ def footprints_from_address(address, distance, footprint_type='building', retain
     ----------
     address : string
         the address to geocode to a lat-long point
-    distance : numeric
+    dist : numeric
         distance in meters
     footprint_type : string
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
@@ -502,7 +502,7 @@ def footprints_from_address(address, distance, footprint_type='building', retain
     point = utils_geo.geocode(query=address)
 
     # get footprints within distance of this point
-    return footprints_from_point(point, distance, footprint_type=footprint_type,
+    return footprints_from_point(point, dist, footprint_type=footprint_type,
                                  retain_invalid=retain_invalid, timeout=timeout,
                                  memory=memory, custom_settings=custom_settings)
 
@@ -577,7 +577,7 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
     geopandas.GeoDataFrame
     """
 
-    city = core.gdf_from_place(place, which_result=which_result)
+    city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
     return _create_footprints_gdf(polygon, retain_invalid=retain_invalid,
                                   footprint_type=footprint_type, timeout=timeout,

@@ -57,7 +57,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
         url = url_template.format(locations, api_key)
 
         # check if this request is already in the cache (if global use_cache=True)
-        cached_response_json = downloader.get_from_cache(url)
+        cached_response_json = downloader._get_from_cache(url)
         if cached_response_json is not None:
             response_json = cached_response_json
         else:
