@@ -1,4 +1,4 @@
-"""Save and load graphs to/from disk."""
+"""Serialize graphs to/from files on disk."""
 
 import ast
 import os
@@ -104,7 +104,7 @@ def save_graph_shapefile(G, filepath=None, encoding='utf-8'):
 
 
 
-def save_graph_osm(data, filepath=None,
+def save_graph_xml(data, filepath=None,
                    node_tags=settings.osm_xml_node_tags,
                    node_attrs=settings.osm_xml_node_attrs,
                    edge_tags=settings.osm_xml_way_tags,
