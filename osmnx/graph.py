@@ -517,7 +517,9 @@ def graph_from_place(query, network_type='all_private', simplify=True,
 def graph_from_file(filename, bidirectional=False, simplify=True,
                     retain_all=False):
     """
-    Create a networkx graph from OSM data in an XML file.
+    Pass-through function just called graph_from_xml.
+
+    Deprecated, will be removed in future release.
 
     Parameters
     ----------
@@ -534,6 +536,37 @@ def graph_from_file(filename, bidirectional=False, simplify=True,
     -------
     networkx.MultiDiGraph
     """
+
+    from warnings import warn
+    msg = 'The `graph_from_file` function has been deprecated and will be ' \
+          'removed in the next release. Use the new `graph_from_xml` ' \
+          'function instead.'
+    warn(msg)
+    return graph_from_xml(filename, bidirectional, simplify, retain_all)
+
+
+
+def graph_from_xml(filename, bidirectional=False, simplify=True,
+                   retain_all=False):
+    """
+    Create a graph from OSM data in an XML file.
+
+    Parameters
+    ----------
+    filename : string
+        the name of a file containing OSM XML data
+    bidirectional : bool
+        if True, create bidirectional edges for one-way streets
+    simplify : bool
+        if True, simplify the graph topology
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+
+    Returns
+    -------
+    networkx.MultiDiGraph
+    """
+
     # transmogrify file of OSM XML data into JSON
     response_jsons = [_overpass_json_from_file(filename)]
 
