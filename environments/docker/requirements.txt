@@ -6,6 +6,8 @@ coverage
 coveralls
 cython
 dill
+flake8
+flake8-docstrings
 folium
 jupyterlab
 nodejs

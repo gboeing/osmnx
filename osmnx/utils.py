@@ -1,9 +1,4 @@
-################################################################################
-# Module: utils.py
-# Description: General utility functions
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""General utility functions."""
 
 import datetime as dt
 import logging as lg
@@ -23,15 +18,16 @@ def citation():
     Systems, 65(126-139). https://doi.org/10.1016/j.compenvurbsys.2017.05.004
     """
 
-    cite = ("To cite OSMnx, use:\n\n"
-            "Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing, "
-            "and Visualizing Complex Street Networks. Computers, Environment and Urban "
-            "Systems, 65(126-139). https://doi.org/10.1016/j.compenvurbsys.2017.05.004"
-            "\n\n"
+    cite = ("Citation:\n\n"
+            "Boeing, G. 2017. OSMnx: New Methods for Acquiring, "
+            "Constructing, Analyzing, and Visualizing Complex Street "
+            "Networks. Computers, Environment and Urban Systems, 65(126-139). "
+            "https://doi.org/10.1016/j.compenvurbsys.2017.05.004\n\n"
             "BibTeX entry for LaTeX users:\n\n"
-
             "@article{boeing_osmnx_2017,\n"
-            "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, {Constructing}, {Analyzing}, and {Visualizing} {Complex} {Street} {Networks}},\n"
+            "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, "
+            "{Constructing}, {Analyzing}, and {Visualizing} {Complex} "
+            "{Street} {Networks}},\n"
             "    volume = {65},\n"
             "    doi = {10.1016/j.compenvurbsys.2017.05.004},\n"
             "    number = {126-139},\n"
@@ -46,7 +42,7 @@ def citation():
 
 def ts(style='datetime', template=None):
     """
-    Get current timestamp as string
+    Get current timestamp as string.
 
     Parameters
     ----------
@@ -107,7 +103,7 @@ def config(data_folder=settings.data_folder,
     Configure osmnx by setting the default global settings' values.
 
     Parameters
-    ---------
+    ----------
     data_folder : string
         where to save and load data files
     logs_folder : string

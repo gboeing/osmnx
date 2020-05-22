@@ -1,9 +1,4 @@
-################################################################################
-# Module: plot.py
-# Description: Plot spatial geometries, street networks, and routes
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Plot spatial geometries, street networks, and routes."""
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -24,7 +19,7 @@ from . import utils_graph
 
 
 def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1,
-               figsize=(6,6), margin=0.02, axis_off=True):
+               figsize=(6, 6), margin=0.02, axis_off=True):
     """
     Plot a GeoDataFrame of place boundary geometries.
 
@@ -87,7 +82,7 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1,
 
 
 
-def rgb_color_list_to_hex(color_list):
+def _rgb_color_list_to_hex(color_list):
     """
     Convert a list of RGBa colors to a list of hexadecimal color codes.
 
@@ -100,7 +95,7 @@ def rgb_color_list_to_hex(color_list):
     -------
     color_list_hex : list
     """
-    color_list_rgb = [[int(x*255) for x in c[0:3]] for c in color_list]
+    color_list_rgb = [[int(x * 255) for x in c[0:3]] for c in color_list]
     color_list_hex = [f'#{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X}' for rgb in color_list_rgb]
     return color_list_hex
 
@@ -132,15 +127,15 @@ def get_colors(n, cmap='viridis', start=0., stop=1., alpha=1., return_hex=False)
     colors = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, n)]
     colors = [(r, g, b, alpha) for r, g, b, _ in colors]
     if return_hex:
-        colors = rgb_color_list_to_hex(colors)
+        colors = _rgb_color_list_to_hex(colors)
     return colors
 
 
 
-def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, stop=1, na_color='none'):
+def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis',
+                            start=0, stop=1, na_color='none'):
     """
-    Get a list of node colors by binning some continuous-variable attribute into
-    quantiles.
+    Get a list of node colors by binning continuous attribute into quantiles.
 
     Parameters
     ----------
@@ -163,7 +158,7 @@ def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, sto
     list
     """
     if num_bins is None:
-        num_bins=len(G)
+        num_bins = len(G)
     bin_labels = range(num_bins)
     attr_values = pd.Series([data[attr] for node, data in G.nodes(data=True)])
     cats = pd.qcut(x=attr_values, q=num_bins, labels=bin_labels)
@@ -173,10 +168,10 @@ def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, sto
 
 
 
-def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1, na_color='none'):
+def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis',
+                            start=0, stop=1, na_color='none'):
     """
-    Get a list of edge colors by binning some continuous-variable attribute into
-    quantiles.
+    Get a list of edge colors by binning continuous attribute into quantiles.
 
     Parameters
     ----------
@@ -199,7 +194,7 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1
     list
     """
     if num_bins is None:
-        num_bins=len(G.edges())
+        num_bins = len(G.edges())
     bin_labels = range(num_bins)
     attr_values = pd.Series([data[attr] for u, v, key, data in G.edges(keys=True, data=True)])
     cats = pd.qcut(x=attr_values, q=num_bins, labels=bin_labels)
@@ -250,7 +245,11 @@ def _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_
             ax.set_position([0, 0, 1, 1])
             ax.patch.set_alpha(0.)
             fig.patch.set_alpha(0.)
-            fig.savefig(path_filename, bbox_inches=0, format=file_format, facecolor=fig.get_facecolor(), transparent=True)
+            fig.savefig(path_filename,
+                        bbox_inches=0,
+                        format=file_format,
+                        facecolor=fig.get_facecolor(),
+                        transparent=True)
         else:
             if axis_off:
                 # if axis is turned off, constrain the saved figure's extent to
@@ -258,7 +257,12 @@ def _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_
                 extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
             else:
                 extent = 'tight'
-            fig.savefig(path_filename, dpi=dpi, bbox_inches=extent, format=file_format, facecolor=fig.get_facecolor(), transparent=True)
+            fig.savefig(path_filename,
+                        dpi=dpi,
+                        bbox_inches=extent,
+                        format=file_format,
+                        facecolor=fig.get_facecolor(),
+                        transparent=True)
         utils.log('Saved the figure to disk')
 
     # show the figure if specified
@@ -359,7 +363,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
 
     # if caller did not pass in a fig_width, calculate it proportionately from
     # the fig_height and bounding box aspect ratio
-    bbox_aspect_ratio = (north-south)/(east-west)
+    bbox_aspect_ratio = (north - south) / (east - west)
     if fig_width is None:
         fig_width = fig_height / bbox_aspect_ratio
 
@@ -391,7 +395,8 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     utils.log('Drew the graph edges')
 
     # scatter plot the nodes
-    ax.scatter(node_Xs, node_Ys, s=node_size, c=node_color, alpha=node_alpha, edgecolor=node_edgecolor, zorder=node_zorder)
+    ax.scatter(node_Xs, node_Ys, s=node_size, c=node_color, alpha=node_alpha,
+               edgecolor=node_edgecolor, zorder=node_zorder)
 
     # set the extent of the figure
     margin_ns = (north - south) * margin
@@ -440,8 +445,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
 
 def _node_list_to_coordinate_lines(G, node_list, use_geom=True):
     """
-    Given a list of nodes, return a list of lines that together follow the path
-    defined by the list of nodes.
+    Make list of lines that follow the path defined by the list of nodes.
 
     Parameters
     ----------
@@ -450,12 +454,13 @@ def _node_list_to_coordinate_lines(G, node_list, use_geom=True):
         the route as a list of nodes
     use_geom : bool
         if True, use the spatial geometry attribute of the edges to draw
-        geographically accurate edges, rather than just lines straight from node
-        to node
+        geographically accurate edges, rather than just lines straight from
+        node to node
 
     Returns
     -------
-    lines : list of lines given as pairs ( (x_start, y_start), (x_stop, y_stop) )
+    lines : list
+        list of lines given as pairs ( (x_start, y_start), (x_stop, y_stop) )
     """
     edge_nodes = list(zip(node_list[:-1], node_list[1:]))
     lines = []
@@ -767,8 +772,9 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
                        file_format='png', show=False, save=True, close=True,
                        dpi=300):
     """
-    Plot a figure-ground diagram of a street network, defaulting to one square
-    mile.
+    Plot figure-ground diagram of a street network.
+
+    Defaults to one square mile.
 
     Parameters
     ----------
@@ -828,12 +834,21 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
     # enough network. simplify in non-strict mode to not combine multiple street
     # types into single edge
     elif address is not None:
-        G, point = graph.graph_from_address(address, dist=dist*multiplier, dist_type='bbox', network_type=network_type,
-                                      simplify=False, truncate_by_edge=True, return_coords=True)
+        G, point = graph.graph_from_address(address,
+                                            dist=dist * multiplier,
+                                            dist_type='bbox',
+                                            network_type=network_type,
+                                            simplify=False,
+                                            truncate_by_edge=True,
+                                            return_coords=True)
         G = simplification.simplify_graph(G, strict=False)
     elif point is not None:
-        G = graph.graph_from_point(point, dist=dist*multiplier, dist_type='bbox', network_type=network_type,
-                             simplify=False, truncate_by_edge=True)
+        G = graph.graph_from_point(point,
+                                   dist=dist * multiplier,
+                                   dist_type='bbox',
+                                   network_type=network_type,
+                                   simplify=False,
+                                   truncate_by_edge=True)
         G = simplification.simplify_graph(G, strict=False)
     else:
         raise ValueError('You must pass an address or lat-long point or graph.')
@@ -841,13 +856,13 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
     # if user did not pass in custom street widths, create a dict of default
     # values
     if street_widths is None:
-        street_widths = {'footway' : 1.5,
-                         'steps' : 1.5,
-                         'pedestrian' : 1.5,
-                         'service' : 1.5,
-                         'path' : 1.5,
-                         'track' : 1.5,
-                         'motorway' : 6}
+        street_widths = {'footway': 1.5,
+                         'steps': 1.5,
+                         'pedestrian': 1.5,
+                         'service': 1.5,
+                         'path': 1.5,
+                         'track': 1.5,
+                         'motorway': 6}
 
     # we need an undirected graph to find every edge incident to a node
     G_undir = G.to_undirected()
@@ -883,7 +898,8 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
 
                 # for each edge type in the flattened list, lookup the
                 # corresponding width
-                edge_widths = [street_widths[edge_type] if edge_type in street_widths else default_width for edge_type in edge_types_flat]
+                edge_widths = [street_widths[edge_type] if edge_type in street_widths else default_width
+                               for edge_type in edge_types_flat]
 
                 # the node diameter will be the biggest of the edge widths, to make joints perfectly smooth
                 # alternatively, use min (?) to pervent anything larger from extending past smallest street's line

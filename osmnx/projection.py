@@ -1,9 +1,4 @@
-################################################################################
-# Module: projection.py
-# Description: Project spatial geometries and street networks
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Project spatial geometries and street networks."""
 
 import geopandas as gpd
 import math
@@ -17,7 +12,7 @@ from . import utils
 
 def _is_crs_utm(crs):
     """
-    Determine if a CRS is a UTM CRS
+    Determine if a CRS is a UTM CRS.
 
     Parameters
     ----------
@@ -40,8 +35,7 @@ def _is_crs_utm(crs):
 
 def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     """
-    Project a shapely Polygon or MultiPolygon from lat-long to UTM, or
-    vice-versa
+    Project a shapely (Multi)Polygon from lat-long to UTM, or vice-versa.
 
     Parameters
     ----------
@@ -78,12 +72,12 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
 
 def project_gdf(gdf, to_crs=None, to_latlong=False):
     """
-    Project a GeoDataFrame to the UTM zone appropriate for its geometries'
-    centroid.
+    Project a GeoDataFrame to UTM.
 
-    The simple calculation in this function works well for most latitudes, but
-    won't work for some far northern locations like Svalbard and parts of far
-    northern Norway.
+    Automatically chooses the UTM zone appropriate for its geometries'
+    centroid. The simple calculation in this function works well for most
+    latitudes, but won't work for some far northern locations like Svalbard
+    and parts of far northern Norway.
 
     Parameters
     ----------
@@ -137,8 +131,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
 
 def project_graph(G, to_crs=None):
     """
-    Project a graph from lat-long to the UTM zone appropriate for its geographic
-    location.
+    Project graph from lat-long to UTM zone appropriate for its centroid.
 
     Parameters
     ----------
@@ -177,7 +170,10 @@ def project_graph(G, to_crs=None):
     edges_with_geom = []
     for u, v, key, data in G_proj.edges(keys=True, data=True):
         if 'geometry' in data:
-            edges_with_geom.append({'u':u, 'v':v, 'key':key, 'geometry':data['geometry']})
+            edges_with_geom.append({'u': u,
+                                    'v': v,
+                                    'key': key,
+                                    'geometry': data['geometry']})
 
     # create an edges GeoDataFrame and project to UTM, if there were any edges
     # with a geometry attribute. geom attr only exists if graph has been
@@ -208,7 +204,8 @@ def project_graph(G, to_crs=None):
     # when it exists) to the graph
     for u, v, key, attributes in edges:
         if 'geometry' in attributes:
-            row = gdf_edges_utm[(gdf_edges_utm['u']==u) & (gdf_edges_utm['v']==v) & (gdf_edges_utm['key']==key)]
+            mask = (gdf_edges_utm['u'] == u) & (gdf_edges_utm['v'] == v) & (gdf_edges_utm['key'] == key)
+            row = gdf_edges_utm[mask]
             attributes['geometry'] = row['geometry'].iloc[0]
 
         # attributes dict contains key, so we don't need to explicitly pass it here

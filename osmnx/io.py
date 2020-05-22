@@ -1,9 +1,4 @@
-################################################################################
-# Module: save_load.py
-# Description: Save and load networks to/from disk
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Serialize graphs to/from files on disk."""
 
 import ast
 import os
@@ -109,15 +104,16 @@ def save_graph_shapefile(G, filepath=None, encoding='utf-8'):
 
 
 
-def save_graph_osm(data, filepath=None,
+def save_graph_xml(data, filepath=None,
                    node_tags=settings.osm_xml_node_tags,
                    node_attrs=settings.osm_xml_node_attrs,
                    edge_tags=settings.osm_xml_way_tags,
                    edge_attrs=settings.osm_xml_way_attrs,
                    oneway=False, merge_edges=True, edge_tag_aggs=None):
     """
-    Save a graph as a .osm XML formatted file. Note: for very large
-    networks this function can take a long time to finish.
+    Save a graph as a .osm XML formatted file.
+
+    Note: for large networks this function can take a long time to finish.
 
     Parameters
     ----------
@@ -285,8 +281,7 @@ def save_graph_osm(data, filepath=None,
 
 def _get_unique_nodes_ordered_from_way(way_edges_df):
     """
-    Function to recover the original order of nodes from a dataframe
-    of edges associated with a single OSM way.
+    Recover original node order from df of edges associated w/ single OSM way.
 
     Parameters
     ----------
@@ -408,8 +403,9 @@ def save_graphml(G, filepath=None, gephi=False, encoding='utf-8'):
 
 def load_graphml(filepath, node_type=int):
     """
-    Load an OSMnx-saved GraphML file from disk and convert the node/edge
-    attributes to appropriate data types.
+    Load an OSMnx-saved GraphML file from disk.
+
+    Then convert the node/edge attributes to appropriate data types.
 
     Parameters
     ----------
@@ -470,7 +466,7 @@ def load_graphml(filepath, node_type=int):
                 # single-value string (and leave as string if error)
                 try:
                     data[attr] = ast.literal_eval(data[attr])
-                except:
+                except Exception:
                     pass
 
         # osmid might have a single value or a list

@@ -1,9 +1,4 @@
-################################################################################
-# Module: truncate.py
-# Description: Truncate graph by distance, bounding box, or polygon
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Truncate graph by distance, bounding box, or polygon."""
 
 import geopandas as gpd
 import networkx as nx
@@ -17,8 +12,7 @@ from . import utils_graph
 def truncate_graph_dist(G, source_node, max_dist=1000, weight='length',
                         retain_all=False):
     """
-    Remove everything further than some network distance from a specified node
-    in graph.
+    Remove everything farther than some network distance from specified node.
 
     Parameters
     ----------
@@ -44,7 +38,7 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight='length',
     # remove every node further than max_dist away
     G = G.copy()
     distances = nx.shortest_path_length(G, source=source_node, weight=weight)
-    distant_nodes = {key:value for key, value in dict(distances).items() if value > max_dist}
+    distant_nodes = {key: value for key, value in dict(distances).items() if value > max_dist}
     G.remove_nodes_from(distant_nodes.keys())
     utils.log('Truncated graph by weighted network distance')
 
@@ -132,8 +126,7 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False,
 def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
                            quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
     """
-    Remove every node in graph that falls outside some shapely Polygon or
-    MultiPolygon.
+    Remove every node in graph that outside a shapely (Multi)Polygon.
 
     Parameters
     ----------
@@ -167,7 +160,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
 
     # get a GeoDataFrame of all the nodes
     node_geom = [Point(data['x'], data['y']) for _, data in G.nodes(data=True)]
-    gdf_nodes = gpd.GeoDataFrame({'node':list(G.nodes()), 'geometry':node_geom})
+    gdf_nodes = gpd.GeoDataFrame({'node': list(G.nodes()), 'geometry': node_geom})
     gdf_nodes.crs = G.graph['crs']
 
     # find all the nodes in the graph that lie outside the polygon

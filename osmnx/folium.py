@@ -1,9 +1,4 @@
-################################################################################
-# Module: folium.py
-# Description: Create leaflet web maps via folium
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Create leaflet web maps via folium."""
 
 import json
 from . import utils_graph
@@ -11,16 +6,15 @@ from . import utils_graph
 # folium is an optional dependency for the folium plotting functions
 try:
     import folium
-except ImportError as e:
+except ImportError:
     folium = None
 
 
 
-def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attribute=None):
-
+def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity,
+                          popup_attribute=None):
     """
-    Turn a row from the gdf_edges GeoDataFrame into a folium PolyLine with
-    attributes.
+    Turn row GeoDataFrame into a folium PolyLine with attributes.
 
     Parameters
     ----------
@@ -172,7 +166,7 @@ def plot_route_folium(G, route, route_map=None, popup_attribute=None,
     # create gdf of the route edges
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
     route_nodes = list(zip(route[:-1], route[1:]))
-    index = [gdf_edges[(gdf_edges['u']==u) & (gdf_edges['v']==v)].index[0] for u, v in route_nodes]
+    index = [gdf_edges[(gdf_edges['u'] == u) & (gdf_edges['v'] == v)].index[0] for u, v in route_nodes]
     gdf_route_edges = gdf_edges.loc[index]
 
     # get route centroid
