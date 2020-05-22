@@ -19,7 +19,7 @@ from . import utils
 
 def geocode(query):
     """
-    Geocode a query string to (lat, lon) with the Nominatim geocoder.
+    Geocode a query string to (lat, lng) with the Nominatim geocoder.
 
     Parameters
     ----------
@@ -29,7 +29,7 @@ def geocode(query):
     Returns
     -------
     point : tuple
-        the (lat, lon) coordinates returned by the geocoder
+        the (lat, lng) coordinates returned by the geocoder
     """
 
     # define the parameters
@@ -43,8 +43,8 @@ def geocode(query):
     # if results were returned, parse lat and long out of the result
     if len(response_json) > 0 and 'lat' in response_json[0] and 'lon' in response_json[0]:
         lat = float(response_json[0]['lat'])
-        lon = float(response_json[0]['lon'])
-        point = (lat, lon)
+        lng = float(response_json[0]['lon'])
+        point = (lat, lng)
         utils.log(f'Geocoded "{query}" to {point}')
         return point
     else:
@@ -474,7 +474,7 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     Parameters
     ----------
     point : tuple
-        the (lat, lon) point to create the bounding box around
+        the (lat, lng) point to create the bounding box around
     dist : int
         how many meters the north, south, east, and west sides of the box should
         each be from the point
@@ -499,7 +499,7 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
         west, south, east, north = buffer_proj.bounds
         utils.log(f'Created bbox {dist} m from {point} and projected it: {north},{south},{east},{west}')
     else:
-        # if project_utm is False, project back to lat-long then get the
+        # if project_utm is False, project back to lat-lng then get the
         # bounding coordinates
         buffer_latlong, _ = projection.project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
         west, south, east, north = buffer_latlong.bounds

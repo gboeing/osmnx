@@ -362,7 +362,7 @@ def _osm_net_download(polygon=None, north=None, south=None, east=None, west=None
         geometry_proj, crs_proj = projection.project_geometry(polygon)
 
         # subdivide it if it exceeds the max area size (in meters), then project
-        # back to lat-long
+        # back to lat-lng
         gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
         utils.log(f'Requesting network data within bounding box from API in {len(geometry)} request(s)')
@@ -370,7 +370,7 @@ def _osm_net_download(polygon=None, north=None, south=None, east=None, west=None
         # loop through each polygon rectangle in the geometry (there will only
         # be one if original bbox didn't exceed max area size)
         for poly in geometry:
-            # represent bbox as south,west,north,east and round lat-longs to 6
+            # represent bbox as south,west,north,east and round lat-lngs to 6
             # decimal places (ie, ~100 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
@@ -382,7 +382,7 @@ def _osm_net_download(polygon=None, north=None, south=None, east=None, west=None
 
     elif by_poly:
         # project to utm, divide polygon up into sub-polygons if area exceeds a
-        # max size (in meters), project back to lat-long, then get a list of
+        # max size (in meters), project back to lat-lng, then get a list of
         # polygon(s) exterior coordinates
         geometry_proj, crs_proj = projection.project_geometry(polygon)
         gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)

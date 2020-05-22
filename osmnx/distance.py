@@ -136,7 +136,7 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
     # calculate the distance between each node and the reference point
     if method == 'haversine':
         # calculate distance vector using haversine (ie, for
-        # spherical lat-long geometries)
+        # spherical lat-lng geometries)
         distances = great_circle_vec(lat1=df['reference_y'],
                                      lng1=df['reference_x'],
                                      lat2=df['y'],
