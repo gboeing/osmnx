@@ -1,9 +1,4 @@
-################################################################################
-# Module: truncate.py
-# Description: Truncate graph by distance, bounding box, or polygon
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Truncate graph by distance, bounding box, or polygon."""
 
 import geopandas as gpd
 import networkx as nx
@@ -17,8 +12,7 @@ from . import utils_graph
 def truncate_graph_dist(G, source_node, max_dist=1000, weight='length',
                         retain_all=False):
     """
-    Remove everything further than some network distance from a specified node
-    in graph.
+    Remove everything farther than some network distance from specified node.
 
     Parameters
     ----------
@@ -132,8 +126,7 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False,
 def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
                            quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
     """
-    Remove every node in graph that falls outside some shapely Polygon or
-    MultiPolygon.
+    Remove every node in graph that outside a shapely (Multi)Polygon.
 
     Parameters
     ----------

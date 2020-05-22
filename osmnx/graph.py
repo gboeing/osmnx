@@ -1,9 +1,4 @@
-################################################################################
-# Module: graph.py
-# Description: Graph creation functions
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Graph creation functions."""
 
 import bz2
 import networkx as nx
@@ -35,7 +30,7 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
                     clean_periphery=True, infrastructure='way["highway"]',
                     custom_filter=None, custom_settings=None):
     """
-    Create a networkx graph from OSM data within some bounding box.
+    Create a graph from OSM within some bounding box.
 
     Parameters
     ----------
@@ -152,13 +147,12 @@ def graph_from_point(center_point, dist=1000, dist_type='bbox',
                      clean_periphery=True, infrastructure='way["highway"]',
                      custom_filter=None, custom_settings=None):
     """
-    Create a networkx graph from OSM data within some distance of some (lat,
-    lon) center point.
+    Create a graph from OSM within some distance of some (lat, lon) point.
 
     Parameters
     ----------
     center_point : tuple
-        the (lat, lon) central point around which to construct the graph
+        the (lat, lon) center point around which to construct the graph
     dist : int
         retain only those nodes within this many meters of the center of the
         graph, with distance determined according to dist_type argument
@@ -234,7 +228,7 @@ def graph_from_address(address, dist=1000, dist_type='bbox',
                        clean_periphery=True, infrastructure='way["highway"]',
                        custom_filter=None, custom_settings=None):
     """
-    Create a networkx graph from OSM data within some distance of some address.
+    Create a graph from OSM within some distance of some address.
 
     Parameters
     ----------
@@ -283,7 +277,7 @@ def graph_from_address(address, dist=1000, dist_type='bbox',
     Returns
     -------
     networkx.MultiDiGraph or tuple
-        multidigraph or optionally (multidigraph, tuple)
+        multidigraph or optionally (multidigraph, (lat, lon))
     """
 
     # geocode the address string to a (lat, lon) point
@@ -312,8 +306,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
                        clean_periphery=True, infrastructure='way["highway"]',
                        custom_filter=None, custom_settings=None):
     """
-    Create a networkx graph from OSM data within the spatial boundaries of the
-    passed-in shapely polygon.
+    Create a graph from OSM within the boundaries of some shapely polygon.
 
     Parameters
     ----------
@@ -437,8 +430,7 @@ def graph_from_place(query, network_type='all_private', simplify=True,
                      infrastructure='way["highway"]', custom_filter=None,
                      custom_settings=None):
     """
-    Create a networkx graph from OSM data within the spatial boundaries of some
-    geocodable place(s).
+    Create graph from OSM within the boundaries of some geocodable place(s).
 
     The query must be geocodable and OSM must have polygon boundaries for the
     geocode result. If OSM does not have a polygon for this place, you can
@@ -710,8 +702,9 @@ def _convert_path(element):
 
 def _parse_osm_nodes_paths(osm_data):
     """
-    Construct dicts of nodes and paths with key=osmid and value=dict of
-    attributes.
+    Construct dicts of nodes and paths.
+
+    Dict key=osmid and value=dict of attributes.
 
     Parameters
     ----------

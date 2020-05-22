@@ -1,9 +1,4 @@
-################################################################################
-# Module: downloader.py
-# Description: Interact with the OSM APIs
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Interact with the OSM APIs."""
 
 import datetime as dt
 import hashlib
@@ -224,6 +219,8 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
 
 def _get_pause(recursive_delay=5, default_duration=10):
     """
+    Get a pause duration from the Overpass API status endpoint.
+
     Check the Overpass API status endpoint to determine how long to wait until
     next slot is available.
 
@@ -450,8 +447,7 @@ def _osm_polygon_download(query, limit=1, polygon_geojson=1):
 def nominatim_request(params, request_type='search', pause=1, timeout=30,
                       error_pause=180):
     """
-    Send a request to the Nominatim API via HTTP GET and return the JSON
-    response.
+    Send a request to the Nominatim API via HTTP GET and return JSON response.
 
     Parameters
     ----------
@@ -526,8 +522,7 @@ def nominatim_request(params, request_type='search', pause=1, timeout=30,
 
 def overpass_request(data, pause=None, timeout=180, error_pause=None):
     """
-    Send a request to the Overpass API via HTTP POST and return the JSON
-    response.
+    Send a request to the Overpass API via HTTP POST and return JSON response.
 
     Parameters
     ----------

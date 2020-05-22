@@ -1,9 +1,4 @@
-################################################################################
-# Module: plot.py
-# Description: Plot spatial geometries, street networks, and routes
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Plot spatial geometries, street networks, and routes."""
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -137,10 +132,10 @@ def get_colors(n, cmap='viridis', start=0., stop=1., alpha=1., return_hex=False)
 
 
 
-def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, stop=1, na_color='none'):
+def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis',
+                            start=0, stop=1, na_color='none'):
     """
-    Get a list of node colors by binning some continuous-variable attribute into
-    quantiles.
+    Get a list of node colors by binning continuous attribute into quantiles.
 
     Parameters
     ----------
@@ -173,10 +168,10 @@ def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, sto
 
 
 
-def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis', start=0, stop=1, na_color='none'):
+def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis',
+                            start=0, stop=1, na_color='none'):
     """
-    Get a list of edge colors by binning some continuous-variable attribute into
-    quantiles.
+    Get a list of edge colors by binning continuous attribute into quantiles.
 
     Parameters
     ----------
@@ -450,8 +445,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
 
 def _node_list_to_coordinate_lines(G, node_list, use_geom=True):
     """
-    Given a list of nodes, return a list of lines that together follow the path
-    defined by the list of nodes.
+    Make list of lines that follow the path defined by the list of nodes.
 
     Parameters
     ----------
@@ -460,12 +454,13 @@ def _node_list_to_coordinate_lines(G, node_list, use_geom=True):
         the route as a list of nodes
     use_geom : bool
         if True, use the spatial geometry attribute of the edges to draw
-        geographically accurate edges, rather than just lines straight from node
-        to node
+        geographically accurate edges, rather than just lines straight from
+        node to node
 
     Returns
     -------
-    lines : list of lines given as pairs ( (x_start, y_start), (x_stop, y_stop) )
+    lines : list
+        list of lines given as pairs ( (x_start, y_start), (x_stop, y_stop) )
     """
     edge_nodes = list(zip(node_list[:-1], node_list[1:]))
     lines = []
@@ -777,8 +772,9 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
                        file_format='png', show=False, save=True, close=True,
                        dpi=300):
     """
-    Plot a figure-ground diagram of a street network, defaulting to one square
-    mile.
+    Plot figure-ground diagram of a street network.
+
+    Defaults to one square mile.
 
     Parameters
     ----------

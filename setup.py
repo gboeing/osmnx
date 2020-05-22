@@ -1,5 +1,8 @@
-# OSMnx
-# See full license in LICENSE.txt
+"""
+OSMnx setup script.
+
+See license in LICENSE.txt.
+"""
 
 import os
 from setuptools import setup

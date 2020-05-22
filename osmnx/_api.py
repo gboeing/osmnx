@@ -1,9 +1,4 @@
-################################################################################
-# Module: api.py
-# Description: Expose the OSMnx API
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Expose the core OSMnx API."""
 
 from .bearing import add_edge_bearings
 
