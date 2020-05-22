@@ -1,6 +1,8 @@
 [flake8]
 
 docstring-convention = numpy
+max_complexity = 15
+max_line_length = 120
 
 exclude = ./build/*
 
@@ -8,13 +10,6 @@ exclude = ./build/*
 ignore =
     D202 #blank line after function docstring
     E303 #too many blank lines
-
-# complexity 1-15 is relatively simple
-# complexity 16-19 is borderline
-# complexity >20 is overly complex and difficult to maintain
-max_complexity = 19
-
-max_line_length = 120
 
 # error codes to ignore per-file
 per-file-ignores =
