@@ -8,6 +8,8 @@ ignore =
     D202 #blank line after function docstring
     E303 #too many blank lines
 
+max_complexity = 15
+
 max_line_length = 120
 
 per-file-ignores =
