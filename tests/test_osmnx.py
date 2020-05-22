@@ -106,24 +106,24 @@ def test_geometry_coords_rounding():
     precision = 3
 
     shape1 = Point(1.123456, 2.123456)
-    shape2 = ox.utils_geo.round_shape_coords(shape1, precision)
+    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
 
     shape1 = MultiPoint([(1.123456, 2.123456), (3.123456, 4.123456)])
-    shape2 = ox.utils_geo.round_shape_coords(shape1, precision)
+    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
 
     shape1 = LineString([(1.123456, 2.123456), (3.123456, 4.123456)])
-    shape2 = ox.utils_geo.round_shape_coords(shape1, precision)
+    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
 
     shape1 = MultiLineString([[(1.123456, 2.123456),
                                (3.123456, 4.123456)],
                               [(11.123456, 12.123456),
                                (13.123456, 14.123456)]])
-    shape2 = ox.utils_geo.round_shape_coords(shape1, precision)
+    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
 
     shape1 = Polygon([(1.123456, 2.123456),
                       (3.123456, 4.123456),
                       (6.123456, 5.123456)])
-    shape2 = ox.utils_geo.round_shape_coords(shape1, precision)
+    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
 
     shape1 = MultiPolygon([Polygon([(1.123456, 2.123456),
                                     (3.123456, 4.123456),
@@ -131,7 +131,7 @@ def test_geometry_coords_rounding():
                            Polygon([(16.123456, 15.123456),
                                     (13.123456, 14.123456),
                                     (12.123456, 11.123456)])])
-    shape2 = ox.utils_geo.round_shape_coords(shape1, precision)
+    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
 
 
 def test_gdf_from_place():
@@ -369,14 +369,14 @@ def test_network_saving_loading():
     default_all_oneway = ox.settings.all_oneway
     ox.settings.all_oneway = True
     G = ox.graph_from_point(location_point, dist=500, network_type='drive')
-    ox.save_graph_osm(G, merge_edges=False)
+    ox.save_graph_xml(G, merge_edges=False)
 
     # test osm xml output merge edges
-    ox.save_graph_osm(G, merge_edges=True, edge_tag_aggs=[('length', 'sum')])
+    ox.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[('length', 'sum')])
 
     # test osm xml output from gdfs
     nodes, edges = ox.graph_to_gdfs(G)
-    ox.save_graph_osm([nodes, edges])
+    ox.save_graph_xml([nodes, edges])
 
     # test ordered nodes from way
     df = pd.DataFrame({'u': [54, 2, 5, 3, 10, 19, 20],

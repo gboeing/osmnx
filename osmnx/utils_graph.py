@@ -94,6 +94,31 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
 def gdfs_to_graph(gdf_nodes, gdf_edges):
     """
+    Pass-through function just calls graph_from_gdfs.
+
+    Deprecated, will be removed in future release.
+
+    Parameters
+    ----------
+    gdf_nodes : GeoDataFrame
+    gdf_edges : GeoDataFrame
+
+    Returns
+    -------
+    networkx.MultiDiGraph
+    """
+
+    from warnings import warn
+    msg = 'The `gdfs_to_graph` function has been deprecated and will be ' \
+          'removed in the next release. Use the new `graph_from_gdfs` ' \
+          'function instead.'
+    warn(msg)
+    return graph_from_gdfs(gdf_nodes, gdf_edges)
+
+
+
+def graph_from_gdfs(gdf_nodes, gdf_edges):
+    """
     Convert node and edge GeoDataFrames into a MultiDiGraph.
 
     Parameters

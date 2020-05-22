@@ -87,7 +87,7 @@ def redistribute_vertices(geom, dist):
 
 
 
-def round_polygon_coords(p, precision):
+def _round_polygon_coords(p, precision):
     """
     Round the coordinates of a shapely Polygon to some decimal precision.
 
@@ -119,7 +119,7 @@ def round_polygon_coords(p, precision):
 
 
 
-def round_multipolygon_coords(mp, precision):
+def _round_multipolygon_coords(mp, precision):
     """
     Round the coordinates of a shapely MultiPolygon to some decimal precision.
 
@@ -135,11 +135,11 @@ def round_multipolygon_coords(mp, precision):
     MultiPolygon
     """
 
-    return MultiPolygon([round_polygon_coords(p, precision) for p in mp])
+    return MultiPolygon([_round_polygon_coords(p, precision) for p in mp])
 
 
 
-def round_point_coords(pt, precision):
+def _round_point_coords(pt, precision):
     """
     Round the coordinates of a shapely Point to some decimal precision.
 
@@ -159,7 +159,7 @@ def round_point_coords(pt, precision):
 
 
 
-def round_multipoint_coords(mpt, precision):
+def _round_multipoint_coords(mpt, precision):
     """
     Round the coordinates of a shapely MultiPoint to some decimal precision.
 
@@ -175,11 +175,11 @@ def round_multipoint_coords(mpt, precision):
     MultiPoint
     """
 
-    return MultiPoint([round_point_coords(pt, precision) for pt in mpt])
+    return MultiPoint([_round_point_coords(pt, precision) for pt in mpt])
 
 
 
-def round_linestring_coords(ls, precision):
+def _round_linestring_coords(ls, precision):
     """
     Round the coordinates of a shapely LineString to some decimal precision.
 
@@ -199,7 +199,7 @@ def round_linestring_coords(ls, precision):
 
 
 
-def round_multilinestring_coords(mls, precision):
+def _round_multilinestring_coords(mls, precision):
     """
     Round the coordinates of a shapely MultiLineString to some decimal precision.
 
@@ -215,11 +215,11 @@ def round_multilinestring_coords(mls, precision):
     MultiLineString
     """
 
-    return MultiLineString([round_linestring_coords(ls, precision) for ls in mls])
+    return MultiLineString([_round_linestring_coords(ls, precision) for ls in mls])
 
 
 
-def round_shape_coords(shape, precision):
+def round_geometry_coords(shape, precision):
     """
     Round the coordinates of a shapely geometry to some decimal precision.
 
@@ -237,22 +237,22 @@ def round_shape_coords(shape, precision):
     """
 
     if isinstance(shape, Point):
-        return round_point_coords(shape, precision)
+        return _round_point_coords(shape, precision)
 
     elif isinstance(shape, MultiPoint):
-        return round_multipoint_coords(shape, precision)
+        return _round_multipoint_coords(shape, precision)
 
     elif isinstance(shape, LineString):
-        return round_linestring_coords(shape, precision)
+        return _round_linestring_coords(shape, precision)
 
     elif isinstance(shape, MultiLineString):
-        return round_multilinestring_coords(shape, precision)
+        return _round_multilinestring_coords(shape, precision)
 
     elif isinstance(shape, Polygon):
-        return round_polygon_coords(shape, precision)
+        return _round_polygon_coords(shape, precision)
 
     elif isinstance(shape, MultiPolygon):
-        return round_multipolygon_coords(shape, precision)
+        return _round_multipolygon_coords(shape, precision)
 
     else:
         raise TypeError(f'cannot round coordinates of unhandled geometry type: {type(shape)}')

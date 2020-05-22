@@ -82,7 +82,7 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1,
 
 
 
-def rgb_color_list_to_hex(color_list):
+def _rgb_color_list_to_hex(color_list):
     """
     Convert a list of RGBa colors to a list of hexadecimal color codes.
 
@@ -127,7 +127,7 @@ def get_colors(n, cmap='viridis', start=0., stop=1., alpha=1., return_hex=False)
     colors = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, n)]
     colors = [(r, g, b, alpha) for r, g, b, _ in colors]
     if return_hex:
-        colors = rgb_color_list_to_hex(colors)
+        colors = _rgb_color_list_to_hex(colors)
     return colors
 
 

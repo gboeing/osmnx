@@ -182,7 +182,7 @@ def _get_paths_to_simplify(G, strict=True):
 
 
 
-def is_simplified(G):
+def _is_simplified(G):
     """
     Determine if a graph has already had its topology simplified.
 
@@ -223,7 +223,7 @@ def simplify_graph(G, strict=True):
     networkx.MultiDiGraph
     """
 
-    if is_simplified(G):
+    if _is_simplified(G):
         raise Exception('This graph has already been simplified, cannot simplify it again.')
 
     utils.log('Begin topologically simplifying the graph...')
@@ -314,6 +314,7 @@ def clean_intersections(G, tolerance=10, dead_ends=False,
     -------
     networkx.MultiDiGraph or geopandas.GeoSeries
     """
+
     from warnings import warn
     msg = 'The `clean_intersections` function has been deprecated and will be ' \
           'removed in the next release. Use the new `consolidate_intersections` ' \
