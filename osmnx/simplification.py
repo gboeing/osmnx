@@ -10,7 +10,6 @@ from . import utils
 from . import utils_graph
 
 
-
 def _is_endpoint(G, node, strict=True):
     """
     Is node a true endpoint of an edge.
@@ -88,7 +87,6 @@ def _is_endpoint(G, node, strict=True):
         return False
 
 
-
 def _build_path(G, node, endpoints, path):
     """
     Recursively build a path of nodes until you hit an endpoint node.
@@ -131,7 +129,6 @@ def _build_path(G, node, endpoints, path):
         path.append(path[0])
 
     return path
-
 
 
 def _get_paths_to_simplify(G, strict=True):
@@ -184,7 +181,6 @@ def _get_paths_to_simplify(G, strict=True):
     return paths_to_simplify
 
 
-
 def _is_simplified(G):
     """
     Determine if a graph has already had its topology simplified.
@@ -203,7 +199,6 @@ def _is_simplified(G):
     """
 
     return 'simplified' in G.graph and G.graph['simplified']
-
 
 
 def simplify_graph(G, strict=True):
@@ -282,9 +277,7 @@ def simplify_graph(G, strict=True):
 
         # add the nodes and edges to their lists for processing at the end
         all_nodes_to_remove.extend(path[1:-1])
-        all_edges_to_add.append({'origin': path[0],
-                                 'destination': path[-1],
-                                 'attr_dict': edge_attributes})
+        all_edges_to_add.append({'origin': path[0], 'destination': path[-1], 'attr_dict': edge_attributes})
 
     # for each edge to add in the list we assembled, create a new edge between
     # the origin and destination
@@ -301,9 +294,7 @@ def simplify_graph(G, strict=True):
     return G
 
 
-
-def clean_intersections(G, tolerance=10, dead_ends=False,
-                        rebuild_graph=False, update_edge_lengths=False):
+def clean_intersections(G, tolerance=10, dead_ends=False, rebuild_graph=False, update_edge_lengths=False):
     """
     Pass-through function just calls consolidate_intersections.
 
@@ -328,20 +319,23 @@ def clean_intersections(G, tolerance=10, dead_ends=False,
     """
 
     from warnings import warn
-    msg = 'The `clean_intersections` function has been deprecated and will be ' \
-          'removed in the next release. Use the new `consolidate_intersections` ' \
-          'function instead.'
+
+    msg = (
+        'The `clean_intersections` function has been deprecated and will be '
+        'removed in the next release. Use the new `consolidate_intersections` '
+        'function instead.'
+    )
     warn(msg)
-    return consolidate_intersections(G,
-                                     tolerance=tolerance,
-                                     dead_ends=dead_ends,
-                                     rebuild_graph=rebuild_graph,
-                                     update_edge_lengths=update_edge_lengths)
+    return consolidate_intersections(
+        G,
+        tolerance=tolerance,
+        dead_ends=dead_ends,
+        rebuild_graph=rebuild_graph,
+        update_edge_lengths=update_edge_lengths,
+    )
 
 
-
-def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
-                              dead_ends=False, update_edge_lengths=True):
+def consolidate_intersections(G, tolerance=10, rebuild_graph=True, dead_ends=False, update_edge_lengths=True):
     """
     Consolidate intersections comprising clusters of nearby nodes.
 
@@ -403,9 +397,9 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
         G.remove_nodes_from(dead_end_nodes)
 
     if rebuild_graph:
-        return _consolidate_intersections_rebuild_graph(G=G,
-                                                        tolerance=tolerance,
-                                                        update_edge_lengths=update_edge_lengths)
+        return _consolidate_intersections_rebuild_graph(
+            G=G, tolerance=tolerance, update_edge_lengths=update_edge_lengths
+        )
 
     else:
         # create a GeoDataFrame of nodes, buffer to passed-in distance, merge overlaps
@@ -421,9 +415,7 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
         return intersection_centroids
 
 
-
-def _consolidate_intersections_rebuild_graph(G, tolerance=10,
-                                             update_edge_lengths=True):
+def _consolidate_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True):
     """
     Consolidate intersections comprising clusters of nearby nodes.
 
@@ -466,15 +458,13 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10,
         # if only a single node results, make iterable to convert to GeoSeries
         buffered_nodes = [buffered_nodes]
 
-
     # STEP 2
     # attach each node to its cluster of merged nodes
     # first get the original graph's node points
     node_points = gdf_nodes[['geometry']]
 
     # then turn buffered nodes into gdf and get centroids of each cluster as x, y
-    node_clusters = gpd.GeoDataFrame(geometry=list(buffered_nodes),
-                                     crs=node_points.crs)
+    node_clusters = gpd.GeoDataFrame(geometry=list(buffered_nodes), crs=node_points.crs)
     centroids = node_clusters.centroid
     node_clusters['x'] = centroids.x
     node_clusters['y'] = centroids.y
@@ -482,7 +472,6 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10,
     # then spatial join to give each node the label of cluster it's within
     gdf = gpd.sjoin(node_points, node_clusters, how='left', op='within')
     gdf = gdf.drop(columns='geometry').rename(columns={'index_right': 'cluster'})
-
 
     # STEP 3
     # if a cluster contains multiple components (i.e., it's not connected)
@@ -506,12 +495,10 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10,
                     gdf.loc[wcc, 'cluster'] = f'{cluster_label}-{suffix}'
                     suffix += 1
 
-
     # STEP 4
     # create new empty graph and copy over misc graph data
     H = nx.MultiDiGraph()
     H.graph = G.graph
-
 
     # STEP 5
     # create a new node for each cluster of merged nodes
@@ -526,11 +513,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10,
         else:
             # if cluster is multiple merged nodes, create one new node to
             # represent them
-            H.add_node(cluster_label,
-                       osmid=str(osmids),
-                       x=nodes_subset['x'].iloc[0],
-                       y=nodes_subset['y'].iloc[0])
-
+            H.add_node(cluster_label, osmid=str(osmids), x=nodes_subset['x'].iloc[0], y=nodes_subset['y'].iloc[0])
 
     # STEP 6
     # create a new edge for each edge in original graph
@@ -547,7 +530,6 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10,
             if 'geometry' not in data:
                 data['geometry'] = gdf_edges.loc[(u, v, k), 'geometry']
             H.add_edge(u2, v2, **data)
-
 
     # STEP 7
     # for every group of merged nodes with more than 1 node in it,

@@ -9,7 +9,6 @@ from . import settings
 from . import utils
 
 
-
 def _is_crs_utm(crs):
     """
     Determine if a CRS is a UTM CRS.
@@ -30,7 +29,6 @@ def _is_crs_utm(crs):
     if crs_obj.coordinate_operation and crs_obj.coordinate_operation.name.upper().startswith('UTM'):
         return True
     return False
-
 
 
 def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
@@ -67,7 +65,6 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     gdf_proj = project_gdf(gdf, to_crs=to_crs, to_latlong=to_latlong)
     geometry_proj = gdf_proj['geometry'].iloc[0]
     return geometry_proj, gdf_proj.crs
-
 
 
 def project_gdf(gdf, to_crs=None, to_latlong=False):
@@ -118,7 +115,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
 
             # calculate the UTM zone from this avg longitude and define the UTM
             # CRS to project
-            utm_zone = int(math.floor((avg_longitude + 180) / 6.) + 1)
+            utm_zone = int(math.floor((avg_longitude + 180) / 6.0) + 1)
             utm_crs = f'+proj=utm +zone={utm_zone} +ellps=WGS84 +datum=WGS84 +units=m +no_defs'
 
             # project the GeoDataFrame to the UTM CRS
@@ -126,7 +123,6 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
             utils.log(f'Projected GeoDataFrame to UTM-{utm_zone}')
 
     return projected_gdf
-
 
 
 def project_graph(G, to_crs=None):
@@ -170,10 +166,7 @@ def project_graph(G, to_crs=None):
     edges_with_geom = []
     for u, v, key, data in G_proj.edges(keys=True, data=True):
         if 'geometry' in data:
-            edges_with_geom.append({'u': u,
-                                    'v': v,
-                                    'key': key,
-                                    'geometry': data['geometry']})
+            edges_with_geom.append({'u': u, 'v': v, 'key': key, 'geometry': data['geometry']})
 
     # create an edges GeoDataFrame and project to UTM, if there were any edges
     # with a geometry attribute. geom attr only exists if graph has been

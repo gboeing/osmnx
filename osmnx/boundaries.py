@@ -8,7 +8,6 @@ from . import settings
 from . import utils
 
 
-
 def gdf_from_place(query, which_result=1, buffer_dist=None):
     """
     Create a GeoDataFrame from a single place name query.
@@ -31,7 +30,7 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
     """
 
     # ensure query type
-    assert (isinstance(query, dict) or isinstance(query, str)), 'query must be a dict or a string'
+    assert isinstance(query, dict) or isinstance(query, str), 'query must be a dict or a string'
 
     # get the data from OSM
     data = downloader._osm_polygon_download(query, limit=which_result)
@@ -42,13 +41,19 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
         bbox_south, bbox_north, bbox_west, bbox_east = [float(x) for x in result['boundingbox']]
         geometry = result['geojson']
         place = result['display_name']
-        features = [{'type': 'Feature',
-                     'geometry': geometry,
-                     'properties': {'place_name': place,
-                                    'bbox_north': bbox_north,
-                                    'bbox_south': bbox_south,
-                                    'bbox_east': bbox_east,
-                                    'bbox_west': bbox_west}}]
+        features = [
+            {
+                'type': 'Feature',
+                'geometry': geometry,
+                'properties': {
+                    'place_name': place,
+                    'bbox_north': bbox_north,
+                    'bbox_south': bbox_south,
+                    'bbox_east': bbox_east,
+                    'bbox_west': bbox_west,
+                },
+            }
+        ]
 
         # if we got an unexpected geometry type (like a point), log a warning
         if geometry['type'] not in ['Polygon', 'MultiPolygon']:
@@ -73,7 +78,6 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
         # if no data returned (or fewer results than which_result)
         utils.log(f'OSM returned no results (or fewer than which_result) for query "{query}"', level=lg.WARNING)
         return gpd.GeoDataFrame()
-
 
 
 def gdf_from_places(queries, which_results=None, buffer_dist=None):

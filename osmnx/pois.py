@@ -11,9 +11,7 @@ from . import utils
 from . import utils_geo
 
 
-
-def _create_poi_query(north, south, east, west, tags,
-                      timeout=180, memory=None, custom_settings=None):
+def _create_poi_query(north, south, east, west, tags, timeout=180, memory=None, custom_settings=None):
     """
     Create an overpass query string based on passed tags.
 
@@ -112,10 +110,9 @@ def _create_poi_query(north, south, east, west, tags,
     return query
 
 
-
-def _osm_poi_download(tags, polygon=None,
-                      north=None, south=None, east=None, west=None,
-                      timeout=180, memory=None, custom_settings=None):
+def _osm_poi_download(
+    tags, polygon=None, north=None, south=None, east=None, west=None, timeout=180, memory=None, custom_settings=None
+):
     """
     Get points of interests (POIs) from OpenStreetMap based on passed tags.
 
@@ -172,15 +169,19 @@ def _osm_poi_download(tags, polygon=None,
         raise ValueError('You must pass a polygon or north, south, east, and west')
 
     # get the POIs
-    query = _create_poi_query(north=north, south=south, east=east, west=west,
-                              tags=tags,
-                              timeout=timeout,
-                              memory=memory,
-                              custom_settings=custom_settings)
+    query = _create_poi_query(
+        north=north,
+        south=south,
+        east=east,
+        west=west,
+        tags=tags,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )
     responses = downloader.overpass_request(data={'data': query}, timeout=timeout)
 
     return responses
-
 
 
 def _parse_nodes_coords(osm_response):
@@ -204,10 +205,8 @@ def _parse_nodes_coords(osm_response):
     coords = {}
     for result in osm_response['elements']:
         if 'type' in result and result['type'] == 'node':
-            coords[result['id']] = {'lat': result['lat'],
-                                    'lon': result['lon']}
+            coords[result['id']] = {'lat': result['lat'], 'lon': result['lon']}
     return coords
-
 
 
 def _parse_polygonal_poi(coords, response):
@@ -231,9 +230,7 @@ def _parse_polygonal_poi(coords, response):
         try:
             polygon = Polygon([(coords[node]['lon'], coords[node]['lat']) for node in nodes])
 
-            poi = {'nodes': nodes,
-                   'geometry': polygon,
-                   'osmid': response['id']}
+            poi = {'nodes': nodes, 'geometry': polygon, 'osmid': response['id']}
 
             if 'tags' in response:
                 for tag in response['tags']:
@@ -244,7 +241,6 @@ def _parse_polygonal_poi(coords, response):
             utils.log(f'Polygon has invalid geometry: {nodes}')
 
     return None
-
 
 
 def _parse_osm_node(response):
@@ -264,8 +260,7 @@ def _parse_osm_node(response):
     try:
         point = Point(response['lon'], response['lat'])
 
-        poi = {'osmid': response['id'],
-               'geometry': point}
+        poi = {'osmid': response['id'], 'geometry': point}
 
         if 'tags' in response:
             for tag in response['tags']:
@@ -275,7 +270,6 @@ def _parse_osm_node(response):
         utils.log(f'Point has invalid geometry: {response["id"]}')
 
     return poi
-
 
 
 def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
@@ -306,7 +300,6 @@ def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
     except Exception:
         utils.log(f'Invalid geometry at relation "{relation["id"]}", way IDs: {way_ids}')
         return None
-
 
 
 def _parse_osm_relations(relations, osm_way_df):
@@ -374,9 +367,9 @@ def _parse_osm_relations(relations, osm_way_df):
     return osm_way_df
 
 
-
-def _create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=None,
-                    timeout=180, memory=None, custom_settings=None):
+def _create_poi_gdf(
+    tags, polygon=None, north=None, south=None, east=None, west=None, timeout=180, memory=None, custom_settings=None
+):
     """
     Create GeoDataFrame from POIs json returned by Overpass API.
 
@@ -420,9 +413,17 @@ def _create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=
         POIs and their associated tags
     """
 
-    responses = _osm_poi_download(tags, polygon=polygon,
-                                  north=north, south=south, east=east, west=west,
-                                  timeout=timeout, memory=memory, custom_settings=custom_settings)
+    responses = _osm_poi_download(
+        tags,
+        polygon=polygon,
+        north=north,
+        south=south,
+        east=east,
+        west=west,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )
 
     # Parse coordinates from all the nodes in the response
     coords = _parse_nodes_coords(responses)
@@ -478,9 +479,7 @@ def _create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=
     return gdf
 
 
-
-def pois_from_point(point, tags, dist=1000,
-                    timeout=180, memory=None, custom_settings=None):
+def pois_from_point(point, tags, dist=1000, timeout=180, memory=None, custom_settings=None):
     """
     Get point of interests (POIs) within some distance N, S, E, W of a point.
 
@@ -516,15 +515,19 @@ def pois_from_point(point, tags, dist=1000,
 
     bbox = utils_geo.bbox_from_point(point=point, dist=dist)
     north, south, east, west = bbox
-    return _create_poi_gdf(tags=tags,
-                           north=north, south=south, east=east, west=west,
-                           timeout=timeout, memory=memory,
-                           custom_settings=custom_settings)
+    return _create_poi_gdf(
+        tags=tags,
+        north=north,
+        south=south,
+        east=east,
+        west=west,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )
 
 
-
-def pois_from_address(address, tags, dist=1000,
-                      timeout=180, memory=None, custom_settings=None):
+def pois_from_address(address, tags, dist=1000, timeout=180, memory=None, custom_settings=None):
     """
     Get point of interests (POIs) within some distance N, S, E, W of address.
 
@@ -562,13 +565,12 @@ def pois_from_address(address, tags, dist=1000,
     point = utils_geo.geocode(query=address)
 
     # get POIs within distance of this point
-    return pois_from_point(point=point, tags=tags, dist=dist,
-                           timeout=timeout, memory=memory, custom_settings=custom_settings)
+    return pois_from_point(
+        point=point, tags=tags, dist=dist, timeout=timeout, memory=memory, custom_settings=custom_settings
+    )
 
 
-
-def pois_from_polygon(polygon, tags,
-                      timeout=180, memory=None, custom_settings=None):
+def pois_from_polygon(polygon, tags, timeout=180, memory=None, custom_settings=None):
     """
     Get point of interests (POIs) within some polygon.
 
@@ -600,14 +602,10 @@ def pois_from_polygon(polygon, tags,
     geopandas.GeoDataFrame
     """
 
-    return _create_poi_gdf(tags=tags, polygon=polygon,
-                           timeout=timeout, memory=memory,
-                           custom_settings=custom_settings)
+    return _create_poi_gdf(tags=tags, polygon=polygon, timeout=timeout, memory=memory, custom_settings=custom_settings)
 
 
-
-def pois_from_place(place, tags, which_result=1,
-                    timeout=180, memory=None, custom_settings=None):
+def pois_from_place(place, tags, which_result=1, timeout=180, memory=None, custom_settings=None):
     """
     Get points of interest (POIs) within the boundaries of some place.
 
@@ -643,6 +641,4 @@ def pois_from_place(place, tags, which_result=1,
 
     city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
-    return _create_poi_gdf(tags=tags, polygon=polygon,
-                           timeout=timeout, memory=memory,
-                           custom_settings=custom_settings)
+    return _create_poi_gdf(tags=tags, polygon=polygon, timeout=timeout, memory=memory, custom_settings=custom_settings)

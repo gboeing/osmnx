@@ -9,9 +9,7 @@ from . import utils
 from . import utils_graph
 
 
-
-def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
-                circuity_dist='gc'):
+def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dist='gc'):
     """
     Calculate basic descriptive metric and topological stats for a graph.
 
@@ -114,8 +112,9 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
 
     # create a dict where key = number of streets (unidirected edges) incident
     # to each node, and value = how many nodes are of this number in the graph
-    streets_per_node_counts = {num: list(streets_per_node.values()).count(num)
-                               for num in range(max(streets_per_node.values()) + 1)}
+    streets_per_node_counts = {
+        num: list(streets_per_node.values()).count(num) for num in range(max(streets_per_node.values()) + 1)
+    }
 
     # degree proportions: dict where key = each degree and value = what
     # proportion of nodes are of this degree in the graph
@@ -135,10 +134,9 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
 
     # calculate clean intersection counts
     if clean_intersects:
-        clean_intersection_points = simplification.clean_intersections(G,
-                                                                       tolerance=tolerance,
-                                                                       rebuild_graph=False,
-                                                                       dead_ends=False)
+        clean_intersection_points = simplification.clean_intersections(
+            G, tolerance=tolerance, rebuild_graph=False, dead_ends=False
+        )
         clean_intersection_count = len(clean_intersection_points)
     else:
         clean_intersection_count = None
@@ -176,21 +174,18 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
     # distance between edge endpoints. first load all the edges origin and
     # destination coordinates as a dataframe, then calculate the straight-line
     # distance
-    coords = np.array([[G.nodes[u]['y'],
-                        G.nodes[u]['x'],
-                        G.nodes[v]['y'],
-                        G.nodes[v]['x']] for u, v, k in G.edges(keys=True)])
+    coords = np.array(
+        [[G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in G.edges(keys=True)]
+    )
     df_coords = pd.DataFrame(coords, columns=['u_y', 'u_x', 'v_y', 'v_x'])
     if circuity_dist == 'gc':
-        gc_distances = distance.great_circle_vec(lat1=df_coords['u_y'],
-                                                 lng1=df_coords['u_x'],
-                                                 lat2=df_coords['v_y'],
-                                                 lng2=df_coords['v_x'])
+        gc_distances = distance.great_circle_vec(
+            lat1=df_coords['u_y'], lng1=df_coords['u_x'], lat2=df_coords['v_y'], lng2=df_coords['v_x']
+        )
     elif circuity_dist == 'euclidean':
-        gc_distances = distance.euclidean_dist_vec(y1=df_coords['u_y'],
-                                                   x1=df_coords['u_x'],
-                                                   y2=df_coords['v_y'],
-                                                   x2=df_coords['v_x'])
+        gc_distances = distance.euclidean_dist_vec(
+            y1=df_coords['u_y'], x1=df_coords['u_x'], y2=df_coords['v_y'], x2=df_coords['v_x']
+        )
     else:
         raise ValueError('circuity_dist must be "gc" or "euclidean"')
 
@@ -206,30 +201,31 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
     self_loop_proportion = self_loops_count / m
 
     # assemble the results
-    stats = {'n': n,
-             'm': m,
-             'k_avg': k_avg,
-             'intersection_count': intersection_count,
-             'streets_per_node_avg': streets_per_node_avg,
-             'streets_per_node_counts': streets_per_node_counts,
-             'streets_per_node_proportion': streets_per_node_proportion,
-             'edge_length_total': edge_length_total,
-             'edge_length_avg': edge_length_avg,
-             'street_length_total': street_length_total,
-             'street_length_avg': street_length_avg,
-             'street_segments_count': street_segments_count,
-             'node_density_km': node_density_km,
-             'intersection_density_km': intersection_density_km,
-             'edge_density_km': edge_density_km,
-             'street_density_km': street_density_km,
-             'circuity_avg': circuity_avg,
-             'self_loop_proportion': self_loop_proportion,
-             'clean_intersection_count': clean_intersection_count,
-             'clean_intersection_density_km': clean_intersection_density_km}
+    stats = {
+        'n': n,
+        'm': m,
+        'k_avg': k_avg,
+        'intersection_count': intersection_count,
+        'streets_per_node_avg': streets_per_node_avg,
+        'streets_per_node_counts': streets_per_node_counts,
+        'streets_per_node_proportion': streets_per_node_proportion,
+        'edge_length_total': edge_length_total,
+        'edge_length_avg': edge_length_avg,
+        'street_length_total': street_length_total,
+        'street_length_avg': street_length_avg,
+        'street_segments_count': street_segments_count,
+        'node_density_km': node_density_km,
+        'intersection_density_km': intersection_density_km,
+        'edge_density_km': edge_density_km,
+        'street_density_km': street_density_km,
+        'circuity_avg': circuity_avg,
+        'self_loop_proportion': self_loop_proportion,
+        'clean_intersection_count': clean_intersection_count,
+        'clean_intersection_density_km': clean_intersection_density_km,
+    }
 
     # return the results
     return stats
-
 
 
 def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=False):
@@ -375,9 +371,10 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     if ecc:
         # precompute shortest paths between all nodes for eccentricity-based
         # stats
-        sp = {source: dict(nx.single_source_dijkstra_path_length(G_strong,
-                                                                 source,
-                                                                 weight='length')) for source in G_strong.nodes()}
+        sp = {
+            source: dict(nx.single_source_dijkstra_path_length(G_strong, source, weight='length'))
+            for source in G_strong.nodes()
+        }
 
         utils.log('Calculated shortest path lengths')
 

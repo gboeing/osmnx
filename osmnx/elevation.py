@@ -9,9 +9,7 @@ from . import downloader
 from . import utils
 
 
-
-def add_node_elevations(G, api_key, max_locations_per_batch=350,
-                        pause_duration=0.02):  # pragma: no cover
+def add_node_elevations(G, api_key, max_locations_per_batch=350, pause_duration=0.02):  # pragma: no cover
     """
     Get the elevation (meters) of each node.
 
@@ -49,7 +47,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
     # API format is locations=lat,lng|lat,lng|lat,lng|lat,lng...
     results = []
     for i in range(0, len(node_points), max_locations_per_batch):
-        chunk = node_points.iloc[i: i + max_locations_per_batch]
+        chunk = node_points.iloc[i : i + max_locations_per_batch]
         locations = '|'.join(chunk)
         url = url_template.format(locations, api_key)
 
@@ -86,7 +84,6 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
     utils.log('Added elevation data to all nodes.')
 
     return G
-
 
 
 def add_edge_grades(G, add_absolute=True):

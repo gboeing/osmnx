@@ -12,7 +12,6 @@ from . import distance
 from . import utils
 
 
-
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
     """
     Convert a graph into node and/or edge GeoDataFrames.
@@ -92,7 +91,6 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         return to_return[0]
 
 
-
 def gdfs_to_graph(gdf_nodes, gdf_edges):
     """
     Pass-through function just calls graph_from_gdfs.
@@ -112,12 +110,14 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
     """
 
     from warnings import warn
-    msg = 'The `gdfs_to_graph` function has been deprecated and will be ' \
-          'removed in the next release. Use the new `graph_from_gdfs` ' \
-          'function instead.'
+
+    msg = (
+        'The `gdfs_to_graph` function has been deprecated and will be '
+        'removed in the next release. Use the new `graph_from_gdfs` '
+        'function instead.'
+    )
     warn(msg)
     return graph_from_gdfs(gdf_nodes, gdf_edges)
-
 
 
 def graph_from_gdfs(gdf_nodes, gdf_edges):
@@ -159,7 +159,6 @@ def graph_from_gdfs(gdf_nodes, gdf_edges):
     return G
 
 
-
 def induce_subgraph(G, node_subset):
     """
     Induce a subgraph of G.
@@ -185,19 +184,26 @@ def induce_subgraph(G, node_subset):
 
     # copy edges to new graph, including parallel edges
     if H.is_multigraph:
-        H.add_edges_from((n, nbr, key, d)
-                         for n, nbrs in G.adj.items() if n in node_subset
-                         for nbr, keydict in nbrs.items() if nbr in node_subset
-                         for key, d in keydict.items())
+        H.add_edges_from(
+            (n, nbr, key, d)
+            for n, nbrs in G.adj.items()
+            if n in node_subset
+            for nbr, keydict in nbrs.items()
+            if nbr in node_subset
+            for key, d in keydict.items()
+        )
     else:
-        H.add_edges_from((n, nbr, d)
-                         for n, nbrs in G.adj.items() if n in node_subset
-                         for nbr, d in nbrs.items() if nbr in node_subset)
+        H.add_edges_from(
+            (n, nbr, d)
+            for n, nbrs in G.adj.items()
+            if n in node_subset
+            for nbr, d in nbrs.items()
+            if nbr in node_subset
+        )
 
     # update graph attribute dict, and return graph
     H.graph.update(G.graph)
     return H
-
 
 
 def get_largest_component(G, strongly=False):
@@ -229,8 +235,10 @@ def get_largest_component(G, strongly=False):
             largest_scc = max(sccs, key=len)
             G = induce_subgraph(G, largest_scc)
 
-            msg = (f'Graph was not connected, retained only the largest strongly '
-                   f'connected component ({len(G)} of {original_len} total nodes)')
+            msg = (
+                f'Graph was not connected, retained only the largest strongly '
+                f'connected component ({len(G)} of {original_len} total nodes)'
+            )
             utils.log(msg)
     else:
         # if the graph is not connected retain only the largest weakly connected component
@@ -241,16 +249,16 @@ def get_largest_component(G, strongly=False):
             largest_wcc = max(wccs, key=len)
             G = induce_subgraph(G, largest_wcc)
 
-            msg = (f'Graph was not connected, retained only the largest weakly '
-                   f'connected component ({len(G)} of {original_len} total nodes)')
+            msg = (
+                f'Graph was not connected, retained only the largest weakly '
+                f'connected component ({len(G)} of {original_len} total nodes)'
+            )
             utils.log(msg)
 
     return G
 
 
-
-def get_route_edge_attributes(G, route, attribute=None, minimize_key='length',
-                              retrieve_default=None):
+def get_route_edge_attributes(G, route, attribute=None, minimize_key='length', retrieve_default=None):
     """
     Get a list of attribute values for each edge in a path.
 
@@ -289,7 +297,6 @@ def get_route_edge_attributes(G, route, attribute=None, minimize_key='length',
             attribute_value = data[attribute]
         attribute_values.append(attribute_value)
     return attribute_values
-
 
 
 def count_streets_per_node(G, nodes=None):
@@ -352,11 +359,9 @@ def count_streets_per_node(G, nodes=None):
     # count how often each node appears in the list of flattened edge endpoints
     counts = Counter(edges_flat)
     streets_per_node = {node: counts[node] for node in nodes}
-    msg = ('Got the counts of undirected street segments incident to each node '
-           '(before removing peripheral edges)')
+    msg = 'Got the counts of undirected street segments incident to each node ' '(before removing peripheral edges)'
     utils.log(msg)
     return streets_per_node
-
 
 
 def remove_isolated_nodes(G):
@@ -377,7 +382,6 @@ def remove_isolated_nodes(G):
     G.remove_nodes_from(isolated_nodes)
     utils.log(f'Removed {len(isolated_nodes)} isolated nodes')
     return G
-
 
 
 def _is_duplicate_edge(data, data_other):
@@ -420,7 +424,6 @@ def _is_duplicate_edge(data, data_other):
     return is_dupe
 
 
-
 def _is_same_geometry(ls1, ls2):
     """
     Check if LineString geometries in two edges are the same.
@@ -449,8 +452,7 @@ def _is_same_geometry(ls1, ls2):
 
     # if the edge's geometry matches its reverse's geometry in either order,
     # return True
-    return (geom1 == geom2 or geom1_r == geom2)
-
+    return geom1 == geom2 or geom1_r == geom2
 
 
 def _update_edge_keys(G):
@@ -510,7 +512,6 @@ def _update_edge_keys(G):
         G.remove_edge(u, v, key=k)
 
     return G
-
 
 
 def get_undirected(G):
@@ -583,7 +584,6 @@ def get_undirected(G):
     return H
 
 
-
 def add_edge_lengths(G):
     """
     Add length (meters) attribute to each edge.
@@ -603,15 +603,16 @@ def add_edge_lengths(G):
     # first load all the edges' origin and destination coordinates as a
     # dataframe indexed by u, v, key
     try:
-        coords = np.array([(u, v, k,
-                            G.nodes[u]['y'],
-                            G.nodes[u]['x'],
-                            G.nodes[v]['y'],
-                            G.nodes[v]['x']) for u, v, k in G.edges(keys=True)])
+        coords = np.array(
+            [
+                (u, v, k, G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x'])
+                for u, v, k in G.edges(keys=True)
+            ]
+        )
     except KeyError:  # pragma: no cover
-        missing_nodes = {str(i) for u, v, _ in G.edges(keys=True)
-                         if not(G.nodes[u] or G.nodes[u])
-                         for i in (u, v) if not G.nodes[i]}
+        missing_nodes = {
+            str(i) for u, v, _ in G.edges(keys=True) if not (G.nodes[u] or G.nodes[u]) for i in (u, v) if not G.nodes[i]
+        }
         missing_str = ', '.join(missing_nodes)
         raise KeyError(f'Edge(s) missing nodes {missing_str} possibly due to clipping issue')
 
@@ -620,10 +621,9 @@ def add_edge_lengths(G):
     df_coords = df_coords.set_index(['u', 'v', 'k'])
 
     # then calculate the great circle distance with the vectorized function
-    gc_distances = distance.great_circle_vec(lat1=df_coords['u_y'],
-                                             lng1=df_coords['u_x'],
-                                             lat2=df_coords['v_y'],
-                                             lng2=df_coords['v_x'])
+    gc_distances = distance.great_circle_vec(
+        lat1=df_coords['u_y'], lng1=df_coords['u_x'], lat2=df_coords['v_y'], lng2=df_coords['v_x']
+    )
 
     # fill nulls with zeros and round to the millimeter
     gc_distances = gc_distances.fillna(value=0).round(3)

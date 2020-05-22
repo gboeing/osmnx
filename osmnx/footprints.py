@@ -13,13 +13,18 @@ from . import utils
 from . import utils_geo
 
 
-
-def _osm_footprints_download(polygon=None,
-                             north=None, south=None, east=None, west=None,
-                             footprint_type='building',
-                             timeout=180, memory=None,
-                             max_query_area_size=50 * 1000 * 50 * 1000,
-                             custom_settings=None):
+def _osm_footprints_download(
+    polygon=None,
+    north=None,
+    south=None,
+    east=None,
+    west=None,
+    footprint_type='building',
+    timeout=180,
+    memory=None,
+    max_query_area_size=50 * 1000 * 50 * 1000,
+    custom_settings=None,
+):
     """
     Download OpenStreetMap footprint data as a list of json responses.
 
@@ -85,11 +90,13 @@ def _osm_footprints_download(polygon=None,
             # decimal places (ie, within 1 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_str = (f'{overpass_settings};'
-                         f'((way["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
-                         f'(._;>;););'
-                         f'(relation["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
-                         f'(._;>;);););out;')
+            query_str = (
+                f'{overpass_settings};'
+                f'((way["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
+                f'(._;>;););'
+                f'(relation["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
+                f'(._;>;);););out;'
+            )
             response_json = downloader.overpass_request(data={'data': query_str}, timeout=timeout)
             response_jsons.append(response_json)
         utils.log(f'Got all footprint data within bounding box from API in {len(geometry)} request(s)')
@@ -106,9 +113,11 @@ def _osm_footprints_download(polygon=None,
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
-            query_str = (f'{overpass_settings};('
-                         f'way(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;);'
-                         f'relation(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;););out;')
+            query_str = (
+                f'{overpass_settings};('
+                f'way(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;);'
+                f'relation(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;););out;'
+            )
             response_json = downloader.overpass_request(data={'data': query_str}, timeout=timeout)
             response_jsons.append(response_json)
         utils.log(f'Got all footprint data within polygon from API in {len(polygon_coord_strs)} request(s)')
@@ -116,10 +125,19 @@ def _osm_footprints_download(polygon=None,
     return response_jsons
 
 
-
-def _create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None,
-                           footprint_type='building', retain_invalid=False, responses=None,
-                           timeout=180, memory=None, custom_settings=None):
+def _create_footprints_gdf(
+    polygon=None,
+    north=None,
+    south=None,
+    east=None,
+    west=None,
+    footprint_type='building',
+    retain_invalid=False,
+    responses=None,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
+):
     """
     Get footprint (polygon) data from OSM and convert it into a GeoDataFrame.
 
@@ -157,8 +175,17 @@ def _create_footprints_gdf(polygon=None, north=None, south=None, east=None, west
 
     # allow pickling between downloading footprints and converting them to a GeoDataFrame
     if responses is None:
-        responses = _osm_footprints_download(polygon, north, south, east, west, footprint_type,
-                                             timeout=timeout, memory=memory, custom_settings=custom_settings)
+        responses = _osm_footprints_download(
+            polygon,
+            north,
+            south,
+            east,
+            west,
+            footprint_type,
+            timeout=timeout,
+            memory=memory,
+            custom_settings=custom_settings,
+        )
 
     # parse the list of responses into separate dicts of vertices, footprints and relations
     # create a set of ways not directly tagged with footprint_type
@@ -194,7 +221,6 @@ def _create_footprints_gdf(polygon=None, north=None, south=None, east=None, west
         gdf = gdf[filter_combined]
 
     return gdf
-
 
 
 def _responses_to_dicts(responses, footprint_type):
@@ -244,8 +270,7 @@ def _responses_to_dicts(responses, footprint_type):
         for element in response['elements']:
             # NODES - only keep coordinates
             if 'type' in element and element['type'] == 'node':
-                vertices[element['id']] = {'lat': element['lat'],
-                                           'lon': element['lon']}
+                vertices[element['id']] = {'lat': element['lat'], 'lon': element['lon']}
             # WAYS - both open and closed
             elif 'type' in element and element['type'] == 'way':
                 footprint = {'nodes': element['nodes']}
@@ -273,7 +298,6 @@ def _responses_to_dicts(responses, footprint_type):
                 utils.log(f'Element {element["id"]} is not a node, way or relation')
 
     return vertices, footprints, relations, untagged_footprints
-
 
 
 def _create_footprint_geometry(footprint_key, footprint_val, vertices):
@@ -317,7 +341,6 @@ def _create_footprint_geometry(footprint_key, footprint_val, vertices):
     return footprint_geometry
 
 
-
 def _create_relation_geometry(relation_key, relation_val, footprints):
     """
     Create Shapely geometry for relations: Polygons with holes or MultiPolygons.
@@ -352,8 +375,7 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
     """
 
     # lists to hold member geometries
-    outer_polys, outer_lines, inner_polys, inner_lines = _members_geom_lists(relation_val,
-                                                                             footprints)
+    outer_polys, outer_lines, inner_polys, inner_lines = _members_geom_lists(relation_val, footprints)
 
     # try to polygonize open outer ways and concatenate them to outer_polys
     if len(outer_lines) > 0:
@@ -399,7 +421,6 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
         utils.log(f'relation {relation_key} could not be converted to a complex footprint')
 
 
-
 def _members_geom_lists(relation_val, footprints):
     """
     Add relation members' geoms to lists.
@@ -437,9 +458,9 @@ def _members_geom_lists(relation_val, footprints):
     return outer_polys, outer_lines, inner_polys, inner_lines
 
 
-
-def footprints_from_point(point, dist, footprint_type='building', retain_invalid=False,
-                          timeout=180, memory=None, custom_settings=None):
+def footprints_from_point(
+    point, dist, footprint_type='building', retain_invalid=False, timeout=180, memory=None, custom_settings=None
+):
     """
     Get footprints within some distance N, S, E, W of a lat-lng point.
 
@@ -469,14 +490,22 @@ def footprints_from_point(point, dist, footprint_type='building', retain_invalid
 
     bbox = utils_geo.bbox_from_point(point=point, dist=dist)
     north, south, east, west = bbox
-    return _create_footprints_gdf(north=north, south=south, east=east, west=west,
-                                  footprint_type=footprint_type, retain_invalid=retain_invalid,
-                                  timeout=timeout, memory=memory, custom_settings=custom_settings)
+    return _create_footprints_gdf(
+        north=north,
+        south=south,
+        east=east,
+        west=west,
+        footprint_type=footprint_type,
+        retain_invalid=retain_invalid,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )
 
 
-
-def footprints_from_address(address, dist, footprint_type='building', retain_invalid=False,
-                            timeout=180, memory=None, custom_settings=None):
+def footprints_from_address(
+    address, dist, footprint_type='building', retain_invalid=False, timeout=180, memory=None, custom_settings=None
+):
     """
     Get footprints within some distance N, S, E, W of an address.
 
@@ -508,14 +537,20 @@ def footprints_from_address(address, dist, footprint_type='building', retain_inv
     point = utils_geo.geocode(query=address)
 
     # get footprints within distance of this point
-    return footprints_from_point(point, dist, footprint_type=footprint_type,
-                                 retain_invalid=retain_invalid, timeout=timeout,
-                                 memory=memory, custom_settings=custom_settings)
+    return footprints_from_point(
+        point,
+        dist,
+        footprint_type=footprint_type,
+        retain_invalid=retain_invalid,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )
 
 
-
-def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=False,
-                            timeout=180, memory=None, custom_settings=None):
+def footprints_from_polygon(
+    polygon, footprint_type='building', retain_invalid=False, timeout=180, memory=None, custom_settings=None
+):
     """
     Get footprints within some polygon.
 
@@ -542,14 +577,25 @@ def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=F
     geopandas.GeoDataFrame
     """
 
-    return _create_footprints_gdf(polygon=polygon, footprint_type=footprint_type,
-                                  retain_invalid=retain_invalid, timeout=timeout,
-                                  memory=memory, custom_settings=custom_settings)
+    return _create_footprints_gdf(
+        polygon=polygon,
+        footprint_type=footprint_type,
+        retain_invalid=retain_invalid,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )
 
 
-
-def footprints_from_place(place, footprint_type='building', retain_invalid=False, which_result=1,
-                          timeout=180, memory=None, custom_settings=None):
+def footprints_from_place(
+    place,
+    footprint_type='building',
+    retain_invalid=False,
+    which_result=1,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
+):
     """
     Get footprints within the boundaries of some place.
 
@@ -585,6 +631,11 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
 
     city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
-    return _create_footprints_gdf(polygon, retain_invalid=retain_invalid,
-                                  footprint_type=footprint_type, timeout=timeout,
-                                  memory=memory, custom_settings=custom_settings)
+    return _create_footprints_gdf(
+        polygon,
+        retain_invalid=retain_invalid,
+        footprint_type=footprint_type,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )

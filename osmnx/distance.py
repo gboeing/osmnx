@@ -19,7 +19,6 @@ except ImportError:
     BallTree = None
 
 
-
 def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     """
     Calculate great-circle distances.
@@ -66,7 +65,6 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     return dist
 
 
-
 def euclidean_dist_vec(y1, x1, y2, x2):
     """
     Calculate euclidean distances.
@@ -95,7 +93,6 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     # euclid's formula
     dist = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
     return dist
-
 
 
 def get_nearest_node(G, point, method='haversine', return_dist=False):
@@ -147,18 +144,12 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
     if method == 'haversine':
         # calculate distance vector using haversine (ie, for
         # spherical lat-lng geometries)
-        distances = great_circle_vec(lat1=df['reference_y'],
-                                     lng1=df['reference_x'],
-                                     lat2=df['y'],
-                                     lng2=df['x'])
+        distances = great_circle_vec(lat1=df['reference_y'], lng1=df['reference_x'], lat2=df['y'], lng2=df['x'])
 
     elif method == 'euclidean':
         # calculate distance vector using euclidean distances (ie, for projected
         # planar geometries)
-        distances = euclidean_dist_vec(y1=df['reference_y'],
-                                       x1=df['reference_x'],
-                                       y2=df['y'],
-                                       x2=df['x'])
+        distances = euclidean_dist_vec(y1=df['reference_y'], x1=df['reference_x'], y2=df['y'], x2=df['x'])
 
     else:
         raise ValueError('method argument must be either "haversine" or "euclidean"')
@@ -173,7 +164,6 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
         return nearest_node, distances.loc[nearest_node]
     else:
         return nearest_node
-
 
 
 def get_nearest_edge(G, point, return_geom=False, return_dist=False):
@@ -227,7 +217,6 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
         return u, v, key
 
 
-
 def get_nearest_nodes(G, X, Y, method=None):
     """
     Return the graph nodes nearest to a list of points.
@@ -275,8 +264,7 @@ def get_nearest_nodes(G, X, Y, method=None):
             raise ImportError('The scipy package must be installed to use this optional feature.')
 
         # build a k-d tree for euclidean nearest node search
-        nodes = pd.DataFrame({'x': nx.get_node_attributes(G, 'x'),
-                              'y': nx.get_node_attributes(G, 'y')})
+        nodes = pd.DataFrame({'x': nx.get_node_attributes(G, 'x'), 'y': nx.get_node_attributes(G, 'y')})
         tree = cKDTree(data=nodes[['x', 'y']], compact_nodes=True, balanced_tree=True)
 
         # query the tree for nearest node to each point
@@ -291,8 +279,7 @@ def get_nearest_nodes(G, X, Y, method=None):
             raise ImportError('The scikit-learn package must be installed to use this optional feature.')
 
         # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
-        nodes = pd.DataFrame({'x': nx.get_node_attributes(G, 'x'),
-                              'y': nx.get_node_attributes(G, 'y')})
+        nodes = pd.DataFrame({'x': nx.get_node_attributes(G, 'x'), 'y': nx.get_node_attributes(G, 'y')})
         nodes_rad = np.deg2rad(nodes[['y', 'x']].astype(np.float))
         points = np.array([Y.astype(np.float), X.astype(np.float)]).T
         points_rad = np.deg2rad(points)
@@ -309,7 +296,6 @@ def get_nearest_nodes(G, X, Y, method=None):
 
     utils.log(f'Found nearest nodes to {len(X)} points')
     return np.array(nn)
-
 
 
 def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
@@ -385,8 +371,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         extended = edges['points'].apply([pd.Series]).stack().reset_index(level=1, drop=True).join(edges).reset_index()
 
         # Prepare btree arrays
-        nbdata = np.array(list(zip(extended['Series'].apply(lambda x: x.x),
-                                   extended['Series'].apply(lambda x: x.y))))
+        nbdata = np.array(list(zip(extended['Series'].apply(lambda x: x.x), extended['Series'].apply(lambda x: x.y))))
 
         # build a k-d tree for euclidean nearest node search
         btree = cKDTree(data=nbdata, compact_nodes=True, balanced_tree=True)
@@ -413,8 +398,9 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         extended = edges['points'].apply([pd.Series]).stack().reset_index(level=1, drop=True).join(edges).reset_index()
 
         # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
-        nodes = pd.DataFrame({'x': extended['Series'].apply(lambda x: x.x),
-                              'y': extended['Series'].apply(lambda x: x.y)})
+        nodes = pd.DataFrame(
+            {'x': extended['Series'].apply(lambda x: x.x), 'y': extended['Series'].apply(lambda x: x.y)}
+        )
         nodes_rad = np.deg2rad(nodes[['y', 'x']].values.astype(np.float))
         points = np.array([Y, X]).T
         points_rad = np.deg2rad(points)

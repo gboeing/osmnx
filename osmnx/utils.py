@@ -8,7 +8,6 @@ import unicodedata
 from . import settings
 
 
-
 def citation():
     """
     Print the OSMnx package's citation information.
@@ -18,26 +17,27 @@ def citation():
     Systems, 65(126-139). https://doi.org/10.1016/j.compenvurbsys.2017.05.004
     """
 
-    cite = ("Citation:\n\n"
-            "Boeing, G. 2017. OSMnx: New Methods for Acquiring, "
-            "Constructing, Analyzing, and Visualizing Complex Street "
-            "Networks. Computers, Environment and Urban Systems, 65(126-139). "
-            "https://doi.org/10.1016/j.compenvurbsys.2017.05.004\n\n"
-            "BibTeX entry for LaTeX users:\n\n"
-            "@article{boeing_osmnx_2017,\n"
-            "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, "
-            "{Constructing}, {Analyzing}, and {Visualizing} {Complex} "
-            "{Street} {Networks}},\n"
-            "    volume = {65},\n"
-            "    doi = {10.1016/j.compenvurbsys.2017.05.004},\n"
-            "    number = {126-139},\n"
-            "    journal = {Computers, Environment and Urban Systems},\n"
-            "    author = {Boeing, Geoff},\n"
-            "    year = {2017}\n"
-            "}")
+    cite = (
+        "Citation:\n\n"
+        "Boeing, G. 2017. OSMnx: New Methods for Acquiring, "
+        "Constructing, Analyzing, and Visualizing Complex Street "
+        "Networks. Computers, Environment and Urban Systems, 65(126-139). "
+        "https://doi.org/10.1016/j.compenvurbsys.2017.05.004\n\n"
+        "BibTeX entry for LaTeX users:\n\n"
+        "@article{boeing_osmnx_2017,\n"
+        "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, "
+        "{Constructing}, {Analyzing}, and {Visualizing} {Complex} "
+        "{Street} {Networks}},\n"
+        "    volume = {65},\n"
+        "    doi = {10.1016/j.compenvurbsys.2017.05.004},\n"
+        "    number = {126-139},\n"
+        "    journal = {Computers, Environment and Urban Systems},\n"
+        "    author = {Boeing, Geoff},\n"
+        "    year = {2017}\n"
+        "}"
+    )
 
     print(cite)
-
 
 
 def ts(style='datetime', template=None):
@@ -73,32 +73,33 @@ def ts(style='datetime', template=None):
     return ts
 
 
-
-def config(data_folder=settings.data_folder,
-           logs_folder=settings.logs_folder,
-           imgs_folder=settings.imgs_folder,
-           cache_folder=settings.cache_folder,
-           use_cache=settings.use_cache,
-           log_file=settings.log_file,
-           log_console=settings.log_console,
-           log_level=settings.log_level,
-           log_name=settings.log_name,
-           log_filename=settings.log_filename,
-           useful_tags_node=settings.useful_tags_node,
-           useful_tags_path=settings.useful_tags_path,
-           osm_xml_node_attrs=settings.osm_xml_node_attrs,
-           osm_xml_node_tags=settings.osm_xml_node_tags,
-           osm_xml_way_attrs=settings.osm_xml_way_attrs,
-           osm_xml_way_tags=settings.osm_xml_way_tags,
-           default_access=settings.default_access,
-           default_crs=settings.default_crs,
-           default_user_agent=settings.default_user_agent,
-           default_referer=settings.default_referer,
-           default_accept_language=settings.default_accept_language,
-           nominatim_endpoint=settings.nominatim_endpoint,
-           nominatim_key=settings.nominatim_key,
-           overpass_endpoint=settings.overpass_endpoint,
-           all_oneway=settings.all_oneway):
+def config(
+    data_folder=settings.data_folder,
+    logs_folder=settings.logs_folder,
+    imgs_folder=settings.imgs_folder,
+    cache_folder=settings.cache_folder,
+    use_cache=settings.use_cache,
+    log_file=settings.log_file,
+    log_console=settings.log_console,
+    log_level=settings.log_level,
+    log_name=settings.log_name,
+    log_filename=settings.log_filename,
+    useful_tags_node=settings.useful_tags_node,
+    useful_tags_path=settings.useful_tags_path,
+    osm_xml_node_attrs=settings.osm_xml_node_attrs,
+    osm_xml_node_tags=settings.osm_xml_node_tags,
+    osm_xml_way_attrs=settings.osm_xml_way_attrs,
+    osm_xml_way_tags=settings.osm_xml_way_tags,
+    default_access=settings.default_access,
+    default_crs=settings.default_crs,
+    default_user_agent=settings.default_user_agent,
+    default_referer=settings.default_referer,
+    default_accept_language=settings.default_accept_language,
+    nominatim_endpoint=settings.nominatim_endpoint,
+    nominatim_key=settings.nominatim_key,
+    overpass_endpoint=settings.overpass_endpoint,
+    all_oneway=settings.all_oneway,
+):
     """
     Configure osmnx by setting the default global settings' values.
 
@@ -196,7 +197,6 @@ def config(data_folder=settings.data_folder,
         log('Configured osmnx')
 
 
-
 def log(message, level=None, name=None, filename=None):
     """
     Write a message to the log file and/or print to the console.
@@ -253,7 +253,6 @@ def log(message, level=None, name=None, filename=None):
         message = unicodedata.normalize('NFKD', str(message)).encode('ascii', errors='replace').decode()
         print(message)
         sys.stdout = standard_out
-
 
 
 def _get_logger(level=None, name=None, filename=None):

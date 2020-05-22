@@ -22,13 +22,26 @@ log_filename = 'osmnx'
 # useful osm tags - note that load_graphml expects a consistent set of tag names
 # for parsing
 useful_tags_node = ['ref', 'highway']
-useful_tags_path = ['bridge', 'tunnel', 'oneway', 'lanes', 'ref', 'name',
-                    'highway', 'maxspeed', 'service', 'access', 'area',
-                    'landuse', 'width', 'est_width', 'junction']
+useful_tags_path = [
+    'bridge',
+    'tunnel',
+    'oneway',
+    'lanes',
+    'ref',
+    'name',
+    'highway',
+    'maxspeed',
+    'service',
+    'access',
+    'area',
+    'landuse',
+    'width',
+    'est_width',
+    'junction',
+]
 
 # tags and attributes for generating an OSM XML file
-osm_xml_node_attrs = ['id', 'timestamp', 'uid', 'user', 'version', 'changeset',
-                      'lat', 'lon']
+osm_xml_node_attrs = ['id', 'timestamp', 'uid', 'user', 'version', 'changeset', 'lat', 'lon']
 osm_xml_node_tags = ['highway']
 osm_xml_way_attrs = ['id', 'timestamp', 'uid', 'user', 'version', 'changeset']
 osm_xml_way_tags = ['highway', 'lanes', 'maxspeed', 'name', 'oneway']

@@ -4,7 +4,6 @@ import math
 import numpy as np
 
 
-
 def get_bearing(origin_point, destination_point):
     """
     Calculate the bearing between two lat-lng points.
@@ -43,7 +42,6 @@ def get_bearing(origin_point, destination_point):
     bearing = (initial_bearing + 360) % 360
 
     return bearing
-
 
 
 def add_edge_bearings(G):

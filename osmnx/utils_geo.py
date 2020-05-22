@@ -16,7 +16,6 @@ from . import projection
 from . import utils
 
 
-
 def geocode(query):
     """
     Geocode a query string to (lat, lng) with the Nominatim geocoder.
@@ -51,7 +50,6 @@ def geocode(query):
         raise Exception(f'Nominatim geocoder returned no results for query "{query}"')
 
 
-
 def redistribute_vertices(geom, dist):
     """
     Redistribute the vertices on a projected LineString or MultiLineString.
@@ -77,14 +75,12 @@ def redistribute_vertices(geom, dist):
         num_vert = int(round(geom.length / dist))
         if num_vert == 0:
             num_vert = 1
-        return [geom.interpolate(float(n) / num_vert, normalized=True)
-                for n in range(num_vert + 1)]
+        return [geom.interpolate(float(n) / num_vert, normalized=True) for n in range(num_vert + 1)]
     elif geom.geom_type == 'MultiLineString':
         parts = [redistribute_vertices(part, dist) for part in geom]
         return type(geom)([p for p in parts if not p])
     else:
         raise ValueError(f'unhandled geometry {geom.geom_type}')
-
 
 
 def _round_polygon_coords(p, precision):
@@ -118,7 +114,6 @@ def _round_polygon_coords(p, precision):
     return new_poly
 
 
-
 def _round_multipolygon_coords(mp, precision):
     """
     Round the coordinates of a shapely MultiPolygon to some decimal precision.
@@ -136,7 +131,6 @@ def _round_multipolygon_coords(mp, precision):
     """
 
     return MultiPolygon([_round_polygon_coords(p, precision) for p in mp])
-
 
 
 def _round_point_coords(pt, precision):
@@ -158,7 +152,6 @@ def _round_point_coords(pt, precision):
     return Point([round(x, precision) for x in pt.coords[0]])
 
 
-
 def _round_multipoint_coords(mpt, precision):
     """
     Round the coordinates of a shapely MultiPoint to some decimal precision.
@@ -176,7 +169,6 @@ def _round_multipoint_coords(mpt, precision):
     """
 
     return MultiPoint([_round_point_coords(pt, precision) for pt in mpt])
-
 
 
 def _round_linestring_coords(ls, precision):
@@ -198,7 +190,6 @@ def _round_linestring_coords(ls, precision):
     return LineString([[round(x, precision) for x in c] for c in ls.coords])
 
 
-
 def _round_multilinestring_coords(mls, precision):
     """
     Round the coordinates of a shapely MultiLineString to some decimal precision.
@@ -216,7 +207,6 @@ def _round_multilinestring_coords(mls, precision):
     """
 
     return MultiLineString([_round_linestring_coords(ls, precision) for ls in mls])
-
 
 
 def round_geometry_coords(shape, precision):
@@ -256,7 +246,6 @@ def round_geometry_coords(shape, precision):
 
     else:
         raise TypeError(f'cannot round coordinates of unhandled geometry type: {type(shape)}')
-
 
 
 def _consolidate_subdivide_geometry(geometry, max_query_area_size):
@@ -301,7 +290,6 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size):
     return geometry
 
 
-
 def _get_polygons_coordinates(geometry):
     """
     Extract exterior coordinates from polygon(s) to pass to OSM.
@@ -343,7 +331,6 @@ def _get_polygons_coordinates(geometry):
         polygon_coord_strs.append(s.strip(separator))
 
     return polygon_coord_strs
-
 
 
 def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9):
@@ -390,7 +377,6 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9
     return multipoly
 
 
-
 def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
     """
     Intersect points with a polygon.
@@ -422,10 +408,9 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
     points_within_geometry = pd.DataFrame()
 
     # cut the geometry into chunks for r-tree spatial index intersecting
-    multipoly = _quadrat_cut_geometry(geometry,
-                                      quadrat_width=quadrat_width,
-                                      buffer_amount=buffer_amount,
-                                      min_num=min_num)
+    multipoly = _quadrat_cut_geometry(
+        geometry, quadrat_width=quadrat_width, buffer_amount=buffer_amount, min_num=min_num
+    )
 
     # create an r-tree spatial index for the nodes (ie, points)
     sindex = gdf['geometry'].sindex
@@ -461,7 +446,6 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
 
     utils.log(f'Identified {len(points_within_geometry)} nodes inside polygon')
     return points_within_geometry
-
 
 
 def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
@@ -509,7 +493,6 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
         return north, south, east, west, crs_proj
     else:
         return north, south, east, west
-
 
 
 def bbox_to_poly(north, south, east, west):

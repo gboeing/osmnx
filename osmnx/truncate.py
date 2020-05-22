@@ -9,8 +9,7 @@ from . import utils_geo
 from . import utils_graph
 
 
-def truncate_graph_dist(G, source_node, max_dist=1000, weight='length',
-                        retain_all=False):
+def truncate_graph_dist(G, source_node, max_dist=1000, weight='length', retain_all=False):
     """
     Remove everything farther than some network distance from specified node.
 
@@ -52,9 +51,7 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight='length',
     return G
 
 
-
-def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False,
-                        retain_all=False):
+def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, retain_all=False):
     """
     Remove every node in graph that falls outside a bounding box.
 
@@ -124,9 +121,9 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False,
     return G
 
 
-
-def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
-                           quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
+def truncate_graph_polygon(
+    G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.05, min_num=3, buffer_amount=1e-9
+):
     """
     Remove every node in graph that outside a shapely (Multi)Polygon.
 
@@ -167,11 +164,9 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
     gdf_nodes.crs = G.graph['crs']
 
     # find all the nodes in the graph that lie outside the polygon
-    points_within_geometry = utils_geo._intersect_index_quadrats(gdf_nodes,
-                                                                 polygon,
-                                                                 quadrat_width=quadrat_width,
-                                                                 min_num=min_num,
-                                                                 buffer_amount=buffer_amount)
+    points_within_geometry = utils_geo._intersect_index_quadrats(
+        gdf_nodes, polygon, quadrat_width=quadrat_width, min_num=min_num, buffer_amount=buffer_amount
+    )
     nodes_outside_polygon = gdf_nodes[~gdf_nodes.index.isin(points_within_geometry.index)]
 
     if truncate_by_edge:

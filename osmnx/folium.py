@@ -10,9 +10,7 @@ except ImportError:
     folium = None
 
 
-
-def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity,
-                          popup_attribute=None):
+def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attribute=None):
     """
     Turn row GeoDataFrame into a folium PolyLine with attributes.
 
@@ -54,15 +52,21 @@ def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity,
         popup = folium.Popup(html=popup_text)
 
     # create a folium polyline with attributes
-    pl = folium.PolyLine(locations=locations, popup=popup,
-                         color=edge_color, weight=edge_width, opacity=edge_opacity)
+    pl = folium.PolyLine(locations=locations, popup=popup, color=edge_color, weight=edge_width, opacity=edge_opacity)
     return pl
 
 
-
-def plot_graph_folium(G, graph_map=None, popup_attribute=None,
-                      tiles='cartodbpositron', zoom=1, fit_bounds=True,
-                      edge_color='#333333', edge_width=5, edge_opacity=1):
+def plot_graph_folium(
+    G,
+    graph_map=None,
+    popup_attribute=None,
+    tiles='cartodbpositron',
+    zoom=1,
+    fit_bounds=True,
+    edge_color='#333333',
+    edge_width=5,
+    edge_opacity=1,
+):
     """
     Plot a graph on an interactive folium web map.
 
@@ -112,8 +116,13 @@ def plot_graph_folium(G, graph_map=None, popup_attribute=None,
 
     # add each graph edge to the map
     for _, row in gdf_edges.iterrows():
-        pl = _make_folium_polyline(edge=row, edge_color=edge_color, edge_width=edge_width,
-                                   edge_opacity=edge_opacity, popup_attribute=popup_attribute)
+        pl = _make_folium_polyline(
+            edge=row,
+            edge_color=edge_color,
+            edge_width=edge_width,
+            edge_opacity=edge_opacity,
+            popup_attribute=popup_attribute,
+        )
         pl.add_to(graph_map)
 
     # if fit_bounds is True, fit the map to the bounds of the route by passing
@@ -126,10 +135,18 @@ def plot_graph_folium(G, graph_map=None, popup_attribute=None,
     return graph_map
 
 
-
-def plot_route_folium(G, route, route_map=None, popup_attribute=None,
-                      tiles='cartodbpositron', zoom=1, fit_bounds=True,
-                      route_color='#cc0000', route_width=5, route_opacity=1):
+def plot_route_folium(
+    G,
+    route,
+    route_map=None,
+    popup_attribute=None,
+    tiles='cartodbpositron',
+    zoom=1,
+    fit_bounds=True,
+    route_color='#cc0000',
+    route_width=5,
+    route_opacity=1,
+):
     """
     Plot a route on an interactive folium web map.
 
@@ -181,8 +198,13 @@ def plot_route_folium(G, route, route_map=None, popup_attribute=None,
 
     # add each route edge to the map
     for _, row in gdf_route_edges.iterrows():
-        pl = _make_folium_polyline(edge=row, edge_color=route_color, edge_width=route_width,
-                                   edge_opacity=route_opacity, popup_attribute=popup_attribute)
+        pl = _make_folium_polyline(
+            edge=row,
+            edge_color=route_color,
+            edge_width=route_width,
+            edge_opacity=route_opacity,
+            popup_attribute=popup_attribute,
+        )
         pl.add_to(route_map)
 
     # if fit_bounds is True, fit the map to the bounds of the route by passing

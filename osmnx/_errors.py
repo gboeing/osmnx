@@ -10,7 +10,6 @@ class EmptyOverpassResponse(ValueError):  # pragma: no cover
         Exception.__init__(self, *args, **kwargs)
 
 
-
 class InsufficientNetworkQueryArguments(ValueError):  # pragma: no cover
     """Exception for insufficient network query args."""
 
@@ -20,7 +19,6 @@ class InsufficientNetworkQueryArguments(ValueError):  # pragma: no cover
         Exception.__init__(self, *args, **kwargs)
 
 
-
 class InvalidDistanceType(ValueError):  # pragma: no cover
     """Exception for invalid distance type."""
 
@@ -28,7 +26,6 @@ class InvalidDistanceType(ValueError):  # pragma: no cover
         """Create exception."""
 
         Exception.__init__(self, *args, **kwargs)
-
 
 
 class UnknownNetworkType(ValueError):  # pragma: no cover
