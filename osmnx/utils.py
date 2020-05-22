@@ -250,7 +250,9 @@ def log(message, level=None, name=None, filename=None):
         message = f'{ts()} {message}'
 
         # convert to ascii so it doesn't break windows terminals
-        message = unicodedata.normalize('NFKD', str(message)).encode('ascii', errors='replace').decode()
+        message = (
+            unicodedata.normalize('NFKD', str(message)).encode('ascii', errors='replace').decode()
+        )
         print(message)
         sys.stdout = standard_out
 

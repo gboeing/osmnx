@@ -398,7 +398,9 @@ def save_graph_xml(
     try:
         gdf_nodes, gdf_edges = data
     except ValueError:
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(data, node_geometry=False, fill_edge_geometry=False)
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(
+            data, node_geometry=False, fill_edge_geometry=False
+        )
 
     # rename columns per osm specification
     gdf_nodes.rename(columns={'osmid': 'id', 'x': 'lon', 'y': 'lat'}, inplace=True)
@@ -427,12 +429,16 @@ def save_graph_xml(
         # fill blank oneway tags with default (False)
         gdf_edges.loc[pd.isnull(gdf_edges['oneway']), 'oneway'] = oneway
         gdf_edges.loc[:, 'oneway'] = gdf_edges['oneway'].astype(str)
-        gdf_edges.loc[:, 'oneway'] = gdf_edges['oneway'].str.replace('False', 'no').replace('True', 'yes')
+        gdf_edges.loc[:, 'oneway'] = (
+            gdf_edges['oneway'].str.replace('False', 'no').replace('True', 'yes')
+        )
 
     # initialize XML tree with an OSM root element then append nodes/edges
     root = etree.Element('osm', attrib={'version': '1', 'generator': 'OSMnx'})
     root = _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags)
-    root = _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges)
+    root = _append_edges_xml_tree(
+        root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges
+    )
 
     # write to disk
     etree.ElementTree(root).write(filepath)
@@ -524,12 +530,16 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
                         etree.SubElement(edge, 'tag', attrib={'k': tag, 'v': first[tag]})
             else:
                 for tag in edge_tags:
-                    if (tag in all_way_edges.columns) and (tag not in [t for t, agg in edge_tag_aggs]):
+                    if (tag in all_way_edges.columns) and (
+                        tag not in [t for t, agg in edge_tag_aggs]
+                    ):
                         etree.SubElement(edge, 'tag', attrib={'k': tag, 'v': first[tag]})
 
                 for tag, agg in edge_tag_aggs:
                     if tag in all_way_edges.columns:
-                        etree.SubElement(edge, 'tag', attrib={'k': tag, 'v': all_way_edges[tag].aggregate(agg)})
+                        etree.SubElement(
+                            edge, 'tag', attrib={'k': tag, 'v': all_way_edges[tag].aggregate(agg)}
+                        )
     else:
         # NOTE: this will generate separate OSM ways for each network edge,
         # even if the edges are all part of the same original OSM way. As

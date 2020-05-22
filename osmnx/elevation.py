@@ -9,7 +9,9 @@ from . import downloader
 from . import utils
 
 
-def add_node_elevations(G, api_key, max_locations_per_batch=350, pause_duration=0.02):  # pragma: no cover
+def add_node_elevations(
+    G, api_key, max_locations_per_batch=350, pause_duration=0.02
+):  # pragma: no cover
     """
     Get the elevation (meters) of each node.
 
@@ -39,7 +41,9 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350, pause_duration=
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
     # round coorindates to 5 decimal places (approx 1 meter) to be able to fit
     # in more locations per API call
-    node_points = pd.Series({node: f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)})
+    node_points = pd.Series(
+        {node: f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)}
+    )
     n_calls = math.ceil(len(node_points) / max_locations_per_batch)
     utils.log(f'Requesting node elevations from the API in {n_calls} calls')
 
@@ -72,9 +76,13 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350, pause_duration=
 
     # sanity check that all our vectors have the same number of elements
     if not (len(results) == len(G) == len(node_points)):
-        raise Exception(f'Graph has {len(G)} nodes but we received {len(results)} results from elevation API')
+        raise Exception(
+            f'Graph has {len(G)} nodes but we received {len(results)} results from elevation API'
+        )
     else:
-        utils.log(f'Graph has {len(G)} nodes and we received {len(results)} results from elevation API')
+        utils.log(
+            f'Graph has {len(G)} nodes and we received {len(results)} results from elevation API'
+        )
 
     # add elevation as an attribute to the nodes
     df = pd.DataFrame(node_points, columns=['node_points'])

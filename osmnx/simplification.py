@@ -169,7 +169,9 @@ def _get_paths_to_simplify(G, strict=True):
                     path = _build_path(G, successor, endpoints, path=[node, successor])
                     paths_to_simplify.append(path)
                 except RecursionError:
-                    utils.log('Exceeded max depth, moving on to next endpoint successor', level=lg.WARNING)
+                    utils.log(
+                        'Exceeded max depth, moving on to next endpoint successor', level=lg.WARNING
+                    )
                     # recursion errors occur if some connected component is a
                     # self-contained ring in which all nodes are not end points.
                     # could also occur in extremely long street segments (eg, in
@@ -245,7 +247,10 @@ def simplify_graph(G, strict=True):
 
             # there shouldn't be multiple edges between interstitial nodes
             if not G.number_of_edges(u, v) == 1:
-                utils.log(f'Multiple edges between "{u}" and "{v}" found when simplifying', level=lg.WARNING)
+                utils.log(
+                    f'Multiple edges between "{u}" and "{v}" found when simplifying',
+                    level=lg.WARNING,
+                )
 
             # the only element in this list as long as above check is True
             # (MultiGraphs use keys (the 0 here), indexed with ints from 0 and
@@ -272,12 +277,16 @@ def simplify_graph(G, strict=True):
                 edge_attributes[key] = list(set(edge_attributes[key]))
 
         # construct the geometry and sum the lengths of the segments
-        edge_attributes['geometry'] = LineString([Point((G.nodes[node]['x'], G.nodes[node]['y'])) for node in path])
+        edge_attributes['geometry'] = LineString(
+            [Point((G.nodes[node]['x'], G.nodes[node]['y'])) for node in path]
+        )
         edge_attributes['length'] = sum(edge_attributes['length'])
 
         # add the nodes and edges to their lists for processing at the end
         all_nodes_to_remove.extend(path[1:-1])
-        all_edges_to_add.append({'origin': path[0], 'destination': path[-1], 'attr_dict': edge_attributes})
+        all_edges_to_add.append(
+            {'origin': path[0], 'destination': path[-1], 'attr_dict': edge_attributes}
+        )
 
     # for each edge to add in the list we assembled, create a new edge between
     # the origin and destination
@@ -294,7 +303,9 @@ def simplify_graph(G, strict=True):
     return G
 
 
-def clean_intersections(G, tolerance=10, dead_ends=False, rebuild_graph=False, update_edge_lengths=False):
+def clean_intersections(
+    G, tolerance=10, dead_ends=False, rebuild_graph=False, update_edge_lengths=False
+):
     """
     Pass-through function just calls consolidate_intersections.
 
@@ -335,7 +346,9 @@ def clean_intersections(G, tolerance=10, dead_ends=False, rebuild_graph=False, u
     )
 
 
-def consolidate_intersections(G, tolerance=10, rebuild_graph=True, dead_ends=False, update_edge_lengths=True):
+def consolidate_intersections(
+    G, tolerance=10, rebuild_graph=True, dead_ends=False, update_edge_lengths=True
+):
     """
     Consolidate intersections comprising clusters of nearby nodes.
 
@@ -513,7 +526,12 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, update_edge_length
         else:
             # if cluster is multiple merged nodes, create one new node to
             # represent them
-            H.add_node(cluster_label, osmid=str(osmids), x=nodes_subset['x'].iloc[0], y=nodes_subset['y'].iloc[0])
+            H.add_node(
+                cluster_label,
+                osmid=str(osmids),
+                x=nodes_subset['x'].iloc[0],
+                y=nodes_subset['y'].iloc[0],
+            )
 
     # STEP 6
     # create a new edge for each edge in original graph

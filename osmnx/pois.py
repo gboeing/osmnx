@@ -11,7 +11,9 @@ from . import utils
 from . import utils_geo
 
 
-def _create_poi_query(north, south, east, west, tags, timeout=180, memory=None, custom_settings=None):
+def _create_poi_query(
+    north, south, east, west, tags, timeout=180, memory=None, custom_settings=None
+):
     """
     Create an overpass query string based on passed tags.
 
@@ -111,7 +113,15 @@ def _create_poi_query(north, south, east, west, tags, timeout=180, memory=None, 
 
 
 def _osm_poi_download(
-    tags, polygon=None, north=None, south=None, east=None, west=None, timeout=180, memory=None, custom_settings=None
+    tags,
+    polygon=None,
+    north=None,
+    south=None,
+    east=None,
+    west=None,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
 ):
     """
     Get points of interests (POIs) from OpenStreetMap based on passed tags.
@@ -331,7 +341,9 @@ def _parse_osm_relations(relations, osm_way_df):
         try:
             if relation['tags']['type'] == 'multipolygon':
                 # Parse member 'way' ids
-                member_way_ids = [member['ref'] for member in relation['members'] if member['type'] == 'way']
+                member_way_ids = [
+                    member['ref'] for member in relation['members'] if member['type'] == 'way'
+                ]
                 # Extract the ways
                 member_ways = osm_way_df.reindex(member_way_ids)
                 # Extract the nodes of those ways
@@ -340,14 +352,18 @@ def _parse_osm_relations(relations, osm_way_df):
                     # Create MultiPolygon from geometries (exclude NaNs)
                     multipoly = MultiPolygon(list(member_ways['geometry']))
                 except Exception:
-                    multipoly = _invalid_multipoly_handler(gdf=member_ways, relation=relation, way_ids=member_way_ids)
+                    multipoly = _invalid_multipoly_handler(
+                        gdf=member_ways, relation=relation, way_ids=member_way_ids
+                    )
 
                 if multipoly:
                     # Create GeoDataFrame with the tags and the MultiPolygon and its
                     # 'ways' (ids), and the 'nodes' of those ways
                     geo = gpd.GeoDataFrame(relation['tags'], index=[relation['id']])
                     # Initialize columns (needed for .loc inserts)
-                    geo = geo.assign(geometry=None, ways=None, nodes=None, element_type=None, osmid=None)
+                    geo = geo.assign(
+                        geometry=None, ways=None, nodes=None, element_type=None, osmid=None
+                    )
                     # Add attributes
                     geo.loc[relation['id'], 'geometry'] = multipoly
                     geo.loc[relation['id'], 'ways'] = member_way_ids
@@ -368,7 +384,15 @@ def _parse_osm_relations(relations, osm_way_df):
 
 
 def _create_poi_gdf(
-    tags, polygon=None, north=None, south=None, east=None, west=None, timeout=180, memory=None, custom_settings=None
+    tags,
+    polygon=None,
+    north=None,
+    south=None,
+    east=None,
+    west=None,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
 ):
     """
     Create GeoDataFrame from POIs json returned by Overpass API.
@@ -566,7 +590,12 @@ def pois_from_address(address, tags, dist=1000, timeout=180, memory=None, custom
 
     # get POIs within distance of this point
     return pois_from_point(
-        point=point, tags=tags, dist=dist, timeout=timeout, memory=memory, custom_settings=custom_settings
+        point=point,
+        tags=tags,
+        dist=dist,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
     )
 
 
@@ -602,7 +631,9 @@ def pois_from_polygon(polygon, tags, timeout=180, memory=None, custom_settings=N
     geopandas.GeoDataFrame
     """
 
-    return _create_poi_gdf(tags=tags, polygon=polygon, timeout=timeout, memory=memory, custom_settings=custom_settings)
+    return _create_poi_gdf(
+        tags=tags, polygon=polygon, timeout=timeout, memory=memory, custom_settings=custom_settings
+    )
 
 
 def pois_from_place(place, tags, which_result=1, timeout=180, memory=None, custom_settings=None):
@@ -641,4 +672,6 @@ def pois_from_place(place, tags, which_result=1, timeout=180, memory=None, custo
 
     city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city['geometry'].iloc[0]
-    return _create_poi_gdf(tags=tags, polygon=polygon, timeout=timeout, memory=memory, custom_settings=custom_settings)
+    return _create_poi_gdf(
+        tags=tags, polygon=polygon, timeout=timeout, memory=memory, custom_settings=custom_settings
+    )

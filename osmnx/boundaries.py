@@ -76,7 +76,10 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
         return gdf
     else:
         # if no data returned (or fewer results than which_result)
-        utils.log(f'OSM returned no results (or fewer than which_result) for query "{query}"', level=lg.WARNING)
+        utils.log(
+            f'OSM returned no results (or fewer than which_result) for query "{query}"',
+            level=lg.WARNING,
+        )
         return gpd.GeoDataFrame()
 
 
@@ -107,9 +110,13 @@ def gdf_from_places(queries, which_results=None, buffer_dist=None):
     # checking for the presence of which_results
     gdf = gpd.GeoDataFrame()
     if which_results is not None:
-        assert len(queries) == len(which_results), 'which_results list length must be the same as queries list length'
+        assert len(queries) == len(
+            which_results
+        ), 'which_results list length must be the same as queries list length'
         for query, which_result in zip(queries, which_results):
-            gdf = gdf.append(gdf_from_place(query, buffer_dist=buffer_dist, which_result=which_result))
+            gdf = gdf.append(
+                gdf_from_place(query, buffer_dist=buffer_dist, which_result=which_result)
+            )
     else:
         for query in queries:
             gdf = gdf.append(gdf_from_place(query, buffer_dist=buffer_dist))

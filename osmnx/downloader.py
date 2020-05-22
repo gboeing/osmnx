@@ -83,7 +83,9 @@ def _get_osm_filter(network_type):
 
     # to download all ways, including private-access ones, just filter out
     # everything not currently in use
-    filters['all_private'] = '["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
+    filters[
+        'all_private'
+    ] = '["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
 
     # no filter, needed for infrastructures other than "highway"
     filters['none'] = ''
@@ -217,7 +219,9 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
         accept_language = settings.default_accept_language
 
     headers = requests.utils.default_headers()
-    headers.update({'User-Agent': user_agent, 'referer': referer, 'Accept-Language': accept_language})
+    headers.update(
+        {'User-Agent': user_agent, 'referer': referer, 'Accept-Language': accept_language}
+    )
     return headers
 
 
@@ -310,7 +314,9 @@ def _make_overpass_settings(custom_settings, timeout, memory):
     if custom_settings:
         overpass_settings = custom_settings
     else:
-        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout, maxsize=maxsize)
+        overpass_settings = settings.default_overpass_query_settings.format(
+            timeout=timeout, maxsize=maxsize
+        )
 
     return overpass_settings
 
@@ -374,7 +380,9 @@ def _osm_net_download(
     by_poly = polygon is not None
     by_bbox = not (north is None or south is None or east is None or west is None)
     if not (by_poly or by_bbox):
-        raise InsufficientNetworkQueryArguments('You must pass a polygon or north, south, east, and west')
+        raise InsufficientNetworkQueryArguments(
+            'You must pass a polygon or north, south, east, and west'
+        )
 
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type
@@ -397,9 +405,13 @@ def _osm_net_download(
 
         # subdivide it if it exceeds the max area size (in meters), then project
         # back to lat-lng
-        gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        gpcs = utils_geo._consolidate_subdivide_geometry(
+            geometry_proj, max_query_area_size=max_query_area_size
+        )
         geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
-        utils.log(f'Requesting network data within bounding box from API in {len(geometry)} request(s)')
+        utils.log(
+            f'Requesting network data within bounding box from API in {len(geometry)} request(s)'
+        )
 
         # loop through each polygon rectangle in the geometry (there will only
         # be one if original bbox didn't exceed max area size)
@@ -414,17 +426,23 @@ def _osm_net_download(
             )
             response_json = overpass_request(data={'data': query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        utils.log(f'Got all network data within bounding box from API in {len(geometry)} request(s)')
+        utils.log(
+            f'Got all network data within bounding box from API in {len(geometry)} request(s)'
+        )
 
     elif by_poly:
         # project to utm, divide polygon up into sub-polygons if area exceeds a
         # max size (in meters), project back to lat-lng, then get a list of
         # polygon(s) exterior coordinates
         geometry_proj, crs_proj = projection.project_geometry(polygon)
-        gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        gpcs = utils_geo._consolidate_subdivide_geometry(
+            geometry_proj, max_query_area_size=max_query_area_size
+        )
         geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
-        utils.log(f'Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)')
+        utils.log(
+            f'Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)'
+        )
 
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
@@ -432,7 +450,9 @@ def _osm_net_download(
             query_str = f'{overpass_settings};({infrastructure}{osm_filter}(poly:"{polygon_coord_str}");>;);out;'
             response_json = overpass_request(data={'data': query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        utils.log(f'Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)')
+        utils.log(
+            f'Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)'
+        )
 
     return response_jsons
 
@@ -458,7 +478,9 @@ def _osm_polygon_download(query, limit=1, polygon_geojson=1):
     params = OrderedDict()
     params['format'] = 'json'
     params['limit'] = limit
-    params['dedupe'] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
+    params[
+        'dedupe'
+    ] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
     params['polygon_geojson'] = polygon_geojson
 
     # add the structured query dict (if provided) to params, otherwise query
@@ -540,14 +562,19 @@ def nominatim_request(params, request_type='search', pause=1, timeout=30, error_
             sc = response.status_code
             if sc in [429, 504]:
                 # pause for error_pause seconds before re-trying request
-                utils.log(f'{domain} returned {sc} and no data: retrying in {error_pause:.2f} secs', level=lg.WARNING)
+                utils.log(
+                    f'{domain} returned {sc} and no data: retrying in {error_pause:.2f} secs',
+                    level=lg.WARNING,
+                )
                 time.sleep(error_pause)
                 response_json = nominatim_request(params=params, pause=pause, timeout=timeout)
 
             # else, this was an unhandled status_code, throw an exception
             else:
                 utils.log(f'{domain} returned {sc} and no data', level=lg.ERROR)
-                raise Exception(f'Server returned no JSON data\n{response} {response.reason}\n{response.text}')
+                raise Exception(
+                    f'Server returned no JSON data\n{response} {response.reason}\n{response.text}'
+                )
 
         return response_json
 
@@ -612,12 +639,17 @@ def overpass_request(data, pause=None, timeout=180, error_pause=None):
             if sc in [429, 504]:
                 if error_pause is None:
                     error_pause = _get_pause()
-                utils.log(f'{domain} returned {sc} and no data: retry in {error_pause} secs.', level=lg.WARNING)
+                utils.log(
+                    f'{domain} returned {sc} and no data: retry in {error_pause} secs.',
+                    level=lg.WARNING,
+                )
                 time.sleep(error_pause)
                 response_json = overpass_request(data=data, pause=pause, timeout=timeout)
             # else, this was an unhandled status_code, throw an exception
             else:
                 utils.log(f'{domain} returned {sc} and no data', level=lg.ERROR)
-                raise Exception(f'Server returned no JSON data\n{response} {response.reason}\n{response.text}')
+                raise Exception(
+                    f'Server returned no JSON data\n{response} {response.reason}\n{response.text}'
+                )
 
         return response_json

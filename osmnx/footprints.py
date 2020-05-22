@@ -79,9 +79,13 @@ def _osm_footprints_download(
 
         # subdivide it if it exceeds the max area size (in meters), then project
         # back to lat-lng
-        gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        gpcs = utils_geo._consolidate_subdivide_geometry(
+            geometry_proj, max_query_area_size=max_query_area_size
+        )
         geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
-        utils.log(f'Requesting footprints within bounding box from API in {len(geometry)} request(s)')
+        utils.log(
+            f'Requesting footprints within bounding box from API in {len(geometry)} request(s)'
+        )
 
         # loop through each polygon rectangle in the geometry (there will only
         # be one if original bbox didn't exceed max area size)
@@ -99,16 +103,22 @@ def _osm_footprints_download(
             )
             response_json = downloader.overpass_request(data={'data': query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        utils.log(f'Got all footprint data within bounding box from API in {len(geometry)} request(s)')
+        utils.log(
+            f'Got all footprint data within bounding box from API in {len(geometry)} request(s)'
+        )
 
     elif by_poly:
         # project to utm, divide polygon up into sub-polygons if area exceeds a
         # max size (in meters), project back to lat-lng, then get a list of polygon(s) exterior coordinates
         geometry_proj, crs_proj = projection.project_geometry(polygon)
-        gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        gpcs = utils_geo._consolidate_subdivide_geometry(
+            geometry_proj, max_query_area_size=max_query_area_size
+        )
         geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
-        utils.log(f'Requesting footprints within polygon from API in {len(polygon_coord_strs)} request(s)')
+        utils.log(
+            f'Requesting footprints within polygon from API in {len(polygon_coord_strs)} request(s)'
+        )
 
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
@@ -120,7 +130,9 @@ def _osm_footprints_download(
             )
             response_json = downloader.overpass_request(data={'data': query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        utils.log(f'Got all footprint data within polygon from API in {len(polygon_coord_strs)} request(s)')
+        utils.log(
+            f'Got all footprint data within polygon from API in {len(polygon_coord_strs)} request(s)'
+        )
 
     return response_jsons
 
@@ -193,7 +205,9 @@ def _create_footprints_gdf(
 
     # create simple Shapely geometries (Polygon or LineString) for all of the ways in footprints
     for footprint_key, footprint_val in footprints.items():
-        footprint_val['geometry'] = _create_footprint_geometry(footprint_key, footprint_val, vertices)
+        footprint_val['geometry'] = _create_footprint_geometry(
+            footprint_key, footprint_val, vertices
+        )
 
     # create a complex Shapely Polygon or MultiPolygon for each relation
     for relation_key, relation_val in relations.items():
@@ -216,7 +230,9 @@ def _create_footprints_gdf(
     # filter the gdf to only include valid Polygons/MultiPolygons if retain_invalid is False
     if not retain_invalid and not gdf.empty:
         filter1 = gdf['geometry'].is_valid
-        filter2 = (gdf['geometry'].geom_type == 'Polygon') | (gdf['geometry'].geom_type == 'MultiPolygon')
+        filter2 = (gdf['geometry'].geom_type == 'Polygon') | (
+            gdf['geometry'].geom_type == 'MultiPolygon'
+        )
         filter_combined = filter1 & filter2
         gdf = gdf[filter_combined]
 
@@ -326,7 +342,9 @@ def _create_footprint_geometry(footprint_key, footprint_val, vertices):
     # CLOSED WAYS
     if footprint_val['nodes'][0] == footprint_val['nodes'][-1]:
         try:
-            poly = [(vertices[node]['lon'], vertices[node]['lat']) for node in footprint_val['nodes']]
+            poly = [
+                (vertices[node]['lon'], vertices[node]['lat']) for node in footprint_val['nodes']
+            ]
             footprint_geometry = Polygon(poly)
         except Exception:
             utils.log(f'Polygon has invalid geometry: {footprint_key}')
@@ -375,7 +393,9 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
     """
 
     # lists to hold member geometries
-    outer_polys, outer_lines, inner_polys, inner_lines = _members_geom_lists(relation_val, footprints)
+    outer_polys, outer_lines, inner_polys, inner_lines = _members_geom_lists(
+        relation_val, footprints
+    )
 
     # try to polygonize open outer ways and concatenate them to outer_polys
     if len(outer_lines) > 0:
@@ -459,7 +479,13 @@ def _members_geom_lists(relation_val, footprints):
 
 
 def footprints_from_point(
-    point, dist, footprint_type='building', retain_invalid=False, timeout=180, memory=None, custom_settings=None
+    point,
+    dist,
+    footprint_type='building',
+    retain_invalid=False,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
 ):
     """
     Get footprints within some distance N, S, E, W of a lat-lng point.
@@ -504,7 +530,13 @@ def footprints_from_point(
 
 
 def footprints_from_address(
-    address, dist, footprint_type='building', retain_invalid=False, timeout=180, memory=None, custom_settings=None
+    address,
+    dist,
+    footprint_type='building',
+    retain_invalid=False,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
 ):
     """
     Get footprints within some distance N, S, E, W of an address.
@@ -549,7 +581,12 @@ def footprints_from_address(
 
 
 def footprints_from_polygon(
-    polygon, footprint_type='building', retain_invalid=False, timeout=180, memory=None, custom_settings=None
+    polygon,
+    footprint_type='building',
+    retain_invalid=False,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
 ):
     """
     Get footprints within some polygon.

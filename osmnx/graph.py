@@ -92,7 +92,9 @@ def graph_from_bbox(
         polygon = Polygon([(west, north), (west, south), (east, south), (east, north)])
         polygon_utm, crs_utm = projection.project_geometry(geometry=polygon)
         polygon_proj_buff = polygon_utm.buffer(buffer_dist)
-        polygon_buff, _ = projection.project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
+        polygon_buff, _ = projection.project_geometry(
+            geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True
+        )
         west_buffered, south_buffered, east_buffered, north_buffered = polygon_buff.bounds
 
         # get the network data from OSM then create the graph
@@ -110,7 +112,9 @@ def graph_from_bbox(
             custom_settings=custom_settings,
         )
         G_buffered = _create_graph(
-            response_jsons, retain_all=retain_all, bidirectional=network_type in settings.bidirectional_network_types
+            response_jsons,
+            retain_all=retain_all,
+            bidirectional=network_type in settings.bidirectional_network_types,
         )
 
         G = truncate.truncate_graph_bbox(
@@ -123,13 +127,21 @@ def graph_from_bbox(
         # truncate graph by desired bbox to return the graph within the bbox
         # caller wants
         G = truncate.truncate_graph_bbox(
-            G_buffered, north, south, east, west, retain_all=retain_all, truncate_by_edge=truncate_by_edge
+            G_buffered,
+            north,
+            south,
+            east,
+            west,
+            retain_all=retain_all,
+            truncate_by_edge=truncate_by_edge,
         )
 
         # count how many street segments in buffered graph emanate from each
         # intersection in un-buffered graph, to retain true counts for each
         # intersection, even if some of its neighbors are outside the bbox
-        G.graph['streets_per_node'] = utils_graph.count_streets_per_node(G_buffered, nodes=G.nodes())
+        G.graph['streets_per_node'] = utils_graph.count_streets_per_node(
+            G_buffered, nodes=G.nodes()
+        )
 
     else:
         # get the network data from OSM
@@ -149,7 +161,9 @@ def graph_from_bbox(
 
         # create the graph, then truncate to the bounding box
         G = _create_graph(
-            response_jsons, retain_all=retain_all, bidirectional=network_type in settings.bidirectional_network_types
+            response_jsons,
+            retain_all=retain_all,
+            bidirectional=network_type in settings.bidirectional_network_types,
         )
         G = truncate.truncate_graph_bbox(
             G, north, south, east, west, retain_all=retain_all, truncate_by_edge=truncate_by_edge
@@ -439,7 +453,9 @@ def graph_from_polygon(
         buffer_dist = 500
         polygon_utm, crs_utm = projection.project_geometry(geometry=polygon)
         polygon_proj_buff = polygon_utm.buffer(buffer_dist)
-        polygon_buffered, _ = projection.project_geometry(geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True)
+        polygon_buffered, _ = projection.project_geometry(
+            geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True
+        )
 
         # get the network data from OSM,  create the buffered graph, then
         # truncate it to the buffered polygon
@@ -454,7 +470,9 @@ def graph_from_polygon(
             custom_settings=custom_settings,
         )
         G_buffered = _create_graph(
-            response_jsons, retain_all=True, bidirectional=network_type in settings.bidirectional_network_types
+            response_jsons,
+            retain_all=True,
+            bidirectional=network_type in settings.bidirectional_network_types,
         )
         G_buffered = truncate.truncate_graph_polygon(
             G_buffered, polygon_buffered, retain_all=True, truncate_by_edge=truncate_by_edge
@@ -475,7 +493,9 @@ def graph_from_polygon(
         # count how many street segments in buffered graph emanate from each
         # intersection in un-buffered graph, to retain true counts for each
         # intersection, even if some of its neighbors are outside the polygon
-        G.graph['streets_per_node'] = utils_graph.count_streets_per_node(G_buffered, nodes=G.nodes())
+        G.graph['streets_per_node'] = utils_graph.count_streets_per_node(
+            G_buffered, nodes=G.nodes()
+        )
 
     else:
         # download a list of API responses for the polygon/multipolygon
@@ -492,11 +512,15 @@ def graph_from_polygon(
 
         # create the graph from the downloaded data
         G = _create_graph(
-            response_jsons, retain_all=True, bidirectional=network_type in settings.bidirectional_network_types
+            response_jsons,
+            retain_all=True,
+            bidirectional=network_type in settings.bidirectional_network_types,
         )
 
         # truncate the graph to the extent of the polygon
-        G = truncate.truncate_graph_polygon(G, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
+        G = truncate.truncate_graph_polygon(
+            G, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge
+        )
 
         # simplify the graph topology as the last step. don't truncate after
         # simplifying or you may have simplified out to an endpoint beyond the
@@ -583,7 +607,9 @@ def graph_from_place(
     if isinstance(query, str) or isinstance(query, dict):
         # if it is a string (place name) or dict (structured place query), then
         # it is a single place
-        gdf_place = boundaries.gdf_from_place(query, which_result=which_result, buffer_dist=buffer_dist)
+        gdf_place = boundaries.gdf_from_place(
+            query, which_result=which_result, buffer_dist=buffer_dist
+        )
     elif isinstance(query, list):
         # if it is a list, it contains multiple places to get
         gdf_place = boundaries.gdf_from_places(query, buffer_dist=buffer_dist)
@@ -738,7 +764,9 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
         raise EmptyOverpassResponse('There are no data elements in the response JSON')
 
     # create the graph as a MultiDiGraph and set its meta-attributes
-    G = nx.MultiDiGraph(created_date=utils.ts(), created_with=f'OSMnx {__version__}', crs=settings.default_crs)
+    G = nx.MultiDiGraph(
+        created_date=utils.ts(), created_with=f'OSMnx {__version__}', crs=settings.default_crs
+    )
 
     # extract nodes and paths from the downloaded osm data
     nodes = {}
@@ -970,7 +998,13 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
         elif name in ('node', 'way'):
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
             self._element.update({k: float(attrs[k]) for k in attrs.keys() if k in ('lat', 'lon')})
-            self._element.update({k: int(attrs[k]) for k in attrs.keys() if k in ('id', 'uid', 'version', 'changeset')})
+            self._element.update(
+                {
+                    k: int(attrs[k])
+                    for k in attrs.keys()
+                    if k in ('id', 'uid', 'version', 'changeset')
+                }
+            )
 
         elif name == 'tag':
             self._element['tags'].update({attrs['k']: attrs['v']})

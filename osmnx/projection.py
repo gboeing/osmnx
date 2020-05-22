@@ -197,7 +197,11 @@ def project_graph(G, to_crs=None):
     # when it exists) to the graph
     for u, v, key, attributes in edges:
         if 'geometry' in attributes:
-            mask = (gdf_edges_utm['u'] == u) & (gdf_edges_utm['v'] == v) & (gdf_edges_utm['key'] == key)
+            mask = (
+                (gdf_edges_utm['u'] == u)
+                & (gdf_edges_utm['v'] == v)
+                & (gdf_edges_utm['key'] == key)
+            )
             row = gdf_edges_utm[mask]
             attributes['geometry'] = row['geometry'].iloc[0]
 

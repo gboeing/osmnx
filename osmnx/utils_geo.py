@@ -35,7 +35,9 @@ def geocode(query):
     params = OrderedDict()
     params['format'] = 'json'
     params['limit'] = 1
-    params['dedupe'] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
+    params[
+        'dedupe'
+    ] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
     params['q'] = query
     response_json = downloader.nominatim_request(params=params, timeout=30)
 
@@ -277,7 +279,9 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size):
 
     # if geometry is a MultiPolygon OR a single Polygon whose area exceeds the
     # max size, get the convex hull around the geometry
-    if isinstance(geometry, MultiPolygon) or (isinstance(geometry, Polygon) and geometry.area > max_query_area_size):
+    if isinstance(geometry, MultiPolygon) or (
+        isinstance(geometry, Polygon) and geometry.area > max_query_area_size
+    ):
         geometry = geometry.convex_hull
 
     # if geometry area exceeds max size, subdivide it into smaller sub-polygons
@@ -481,13 +485,17 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
 
     if project_utm:
         west, south, east, north = buffer_proj.bounds
-        utils.log(f'Created bbox {dist} m from {point} and projected it: {north},{south},{east},{west}')
+        utils.log(
+            f'Created bbox {dist} m from {point} and projected it: {north},{south},{east},{west}'
+        )
     else:
         # if project_utm is False, project back to lat-lng then get the
         # bounding coordinates
         buffer_latlong, _ = projection.project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
         west, south, east, north = buffer_latlong.bounds
-        utils.log(f'Created bounding box {dist} meters in each direction from {point}: {north},{south},{east},{west}')
+        utils.log(
+            f'Created bounding box {dist} meters in each direction from {point}: {north},{south},{east},{west}'
+        )
 
     if return_crs:
         return north, south, east, west, crs_proj

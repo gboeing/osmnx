@@ -18,7 +18,16 @@ from . import utils_geo
 from . import utils_graph
 
 
-def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6, 6), margin=0.02, axis_off=True):
+def plot_shape(
+    gdf,
+    fc='#cbe0f0',
+    ec='#999999',
+    linewidth=1,
+    alpha=1,
+    figsize=(6, 6),
+    margin=0.02,
+    axis_off=True,
+):
     """
     Plot a GeoDataFrame of place boundary geometries.
 
@@ -60,10 +69,14 @@ def plot_shape(gdf, fc='#cbe0f0', ec='#999999', linewidth=1, alpha=1, figsize=(6
             if isinstance(geometry, Polygon):
                 geometry = MultiPolygon([geometry])
             for polygon in geometry:
-                patch = PolygonPatch(polygon, fc=facecolor, ec=edgecolor, linewidth=linewidth, alpha=alpha)
+                patch = PolygonPatch(
+                    polygon, fc=facecolor, ec=edgecolor, linewidth=linewidth, alpha=alpha
+                )
                 ax.add_patch(patch)
         else:
-            raise ValueError('All geometries in GeoDataFrame must be shapely Polygons or MultiPolygons')
+            raise ValueError(
+                'All geometries in GeoDataFrame must be shapely Polygons or MultiPolygons'
+            )
 
     # adjust the axis margins and limits around the image and make axes
     # equal-aspect
@@ -128,7 +141,9 @@ def get_colors(n, cmap='viridis', start=0.0, stop=1.0, alpha=1.0, return_hex=Fal
     return colors
 
 
-def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis', start=0, stop=1, na_color='none'):
+def get_node_colors_by_attr(
+    G, attr, num_bins=None, cmap='viridis', start=0, stop=1, na_color='none'
+):
     """
     Get a list of node colors by binning continuous attribute into quantiles.
 
@@ -242,7 +257,11 @@ def _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_
             ax.patch.set_alpha(0.0)
             fig.patch.set_alpha(0.0)
             fig.savefig(
-                path_filename, bbox_inches=0, format=file_format, facecolor=fig.get_facecolor(), transparent=True
+                path_filename,
+                bbox_inches=0,
+                format=file_format,
+                facecolor=fig.get_facecolor(),
+                transparent=True,
             )
         else:
             if axis_off:
@@ -405,13 +424,21 @@ def plot_graph(
             lines.append(line)
 
     # add the lines to the axis as a linecollection
-    lc = LineCollection(lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=2)
+    lc = LineCollection(
+        lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=2
+    )
     ax.add_collection(lc)
     utils.log('Drew the graph edges')
 
     # scatter plot the nodes
     ax.scatter(
-        node_Xs, node_Ys, s=node_size, c=node_color, alpha=node_alpha, edgecolor=node_edgecolor, zorder=node_zorder
+        node_Xs,
+        node_Ys,
+        s=node_size,
+        c=node_color,
+        alpha=node_alpha,
+        edgecolor=node_edgecolor,
+        zorder=node_zorder,
     )
 
     # set the extent of the figure
@@ -676,7 +703,9 @@ def plot_graph_route(
     lines = _node_list_to_coordinate_lines(G, route, use_geom)
 
     # add the lines to the axis as a linecollection
-    lc = LineCollection(lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3)
+    lc = LineCollection(
+        lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3
+    )
     ax.add_collection(lc)
 
     # save and show the figure as specified
@@ -865,7 +894,9 @@ def plot_graph_routes(
         lines.extend(_node_list_to_coordinate_lines(G, route, use_geom))
 
     # add the lines to the axis as a linecollection
-    lc = LineCollection(lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3)
+    lc = LineCollection(
+        lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3
+    )
     ax.add_collection(lc)
 
     # save and show the figure as specified
@@ -1010,7 +1041,9 @@ def plot_figure_ground(
         node_widths = {}
         for node in G_undir.nodes():
             # first, identify all the highway types of this node's incident edges
-            incident_edges_data = [G_undir.get_edge_data(node, neighbor) for neighbor in G_undir.neighbors(node)]
+            incident_edges_data = [
+                G_undir.get_edge_data(node, neighbor) for neighbor in G_undir.neighbors(node)
+            ]
             edge_types = [data[0]['highway'] for data in incident_edges_data]
             if len(edge_types) < 1:
                 # if node has no incident edges, make size zero
@@ -1144,7 +1177,9 @@ def plot_footprints(
         if isinstance(geometry, Polygon):
             patches.append(PolygonPatch(geometry))
         elif isinstance(geometry, MultiPolygon):
-            for subpolygon in geometry:  # if geometry is multipolygon, go through each constituent subpolygon
+            for (
+                subpolygon
+            ) in geometry:  # if geometry is multipolygon, go through each constituent subpolygon
                 patches.append(PolygonPatch(subpolygon))
     pc = PatchCollection(patches, facecolor=color, edgecolor=color, linewidth=0, alpha=1)
     ax.add_collection(pc)

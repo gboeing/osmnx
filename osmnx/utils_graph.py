@@ -258,7 +258,9 @@ def get_largest_component(G, strongly=False):
     return G
 
 
-def get_route_edge_attributes(G, route, attribute=None, minimize_key='length', retrieve_default=None):
+def get_route_edge_attributes(
+    G, route, attribute=None, minimize_key='length', retrieve_default=None
+):
     """
     Get a list of attribute values for each edge in a path.
 
@@ -359,7 +361,10 @@ def count_streets_per_node(G, nodes=None):
     # count how often each node appears in the list of flattened edge endpoints
     counts = Counter(edges_flat)
     streets_per_node = {node: counts[node] for node in nodes}
-    msg = 'Got the counts of undirected street segments incident to each node ' '(before removing peripheral edges)'
+    msg = (
+        'Got the counts of undirected street segments incident to each node '
+        '(before removing peripheral edges)'
+    )
     utils.log(msg)
     return streets_per_node
 
@@ -405,7 +410,9 @@ def _is_duplicate_edge(data, data_other):
     # if either edge's OSM ID contains multiple values (due to simplification), we want
     # to compare as sets so they are order-invariant, otherwise uv does not match vu
     osmid = set(data['osmid']) if isinstance(data['osmid'], list) else data['osmid']
-    osmid_other = set(data_other['osmid']) if isinstance(data_other['osmid'], list) else data_other['osmid']
+    osmid_other = (
+        set(data_other['osmid']) if isinstance(data_other['osmid'], list) else data_other['osmid']
+    )
 
     if osmid == osmid_other:
         # if they contain the same OSM ID or set of OSM IDs (due to simplification)
@@ -477,7 +484,9 @@ def _update_edge_keys(G):
     # of their origin, destination, and key. that is, edge uv will match edge vu
     # as a duplicate, but only if they have the same key
     edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
-    edges['uvk'] = edges.apply(lambda row: '_'.join(sorted([str(row['u']), str(row['v'])]) + [str(row['key'])]), axis=1)
+    edges['uvk'] = edges.apply(
+        lambda row: '_'.join(sorted([str(row['u']), str(row['v'])]) + [str(row['key'])]), axis=1
+    )
     edges['dupe'] = edges['uvk'].duplicated(keep=False)
     dupes = edges[edges['dupe']].dropna(subset=['geometry'])
 
@@ -502,7 +511,9 @@ def _update_edge_keys(G):
             if not _is_same_geometry(geom1, geom2):
                 # add edge uvk, but not edge vuk, otherwise we'll iterate both their keys
                 # and they'll still duplicate each other at the end of this process
-                different_streets.append((group['u'].iloc[0], group['v'].iloc[0], group['key'].iloc[0]))
+                different_streets.append(
+                    (group['u'].iloc[0], group['v'].iloc[0], group['key'].iloc[0])
+                )
 
     # for each unique different street, iterate its key + 1 so it's unique
     for u, v, k in set(different_streets):
@@ -611,7 +622,11 @@ def add_edge_lengths(G):
         )
     except KeyError:  # pragma: no cover
         missing_nodes = {
-            str(i) for u, v, _ in G.edges(keys=True) if not (G.nodes[u] or G.nodes[u]) for i in (u, v) if not G.nodes[i]
+            str(i)
+            for u, v, _ in G.edges(keys=True)
+            if not (G.nodes[u] or G.nodes[u])
+            for i in (u, v)
+            if not G.nodes[i]
         }
         missing_str = ', '.join(missing_nodes)
         raise KeyError(f'Edge(s) missing nodes {missing_str} possibly due to clipping issue')

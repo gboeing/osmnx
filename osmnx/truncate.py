@@ -122,7 +122,13 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
 
 
 def truncate_graph_polygon(
-    G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.05, min_num=3, buffer_amount=1e-9
+    G,
+    polygon,
+    retain_all=False,
+    truncate_by_edge=False,
+    quadrat_width=0.05,
+    min_num=3,
+    buffer_amount=1e-9,
 ):
     """
     Remove every node in graph that outside a shapely (Multi)Polygon.
@@ -165,7 +171,11 @@ def truncate_graph_polygon(
 
     # find all the nodes in the graph that lie outside the polygon
     points_within_geometry = utils_geo._intersect_index_quadrats(
-        gdf_nodes, polygon, quadrat_width=quadrat_width, min_num=min_num, buffer_amount=buffer_amount
+        gdf_nodes,
+        polygon,
+        quadrat_width=quadrat_width,
+        min_num=min_num,
+        buffer_amount=buffer_amount,
     )
     nodes_outside_polygon = gdf_nodes[~gdf_nodes.index.isin(points_within_geometry.index)]
 

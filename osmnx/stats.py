@@ -104,7 +104,9 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     # count number of intersections in graph, as nodes with >1 street emanating
     # from them
     node_ids = set(G.nodes())
-    intersection_count = len([True for node, count in streets_per_node.items() if (count > 1) and (node in node_ids)])
+    intersection_count = len(
+        [True for node, count in streets_per_node.items() if (count > 1) and (node in node_ids)]
+    )
 
     # calculate the average number of streets (unidirected edges) incident to
     # each node
@@ -113,7 +115,8 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     # create a dict where key = number of streets (unidirected edges) incident
     # to each node, and value = how many nodes are of this number in the graph
     streets_per_node_counts = {
-        num: list(streets_per_node.values()).count(num) for num in range(max(streets_per_node.values()) + 1)
+        num: list(streets_per_node.values()).count(num)
+        for num in range(max(streets_per_node.values()) + 1)
     }
 
     # degree proportions: dict where key = each degree and value = what
@@ -175,12 +178,18 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     # destination coordinates as a dataframe, then calculate the straight-line
     # distance
     coords = np.array(
-        [[G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in G.edges(keys=True)]
+        [
+            [G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']]
+            for u, v, k in G.edges(keys=True)
+        ]
     )
     df_coords = pd.DataFrame(coords, columns=['u_y', 'u_x', 'v_y', 'v_x'])
     if circuity_dist == 'gc':
         gc_distances = distance.great_circle_vec(
-            lat1=df_coords['u_y'], lng1=df_coords['u_x'], lat2=df_coords['v_y'], lng2=df_coords['v_x']
+            lat1=df_coords['u_y'],
+            lng1=df_coords['u_x'],
+            lat2=df_coords['v_y'],
+            lng2=df_coords['v_x'],
         )
     elif circuity_dist == 'euclidean':
         gc_distances = distance.euclidean_dist_vec(
@@ -405,7 +414,9 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
         # shortest path distances from u to all other nodes
         closeness_centrality = nx.closeness_centrality(G, distance='length')
         stats['closeness_centrality'] = closeness_centrality
-        stats['closeness_centrality_avg'] = sum(closeness_centrality.values()) / len(closeness_centrality)
+        stats['closeness_centrality_avg'] = sum(closeness_centrality.values()) / len(
+            closeness_centrality
+        )
         utils.log('Calculated closeness centrality')
 
     # if True, calculate node betweenness centrality
@@ -415,7 +426,9 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
         # networkx 2.4+ implementation cannot run on Multi(Di)Graphs, so use DiGraph
         betweenness_centrality = nx.betweenness_centrality(G_dir, weight='length')
         stats['betweenness_centrality'] = betweenness_centrality
-        stats['betweenness_centrality_avg'] = sum(betweenness_centrality.values()) / len(betweenness_centrality)
+        stats['betweenness_centrality_avg'] = sum(betweenness_centrality.values()) / len(
+            betweenness_centrality
+        )
         utils.log('Calculated betweenness centrality')
 
     utils.log('Calculated extended stats')

@@ -52,7 +52,9 @@ def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attr
         popup = folium.Popup(html=popup_text)
 
     # create a folium polyline with attributes
-    pl = folium.PolyLine(locations=locations, popup=popup, color=edge_color, weight=edge_width, opacity=edge_opacity)
+    pl = folium.PolyLine(
+        locations=locations, popup=popup, color=edge_color, weight=edge_width, opacity=edge_opacity
+    )
     return pl
 
 
@@ -185,7 +187,9 @@ def plot_route_folium(
     # create gdf of the route edges
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
     route_nodes = list(zip(route[:-1], route[1:]))
-    index = [gdf_edges[(gdf_edges['u'] == u) & (gdf_edges['v'] == v)].index[0] for u, v in route_nodes]
+    index = [
+        gdf_edges[(gdf_edges['u'] == u) & (gdf_edges['v'] == v)].index[0] for u, v in route_nodes
+    ]
     gdf_route_edges = gdf_edges.loc[index]
 
     # get route centroid
