@@ -470,7 +470,7 @@ def load_graphml(filepath, node_type=int):
                 # single-value string (and leave as string if error)
                 try:
                     data[attr] = ast.literal_eval(data[attr])
-                except:
+                except Exception:
                     pass
 
         # osmid might have a single value or a list

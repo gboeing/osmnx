@@ -16,7 +16,7 @@ from . import utils
 
 
 def add_node_elevations(G, api_key, max_locations_per_batch=350,
-                        pause_duration=0.02): # pragma: no cover
+                        pause_duration=0.02):  # pragma: no cover
     """
     Get the elevation (meters) of each node in the network and add it to the
     node as an attribute.
@@ -44,7 +44,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
     # round coorindates to 5 decimal places (approx 1 meter) to be able to fit
     # in more locations per API call
-    node_points = pd.Series({node:f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)})
+    node_points = pd.Series({node: f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)})
     n_calls = math.ceil(len(node_points) / max_locations_per_batch)
     utils.log(f'Requesting node elevations from the API in {n_calls} calls')
 
@@ -52,7 +52,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
     # API format is locations=lat,lng|lat,lng|lat,lng|lat,lng...
     results = []
     for i in range(0, len(node_points), max_locations_per_batch):
-        chunk = node_points.iloc[i : i + max_locations_per_batch]
+        chunk = node_points.iloc[i: i + max_locations_per_batch]
         locations = '|'.join(chunk)
         url = url_template.format(locations, api_key)
 
@@ -84,7 +84,7 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
     # add elevation as an attribute to the nodes
     df = pd.DataFrame(node_points, columns=['node_points'])
     df['elevation'] = [result['elevation'] for result in results]
-    df['elevation'] = df['elevation'].round(3) # round to millimeter
+    df['elevation'] = df['elevation'].round(3)  # round to millimeter
     nx.set_node_attributes(G, name='elevation', values=df['elevation'].to_dict())
     utils.log('Added elevation data to all nodes.')
 

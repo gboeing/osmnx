@@ -53,12 +53,12 @@ def _is_endpoint(G, node, strict=True):
         return True
 
     # rule 2
-    elif G.out_degree(node)==0 or G.in_degree(node)==0:
+    elif G.out_degree(node) == 0 or G.in_degree(node) == 0:
         # if node has no incoming edges or no outgoing edges, it is an endpoint
         return True
 
     # rule 3
-    elif not (n==2 and (d==2 or d==4)):
+    elif not (n == 2 and (d == 2 or d == 4)):
         # else, if it does NOT have 2 neighbors AND either 2 or 4 directed
         # edges, it is an endpoint. either it has 1 or 3+ neighbors, in which
         # case it is a dead-end or an intersection of multiple streets or it has
@@ -173,7 +173,7 @@ def _get_paths_to_simplify(G, strict=True):
                     path = _build_path(G, successor, endpoints, path=[node, successor])
                     paths_to_simplify.append(path)
                 except RecursionError:
-                    utils.log('Recursion error: exceeded max depth, moving on to next endpoint successor', level=lg.WARNING)
+                    utils.log('Exceeded max depth, moving on to next endpoint successor', level=lg.WARNING)
                     # recursion errors occur if some connected component is a
                     # self-contained ring in which all nodes are not end points.
                     # could also occur in extremely long street segments (eg, in
@@ -281,9 +281,9 @@ def simplify_graph(G, strict=True):
 
         # add the nodes and edges to their lists for processing at the end
         all_nodes_to_remove.extend(path[1:-1])
-        all_edges_to_add.append({'origin':path[0],
-                                 'destination':path[-1],
-                                 'attr_dict':edge_attributes})
+        all_edges_to_add.append({'origin': path[0],
+                                 'destination': path[-1],
+                                 'attr_dict': edge_attributes})
 
     # for each edge to add in the list we assembled, create a new edge between
     # the origin and destination
@@ -295,7 +295,7 @@ def simplify_graph(G, strict=True):
 
     G.graph['simplified'] = True
 
-    msg = f'Simplified graph from {initial_node_count} to {len(G)} nodes and from {initial_edge_count} to {len(G.edges())} edges'
+    msg = f'Simplified graph: {initial_node_count} to {len(G)} nodes, {initial_edge_count} to {len(G.edges())} edges'
     utils.log(msg)
     return G
 
@@ -469,7 +469,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10,
 
     # then spatial join to give each node the label of cluster it's within
     gdf = gpd.sjoin(node_points, node_clusters, how='left', op='within')
-    gdf = gdf.drop(columns='geometry').rename(columns={'index_right':'cluster'})
+    gdf = gdf.drop(columns='geometry').rename(columns={'index_right': 'cluster'})
 
 
     # STEP 3
@@ -523,7 +523,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10,
     # STEP 6
     # create a new edge for each edge in original graph
     # but from cluster to cluster
-    for u, v, k, data  in G.edges(keys=True, data=True):
+    for u, v, k, data in G.edges(keys=True, data=True):
         u2 = gdf.loc[u, 'cluster']
         v2 = gdf.loc[v, 'cluster']
 
@@ -532,7 +532,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10,
         if (u2 != v2) or (u == v):
             data['u_original'] = u
             data['v_original'] = v
-            if not 'geometry' in data:
+            if 'geometry' not in data:
                 data['geometry'] = gdf_edges.loc[(u, v, k), 'geometry']
             H.add_edge(u2, v2, **data)
 
@@ -555,7 +555,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10,
 
             # for each edge incident to this new merged node, update
             # its geometry to extend to/from the new node's point coords
-            mask = (new_edges['u']==cluster_label) | (new_edges['v']==cluster_label)
+            mask = (new_edges['u'] == cluster_label) | (new_edges['v'] == cluster_label)
             for _, (u, v, k) in new_edges.loc[mask, ['u', 'v', 'key']].iterrows():
                 old_coords = list(H.edges[u, v, k]['geometry'].coords)
                 new_coords = xy + old_coords if cluster_label == u else old_coords + xy

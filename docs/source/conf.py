@@ -25,28 +25,27 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # mock import these packages because readthedocs doesn't have them installed
 autodoc_mock_imports = [
-  'dateutil',
-  'descartes',
-  'geopandas',
-  'matplotlib',
-  'matplotlib.cm',
-  'matplotlib.collections',
-  'matplotlib.pyplot',
-  'networkx',
-  'numpy',
-  'pandas',
-  'pyproj',
-  'requests',
-  'rtree',
-  'rtree.index',
-  'scipy',
-  'scipy.spatial',
-  'shapely',
-  'shapely.geometry',
-  'shapely.ops',
-  'sklearn',
-  'sklearn.neighbors'
-]
+    'dateutil',
+    'descartes',
+    'geopandas',
+    'matplotlib',
+    'matplotlib.cm',
+    'matplotlib.collections',
+    'matplotlib.pyplot',
+    'networkx',
+    'numpy',
+    'pandas',
+    'pyproj',
+    'requests',
+    'rtree',
+    'rtree.index',
+    'scipy',
+    'scipy.spatial',
+    'shapely',
+    'shapely.geometry',
+    'shapely.ops',
+    'sklearn',
+    'sklearn.neighbors']
 
 # -- General configuration ------------------------------------------------
 

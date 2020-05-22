@@ -177,7 +177,10 @@ def project_graph(G, to_crs=None):
     edges_with_geom = []
     for u, v, key, data in G_proj.edges(keys=True, data=True):
         if 'geometry' in data:
-            edges_with_geom.append({'u':u, 'v':v, 'key':key, 'geometry':data['geometry']})
+            edges_with_geom.append({'u': u,
+                                    'v': v,
+                                    'key': key,
+                                    'geometry': data['geometry']})
 
     # create an edges GeoDataFrame and project to UTM, if there were any edges
     # with a geometry attribute. geom attr only exists if graph has been
@@ -208,7 +211,8 @@ def project_graph(G, to_crs=None):
     # when it exists) to the graph
     for u, v, key, attributes in edges:
         if 'geometry' in attributes:
-            row = gdf_edges_utm[(gdf_edges_utm['u']==u) & (gdf_edges_utm['v']==v) & (gdf_edges_utm['key']==key)]
+            mask = (gdf_edges_utm['u'] == u) & (gdf_edges_utm['v'] == v) & (gdf_edges_utm['key'] == key)
+            row = gdf_edges_utm[mask]
             attributes['geometry'] = row['geometry'].iloc[0]
 
         # attributes dict contains key, so we don't need to explicitly pass it here

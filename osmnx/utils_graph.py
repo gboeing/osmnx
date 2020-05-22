@@ -67,7 +67,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
             # for each edge, add key and all attributes in data dict to the
             # edge_details
-            edge_details = {'u':u, 'v':v, 'key':key}
+            edge_details = {'u': u, 'v': v, 'key': key}
             for attr_key in data:
                 edge_details[attr_key] = data[attr_key]
 
@@ -119,7 +119,7 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
     attributes = gdf_nodes.to_dict()
     for attribute_name in gdf_nodes.columns:
         # only add this attribute to nodes which have a non-null value for it
-        attribute_values = {k:v for k, v in attributes[attribute_name].items() if pd.notnull(v)}
+        attribute_values = {k: v for k, v in attributes[attribute_name].items() if pd.notnull(v)}
         nx.set_node_attributes(G, name=attribute_name, values=attribute_values)
 
     # add the edges and attributes that are not u, v, key (as they're added
@@ -160,13 +160,13 @@ def induce_subgraph(G, node_subset):
     # copy edges to new graph, including parallel edges
     if H.is_multigraph:
         H.add_edges_from((n, nbr, key, d)
-            for n, nbrs in G.adj.items() if n in node_subset
-            for nbr, keydict in nbrs.items() if nbr in node_subset
-            for key, d in keydict.items())
+                         for n, nbrs in G.adj.items() if n in node_subset
+                         for nbr, keydict in nbrs.items() if nbr in node_subset
+                         for key, d in keydict.items())
     else:
         H.add_edges_from((n, nbr, d)
-            for n, nbrs in G.adj.items() if n in node_subset
-            for nbr, d in nbrs.items() if nbr in node_subset)
+                         for n, nbrs in G.adj.items() if n in node_subset
+                         for nbr, d in nbrs.items() if nbr in node_subset)
 
     # update graph attribute dict, and return graph
     H.graph.update(G.graph)
@@ -305,7 +305,7 @@ def count_streets_per_node(G, nodes=None):
     all_unique_edges = set(all_edges)
 
     # get all edges (including parallel edges) that are not self-loops
-    non_self_loop_edges = [e for e in all_edges if not e[0]==e[1]]
+    non_self_loop_edges = [e for e in all_edges if not e[0] == e[1]]
 
     # get a single copy of each self-loop edge (ie, if it's bi-directional, we
     # ignore the parallel edge going the reverse direction and keep only one
@@ -323,7 +323,7 @@ def count_streets_per_node(G, nodes=None):
 
     # count how often each node appears in the list of flattened edge endpoints
     counts = Counter(edges_flat)
-    streets_per_node = {node:counts[node] for node in nodes}
+    streets_per_node = {node: counts[node] for node in nodes}
     msg = ('Got the counts of undirected street segments incident to each node '
            '(before removing peripheral edges)')
     utils.log(msg)
@@ -448,7 +448,7 @@ def _update_edge_keys(G):
     edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
     edges['uvk'] = edges.apply(lambda row: '_'.join(sorted([str(row['u']), str(row['v'])]) + [str(row['key'])]), axis=1)
     edges['dupe'] = edges['uvk'].duplicated(keep=False)
-    dupes = edges[edges['dupe']==True].dropna(subset=['geometry'])
+    dupes = edges[edges['dupe']].dropna(subset=['geometry'])
 
     different_streets = []
     groups = dupes[['geometry', 'uvk', 'u', 'v', 'key', 'dupe']].groupby('uvk')
@@ -458,9 +458,9 @@ def _update_edge_keys(G):
 
         # if there are more than 2 edges here, make sure to compare all
         if len(group['geometry']) > 2:
-            l = group['geometry'].tolist()
-            l.append(l[0])
-            geom_pairs = list(zip(l[:-1], l[1:]))
+            li = group['geometry'].tolist()
+            li.append(li[0])
+            geom_pairs = list(zip(li[:-1], li[1:]))
         # otherwise, just compare the first edge to the second edge
         else:
             geom_pairs = [(group['geometry'].iloc[0], group['geometry'].iloc[1])]
@@ -476,8 +476,8 @@ def _update_edge_keys(G):
     # for each unique different street, iterate its key + 1 so it's unique
     for u, v, k in set(different_streets):
         # filter out key if it appears in data dict as we'll pass it explicitly
-        attributes = {k:v for k, v in G[u][v][k].items() if k != 'key'}
-        G.add_edge(u, v, key=k+1, **attributes)
+        attributes = {k: v for k, v in G[u][v][k].items() if k != 'key'}
+        G.add_edge(u, v, key=k + 1, **attributes)
         G.remove_edge(u, v, key=k)
 
     return G
@@ -570,20 +570,27 @@ def add_edge_lengths(G):
     # first load all the edges' origin and destination coordinates as a
     # dataframe indexed by u, v, key
     try:
-        coords = np.array([[u, v, k, G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']] for u, v, k in G.edges(keys=True)])
-    except KeyError: # pragma: no cover
-        missing_nodes = {str(i) for u, v, _ in G.edges(keys=True) if not(G.nodes[u] or G.nodes[u]) for i in (u, v) if not G.nodes[i]}
-        missing_nodes_str = ', '.join(missing_nodes)
-        raise TypeError(f'Edge(s) with missing nodes {missing_nodes_str} possibly due to a clipping issue')
+        coords = np.array([(u, v, k,
+                            G.nodes[u]['y'],
+                            G.nodes[u]['x'],
+                            G.nodes[v]['y'],
+                            G.nodes[v]['x']) for u, v, k in G.edges(keys=True)])
+    except KeyError:  # pragma: no cover
+        missing_nodes = {str(i) for u, v, _ in G.edges(keys=True)
+                         if not(G.nodes[u] or G.nodes[u])
+                         for i in (u, v) if not G.nodes[i]}
+        missing_str = ', '.join(missing_nodes)
+        raise KeyError(f'Edge(s) missing nodes {missing_str} possibly due to clipping issue')
+
     df_coords = pd.DataFrame(coords, columns=['u', 'v', 'k', 'u_y', 'u_x', 'v_y', 'v_x'])
     df_coords[['u', 'v', 'k']] = df_coords[['u', 'v', 'k']].astype(np.int64)
     df_coords = df_coords.set_index(['u', 'v', 'k'])
 
     # then calculate the great circle distance with the vectorized function
     gc_distances = distance.great_circle_vec(lat1=df_coords['u_y'],
-                                    lng1=df_coords['u_x'],
-                                    lat2=df_coords['v_y'],
-                                    lng2=df_coords['v_x'])
+                                             lng1=df_coords['u_x'],
+                                             lat2=df_coords['v_y'],
+                                             lng2=df_coords['v_x'])
 
     # fill nulls with zeros and round to the millimeter
     gc_distances = gc_distances.fillna(value=0).round(3)

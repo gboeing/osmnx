@@ -1,8 +1,8 @@
-################################################################################
+##############################################################################
 # test_osmnx.py
 # License: MIT, see full license in LICENSE.txt
 # Web: https://github.com/gboeing/osmnx
-################################################################################
+##############################################################################
 
 # use agg backend so you don't need a display on travis-ci
 import matplotlib as mpl
@@ -44,8 +44,12 @@ ox.config(log_console=True,
 location_point = (37.791427, -122.410018)
 address = '600 Montgomery St, San Francisco, California, USA'
 place1 = 'Piedmont, California, USA'
-place2 = {'neighborhood':'Financial District', 'city':'Los Angeles', 'state':'California'}
-polygon = wkt.loads('POLYGON ((-122.262 37.869, -122.255 37.869, -122.255 37.874, -122.262 37.874, -122.262 37.869))')
+place2 = {'neighborhood': 'Financial District',
+          'city': 'Los Angeles',
+          'state': 'California'}
+p = ('POLYGON ((-122.262 37.869, -122.255 37.869, -122.255 37.874,'
+     '-122.262 37.874, -122.262 37.869))')
+polygon = wkt.loads(p)
 
 
 def test_imports():
@@ -114,15 +118,23 @@ def test_geometry_coords_rounding():
     shape1 = LineString([(1.123456, 2.123456), (3.123456, 4.123456)])
     shape2 = ox.utils_geo.round_shape_coords(shape1, precision)
 
-    shape1 = MultiLineString([[(1.123456, 2.123456), (3.123456, 4.123456)],
-                              [(11.123456, 12.123456), (13.123456, 14.123456)]])
+    shape1 = MultiLineString([[(1.123456, 2.123456),
+                               (3.123456, 4.123456)],
+                              [(11.123456, 12.123456),
+                               (13.123456, 14.123456)]])
     shape2 = ox.utils_geo.round_shape_coords(shape1, precision)
 
-    shape1 = Polygon([(1.123456, 2.123456), (3.123456, 4.123456), (6.123456, 5.123456)])
+    shape1 = Polygon([(1.123456, 2.123456),
+                      (3.123456, 4.123456),
+                      (6.123456, 5.123456)])
     shape2 = ox.utils_geo.round_shape_coords(shape1, precision)
 
-    shape1 = MultiPolygon([Polygon([(1.123456, 2.123456), (3.123456, 4.123456), (6.123456, 5.123456)]),
-                           Polygon([(16.123456, 15.123456), (13.123456, 14.123456), (12.123456, 11.123456)])])
+    shape1 = MultiPolygon([Polygon([(1.123456, 2.123456),
+                                    (3.123456, 4.123456),
+                                    (6.123456, 5.123456)]),
+                           Polygon([(16.123456, 15.123456),
+                                    (13.123456, 14.123456),
+                                    (12.123456, 11.123456)])])
     shape2 = ox.utils_geo.round_shape_coords(shape1, precision)
 
 
@@ -163,11 +175,12 @@ def test_graph_from_file():
 def test_routing_folium():
 
     # calculate shortest path and plot as static image and leaflet web map
-    G = ox.graph_from_address(address=address, dist=500, dist_type='bbox', network_type='bike')
+    G = ox.graph_from_address(address=address, dist=500, dist_type='bbox',
+                              network_type='bike')
 
     # give each node a random elevation then calculate edge grades
-    rando = np.random.random(size=len(G.nodes()))
-    elevs = {n:e for n, e in zip(G.nodes(), rando)}
+    randm = np.random.random(size=len(G.nodes()))
+    elevs = {n: e for n, e in zip(G.nodes(), randm)}
     nx.set_node_attributes(G, name='elevation', values=elevs)
     G = ox.add_edge_grades(G, add_absolute=True)
 
@@ -179,9 +192,12 @@ def test_routing_folium():
 
     attributes = ox.utils_graph.get_route_edge_attributes(G, route, 'length')
 
-    fig, ax = ox.plot_graph_route(G, route, save=True, filename='route', file_format='png')
-    fig, ax = ox.plot_graph_route(G, route, origin_point=orig_pt, destination_point=dest_pt,
-                                  save=True, filename='route', file_format='png')
+    fig, ax = ox.plot_graph_route(G, route, save=True, filename='route',
+                                  file_format='png')
+
+    fig, ax = ox.plot_graph_route(G, route, origin_point=orig_pt,
+                                  destination_point=dest_pt, save=True,
+                                  filename='route', file_format='png')
 
     # test multiple routes
     fig, ax = ox.plot_graph_routes(G, [route, route])
@@ -201,16 +217,24 @@ def test_plots():
 
     # plot and save to disk
     fig, ax = ox.plot_graph(G, save=True, file_format='png')
-    fig, ax = ox.plot_graph(G, show=False, save=True, close=True, file_format='svg')
-    fig, ax = ox.plot_graph(ox.project_graph(G), fig_height=5, fig_width=5, margin=0.05, axis_off=False, bgcolor='y',
-                            file_format='png', filename='x', dpi=180, annotate=True, node_color='k', node_size=5,
-                            node_alpha=0.1, node_edgecolor='b', node_zorder=5, edge_color='r', edge_linewidth=2,
-                            edge_alpha=0.1, use_geom=False, show=False, save=True, close=True)
+
+    fig, ax = ox.plot_graph(G, show=False, save=True, close=True,
+                            file_format='svg')
+
+    fig, ax = ox.plot_graph(ox.project_graph(G), fig_height=5, fig_width=5,
+                            margin=0.05, axis_off=False, bgcolor='y',
+                            file_format='png', filename='x', dpi=180,
+                            annotate=True, node_color='k', node_size=5,
+                            node_alpha=0.1, node_edgecolor='b', node_zorder=5,
+                            edge_color='r', edge_linewidth=2, edge_alpha=0.1,
+                            use_geom=False, show=False, save=True, close=True)
 
     # figure-ground plots
     fig, ax = ox.plot_figure_ground(G=G, file_format='png')
-    fig, ax = ox.plot_figure_ground(point=location_point, dist=500, network_type='drive', file_format='png')
-    fig, ax = ox.plot_figure_ground(address=address, dist=500, network_type='bike', file_format='png')
+    fig, ax = ox.plot_figure_ground(point=location_point, dist=500,
+                                    network_type='drive', file_format='png')
+    fig, ax = ox.plot_figure_ground(address=address, dist=500,
+                                    network_type='bike', file_format='png')
 
 
 
@@ -220,7 +244,9 @@ def test_find_nearest():
     G = ox.graph_from_point(location_point, dist=500, network_type='drive')
 
     # convert graph to node/edge GeoDataFrames and back again
-    gdf_nodes, gdf_edges = ox.graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True)
+    gdf_nodes, gdf_edges = ox.graph_to_gdfs(G, nodes=True, edges=True,
+                                            node_geometry=True,
+                                            fill_edge_geometry=True)
     assert len(gdf_nodes) == len(G.nodes())
     assert len(gdf_edges) == len(G.edges(keys=True))
     G = ox.gdfs_to_graph(gdf_nodes, gdf_edges)
@@ -228,7 +254,8 @@ def test_find_nearest():
     assert len(gdf_edges) == len(G.edges(keys=True))
 
     # get nearest node
-    nn, d = ox.get_nearest_node(G, location_point, method='euclidean', return_dist=True)
+    nn, d = ox.get_nearest_node(G, location_point, method='euclidean',
+                                return_dist=True)
 
     # get nearest nodes: haversine, kdtree, balltree
     X = gdf_nodes['x'].head()
@@ -238,7 +265,8 @@ def test_find_nearest():
     nn3 = ox.get_nearest_nodes(G, X, Y, method='balltree')
 
     # get nearest edge
-    u, v, k, g, d = ox.get_nearest_edge(G, location_point, return_geom=True, return_dist=True)
+    u, v, k, g, d = ox.get_nearest_edge(G, location_point, return_geom=True,
+                                        return_dist=True)
 
     # get nearest edges: haversine, kdtree, balltree
     ne1 = ox.get_nearest_edges(G, X, Y)
@@ -249,21 +277,22 @@ def test_find_nearest():
 
 def test_pois():
 
-    tags = {'amenity' : True,
-            'landuse' : ['retail', 'commercial'],
-            'highway' : 'bus_stop'}
+    tags = {'amenity': True,
+            'landuse': ['retail', 'commercial'],
+            'highway': 'bus_stop'}
 
     gdf = ox.pois_from_place(place1, tags=tags)
 
-    gdf = ox.pois_from_polygon(polygon, tags={'amenity':'library'})
+    gdf = ox.pois_from_polygon(polygon, tags={'amenity': 'library'})
 
+    cs = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
     gdf = ox.pois_from_address(address,
-                               tags={'amenity' : 'school'},
-                               custom_settings='[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]')
+                               tags={'amenity': 'school'},
+                               custom_settings=cs)
 
     gdf = ox.pois_from_point(location_point,
                              dist=500,
-                             tags={'amenity' : 'restaurant'},
+                             tags={'amenity': 'restaurant'},
                              timeout=200,
                              memory=100000)
 
@@ -276,11 +305,13 @@ def test_api_endpoints():
 
     # Bad Address - should return an empty response
     params['q'] = 'AAAAAAAAAAA'
-    response_json = ox.downloader.nominatim_request(params=params, request_type='search')
+    response_json = ox.downloader.nominatim_request(params=params,
+                                                    request_type='search')
 
     # Good Address - should return a valid response with a valid osm_id
     params['q'] = 'Newcastle A186 Westgate Rd'
-    response_json = ox.downloader.nominatim_request(params=params, request_type='search')
+    response_json = ox.downloader.nominatim_request(params=params,
+                                                    request_type='search')
 
     # Lookup
     params = OrderedDict()
@@ -288,27 +319,33 @@ def test_api_endpoints():
     params['address_details'] = 0
     params['osm_ids'] = 'W68876073'
 
-    response_json = ox.downloader.nominatim_request(params=params, request_type='lookup')
+    response_json = ox.downloader.nominatim_request(params=params,
+                                                    request_type='lookup')
 
     # Invalid nominatim query type
     with pytest.raises(ValueError):
-        response_json = ox.downloader.nominatim_request(params=params, request_type='xyz')
+        response_json = ox.downloader.nominatim_request(params=params,
+                                                        request_type='xyz')
 
     default_key = ox.settings.nominatim_key
     default_nominatim_endpoint = ox.settings.nominatim_endpoint
     default_overpass_endpoint = ox.settings.overpass_endpoint
 
     # Searching on public nominatim should work even if a key was provided
-    ox.settings.nominatim_key='NOT_A_KEY'
-    response_json = ox.downloader.nominatim_request(params=params, request_type='search')
+    ox.settings.nominatim_key = 'NOT_A_KEY'
+    response_json = ox.downloader.nominatim_request(params=params,
+                                                    request_type='search')
 
-    # Test changing the endpoint. It should fail because we didn't provide a valid key
-    ox.settings.nominatim_endpoint='http://open.mapquestapi.com/nominatim/v1/'
+    # Test changing the endpoint.
+    # It should fail because we didn't provide a valid key
+    ox.settings.nominatim_endpoint = 'http://open.mapquestapi.com/nominatim/v1/'
     with pytest.raises(Exception):
-        response_json = ox.downloader.nominatim_request(params=params, request_type='search')
+        response_json = ox.downloader.nominatim_request(params=params,
+                                                        request_type='search')
 
-    # Test changing the endpoint. This should fail because we didn't provide a valid endpoint
-    ox.settings.overpass_endpoint='http://NOT_A_VALID_ENDPOINT/api/'
+    # Test changing the endpoint.
+    # This should fail because we didn't provide a valid endpoint
+    ox.settings.overpass_endpoint = 'http://NOT_A_VALID_ENDPOINT/api/'
     with pytest.raises(Exception):
         G = ox.graph_from_place(place1, network_type='drive')
 
@@ -346,9 +383,8 @@ def test_network_saving_loading():
     ox.save_graph_osm([nodes, edges])
 
     # test ordered nodes from way
-    df = pd.DataFrame(
-        {'u':[54, 2, 5, 3, 10, 19, 20],
-        'v': [76, 3, 8, 10, 5, 20, 15]})
+    df = pd.DataFrame({'u': [54, 2, 5, 3, 10, 19, 20],
+                       'v': [76, 3, 8, 10, 5, 20, 15]})
     ordered_nodes = ox.save_load._get_unique_nodes_ordered_from_way(df)
     assert ordered_nodes == [2, 3, 10, 5, 8]
 
@@ -361,10 +397,12 @@ def test_get_network_methods():
     # graph from bounding box
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
     G = ox.graph_from_bbox(north, south, east, west, network_type='drive')
-    G = ox.graph_from_bbox(north, south, east, west, network_type='drive_service', truncate_by_edge=True)
+    G = ox.graph_from_bbox(north, south, east, west, network_type='drive_service',
+                           truncate_by_edge=True)
 
     # graph from address
-    G = ox.graph_from_address(address=address, dist=500, dist_type='bbox', network_type='bike')
+    G = ox.graph_from_address(address=address, dist=500, dist_type='bbox',
+                              network_type='bike')
 
     # graph from list of places
     G = ox.graph_from_place([place1], network_type='drive', clean_periphery=False)
@@ -374,10 +412,10 @@ def test_get_network_methods():
 
     # test custom query filter
     cf = ('["area"!~"yes"]'
-             '["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
-             '["foot"!~"no"]'
-             '["service"!~"private"]'
-             '["access"!~"private"]')
+          '["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
+          '["foot"!~"no"]'
+          '["service"!~"private"]'
+          '["access"!~"private"]')
     G = ox.graph_from_point(location_point, dist=500, custom_filter=cf,
                             dist_type='bbox', network_type='all')
 
@@ -397,13 +435,16 @@ def test_stats():
     # calculate stats
     stats = ox.basic_stats(G)
     stats = ox.basic_stats(G, area=1000)
-    stats = ox.basic_stats(G_proj, area=1000, clean_intersects=True, tolerance=15, circuity_dist='euclidean')
+    stats = ox.basic_stats(G_proj, area=1000, clean_intersects=True,
+                           tolerance=15, circuity_dist='euclidean')
 
     # calculate extended stats
-    stats = ox.extended_stats(G, connectivity=True, anc=False, ecc=True, bc=True, cc=True)
+    stats = ox.extended_stats(G, connectivity=True, anc=False, ecc=True,
+                              bc=True, cc=True)
 
     # test cleaning and rebuilding graph
-    G_clean = ox.clean_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
+    G_clean = ox.clean_intersections(G_proj, tolerance=10, rebuild_graph=True,
+                                     dead_ends=True)
 
 
 def test_footprints():
@@ -415,8 +456,9 @@ def test_footprints():
     gdf = ox.footprints_from_address(address, dist=300)
     fig, ax = ox.plot_footprints(gdf)
 
-    # new_river_head.json contains a relation with 1 outer closed way and 2 inner closed ways
-    # inner way 665593284 is directly tagged as a building and should create its own polygon
+    # new_river_head.json contains a relation with 1 outer closed way and 2
+    # inner closed ways inner way 665593284 is directly tagged as a building
+    # and should create its own polygon
     with open('tests/input_data/new_river_head.json', 'r') as read_file:
         new_river_head_responses = [json.load(read_file)]
     new_river_head_gdf = ox.footprints._create_footprints_gdf(responses=new_river_head_responses)
@@ -424,23 +466,28 @@ def test_footprints():
     assert new_river_head_gdf.loc[9246394]['geometry'].type == 'Polygon'
     assert len(new_river_head_gdf.loc[9246394, 'geometry'].interiors) == 2
 
-    # clapham_common.json contains a relation with 5 outer rings and 1 inner ring. One of the outer rings is a chain of open ways
+    # clapham_common.json contains a relation with 5 outer rings and 1
+    # inner ring. One of the outer rings is a chain of open ways
     with open('tests/input_data/clapham_common.json', 'r') as read_file:
         clapham_common_responses = [json.load(read_file)]
-    clapham_common_gdf = ox.footprints._create_footprints_gdf(footprint_type='leisure', responses=clapham_common_responses)
+    clapham_common_gdf = ox.footprints._create_footprints_gdf(footprint_type='leisure',
+                                                              responses=clapham_common_responses)
     assert clapham_common_gdf.loc[1290065]['geometry'].type == 'MultiPolygon'
 
-    # relation_no_outer.json contains a relation with 0 outer rings and 1 inner ring
+    # relation_no_outer.json contains a relation with 0 outer rings and 1
+    # inner ring
     with open('tests/input_data/relation_no_outer.json', 'r') as read_file:
         relation_no_outer_responses = [json.load(read_file)]
     ox.footprints._create_footprints_gdf(responses=relation_no_outer_responses)
 
-    # inner_chain.json contains a relation with 1 outer rings and several inner rings one of which is a chain of open ways
+    # inner_chain.json contains a relation with 1 outer rings and several
+    # inner rings one of which is a chain of open ways
     with open('tests/input_data/inner_chain.json', 'r') as read_file:
         inner_chain_responses = [json.load(read_file)]
     ox.footprints._create_footprints_gdf(responses=inner_chain_responses)
 
-    # mis_tagged_bus_route.json contains a relation with out 'inner' or 'inner' rings
+    # mis_tagged_bus_route.json contains a relation with out 'inner' or
+    # 'inner' rings
     with open('tests/input_data/mis_tagged_bus_route.json', 'r') as read_file:
         mis_tagged_bus_route_responses = [json.load(read_file)]
     ox.footprints._create_footprints_gdf(responses=mis_tagged_bus_route_responses)
@@ -451,4 +498,6 @@ def test_footprints():
     # should raise an exception
     # polygon or -north, south, east, west- should be provided
     with pytest.raises(ValueError):
-        ox.footprints._create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None)
+        ox.footprints._create_footprints_gdf(polygon=None,
+                                             north=None, south=None,
+                                             east=None, west=None)

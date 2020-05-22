@@ -23,15 +23,16 @@ def citation():
     Systems, 65(126-139). https://doi.org/10.1016/j.compenvurbsys.2017.05.004
     """
 
-    cite = ("To cite OSMnx, use:\n\n"
-            "Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing, "
-            "and Visualizing Complex Street Networks. Computers, Environment and Urban "
-            "Systems, 65(126-139). https://doi.org/10.1016/j.compenvurbsys.2017.05.004"
-            "\n\n"
+    cite = ("Citation:\n\n"
+            "Boeing, G. 2017. OSMnx: New Methods for Acquiring, "
+            "Constructing, Analyzing, and Visualizing Complex Street "
+            "Networks. Computers, Environment and Urban Systems, 65(126-139). "
+            "https://doi.org/10.1016/j.compenvurbsys.2017.05.004\n\n"
             "BibTeX entry for LaTeX users:\n\n"
-
             "@article{boeing_osmnx_2017,\n"
-            "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, {Constructing}, {Analyzing}, and {Visualizing} {Complex} {Street} {Networks}},\n"
+            "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, "
+            "{Constructing}, {Analyzing}, and {Visualizing} {Complex} "
+            "{Street} {Networks}},\n"
             "    volume = {65},\n"
             "    doi = {10.1016/j.compenvurbsys.2017.05.004},\n"
             "    number = {126-139},\n"

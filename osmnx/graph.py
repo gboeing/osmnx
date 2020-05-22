@@ -31,9 +31,9 @@ from ._version import __version__
 def graph_from_bbox(north, south, east, west, network_type='all_private',
                     simplify=True, retain_all=False, truncate_by_edge=False,
                     timeout=180, memory=None,
-                    max_query_area_size=50*1000*50*1000, clean_periphery=True,
-                    infrastructure='way["highway"]', custom_filter=None,
-                    custom_settings=None):
+                    max_query_area_size=50 * 1000 * 50 * 1000,
+                    clean_periphery=True, infrastructure='way["highway"]',
+                    custom_filter=None, custom_settings=None):
     """
     Create a networkx graph from OSM data within some bounding box.
 
@@ -92,22 +92,25 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
 
         # get the network data from OSM then create the graph
         response_jsons = downloader._osm_net_download(north=north_buffered, south=south_buffered,
-                                           east=east_buffered, west=west_buffered,
-                                           network_type=network_type, timeout=timeout,
-                                           memory=memory, max_query_area_size=max_query_area_size,
-                                           infrastructure=infrastructure, custom_filter=custom_filter,
-                                           custom_settings=custom_settings)
+                                                      east=east_buffered, west=west_buffered,
+                                                      network_type=network_type, timeout=timeout,
+                                                      memory=memory, max_query_area_size=max_query_area_size,
+                                                      infrastructure=infrastructure, custom_filter=custom_filter,
+                                                      custom_settings=custom_settings)
         G_buffered = _create_graph(response_jsons,
                                    retain_all=retain_all,
                                    bidirectional=network_type in settings.bidirectional_network_types)
-        G = truncate.truncate_graph_bbox(G_buffered, north, south, east, west, retain_all=True, truncate_by_edge=truncate_by_edge)
+
+        G = truncate.truncate_graph_bbox(G_buffered, north, south, east, west,
+                                         retain_all=True, truncate_by_edge=truncate_by_edge)
 
         # simplify the graph topology
         G_buffered = simplification.simplify_graph(G_buffered)
 
         # truncate graph by desired bbox to return the graph within the bbox
         # caller wants
-        G = truncate.truncate_graph_bbox(G_buffered, north, south, east, west, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
+        G = truncate.truncate_graph_bbox(G_buffered, north, south, east, west,
+                                         retain_all=retain_all, truncate_by_edge=truncate_by_edge)
 
         # count how many street segments in buffered graph emanate from each
         # intersection in un-buffered graph, to retain true counts for each
@@ -117,17 +120,18 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
     else:
         # get the network data from OSM
         response_jsons = downloader._osm_net_download(north=north, south=south, east=east,
-                                           west=west, network_type=network_type,
-                                           timeout=timeout, memory=memory,
-                                           max_query_area_size=max_query_area_size,
-                                           infrastructure=infrastructure, custom_filter=custom_filter,
-                                           custom_settings=custom_settings)
+                                                      west=west, network_type=network_type,
+                                                      timeout=timeout, memory=memory,
+                                                      max_query_area_size=max_query_area_size,
+                                                      infrastructure=infrastructure, custom_filter=custom_filter,
+                                                      custom_settings=custom_settings)
 
         # create the graph, then truncate to the bounding box
         G = _create_graph(response_jsons,
                           retain_all=retain_all,
                           bidirectional=network_type in settings.bidirectional_network_types)
-        G = truncate.truncate_graph_bbox(G, north, south, east, west, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
+        G = truncate.truncate_graph_bbox(G, north, south, east, west,
+                                         retain_all=retain_all, truncate_by_edge=truncate_by_edge)
 
         # simplify the graph topology as the last step. don't truncate after
         # simplifying or you may have simplified out to an endpoint
@@ -137,14 +141,14 @@ def graph_from_bbox(north, south, east, west, network_type='all_private',
             G = simplification.simplify_graph(G)
 
     utils.log(f'graph_from_bbox returned graph with {len(G)} nodes and {len(G.edges())} edges')
-    return  G
+    return G
 
 
 
 def graph_from_point(center_point, dist=1000, dist_type='bbox',
                      network_type='all_private', simplify=True, retain_all=False,
                      truncate_by_edge=False, timeout=180,
-                     memory=None, max_query_area_size=50*1000*50*1000,
+                     memory=None, max_query_area_size=50 * 1000 * 50 * 1000,
                      clean_periphery=True, infrastructure='way["highway"]',
                      custom_filter=None, custom_settings=None):
     """
@@ -226,7 +230,7 @@ def graph_from_address(address, dist=1000, dist_type='bbox',
                        network_type='all_private', simplify=True, retain_all=False,
                        truncate_by_edge=False, return_coords=False,
                        timeout=180, memory=None,
-                       max_query_area_size=50*1000*50*1000,
+                       max_query_area_size=50 * 1000 * 50 * 1000,
                        clean_periphery=True, infrastructure='way["highway"]',
                        custom_filter=None, custom_settings=None):
     """
@@ -304,7 +308,7 @@ def graph_from_address(address, dist=1000, dist_type='bbox',
 def graph_from_polygon(polygon, network_type='all_private', simplify=True,
                        retain_all=False, truncate_by_edge=False,
                        timeout=180, memory=None,
-                       max_query_area_size=50*1000*50*1000,
+                       max_query_area_size=50 * 1000 * 50 * 1000,
                        clean_periphery=True, infrastructure='way["highway"]',
                        custom_filter=None, custom_settings=None):
     """
@@ -357,9 +361,9 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         raise TypeError('Shape does not have a valid geometry')
     if not isinstance(polygon, (Polygon, MultiPolygon)):
         raise TypeError('Geometry must be a shapely Polygon or MultiPolygon. If you requested '
-                         'graph from place name or address, make sure your query resolves to a '
-                         'Polygon or MultiPolygon, and not some other geometry, like a Point. '
-                         'See OSMnx documentation for details.')
+                        'graph from place name or address, make sure your query resolves to a '
+                        'Polygon or MultiPolygon, and not some other geometry, like a Point. '
+                        'See OSMnx documentation for details.')
 
     if clean_periphery and simplify:
         # create a new buffered polygon 0.5km around the desired one
@@ -371,14 +375,15 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         # get the network data from OSM,  create the buffered graph, then
         # truncate it to the buffered polygon
         response_jsons = downloader._osm_net_download(polygon=polygon_buffered, network_type=network_type,
-                                           timeout=timeout, memory=memory,
-                                           max_query_area_size=max_query_area_size,
-                                           infrastructure=infrastructure, custom_filter=custom_filter,
-                                           custom_settings=custom_settings)
+                                                      timeout=timeout, memory=memory,
+                                                      max_query_area_size=max_query_area_size,
+                                                      infrastructure=infrastructure, custom_filter=custom_filter,
+                                                      custom_settings=custom_settings)
         G_buffered = _create_graph(response_jsons,
                                    retain_all=True,
                                    bidirectional=network_type in settings.bidirectional_network_types)
-        G_buffered = truncate.truncate_graph_polygon(G_buffered, polygon_buffered, retain_all=True, truncate_by_edge=truncate_by_edge)
+        G_buffered = truncate.truncate_graph_polygon(G_buffered, polygon_buffered, retain_all=True,
+                                                     truncate_by_edge=truncate_by_edge)
 
         # simplify the graph topology
         G_buffered = simplification.simplify_graph(G_buffered)
@@ -388,7 +393,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
         # intersections along the street that may now only connect 2 street
         # segments in the network, but in reality also connect to an
         # intersection just outside the polygon
-        G = truncate.truncate_graph_polygon(G_buffered, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
+        G = truncate.truncate_graph_polygon(G_buffered, polygon, retain_all=retain_all,
+                                            truncate_by_edge=truncate_by_edge)
 
         # count how many street segments in buffered graph emanate from each
         # intersection in un-buffered graph, to retain true counts for each
@@ -398,10 +404,10 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
     else:
         # download a list of API responses for the polygon/multipolygon
         response_jsons = downloader._osm_net_download(polygon=polygon, network_type=network_type,
-                                           timeout=timeout, memory=memory,
-                                           max_query_area_size=max_query_area_size,
-                                           infrastructure=infrastructure, custom_filter=custom_filter,
-                                           custom_settings=custom_settings)
+                                                      timeout=timeout, memory=memory,
+                                                      max_query_area_size=max_query_area_size,
+                                                      infrastructure=infrastructure, custom_filter=custom_filter,
+                                                      custom_settings=custom_settings)
 
         # create the graph from the downloaded data
         G = _create_graph(response_jsons,
@@ -409,7 +415,8 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
                           bidirectional=network_type in settings.bidirectional_network_types)
 
         # truncate the graph to the extent of the polygon
-        G = truncate.truncate_graph_polygon(G, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
+        G = truncate.truncate_graph_polygon(G, polygon, retain_all=retain_all,
+                                            truncate_by_edge=truncate_by_edge)
 
         # simplify the graph topology as the last step. don't truncate after
         # simplifying or you may have simplified out to an endpoint beyond the
@@ -426,7 +433,7 @@ def graph_from_polygon(polygon, network_type='all_private', simplify=True,
 def graph_from_place(query, network_type='all_private', simplify=True,
                      retain_all=False, truncate_by_edge=False,
                      which_result=1, buffer_dist=None, timeout=180, memory=None,
-                     max_query_area_size=50*1000*50*1000, clean_periphery=True,
+                     max_query_area_size=50 * 1000 * 50 * 1000, clean_periphery=True,
                      infrastructure='way["highway"]', custom_filter=None,
                      custom_settings=None):
     """
@@ -565,16 +572,16 @@ def _overpass_json_from_file(filename):
     OSMContentHandler object
     """
 
-    _, ext = os.path.splitext(filename)
+    def _opener(filename):
+        _, ext = os.path.splitext(filename)
+        if ext == '.bz2':
+            # Use Python 2/3 compatible BZ2File()
+            return bz2.BZ2File(filename)
+        else:
+            # Assume an unrecognized file extension is just XML
+            return open(filename, mode='rb')
 
-    if ext == '.bz2':
-        # Use Python 2/3 compatible BZ2File()
-        opener = lambda fn: bz2.BZ2File(fn)
-    else:
-        # Assume an unrecognized file extension is just XML
-        opener = lambda fn: open(fn, mode='rb')
-
-    with opener(filename) as file:
+    with _opener(filename) as file:
         handler = _OSMContentHandler()
         xml.sax.parse(file, handler)
         return handler.object
@@ -722,7 +729,7 @@ def _parse_osm_nodes_paths(osm_data):
         if element['type'] == 'node':
             key = element['id']
             nodes[key] = _convert_node(element)
-        elif element['type'] == 'way': #osm calls network paths 'ways'
+        elif element['type'] == 'way':
             key = element['id']
             paths[key] = _convert_path(element)
 

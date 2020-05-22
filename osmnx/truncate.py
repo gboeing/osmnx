@@ -44,7 +44,7 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight='length',
     # remove every node further than max_dist away
     G = G.copy()
     distances = nx.shortest_path_length(G, source=source_node, weight=weight)
-    distant_nodes = {key:value for key, value in dict(distances).items() if value > max_dist}
+    distant_nodes = {key: value for key, value in dict(distances).items() if value > max_dist}
     G.remove_nodes_from(distant_nodes.keys())
     utils.log('Truncated graph by weighted network distance')
 
@@ -167,7 +167,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
 
     # get a GeoDataFrame of all the nodes
     node_geom = [Point(data['x'], data['y']) for _, data in G.nodes(data=True)]
-    gdf_nodes = gpd.GeoDataFrame({'node':list(G.nodes()), 'geometry':node_geom})
+    gdf_nodes = gpd.GeoDataFrame({'node': list(G.nodes()), 'geometry': node_geom})
     gdf_nodes.crs = G.graph['crs']
 
     # find all the nodes in the graph that lie outside the polygon

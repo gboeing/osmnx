@@ -79,7 +79,7 @@ def _get_osm_filter(network_type):
 
     # to download all ways, including private-access ones, just filter out
     # everything not currently in use
-    filters['all_private'] = f'["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
+    filters['all_private'] = '["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
 
     # no filter, needed for infrastructures other than "highway"
     filters['none'] = ''
@@ -222,7 +222,7 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
 
 
 
-def _get_pause_duration(recursive_delay=5, default_duration=10):
+def _get_pause(recursive_delay=5, default_duration=10):
     """
     Check the Overpass API status endpoint to determine how long to wait until
     next slot is available.
@@ -254,33 +254,34 @@ def _get_pause_duration(recursive_delay=5, default_duration=10):
     try:
         # if first token is numeric, it's how many slots you have available - no
         # wait required
-        available_slots = int(status_first_token)
-        pause_duration = 0
+        _ = int(status_first_token)  # number of available slots
+        pause = 0
     except Exception:
         # if first token is 'Slot', it tells you when your slot will be free
         if status_first_token == 'Slot':
             utc_time_str = status.split(' ')[3]
             utc_time = date_parser.parse(utc_time_str).replace(tzinfo=None)
-            pause_duration = math.ceil((utc_time - dt.datetime.utcnow()).total_seconds())
-            pause_duration = max(pause_duration, 1)
+            pause = math.ceil((utc_time - dt.datetime.utcnow()).total_seconds())
+            pause = max(pause, 1)
 
         # if first token is 'Currently', it is currently running a query so
         # check back in recursive_delay seconds. any other status is unrecognized,
         # log an error and return default duration
         elif status_first_token == 'Currently':
             time.sleep(recursive_delay)
-            pause_duration = _get_pause_duration()
+            pause = _get_pause()
         else:
             utils.log(f'Unrecognized server status: "{status}"', level=lg.ERROR)
             return default_duration
 
-    return pause_duration
+    return pause
 
 
 
 def _osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
                       network_type='all_private', timeout=180, memory=None,
-                      max_query_area_size=50*1000*50*1000, infrastructure='way["highway"]',
+                      max_query_area_size=50 * 1000 * 50 * 1000,
+                      infrastructure='way["highway"]',
                       custom_filter=None, custom_settings=None):
     """
     Download OSM ways and nodes within some bounding box from the Overpass API.
@@ -376,8 +377,9 @@ def _osm_net_download(polygon=None, north=None, south=None, east=None, west=None
             # decimal places (ie, ~100 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_str = f'{overpass_settings};({infrastructure}{osm_filter}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;'
-            response_json = overpass_request(data={'data':query_str}, timeout=timeout)
+            query_str = (f'{overpass_settings};'
+                         f'({infrastructure}{osm_filter}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;')
+            response_json = overpass_request(data={'data': query_str}, timeout=timeout)
             response_jsons.append(response_json)
         utils.log(f'Got all network data within bounding box from API in {len(geometry)} request(s)')
 
@@ -395,7 +397,7 @@ def _osm_net_download(polygon=None, north=None, south=None, east=None, west=None
         # a time
         for polygon_coord_str in polygon_coord_strs:
             query_str = f'{overpass_settings};({infrastructure}{osm_filter}(poly:"{polygon_coord_str}");>;);out;'
-            response_json = overpass_request(data={'data':query_str}, timeout=timeout)
+            response_json = overpass_request(data={'data': query_str}, timeout=timeout)
             response_jsons.append(response_json)
         utils.log(f'Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)')
 
@@ -445,7 +447,8 @@ def _osm_polygon_download(query, limit=1, polygon_geojson=1):
 
 
 
-def nominatim_request(params, request_type='search', pause_duration=1, timeout=30, error_pause_duration=180):
+def nominatim_request(params, request_type='search', pause=1, timeout=30,
+                      error_pause=180):
     """
     Send a request to the Nominatim API via HTTP GET and return the JSON
     response.
@@ -456,11 +459,11 @@ def nominatim_request(params, request_type='search', pause_duration=1, timeout=3
         key-value pairs of parameters
     request_type : string
         Type of Nominatim query. One of: search, reverse, or lookup
-    pause_duration : int
+    pause : int
         how long to pause before requests, in seconds
     timeout : int
         the timeout interval for the requests library
-    error_pause_duration : int
+    error_pause : int
         how long to pause in seconds before re-trying requests if error
 
     Returns
@@ -488,8 +491,8 @@ def nominatim_request(params, request_type='search', pause_duration=1, timeout=3
 
     else:
         # if this URL is not already in the cache, pause, then request it
-        utils.log(f'Pausing {pause_duration} seconds before making API GET request')
-        time.sleep(pause_duration)
+        utils.log(f'Pausing {pause} seconds before making API GET request')
+        time.sleep(pause)
         utils.log(f'Requesting {prepared_url} with timeout={timeout}')
         response = requests.get(url, params=params, timeout=timeout, headers=_get_http_headers())
 
@@ -505,22 +508,23 @@ def nominatim_request(params, request_type='search', pause_duration=1, timeout=3
             # 429 is 'too many requests' and 504 is 'gateway timeout' from server
             # overload - handle these errors by recursively calling
             # nominatim_request until we get a valid response
-            if response.status_code in [429, 504]:
-                # pause for error_pause_duration seconds before re-trying request
-                utils.log(f'Server at {domain} returned status {response.status_code} and no JSON data: retrying in {error_pause_duration:.2f} seconds', level=lg.WARNING)
-                time.sleep(error_pause_duration)
-                response_json = nominatim_request(params=params, pause_duration=pause_duration, timeout=timeout)
+            sc = response.status_code
+            if sc in [429, 504]:
+                # pause for error_pause seconds before re-trying request
+                utils.log(f'{domain} returned {sc} and no data: retrying in {error_pause:.2f} secs', level=lg.WARNING)
+                time.sleep(error_pause)
+                response_json = nominatim_request(params=params, pause=pause, timeout=timeout)
 
             # else, this was an unhandled status_code, throw an exception
             else:
-                utils.log(f'Server at {domain} returned status code {response.status_code} and no JSON data', level=lg.ERROR)
+                utils.log(f'{domain} returned {sc} and no data', level=lg.ERROR)
                 raise Exception(f'Server returned no JSON data\n{response} {response.reason}\n{response.text}')
 
         return response_json
 
 
 
-def overpass_request(data, pause_duration=None, timeout=180, error_pause_duration=None):
+def overpass_request(data, pause=None, timeout=180, error_pause=None):
     """
     Send a request to the Overpass API via HTTP POST and return the JSON
     response.
@@ -529,12 +533,12 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
     ----------
     data : dict or OrderedDict
         key-value pairs of parameters to post to the API
-    pause_duration : int
+    pause : int
         how long to pause in seconds before requests, if None, will query API
         status endpoint to find when next slot is available
     timeout : int
         the timeout interval for the requests library
-    error_pause_duration : int
+    error_pause : int
         how long to pause in seconds before re-trying requests if error
 
     Returns
@@ -555,10 +559,10 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
 
     else:
         # if this URL is not already in the cache, pause, then request it
-        if pause_duration is None:
-            this_pause_duration = _get_pause_duration()
-        utils.log(f'Pausing {this_pause_duration} seconds before making API POST request')
-        time.sleep(this_pause_duration)
+        if pause is None:
+            this_pause = _get_pause()
+        utils.log(f'Pausing {this_pause} seconds before making API POST request')
+        time.sleep(this_pause)
         utils.log(f'Posting to {url} with timeout={timeout}, "{data}"')
         response = requests.post(url, data=data, timeout=timeout, headers=_get_http_headers())
 
@@ -577,15 +581,16 @@ def overpass_request(data, pause_duration=None, timeout=180, error_pause_duratio
         # overload - handle these errors by recursively calling overpass_request
         # after a pause until we get a valid response
         except Exception:
-            if response.status_code in [429, 504]:
-                if error_pause_duration is None:
-                    error_pause_duration = _get_pause_duration()
-                utils.log(f'Server at {domain} returned status {response.status_code} and no JSON data: retrying in {error_pause_duration} seconds.', level=lg.WARNING)
-                time.sleep(error_pause_duration)
-                response_json = overpass_request(data=data, pause_duration=pause_duration, timeout=timeout)
+            sc = response.status_code
+            if sc in [429, 504]:
+                if error_pause is None:
+                    error_pause = _get_pause()
+                utils.log(f'{domain} returned {sc} and no data: retry in {error_pause} secs.', level=lg.WARNING)
+                time.sleep(error_pause)
+                response_json = overpass_request(data=data, pause=pause, timeout=timeout)
             # else, this was an unhandled status_code, throw an exception
             else:
-                utils.log(f'Server at {domain} returned status code {response.status_code} and no JSON data', level=lg.ERROR)
+                utils.log(f'{domain} returned {sc} and no data', level=lg.ERROR)
                 raise Exception(f'Server returned no JSON data\n{response} {response.reason}\n{response.text}')
 
         return response_json

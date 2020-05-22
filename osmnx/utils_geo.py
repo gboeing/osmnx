@@ -373,8 +373,8 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9
 
     # create n evenly spaced points between the min and max x and y bounds
     west, south, east, north = geometry.bounds
-    x_num = math.ceil((east-west) / quadrat_width) + 1
-    y_num = math.ceil((north-south) / quadrat_width) + 1
+    x_num = math.ceil((east - west) / quadrat_width) + 1
+    y_num = math.ceil((north - south) / quadrat_width) + 1
     x_points = np.linspace(west, east, num=max(x_num, min_num))
     y_points = np.linspace(south, north, num=max(y_num, min_num))
 
@@ -496,7 +496,7 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
 
     if project_utm:
         west, south, east, north = buffer_proj.bounds
-        utils.log(f'Created bounding box {dist} meters in each direction from {point} and projected it: {north},{south},{east},{west}')
+        utils.log(f'Created bbox {dist} m from {point} and projected it: {north},{south},{east},{west}')
     else:
         # if project_utm is False, project back to lat-long then get the
         # bounding coordinates

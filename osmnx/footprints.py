@@ -23,9 +23,12 @@ from . import utils_geo
 
 
 
-def _osm_footprints_download(polygon=None, north=None, south=None, east=None, west=None,
-                             footprint_type='building', timeout=180, memory=None,
-                             max_query_area_size=50*1000*50*1000, custom_settings= None):
+def _osm_footprints_download(polygon=None,
+                             north=None, south=None, east=None, west=None,
+                             footprint_type='building',
+                             timeout=180, memory=None,
+                             max_query_area_size=50 * 1000 * 50 * 1000,
+                             custom_settings=None):
     """
     Download OpenStreetMap footprint data as a list of json responses.
 
@@ -109,7 +112,7 @@ def _osm_footprints_download(polygon=None, north=None, south=None, east=None, we
                          f'(._;>;););'
                          f'(relation["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
                          f'(._;>;);););out;')
-            response_json = downloader.overpass_request(data={'data':query_str}, timeout=timeout)
+            response_json = downloader.overpass_request(data={'data': query_str}, timeout=timeout)
             response_jsons.append(response_json)
         utils.log(f'Got all footprint data within bounding box from API in {len(geometry)} request(s)')
 
@@ -128,7 +131,7 @@ def _osm_footprints_download(polygon=None, north=None, south=None, east=None, we
             query_str = (f'{overpass_settings};('
                          f'way(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;);'
                          f'relation(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;););out;')
-            response_json = downloader.overpass_request(data={'data':query_str}, timeout=timeout)
+            response_json = downloader.overpass_request(data={'data': query_str}, timeout=timeout)
             response_jsons.append(response_json)
         utils.log(f'Got all footprint data within polygon from API in {len(polygon_coord_strs)} request(s)')
 
@@ -262,12 +265,12 @@ def _responses_to_dicts(responses, footprint_type):
     for response in responses:
         for element in response['elements']:
             # NODES - only keep coordinates
-            if 'type' in element and element['type']=='node':
-                vertices[element['id']] = {'lat' : element['lat'],
-                                           'lon' : element['lon']}
+            if 'type' in element and element['type'] == 'node':
+                vertices[element['id']] = {'lat': element['lat'],
+                                           'lon': element['lon']}
             # WAYS - both open and closed
-            elif 'type' in element and element['type']=='way':
-                footprint = {'nodes' : element['nodes']}
+            elif 'type' in element and element['type'] == 'way':
+                footprint = {'nodes': element['nodes']}
                 if 'tags' in element:
                     for tag in element['tags']:
                         footprint[tag] = element['tags'][tag]
@@ -276,11 +279,11 @@ def _responses_to_dicts(responses, footprint_type):
                 if ('tags' not in element) or (footprint_type not in element['tags']):
                     untagged_footprints.add(element['id'])
             # RELATIONS
-            elif 'type' in element and element['type']=='relation':
-                relation = {'members' : {}}
+            elif 'type' in element and element['type'] == 'relation':
+                relation = {'members': {}}
                 for member in element['members']:
-                    if 'type' in member and member['type']=='way':
-                        relation['members'].update({member['ref']:member.get('role')})
+                    if 'type' in member and member['type'] == 'way':
+                        relation['members'].update({member['ref']: member.get('role')})
                 if 'tags' in element:
                     for tag in element['tags']:
                         relation[tag] = element['tags'][tag]
@@ -297,10 +300,10 @@ def _responses_to_dicts(responses, footprint_type):
 
 def _create_footprint_geometry(footprint_key, footprint_val, vertices):
     """
-    Create Shapely geometry for open or closed ways in the initial footprints dictionary.
-
-    Closed ways are converted directly to Shapely Polygons, open ways (fragments that will
-    form the outer and inner rings of relations) are converted to LineStrings.
+    Create Shapely geometry for open or closed ways in the initial footprints
+    dictionary. Closed ways are converted directly to Shapely Polygons, open
+    ways (fragments that will form the outer and inner rings of relations) are
+    converted to LineStrings.
 
     Parameters
     ----------
@@ -319,13 +322,15 @@ def _create_footprint_geometry(footprint_key, footprint_val, vertices):
     # CLOSED WAYS
     if footprint_val['nodes'][0] == footprint_val['nodes'][-1]:
         try:
-            footprint_geometry = Polygon([(vertices[node]['lon'], vertices[node]['lat']) for node in footprint_val['nodes']])
+            poly = [(vertices[node]['lon'], vertices[node]['lat']) for node in footprint_val['nodes']]
+            footprint_geometry = Polygon(poly)
         except Exception:
             utils.log(f'Polygon has invalid geometry: {footprint_key}')
     # OPEN WAYS
     else:
         try:
-            footprint_geometry = LineString([(vertices[node]['lon'], vertices[node]['lat']) for node in footprint_val['nodes']])
+            ls = [(vertices[node]['lon'], vertices[node]['lat']) for node in footprint_val['nodes']]
+            footprint_geometry = LineString(ls)
         except Exception:
             utils.log(f'LineString has invalid geometry: {footprint_key}')
 
@@ -412,12 +417,12 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
     # process the others to multipolygons
     else:
         for outer_poly in outer_polys:
-            outer_poly = outer_poly.buffer(0) #fix invalid geometry if present
+            outer_poly = outer_poly.buffer(0)  # fix invalid geometry if present
             temp_poly = outer_poly
             for inner_poly in inner_polys:
-                inner_poly = inner_poly.buffer(0) #fix invalid geometry if present
+                inner_poly = inner_poly.buffer(0)  # fix invalid geometry if present
                 if inner_poly.within(outer_poly):
-                    temp_poly=temp_poly.difference(inner_poly)
+                    temp_poly = temp_poly.difference(inner_poly)
             multipoly.append(temp_poly)
 
     # return relations with one outer way as Polygons, multiple outer ways as MultiPolygons
@@ -585,9 +590,10 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
 
 
 
-def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcolor='w',
-                   set_bounds=True, bbox=None, save=False, show=True, close=False,
-                   filename='image', file_format='png', dpi=600):
+def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333',
+                    bgcolor='w', set_bounds=True, bbox=None, save=False,
+                    show=True, close=False, filename='image',
+                    file_format='png', dpi=600):
     """
     Plot a GeoDataFrame of footprints.
 
@@ -636,7 +642,7 @@ def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcol
         if isinstance(geometry, Polygon):
             patches.append(PolygonPatch(geometry))
         elif isinstance(geometry, MultiPolygon):
-            for subpolygon in geometry: #if geometry is multipolygon, go through each constituent subpolygon
+            for subpolygon in geometry:  # if geometry is multipolygon, go through each constituent subpolygon
                 patches.append(PolygonPatch(subpolygon))
     pc = PatchCollection(patches, facecolor=color, edgecolor=color, linewidth=0, alpha=1)
     ax.add_collection(pc)
@@ -662,7 +668,7 @@ def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333', bgcol
     fig.canvas.draw()
 
     fig, ax = plot._save_and_show(fig=fig, ax=ax, save=save, show=show, close=close,
-                                 filename=filename, file_format=file_format, dpi=dpi,
-                                 axis_off=True)
+                                  filename=filename, file_format=file_format, dpi=dpi,
+                                  axis_off=True)
 
     return fig, ax

@@ -16,11 +16,11 @@ from . import utils_graph
 # scipy and sklearn are optional dependencies for faster nearest node search
 try:
     from scipy.spatial import cKDTree
-except ImportError as e:
+except ImportError:
     cKDTree = None
 try:
     from sklearn.neighbors import BallTree
-except ImportError as e:
+except ImportError:
     BallTree = None
 
 
@@ -261,8 +261,8 @@ def get_nearest_nodes(G, X, Y, method=None):
             raise ImportError('The scipy package must be installed to use this optional feature.')
 
         # build a k-d tree for euclidean nearest node search
-        nodes = pd.DataFrame({'x':nx.get_node_attributes(G, 'x'),
-                              'y':nx.get_node_attributes(G, 'y')})
+        nodes = pd.DataFrame({'x': nx.get_node_attributes(G, 'x'),
+                              'y': nx.get_node_attributes(G, 'y')})
         tree = cKDTree(data=nodes[['x', 'y']], compact_nodes=True, balanced_tree=True)
 
         # query the tree for nearest node to each point
@@ -277,8 +277,8 @@ def get_nearest_nodes(G, X, Y, method=None):
             raise ImportError('The scikit-learn package must be installed to use this optional feature.')
 
         # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
-        nodes = pd.DataFrame({'x':nx.get_node_attributes(G, 'x'),
-                              'y':nx.get_node_attributes(G, 'y')})
+        nodes = pd.DataFrame({'x': nx.get_node_attributes(G, 'x'),
+                              'y': nx.get_node_attributes(G, 'y')})
         nodes_rad = np.deg2rad(nodes[['y', 'x']].astype(np.float))
         points = np.array([Y.astype(np.float), X.astype(np.float)]).T
         points_rad = np.deg2rad(points)
@@ -288,7 +288,7 @@ def get_nearest_nodes(G, X, Y, method=None):
 
         # query the tree for nearest node to each point
         idx = tree.query(points_rad, k=1, return_distance=False)
-        nn = nodes.iloc[idx[:,0]].index
+        nn = nodes.iloc[idx[:, 0]].index
 
     else:
         raise ValueError('You must pass a valid method name, or None.')
@@ -379,7 +379,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         points = np.array([X, Y]).T
         dist, idx = btree.query(points, k=1)  # Returns ids of closest point
         eidx = extended.loc[idx, 'index']
-        ne = edges.loc[eidx, ['u', 'v','key']]
+        ne = edges.loc[eidx, ['u', 'v', 'key']]
 
     elif method == 'balltree':
 
@@ -409,7 +409,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         # query the tree for nearest node to each point
         idx = tree.query(points_rad, k=1, return_distance=False)
         eidx = extended.loc[idx[:, 0], 'index']
-        ne = edges.loc[eidx, ['u', 'v','key']]
+        ne = edges.loc[eidx, ['u', 'v', 'key']]
 
     else:
         raise ValueError('You must pass a valid method name, or None.')

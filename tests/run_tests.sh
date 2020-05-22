@@ -1,4 +1,4 @@
 #!/bin/bash
-pylint -E ./osmnx/*
+flake8
 coverage run --source osmnx --module pytest --verbose
 coverage report -m
