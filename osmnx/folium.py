@@ -35,12 +35,12 @@ def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attr
 
     # check if we were able to import folium successfully
     if not folium:
-        raise ImportError('The folium package must be installed to use this optional feature.')
+        raise ImportError("The folium package must be installed to use this optional feature.")
 
     # locations is a list of points for the polyline
     # folium takes coords in lat,lon but geopandas provides them in lon,lat
     # so we have to flip them around
-    locations = list([(lat, lng) for lng, lat in edge['geometry'].coords])
+    locations = list([(lat, lng) for lng, lat in edge["geometry"].coords])
 
     # if popup_attribute is None, then create no pop-up
     if popup_attribute is None:
@@ -62,10 +62,10 @@ def plot_graph_folium(
     G,
     graph_map=None,
     popup_attribute=None,
-    tiles='cartodbpositron',
+    tiles="cartodbpositron",
     zoom=1,
     fit_bounds=True,
-    edge_color='#333333',
+    edge_color="#333333",
     edge_width=5,
     edge_opacity=1,
 ):
@@ -103,7 +103,7 @@ def plot_graph_folium(
 
     # check if we were able to import folium successfully
     if not folium:
-        raise ImportError('The folium package must be installed to use this optional feature.')
+        raise ImportError("The folium package must be installed to use this optional feature.")
 
     # create gdf of the graph edges
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
@@ -142,10 +142,10 @@ def plot_route_folium(
     route,
     route_map=None,
     popup_attribute=None,
-    tiles='cartodbpositron',
+    tiles="cartodbpositron",
     zoom=1,
     fit_bounds=True,
-    route_color='#cc0000',
+    route_color="#cc0000",
     route_width=5,
     route_opacity=1,
 ):
@@ -182,13 +182,13 @@ def plot_route_folium(
 
     # check if we were able to import folium successfully
     if not folium:
-        raise ImportError('The folium package must be installed to use this optional feature.')
+        raise ImportError("The folium package must be installed to use this optional feature.")
 
     # create gdf of the route edges
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
     route_nodes = list(zip(route[:-1], route[1:]))
     index = [
-        gdf_edges[(gdf_edges['u'] == u) & (gdf_edges['v'] == v)].index[0] for u, v in route_nodes
+        gdf_edges[(gdf_edges["u"] == u) & (gdf_edges["v"] == v)].index[0] for u, v in route_nodes
     ]
     gdf_route_edges = gdf_edges.loc[index]
 

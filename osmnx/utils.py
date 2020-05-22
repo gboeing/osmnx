@@ -40,7 +40,7 @@ def citation():
     print(cite)
 
 
-def ts(style='datetime', template=None):
+def ts(style="datetime", template=None):
     """
     Get current timestamp as string.
 
@@ -60,12 +60,12 @@ def ts(style='datetime', template=None):
     """
 
     if template is None:
-        if style == 'datetime':
-            template = '{:%Y-%m-%d %H:%M:%S}'
-        elif style == 'date':
-            template = '{:%Y-%m-%d}'
-        elif style == 'time':
-            template = '{:%H:%M:%S}'
+        if style == "datetime":
+            template = "{:%Y-%m-%d %H:%M:%S}"
+        elif style == "date":
+            template = "{:%Y-%m-%d}"
+        elif style == "time":
+            template = "{:%H:%M:%S}"
         else:
             raise ValueError(f'unrecognized timestamp style "{style}"')
 
@@ -194,7 +194,7 @@ def config(
 
     # if logging is turned on, log that we are configured
     if settings.log_file or settings.log_console:
-        log('Configured osmnx')
+        log("Configured osmnx")
 
 
 def log(message, level=None, name=None, filename=None):
@@ -247,11 +247,11 @@ def log(message, level=None, name=None, filename=None):
         sys.stdout = sys.__stdout__
 
         # prepend timestamp
-        message = f'{ts()} {message}'
+        message = f"{ts()} {message}"
 
         # convert to ascii so it doesn't break windows terminals
         message = (
-            unicodedata.normalize('NFKD', str(message)).encode('ascii', errors='replace').decode()
+            unicodedata.normalize("NFKD", str(message)).encode("ascii", errors="replace").decode()
         )
         print(message)
         sys.stdout = standard_out
@@ -285,7 +285,7 @@ def _get_logger(level=None, name=None, filename=None):
     logger = lg.getLogger(name)
 
     # if a logger with this name is not already set up
-    if not getattr(logger, 'handler_set', None):
+    if not getattr(logger, "handler_set", None):
 
         # get today's date and construct a log filename
         log_filename = os.path.join(settings.logs_folder, f'{filename}_{ts(style="date")}.log')
@@ -295,8 +295,8 @@ def _get_logger(level=None, name=None, filename=None):
             os.makedirs(settings.logs_folder)
 
         # create file handler and log formatter and set them up
-        handler = lg.FileHandler(log_filename, encoding='utf-8')
-        formatter = lg.Formatter('%(asctime)s %(levelname)s %(name)s %(message)s')
+        handler = lg.FileHandler(log_filename, encoding="utf-8")
+        formatter = lg.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         logger.setLevel(level)

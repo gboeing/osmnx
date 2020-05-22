@@ -40,7 +40,7 @@ def _get_osm_filter(network_type):
     # anything specifying motor=no. also filter out any non-service roads that
     # are tagged as providing parking, driveway, private, or emergency-access
     # services
-    filters['drive'] = (
+    filters["drive"] = (
         f'["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
         f'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway|service"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]{settings.default_access}'
@@ -49,7 +49,7 @@ def _get_osm_filter(network_type):
 
     # drive+service: allow ways tagged 'service' but filter out certain types of
     # service ways
-    filters['drive_service'] = (
+    filters["drive_service"] = (
         f'["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
         f'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]{settings.default_access}'
@@ -61,14 +61,14 @@ def _get_osm_filter(network_type):
     # lot lanes, alleys, etc that you *can* walk on even if they're not exactly
     # pleasant walks. some cycleways may allow pedestrians, but this filter ignores
     # such cycleways.
-    filters['walk'] = (
+    filters["walk"] = (
         f'["area"!~"yes"]["highway"!~"cycleway|motor|proposed|construction|abandoned|platform|raceway"]'
         f'["foot"!~"no"]["service"!~"private"]{settings.default_access}'
     )
 
     # biking: filter out foot ways, motor ways, private ways, and anything
     # specifying biking=no
-    filters['bike'] = (
+    filters["bike"] = (
         f'["area"!~"yes"]["highway"!~"footway|steps|corridor|elevator|escalator|motor|proposed|'
         f'construction|abandoned|platform|raceway"]'
         f'["bicycle"!~"no"]["service"!~"private"]{settings.default_access}'
@@ -76,7 +76,7 @@ def _get_osm_filter(network_type):
 
     # to download all ways, just filter out everything not currently in use or
     # that is private-access only
-    filters['all'] = (
+    filters["all"] = (
         f'["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
         f'["service"!~"private"]{settings.default_access}'
     )
@@ -84,11 +84,11 @@ def _get_osm_filter(network_type):
     # to download all ways, including private-access ones, just filter out
     # everything not currently in use
     filters[
-        'all_private'
+        "all_private"
     ] = '["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
 
     # no filter, needed for infrastructures other than "highway"
-    filters['none'] = ''
+    filters["none"] = ""
 
     if network_type in filters:
         osm_filter = filters[network_type]
@@ -123,19 +123,19 @@ def _save_to_cache(url, response_json):
     """
     if settings.use_cache:
         if response_json is None:
-            utils.log('Did not save to cache because response_json is None')
+            utils.log("Did not save to cache because response_json is None")
         else:
             # create the folder on the disk if it doesn't already exist
             if not os.path.exists(settings.cache_folder):
                 os.makedirs(settings.cache_folder)
 
             # hash the url to make the filename succinct but unique
-            filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-            cache_filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
+            filename = hashlib.md5(url.encode("utf-8")).hexdigest()
+            cache_filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, "json"]))
 
             # dump to json, and save to file
             json_str = str(json.dumps(response_json))
-            with open(cache_filepath, 'w', encoding='utf-8') as cache_file:
+            with open(cache_filepath, "w", encoding="utf-8") as cache_file:
                 cache_file.write(json_str)
 
             utils.log(f'Saved response to cache file "{cache_filepath}"')
@@ -158,8 +158,8 @@ def _url_in_cache(url):
     """
 
     # hash the url to generate the cache filename
-    filename = hashlib.md5(url.encode('utf-8')).hexdigest()
-    filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, 'json']))
+    filename = hashlib.md5(url.encode("utf-8")).hexdigest()
+    filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, "json"]))
 
     # if this file exists in the cache, return its full path
     if os.path.isfile(filepath):
@@ -187,7 +187,7 @@ def _get_from_cache(url):
         # return cached response for this url if it exists, otherwise return None
         cache_filepath = _url_in_cache(url)
         if cache_filepath is not None:
-            with open(cache_filepath, encoding='utf-8') as cache_file:
+            with open(cache_filepath, encoding="utf-8") as cache_file:
                 response_json = json.load(cache_file)
             utils.log(f'Retrieved response from cache file "{cache_filepath}" for URL "{url}"')
             return response_json
@@ -220,7 +220,7 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
 
     headers = requests.utils.default_headers()
     headers.update(
-        {'User-Agent': user_agent, 'referer': referer, 'Accept-Language': accept_language}
+        {"User-Agent": user_agent, "referer": referer, "Accept-Language": accept_language}
     )
     return headers
 
@@ -246,14 +246,14 @@ def _get_pause(recursive_delay=5, default_duration=10):
     """
 
     try:
-        url = settings.overpass_endpoint.rstrip('/') + '/status'
+        url = settings.overpass_endpoint.rstrip("/") + "/status"
         response = requests.get(url, headers=_get_http_headers())
-        status = response.text.split('\n')[3]
-        status_first_token = status.split(' ')[0]
+        status = response.text.split("\n")[3]
+        status_first_token = status.split(" ")[0]
     # if we cannot reach the status endpoint or parse its output, log an
     # error and return default duration
     except Exception:
-        utils.log(f'Unable to query {url}', level=lg.ERROR)
+        utils.log(f"Unable to query {url}", level=lg.ERROR)
         return default_duration
 
     try:
@@ -263,8 +263,8 @@ def _get_pause(recursive_delay=5, default_duration=10):
         pause = 0
     except Exception:
         # if first token is 'Slot', it tells you when your slot will be free
-        if status_first_token == 'Slot':
-            utc_time_str = status.split(' ')[3]
+        if status_first_token == "Slot":
+            utc_time_str = status.split(" ")[3]
             utc_time = date_parser.parse(utc_time_str).replace(tzinfo=None)
             pause = math.ceil((utc_time - dt.datetime.utcnow()).total_seconds())
             pause = max(pause, 1)
@@ -272,7 +272,7 @@ def _get_pause(recursive_delay=5, default_duration=10):
         # if first token is 'Currently', it is currently running a query so
         # check back in recursive_delay seconds. any other status is unrecognized,
         # log an error and return default duration
-        elif status_first_token == 'Currently':
+        elif status_first_token == "Currently":
             time.sleep(recursive_delay)
             pause = _get_pause()
         else:
@@ -306,9 +306,9 @@ def _make_overpass_settings(custom_settings, timeout, memory):
     # otherwise, define the query's maxsize parameter value as whatever the
     # caller passed in
     if memory is None:
-        maxsize = ''
+        maxsize = ""
     else:
-        maxsize = f'[maxsize:{memory}]'
+        maxsize = f"[maxsize:{memory}]"
 
     # use custom settings if delivered, otherwise just the default ones
     if custom_settings:
@@ -327,7 +327,7 @@ def _osm_net_download(
     south=None,
     east=None,
     west=None,
-    network_type='all_private',
+    network_type="all_private",
     timeout=180,
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
@@ -381,7 +381,7 @@ def _osm_net_download(
     by_bbox = not (north is None or south is None or east is None or west is None)
     if not (by_poly or by_bbox):
         raise InsufficientNetworkQueryArguments(
-            'You must pass a polygon or north, south, east, and west'
+            "You must pass a polygon or north, south, east, and west"
         )
 
     # create a filter to exclude certain kinds of ways based on the requested
@@ -410,7 +410,7 @@ def _osm_net_download(
         )
         geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
         utils.log(
-            f'Requesting network data within bounding box from API in {len(geometry)} request(s)'
+            f"Requesting network data within bounding box from API in {len(geometry)} request(s)"
         )
 
         # loop through each polygon rectangle in the geometry (there will only
@@ -421,13 +421,13 @@ def _osm_net_download(
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
             query_str = (
-                f'{overpass_settings};'
-                f'({infrastructure}{osm_filter}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;'
+                f"{overpass_settings};"
+                f"({infrastructure}{osm_filter}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;"
             )
-            response_json = overpass_request(data={'data': query_str}, timeout=timeout)
+            response_json = overpass_request(data={"data": query_str}, timeout=timeout)
             response_jsons.append(response_json)
         utils.log(
-            f'Got all network data within bounding box from API in {len(geometry)} request(s)'
+            f"Got all network data within bounding box from API in {len(geometry)} request(s)"
         )
 
     elif by_poly:
@@ -441,17 +441,17 @@ def _osm_net_download(
         geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
         utils.log(
-            f'Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)'
+            f"Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)"
         )
 
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
             query_str = f'{overpass_settings};({infrastructure}{osm_filter}(poly:"{polygon_coord_str}");>;);out;'
-            response_json = overpass_request(data={'data': query_str}, timeout=timeout)
+            response_json = overpass_request(data={"data": query_str}, timeout=timeout)
             response_jsons.append(response_json)
         utils.log(
-            f'Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)'
+            f"Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)"
         )
 
     return response_jsons
@@ -476,31 +476,31 @@ def _osm_polygon_download(query, limit=1, polygon_geojson=1):
     """
     # define the parameters
     params = OrderedDict()
-    params['format'] = 'json'
-    params['limit'] = limit
+    params["format"] = "json"
+    params["limit"] = limit
     params[
-        'dedupe'
+        "dedupe"
     ] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
-    params['polygon_geojson'] = polygon_geojson
+    params["polygon_geojson"] = polygon_geojson
 
     # add the structured query dict (if provided) to params, otherwise query
     # with place name string
     if isinstance(query, str):
-        params['q'] = query
+        params["q"] = query
     elif isinstance(query, dict):
         # add the query keys in alphabetical order so the URL is the same string
         # each time, for caching purposes
         for key in sorted(list(query.keys())):
             params[key] = query[key]
     else:
-        raise TypeError('query must be a dict or a string')
+        raise TypeError("query must be a dict or a string")
 
     # request the URL, return the JSON
     response_json = nominatim_request(params=params, timeout=30)
     return response_json
 
 
-def nominatim_request(params, request_type='search', pause=1, timeout=30, error_pause=180):
+def nominatim_request(params, request_type="search", pause=1, timeout=30, error_pause=180):
     """
     Send a request to the Nominatim API via HTTP GET and return JSON response.
 
@@ -522,18 +522,18 @@ def nominatim_request(params, request_type='search', pause=1, timeout=30, error_
     response_json : dict
     """
 
-    known_requests = {'search', 'reverse', 'lookup'}
+    known_requests = {"search", "reverse", "lookup"}
     if request_type not in known_requests:
         raise ValueError('Nominatim request_type must be "search", "reverse", or "lookup"')
 
     # prepare the Nominatim API URL and see if request already exists in the
     # cache
-    url = settings.nominatim_endpoint.rstrip('/') + '/' + request_type
-    prepared_url = requests.Request('GET', url, params=params).prepare().url
+    url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
+    prepared_url = requests.Request("GET", url, params=params).prepare().url
     cached_response_json = _get_from_cache(prepared_url)
 
     if settings.nominatim_key:
-        params['key'] = settings.nominatim_key
+        params["key"] = settings.nominatim_key
 
     if cached_response_json is not None:
         # found this request in the cache, just return it instead of making a
@@ -542,15 +542,15 @@ def nominatim_request(params, request_type='search', pause=1, timeout=30, error_
 
     else:
         # if this URL is not already in the cache, pause, then request it
-        utils.log(f'Pausing {pause} seconds before making API GET request')
+        utils.log(f"Pausing {pause} seconds before making API GET request")
         time.sleep(pause)
-        utils.log(f'Requesting {prepared_url} with timeout={timeout}')
+        utils.log(f"Requesting {prepared_url} with timeout={timeout}")
         response = requests.get(url, params=params, timeout=timeout, headers=_get_http_headers())
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.0
-        domain = re.findall(r'(?s)//(.*?)/', url)[0]
-        utils.log(f'Downloaded {size_kb:,.1f}KB from {domain}')
+        domain = re.findall(r"(?s)//(.*?)/", url)[0]
+        utils.log(f"Downloaded {size_kb:,.1f}KB from {domain}")
 
         try:
             response_json = response.json()
@@ -563,7 +563,7 @@ def nominatim_request(params, request_type='search', pause=1, timeout=30, error_
             if sc in [429, 504]:
                 # pause for error_pause seconds before re-trying request
                 utils.log(
-                    f'{domain} returned {sc} and no data: retrying in {error_pause:.2f} secs',
+                    f"{domain} returned {sc} and no data: retrying in {error_pause:.2f} secs",
                     level=lg.WARNING,
                 )
                 time.sleep(error_pause)
@@ -571,9 +571,9 @@ def nominatim_request(params, request_type='search', pause=1, timeout=30, error_
 
             # else, this was an unhandled status_code, throw an exception
             else:
-                utils.log(f'{domain} returned {sc} and no data', level=lg.ERROR)
+                utils.log(f"{domain} returned {sc} and no data", level=lg.ERROR)
                 raise Exception(
-                    f'Server returned no JSON data\n{response} {response.reason}\n{response.text}'
+                    f"Server returned no JSON data\n{response} {response.reason}\n{response.text}"
                 )
 
         return response_json
@@ -602,8 +602,8 @@ def overpass_request(data, pause=None, timeout=180, error_pause=None):
 
     # define the Overpass API URL, then construct a GET-style URL as a string to
     # hash to look up/save to cache
-    url = settings.overpass_endpoint.rstrip('/') + '/interpreter'
-    prepared_url = requests.Request('GET', url, params=data).prepare().url
+    url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
+    prepared_url = requests.Request("GET", url, params=data).prepare().url
     cached_response_json = _get_from_cache(prepared_url)
 
     if cached_response_json is not None:
@@ -615,19 +615,19 @@ def overpass_request(data, pause=None, timeout=180, error_pause=None):
         # if this URL is not already in the cache, pause, then request it
         if pause is None:
             this_pause = _get_pause()
-        utils.log(f'Pausing {this_pause} seconds before making API POST request')
+        utils.log(f"Pausing {this_pause} seconds before making API POST request")
         time.sleep(this_pause)
         utils.log(f'Posting to {url} with timeout={timeout}, "{data}"')
         response = requests.post(url, data=data, timeout=timeout, headers=_get_http_headers())
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.0
-        domain = re.findall(r'(?s)//(.*?)/', url)[0]
-        utils.log(f'Downloaded {size_kb:,.1f}KB from {domain}')
+        domain = re.findall(r"(?s)//(.*?)/", url)[0]
+        utils.log(f"Downloaded {size_kb:,.1f}KB from {domain}")
 
         try:
             response_json = response.json()
-            if 'remark' in response_json:
+            if "remark" in response_json:
                 utils.log(f'Server remark: "{response_json["remark"]}"', level=lg.WARNING)
             _save_to_cache(prepared_url, response_json)
 
@@ -640,16 +640,16 @@ def overpass_request(data, pause=None, timeout=180, error_pause=None):
                 if error_pause is None:
                     error_pause = _get_pause()
                 utils.log(
-                    f'{domain} returned {sc} and no data: retry in {error_pause} secs.',
+                    f"{domain} returned {sc} and no data: retry in {error_pause} secs.",
                     level=lg.WARNING,
                 )
                 time.sleep(error_pause)
                 response_json = overpass_request(data=data, pause=pause, timeout=timeout)
             # else, this was an unhandled status_code, throw an exception
             else:
-                utils.log(f'{domain} returned {sc} and no data', level=lg.ERROR)
+                utils.log(f"{domain} returned {sc} and no data", level=lg.ERROR)
                 raise Exception(
-                    f'Server returned no JSON data\n{response} {response.reason}\n{response.text}'
+                    f"Server returned no JSON data\n{response} {response.reason}\n{response.text}"
                 )
 
         return response_json

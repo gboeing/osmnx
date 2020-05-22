@@ -9,7 +9,7 @@ from . import utils
 from . import utils_graph
 
 
-def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dist='gc'):
+def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dist="gc"):
     """
     Calculate basic descriptive metric and topological stats for a graph.
 
@@ -90,13 +90,13 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     # calculate the average degree of the graph
     k_avg = 2 * m / n
 
-    if 'streets_per_node' in G.graph:
+    if "streets_per_node" in G.graph:
         # get the degrees saved as a graph attribute (from an undirected
         # representation of the graph). this is not the degree of the nodes in
         # the directed graph, but rather represents the number of streets
         # (unidirected edges) emanating from each node. see
         # count_streets_per_node function.
-        streets_per_node = G.graph['streets_per_node']
+        streets_per_node = G.graph["streets_per_node"]
     else:
         # count how many street segments emanate from each node in this graph
         streets_per_node = utils_graph.count_streets_per_node(G)
@@ -124,14 +124,14 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     streets_per_node_proportion = {num: count / n for num, count in streets_per_node_counts.items()}
 
     # calculate the total and average edge lengths
-    edge_length_total = sum([d['length'] for u, v, d in G.edges(data=True)])
+    edge_length_total = sum([d["length"] for u, v, d in G.edges(data=True)])
     edge_length_avg = edge_length_total / m
 
     # calculate the total and average street segment lengths (so, edges without
     # double-counting two-way streets)
     if G_undirected is None:
         G_undirected = G.to_undirected(reciprocal=False)
-    street_length_total = sum([d['length'] for u, v, d in G_undirected.edges(data=True)])
+    street_length_total = sum([d["length"] for u, v, d in G_undirected.edges(data=True)])
     street_segments_count = len(list(G_undirected.edges(keys=True)))
     street_length_avg = street_length_total / street_segments_count
 
@@ -179,21 +179,21 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     # distance
     coords = np.array(
         [
-            [G.nodes[u]['y'], G.nodes[u]['x'], G.nodes[v]['y'], G.nodes[v]['x']]
+            [G.nodes[u]["y"], G.nodes[u]["x"], G.nodes[v]["y"], G.nodes[v]["x"]]
             for u, v, k in G.edges(keys=True)
         ]
     )
-    df_coords = pd.DataFrame(coords, columns=['u_y', 'u_x', 'v_y', 'v_x'])
-    if circuity_dist == 'gc':
+    df_coords = pd.DataFrame(coords, columns=["u_y", "u_x", "v_y", "v_x"])
+    if circuity_dist == "gc":
         gc_distances = distance.great_circle_vec(
-            lat1=df_coords['u_y'],
-            lng1=df_coords['u_x'],
-            lat2=df_coords['v_y'],
-            lng2=df_coords['v_x'],
+            lat1=df_coords["u_y"],
+            lng1=df_coords["u_x"],
+            lat2=df_coords["v_y"],
+            lng2=df_coords["v_x"],
         )
-    elif circuity_dist == 'euclidean':
+    elif circuity_dist == "euclidean":
         gc_distances = distance.euclidean_dist_vec(
-            y1=df_coords['u_y'], x1=df_coords['u_x'], y2=df_coords['v_y'], x2=df_coords['v_x']
+            y1=df_coords["u_y"], x1=df_coords["u_x"], y2=df_coords["v_y"], x2=df_coords["v_x"]
         )
     else:
         raise ValueError('circuity_dist must be "gc" or "euclidean"')
@@ -211,26 +211,26 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
 
     # assemble the results
     stats = {
-        'n': n,
-        'm': m,
-        'k_avg': k_avg,
-        'intersection_count': intersection_count,
-        'streets_per_node_avg': streets_per_node_avg,
-        'streets_per_node_counts': streets_per_node_counts,
-        'streets_per_node_proportion': streets_per_node_proportion,
-        'edge_length_total': edge_length_total,
-        'edge_length_avg': edge_length_avg,
-        'street_length_total': street_length_total,
-        'street_length_avg': street_length_avg,
-        'street_segments_count': street_segments_count,
-        'node_density_km': node_density_km,
-        'intersection_density_km': intersection_density_km,
-        'edge_density_km': edge_density_km,
-        'street_density_km': street_density_km,
-        'circuity_avg': circuity_avg,
-        'self_loop_proportion': self_loop_proportion,
-        'clean_intersection_count': clean_intersection_count,
-        'clean_intersection_density_km': clean_intersection_density_km,
+        "n": n,
+        "m": m,
+        "k_avg": k_avg,
+        "intersection_count": intersection_count,
+        "streets_per_node_avg": streets_per_node_avg,
+        "streets_per_node_counts": streets_per_node_counts,
+        "streets_per_node_proportion": streets_per_node_proportion,
+        "edge_length_total": edge_length_total,
+        "edge_length_avg": edge_length_avg,
+        "street_length_total": street_length_total,
+        "street_length_avg": street_length_avg,
+        "street_segments_count": street_segments_count,
+        "node_density_km": node_density_km,
+        "intersection_density_km": intersection_density_km,
+        "edge_density_km": edge_density_km,
+        "street_density_km": street_density_km,
+        "circuity_avg": circuity_avg,
+        "self_loop_proportion": self_loop_proportion,
+        "clean_intersection_count": clean_intersection_count,
+        "clean_intersection_density_km": clean_intersection_density_km,
     }
 
     # return the results
@@ -314,66 +314,66 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
 
     # average degree of the neighborhood of each node, and average for the graph
     avg_neighbor_degree = nx.average_neighbor_degree(G)
-    stats['avg_neighbor_degree'] = avg_neighbor_degree
-    stats['avg_neighbor_degree_avg'] = sum(avg_neighbor_degree.values()) / len(avg_neighbor_degree)
+    stats["avg_neighbor_degree"] = avg_neighbor_degree
+    stats["avg_neighbor_degree_avg"] = sum(avg_neighbor_degree.values()) / len(avg_neighbor_degree)
 
     # average weighted degree of the neighborhood of each node, and average for
     # the graph
-    avg_wtd_nbr_deg = nx.average_neighbor_degree(G, weight='length')
-    stats['avg_weighted_neighbor_degree'] = avg_wtd_nbr_deg
-    stats['avg_weighted_neighbor_degree_avg'] = sum(avg_wtd_nbr_deg.values()) / len(avg_wtd_nbr_deg)
+    avg_wtd_nbr_deg = nx.average_neighbor_degree(G, weight="length")
+    stats["avg_weighted_neighbor_degree"] = avg_wtd_nbr_deg
+    stats["avg_weighted_neighbor_degree_avg"] = sum(avg_wtd_nbr_deg.values()) / len(avg_wtd_nbr_deg)
 
     # degree centrality for a node is the fraction of nodes it is connected to
     degree_centrality = nx.degree_centrality(G)
-    stats['degree_centrality'] = degree_centrality
-    stats['degree_centrality_avg'] = sum(degree_centrality.values()) / len(degree_centrality)
+    stats["degree_centrality"] = degree_centrality
+    stats["degree_centrality_avg"] = sum(degree_centrality.values()) / len(degree_centrality)
 
     # calculate clustering coefficient for the nodes
-    stats['clustering_coefficient'] = nx.clustering(G_undir)
+    stats["clustering_coefficient"] = nx.clustering(G_undir)
 
     # average clustering coefficient for the graph
-    stats['clustering_coefficient_avg'] = nx.average_clustering(G_undir)
+    stats["clustering_coefficient_avg"] = nx.average_clustering(G_undir)
 
     # calculate weighted clustering coefficient for the nodes
-    stats['clustering_coefficient_weighted'] = nx.clustering(G_undir, weight='length')
+    stats["clustering_coefficient_weighted"] = nx.clustering(G_undir, weight="length")
 
     # average clustering coefficient (weighted) for the graph
-    stats['clustering_coefficient_weighted_avg'] = nx.average_clustering(G_undir, weight='length')
+    stats["clustering_coefficient_weighted_avg"] = nx.average_clustering(G_undir, weight="length")
 
     # pagerank: a ranking of the nodes in the graph based on the structure of
     # the incoming links
-    pagerank = nx.pagerank(G_dir, weight='length')
-    stats['pagerank'] = pagerank
+    pagerank = nx.pagerank(G_dir, weight="length")
+    stats["pagerank"] = pagerank
 
     # node with the highest page rank, and its value
     pagerank_max_node = max(pagerank, key=lambda x: pagerank[x])
-    stats['pagerank_max_node'] = pagerank_max_node
-    stats['pagerank_max'] = pagerank[pagerank_max_node]
+    stats["pagerank_max_node"] = pagerank_max_node
+    stats["pagerank_max"] = pagerank[pagerank_max_node]
 
     # node with the lowest page rank, and its value
     pagerank_min_node = min(pagerank, key=lambda x: pagerank[x])
-    stats['pagerank_min_node'] = pagerank_min_node
-    stats['pagerank_min'] = pagerank[pagerank_min_node]
+    stats["pagerank_min_node"] = pagerank_min_node
+    stats["pagerank_min"] = pagerank[pagerank_min_node]
 
     # if True, calculate node and edge connectivity
     if connectivity:
 
         # node connectivity is the minimum number of nodes that must be removed
         # to disconnect G or render it trivial
-        stats['node_connectivity'] = nx.node_connectivity(G_strong)
+        stats["node_connectivity"] = nx.node_connectivity(G_strong)
 
         # edge connectivity is equal to the minimum number of edges that must be
         # removed to disconnect G or render it trivial
-        stats['edge_connectivity'] = nx.edge_connectivity(G_strong)
-        utils.log('Calculated node and edge connectivity')
+        stats["edge_connectivity"] = nx.edge_connectivity(G_strong)
+        utils.log("Calculated node and edge connectivity")
 
     # if True, calculate average node connectivity
     if anc:
         # mean number of internally node-disjoint paths between each pair of
         # nodes in G, i.e., the expected number of nodes that must be removed to
         # disconnect a randomly selected pair of non-adjacent nodes
-        stats['node_connectivity_avg'] = nx.average_node_connectivity(G)
-        utils.log('Calculated average node connectivity')
+        stats["node_connectivity_avg"] = nx.average_node_connectivity(G)
+        utils.log("Calculated average node connectivity")
 
     # if True, calculate shortest paths, eccentricity, and topological metrics
     # that use eccentricity
@@ -381,55 +381,55 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
         # precompute shortest paths between all nodes for eccentricity-based
         # stats
         sp = {
-            source: dict(nx.single_source_dijkstra_path_length(G_strong, source, weight='length'))
+            source: dict(nx.single_source_dijkstra_path_length(G_strong, source, weight="length"))
             for source in G_strong.nodes()
         }
 
-        utils.log('Calculated shortest path lengths')
+        utils.log("Calculated shortest path lengths")
 
         # eccentricity of a node v is the maximum distance from v to all other
         # nodes in G
         eccentricity = nx.eccentricity(G_strong, sp=sp)
-        stats['eccentricity'] = eccentricity
+        stats["eccentricity"] = eccentricity
 
         # diameter is the maximum eccentricity
         diameter = nx.diameter(G_strong, e=eccentricity)
-        stats['diameter'] = diameter
+        stats["diameter"] = diameter
 
         # radius is the minimum eccentricity
         radius = nx.radius(G_strong, e=eccentricity)
-        stats['radius'] = radius
+        stats["radius"] = radius
 
         # center is the set of nodes with eccentricity equal to radius
         center = nx.center(G_strong, e=eccentricity)
-        stats['center'] = center
+        stats["center"] = center
 
         # periphery is the set of nodes with eccentricity equal to the diameter
         periphery = nx.periphery(G_strong, e=eccentricity)
-        stats['periphery'] = periphery
+        stats["periphery"] = periphery
 
     # if True, calculate node closeness centrality
     if cc:
         # closeness centrality of a node is the reciprocal of the sum of the
         # shortest path distances from u to all other nodes
-        closeness_centrality = nx.closeness_centrality(G, distance='length')
-        stats['closeness_centrality'] = closeness_centrality
-        stats['closeness_centrality_avg'] = sum(closeness_centrality.values()) / len(
+        closeness_centrality = nx.closeness_centrality(G, distance="length")
+        stats["closeness_centrality"] = closeness_centrality
+        stats["closeness_centrality_avg"] = sum(closeness_centrality.values()) / len(
             closeness_centrality
         )
-        utils.log('Calculated closeness centrality')
+        utils.log("Calculated closeness centrality")
 
     # if True, calculate node betweenness centrality
     if bc:
         # betweenness centrality of a node is the sum of the fraction of
         # all-pairs shortest paths that pass through node
         # networkx 2.4+ implementation cannot run on Multi(Di)Graphs, so use DiGraph
-        betweenness_centrality = nx.betweenness_centrality(G_dir, weight='length')
-        stats['betweenness_centrality'] = betweenness_centrality
-        stats['betweenness_centrality_avg'] = sum(betweenness_centrality.values()) / len(
+        betweenness_centrality = nx.betweenness_centrality(G_dir, weight="length")
+        stats["betweenness_centrality"] = betweenness_centrality
+        stats["betweenness_centrality_avg"] = sum(betweenness_centrality.values()) / len(
             betweenness_centrality
         )
-        utils.log('Calculated betweenness centrality')
+        utils.log("Calculated betweenness centrality")
 
-    utils.log('Calculated extended stats')
+    utils.log("Calculated extended stats")
     return stats

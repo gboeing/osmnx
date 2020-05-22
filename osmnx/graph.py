@@ -27,7 +27,7 @@ def graph_from_bbox(
     south,
     east,
     west,
-    network_type='all_private',
+    network_type="all_private",
     simplify=True,
     retain_all=False,
     truncate_by_edge=False,
@@ -139,7 +139,7 @@ def graph_from_bbox(
         # count how many street segments in buffered graph emanate from each
         # intersection in un-buffered graph, to retain true counts for each
         # intersection, even if some of its neighbors are outside the bbox
-        G.graph['streets_per_node'] = utils_graph.count_streets_per_node(
+        G.graph["streets_per_node"] = utils_graph.count_streets_per_node(
             G_buffered, nodes=G.nodes()
         )
 
@@ -176,15 +176,15 @@ def graph_from_bbox(
         if simplify:
             G = simplification.simplify_graph(G)
 
-    utils.log(f'graph_from_bbox returned graph with {len(G)} nodes and {len(G.edges())} edges')
+    utils.log(f"graph_from_bbox returned graph with {len(G)} nodes and {len(G.edges())} edges")
     return G
 
 
 def graph_from_point(
     center_point,
     dist=1000,
-    dist_type='bbox',
-    network_type='all_private',
+    dist_type="bbox",
+    network_type="all_private",
     simplify=True,
     retain_all=False,
     truncate_by_edge=False,
@@ -244,7 +244,7 @@ def graph_from_point(
     networkx.MultiDiGraph
     """
 
-    if dist_type not in ['bbox', 'network']:
+    if dist_type not in ["bbox", "network"]:
         raise InvalidDistanceType('dist_type must be "bbox" or "network"')
 
     # create a bounding box from the center point and the distance in each
@@ -273,19 +273,19 @@ def graph_from_point(
     # if the network dist_type is network, find the node in the graph
     # nearest to the center point, and truncate the graph by network distance
     # from this node
-    if dist_type == 'network':
+    if dist_type == "network":
         centermost_node = distance.get_nearest_node(G, center_point)
         G = truncate.truncate_graph_dist(G, centermost_node, max_dist=dist)
 
-    utils.log(f'graph_from_point returned graph with {len(G)} nodes and {len(G.edges())} edges')
+    utils.log(f"graph_from_point returned graph with {len(G)} nodes and {len(G.edges())} edges")
     return G
 
 
 def graph_from_address(
     address,
     dist=1000,
-    dist_type='bbox',
-    network_type='all_private',
+    dist_type="bbox",
+    network_type="all_private",
     simplify=True,
     retain_all=False,
     truncate_by_edge=False,
@@ -371,7 +371,7 @@ def graph_from_address(
         custom_filter=custom_filter,
         custom_settings=custom_settings,
     )
-    utils.log(f'graph_from_address returned graph with {len(G)} nodes and {len(G.edges())} edges')
+    utils.log(f"graph_from_address returned graph with {len(G)} nodes and {len(G.edges())} edges")
 
     if return_coords:
         return G, point
@@ -381,7 +381,7 @@ def graph_from_address(
 
 def graph_from_polygon(
     polygon,
-    network_type='all_private',
+    network_type="all_private",
     simplify=True,
     retain_all=False,
     truncate_by_edge=False,
@@ -439,13 +439,13 @@ def graph_from_polygon(
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:
-        raise TypeError('Shape does not have a valid geometry')
+        raise TypeError("Shape does not have a valid geometry")
     if not isinstance(polygon, (Polygon, MultiPolygon)):
         raise TypeError(
-            'Geometry must be a shapely Polygon or MultiPolygon. If you requested '
-            'graph from place name or address, make sure your query resolves to a '
-            'Polygon or MultiPolygon, and not some other geometry, like a Point. '
-            'See OSMnx documentation for details.'
+            "Geometry must be a shapely Polygon or MultiPolygon. If you requested "
+            "graph from place name or address, make sure your query resolves to a "
+            "Polygon or MultiPolygon, and not some other geometry, like a Point. "
+            "See OSMnx documentation for details."
         )
 
     if clean_periphery and simplify:
@@ -493,7 +493,7 @@ def graph_from_polygon(
         # count how many street segments in buffered graph emanate from each
         # intersection in un-buffered graph, to retain true counts for each
         # intersection, even if some of its neighbors are outside the polygon
-        G.graph['streets_per_node'] = utils_graph.count_streets_per_node(
+        G.graph["streets_per_node"] = utils_graph.count_streets_per_node(
             G_buffered, nodes=G.nodes()
         )
 
@@ -529,13 +529,13 @@ def graph_from_polygon(
         if simplify:
             G = simplification.simplify_graph(G)
 
-    utils.log(f'graph_from_polygon returned graph with {len(G)} nodes and {len(G.edges())} edges')
+    utils.log(f"graph_from_polygon returned graph with {len(G)} nodes and {len(G.edges())} edges")
     return G
 
 
 def graph_from_place(
     query,
-    network_type='all_private',
+    network_type="all_private",
     simplify=True,
     retain_all=False,
     truncate_by_edge=False,
@@ -614,11 +614,11 @@ def graph_from_place(
         # if it is a list, it contains multiple places to get
         gdf_place = boundaries.gdf_from_places(query, buffer_dist=buffer_dist)
     else:
-        raise TypeError('query must be a string or a list of query strings')
+        raise TypeError("query must be a string or a list of query strings")
 
     # extract the geometry from the GeoDataFrame to use in API query
-    polygon = gdf_place['geometry'].unary_union
-    utils.log('Constructed place geometry polygon(s) to query API')
+    polygon = gdf_place["geometry"].unary_union
+    utils.log("Constructed place geometry polygon(s) to query API")
 
     # create graph using this polygon(s) geometry
     G = graph_from_polygon(
@@ -636,7 +636,7 @@ def graph_from_place(
         custom_settings=custom_settings,
     )
 
-    utils.log(f'graph_from_place returned graph with {len(G)} nodes and {len(G.edges())} edges')
+    utils.log(f"graph_from_place returned graph with {len(G)} nodes and {len(G.edges())} edges")
     return G
 
 
@@ -665,9 +665,9 @@ def graph_from_file(filename, bidirectional=False, simplify=True, retain_all=Fal
     from warnings import warn
 
     msg = (
-        'The `graph_from_file` function has been deprecated and will be '
-        'removed in the next release. Use the new `graph_from_xml` '
-        'function instead.'
+        "The `graph_from_file` function has been deprecated and will be "
+        "removed in the next release. Use the new `graph_from_xml` "
+        "function instead."
     )
     warn(msg)
     return graph_from_xml(filename, bidirectional, simplify, retain_all)
@@ -703,7 +703,7 @@ def graph_from_xml(filename, bidirectional=False, simplify=True, retain_all=Fals
     if simplify:
         G = simplification.simplify_graph(G)
 
-    utils.log(f'graph_from_file returned graph with {len(G)} nodes and {len(G.edges())} edges')
+    utils.log(f"graph_from_file returned graph with {len(G)} nodes and {len(G.edges())} edges")
     return G
 
 
@@ -723,12 +723,12 @@ def _overpass_json_from_file(filename):
 
     def _opener(filename):
         _, ext = os.path.splitext(filename)
-        if ext == '.bz2':
+        if ext == ".bz2":
             # Use Python 2/3 compatible BZ2File()
             return bz2.BZ2File(filename)
         else:
             # Assume an unrecognized file extension is just XML
-            return open(filename, mode='rb')
+            return open(filename, mode="rb")
 
     with _opener(filename) as file:
         handler = _OSMContentHandler()
@@ -754,18 +754,18 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     networkx.MultiDiGraph
     """
 
-    utils.log('Creating networkx graph from downloaded OSM data...')
+    utils.log("Creating networkx graph from downloaded OSM data...")
 
     # make sure we got data back from the server requests
     elements = []
     for response_json in response_jsons:
-        elements.extend(response_json['elements'])
+        elements.extend(response_json["elements"])
     if len(elements) < 1:
-        raise EmptyOverpassResponse('There are no data elements in the response JSON')
+        raise EmptyOverpassResponse("There are no data elements in the response JSON")
 
     # create the graph as a MultiDiGraph and set its meta-attributes
     G = nx.MultiDiGraph(
-        created_date=utils.ts(), created_with=f'OSMnx {__version__}', crs=settings.default_crs
+        created_date=utils.ts(), created_with=f"OSMnx {__version__}", crs=settings.default_crs
     )
 
     # extract nodes and paths from the downloaded osm data
@@ -790,7 +790,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     if not retain_all:
         G = utils_graph.get_largest_component(G)
 
-    utils.log(f'Created graph with {len(G)} nodes and {len(G.edges())} edges')
+    utils.log(f"Created graph with {len(G)} nodes and {len(G.edges())} edges")
 
     # add length (great circle distance between nodes) attribute to each edge to
     # use as weight
@@ -815,13 +815,13 @@ def _convert_node(element):
     """
 
     node = {}
-    node['y'] = element['lat']
-    node['x'] = element['lon']
-    node['osmid'] = element['id']
-    if 'tags' in element:
+    node["y"] = element["lat"]
+    node["x"] = element["lon"]
+    node["osmid"] = element["id"]
+    if "tags" in element:
         for useful_tag in settings.useful_tags_node:
-            if useful_tag in element['tags']:
-                node[useful_tag] = element['tags'][useful_tag]
+            if useful_tag in element["tags"]:
+                node[useful_tag] = element["tags"][useful_tag]
     return node
 
 
@@ -840,16 +840,16 @@ def _convert_path(element):
     """
 
     path = {}
-    path['osmid'] = element['id']
+    path["osmid"] = element["id"]
 
     # remove any consecutive duplicate elements in the list of nodes
-    grouped_list = groupby(element['nodes'])
-    path['nodes'] = [group[0] for group in grouped_list]
+    grouped_list = groupby(element["nodes"])
+    path["nodes"] = [group[0] for group in grouped_list]
 
-    if 'tags' in element:
+    if "tags" in element:
         for useful_tag in settings.useful_tags_path:
-            if useful_tag in element['tags']:
-                path[useful_tag] = element['tags'][useful_tag]
+            if useful_tag in element["tags"]:
+                path[useful_tag] = element["tags"][useful_tag]
     return path
 
 
@@ -871,12 +871,12 @@ def _parse_osm_nodes_paths(osm_data):
 
     nodes = {}
     paths = {}
-    for element in osm_data['elements']:
-        if element['type'] == 'node':
-            key = element['id']
+    for element in osm_data["elements"]:
+        if element["type"] == "node":
+            key = element["id"]
             nodes[key] = _convert_node(element)
-        elif element['type'] == 'way':
-            key = element['id']
+        elif element["type"] == "way":
+            key = element["id"]
             paths[key] = _convert_path(element)
 
     return nodes, paths
@@ -902,15 +902,15 @@ def _add_path(G, data, one_way):
 
     # extract the ordered list of nodes from this path element, then delete it
     # so we don't add it as an attribute to the edge later
-    path_nodes = data['nodes']
-    del data['nodes']
+    path_nodes = data["nodes"]
+    del data["nodes"]
 
     # set the oneway attribute to the passed-in value, to make it consistent
     # True/False values, but only do this if you aren't forcing all edges to
     # oneway with the all_oneway setting. With the all_oneway setting, you
     # likely still want to preserve the original OSM oneway attribute.
     if not settings.all_oneway:
-        data['oneway'] = one_way
+        data["oneway"] = one_way
 
     # zip together the path nodes so you get tuples like (0,1), (1,2), (2,3)
     # and so on
@@ -946,7 +946,7 @@ def _add_paths(G, paths, bidirectional=False):
 
     # the list of values OSM uses in its 'oneway' tag to denote True
     # updated list of of values OSM uses based on https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf
-    osm_oneway_values = ['yes', 'true', '1', '-1', 'T', 'F']
+    osm_oneway_values = ["yes", "true", "1", "-1", "T", "F"]
 
     for data in paths.values():
 
@@ -954,15 +954,15 @@ def _add_paths(G, paths, bidirectional=False):
             _add_path(G, data, one_way=True)
         # if this path is tagged as one-way and if it is not a walking network,
         # then we'll add the path in one direction only
-        elif ('oneway' in data and data['oneway'] in osm_oneway_values) and not bidirectional:
-            if data['oneway'] == '-1' or data['oneway'] == 'T':
+        elif ("oneway" in data and data["oneway"] in osm_oneway_values) and not bidirectional:
+            if data["oneway"] == "-1" or data["oneway"] == "T":
                 # paths with a one-way value of -1 or T are one-way, but in the
                 # reverse direction of the nodes' order, see osm documentation
-                data['nodes'] = list(reversed(data['nodes']))
+                data["nodes"] = list(reversed(data["nodes"]))
             # add this path (in only one direction) to the graph
             _add_path(G, data, one_way=True)
 
-        elif ('junction' in data and data['junction'] == 'roundabout') and not bidirectional:
+        elif ("junction" in data and data["junction"] == "roundabout") and not bidirectional:
             # roundabout are also oneway but not tagged as is
             _add_path(G, data, one_way=True)
 
@@ -989,34 +989,34 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
 
     def __init__(self):
         self._element = None
-        self.object = {'elements': []}
+        self.object = {"elements": []}
 
     def startElement(self, name, attrs):
-        if name == 'osm':
-            self.object.update({k: attrs[k] for k in attrs.keys() if k in ('version', 'generator')})
+        if name == "osm":
+            self.object.update({k: attrs[k] for k in attrs.keys() if k in ("version", "generator")})
 
-        elif name in ('node', 'way'):
+        elif name in ("node", "way"):
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
-            self._element.update({k: float(attrs[k]) for k in attrs.keys() if k in ('lat', 'lon')})
+            self._element.update({k: float(attrs[k]) for k in attrs.keys() if k in ("lat", "lon")})
             self._element.update(
                 {
                     k: int(attrs[k])
                     for k in attrs.keys()
-                    if k in ('id', 'uid', 'version', 'changeset')
+                    if k in ("id", "uid", "version", "changeset")
                 }
             )
 
-        elif name == 'tag':
-            self._element['tags'].update({attrs['k']: attrs['v']})
+        elif name == "tag":
+            self._element["tags"].update({attrs["k"]: attrs["v"]})
 
-        elif name == 'nd':
-            self._element['nodes'].append(int(attrs['ref']))
+        elif name == "nd":
+            self._element["nodes"].append(int(attrs["ref"]))
 
-        elif name == 'relation':
+        elif name == "relation":
             # Placeholder for future relation support.
             # Look for nested members and tags.
             pass
 
     def endElement(self, name):
-        if name in ('node', 'way'):
-            self.object['elements'].append(self._element)
+        if name in ("node", "way"):
+            self.object["elements"].append(self._element)

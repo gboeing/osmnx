@@ -33,18 +33,18 @@ def geocode(query):
 
     # define the parameters
     params = OrderedDict()
-    params['format'] = 'json'
-    params['limit'] = 1
+    params["format"] = "json"
+    params["limit"] = 1
     params[
-        'dedupe'
+        "dedupe"
     ] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
-    params['q'] = query
+    params["q"] = query
     response_json = downloader.nominatim_request(params=params, timeout=30)
 
     # if results were returned, parse lat and long out of the result
-    if len(response_json) > 0 and 'lat' in response_json[0] and 'lon' in response_json[0]:
-        lat = float(response_json[0]['lat'])
-        lng = float(response_json[0]['lon'])
+    if len(response_json) > 0 and "lat" in response_json[0] and "lon" in response_json[0]:
+        lat = float(response_json[0]["lat"])
+        lng = float(response_json[0]["lon"])
         point = (lat, lng)
         utils.log(f'Geocoded "{query}" to {point}')
         return point
@@ -73,16 +73,16 @@ def redistribute_vertices(geom, dist):
     -------
         list or MultiLineString
     """
-    if geom.geom_type == 'LineString':
+    if geom.geom_type == "LineString":
         num_vert = int(round(geom.length / dist))
         if num_vert == 0:
             num_vert = 1
         return [geom.interpolate(float(n) / num_vert, normalized=True) for n in range(num_vert + 1)]
-    elif geom.geom_type == 'MultiLineString':
+    elif geom.geom_type == "MultiLineString":
         parts = [redistribute_vertices(part, dist) for part in geom]
         return type(geom)([p for p in parts if not p])
     else:
-        raise ValueError(f'unhandled geometry {geom.geom_type}')
+        raise ValueError(f"unhandled geometry {geom.geom_type}")
 
 
 def _round_polygon_coords(p, precision):
@@ -247,7 +247,7 @@ def round_geometry_coords(shape, precision):
         return _round_multipolygon_coords(shape, precision)
 
     else:
-        raise TypeError(f'cannot round coordinates of unhandled geometry type: {type(shape)}')
+        raise TypeError(f"cannot round coordinates of unhandled geometry type: {type(shape)}")
 
 
 def _consolidate_subdivide_geometry(geometry, max_query_area_size):
@@ -275,7 +275,7 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size):
     quadrat_width = math.sqrt(max_query_area_size)
 
     if not isinstance(geometry, (Polygon, MultiPolygon)):
-        raise TypeError('Geometry must be a shapely Polygon or MultiPolygon')
+        raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
 
     # if geometry is a MultiPolygon OR a single Polygon whose area exceeds the
     # max size, get the convex hull around the geometry
@@ -320,18 +320,18 @@ def _get_polygons_coordinates(geometry):
             x, y = polygon.exterior.xy
             polygons_coords.append(list(zip(x, y)))
     else:
-        raise TypeError('Geometry must be a shapely Polygon or MultiPolygon')
+        raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
 
     # convert the exterior coordinates of the polygon(s) to the string format
     # the API expects
     polygon_coord_strs = []
     for coords in polygons_coords:
-        s = ''
-        separator = ' '
+        s = ""
+        separator = " "
         for coord in list(coords):
             # round floating point lats and longs to 6 decimal places (ie, ~100 mm),
             # so we can hash and cache strings consistently
-            s = f'{s}{separator}{coord[1]:.6f}{separator}{coord[0]:.6f}'
+            s = f"{s}{separator}{coord[1]:.6f}{separator}{coord[0]:.6f}"
         polygon_coord_strs.append(s.strip(separator))
 
     return polygon_coord_strs
@@ -417,8 +417,8 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
     )
 
     # create an r-tree spatial index for the nodes (ie, points)
-    sindex = gdf['geometry'].sindex
-    utils.log(f'Created r-tree spatial index for {len(gdf)} points')
+    sindex = gdf["geometry"].sindex
+    utils.log(f"Created r-tree spatial index for {len(gdf)} points")
 
     # loop through each chunk of the geometry to find approximate and then
     # precisely intersecting points
@@ -441,14 +441,14 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
     if len(points_within_geometry) > 0:
         # drop duplicate points, if buffered poly caused an overlap on point(s)
         # that lay directly on a quadrat line
-        points_within_geometry = points_within_geometry.drop_duplicates(subset='node')
+        points_within_geometry = points_within_geometry.drop_duplicates(subset="node")
     else:
         # after simplifying the graph, and given the requested network type,
         # there are no nodes inside the polygon - can't create graph from that
         # so throw error
-        raise Exception('There are no nodes within the requested geometry')
+        raise Exception("There are no nodes within the requested geometry")
 
-    utils.log(f'Identified {len(points_within_geometry)} nodes inside polygon')
+    utils.log(f"Identified {len(points_within_geometry)} nodes inside polygon")
     return points_within_geometry
 
 
@@ -486,7 +486,7 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     if project_utm:
         west, south, east, north = buffer_proj.bounds
         utils.log(
-            f'Created bbox {dist} m from {point} and projected it: {north},{south},{east},{west}'
+            f"Created bbox {dist} m from {point} and projected it: {north},{south},{east},{west}"
         )
     else:
         # if project_utm is False, project back to lat-lng then get the
@@ -494,7 +494,7 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
         buffer_latlong, _ = projection.project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
         west, south, east, north = buffer_latlong.bounds
         utils.log(
-            f'Created bounding box {dist} meters in each direction from {point}: {north},{south},{east},{west}'
+            f"Created bounding box {dist} meters in each direction from {point}: {north},{south},{east},{west}"
         )
 
     if return_crs:

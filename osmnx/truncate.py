@@ -9,7 +9,7 @@ from . import utils_geo
 from . import utils_graph
 
 
-def truncate_graph_dist(G, source_node, max_dist=1000, weight='length', retain_all=False):
+def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_all=False):
     """
     Remove everything farther than some network distance from specified node.
 
@@ -40,7 +40,7 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight='length', retain_a
     distances = nx.shortest_path_length(G, source=source_node, weight=weight)
     distant_nodes = {key: value for key, value in dict(distances).items() if value > max_dist}
     G.remove_nodes_from(distant_nodes.keys())
-    utils.log('Truncated graph by weighted network distance')
+    utils.log("Truncated graph by weighted network distance")
 
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
@@ -86,7 +86,7 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
     nodes_outside_bbox = []
 
     for node, data in G.nodes(data=True):
-        if data['y'] > north or data['y'] < south or data['x'] > east or data['x'] < west:
+        if data["y"] > north or data["y"] < south or data["x"] > east or data["x"] < west:
             # this node is outside the bounding box
             if not truncate_by_edge:
                 # if we're not truncating by edge, add node to list of nodes
@@ -98,8 +98,8 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
                 any_neighbors_in_bbox = False
                 neighbors = list(G.successors(node)) + list(G.predecessors(node))
                 for neighbor in neighbors:
-                    x = G.nodes[neighbor]['x']
-                    y = G.nodes[neighbor]['y']
+                    x = G.nodes[neighbor]["x"]
+                    y = G.nodes[neighbor]["y"]
                     if y < north and y > south and x < east and x > west:
                         any_neighbors_in_bbox = True
                         break
@@ -110,7 +110,7 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
                     nodes_outside_bbox.append(node)
 
     G.remove_nodes_from(nodes_outside_bbox)
-    utils.log('Truncated graph by bounding box')
+    utils.log("Truncated graph by bounding box")
 
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
@@ -162,12 +162,12 @@ def truncate_graph_polygon(
     """
 
     G = G.copy()
-    utils.log('Identifying all nodes that lie outside the polygon...')
+    utils.log("Identifying all nodes that lie outside the polygon...")
 
     # get a GeoDataFrame of all the nodes
-    node_geom = [Point(data['x'], data['y']) for _, data in G.nodes(data=True)]
-    gdf_nodes = gpd.GeoDataFrame({'node': list(G.nodes()), 'geometry': node_geom})
-    gdf_nodes.crs = G.graph['crs']
+    node_geom = [Point(data["x"], data["y"]) for _, data in G.nodes(data=True)]
+    gdf_nodes = gpd.GeoDataFrame({"node": list(G.nodes()), "geometry": node_geom})
+    gdf_nodes.crs = G.graph["crs"]
 
     # find all the nodes in the graph that lie outside the polygon
     points_within_geometry = utils_geo._intersect_index_quadrats(
@@ -181,18 +181,18 @@ def truncate_graph_polygon(
 
     if truncate_by_edge:
         nodes_to_remove = []
-        for node in nodes_outside_polygon['node']:
+        for node in nodes_outside_polygon["node"]:
             neighbors = pd.Series(list(G.successors(node)) + list(G.predecessors(node)))
             # check if all the neighbors of this node also lie outside polygon
-            if neighbors.isin(nodes_outside_polygon['node']).all():
+            if neighbors.isin(nodes_outside_polygon["node"]).all():
                 nodes_to_remove.append(node)
     else:
-        nodes_to_remove = nodes_outside_polygon['node']
+        nodes_to_remove = nodes_outside_polygon["node"]
 
     # now remove from the graph all those nodes that lie outside the place
     # polygon
     G.remove_nodes_from(nodes_to_remove)
-    utils.log(f'Removed {len(nodes_outside_polygon)} nodes outside polygon')
+    utils.log(f"Removed {len(nodes_outside_polygon)} nodes outside polygon")
 
     # remove any isolated nodes and retain only the largest component (if retain_all is False)
     if not retain_all:
