@@ -54,22 +54,7 @@ def _create_poi_query(north, south, east, west, tags,
     query : string
     """
 
-    # pass server memory allocation in bytes for the query to the API
-    # if None, pass nothing so the server will use its default allocation size
-    # otherwise, define the query's maxsize parameter value as whatever the
-    # caller passed in
-    if memory is None:
-        maxsize = ''
-    else:
-        maxsize = f'[maxsize:{memory}]'
-
-    # use custom settings if delivered, otherwise just the default ones.
-    if custom_settings:
-        overpass_settings = custom_settings
-    else:
-        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout,
-                                                                            maxsize=maxsize)
-
+    overpass_settings = downloader._make_overpass_settings(custom_settings, timeout, memory)
 
     # make sure every value in dict is bool, str, or list of str
     error_msg = 'tags must be a dict with values of bool, str, or list of str'

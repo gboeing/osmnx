@@ -7,6 +7,7 @@ import os
 import pandas as pd
 from descartes import PolygonPatch
 from matplotlib.collections import LineCollection
+from matplotlib.collections import PatchCollection
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
 from . import graph
@@ -140,6 +141,7 @@ def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis',
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     attr : string
         the name of the attribute
     num_bins : int
@@ -155,7 +157,7 @@ def get_node_colors_by_attr(G, attr, num_bins=None, cmap='viridis',
 
     Returns
     -------
-    list
+    node_colors : list
     """
     if num_bins is None:
         num_bins = len(G)
@@ -176,6 +178,7 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis',
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     attr : string
         the name of the continuous-variable attribute
     num_bins : int
@@ -191,7 +194,7 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap='viridis',
 
     Returns
     -------
-    list
+    edge_colors : list
     """
     if num_bins is None:
         num_bins = len(G.edges())
@@ -211,7 +214,9 @@ def _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_
     Parameters
     ----------
     fig : figure
+        matplotlib figure
     ax : axis
+        matplotlib axis
     save : bool
         whether to save the figure to disk or not
     show : bool
@@ -290,6 +295,7 @@ def plot_graph(G, bbox=None, fig_height=6, fig_width=None, margin=0.02,
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     bbox : tuple
         bounding box as north,south,east,west - if None will calculate from
         spatial extents of data. if passing a bbox, you probably also want to
@@ -450,8 +456,9 @@ def _node_list_to_coordinate_lines(G, node_list, use_geom=True):
     Parameters
     ----------
     G : networkx.MultiDiGraph
-    route : list
-        the route as a list of nodes
+        input graph
+    node_list : list
+        a route as a list of node IDs
     use_geom : bool
         if True, use the spatial geometry attribute of the edges to draw
         geographically accurate edges, rather than just lines straight from
@@ -460,7 +467,7 @@ def _node_list_to_coordinate_lines(G, node_list, use_geom=True):
     Returns
     -------
     lines : list
-        list of lines given as pairs ( (x_start, y_start), (x_stop, y_stop) )
+        list of lines as pairs ((x_start, y_start), (x_stop, y_stop))
     """
     edge_nodes = list(zip(node_list[:-1], node_list[1:]))
     lines = []
@@ -503,6 +510,7 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     route : list
         the route as a list of nodes
     bbox : tuple
@@ -639,6 +647,7 @@ def plot_graph_routes(G, routes, bbox=None, fig_height=6, fig_width=None,
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     routes : list
         the routes as a list of lists of nodes
     bbox : tuple
@@ -778,7 +787,8 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph. must be unprojected.
+    G : networkx.MultiDiGraph
+        input graph, must be unprojected
     address : string
         the address to geocode as the center point if G is not passed in
     point : tuple
@@ -931,5 +941,93 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
                          edge_color=edge_color, show=show, save=save,
                          close=close, filename=filename, file_format=file_format,
                          dpi=dpi)
+
+    return fig, ax
+
+
+
+def plot_footprints(gdf, fig=None, ax=None, figsize=None, color='#333333',
+                    bgcolor='w', set_bounds=True, bbox=None, save=False,
+                    show=True, close=False, filename='image',
+                    file_format='png', dpi=600):
+    """
+    Plot a GeoDataFrame of footprints.
+
+    Parameters
+    ----------
+    gdf : geopandas.GeoDataFrame
+        GeoDataFrame of footprints
+    fig : figure
+        matplotlib figure
+    ax : axis
+        matplotlib axis
+    figsize : tuple
+        (width, height) size of matplotlib figure
+    color : string
+        the color of the footprints
+    bgcolor : string
+        the background color of the plot
+    set_bounds : bool
+        if True, set bounds from either passed-in bbox or the spatial extent of the gdf
+    bbox : tuple
+        if True and if set_bounds is True, set the display bounds to this bbox
+    save : bool
+        whether to save the figure to disk or not
+    show : bool
+        whether to display the figure or not
+    close : bool
+        close the figure (only if show equals False) to prevent display
+    filename : string
+        the name of the file to save
+    file_format : string
+        the format of the file to save (e.g., 'jpg', 'png', 'svg')
+    dpi : int
+        the resolution of the image file if saving
+
+    Returns
+    -------
+    fig, ax : tuple
+
+    """
+
+    if fig is None or ax is None:
+        fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)
+        ax.set_facecolor(bgcolor)
+
+    # extract each polygon as a descartes patch, and add to a matplotlib patch
+    # collection
+    patches = []
+    for geometry in gdf['geometry']:
+        if isinstance(geometry, Polygon):
+            patches.append(PolygonPatch(geometry))
+        elif isinstance(geometry, MultiPolygon):
+            for subpolygon in geometry:  # if geometry is multipolygon, go through each constituent subpolygon
+                patches.append(PolygonPatch(subpolygon))
+    pc = PatchCollection(patches, facecolor=color, edgecolor=color, linewidth=0, alpha=1)
+    ax.add_collection(pc)
+
+    if set_bounds:
+        if bbox is None:
+            # set the figure bounds to the polygons' bounds
+            left, bottom, right, top = gdf.total_bounds
+        else:
+            top, bottom, right, left = bbox
+        ax.set_xlim((left, right))
+        ax.set_ylim((bottom, top))
+
+    # turn off the axis display set the margins to zero and point the ticks in
+    # so there's no space around the plot
+    ax.axis('off')
+    ax.margins(0)
+    ax.tick_params(which='both', direction='in')
+    fig.canvas.draw()
+
+    # make everything square
+    ax.set_aspect('equal')
+    fig.canvas.draw()
+
+    fig, ax = _save_and_show(fig=fig, ax=ax, save=save, show=show, close=close,
+                             filename=filename, file_format=file_format, dpi=dpi,
+                             axis_off=True)
 
     return fig, ax

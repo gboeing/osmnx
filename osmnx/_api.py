@@ -20,7 +20,6 @@ from .footprints import footprints_from_address
 from .footprints import footprints_from_place
 from .footprints import footprints_from_point
 from .footprints import footprints_from_polygon
-from .footprints import plot_footprints
 
 from .graph import graph_from_address
 from .graph import graph_from_bbox
@@ -37,6 +36,7 @@ from .io import save_graph_xml
 from .io import save_graphml
 
 from .plot import plot_figure_ground
+from .plot import plot_footprints
 from .plot import plot_graph
 from .plot import plot_graph_route
 from .plot import plot_graph_routes

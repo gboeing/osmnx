@@ -20,6 +20,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     nodes : bool
         if True, convert graph nodes to a GeoDataFrame and return it
     edges : bool
@@ -101,7 +102,9 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
     Parameters
     ----------
     gdf_nodes : GeoDataFrame
+        GeoDataFrame of graph nodes
     gdf_edges : GeoDataFrame
+        GeoDataFrame of graph edges
 
     Returns
     -------
@@ -124,7 +127,9 @@ def graph_from_gdfs(gdf_nodes, gdf_edges):
     Parameters
     ----------
     gdf_nodes : GeoDataFrame
+        GeoDataFrame of graph nodes
     gdf_edges : GeoDataFrame
+        GeoDataFrame of graph edges
 
     Returns
     -------
@@ -162,6 +167,7 @@ def induce_subgraph(G, node_subset):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     node_subset : list-like
         the subset of nodes to induce a subgraph of G
 
@@ -201,6 +207,7 @@ def get_largest_component(G, strongly=False):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     strongly : bool
         if True, return the largest strongly instead of weakly connected
         component
@@ -250,6 +257,7 @@ def get_route_edge_attributes(G, route, attribute=None, minimize_key='length',
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     route : list
         list of nodes in the path
     attribute : string
@@ -293,6 +301,7 @@ def count_streets_per_node(G, nodes=None):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     nodes : iterable
         the set of node IDs to get counts for
 
@@ -357,7 +366,7 @@ def remove_isolated_nodes(G):
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        the graph from which to remove nodes
+        graph from which to remove nodes
 
     Returns
     -------
@@ -455,6 +464,7 @@ def _update_edge_keys(G):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
 
     Returns
     -------
@@ -512,6 +522,7 @@ def get_undirected(G):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
 
     Returns
     -------
@@ -582,6 +593,7 @@ def add_edge_lengths(G):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
 
     Returns
     -------

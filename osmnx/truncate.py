@@ -17,6 +17,7 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight='length',
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     source_node : int
         the node in the graph from which to measure network distances to other
         nodes
@@ -64,6 +65,7 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False,
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     north : float
         northern latitude of bounding box
     south : float
@@ -131,6 +133,7 @@ def truncate_graph_polygon(G, polygon, retain_all=False, truncate_by_edge=False,
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     polygon : shapely Polygon or MultiPolygon
         only retain nodes in graph that lie within this geometry
     retain_all : bool

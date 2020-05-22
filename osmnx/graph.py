@@ -770,6 +770,7 @@ def _add_path(G, data, one_way):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     data : dict
         the attributes of the path
     one_way : bool
@@ -813,6 +814,7 @@ def _add_paths(G, paths, bidirectional=False):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     paths : dict
         the paths from OSM
     bidirectional : bool

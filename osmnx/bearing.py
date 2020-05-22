@@ -14,7 +14,9 @@ def get_bearing(origin_point, destination_point):
     Parameters
     ----------
     origin_point : tuple
+        (lat, lng)
     destination_point : tuple
+        (lat, lng)
 
     Returns
     -------
@@ -55,10 +57,12 @@ def add_edge_bearings(G):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
 
     Returns
     -------
     G : networkx.MultiDiGraph
+        graph with edge bearing attributes
     """
 
     for u, v, data in G.edges(keys=False, data=True):

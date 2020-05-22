@@ -72,6 +72,7 @@ def plot_graph_folium(G, graph_map=None, popup_attribute=None,
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     graph_map : folium.folium.Map
         if not None, plot the graph on this preexisting folium map object
     popup_attribute : string
@@ -135,6 +136,7 @@ def plot_route_folium(G, route, route_map=None, popup_attribute=None,
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     route : list
         the route as a list of nodes
     route_map : folium.folium.Map

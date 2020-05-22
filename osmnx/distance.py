@@ -30,9 +30,13 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     Parameters
     ----------
     lat1 : float or array of float
+        first lat coord
     lng1 : float or array of float
+        first lng coord
     lat2 : float or array of float
+        second lat coord
     lng2 : float or array of float
+        second lng coord
     earth_radius : numeric
         radius of earth in units in which distance will be returned
         (default is meters)
@@ -73,14 +77,19 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     Parameters
     ----------
     y1 : float or np.array of float
+        first y coord
     x1 : float or np.array of float
+        first x coord
     y2 : float or np.array of float
+        second y coord
     x2 : float or np.array of float
+        second x coord
 
     Returns
     -------
     dist : float or np.array of float
-        distance or vector of distances from (x1, y1) to (x2, y2) in graph units
+        distance or vector of distances from (x1, y1) to (x2, y2) in graph
+        units
     """
 
     # euclid's formula
@@ -100,6 +109,7 @@ def get_nearest_node(G, point, method='haversine', return_dist=False):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     point : tuple
         The (lat, lng) or (y, x) point for which we will find the nearest node
         in the graph
@@ -173,14 +183,15 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     point : tuple
-        The (lat, lng) or (y, x) point for which we will find the nearest edge
+        the (lat, lng) or (y, x) point for which we will find the nearest edge
         in the graph
     return_geom : bool
         Optionally return the geometry of the nearest edge
     return_dist : bool
-        Optionally return the distance in graph's coordinates' units between the
-        point and the nearest node
+        Optionally return the distance in graph's coordinates' units between
+        the point and the nearest node
 
     Returns
     -------
@@ -231,6 +242,7 @@ def get_nearest_nodes(G, X, Y, method=None):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     X : list-like
         The vector of longitudes or x's for which we will find the nearest
         node in the graph
@@ -324,6 +336,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     X : list-like
         The vector of longitudes or x's for which we will find the nearest
         edge in the graph. For projected graphs, use the projected coordinates,

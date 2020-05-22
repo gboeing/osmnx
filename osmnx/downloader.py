@@ -275,6 +275,44 @@ def _get_pause(recursive_delay=5, default_duration=10):
 
 
 
+def _make_overpass_settings(custom_settings, timeout, memory):
+    """
+    Make settings string to send in Overpass query.
+
+    Parameters
+    ----------
+    custom_settings : string
+        custom settings to be used in the overpass query instead of defaults
+    timeout : int
+        the timeout interval for requests and to pass to API
+    memory : int
+        server memory allocation size for the query, in bytes. If none, server
+        will use its default allocation size
+
+    Returns
+    -------
+    overpass_settings : string
+    """
+
+    # pass server memory allocation in bytes for the query to the API
+    # if None, pass nothing so the server will use its default allocation size
+    # otherwise, define the query's maxsize parameter value as whatever the
+    # caller passed in
+    if memory is None:
+        maxsize = ''
+    else:
+        maxsize = f'[maxsize:{memory}]'
+
+    # use custom settings if delivered, otherwise just the default ones
+    if custom_settings:
+        overpass_settings = custom_settings
+    else:
+        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout, maxsize=maxsize)
+
+    return overpass_settings
+
+
+
 def _osm_net_download(polygon=None, north=None, south=None, east=None, west=None,
                       network_type='all_private', timeout=180, memory=None,
                       max_query_area_size=50 * 1000 * 50 * 1000,
@@ -313,8 +351,7 @@ def _osm_net_download(polygon=None, north=None, south=None, east=None, west=None
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in the overpass query instead of defaults
 
     Returns
     -------
@@ -337,20 +374,7 @@ def _osm_net_download(polygon=None, north=None, south=None, east=None, west=None
         osm_filter = _get_osm_filter(network_type)
     response_jsons = []
 
-    # pass server memory allocation in bytes for the query to the API
-    # if None, pass nothing so the server will use its default allocation size
-    # otherwise, define the query's maxsize parameter value as whatever the
-    # caller passed in
-    if memory is None:
-        maxsize = ''
-    else:
-        maxsize = f'[maxsize:{memory}]'
-
-    # use custom settings if delivered, otherwise just the default ones.
-    if custom_settings:
-        overpass_settings = custom_settings
-    else:
-        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout, maxsize=maxsize)
+    overpass_settings = _make_overpass_settings(custom_settings, timeout, memory)
 
     # define the query to send the API
     # specifying way["highway"] means that all ways returned must have a highway
