@@ -555,9 +555,9 @@ def plot_graph_route(G, route, bbox=None, fig_height=6, fig_width=None,
         geographically accurate edges, rather than just lines straight from node
         to node
     origin_point : tuple
-        optional, an origin (lat, lon) point to plot instead of the origin node
+        optional, an origin (lat, lng) point to plot instead of the origin node
     destination_point : tuple
-        optional, a destination (lat, lon) point to plot instead of the
+        optional, a destination (lat, lng) point to plot instead of the
         destination node
     route_color : string
         the color of the route
@@ -691,7 +691,7 @@ def plot_graph_routes(G, routes, bbox=None, fig_height=6, fig_width=None,
         geographically accurate edges, rather than just lines straight from node
         to node
     orig_dest_points : list of tuples
-        optional, a group of (lat, lon) points to plot instead of the
+        optional, a group of (lat, lng) points to plot instead of the
         origins and destinations of each route nodes
     route_color : string
         the color of the route
@@ -851,7 +851,7 @@ def plot_figure_ground(G=None, address=None, point=None, dist=805,
                                    truncate_by_edge=True)
         G = simplification.simplify_graph(G, strict=False)
     else:
-        raise ValueError('You must pass an address or lat-long point or graph.')
+        raise ValueError('You must pass an address or lat-lng point or graph.')
 
     # if user did not pass in custom street widths, create a dict of default
     # values

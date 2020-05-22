@@ -147,12 +147,12 @@ def graph_from_point(center_point, dist=1000, dist_type='bbox',
                      clean_periphery=True, infrastructure='way["highway"]',
                      custom_filter=None, custom_settings=None):
     """
-    Create a graph from OSM within some distance of some (lat, lon) point.
+    Create a graph from OSM within some distance of some (lat, lng) point.
 
     Parameters
     ----------
     center_point : tuple
-        the (lat, lon) center point around which to construct the graph
+        the (lat, lng) center point around which to construct the graph
     dist : int
         retain only those nodes within this many meters of the center of the
         graph, with distance determined according to dist_type argument
@@ -277,10 +277,10 @@ def graph_from_address(address, dist=1000, dist_type='bbox',
     Returns
     -------
     networkx.MultiDiGraph or tuple
-        multidigraph or optionally (multidigraph, (lat, lon))
+        multidigraph or optionally (multidigraph, (lat, lng))
     """
 
-    # geocode the address string to a (lat, lon) point
+    # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
 
     # then create a graph from this point

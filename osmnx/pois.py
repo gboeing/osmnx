@@ -213,7 +213,7 @@ def _parse_nodes_coords(osm_response):
     Returns
     -------
     coords : dict
-        dict of node IDs and their lat, lon coordinates
+        dict of node IDs and their lat, lng coordinates
     """
 
     coords = {}
@@ -232,7 +232,7 @@ def _parse_polygonal_poi(coords, response):
     Parameters
     ----------
     coords : dict
-        dict of node IDs and their lat, lon coordinates
+        dict of node IDs and their lat, lng coordinates
     response : string
         OSM response JSON string
 
@@ -273,7 +273,7 @@ def _parse_osm_node(response):
 
     Returns
     -------
-    Dict of vertex IDs and their lat, lon coordinates.
+    Dict of vertex IDs and their lat, lng coordinates.
     """
 
     try:
@@ -502,7 +502,7 @@ def pois_from_point(point, tags, dist=1000,
     Parameters
     ----------
     point : tuple
-        a (lat, lon) point
+        a (lat, lng) point
     tags : dict
         Dict of tags used for finding POIs from the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -546,7 +546,7 @@ def pois_from_address(address, tags, dist=1000,
     Parameters
     ----------
     address : string
-        the address to geocode to a lat-long point
+        the address to geocode to a lat-lng point
     tags : dict
         Dict of tags used for finding POIs from the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -573,7 +573,7 @@ def pois_from_address(address, tags, dist=1000,
     geopandas.GeoDataFrame
     """
 
-    # geocode the address string to a (lat, lon) point
+    # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
 
     # get POIs within distance of this point

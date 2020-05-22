@@ -35,7 +35,7 @@ def _is_crs_utm(crs):
 
 def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     """
-    Project a shapely (Multi)Polygon from lat-long to UTM, or vice-versa.
+    Project a shapely (Multi)Polygon from lat-lng to UTM, or vice-versa.
 
     Parameters
     ----------
@@ -47,7 +47,7 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     to_crs : dict or string or pyproj.CRS
         if not None, just project to this CRS instead of to UTM
     to_latlong : bool
-        if True, project from crs to lat-long, if False, project from crs to
+        if True, project from crs to lat-lng, if False, project from crs to
         local UTM zone
 
     Returns
@@ -131,7 +131,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
 
 def project_graph(G, to_crs=None):
     """
-    Project graph from lat-long to UTM zone appropriate for its centroid.
+    Project graph from lat-lng to UTM zone appropriate for its centroid.
 
     Parameters
     ----------
@@ -152,7 +152,7 @@ def project_graph(G, to_crs=None):
     gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
     gdf_nodes.crs = G_proj.graph['crs']
 
-    # create new lat/lon columns just to save that data for later reference
+    # create new lat-lng columns just to save that data for later reference
     # if they do not already exist (i.e., don't overwrite in subsequent re-projections)
     if 'lon' not in gdf_nodes.columns or 'lat' not in gdf_nodes.columns:
         gdf_nodes['lon'] = gdf_nodes['x']

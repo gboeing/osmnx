@@ -59,7 +59,7 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
         gdf.crs = settings.default_crs
 
         # if buffer_dist was passed in, project the geometry to UTM, buffer it
-        # in meters, then project it back to lat-long
+        # in meters, then project it back to lat-lng
         if buffer_dist is not None:
             gdf_utm = projection.project_gdf(gdf)
             gdf_utm['geometry'] = gdf_utm['geometry'].buffer(buffer_dist)

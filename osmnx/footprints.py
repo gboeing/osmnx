@@ -90,7 +90,7 @@ def _osm_footprints_download(polygon=None,
         geometry_proj, crs_proj = projection.project_geometry(polygon)
 
         # subdivide it if it exceeds the max area size (in meters), then project
-        # back to lat-long
+        # back to lat-lng
         gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
         utils.log(f'Requesting footprints within bounding box from API in {len(geometry)} request(s)')
@@ -98,7 +98,7 @@ def _osm_footprints_download(polygon=None,
         # loop through each polygon rectangle in the geometry (there will only
         # be one if original bbox didn't exceed max area size)
         for poly in geometry:
-            # represent bbox as south,west,north,east and round lat-longs to 8
+            # represent bbox as south,west,north,east and round lat-lngs to 8
             # decimal places (ie, within 1 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
@@ -113,7 +113,7 @@ def _osm_footprints_download(polygon=None,
 
     elif by_poly:
         # project to utm, divide polygon up into sub-polygons if area exceeds a
-        # max size (in meters), project back to lat-long, then get a list of polygon(s) exterior coordinates
+        # max size (in meters), project back to lat-lng, then get a list of polygon(s) exterior coordinates
         geometry_proj, crs_proj = projection.project_geometry(polygon)
         gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
         geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
@@ -240,7 +240,7 @@ def _responses_to_dicts(responses, footprint_type):
     -------
     (vertices, footprints, relations, untagged_footprints) : tuple
         vertices
-            dictionary of OSM nodes including their lat, lon coordinates
+            dictionary of OSM nodes including their lat, lng coordinates
         footprints
             dictionary of OSM ways including their nodes and tags
         relations
@@ -435,12 +435,12 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
 def footprints_from_point(point, dist, footprint_type='building', retain_invalid=False,
                           timeout=180, memory=None, custom_settings=None):
     """
-    Get footprints within some distance N, S, E, W of a lat-long point.
+    Get footprints within some distance N, S, E, W of a lat-lng point.
 
     Parameters
     ----------
     point : tuple
-        a lat-long point
+        a lat-lng point
     dist : numeric
         distance in meters
     footprint_type : string
@@ -477,7 +477,7 @@ def footprints_from_address(address, dist, footprint_type='building', retain_inv
     Parameters
     ----------
     address : string
-        the address to geocode to a lat-long point
+        the address to geocode to a lat-lng point
     dist : numeric
         distance in meters
     footprint_type : string
@@ -498,7 +498,7 @@ def footprints_from_address(address, dist, footprint_type='building', retain_inv
     geopandas.GeoDataFrame
     """
 
-    # geocode the address string to a (lat, lon) point
+    # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
 
     # get footprints within distance of this point

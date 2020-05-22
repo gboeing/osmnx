@@ -7,7 +7,7 @@ import numpy as np
 
 def get_bearing(origin_point, destination_point):
     """
-    Calculate the bearing between two lat-long points.
+    Calculate the bearing between two lat-lng points.
 
     Each tuple should represent (lat, lng) as decimal degrees.
 
