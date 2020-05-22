@@ -1,9 +1,4 @@
-################################################################################
-# Module: elevation.py
-# Description: Get node elevations and calculate edge grades
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Get node elevations and calculate edge grades."""
 
 import math
 import networkx as nx
@@ -18,8 +13,9 @@ from . import utils
 def add_node_elevations(G, api_key, max_locations_per_batch=350,
                         pause_duration=0.02):  # pragma: no cover
     """
-    Get the elevation (meters) of each node in the network and add it to the
-    node as an attribute.
+    Get the elevation (meters) of each node.
+
+    Add it to the node as an attribute.
 
     Parameters
     ----------
@@ -94,6 +90,8 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
 
 def add_edge_grades(G, add_absolute=True):
     """
+    Add grade attribute to each graph edge.
+
     Get the directed grade (ie, rise over run) for each edge in the network and
     add it to the edge as an attribute. Nodes must have elevation attributes to
     use this function.

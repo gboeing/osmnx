@@ -1,9 +1,4 @@
-################################################################################
-# Module: boundaries.py
-# Description: Create GeoDataFrames of place boundaries
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Create GeoDataFrames of place boundaries."""
 
 import geopandas as gpd
 import logging as lg
@@ -16,8 +11,9 @@ from . import utils
 
 def gdf_from_place(query, which_result=1, buffer_dist=None):
     """
-    Create a GeoDataFrame from a single place name query by geocoding
-    the query with Nominatim then turning it into a GeoDataFrame with
+    Create a GeoDataFrame from a single place name query.
+
+    Geocode the query with Nominatim then turn it into a GeoDataFrame with
     a geometry column.
 
     Parameters
@@ -82,8 +78,9 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
 
 def gdf_from_places(queries, which_results=None, buffer_dist=None):
     """
-    Create a GeoDataFrame from a list of place name queries by geocoding
-    the queries with Nominatim then turning result into a GeoDataFrame with
+    Create a GeoDataFrame from a list of place name queries.
+
+    Geocode the queries with Nominatim then turn result into GeoDataFrame with
     a geometry column.
 
     Parameters

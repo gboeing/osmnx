@@ -1,9 +1,4 @@
-################################################################################
-# Module: bearing.py
-# Description: Calculate graph edge bearings
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Calculate graph edge bearings."""
 
 import math
 import numpy as np
@@ -12,8 +7,9 @@ import numpy as np
 
 def get_bearing(origin_point, destination_point):
     """
-    Calculate the bearing between two lat-long points. Each tuple should
-    represent (lat, lng) as decimal degrees.
+    Calculate the bearing between two lat-long points.
+
+    Each tuple should represent (lat, lng) as decimal degrees.
 
     Parameters
     ----------
@@ -50,6 +46,8 @@ def get_bearing(origin_point, destination_point):
 
 def add_edge_bearings(G):
     """
+    Add each bearing attributes to all graph edges.
+
     Calculate the compass bearing from origin node to destination
     node for each edge in the directed graph then add each bearing
     as a new edge attribute.

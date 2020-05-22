@@ -1,9 +1,4 @@
-################################################################################
-# Module: utils.py
-# Description: General utility functions
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""General utility functions."""
 
 import datetime as dt
 import logging as lg
@@ -47,7 +42,7 @@ def citation():
 
 def ts(style='datetime', template=None):
     """
-    Get current timestamp as string
+    Get current timestamp as string.
 
     Parameters
     ----------
@@ -108,7 +103,7 @@ def config(data_folder=settings.data_folder,
     Configure osmnx by setting the default global settings' values.
 
     Parameters
-    ---------
+    ----------
     data_folder : string
         where to save and load data files
     logs_folder : string

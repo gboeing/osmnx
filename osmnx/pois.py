@@ -1,9 +1,4 @@
-################################################################################
-# Module: pois.py
-# Description: Download points of interests (POIs) from OpenStreetMap
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Download points of interests (POIs) from OpenStreetMap."""
 
 import geopandas as gpd
 from shapely.geometry import MultiPolygon
@@ -24,7 +19,6 @@ def _create_poi_query(north, south, east, west, tags,
 
     Parameters
     ----------
-
     north : float
         Northernmost coordinate from bounding box of the search area.
     south : float
@@ -138,7 +132,8 @@ def _osm_poi_download(tags, polygon=None,
                       north=None, south=None, east=None, west=None,
                       timeout=180, memory=None, custom_settings=None):
     """
-    Get points of interests (POIs) from OpenStreetMap based on passed tags
+    Get points of interests (POIs) from OpenStreetMap based on passed tags.
+
     Note that if a polygon is passed-in, the query will be limited to its
     bounding box rather than to the shape of the polygon itself.
 
@@ -205,8 +200,10 @@ def _osm_poi_download(tags, polygon=None,
 
 def _parse_nodes_coords(osm_response):
     """
-    Parse node coordinates from OSM response. Some nodes are standalone points
-    of interest, others are vertices in polygonal (areal) POIs.
+    Parse node coordinates from OSM response.
+
+    Some nodes are standalone points of interest, others are vertices in
+    polygonal (areal) POIs.
 
     Parameters
     ----------
@@ -298,12 +295,12 @@ def _parse_osm_node(response):
 
 def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
     """
-    Handles invalid multipolygon geometries when there exists e.g. a feature without
-    geometry (geometry == NaN)
+    Handle invalid multipolygon geometries.
+
+    For example, when there exists a feature without geometry (geometry==NaN).
 
     Parameters
     ----------
-
     gdf : gpd.GeoDataFrame
         GeoDataFrame with Polygon geometries that should be converted into a MultiPolygon object.
     relation : dict
@@ -329,9 +326,10 @@ def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
 
 def _parse_osm_relations(relations, osm_way_df):
     """
-    Parses the osm relations (multipolygons) from osm
-    ways and nodes. See more information about relations
-    from OSM documentation: http://wiki.openstreetmap.org/wiki/Relation
+    Parse OSM relations (MultiPolygons) from  ways and nodes.
+
+    See more information about relations from OSM documentation:
+    http://wiki.openstreetmap.org/wiki/Relation
 
     Parameters
     ----------
@@ -395,7 +393,7 @@ def _parse_osm_relations(relations, osm_way_df):
 def _create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=None,
                     timeout=180, memory=None, custom_settings=None):
     """
-    Create GeoDataFrame from POI json returned by Overpass API
+    Create GeoDataFrame from POIs json returned by Overpass API.
 
     Parameters
     ----------
@@ -499,13 +497,12 @@ def _create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=
 def pois_from_point(point, tags, dist=1000,
                     timeout=180, memory=None, custom_settings=None):
     """
-    Get point of interests (POIs) within some distance north, south, east, and
-    west of a lat-long point.
+    Get point of interests (POIs) within some distance N, S, E, W of a point.
 
     Parameters
     ----------
     point : tuple
-        a lat-long point
+        a (lat, lon) point
     tags : dict
         Dict of tags used for finding POIs from the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -544,8 +541,7 @@ def pois_from_point(point, tags, dist=1000,
 def pois_from_address(address, tags, dist=1000,
                       timeout=180, memory=None, custom_settings=None):
     """
-    Get point of interests (POIs) within some distance north, south, east, and
-    west of an address.
+    Get point of interests (POIs) within some distance N, S, E, W of address.
 
     Parameters
     ----------

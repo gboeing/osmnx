@@ -1,9 +1,4 @@
-################################################################################
-# Module: footprints.py
-# Description: Download and plot footprints from OpenStreetMap
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Download and plot footprints from OpenStreetMap."""
 
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -300,6 +295,8 @@ def _responses_to_dicts(responses, footprint_type):
 
 def _create_footprint_geometry(footprint_key, footprint_val, vertices):
     """
+    Create geometry for footprint open/closed ways.
+
     Create Shapely geometry for open or closed ways in the initial footprints
     dictionary. Closed ways are converted directly to Shapely Polygons, open
     ways (fragments that will form the outer and inner rings of relations) are
@@ -340,7 +337,7 @@ def _create_footprint_geometry(footprint_key, footprint_val, vertices):
 
 def _create_relation_geometry(relation_key, relation_val, footprints):
     """
-    Create Shapely geometry for relations - Polygons with holes or MultiPolygons
+    Create Shapely geometry for relations: Polygons with holes or MultiPolygons.
 
     OSM relations are used to define complex polygons - polygons with holes or
     multi-polygons. The polygons' outer and inner rings may be made up of chains
@@ -438,8 +435,7 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
 def footprints_from_point(point, dist, footprint_type='building', retain_invalid=False,
                           timeout=180, memory=None, custom_settings=None):
     """
-    Get footprints within some distance north, south, east, and west of
-    a lat-long point.
+    Get footprints within some distance N, S, E, W of a lat-long point.
 
     Parameters
     ----------
@@ -476,8 +472,7 @@ def footprints_from_point(point, dist, footprint_type='building', retain_invalid
 def footprints_from_address(address, dist, footprint_type='building', retain_invalid=False,
                             timeout=180, memory=None, custom_settings=None):
     """
-    Get footprints within some distance north, south, east, and west of
-    an address.
+    Get footprints within some distance N, S, E, W of an address.
 
     Parameters
     ----------
