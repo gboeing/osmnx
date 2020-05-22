@@ -21,6 +21,7 @@ install:
   - conda list
 
 script:
+  - flake8 .
   - coverage run --source osmnx -m pytest --verbose
 
 after_success:
