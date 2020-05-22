@@ -1,9 +1,4 @@
-################################################################################
-# Module: utils_graph.py
-# Description: Network utility functions
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Graph utility functions."""
 
 import geopandas as gpd
 import networkx as nx
@@ -20,7 +15,7 @@ from . import utils
 
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
     """
-    Convert a graph into node and/or edge GeoDataFrames
+    Convert a graph into node and/or edge GeoDataFrames.
 
     Parameters
     ----------
@@ -99,7 +94,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
 def gdfs_to_graph(gdf_nodes, gdf_edges):
     """
-    Convert node and edge GeoDataFrames into a MultiDiGraph
+    Convert node and edge GeoDataFrames into a MultiDiGraph.
 
     Parameters
     ----------
@@ -176,8 +171,7 @@ def induce_subgraph(G, node_subset):
 
 def get_largest_component(G, strongly=False):
     """
-    Return a subgraph of the largest weakly or strongly connected component
-    from a directed graph.
+    Get subgraph of MultiDiGraph's largest weakly/strongly connected component.
 
     Parameters
     ----------
@@ -267,9 +261,9 @@ def get_route_edge_attributes(G, route, attribute=None, minimize_key='length',
 
 def count_streets_per_node(G, nodes=None):
     """
-    Count how many street segments emanate from each node (i.e.,
-    intersections and dead-ends) in this graph. If nodes is passed,
-    then only count the nodes in the graph with those IDs.
+    Count how many street segments emanate from each node in this graph.
+
+    If nodes is passed, then only count the nodes in the graph with those IDs.
 
     Parameters
     ----------
@@ -278,7 +272,7 @@ def count_streets_per_node(G, nodes=None):
         the set of node IDs to get counts for
 
     Returns
-    ----------
+    -------
     streets_per_node : dict
         counts of how many streets emanate from each node with
         keys=node id and values=count
@@ -333,8 +327,7 @@ def count_streets_per_node(G, nodes=None):
 
 def remove_isolated_nodes(G):
     """
-    Remove from a graph all the nodes that have no incident edges (ie, node
-    degree = 0).
+    Remove from a graph all nodes that have no incident edges.
 
     Parameters
     ----------
@@ -355,8 +348,7 @@ def remove_isolated_nodes(G):
 
 def _is_duplicate_edge(data, data_other):
     """
-    Check if two edge data dictionaries are the same based on OSM ID and
-    geometry.
+    Check if two edge data dicts are the same based on OSM ID and geometry.
 
     Parameters
     ----------
@@ -397,8 +389,9 @@ def _is_duplicate_edge(data, data_other):
 
 def _is_same_geometry(ls1, ls2):
     """
-    Check if LineString geometries in two edges are the same, in
-    normal or reversed order of points.
+    Check if LineString geometries in two edges are the same.
+
+    Check both normal and reversed order of constituent points.
 
     Parameters
     ----------
@@ -428,10 +421,11 @@ def _is_same_geometry(ls1, ls2):
 
 def _update_edge_keys(G):
     """
-    Update the keys of edges that share a u, v with another edge but differ in
-    geometry. For example, two one-way streets from u to v that bow away from
-    each other as separate streets, rather than opposite direction edges of a
-    single street.
+    Update keys of edges that share u, v with other edge but differ in geometry.
+
+    For example, two one-way streets from u to v that bow away from each other
+    as separate streets, rather than opposite direction edges of a single
+    street.
 
     Parameters
     ----------
@@ -486,8 +480,9 @@ def _update_edge_keys(G):
 
 def get_undirected(G):
     """
-    Convert a directed graph to an undirected graph that maintains parallel
-    edges if geometries differ.
+    Convert MultiDiGraph to MultiGraph.
+
+    Maintains parallel edges if their geometries differ.
 
     Parameters
     ----------
@@ -555,8 +550,9 @@ def get_undirected(G):
 
 def add_edge_lengths(G):
     """
-    Add length (meters) attribute to each edge by great circle distance between
-    nodes u and v.
+    Add length (meters) attribute to each edge.
+
+    Calculate via great circle distance between nodes u and v.
 
     Parameters
     ----------

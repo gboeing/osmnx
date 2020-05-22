@@ -1,9 +1,4 @@
-################################################################################
-# Module: simplification.py
-# Description: Simplify, correct, and consolidate network topology
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Simplify, correct, and consolidate network topology."""
 
 import geopandas as gpd
 import logging as lg
@@ -18,6 +13,8 @@ from . import utils_graph
 
 def _is_endpoint(G, node, strict=True):
     """
+    Is node a true endpoint of an edge.
+
     Return True if the node is a "real" endpoint of an edge in the network,
     otherwise False. OSM data includes lots of nodes that exist only as points
     to help streets bend around curves. An end point is a node that either:
@@ -30,7 +27,6 @@ def _is_endpoint(G, node, strict=True):
     Parameters
     ----------
     G : networkx.MultiDiGraph
-
     node : int
         the node to examine
     strict : bool
@@ -208,19 +204,19 @@ def is_simplified(G):
 
 def simplify_graph(G, strict=True):
     """
-    Simplify a graph's topology by removing all nodes that are not intersections
-    or dead-ends.
+    Simplify a graph's topology by removing interstitial nodes.
 
-    Create an edge directly between the end points that encapsulate them,
-    but retain the geometry of the original edges, saved as attribute in new
-    edge.
+    Simplify graph topology by removing all nodes that are not intersections
+    or dead-ends. Create an edge directly between the end points that
+    encapsulate them, but retain the geometry of the original edges, saved as
+    attribute in new edge.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
     strict : bool
-        if False, allow nodes to be end points even if they fail all other rules
-        but have edges with different OSM IDs
+        if False, allow nodes to be end points even if they fail all other
+        rules but have edges with different OSM IDs
 
     Returns
     -------
@@ -304,8 +300,9 @@ def simplify_graph(G, strict=True):
 def clean_intersections(G, tolerance=10, dead_ends=False,
                         rebuild_graph=False, update_edge_lengths=False):
     """
-    Deprecated pass-through function that calls consolidate_intersections.
-    Will be removed in future release.
+    Pass-through function just calls consolidate_intersections.
+
+    Deprecated: will be removed in future release.
 
     Parameters
     ----------
@@ -314,7 +311,7 @@ def clean_intersections(G, tolerance=10, dead_ends=False,
     dead_ends : bool
 
     Returns
-    ----------
+    -------
     networkx.MultiDiGraph or geopandas.GeoSeries
     """
     from warnings import warn
@@ -333,9 +330,10 @@ def clean_intersections(G, tolerance=10, dead_ends=False,
 def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
                               dead_ends=False, update_edge_lengths=True):
     """
-    Consolidate intersections comprising clusters of nodes by merging them
-    and returning either their centroids or a rebuilt graph with consolidated
-    intersections and reconnected edge geometries.
+    Consolidate intersections comprising clusters of nearby nodes.
+
+    Merging nodes and return either their centroids or a rebuilt graph with
+    consolidated intersections and reconnected edge geometries.
 
     The tolerance argument should be adjusted to approximately match street
     design standards in the specific street network, and you should always use
@@ -372,7 +370,7 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
         merged node; if False, just retain the original edge length.
 
     Returns
-    ----------
+    -------
     networkx.MultiDiGraph or geopandas.GeoSeries
         if rebuild_graph=True, returns MultiDiGraph with consolidated
         intersections & reconnected edge geometries. if rebuild_graph=False,
@@ -414,8 +412,9 @@ def consolidate_intersections(G, tolerance=10, rebuild_graph=True,
 def _consolidate_intersections_rebuild_graph(G, tolerance=10,
                                              update_edge_lengths=True):
     """
-    Consolidate intersections comprising clusters of nodes by merging them
-    and returning a rebuilt graph with consolidated intersections and
+    Consolidate intersections comprising clusters of nearby nodes.
+
+    Merge nodes and return a rebuilt graph with consolidated intersections and
     reconnected edge geometries.
 
     The tolerance argument should be adjusted to approximately match street
@@ -439,7 +438,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10,
         merged node; if False, just retain the original edge length
 
     Returns
-    ----------
+    -------
     networkx.MultiDiGraph
         the rebuilt graph with consolidated intersections and reconnected
         edge geometries

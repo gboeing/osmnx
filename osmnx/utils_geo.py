@@ -1,9 +1,4 @@
-################################################################################
-# Module: utils_geo.py
-# Description: Geospatial utility functions
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Geospatial utility functions."""
 
 import math
 import numpy as np
@@ -59,10 +54,11 @@ def geocode(query):
 
 def redistribute_vertices(geom, dist):
     """
-    Redistribute the vertices on a projected LineString or MultiLineString. The distance
-    argument is only approximate since the total distance of the linestring may not be
-    a multiple of the preferred distance. This function works on only [Multi]LineString
-    geometry types.
+    Redistribute the vertices on a projected LineString or MultiLineString.
+
+    The distance argument is only approximate since the total distance of the
+    linestring may not be a multiple of the preferred distance. This function
+    works on only (Multi)LineString geometry types.
 
     Parameters
     ----------
@@ -75,7 +71,7 @@ def redistribute_vertices(geom, dist):
 
     Returns
     -------
-        list of Point geometries : list
+        list or MultiLineString
     """
     if geom.geom_type == 'LineString':
         num_vert = int(round(geom.length / dist))
@@ -84,8 +80,7 @@ def redistribute_vertices(geom, dist):
         return [geom.interpolate(float(n) / num_vert, normalized=True)
                 for n in range(num_vert + 1)]
     elif geom.geom_type == 'MultiLineString':
-        parts = [redistribute_vertices(part, dist)
-                 for part in geom]
+        parts = [redistribute_vertices(part, dist) for part in geom]
         return type(geom)([p for p in parts if not p])
     else:
         raise ValueError(f'unhandled geometry {geom.geom_type}')
@@ -266,6 +261,8 @@ def round_shape_coords(shape, precision):
 
 def _consolidate_subdivide_geometry(geometry, max_query_area_size):
     """
+    Consolidate and subdivide some geometry.
+
     Consolidate a geometry into a convex hull, then subdivide it into smaller
     sub-polygons if its area exceeds max size (in geometry's units).
 
@@ -307,8 +304,9 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size):
 
 def _get_polygons_coordinates(geometry):
     """
-    Extract exterior coordinates from polygon(s) to pass to OSM in a query by
-    polygon. Ignore the interior ("holes") coordinates.
+    Extract exterior coordinates from polygon(s) to pass to OSM.
+
+    Ignore the interior ("holes") coordinates.
 
     Parameters
     ----------
@@ -350,8 +348,7 @@ def _get_polygons_coordinates(geometry):
 
 def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9):
     """
-    Split a Polygon or MultiPolygon up into sub-polygons of a specified size,
-    using quadrats.
+    Split a Polygon or MultiPolygon up into sub-polygons of a specified size.
 
     Parameters
     ----------
@@ -396,8 +393,10 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9
 
 def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
     """
-    Intersect points with a polygon, using an r-tree spatial index and cutting
-    the polygon up into smaller sub-polygons for r-tree acceleration.
+    Intersect points with a polygon.
+
+    Use an r-tree spatial index and cut the polygon up into smaller
+    sub-polygons for r-tree acceleration.
 
     Parameters
     ----------
@@ -467,6 +466,8 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
 
 def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     """
+    Create a bounding box from a point.
+
     Create a bounding box some distance in each direction (north, south, east,
     and west) from some (lat, lng) point.
 
@@ -513,7 +514,22 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
 
 def bbox_to_poly(north, south, east, west):
     """
-    Convenience function to parse bbox -> poly
+    Convert bounding box to shapely Polygon.
+
+    Parameters
+    ----------
+    north : float
+        northern coordinate
+    south : float
+        southern coordinate
+    east : float
+        eastern coordinate
+    west : float
+        western coordinate
+
+    Returns
+    -------
+    shapely Polygon
     """
 
     return Polygon([(west, south), (east, south), (east, north), (west, north)])
