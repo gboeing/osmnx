@@ -54,7 +54,6 @@ def plot_shape(
     -------
     fig, ax : tuple
     """
-
     # if facecolor or edgecolor is a string instead of a list, make sure we have
     # as many colors as gdf elements
     if isinstance(fc, str):
@@ -382,7 +381,6 @@ def plot_graph(
     -------
     fig, ax : tuple
     """
-
     utils.log("Begin plotting the graph...")
     node_Xs = [float(x) for _, x in G.nodes(data="x")]
     node_Ys = [float(y) for _, y in G.nodes(data="y")]
@@ -646,7 +644,6 @@ def plot_graph_route(
     -------
     fig, ax : tuple
     """
-
     # plot the graph but not the route
     fig, ax = plot_graph(
         G,
@@ -828,7 +825,6 @@ def plot_graph_routes(
     -------
     fig, ax : tuple
     """
-
     # plot the graph but not the routes
     fig, ax = plot_graph(
         G,
@@ -972,7 +968,6 @@ def plot_figure_ground(
     -------
     fig, ax : tuple
     """
-
     multiplier = 1.2
 
     # if G was passed-in, use this graph in the plot, centered on the centroid
@@ -1064,8 +1059,10 @@ def plot_figure_ground(
                     for edge_type in edge_types_flat
                 ]
 
-                # the node diameter will be the biggest of the edge widths, to make joints perfectly smooth
-                # alternatively, use min (?) to pervent anything larger from extending past smallest street's line
+                # the node diameter will be the biggest of the edge widths, to
+                # make joints perfectly smooth alternatively, use min (?) to
+                # prevent anything larger from extending past smallest
+                # street's line
                 circle_diameter = max(edge_widths)
 
                 # mpl circle marker sizes are in area, so it is the diameter
@@ -1165,7 +1162,6 @@ def plot_footprints(
     fig, ax : tuple
 
     """
-
     if fig is None or ax is None:
         fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)
         ax.set_facecolor(bgcolor)

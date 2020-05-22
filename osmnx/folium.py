@@ -32,7 +32,6 @@ def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attr
     -------
     pl : folium.PolyLine
     """
-
     # check if we were able to import folium successfully
     if not folium:
         raise ImportError("The folium package must be installed to use this optional feature.")
@@ -100,7 +99,6 @@ def plot_graph_folium(
     -------
     graph_map : folium.folium.Map
     """
-
     # check if we were able to import folium successfully
     if not folium:
         raise ImportError("The folium package must be installed to use this optional feature.")
@@ -179,7 +177,6 @@ def plot_route_folium(
     -------
     route_map : folium.folium.Map
     """
-
     # check if we were able to import folium successfully
     if not folium:
         raise ImportError("The folium package must be installed to use this optional feature.")

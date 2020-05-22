@@ -54,7 +54,6 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
         (geometry_proj, crs), the projected shapely geometry and the crs of the
         projected geometry
     """
-
     if crs is None:
         crs = settings.default_crs
 
@@ -140,7 +139,6 @@ def project_graph(G, to_crs=None):
     -------
     networkx.MultiDiGraph
     """
-
     G_proj = G.copy()
 
     # create a GeoDataFrame of the nodes, name it, convert osmid to str

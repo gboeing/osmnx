@@ -35,7 +35,6 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     GeoDataFrame or tuple
         gdf_nodes or gdf_edges or both as a tuple
     """
-
     if not (nodes or edges):
         raise ValueError("You must request nodes or edges, or both.")
 
@@ -108,7 +107,6 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
     -------
     networkx.MultiDiGraph
     """
-
     from warnings import warn
 
     msg = (
@@ -135,7 +133,6 @@ def graph_from_gdfs(gdf_nodes, gdf_edges):
     -------
     networkx.MultiDiGraph
     """
-
     G = nx.MultiDiGraph()
     G.graph["crs"] = gdf_nodes.crs
 
@@ -151,7 +148,7 @@ def graph_from_gdfs(gdf_nodes, gdf_edges):
     # separately) or null
     for _, row in gdf_edges.iterrows():
         attrs = {}
-        for label, value in row.iteritems():
+        for label, value in row.items():
             if (label not in ["u", "v", "key"]) and (isinstance(value, list) or pd.notnull(value)):
                 attrs[label] = value
         G.add_edge(row["u"], row["v"], key=row["key"], **attrs)
@@ -175,7 +172,6 @@ def induce_subgraph(G, node_subset):
     H : networkx.MultiDiGraph
         the subgraph of G induced by node_subset
     """
-
     node_subset = set(node_subset)
 
     # copy nodes into new graph
@@ -223,7 +219,6 @@ def get_largest_component(G, strongly=False):
     G : networkx.MultiDiGraph
         the largest connected component subgraph from the original graph
     """
-
     original_len = len(list(G.nodes()))
 
     if strongly:
@@ -285,7 +280,6 @@ def get_route_edge_attributes(
     attribute_values : list
         list of edge attribute values
     """
-
     attribute_values = []
     for u, v in zip(route[:-1], route[1:]):
         # if there are parallel edges between two nodes, select the one with the
@@ -320,7 +314,6 @@ def count_streets_per_node(G, nodes=None):
         counts of how many streets emanate from each node with
         keys=node id and values=count
     """
-
     # to calculate the counts, get undirected representation of the graph. for
     # each node, get the list of the set of unique u,v,key edges, including
     # parallel edges but excluding self-loop parallel edges (this is necessary
@@ -382,7 +375,6 @@ def remove_isolated_nodes(G):
     -------
     networkx.MultiDiGraph
     """
-
     isolated_nodes = [node for node, degree in dict(G.degree()).items() if degree < 1]
     G.remove_nodes_from(isolated_nodes)
     utils.log(f"Removed {len(isolated_nodes)} isolated nodes")
@@ -404,7 +396,6 @@ def _is_duplicate_edge(data, data_other):
     -------
     is_dupe : bool
     """
-
     is_dupe = False
 
     # if either edge's OSM ID contains multiple values (due to simplification), we want
@@ -448,7 +439,6 @@ def _is_same_geometry(ls1, ls2):
     -------
     bool
     """
-
     # extract geometries from each edge data dict
     geom1 = [list(coords) for coords in ls1.xy]
     geom2 = [list(coords) for coords in ls2.xy]
@@ -479,7 +469,6 @@ def _update_edge_keys(G):
     -------
     networkx.MultiDiGraph
     """
-
     # identify all the edges that are duplicates based on a sorted combination
     # of their origin, destination, and key. that is, edge uv will match edge vu
     # as a duplicate, but only if they have the same key
@@ -494,7 +483,7 @@ def _update_edge_keys(G):
     groups = dupes[["geometry", "uvk", "u", "v", "key", "dupe"]].groupby("uvk")
 
     # for each set of duplicate edges
-    for label, group in groups:
+    for _, group in groups:
 
         # if there are more than 2 edges here, make sure to compare all
         if len(group["geometry"]) > 2:
@@ -540,7 +529,6 @@ def get_undirected(G):
     -------
     networkx.MultiGraph
     """
-
     # set from/to nodes before making graph undirected
     G = G.copy()
     for u, v, k, data in G.edges(keys=True, data=True):
@@ -610,7 +598,6 @@ def add_edge_lengths(G):
     -------
     G : networkx.MultiDiGraph
     """
-
     # first load all the edges' origin and destination coordinates as a
     # dataframe indexed by u, v, key
     try:

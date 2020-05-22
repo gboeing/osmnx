@@ -36,7 +36,6 @@ def _is_endpoint(G, node, strict=True):
     Returns
     -------
     bool
-
     """
     neighbors = set(list(G.predecessors(node)) + list(G.successors(node)))
     n = len(neighbors)
@@ -152,7 +151,6 @@ def _get_paths_to_simplify(G, strict=True):
     -------
     paths_to_simplify : list
     """
-
     # first identify all the nodes that are endpoints
     endpoints = set([node for node in G.nodes() if _is_endpoint(G, node, strict=strict)])
     utils.log(f"Identified {len(endpoints)} edge endpoints")
@@ -199,7 +197,6 @@ def _is_simplified(G):
     -------
     bool
     """
-
     return "simplified" in G.graph and G.graph["simplified"]
 
 
@@ -224,7 +221,6 @@ def simplify_graph(G, strict=True):
     -------
     networkx.MultiDiGraph
     """
-
     if _is_simplified(G):
         raise Exception("This graph has already been simplified, cannot simplify it again.")
 
@@ -298,7 +294,10 @@ def simplify_graph(G, strict=True):
 
     G.graph["simplified"] = True
 
-    msg = f"Simplified graph: {initial_node_count} to {len(G)} nodes, {initial_edge_count} to {len(G.edges())} edges"
+    msg = (
+        f"Simplified graph: {initial_node_count} to {len(G)} nodes, "
+        f"{initial_edge_count} to {len(G.edges())} edges"
+    )
     utils.log(msg)
     return G
 
@@ -328,7 +327,6 @@ def clean_intersections(
     -------
     networkx.MultiDiGraph or geopandas.GeoSeries
     """
-
     from warnings import warn
 
     msg = (
@@ -397,7 +395,6 @@ def consolidate_intersections(
         returns GeoSeries of shapely Points representing the centroids of
         street intersections
     """
-
     # if dead_ends is False, discard dead-end nodes to retain only intersections
     if not dead_ends:
         if "streets_per_node" in G.graph:
@@ -461,7 +458,6 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, update_edge_length
         the rebuilt graph with consolidated intersections and reconnected
         edge geometries
     """
-
     # STEP 1
     # buffer nodes to passed-in distance, merge overlaps
     gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)

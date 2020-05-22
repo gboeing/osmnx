@@ -156,7 +156,6 @@ def _url_in_cache(url):
         path to cached response for url if it exists in the cache,
         otherwise None
     """
-
     # hash the url to generate the cache filename
     filename = hashlib.md5(url.encode("utf-8")).hexdigest()
     filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, "json"]))
@@ -180,7 +179,6 @@ def _get_from_cache(url):
     response_json : dict
         cached response for url if it exists in the cache, otherwise None
     """
-
     # if the tool is configured to use the cache
     if settings.use_cache:
 
@@ -210,7 +208,6 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     -------
     headers : dict
     """
-
     if user_agent is None:
         user_agent = settings.default_user_agent
     if referer is None:
@@ -244,7 +241,6 @@ def _get_pause(recursive_delay=5, default_duration=10):
     -------
     int
     """
-
     try:
         url = settings.overpass_endpoint.rstrip("/") + "/status"
         response = requests.get(url, headers=_get_http_headers())
@@ -300,7 +296,6 @@ def _make_overpass_settings(custom_settings, timeout, memory):
     -------
     overpass_settings : string
     """
-
     # pass server memory allocation in bytes for the query to the API
     # if None, pass nothing so the server will use its default allocation size
     # otherwise, define the query's maxsize parameter value as whatever the
@@ -374,7 +369,6 @@ def _osm_net_download(
     -------
     response_jsons : list
     """
-
     # check if we're querying by polygon or by bounding box based on which
     # argument(s) where passed into this function
     by_poly = polygon is not None
@@ -447,7 +441,10 @@ def _osm_net_download(
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
-            query_str = f'{overpass_settings};({infrastructure}{osm_filter}(poly:"{polygon_coord_str}");>;);out;'
+            query_str = (
+                f"{overpass_settings};"
+                f"({infrastructure}{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
+            )
             response_json = overpass_request(data={"data": query_str}, timeout=timeout)
             response_jsons.append(response_json)
         utils.log(
@@ -521,7 +518,6 @@ def nominatim_request(params, request_type="search", pause=1, timeout=30, error_
     -------
     response_json : dict
     """
-
     known_requests = {"search", "reverse", "lookup"}
     if request_type not in known_requests:
         raise ValueError('Nominatim request_type must be "search", "reverse", or "lookup"')
@@ -599,7 +595,6 @@ def overpass_request(data, pause=None, timeout=180, error_pause=None):
     -------
     dict
     """
-
     # define the Overpass API URL, then construct a GET-style URL as a string to
     # hash to look up/save to cache
     url = settings.overpass_endpoint.rstrip("/") + "/interpreter"

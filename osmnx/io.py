@@ -465,7 +465,7 @@ def _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags):
     root : ElementTree.Element
         xml tree with nodes appended
     """
-    for i, row in gdf_nodes.iterrows():
+    for _, row in gdf_nodes.iterrows():
         node = etree.SubElement(root, "node", attrib=row[node_attrs].dropna().to_dict())
         for tag in node_tags:
             if tag in gdf_nodes.columns:
@@ -547,7 +547,7 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
         # many ways with the same OSM id. This does not conform to the
         # OSM XML schema standard, however, the data will still comprise a
         # valid network and will be readable by *most* OSM tools.
-        for i, row in gdf_edges.iterrows():
+        for _, row in gdf_edges.iterrows():
             edge = etree.SubElement(root, "way", attrib=row[edge_attrs].dropna().to_dict())
             etree.SubElement(edge, "nd", attrib={"ref": row["u"]})
             etree.SubElement(edge, "nd", attrib={"ref": row["v"]})

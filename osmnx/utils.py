@@ -16,7 +16,6 @@ def citation():
     and Visualizing Complex Street Networks. Computers, Environment and Urban
     Systems, 65(126-139). https://doi.org/10.1016/j.compenvurbsys.2017.05.004
     """
-
     cite = (
         "Citation:\n\n"
         "Boeing, G. 2017. OSMnx: New Methods for Acquiring, "
@@ -58,7 +57,6 @@ def ts(style="datetime", template=None):
     ts : string
         the string timestamp
     """
-
     if template is None:
         if style == "datetime":
             template = "{:%Y-%m-%d %H:%M:%S}"
@@ -162,7 +160,6 @@ def config(
     -------
     None
     """
-
     # set each global variable to the passed-in parameter value
     settings.use_cache = use_cache
     settings.cache_folder = cache_folder
@@ -216,7 +213,6 @@ def log(message, level=None, name=None, filename=None):
     -------
     None
     """
-
     if level is None:
         level = settings.log_level
     if name is None:
@@ -274,7 +270,6 @@ def _get_logger(level=None, name=None, filename=None):
     -------
     logger.logger
     """
-
     if level is None:
         level = settings.log_level
     if name is None:

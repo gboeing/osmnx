@@ -30,7 +30,6 @@ def geocode(query):
     point : tuple
         the (lat, lng) coordinates returned by the geocoder
     """
-
     # define the parameters
     params = OrderedDict()
     params["format"] = "json"
@@ -101,7 +100,6 @@ def _round_polygon_coords(p, precision):
     new_poly : shapely Polygon
         the polygon with rounded coordinates
     """
-
     # round the coordinates of the Polygon exterior
     new_exterior = [[round(x, precision) for x in c] for c in p.exterior.coords]
 
@@ -131,7 +129,6 @@ def _round_multipolygon_coords(mp, precision):
     -------
     MultiPolygon
     """
-
     return MultiPolygon([_round_polygon_coords(p, precision) for p in mp])
 
 
@@ -150,7 +147,6 @@ def _round_point_coords(pt, precision):
     -------
     Point
     """
-
     return Point([round(x, precision) for x in pt.coords[0]])
 
 
@@ -169,7 +165,6 @@ def _round_multipoint_coords(mpt, precision):
     -------
     MultiPoint
     """
-
     return MultiPoint([_round_point_coords(pt, precision) for pt in mpt])
 
 
@@ -188,7 +183,6 @@ def _round_linestring_coords(ls, precision):
     -------
     LineString
     """
-
     return LineString([[round(x, precision) for x in c] for c in ls.coords])
 
 
@@ -207,7 +201,6 @@ def _round_multilinestring_coords(mls, precision):
     -------
     MultiLineString
     """
-
     return MultiLineString([_round_linestring_coords(ls, precision) for ls in mls])
 
 
@@ -227,7 +220,6 @@ def round_geometry_coords(shape, precision):
     -------
     shapely geometry
     """
-
     if isinstance(shape, Point):
         return _round_point_coords(shape, precision)
 
@@ -269,7 +261,6 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size):
     -------
     geometry : Polygon or MultiPolygon
     """
-
     # let the linear length of the quadrats (with which to subdivide the
     # geometry) be the square root of max area size
     quadrat_width = math.sqrt(max_query_area_size)
@@ -309,7 +300,6 @@ def _get_polygons_coordinates(geometry):
     -------
     polygon_coord_strs : list
     """
-
     # extract the exterior coordinates of the geometry to pass to the API later
     polygons_coords = []
     if isinstance(geometry, Polygon):
@@ -358,7 +348,6 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9
     -------
     shapely MultiPolygon
     """
-
     # create n evenly spaced points between the min and max x and y bounds
     west, south, east, north = geometry.bounds
     x_num = math.ceil((east - west) / quadrat_width) + 1
@@ -407,7 +396,6 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
     -------
     GeoDataFrame
     """
-
     # create an empty dataframe to append matches to
     points_within_geometry = pd.DataFrame()
 
@@ -476,7 +464,6 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     north, south, east, west : tuple, if return_crs=False
     north, south, east, west, crs_proj : tuple, if return_crs=True
     """
-
     # reverse the order of the (lat,lng) point so it is (x,y) for shapely, then
     # project to UTM and buffer in meters
     lat, lng = point
@@ -494,7 +481,10 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
         buffer_latlong, _ = projection.project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
         west, south, east, north = buffer_latlong.bounds
         utils.log(
-            f"Created bounding box {dist} meters in each direction from {point}: {north},{south},{east},{west}"
+            (
+                f"Created bounding box {dist} meters in each direction "
+                f"from {point}: {north},{south},{east},{west}"
+            )
         )
 
     if return_crs:
@@ -522,5 +512,4 @@ def bbox_to_poly(north, south, east, west):
     -------
     shapely Polygon
     """
-
     return Polygon([(west, south), (east, south), (east, north), (west, north)])

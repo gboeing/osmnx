@@ -79,7 +79,6 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
           - clean_intersection_density_km = clean_intersection_count divided by
                 area in square kilometers
     """
-
     sq_m_in_sq_km = 1e6  # there are 1 million sq meters in 1 sq km
     G_undirected = None
 
@@ -298,7 +297,6 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
           - betweenness_centrality_avg
 
     """
-
     stats = {}
 
     # create a DiGraph from the MultiDiGraph, for those metrics that require it

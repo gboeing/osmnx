@@ -46,7 +46,6 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
         distance or array of distances from (lat1, lng1) to (lat2, lng2) in
         units of earth_radius
     """
-
     phi1 = np.deg2rad(lat1)
     phi2 = np.deg2rad(lat2)
     d_phi = phi2 - phi1
@@ -89,7 +88,6 @@ def euclidean_dist_vec(y1, x1, y2, x2):
         distance or vector of distances from (x1, y1) to (x2, y2) in graph
         units
     """
-
     # euclid's formula
     dist = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
     return dist
@@ -126,7 +124,6 @@ def get_nearest_node(G, point, method="haversine", return_dist=False):
         the distance (in meters if haversine, or graph node coordinate units
         if euclidean) between the point and nearest node
     """
-
     if not G or (G.number_of_nodes() == 0):
         raise ValueError("G argument must be not be empty or should contain at least one node")
 
@@ -195,7 +192,6 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
         Or a tuple of (u, v, key, dist) if return_dist is True.
         Or a tuple of (u, v, key, geom, dist) if return_geom and return_dist are True.
     """
-
     # get u, v, key, geom from all the graph edges
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
     edges = gdf_edges[["u", "v", "key", "geometry"]].values
@@ -255,7 +251,6 @@ def get_nearest_nodes(G, X, Y, method=None):
     nn : np.array
         list of nearest node IDs
     """
-
     if method is None:
 
         # calculate nearest node one at a time for each point
@@ -360,7 +355,6 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         array of nearest edges represented by their startpoint and endpoint ids,
         u and v, the OSM ids of the nodes, and the edge key.
     """
-
     if method is None:
         # calculate nearest edge one at a time for each (y, x) point
         ne = [get_nearest_edge(G, (y, x)) for x, y in zip(X, Y)]

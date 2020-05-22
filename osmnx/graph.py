@@ -85,7 +85,6 @@ def graph_from_bbox(
     -------
     networkx.MultiDiGraph
     """
-
     if clean_periphery and simplify:
         # create a new buffered bbox 0.5km around the desired one
         buffer_dist = 500
@@ -243,7 +242,6 @@ def graph_from_point(
     -------
     networkx.MultiDiGraph
     """
-
     if dist_type not in ["bbox", "network"]:
         raise InvalidDistanceType('dist_type must be "bbox" or "network"')
 
@@ -350,7 +348,6 @@ def graph_from_address(
     networkx.MultiDiGraph or tuple
         multidigraph or optionally (multidigraph, (lat, lng))
     """
-
     # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
 
@@ -435,7 +432,6 @@ def graph_from_polygon(
     -------
     networkx.MultiDiGraph
     """
-
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:
@@ -602,7 +598,6 @@ def graph_from_place(
     -------
     networkx.MultiDiGraph
     """
-
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, str) or isinstance(query, dict):
         # if it is a string (place name) or dict (structured place query), then
@@ -642,7 +637,7 @@ def graph_from_place(
 
 def graph_from_file(filename, bidirectional=False, simplify=True, retain_all=False):
     """
-    Pass-through function just called graph_from_xml.
+    Pass-through function just calls graph_from_xml.
 
     Deprecated, will be removed in future release.
 
@@ -661,7 +656,6 @@ def graph_from_file(filename, bidirectional=False, simplify=True, retain_all=Fal
     -------
     networkx.MultiDiGraph
     """
-
     from warnings import warn
 
     msg = (
@@ -692,7 +686,6 @@ def graph_from_xml(filename, bidirectional=False, simplify=True, retain_all=Fals
     -------
     networkx.MultiDiGraph
     """
-
     # transmogrify file of OSM XML data into JSON
     response_jsons = [_overpass_json_from_file(filename)]
 
@@ -720,7 +713,6 @@ def _overpass_json_from_file(filename):
     -------
     OSMContentHandler object
     """
-
     def _opener(filename):
         _, ext = os.path.splitext(filename)
         if ext == ".bz2":
@@ -753,7 +745,6 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     -------
     networkx.MultiDiGraph
     """
-
     utils.log("Creating networkx graph from downloaded OSM data...")
 
     # make sure we got data back from the server requests
@@ -813,7 +804,6 @@ def _convert_node(element):
     -------
     dict
     """
-
     node = {}
     node["y"] = element["lat"]
     node["x"] = element["lon"]
@@ -838,7 +828,6 @@ def _convert_path(element):
     -------
     dict
     """
-
     path = {}
     path["osmid"] = element["id"]
 
@@ -868,7 +857,6 @@ def _parse_osm_nodes_paths(osm_data):
     -------
     nodes, paths : tuple
     """
-
     nodes = {}
     paths = {}
     for element in osm_data["elements"]:
@@ -899,7 +887,6 @@ def _add_path(G, data, one_way):
     -------
     None
     """
-
     # extract the ordered list of nodes from this path element, then delete it
     # so we don't add it as an attribute to the edge later
     path_nodes = data["nodes"]
@@ -943,9 +930,9 @@ def _add_paths(G, paths, bidirectional=False):
     -------
     None
     """
-
-    # the list of values OSM uses in its 'oneway' tag to denote True
-    # updated list of of values OSM uses based on https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf
+    # the list of values OSM uses in its 'oneway' tag to denote True updated
+    # list of of values OSM uses based on
+    # https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf
     osm_oneway_values = ["yes", "true", "1", "-1", "T", "F"]
 
     for data in paths.values():
