@@ -65,6 +65,14 @@ osmnx.graph module
     :undoc-members:
     :show-inheritance:
 
+osmnx.io module
+---------------
+
+.. automodule:: osmnx.io
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 osmnx.plot module
 -----------------
 
@@ -85,14 +93,6 @@ osmnx.projection module
 -----------------------
 
 .. automodule:: osmnx.projection
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-osmnx.save_load module
-----------------------
-
-.. automodule:: osmnx.save_load
     :members:
     :undoc-members:
     :show-inheritance:
