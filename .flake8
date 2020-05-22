@@ -1,0 +1,13 @@
+[flake8]
+
+max_line_length = 120
+
+ignore = E303 #too many blank lines
+
+per-file-ignores =
+	./setup.py:E501,
+	./osmnx/__init__.py:F401,F403,
+	./osmnx/_api.py:F401
+	./tests/test_osmnx.py:E402,F401,F841
+
+docstring-convention = numpy

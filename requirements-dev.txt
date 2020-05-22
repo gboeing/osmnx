@@ -1,7 +1,8 @@
 coverage
 coveralls
+flake8
+flake8-docstrings
 folium
-pylint
 pytest
 scikit-learn
 scipy
