@@ -113,14 +113,14 @@ def save_graph_xml(data, filepath=None,
                    edge_attrs=settings.osm_xml_way_attrs,
                    oneway=False, merge_edges=True, edge_tag_aggs=None):
     """
-    Save a graph as a .osm XML formatted file.
+    Save graph to disk as .osm formatted XML file.
 
-    Note: for large networks this function can take a long time to finish.
+    Note: for large networks this function can take a long time to run.
 
     Parameters
     ----------
     data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
-        geopandas.GeoDataFrames
+        geopandas GeoDataFrames
     filepath : string
         path to the .osm file including extension
     node_tags : list
@@ -219,6 +219,50 @@ def save_graph_xml(data, filepath=None,
                     node, 'tag', attrib={'k': tag, 'v': row[tag]})
 
     # append edges to the XML tree
+    root = _append_edges_xml_tree(root, edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges)
+
+    et = etree.ElementTree(root)
+    et.write(filepath)
+    utils.log(f'Saved graph as .osm file at "{filepath}"')
+
+
+
+def _append_edges_xml_tree(root, edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges):
+    """
+    Append edges to an XML tree.
+
+    Parameters
+    ----------
+    root : ElementTree.Element
+        xml tree
+    edges : geopandas.GeoDataFrame
+        GeoDataFrame of graph edges
+    edge_attrs : list
+        osm way attributes to include in output OSM XML
+    edge_tags : list
+        osm way tags to include in output OSM XML
+    edge_tag_aggs : list of length-2 string tuples
+        useful only if merge_edges is True, this argument allows the user
+        to specify edge attributes to aggregate such that the merged
+        OSM way entry tags accurately represent the sum total of
+        their component edge attributes. For example, if the user
+        wants the OSM way to have a "length" attribute, the user must
+        specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
+        this method to aggregate the lengths of the individual
+        component edges. Otherwise, the length attribute will simply
+        reflect the length of the first edge associated with the way.
+    merge_edges : bool
+        if True merges graph edges such that each OSM way has one entry
+        and one entry only in the OSM XML. Otherwise, every OSM way
+        will have a separate entry for each node pair it contains.
+
+    Returns
+    -------
+    root : ElementTree.Element
+        xml tree with edges appended
+    """
+
+    # append edges to the XML tree
     if merge_edges:
         for e in edges['id'].unique():
             all_way_edges = edges[edges['id'] == e]
@@ -275,9 +319,7 @@ def save_graph_xml(data, filepath=None,
                     etree.SubElement(
                         edge, 'tag', attrib={'k': tag, 'v': row[tag]})
 
-    et = etree.ElementTree(root)
-    et.write(filepath)
-    utils.log(f'Saved graph as .osm file at "{filepath}"')
+    return root
 
 
 

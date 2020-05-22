@@ -64,20 +64,7 @@ def _osm_footprints_download(polygon=None,
 
     response_jsons = []
 
-    # pass server memory allocation in bytes for the query to the API
-    # if None, pass nothing so the server will use its default allocation size
-    # otherwise, define the query's maxsize parameter value as whatever the
-    # caller passed in
-    if memory is None:
-        maxsize = ''
-    else:
-        maxsize = f'[maxsize:{memory}]'
-
-    # use custom settings if delivered, otherwise just the default ones.
-    if custom_settings:
-        overpass_settings = custom_settings
-    else:
-        overpass_settings = settings.default_overpass_query_settings.format(timeout=timeout, maxsize=maxsize)
+    overpass_settings = downloader._make_overpass_settings(custom_settings, timeout, memory)
 
     # define the query to send the API
     if by_bbox:
@@ -364,25 +351,9 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
     Shapely Polygon or MultiPolygon
     """
 
-    # create empty lists to hold member geometries
-    multipoly = []
-    outer_polys = []
-    outer_lines = []
-    inner_polys = []
-    inner_lines = []
-
-    # add each members geometry to a list according to its role and geometry type
-    for member_id, member_role in relation_val['members'].items():
-        if member_role == 'outer':
-            if footprints[member_id]['geometry'].geom_type == 'Polygon':
-                outer_polys.append(footprints[member_id]['geometry'])
-            elif footprints[member_id]['geometry'].geom_type == 'LineString':
-                outer_lines.append(footprints[member_id]['geometry'])
-        elif member_role == 'inner':
-            if footprints[member_id]['geometry'].geom_type == 'Polygon':
-                inner_polys.append(footprints[member_id]['geometry'])
-            elif footprints[member_id]['geometry'].geom_type == 'LineString':
-                inner_lines.append(footprints[member_id]['geometry'])
+    # lists to hold member geometries
+    outer_polys, outer_lines, inner_polys, inner_lines = _members_geom_lists(relation_val,
+                                                                             footprints)
 
     # try to polygonize open outer ways and concatenate them to outer_polys
     if len(outer_lines) > 0:
@@ -403,6 +374,7 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
             inner_polys += result
 
     # filter out relations missing both 'outer' and 'inner' polygons or just 'outer'
+    multipoly = []
     if len(outer_polys + inner_polys) == 0:
         utils.log(f'Relation {relation_key} missing outer and inner closed ways')
     elif len(outer_polys) == 0:
@@ -425,6 +397,44 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
         return MultiPolygon(multipoly)
     else:
         utils.log(f'relation {relation_key} could not be converted to a complex footprint')
+
+
+
+def _members_geom_lists(relation_val, footprints):
+    """
+    Add relation members' geoms to lists.
+
+    Parameters
+    ----------
+    relation_val : dict
+        members and tags of the relation
+    footprints : dict
+        dictionary of all footprints (including open and closed ways)
+
+    Returns
+    -------
+    tuple of lists
+    """
+
+    outer_polys = []
+    outer_lines = []
+    inner_polys = []
+    inner_lines = []
+
+    # add each members geometry to a list according to its role and geometry type
+    for member_id, member_role in relation_val['members'].items():
+        if member_role == 'outer':
+            if footprints[member_id]['geometry'].geom_type == 'Polygon':
+                outer_polys.append(footprints[member_id]['geometry'])
+            elif footprints[member_id]['geometry'].geom_type == 'LineString':
+                outer_lines.append(footprints[member_id]['geometry'])
+        elif member_role == 'inner':
+            if footprints[member_id]['geometry'].geom_type == 'Polygon':
+                inner_polys.append(footprints[member_id]['geometry'])
+            elif footprints[member_id]['geometry'].geom_type == 'LineString':
+                inner_lines.append(footprints[member_id]['geometry'])
+
+    return outer_polys, outer_lines, inner_polys, inner_lines
 
 
 
