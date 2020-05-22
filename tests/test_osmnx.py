@@ -381,7 +381,7 @@ def test_network_saving_loading():
     # test ordered nodes from way
     df = pd.DataFrame({'u': [54, 2, 5, 3, 10, 19, 20],
                        'v': [76, 3, 8, 10, 5, 20, 15]})
-    ordered_nodes = ox.save_load._get_unique_nodes_ordered_from_way(df)
+    ordered_nodes = ox.io._get_unique_nodes_ordered_from_way(df)
     assert ordered_nodes == [2, 3, 10, 5, 8]
 
     ox.settings.all_oneway = default_all_oneway
