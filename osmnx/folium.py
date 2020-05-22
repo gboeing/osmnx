@@ -1,9 +1,4 @@
-################################################################################
-# Module: folium.py
-# Description: Create leaflet web maps via folium
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Create leaflet web maps via folium."""
 
 import json
 from . import utils_graph
@@ -16,11 +11,10 @@ except ImportError:
 
 
 
-def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attribute=None):
-
+def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity,
+                          popup_attribute=None):
     """
-    Turn a row from the gdf_edges GeoDataFrame into a folium PolyLine with
-    attributes.
+    Turn row GeoDataFrame into a folium PolyLine with attributes.
 
     Parameters
     ----------

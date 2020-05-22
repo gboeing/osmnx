@@ -1,8 +1,4 @@
-##############################################################################
-# test_osmnx.py
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-##############################################################################
+"""Unit tests for the package."""
 
 # use agg backend so you don't need a display on travis-ci
 import matplotlib as mpl

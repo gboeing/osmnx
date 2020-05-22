@@ -1,9 +1,4 @@
-################################################################################
-# Module: stats.py
-# Description: Calculate graph-theoretic network measures
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Calculate graph-theoretic network measures."""
 
 import networkx as nx
 import numpy as np

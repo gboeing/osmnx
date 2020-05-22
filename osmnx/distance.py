@@ -1,9 +1,4 @@
-################################################################################
-# Module: distance.py
-# Description: Calculate distances and find nearest node/edge(s) to point(s)
-# License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-################################################################################
+"""Functions to calculate distances and find nearest node/edge(s) to point(s)."""
 
 import networkx as nx
 import numpy as np
@@ -27,6 +22,8 @@ except ImportError:
 
 def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     """
+    Calculate great-circle distances.
+
     Vectorized function to calculate the great-circle distance between two
     points or between vectors of points, using haversine.
 
@@ -37,8 +34,8 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     lat2 : float or array of float
     lng2 : float or array of float
     earth_radius : numeric
-        radius of earth in units in which distance will be returned (default is
-        meters)
+        radius of earth in units in which distance will be returned
+        (default is meters)
 
     Returns
     -------
@@ -68,6 +65,8 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
 
 def euclidean_dist_vec(y1, x1, y2, x2):
     """
+    Calculate euclidean distances.
+
     Vectorized function to calculate the euclidean distance between two points
     or between arrays of points.
 
@@ -92,6 +91,8 @@ def euclidean_dist_vec(y1, x1, y2, x2):
 
 def get_nearest_node(G, point, method='haversine', return_dist=False):
     """
+    Find node nearest to a point.
+
     Return the graph node nearest to some specified (lat, lng) or (y, x) point,
     and optionally the distance between the node and the point. This function
     can use either a haversine or euclidean distance calculator.
@@ -218,13 +219,14 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
 
 def get_nearest_nodes(G, X, Y, method=None):
     """
-    Return the graph nodes nearest to a list of points. Pass in points
-    as separate vectors of X and Y coordinates. The 'kdtree' method
-    is by far the fastest with large data sets, but only finds approximate
-    nearest nodes if working in unprojected coordinates like lat-lng (it
-    precisely finds the nearest node if working in projected coordinates).
-    The 'balltree' method is second fastest with large data sets, but it
-    is precise if working in unprojected coordinates like lat-lng.
+    Return the graph nodes nearest to a list of points.
+
+    Pass in points as separate vectors of X and Y coordinates. The 'kdtree'
+    method is by far the fastest with large data sets, but only finds
+    approximate nearest nodes if working in unprojected coordinates like
+    lat-lng (it precisely finds the nearest node if working in projected
+    coordinates). The 'balltree' method is second fastest with large data
+    sets but it is precise if working in unprojected coordinates like lat-lng.
 
     Parameters
     ----------
@@ -300,17 +302,18 @@ def get_nearest_nodes(G, X, Y, method=None):
 
 def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     """
-    Return the graph edges nearest to a list of points. Pass in points
-    as separate vectors of X and Y coordinates. The 'kdtree' method
-    is by far the fastest with large data sets, but only finds approximate
-    nearest edges if working in unprojected coordinates like lat-lng (it
-    precisely finds the nearest edge if working in projected coordinates).
-    The 'balltree' method is second fastest with large data sets, but it
-    is precise if working in unprojected coordinates like lat-lng. As a
-    rule of thumb, if you have a small graph just use method=None. If you
-    have a large graph with lat-lng coordinates, use method='balltree'.
-    If you have a large graph with projected coordinates, use
-    method='kdtree'. Note that if you are working in units of lat-lng,
+    Return the graph edges nearest to a list of points.
+
+    Pass in points as separate vectors of X and Y coordinates. The 'kdtree'
+    method is by far the fastest with large data sets, but only finds
+    approximate nearest edges if working in unprojected coordinates like
+    lat-lng (it precisely finds the nearest edge if working in projected
+    coordinates). The 'balltree' method is second fastest with large data
+    sets, but it is precise if working in unprojected coordinates like
+    lat-lng. As a rule of thumb, if you have a small graph just use
+    method=None. If you have a large graph with lat-lng coordinates, use
+    method='balltree'. If you have a large graph with projected coordinates,
+    use method='kdtree'. Note that if you are working in units of lat-lng,
     the X vector corresponds to longitude and the Y vector corresponds
     to latitude. The method creates equally distanced points along the edges
     of the network. Then, these points are used in a kdTree or BallTree search
