@@ -1,6 +1,6 @@
 [flake8]
 
-max_line_length = 120
+exclude = ./build/*
 
 ignore =
 	D202 #blank line after function docstring
@@ -13,3 +13,5 @@ per-file-ignores =
 	./tests/test_osmnx.py:D103,E402,F401,F841
 
 docstring-convention = numpy
+
+max_line_length = 120
