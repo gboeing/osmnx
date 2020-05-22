@@ -27,6 +27,7 @@ def _is_endpoint(G, node, strict=True):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     node : int
         the node to examine
     strict : bool
@@ -95,6 +96,7 @@ def _build_path(G, node, endpoints, path):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     node : int
         the current node to start from
     endpoints : set
@@ -144,6 +146,7 @@ def _get_paths_to_simplify(G, strict=True):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     strict : bool
         if False, allow nodes to be end points even if they fail all other rules
         but have edges with different OSM IDs
@@ -192,6 +195,7 @@ def _is_simplified(G):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
 
     Returns
     -------
@@ -214,6 +218,7 @@ def simplify_graph(G, strict=True):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     strict : bool
         if False, allow nodes to be end points even if they fail all other
         rules but have edges with different OSM IDs
@@ -307,8 +312,15 @@ def clean_intersections(G, tolerance=10, dead_ends=False,
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        param for consolidate_intersections
     tolerance : float
+        param for consolidate_intersections
     dead_ends : bool
+        param for consolidate_intersections
+    rebuild_graph : bool
+        param for consolidate_intersections
+    update_edge_lengths : bool
+        param for consolidate_intersections
 
     Returns
     -------

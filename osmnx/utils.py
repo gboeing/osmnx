@@ -123,10 +123,20 @@ def config(data_folder=settings.data_folder,
         one of the logger.level constants
     log_name : string
         name of the logger
+    log_filename : string
+        filename of the log
     useful_tags_node : list
         a list of useful OSM tags to attempt to save from node elements
     useful_tags_path : list
         a list of useful OSM tags to attempt to save from path elements
+    osm_xml_node_attrs : list
+        list of node attributes for .osm xml files
+    osm_xml_node_tags : list
+        list of node tags for .osm xml files
+    osm_xml_way_attrs : list
+        list of edge attributes for .osm xml files
+    osm_xml_way_tags : list
+        list of edge tags for .osm xml files
     default_access : string
         default filter for OSM "access" key
     default_crs : string

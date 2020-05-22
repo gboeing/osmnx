@@ -20,6 +20,7 @@ def save_graph_geopackage(G, filepath=None, encoding='utf-8'):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     filepath : string
         path to the GeoPackage file including extension. if None, use
         default data folder + graph.gpkg
@@ -62,6 +63,7 @@ def save_graph_shapefile(G, filepath=None, encoding='utf-8'):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     filepath : string
         path to the shapefiles folder (no file extension). if None,
         use default data folder
@@ -331,6 +333,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding='utf-8'):
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     filepath : string
         path to the GraphML file including extension
     gephi : bool

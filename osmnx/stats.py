@@ -23,6 +23,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15,
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     area : numeric
         the area covered by the street network, in square meters (typically land
         area); if none, will skip all density-based metrics
@@ -244,6 +245,7 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        input graph
     connectivity : bool
         if True, calculate node and edge connectivity
     anc : bool
