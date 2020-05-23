@@ -6,8 +6,8 @@
   - clean up API and namespace
   - new consolidate_intersections function with topological option
   - generalize POIs module to query with a flexible tags dict
-  - all graph saving functions now take a filepath argument
-  - now save shapefiles in single folder containing both nodes and edges
+  - all graph saving functions now take a filepath argument instead of filename/folder
+  - save shapefiles in single folder containing both nodes and edges
   - optionally return distance and/or geometry in nearest edge search
   - expose timeout and memory parameters in pois and footprints modules
   - define default crs via epsg code instead of proj4 string
@@ -15,9 +15,9 @@
   - graph metadata: add creation date and version, remove name
   - replace inconsistent distance parameters with consistent dist parameters
   - deprecate old clean_intersections function in favor of new consolidate_intersections
-  - deprecate old gdfs_to_graph function in favor of new graph_from_gdfs
-  - deprecate old graph_from_file function in favor of new graph_from_xml
-  - rename save_as_osm function -> save_graph_xml
+  - deprecate old gdfs_to_graph function in favor of graph_from_gdfs
+  - deprecate old graph_from_file function in favor of graph_from_xml
+  - rename save_as_osm function -> save_graph_xml for consistency
   - rename save_load module -> io
   - remove old save_gdf_shapefile function
   - drop support for python 3.5 and lower
