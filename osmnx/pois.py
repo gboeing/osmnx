@@ -11,9 +11,9 @@ from . import utils
 from . import utils_geo
 
 
-
-def _create_poi_query(north, south, east, west, tags,
-                      timeout=180, memory=None, custom_settings=None):
+def _create_poi_query(
+    north, south, east, west, tags, timeout=180, memory=None, custom_settings=None
+):
     """
     Create an overpass query string based on passed tags.
 
@@ -53,11 +53,10 @@ def _create_poi_query(north, south, east, west, tags,
     -------
     query : string
     """
-
     overpass_settings = downloader._make_overpass_settings(custom_settings, timeout, memory)
 
     # make sure every value in dict is bool, str, or list of str
-    error_msg = 'tags must be a dict with values of bool, str, or list of str'
+    error_msg = "tags must be a dict with values of bool, str, or list of str"
     if not isinstance(tags, dict):
         raise TypeError(error_msg)
 
@@ -88,7 +87,7 @@ def _create_poi_query(north, south, east, west, tags,
                 tags_list.append({key: value_item})
 
     # create query bounding box
-    bbox = f'({south:.6f},{west:.6f},{north:.6f},{east:.6f})'
+    bbox = f"({south:.6f},{west:.6f},{north:.6f},{east:.6f})"
 
     # add node/way/relation query components one at a time
     components = []
@@ -102,20 +101,27 @@ def _create_poi_query(north, south, east, west, tags,
                 # otherwise, pass "key"="value"
                 tag_str = f'["{key}"="{value}"]{bbox};(._;>;);'
 
-            for kind in ['node', 'way', 'relation']:
-                components.append(f'({kind}{tag_str});')
+            for kind in ["node", "way", "relation"]:
+                components.append(f"({kind}{tag_str});")
 
     # finalize query and return
-    components = ''.join(components)
-    query = f'{overpass_settings};({components});out;'
+    components = "".join(components)
+    query = f"{overpass_settings};({components});out;"
 
     return query
 
 
-
-def _osm_poi_download(tags, polygon=None,
-                      north=None, south=None, east=None, west=None,
-                      timeout=180, memory=None, custom_settings=None):
+def _osm_poi_download(
+    tags,
+    polygon=None,
+    north=None,
+    south=None,
+    east=None,
+    west=None,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
+):
     """
     Get points of interests (POIs) from OpenStreetMap based on passed tags.
 
@@ -161,7 +167,6 @@ def _osm_poi_download(tags, polygon=None,
     responses : dict
         JSON response with POIs from Overpass API server
     """
-
     # TODO: add functionality for subdividing search area geometry
     # TODO: add functionality for constraining query to poly rather than its bbox
     if polygon is not None:
@@ -169,18 +174,22 @@ def _osm_poi_download(tags, polygon=None,
     elif not (north is None or south is None or east is None or west is None):
         pass
     else:
-        raise ValueError('You must pass a polygon or north, south, east, and west')
+        raise ValueError("You must pass a polygon or north, south, east, and west")
 
     # get the POIs
-    query = _create_poi_query(north=north, south=south, east=east, west=west,
-                              tags=tags,
-                              timeout=timeout,
-                              memory=memory,
-                              custom_settings=custom_settings)
-    responses = downloader.overpass_request(data={'data': query}, timeout=timeout)
+    query = _create_poi_query(
+        north=north,
+        south=south,
+        east=east,
+        west=west,
+        tags=tags,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )
+    responses = downloader.overpass_request(data={"data": query}, timeout=timeout)
 
     return responses
-
 
 
 def _parse_nodes_coords(osm_response):
@@ -200,14 +209,11 @@ def _parse_nodes_coords(osm_response):
     coords : dict
         dict of node IDs and their lat, lng coordinates
     """
-
     coords = {}
-    for result in osm_response['elements']:
-        if 'type' in result and result['type'] == 'node':
-            coords[result['id']] = {'lat': result['lat'],
-                                    'lon': result['lon']}
+    for result in osm_response["elements"]:
+        if "type" in result and result["type"] == "node":
+            coords[result["id"]] = {"lat": result["lat"], "lon": result["lon"]}
     return coords
-
 
 
 def _parse_polygonal_poi(coords, response):
@@ -225,26 +231,22 @@ def _parse_polygonal_poi(coords, response):
     -------
     dict of POIs containing each's nodes, polygon geometry, and osmid
     """
-
-    if 'type' in response and response['type'] == 'way':
-        nodes = response['nodes']
+    if "type" in response and response["type"] == "way":
+        nodes = response["nodes"]
         try:
-            polygon = Polygon([(coords[node]['lon'], coords[node]['lat']) for node in nodes])
+            polygon = Polygon([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
 
-            poi = {'nodes': nodes,
-                   'geometry': polygon,
-                   'osmid': response['id']}
+            poi = {"nodes": nodes, "geometry": polygon, "osmid": response["id"]}
 
-            if 'tags' in response:
-                for tag in response['tags']:
-                    poi[tag] = response['tags'][tag]
+            if "tags" in response:
+                for tag in response["tags"]:
+                    poi[tag] = response["tags"][tag]
             return poi
 
         except Exception:
-            utils.log(f'Polygon has invalid geometry: {nodes}')
+            utils.log(f"Polygon has invalid geometry: {nodes}")
 
     return None
-
 
 
 def _parse_osm_node(response):
@@ -260,22 +262,19 @@ def _parse_osm_node(response):
     -------
     Dict of vertex IDs and their lat, lng coordinates.
     """
-
     try:
-        point = Point(response['lon'], response['lat'])
+        point = Point(response["lon"], response["lat"])
 
-        poi = {'osmid': response['id'],
-               'geometry': point}
+        poi = {"osmid": response["id"], "geometry": point}
 
-        if 'tags' in response:
-            for tag in response['tags']:
-                poi[tag] = response['tags'][tag]
+        if "tags" in response:
+            for tag in response["tags"]:
+                poi[tag] = response["tags"][tag]
 
     except Exception:
         utils.log(f'Point has invalid geometry: {response["id"]}')
 
     return poi
-
 
 
 def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
@@ -297,16 +296,14 @@ def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
     -------
     shapely.geometry.MultiPolygon
     """
-
     try:
-        gdf_clean = gdf.dropna(subset=['geometry'])
-        multipoly = MultiPolygon(list(gdf_clean['geometry']))
+        gdf_clean = gdf.dropna(subset=["geometry"])
+        multipoly = MultiPolygon(list(gdf_clean["geometry"]))
         return multipoly
 
     except Exception:
         utils.log(f'Invalid geometry at relation "{relation["id"]}", way IDs: {way_ids}')
         return None
-
 
 
 def _parse_osm_relations(relations, osm_way_df):
@@ -330,37 +327,42 @@ def _parse_osm_relations(relations, osm_way_df):
         A GeoDataFrame with MultiPolygon representations of the
         relations and the attributes associated with them.
     """
-
     gdf_relations = gpd.GeoDataFrame()
 
     # Iterate over relations and extract the items
     for relation in relations:
         try:
-            if relation['tags']['type'] == 'multipolygon':
+            if relation["tags"]["type"] == "multipolygon":
                 # Parse member 'way' ids
-                member_way_ids = [member['ref'] for member in relation['members'] if member['type'] == 'way']
+                member_way_ids = [
+                    member["ref"] for member in relation["members"] if member["type"] == "way"
+                ]
                 # Extract the ways
                 member_ways = osm_way_df.reindex(member_way_ids)
                 # Extract the nodes of those ways
-                member_nodes = list(member_ways['nodes'].values)
+                member_nodes = list(member_ways["nodes"].values)
                 try:
                     # Create MultiPolygon from geometries (exclude NaNs)
-                    multipoly = MultiPolygon(list(member_ways['geometry']))
+                    multipoly = MultiPolygon(list(member_ways["geometry"]))
                 except Exception:
-                    multipoly = _invalid_multipoly_handler(gdf=member_ways, relation=relation, way_ids=member_way_ids)
+                    multipoly = _invalid_multipoly_handler(
+                        gdf=member_ways, relation=relation, way_ids=member_way_ids
+                    )
 
                 if multipoly:
                     # Create GeoDataFrame with the tags and the MultiPolygon and its
                     # 'ways' (ids), and the 'nodes' of those ways
-                    geo = gpd.GeoDataFrame(relation['tags'], index=[relation['id']])
+                    geo = gpd.GeoDataFrame(relation["tags"], index=[relation["id"]])
                     # Initialize columns (needed for .loc inserts)
-                    geo = geo.assign(geometry=None, ways=None, nodes=None, element_type=None, osmid=None)
+                    geo = geo.assign(
+                        geometry=None, ways=None, nodes=None, element_type=None, osmid=None
+                    )
                     # Add attributes
-                    geo.loc[relation['id'], 'geometry'] = multipoly
-                    geo.loc[relation['id'], 'ways'] = member_way_ids
-                    geo.loc[relation['id'], 'nodes'] = member_nodes
-                    geo.loc[relation['id'], 'element_type'] = 'relation'
-                    geo.loc[relation['id'], 'osmid'] = relation['id']
+                    geo.loc[relation["id"], "geometry"] = multipoly
+                    geo.loc[relation["id"], "ways"] = member_way_ids
+                    geo.loc[relation["id"], "nodes"] = member_nodes
+                    geo.loc[relation["id"], "element_type"] = "relation"
+                    geo.loc[relation["id"], "osmid"] = relation["id"]
 
                     # Append to relation GeoDataFrame
                     gdf_relations = gdf_relations.append(geo, sort=False)
@@ -374,9 +376,17 @@ def _parse_osm_relations(relations, osm_way_df):
     return osm_way_df
 
 
-
-def _create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=None,
-                    timeout=180, memory=None, custom_settings=None):
+def _create_poi_gdf(
+    tags,
+    polygon=None,
+    north=None,
+    south=None,
+    east=None,
+    west=None,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
+):
     """
     Create GeoDataFrame from POIs json returned by Overpass API.
 
@@ -419,10 +429,17 @@ def _create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=
     geopandas.GeoDataFrame
         POIs and their associated tags
     """
-
-    responses = _osm_poi_download(tags, polygon=polygon,
-                                  north=north, south=south, east=east, west=west,
-                                  timeout=timeout, memory=memory, custom_settings=custom_settings)
+    responses = _osm_poi_download(
+        tags,
+        polygon=polygon,
+        north=north,
+        south=south,
+        east=east,
+        west=west,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )
 
     # Parse coordinates from all the nodes in the response
     coords = _parse_nodes_coords(responses)
@@ -436,23 +453,23 @@ def _create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=
     # A list of POI relations
     relations = []
 
-    for result in responses['elements']:
-        if result['type'] == 'node' and 'tags' in result:
+    for result in responses["elements"]:
+        if result["type"] == "node" and "tags" in result:
             poi = _parse_osm_node(response=result)
             # Add element_type
-            poi['element_type'] = 'node'
+            poi["element_type"] = "node"
             # Add to 'pois'
-            poi_nodes[result['id']] = poi
-        elif result['type'] == 'way':
+            poi_nodes[result["id"]] = poi
+        elif result["type"] == "way":
             # Parse POI area Polygon
             poi_area = _parse_polygonal_poi(coords=coords, response=result)
             if poi_area:
                 # Add element_type
-                poi_area['element_type'] = 'way'
+                poi_area["element_type"] = "way"
                 # Add to 'poi_ways'
-                poi_ways[result['id']] = poi_area
+                poi_ways[result["id"]] = poi_area
 
-        elif result['type'] == 'relation':
+        elif result["type"] == "relation":
             # Add relation to a relation list (needs to be parsed after
             # all nodes and ways have been parsed)
             relations.append(result)
@@ -473,14 +490,12 @@ def _create_poi_gdf(tags, polygon=None, north=None, south=None, east=None, west=
     # if caller requested pois within a polygon, only retain those that
     # fall within the polygon
     if polygon and len(gdf) > 0:
-        gdf = gdf.loc[gdf['geometry'].centroid.within(polygon)]
+        gdf = gdf.loc[gdf["geometry"].centroid.within(polygon)]
 
     return gdf
 
 
-
-def pois_from_point(point, tags, dist=1000,
-                    timeout=180, memory=None, custom_settings=None):
+def pois_from_point(point, tags, dist=1000, timeout=180, memory=None, custom_settings=None):
     """
     Get point of interests (POIs) within some distance N, S, E, W of a point.
 
@@ -513,18 +528,21 @@ def pois_from_point(point, tags, dist=1000,
     -------
     geopandas.GeoDataFrame
     """
-
     bbox = utils_geo.bbox_from_point(point=point, dist=dist)
     north, south, east, west = bbox
-    return _create_poi_gdf(tags=tags,
-                           north=north, south=south, east=east, west=west,
-                           timeout=timeout, memory=memory,
-                           custom_settings=custom_settings)
+    return _create_poi_gdf(
+        tags=tags,
+        north=north,
+        south=south,
+        east=east,
+        west=west,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )
 
 
-
-def pois_from_address(address, tags, dist=1000,
-                      timeout=180, memory=None, custom_settings=None):
+def pois_from_address(address, tags, dist=1000, timeout=180, memory=None, custom_settings=None):
     """
     Get point of interests (POIs) within some distance N, S, E, W of address.
 
@@ -557,18 +575,21 @@ def pois_from_address(address, tags, dist=1000,
     -------
     geopandas.GeoDataFrame
     """
-
     # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
 
     # get POIs within distance of this point
-    return pois_from_point(point=point, tags=tags, dist=dist,
-                           timeout=timeout, memory=memory, custom_settings=custom_settings)
+    return pois_from_point(
+        point=point,
+        tags=tags,
+        dist=dist,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )
 
 
-
-def pois_from_polygon(polygon, tags,
-                      timeout=180, memory=None, custom_settings=None):
+def pois_from_polygon(polygon, tags, timeout=180, memory=None, custom_settings=None):
     """
     Get point of interests (POIs) within some polygon.
 
@@ -599,15 +620,12 @@ def pois_from_polygon(polygon, tags,
     -------
     geopandas.GeoDataFrame
     """
-
-    return _create_poi_gdf(tags=tags, polygon=polygon,
-                           timeout=timeout, memory=memory,
-                           custom_settings=custom_settings)
-
+    return _create_poi_gdf(
+        tags=tags, polygon=polygon, timeout=timeout, memory=memory, custom_settings=custom_settings
+    )
 
 
-def pois_from_place(place, tags, which_result=1,
-                    timeout=180, memory=None, custom_settings=None):
+def pois_from_place(place, tags, which_result=1, timeout=180, memory=None, custom_settings=None):
     """
     Get points of interest (POIs) within the boundaries of some place.
 
@@ -640,9 +658,8 @@ def pois_from_place(place, tags, which_result=1,
     -------
     geopandas.GeoDataFrame
     """
-
     city = boundaries.gdf_from_place(place, which_result=which_result)
-    polygon = city['geometry'].iloc[0]
-    return _create_poi_gdf(tags=tags, polygon=polygon,
-                           timeout=timeout, memory=memory,
-                           custom_settings=custom_settings)
+    polygon = city["geometry"].iloc[0]
+    return _create_poi_gdf(
+        tags=tags, polygon=polygon, timeout=timeout, memory=memory, custom_settings=custom_settings
+    )

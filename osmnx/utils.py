@@ -8,7 +8,6 @@ import unicodedata
 from . import settings
 
 
-
 def citation():
     """
     Print the OSMnx package's citation information.
@@ -17,30 +16,30 @@ def citation():
     and Visualizing Complex Street Networks. Computers, Environment and Urban
     Systems, 65(126-139). https://doi.org/10.1016/j.compenvurbsys.2017.05.004
     """
-
-    cite = ("Citation:\n\n"
-            "Boeing, G. 2017. OSMnx: New Methods for Acquiring, "
-            "Constructing, Analyzing, and Visualizing Complex Street "
-            "Networks. Computers, Environment and Urban Systems, 65(126-139). "
-            "https://doi.org/10.1016/j.compenvurbsys.2017.05.004\n\n"
-            "BibTeX entry for LaTeX users:\n\n"
-            "@article{boeing_osmnx_2017,\n"
-            "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, "
-            "{Constructing}, {Analyzing}, and {Visualizing} {Complex} "
-            "{Street} {Networks}},\n"
-            "    volume = {65},\n"
-            "    doi = {10.1016/j.compenvurbsys.2017.05.004},\n"
-            "    number = {126-139},\n"
-            "    journal = {Computers, Environment and Urban Systems},\n"
-            "    author = {Boeing, Geoff},\n"
-            "    year = {2017}\n"
-            "}")
+    cite = (
+        "Citation:\n\n"
+        "Boeing, G. 2017. OSMnx: New Methods for Acquiring, "
+        "Constructing, Analyzing, and Visualizing Complex Street "
+        "Networks. Computers, Environment and Urban Systems, 65(126-139). "
+        "https://doi.org/10.1016/j.compenvurbsys.2017.05.004\n\n"
+        "BibTeX entry for LaTeX users:\n\n"
+        "@article{boeing_osmnx_2017,\n"
+        "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, "
+        "{Constructing}, {Analyzing}, and {Visualizing} {Complex} "
+        "{Street} {Networks}},\n"
+        "    volume = {65},\n"
+        "    doi = {10.1016/j.compenvurbsys.2017.05.004},\n"
+        "    number = {126-139},\n"
+        "    journal = {Computers, Environment and Urban Systems},\n"
+        "    author = {Boeing, Geoff},\n"
+        "    year = {2017}\n"
+        "}"
+    )
 
     print(cite)
 
 
-
-def ts(style='datetime', template=None):
+def ts(style="datetime", template=None):
     """
     Get current timestamp as string.
 
@@ -58,14 +57,13 @@ def ts(style='datetime', template=None):
     ts : string
         the string timestamp
     """
-
     if template is None:
-        if style == 'datetime':
-            template = '{:%Y-%m-%d %H:%M:%S}'
-        elif style == 'date':
-            template = '{:%Y-%m-%d}'
-        elif style == 'time':
-            template = '{:%H:%M:%S}'
+        if style == "datetime":
+            template = "{:%Y-%m-%d %H:%M:%S}"
+        elif style == "date":
+            template = "{:%Y-%m-%d}"
+        elif style == "time":
+            template = "{:%H:%M:%S}"
         else:
             raise ValueError(f'unrecognized timestamp style "{style}"')
 
@@ -73,32 +71,33 @@ def ts(style='datetime', template=None):
     return ts
 
 
-
-def config(data_folder=settings.data_folder,
-           logs_folder=settings.logs_folder,
-           imgs_folder=settings.imgs_folder,
-           cache_folder=settings.cache_folder,
-           use_cache=settings.use_cache,
-           log_file=settings.log_file,
-           log_console=settings.log_console,
-           log_level=settings.log_level,
-           log_name=settings.log_name,
-           log_filename=settings.log_filename,
-           useful_tags_node=settings.useful_tags_node,
-           useful_tags_path=settings.useful_tags_path,
-           osm_xml_node_attrs=settings.osm_xml_node_attrs,
-           osm_xml_node_tags=settings.osm_xml_node_tags,
-           osm_xml_way_attrs=settings.osm_xml_way_attrs,
-           osm_xml_way_tags=settings.osm_xml_way_tags,
-           default_access=settings.default_access,
-           default_crs=settings.default_crs,
-           default_user_agent=settings.default_user_agent,
-           default_referer=settings.default_referer,
-           default_accept_language=settings.default_accept_language,
-           nominatim_endpoint=settings.nominatim_endpoint,
-           nominatim_key=settings.nominatim_key,
-           overpass_endpoint=settings.overpass_endpoint,
-           all_oneway=settings.all_oneway):
+def config(
+    data_folder=settings.data_folder,
+    logs_folder=settings.logs_folder,
+    imgs_folder=settings.imgs_folder,
+    cache_folder=settings.cache_folder,
+    use_cache=settings.use_cache,
+    log_file=settings.log_file,
+    log_console=settings.log_console,
+    log_level=settings.log_level,
+    log_name=settings.log_name,
+    log_filename=settings.log_filename,
+    useful_tags_node=settings.useful_tags_node,
+    useful_tags_path=settings.useful_tags_path,
+    osm_xml_node_attrs=settings.osm_xml_node_attrs,
+    osm_xml_node_tags=settings.osm_xml_node_tags,
+    osm_xml_way_attrs=settings.osm_xml_way_attrs,
+    osm_xml_way_tags=settings.osm_xml_way_tags,
+    default_access=settings.default_access,
+    default_crs=settings.default_crs,
+    default_user_agent=settings.default_user_agent,
+    default_referer=settings.default_referer,
+    default_accept_language=settings.default_accept_language,
+    nominatim_endpoint=settings.nominatim_endpoint,
+    nominatim_key=settings.nominatim_key,
+    overpass_endpoint=settings.overpass_endpoint,
+    all_oneway=settings.all_oneway,
+):
     """
     Configure osmnx by setting the default global settings' values.
 
@@ -161,7 +160,6 @@ def config(data_folder=settings.data_folder,
     -------
     None
     """
-
     # set each global variable to the passed-in parameter value
     settings.use_cache = use_cache
     settings.cache_folder = cache_folder
@@ -193,8 +191,7 @@ def config(data_folder=settings.data_folder,
 
     # if logging is turned on, log that we are configured
     if settings.log_file or settings.log_console:
-        log('Configured osmnx')
-
+        log("Configured osmnx")
 
 
 def log(message, level=None, name=None, filename=None):
@@ -216,7 +213,6 @@ def log(message, level=None, name=None, filename=None):
     -------
     None
     """
-
     if level is None:
         level = settings.log_level
     if name is None:
@@ -247,13 +243,14 @@ def log(message, level=None, name=None, filename=None):
         sys.stdout = sys.__stdout__
 
         # prepend timestamp
-        message = f'{ts()} {message}'
+        message = f"{ts()} {message}"
 
         # convert to ascii so it doesn't break windows terminals
-        message = unicodedata.normalize('NFKD', str(message)).encode('ascii', errors='replace').decode()
+        message = (
+            unicodedata.normalize("NFKD", str(message)).encode("ascii", errors="replace").decode()
+        )
         print(message)
         sys.stdout = standard_out
-
 
 
 def _get_logger(level=None, name=None, filename=None):
@@ -273,7 +270,6 @@ def _get_logger(level=None, name=None, filename=None):
     -------
     logger.logger
     """
-
     if level is None:
         level = settings.log_level
     if name is None:
@@ -284,7 +280,7 @@ def _get_logger(level=None, name=None, filename=None):
     logger = lg.getLogger(name)
 
     # if a logger with this name is not already set up
-    if not getattr(logger, 'handler_set', None):
+    if not getattr(logger, "handler_set", None):
 
         # get today's date and construct a log filename
         log_filename = os.path.join(settings.logs_folder, f'{filename}_{ts(style="date")}.log')
@@ -294,8 +290,8 @@ def _get_logger(level=None, name=None, filename=None):
             os.makedirs(settings.logs_folder)
 
         # create file handler and log formatter and set them up
-        handler = lg.FileHandler(log_filename, encoding='utf-8')
-        formatter = lg.Formatter('%(asctime)s %(levelname)s %(name)s %(message)s')
+        handler = lg.FileHandler(log_filename, encoding="utf-8")
+        formatter = lg.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         logger.setLevel(level)

@@ -13,13 +13,18 @@ from . import utils
 from . import utils_geo
 
 
-
-def _osm_footprints_download(polygon=None,
-                             north=None, south=None, east=None, west=None,
-                             footprint_type='building',
-                             timeout=180, memory=None,
-                             max_query_area_size=50 * 1000 * 50 * 1000,
-                             custom_settings=None):
+def _osm_footprints_download(
+    polygon=None,
+    north=None,
+    south=None,
+    east=None,
+    west=None,
+    footprint_type="building",
+    timeout=180,
+    memory=None,
+    max_query_area_size=50 * 1000 * 50 * 1000,
+    custom_settings=None,
+):
     """
     Download OpenStreetMap footprint data as a list of json responses.
 
@@ -54,13 +59,12 @@ def _osm_footprints_download(polygon=None,
     list
         list of response_json dicts
     """
-
     # check if we're querying by polygon or by bounding box based on which
     # argument(s) where passed into this function
     by_poly = polygon is not None
     by_bbox = not (north is None or south is None or east is None or west is None)
     if not (by_poly or by_bbox):
-        raise ValueError('You must pass a polygon or north, south, east, and west')
+        raise ValueError("You must pass a polygon or north, south, east, and west")
 
     response_jsons = []
 
@@ -74,9 +78,13 @@ def _osm_footprints_download(polygon=None,
 
         # subdivide it if it exceeds the max area size (in meters), then project
         # back to lat-lng
-        gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        gpcs = utils_geo._consolidate_subdivide_geometry(
+            geometry_proj, max_query_area_size=max_query_area_size
+        )
         geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
-        utils.log(f'Requesting footprints within bounding box from API in {len(geometry)} request(s)')
+        utils.log(
+            f"Requesting footprints within bounding box from API in {len(geometry)} request(s)"
+        )
 
         # loop through each polygon rectangle in the geometry (there will only
         # be one if original bbox didn't exceed max area size)
@@ -85,41 +93,62 @@ def _osm_footprints_download(polygon=None,
             # decimal places (ie, within 1 mm) so URL strings aren't different
             # due to float rounding issues (for consistent caching)
             west, south, east, north = poly.bounds
-            query_str = (f'{overpass_settings};'
-                         f'((way["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
-                         f'(._;>;););'
-                         f'(relation["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
-                         f'(._;>;);););out;')
-            response_json = downloader.overpass_request(data={'data': query_str}, timeout=timeout)
+            query_str = (
+                f"{overpass_settings};"
+                f'((way["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
+                f"(._;>;););"
+                f'(relation["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
+                f"(._;>;);););out;"
+            )
+            response_json = downloader.overpass_request(data={"data": query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        utils.log(f'Got all footprint data within bounding box from API in {len(geometry)} request(s)')
+        utils.log(
+            f"Got all footprint data within bounding box from API in {len(geometry)} request(s)"
+        )
 
     elif by_poly:
         # project to utm, divide polygon up into sub-polygons if area exceeds a
         # max size (in meters), project back to lat-lng, then get a list of polygon(s) exterior coordinates
         geometry_proj, crs_proj = projection.project_geometry(polygon)
-        gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj, max_query_area_size=max_query_area_size)
+        gpcs = utils_geo._consolidate_subdivide_geometry(
+            geometry_proj, max_query_area_size=max_query_area_size
+        )
         geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
         polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
-        utils.log(f'Requesting footprints within polygon from API in {len(polygon_coord_strs)} request(s)')
+        utils.log(
+            f"Requesting footprints within polygon from API in {len(polygon_coord_strs)} request(s)"
+        )
 
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
-            query_str = (f'{overpass_settings};('
-                         f'way(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;);'
-                         f'relation(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;););out;')
-            response_json = downloader.overpass_request(data={'data': query_str}, timeout=timeout)
+            query_str = (
+                f"{overpass_settings};("
+                f'way(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;);'
+                f'relation(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;););out;'
+            )
+            response_json = downloader.overpass_request(data={"data": query_str}, timeout=timeout)
             response_jsons.append(response_json)
-        utils.log(f'Got all footprint data within polygon from API in {len(polygon_coord_strs)} request(s)')
+        utils.log(
+            f"Got all footprint data within polygon from API in {len(polygon_coord_strs)} request(s)"
+        )
 
     return response_jsons
 
 
-
-def _create_footprints_gdf(polygon=None, north=None, south=None, east=None, west=None,
-                           footprint_type='building', retain_invalid=False, responses=None,
-                           timeout=180, memory=None, custom_settings=None):
+def _create_footprints_gdf(
+    polygon=None,
+    north=None,
+    south=None,
+    east=None,
+    west=None,
+    footprint_type="building",
+    retain_invalid=False,
+    responses=None,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
+):
     """
     Get footprint (polygon) data from OSM and convert it into a GeoDataFrame.
 
@@ -154,11 +183,19 @@ def _create_footprints_gdf(polygon=None, north=None, south=None, east=None, west
     -------
     geopandas.GeoDataFrame
     """
-
     # allow pickling between downloading footprints and converting them to a GeoDataFrame
     if responses is None:
-        responses = _osm_footprints_download(polygon, north, south, east, west, footprint_type,
-                                             timeout=timeout, memory=memory, custom_settings=custom_settings)
+        responses = _osm_footprints_download(
+            polygon,
+            north,
+            south,
+            east,
+            west,
+            footprint_type,
+            timeout=timeout,
+            memory=memory,
+            custom_settings=custom_settings,
+        )
 
     # parse the list of responses into separate dicts of vertices, footprints and relations
     # create a set of ways not directly tagged with footprint_type
@@ -166,11 +203,13 @@ def _create_footprints_gdf(polygon=None, north=None, south=None, east=None, west
 
     # create simple Shapely geometries (Polygon or LineString) for all of the ways in footprints
     for footprint_key, footprint_val in footprints.items():
-        footprint_val['geometry'] = _create_footprint_geometry(footprint_key, footprint_val, vertices)
+        footprint_val["geometry"] = _create_footprint_geometry(
+            footprint_key, footprint_val, vertices
+        )
 
     # create a complex Shapely Polygon or MultiPolygon for each relation
     for relation_key, relation_val in relations.items():
-        relation_val['geometry'] = _create_relation_geometry(relation_key, relation_val, footprints)
+        relation_val["geometry"] = _create_relation_geometry(relation_key, relation_val, footprints)
 
     # merge relations into the footprints dictionary
     footprints.update(relations)
@@ -180,21 +219,22 @@ def _create_footprints_gdf(polygon=None, north=None, south=None, east=None, west
         try:
             del footprints[untagged_way]
         except KeyError:
-            utils.log(f'untagged_way {untagged_way} not found in footprints dict')
+            utils.log(f"untagged_way {untagged_way} not found in footprints dict")
 
     # Convert footprints dictionary to a GeoDataFrame
-    gdf = gpd.GeoDataFrame.from_dict(footprints, orient='index')
+    gdf = gpd.GeoDataFrame.from_dict(footprints, orient="index")
     gdf.crs = settings.default_crs
 
     # filter the gdf to only include valid Polygons/MultiPolygons if retain_invalid is False
     if not retain_invalid and not gdf.empty:
-        filter1 = gdf['geometry'].is_valid
-        filter2 = (gdf['geometry'].geom_type == 'Polygon') | (gdf['geometry'].geom_type == 'MultiPolygon')
+        filter1 = gdf["geometry"].is_valid
+        filter2 = (gdf["geometry"].geom_type == "Polygon") | (
+            gdf["geometry"].geom_type == "MultiPolygon"
+        )
         filter_combined = filter1 & filter2
         gdf = gdf[filter_combined]
 
     return gdf
-
 
 
 def _responses_to_dicts(responses, footprint_type):
@@ -231,49 +271,47 @@ def _responses_to_dicts(responses, footprint_type):
         untagged_footprints
             set of ids for ways or relations not directly tagged with footprint_type
     """
-
     # create dictionaries to hold vertices, footprints and relations
     vertices = {}
     footprints = {}
     relations = {}
+
     # create a set to hold the ids of ways not directly tagged as footprint_type
     untagged_footprints = set()
 
     # loop through each response once adding each element to one of the dicts
     for response in responses:
-        for element in response['elements']:
+        for element in response["elements"]:
             # NODES - only keep coordinates
-            if 'type' in element and element['type'] == 'node':
-                vertices[element['id']] = {'lat': element['lat'],
-                                           'lon': element['lon']}
+            if "type" in element and element["type"] == "node":
+                vertices[element["id"]] = {"lat": element["lat"], "lon": element["lon"]}
             # WAYS - both open and closed
-            elif 'type' in element and element['type'] == 'way':
-                footprint = {'nodes': element['nodes']}
-                if 'tags' in element:
-                    for tag in element['tags']:
-                        footprint[tag] = element['tags'][tag]
-                footprints[element['id']] = footprint
+            elif "type" in element and element["type"] == "way":
+                footprint = {"nodes": element["nodes"]}
+                if "tags" in element:
+                    for tag in element["tags"]:
+                        footprint[tag] = element["tags"][tag]
+                footprints[element["id"]] = footprint
                 # add ways not individually tagged with footprint_type to the untagged_footprints set
-                if ('tags' not in element) or (footprint_type not in element['tags']):
-                    untagged_footprints.add(element['id'])
+                if ("tags" not in element) or (footprint_type not in element["tags"]):
+                    untagged_footprints.add(element["id"])
             # RELATIONS
-            elif 'type' in element and element['type'] == 'relation':
-                relation = {'members': {}}
-                for member in element['members']:
-                    if 'type' in member and member['type'] == 'way':
-                        relation['members'].update({member['ref']: member.get('role')})
-                if 'tags' in element:
-                    for tag in element['tags']:
-                        relation[tag] = element['tags'][tag]
-                relations[element['id']] = relation
+            elif "type" in element and element["type"] == "relation":
+                relation = {"members": {}}
+                for member in element["members"]:
+                    if "type" in member and member["type"] == "way":
+                        relation["members"].update({member["ref"]: member.get("role")})
+                if "tags" in element:
+                    for tag in element["tags"]:
+                        relation[tag] = element["tags"][tag]
+                relations[element["id"]] = relation
                 # add relations not individually tagged with footprint_type to the untagged_footprints set
-                if ('tags' not in element) or (footprint_type not in element['tags']):
-                    untagged_footprints.add(element['id'])
+                if ("tags" not in element) or (footprint_type not in element["tags"]):
+                    untagged_footprints.add(element["id"])
             else:
                 utils.log(f'Element {element["id"]} is not a node, way or relation')
 
     return vertices, footprints, relations, untagged_footprints
-
 
 
 def _create_footprint_geometry(footprint_key, footprint_val, vertices):
@@ -298,24 +336,24 @@ def _create_footprint_geometry(footprint_key, footprint_val, vertices):
     -------
     Shapely Polygon or LineString
     """
-
     # CLOSED WAYS
-    if footprint_val['nodes'][0] == footprint_val['nodes'][-1]:
+    if footprint_val["nodes"][0] == footprint_val["nodes"][-1]:
         try:
-            poly = [(vertices[node]['lon'], vertices[node]['lat']) for node in footprint_val['nodes']]
+            poly = [
+                (vertices[node]["lon"], vertices[node]["lat"]) for node in footprint_val["nodes"]
+            ]
             footprint_geometry = Polygon(poly)
         except Exception:
-            utils.log(f'Polygon has invalid geometry: {footprint_key}')
+            utils.log(f"Polygon has invalid geometry: {footprint_key}")
     # OPEN WAYS
     else:
         try:
-            ls = [(vertices[node]['lon'], vertices[node]['lat']) for node in footprint_val['nodes']]
+            ls = [(vertices[node]["lon"], vertices[node]["lat"]) for node in footprint_val["nodes"]]
             footprint_geometry = LineString(ls)
         except Exception:
-            utils.log(f'LineString has invalid geometry: {footprint_key}')
+            utils.log(f"LineString has invalid geometry: {footprint_key}")
 
     return footprint_geometry
-
 
 
 def _create_relation_geometry(relation_key, relation_val, footprints):
@@ -350,17 +388,17 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
     -------
     Shapely Polygon or MultiPolygon
     """
-
     # lists to hold member geometries
-    outer_polys, outer_lines, inner_polys, inner_lines = _members_geom_lists(relation_val,
-                                                                             footprints)
+    outer_polys, outer_lines, inner_polys, inner_lines = _members_geom_lists(
+        relation_val, footprints
+    )
 
     # try to polygonize open outer ways and concatenate them to outer_polys
     if len(outer_lines) > 0:
         try:
             result = list(polygonize(outer_lines))
         except Exception:
-            utils.log(f'polygonize failed for outer ways in relation: {relation_key}')
+            utils.log(f"polygonize failed for outer ways in relation: {relation_key}")
         else:
             outer_polys += result
 
@@ -369,16 +407,16 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
         try:
             result = list(polygonize(inner_lines))
         except Exception:
-            utils.log(f'polygonize failed for inner ways in relation: {relation_key}')
+            utils.log(f"polygonize failed for inner ways in relation: {relation_key}")
         else:
             inner_polys += result
 
     # filter out relations missing both 'outer' and 'inner' polygons or just 'outer'
     multipoly = []
     if len(outer_polys + inner_polys) == 0:
-        utils.log(f'Relation {relation_key} missing outer and inner closed ways')
+        utils.log(f"Relation {relation_key} missing outer and inner closed ways")
     elif len(outer_polys) == 0:
-        utils.log(f'Relation {relation_key} missing outer closed ways')
+        utils.log(f"Relation {relation_key} missing outer closed ways")
     # process the others to multipolygons
     else:
         for outer_poly in outer_polys:
@@ -396,8 +434,7 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
     elif len(multipoly) > 1:
         return MultiPolygon(multipoly)
     else:
-        utils.log(f'relation {relation_key} could not be converted to a complex footprint')
-
+        utils.log(f"relation {relation_key} could not be converted to a complex footprint")
 
 
 def _members_geom_lists(relation_val, footprints):
@@ -415,31 +452,36 @@ def _members_geom_lists(relation_val, footprints):
     -------
     tuple of lists
     """
-
     outer_polys = []
     outer_lines = []
     inner_polys = []
     inner_lines = []
 
     # add each members geometry to a list according to its role and geometry type
-    for member_id, member_role in relation_val['members'].items():
-        if member_role == 'outer':
-            if footprints[member_id]['geometry'].geom_type == 'Polygon':
-                outer_polys.append(footprints[member_id]['geometry'])
-            elif footprints[member_id]['geometry'].geom_type == 'LineString':
-                outer_lines.append(footprints[member_id]['geometry'])
-        elif member_role == 'inner':
-            if footprints[member_id]['geometry'].geom_type == 'Polygon':
-                inner_polys.append(footprints[member_id]['geometry'])
-            elif footprints[member_id]['geometry'].geom_type == 'LineString':
-                inner_lines.append(footprints[member_id]['geometry'])
+    for member_id, member_role in relation_val["members"].items():
+        if member_role == "outer":
+            if footprints[member_id]["geometry"].geom_type == "Polygon":
+                outer_polys.append(footprints[member_id]["geometry"])
+            elif footprints[member_id]["geometry"].geom_type == "LineString":
+                outer_lines.append(footprints[member_id]["geometry"])
+        elif member_role == "inner":
+            if footprints[member_id]["geometry"].geom_type == "Polygon":
+                inner_polys.append(footprints[member_id]["geometry"])
+            elif footprints[member_id]["geometry"].geom_type == "LineString":
+                inner_lines.append(footprints[member_id]["geometry"])
 
     return outer_polys, outer_lines, inner_polys, inner_lines
 
 
-
-def footprints_from_point(point, dist, footprint_type='building', retain_invalid=False,
-                          timeout=180, memory=None, custom_settings=None):
+def footprints_from_point(
+    point,
+    dist,
+    footprint_type="building",
+    retain_invalid=False,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
+):
     """
     Get footprints within some distance N, S, E, W of a lat-lng point.
 
@@ -466,17 +508,30 @@ def footprints_from_point(point, dist, footprint_type='building', retain_invalid
     -------
     geopandas.GeoDataFrame
     """
-
     bbox = utils_geo.bbox_from_point(point=point, dist=dist)
     north, south, east, west = bbox
-    return _create_footprints_gdf(north=north, south=south, east=east, west=west,
-                                  footprint_type=footprint_type, retain_invalid=retain_invalid,
-                                  timeout=timeout, memory=memory, custom_settings=custom_settings)
+    return _create_footprints_gdf(
+        north=north,
+        south=south,
+        east=east,
+        west=west,
+        footprint_type=footprint_type,
+        retain_invalid=retain_invalid,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )
 
 
-
-def footprints_from_address(address, dist, footprint_type='building', retain_invalid=False,
-                            timeout=180, memory=None, custom_settings=None):
+def footprints_from_address(
+    address,
+    dist,
+    footprint_type="building",
+    retain_invalid=False,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
+):
     """
     Get footprints within some distance N, S, E, W of an address.
 
@@ -503,19 +558,29 @@ def footprints_from_address(address, dist, footprint_type='building', retain_inv
     -------
     geopandas.GeoDataFrame
     """
-
     # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
 
     # get footprints within distance of this point
-    return footprints_from_point(point, dist, footprint_type=footprint_type,
-                                 retain_invalid=retain_invalid, timeout=timeout,
-                                 memory=memory, custom_settings=custom_settings)
+    return footprints_from_point(
+        point,
+        dist,
+        footprint_type=footprint_type,
+        retain_invalid=retain_invalid,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )
 
 
-
-def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=False,
-                            timeout=180, memory=None, custom_settings=None):
+def footprints_from_polygon(
+    polygon,
+    footprint_type="building",
+    retain_invalid=False,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
+):
     """
     Get footprints within some polygon.
 
@@ -541,15 +606,25 @@ def footprints_from_polygon(polygon, footprint_type='building', retain_invalid=F
     -------
     geopandas.GeoDataFrame
     """
+    return _create_footprints_gdf(
+        polygon=polygon,
+        footprint_type=footprint_type,
+        retain_invalid=retain_invalid,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )
 
-    return _create_footprints_gdf(polygon=polygon, footprint_type=footprint_type,
-                                  retain_invalid=retain_invalid, timeout=timeout,
-                                  memory=memory, custom_settings=custom_settings)
 
-
-
-def footprints_from_place(place, footprint_type='building', retain_invalid=False, which_result=1,
-                          timeout=180, memory=None, custom_settings=None):
+def footprints_from_place(
+    place,
+    footprint_type="building",
+    retain_invalid=False,
+    which_result=1,
+    timeout=180,
+    memory=None,
+    custom_settings=None,
+):
     """
     Get footprints within the boundaries of some place.
 
@@ -582,9 +657,13 @@ def footprints_from_place(place, footprint_type='building', retain_invalid=False
     -------
     geopandas.GeoDataFrame
     """
-
     city = boundaries.gdf_from_place(place, which_result=which_result)
-    polygon = city['geometry'].iloc[0]
-    return _create_footprints_gdf(polygon, retain_invalid=retain_invalid,
-                                  footprint_type=footprint_type, timeout=timeout,
-                                  memory=memory, custom_settings=custom_settings)
+    polygon = city["geometry"].iloc[0]
+    return _create_footprints_gdf(
+        polygon,
+        retain_invalid=retain_invalid,
+        footprint_type=footprint_type,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+    )

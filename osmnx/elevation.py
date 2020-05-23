@@ -9,9 +9,9 @@ from . import downloader
 from . import utils
 
 
-
-def add_node_elevations(G, api_key, max_locations_per_batch=350,
-                        pause_duration=0.02):  # pragma: no cover
+def add_node_elevations(
+    G, api_key, max_locations_per_batch=350, pause_duration=0.02
+):  # pragma: no cover
     """
     Get the elevation (meters) of each node.
 
@@ -34,23 +34,24 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
     -------
     G : networkx.MultiDiGraph
     """
-
     # google maps elevation API endpoint
-    url_template = 'https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}'
+    url_template = "https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}"
 
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
     # round coorindates to 5 decimal places (approx 1 meter) to be able to fit
     # in more locations per API call
-    node_points = pd.Series({node: f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)})
+    node_points = pd.Series(
+        {node: f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)}
+    )
     n_calls = math.ceil(len(node_points) / max_locations_per_batch)
-    utils.log(f'Requesting node elevations from the API in {n_calls} calls')
+    utils.log(f"Requesting node elevations from the API in {n_calls} calls")
 
     # break the series of coordinates into chunks of size max_locations_per_batch
     # API format is locations=lat,lng|lat,lng|lat,lng|lat,lng...
     results = []
     for i in range(0, len(node_points), max_locations_per_batch):
-        chunk = node_points.iloc[i: i + max_locations_per_batch]
-        locations = '|'.join(chunk)
+        chunk = node_points.iloc[i : i + max_locations_per_batch]
+        locations = "|".join(chunk)
         url = url_template.format(locations, api_key)
 
         # check if this request is already in the cache (if global use_cache=True)
@@ -60,33 +61,36 @@ def add_node_elevations(G, api_key, max_locations_per_batch=350,
         else:
             try:
                 # request the elevations from the API
-                utils.log(f'Requesting node elevations: {url}')
+                utils.log(f"Requesting node elevations: {url}")
                 time.sleep(pause_duration)
                 response = requests.get(url)
                 response_json = response.json()
                 downloader._save_to_cache(url, response_json)
             except Exception as e:
                 utils.log(e)
-                utils.log(f'Server responded with {response.status_code}: {response.reason}')
+                utils.log(f"Server responded with {response.status_code}: {response.reason}")
 
         # append these elevation results to the list of all results
-        results.extend(response_json['results'])
+        results.extend(response_json["results"])
 
     # sanity check that all our vectors have the same number of elements
     if not (len(results) == len(G) == len(node_points)):
-        raise Exception(f'Graph has {len(G)} nodes but we received {len(results)} results from elevation API')
+        raise Exception(
+            f"Graph has {len(G)} nodes but we received {len(results)} results from elevation API"
+        )
     else:
-        utils.log(f'Graph has {len(G)} nodes and we received {len(results)} results from elevation API')
+        utils.log(
+            f"Graph has {len(G)} nodes and we received {len(results)} results from elevation API"
+        )
 
     # add elevation as an attribute to the nodes
-    df = pd.DataFrame(node_points, columns=['node_points'])
-    df['elevation'] = [result['elevation'] for result in results]
-    df['elevation'] = df['elevation'].round(3)  # round to millimeter
-    nx.set_node_attributes(G, name='elevation', values=df['elevation'].to_dict())
-    utils.log('Added elevation data to all nodes.')
+    df = pd.DataFrame(node_points, columns=["node_points"])
+    df["elevation"] = [result["elevation"] for result in results]
+    df["elevation"] = df["elevation"].round(3)  # round to millimeter
+    nx.set_node_attributes(G, name="elevation", values=df["elevation"].to_dict())
+    utils.log("Added elevation data to all nodes.")
 
     return G
-
 
 
 def add_edge_grades(G, add_absolute=True):
@@ -108,22 +112,21 @@ def add_edge_grades(G, add_absolute=True):
     -------
     G : networkx.MultiDiGraph
     """
-
     # for each edge, calculate the difference in elevation from origin to
     # destination, then divide by edge length
     for u, v, data in G.edges(keys=False, data=True):
-        elevation_change = G.nodes[v]['elevation'] - G.nodes[u]['elevation']
+        elevation_change = G.nodes[v]["elevation"] - G.nodes[u]["elevation"]
 
         # round to ten-thousandths decimal place
         try:
-            grade = round(elevation_change / data['length'], 4)
+            grade = round(elevation_change / data["length"], 4)
         except ZeroDivisionError:
             grade = None
 
         # add grade and (optionally) grade absolute value to the edge data
-        data['grade'] = grade
+        data["grade"] = grade
         if add_absolute:
-            data['grade_abs'] = abs(grade)
+            data["grade_abs"] = abs(grade)
 
-    utils.log('Added grade data to all edges.')
+    utils.log("Added grade data to all edges.")
     return G

@@ -4,7 +4,6 @@ import math
 import numpy as np
 
 
-
 def get_bearing(origin_point, destination_point):
     """
     Calculate the bearing between two lat-lng points.
@@ -24,9 +23,8 @@ def get_bearing(origin_point, destination_point):
         the compass bearing in decimal degrees from the origin point
         to the destination point
     """
-
     if not (isinstance(origin_point, tuple) and isinstance(destination_point, tuple)):
-        raise TypeError('origin_point and destination_point must be (lat, lng) tuples')
+        raise TypeError("origin_point and destination_point must be (lat, lng) tuples")
 
     # get latitudes and the difference in longitude, as radians
     lat1 = math.radians(origin_point[0])
@@ -43,7 +41,6 @@ def get_bearing(origin_point, destination_point):
     bearing = (initial_bearing + 360) % 360
 
     return bearing
-
 
 
 def add_edge_bearings(G):
@@ -64,20 +61,19 @@ def add_edge_bearings(G):
     G : networkx.MultiDiGraph
         graph with edge bearing attributes
     """
-
     for u, v, data in G.edges(keys=False, data=True):
 
         if u == v:
             # a self-loop has an undefined compass bearing
-            data['bearing'] = np.nan
+            data["bearing"] = np.nan
 
         else:
             # calculate bearing from edge's origin to its destination
-            origin_point = (G.nodes[u]['y'], G.nodes[u]['x'])
-            destination_point = (G.nodes[v]['y'], G.nodes[v]['x'])
+            origin_point = (G.nodes[u]["y"], G.nodes[u]["x"])
+            destination_point = (G.nodes[v]["y"], G.nodes[v]["x"])
             bearing = get_bearing(origin_point, destination_point)
 
             # round to thousandth of a degree
-            data['bearing'] = round(bearing, 3)
+            data["bearing"] = round(bearing, 3)
 
     return G

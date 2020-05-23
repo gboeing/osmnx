@@ -16,7 +16,6 @@ from . import projection
 from . import utils
 
 
-
 def geocode(query):
     """
     Geocode a query string to (lat, lng) with the Nominatim geocoder.
@@ -31,25 +30,25 @@ def geocode(query):
     point : tuple
         the (lat, lng) coordinates returned by the geocoder
     """
-
     # define the parameters
     params = OrderedDict()
-    params['format'] = 'json'
-    params['limit'] = 1
-    params['dedupe'] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
-    params['q'] = query
+    params["format"] = "json"
+    params["limit"] = 1
+    params[
+        "dedupe"
+    ] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
+    params["q"] = query
     response_json = downloader.nominatim_request(params=params, timeout=30)
 
     # if results were returned, parse lat and long out of the result
-    if len(response_json) > 0 and 'lat' in response_json[0] and 'lon' in response_json[0]:
-        lat = float(response_json[0]['lat'])
-        lng = float(response_json[0]['lon'])
+    if len(response_json) > 0 and "lat" in response_json[0] and "lon" in response_json[0]:
+        lat = float(response_json[0]["lat"])
+        lng = float(response_json[0]["lon"])
         point = (lat, lng)
         utils.log(f'Geocoded "{query}" to {point}')
         return point
     else:
         raise Exception(f'Nominatim geocoder returned no results for query "{query}"')
-
 
 
 def redistribute_vertices(geom, dist):
@@ -73,18 +72,16 @@ def redistribute_vertices(geom, dist):
     -------
         list or MultiLineString
     """
-    if geom.geom_type == 'LineString':
+    if geom.geom_type == "LineString":
         num_vert = int(round(geom.length / dist))
         if num_vert == 0:
             num_vert = 1
-        return [geom.interpolate(float(n) / num_vert, normalized=True)
-                for n in range(num_vert + 1)]
-    elif geom.geom_type == 'MultiLineString':
+        return [geom.interpolate(float(n) / num_vert, normalized=True) for n in range(num_vert + 1)]
+    elif geom.geom_type == "MultiLineString":
         parts = [redistribute_vertices(part, dist) for part in geom]
         return type(geom)([p for p in parts if not p])
     else:
-        raise ValueError(f'unhandled geometry {geom.geom_type}')
-
+        raise ValueError(f"unhandled geometry {geom.geom_type}")
 
 
 def _round_polygon_coords(p, precision):
@@ -103,7 +100,6 @@ def _round_polygon_coords(p, precision):
     new_poly : shapely Polygon
         the polygon with rounded coordinates
     """
-
     # round the coordinates of the Polygon exterior
     new_exterior = [[round(x, precision) for x in c] for c in p.exterior.coords]
 
@@ -116,7 +112,6 @@ def _round_polygon_coords(p, precision):
     # buffer by zero to clean self-touching or self-crossing polygons
     new_poly = Polygon(shell=new_exterior, holes=new_interiors).buffer(0)
     return new_poly
-
 
 
 def _round_multipolygon_coords(mp, precision):
@@ -134,9 +129,7 @@ def _round_multipolygon_coords(mp, precision):
     -------
     MultiPolygon
     """
-
     return MultiPolygon([_round_polygon_coords(p, precision) for p in mp])
-
 
 
 def _round_point_coords(pt, precision):
@@ -154,9 +147,7 @@ def _round_point_coords(pt, precision):
     -------
     Point
     """
-
     return Point([round(x, precision) for x in pt.coords[0]])
-
 
 
 def _round_multipoint_coords(mpt, precision):
@@ -174,9 +165,7 @@ def _round_multipoint_coords(mpt, precision):
     -------
     MultiPoint
     """
-
     return MultiPoint([_round_point_coords(pt, precision) for pt in mpt])
-
 
 
 def _round_linestring_coords(ls, precision):
@@ -194,9 +183,7 @@ def _round_linestring_coords(ls, precision):
     -------
     LineString
     """
-
     return LineString([[round(x, precision) for x in c] for c in ls.coords])
-
 
 
 def _round_multilinestring_coords(mls, precision):
@@ -214,9 +201,7 @@ def _round_multilinestring_coords(mls, precision):
     -------
     MultiLineString
     """
-
     return MultiLineString([_round_linestring_coords(ls, precision) for ls in mls])
-
 
 
 def round_geometry_coords(shape, precision):
@@ -235,7 +220,6 @@ def round_geometry_coords(shape, precision):
     -------
     shapely geometry
     """
-
     if isinstance(shape, Point):
         return _round_point_coords(shape, precision)
 
@@ -255,8 +239,7 @@ def round_geometry_coords(shape, precision):
         return _round_multipolygon_coords(shape, precision)
 
     else:
-        raise TypeError(f'cannot round coordinates of unhandled geometry type: {type(shape)}')
-
+        raise TypeError(f"cannot round coordinates of unhandled geometry type: {type(shape)}")
 
 
 def _consolidate_subdivide_geometry(geometry, max_query_area_size):
@@ -278,17 +261,18 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size):
     -------
     geometry : Polygon or MultiPolygon
     """
-
     # let the linear length of the quadrats (with which to subdivide the
     # geometry) be the square root of max area size
     quadrat_width = math.sqrt(max_query_area_size)
 
     if not isinstance(geometry, (Polygon, MultiPolygon)):
-        raise TypeError('Geometry must be a shapely Polygon or MultiPolygon')
+        raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
 
     # if geometry is a MultiPolygon OR a single Polygon whose area exceeds the
     # max size, get the convex hull around the geometry
-    if isinstance(geometry, MultiPolygon) or (isinstance(geometry, Polygon) and geometry.area > max_query_area_size):
+    if isinstance(geometry, MultiPolygon) or (
+        isinstance(geometry, Polygon) and geometry.area > max_query_area_size
+    ):
         geometry = geometry.convex_hull
 
     # if geometry area exceeds max size, subdivide it into smaller sub-polygons
@@ -299,7 +283,6 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size):
         geometry = MultiPolygon([geometry])
 
     return geometry
-
 
 
 def _get_polygons_coordinates(geometry):
@@ -317,7 +300,6 @@ def _get_polygons_coordinates(geometry):
     -------
     polygon_coord_strs : list
     """
-
     # extract the exterior coordinates of the geometry to pass to the API later
     polygons_coords = []
     if isinstance(geometry, Polygon):
@@ -328,22 +310,21 @@ def _get_polygons_coordinates(geometry):
             x, y = polygon.exterior.xy
             polygons_coords.append(list(zip(x, y)))
     else:
-        raise TypeError('Geometry must be a shapely Polygon or MultiPolygon')
+        raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
 
     # convert the exterior coordinates of the polygon(s) to the string format
     # the API expects
     polygon_coord_strs = []
     for coords in polygons_coords:
-        s = ''
-        separator = ' '
+        s = ""
+        separator = " "
         for coord in list(coords):
             # round floating point lats and longs to 6 decimal places (ie, ~100 mm),
             # so we can hash and cache strings consistently
-            s = f'{s}{separator}{coord[1]:.6f}{separator}{coord[0]:.6f}'
+            s = f"{s}{separator}{coord[1]:.6f}{separator}{coord[0]:.6f}"
         polygon_coord_strs.append(s.strip(separator))
 
     return polygon_coord_strs
-
 
 
 def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9):
@@ -367,7 +348,6 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9
     -------
     shapely MultiPolygon
     """
-
     # create n evenly spaced points between the min and max x and y bounds
     west, south, east, north = geometry.bounds
     x_num = math.ceil((east - west) / quadrat_width) + 1
@@ -388,7 +368,6 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9
     multipoly = geometry.difference(quadrats)
 
     return multipoly
-
 
 
 def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
@@ -417,19 +396,17 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
     -------
     GeoDataFrame
     """
-
     # create an empty dataframe to append matches to
     points_within_geometry = pd.DataFrame()
 
     # cut the geometry into chunks for r-tree spatial index intersecting
-    multipoly = _quadrat_cut_geometry(geometry,
-                                      quadrat_width=quadrat_width,
-                                      buffer_amount=buffer_amount,
-                                      min_num=min_num)
+    multipoly = _quadrat_cut_geometry(
+        geometry, quadrat_width=quadrat_width, buffer_amount=buffer_amount, min_num=min_num
+    )
 
     # create an r-tree spatial index for the nodes (ie, points)
-    sindex = gdf['geometry'].sindex
-    utils.log(f'Created r-tree spatial index for {len(gdf)} points')
+    sindex = gdf["geometry"].sindex
+    utils.log(f"Created r-tree spatial index for {len(gdf)} points")
 
     # loop through each chunk of the geometry to find approximate and then
     # precisely intersecting points
@@ -452,16 +429,15 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
     if len(points_within_geometry) > 0:
         # drop duplicate points, if buffered poly caused an overlap on point(s)
         # that lay directly on a quadrat line
-        points_within_geometry = points_within_geometry.drop_duplicates(subset='node')
+        points_within_geometry = points_within_geometry.drop_duplicates(subset="node")
     else:
         # after simplifying the graph, and given the requested network type,
         # there are no nodes inside the polygon - can't create graph from that
         # so throw error
-        raise Exception('There are no nodes within the requested geometry')
+        raise Exception("There are no nodes within the requested geometry")
 
-    utils.log(f'Identified {len(points_within_geometry)} nodes inside polygon')
+    utils.log(f"Identified {len(points_within_geometry)} nodes inside polygon")
     return points_within_geometry
-
 
 
 def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
@@ -488,7 +464,6 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     north, south, east, west : tuple, if return_crs=False
     north, south, east, west, crs_proj : tuple, if return_crs=True
     """
-
     # reverse the order of the (lat,lng) point so it is (x,y) for shapely, then
     # project to UTM and buffer in meters
     lat, lng = point
@@ -497,19 +472,25 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
 
     if project_utm:
         west, south, east, north = buffer_proj.bounds
-        utils.log(f'Created bbox {dist} m from {point} and projected it: {north},{south},{east},{west}')
+        utils.log(
+            f"Created bbox {dist} m from {point} and projected it: {north},{south},{east},{west}"
+        )
     else:
         # if project_utm is False, project back to lat-lng then get the
         # bounding coordinates
         buffer_latlong, _ = projection.project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
         west, south, east, north = buffer_latlong.bounds
-        utils.log(f'Created bounding box {dist} meters in each direction from {point}: {north},{south},{east},{west}')
+        utils.log(
+            (
+                f"Created bounding box {dist} meters in each direction "
+                f"from {point}: {north},{south},{east},{west}"
+            )
+        )
 
     if return_crs:
         return north, south, east, west, crs_proj
     else:
         return north, south, east, west
-
 
 
 def bbox_to_poly(north, south, east, west):
@@ -531,5 +512,4 @@ def bbox_to_poly(north, south, east, west):
     -------
     shapely Polygon
     """
-
     return Polygon([(west, south), (east, south), (east, north), (west, north)])
