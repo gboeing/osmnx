@@ -268,10 +268,19 @@ def _convert_edge_attr_types(G, node_type):
     # convert numeric, bool, and list edge attributes from string to correct data types
     for _, _, data in G.edges(data=True, keys=False):
 
-        # first parse oneway to bool and length to float - they should always
-        # have only 1 value each
-        data["oneway"] = ast.literal_eval(data["oneway"])
+        # parse length to float: should always have only 1 value
         data["length"] = float(data["length"])
+
+        try:
+            data["oneway"] = ast.literal_eval(data["oneway"])
+        except KeyError:
+            # may lack oneway if settings.all_oneway=True when you created graph
+            pass
+        except ValueError:
+            # may have values it can't eval if settings.all_oneway=True
+            pass
+
+        # parse grade attrs to float: should always have only 1 value each
         if "grade" in data:
             data["grade"] = float(data["grade"])
         if "grade_abs" in data:
@@ -306,8 +315,8 @@ def _convert_edge_attr_types(G, node_type):
 
         # osmid might have a single value or a list
         if "osmid" in data:
-            if data["osmid"][0] == "[" and data["osmid"][-1] == "]":
-                # if it's a list, eval the list then convert each element to node_type
+            if data["osmid"].startswith("[") and data["osmid"].endswith("]"):
+                # if it's a list, eval list then convert each element to node_type
                 data["osmid"] = [node_type(i) for i in ast.literal_eval(data["osmid"])]
             else:
                 # if it's not a list, convert it to the node_type

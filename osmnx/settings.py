@@ -52,8 +52,8 @@ osm_xml_way_tags = ["highway", "lanes", "maxspeed", "name", "oneway"]
 # road network (e.g., '["access"!~"private|no"]'). however, some drivable
 # tollroads have "access=no" plus a "access:conditional" key to clarify when
 # it is accessible, so we can't filter out all "access=no" ways by default.
-# best to be permissive here then remove complicated combinations of tags in
-# python after the full graph is downloaded and constructed.
+# best to be permissive here then remove complicated combinations of tags
+# programatically after the full graph is downloaded and constructed.
 default_access = '["access"!~"private"]'
 
 # The network types for which a bidirectional graph will be created
@@ -63,16 +63,16 @@ bidirectional_network_types = ["walk"]
 # be dynamically set where used
 default_overpass_query_settings = "[out:json][timeout:{timeout}]{maxsize}"
 
-# all one-way mode to maintain original OSM node order
-# when constructing graphs specifically to save to .osm xml file
+# all one-way mode to maintain original OSM node order when creating graphs
+# specifically to save to .osm xml file with save_graph_xml function
 all_oneway = False
 
 # default CRS to set when creating graphs
 default_crs = "epsg:4326"
 
 # default HTTP request headers
-default_user_agent = "Python OSMnx package (https://github.com/gboeing/osmnx)"
-default_referer = "Python OSMnx package (https://github.com/gboeing/osmnx)"
+default_user_agent = "OSMnx Python package (https://github.com/gboeing/osmnx)"
+default_referer = "OSMnx Python package (https://github.com/gboeing/osmnx)"
 default_accept_language = "en"
 
 # which API endpoint to use for nominatim queries

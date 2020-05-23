@@ -154,7 +154,8 @@ def config(
         which API endpoint to use for overpass queries
     all_oneway : boolean
         if True, forces all paths to be loaded as oneway ways, preserving
-        the original order of nodes stored in the OSM way XML.
+        the original order of nodes stored in the OSM way XML. Only use if
+        specifically saving to .osm xml file with save_graph_xml function.
 
     Returns
     -------
