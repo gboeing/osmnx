@@ -53,7 +53,6 @@ def _create_poi_query(
     -------
     query : string
     """
-
     overpass_settings = downloader._make_overpass_settings(custom_settings, timeout, memory)
 
     # make sure every value in dict is bool, str, or list of str
@@ -168,7 +167,6 @@ def _osm_poi_download(
     responses : dict
         JSON response with POIs from Overpass API server
     """
-
     # TODO: add functionality for subdividing search area geometry
     # TODO: add functionality for constraining query to poly rather than its bbox
     if polygon is not None:
@@ -211,7 +209,6 @@ def _parse_nodes_coords(osm_response):
     coords : dict
         dict of node IDs and their lat, lng coordinates
     """
-
     coords = {}
     for result in osm_response["elements"]:
         if "type" in result and result["type"] == "node":
@@ -234,7 +231,6 @@ def _parse_polygonal_poi(coords, response):
     -------
     dict of POIs containing each's nodes, polygon geometry, and osmid
     """
-
     if "type" in response and response["type"] == "way":
         nodes = response["nodes"]
         try:
@@ -266,7 +262,6 @@ def _parse_osm_node(response):
     -------
     Dict of vertex IDs and their lat, lng coordinates.
     """
-
     try:
         point = Point(response["lon"], response["lat"])
 
@@ -301,7 +296,6 @@ def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
     -------
     shapely.geometry.MultiPolygon
     """
-
     try:
         gdf_clean = gdf.dropna(subset=["geometry"])
         multipoly = MultiPolygon(list(gdf_clean["geometry"]))
@@ -333,7 +327,6 @@ def _parse_osm_relations(relations, osm_way_df):
         A GeoDataFrame with MultiPolygon representations of the
         relations and the attributes associated with them.
     """
-
     gdf_relations = gpd.GeoDataFrame()
 
     # Iterate over relations and extract the items
@@ -436,7 +429,6 @@ def _create_poi_gdf(
     geopandas.GeoDataFrame
         POIs and their associated tags
     """
-
     responses = _osm_poi_download(
         tags,
         polygon=polygon,
@@ -536,7 +528,6 @@ def pois_from_point(point, tags, dist=1000, timeout=180, memory=None, custom_set
     -------
     geopandas.GeoDataFrame
     """
-
     bbox = utils_geo.bbox_from_point(point=point, dist=dist)
     north, south, east, west = bbox
     return _create_poi_gdf(
@@ -584,7 +575,6 @@ def pois_from_address(address, tags, dist=1000, timeout=180, memory=None, custom
     -------
     geopandas.GeoDataFrame
     """
-
     # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
 
@@ -630,7 +620,6 @@ def pois_from_polygon(polygon, tags, timeout=180, memory=None, custom_settings=N
     -------
     geopandas.GeoDataFrame
     """
-
     return _create_poi_gdf(
         tags=tags, polygon=polygon, timeout=timeout, memory=memory, custom_settings=custom_settings
     )
@@ -669,7 +658,6 @@ def pois_from_place(place, tags, which_result=1, timeout=180, memory=None, custo
     -------
     geopandas.GeoDataFrame
     """
-
     city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city["geometry"].iloc[0]
     return _create_poi_gdf(

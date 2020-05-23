@@ -34,7 +34,6 @@ def add_node_elevations(
     -------
     G : networkx.MultiDiGraph
     """
-
     # google maps elevation API endpoint
     url_template = "https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}"
 
@@ -113,7 +112,6 @@ def add_edge_grades(G, add_absolute=True):
     -------
     G : networkx.MultiDiGraph
     """
-
     # for each edge, calculate the difference in elevation from origin to
     # destination, then divide by edge length
     for u, v, data in G.edges(keys=False, data=True):

@@ -23,7 +23,6 @@ def get_bearing(origin_point, destination_point):
         the compass bearing in decimal degrees from the origin point
         to the destination point
     """
-
     if not (isinstance(origin_point, tuple) and isinstance(destination_point, tuple)):
         raise TypeError("origin_point and destination_point must be (lat, lng) tuples")
 
@@ -62,7 +61,6 @@ def add_edge_bearings(G):
     G : networkx.MultiDiGraph
         graph with edge bearing attributes
     """
-
     for u, v, data in G.edges(keys=False, data=True):
 
         if u == v:

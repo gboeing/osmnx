@@ -28,7 +28,6 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
     -------
     geopandas.GeoDataFrame
     """
-
     # ensure query type
     assert isinstance(query, dict) or isinstance(query, str), "query must be a dict or a string"
 
@@ -105,7 +104,6 @@ def gdf_from_places(queries, which_results=None, buffer_dist=None):
     -------
     geopandas.GeoDataFrame
     """
-
     # create an empty GeoDataFrame then append each result as a new row,
     # checking for the presence of which_results
     gdf = gpd.GeoDataFrame()

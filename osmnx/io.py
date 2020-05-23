@@ -30,7 +30,6 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8"):
     -------
     None
     """
-
     # default filepath if none was provided
     if filepath is None:
         filepath = os.path.join(settings.data_folder, "graph.gpkg")
@@ -72,7 +71,6 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8"):
     -------
     None
     """
-
     # default filepath if none was provided
     if filepath is None:
         filepath = settings.data_folder
@@ -123,7 +121,6 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     -------
     None
     """
-
     # default filepath if none was provided
     if filepath is None:
         filepath = os.path.join(settings.data_folder, "graph.graphml")
@@ -197,7 +194,6 @@ def load_graphml(filepath, node_type=int):
     -------
     G : networkx.MultiDiGraph
     """
-
     # read the graph from disk
     G = nx.MultiDiGraph(nx.read_graphml(filepath, node_type=node_type))
 
@@ -239,7 +235,6 @@ def _convert_node_attr_types(G, node_type):
     -------
     G : networkx.MultiDiGraph
     """
-
     # convert numeric node tags from string to numeric data types
     for _, data in G.nodes(data=True):
         data["osmid"] = node_type(data["osmid"])
@@ -270,7 +265,6 @@ def _convert_edge_attr_types(G, node_type):
     -------
     G : networkx.MultiDiGraph
     """
-
     # convert numeric, bool, and list edge attributes from string to correct data types
     for _, _, data in G.edges(data=True, keys=False):
 
@@ -378,7 +372,6 @@ def save_graph_xml(
     -------
     None
     """
-
     # default filepath if none was provided
     if filepath is None:
         filepath = os.path.join(settings.data_folder, "graph.osm")
@@ -507,7 +500,6 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
     root : ElementTree.Element
         xml tree with edges appended
     """
-
     if merge_edges:
 
         for e in gdf_edges["id"].unique():
@@ -583,7 +575,6 @@ def _get_unique_nodes_ordered_from_way(df_way_edges):
         kind of disconnected structure of nodes within a given way, but
         it is not explicitly forbidden in the OSM XML design schema.
     """
-
     G = nx.MultiDiGraph()
     all_nodes = list(df_way_edges["u"].values) + list(df_way_edges["v"].values)
 

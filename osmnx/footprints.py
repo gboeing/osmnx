@@ -59,7 +59,6 @@ def _osm_footprints_download(
     list
         list of response_json dicts
     """
-
     # check if we're querying by polygon or by bounding box based on which
     # argument(s) where passed into this function
     by_poly = polygon is not None
@@ -184,7 +183,6 @@ def _create_footprints_gdf(
     -------
     geopandas.GeoDataFrame
     """
-
     # allow pickling between downloading footprints and converting them to a GeoDataFrame
     if responses is None:
         responses = _osm_footprints_download(
@@ -273,11 +271,11 @@ def _responses_to_dicts(responses, footprint_type):
         untagged_footprints
             set of ids for ways or relations not directly tagged with footprint_type
     """
-
     # create dictionaries to hold vertices, footprints and relations
     vertices = {}
     footprints = {}
     relations = {}
+
     # create a set to hold the ids of ways not directly tagged as footprint_type
     untagged_footprints = set()
 
@@ -338,7 +336,6 @@ def _create_footprint_geometry(footprint_key, footprint_val, vertices):
     -------
     Shapely Polygon or LineString
     """
-
     # CLOSED WAYS
     if footprint_val["nodes"][0] == footprint_val["nodes"][-1]:
         try:
@@ -391,7 +388,6 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
     -------
     Shapely Polygon or MultiPolygon
     """
-
     # lists to hold member geometries
     outer_polys, outer_lines, inner_polys, inner_lines = _members_geom_lists(
         relation_val, footprints
@@ -456,7 +452,6 @@ def _members_geom_lists(relation_val, footprints):
     -------
     tuple of lists
     """
-
     outer_polys = []
     outer_lines = []
     inner_polys = []
@@ -513,7 +508,6 @@ def footprints_from_point(
     -------
     geopandas.GeoDataFrame
     """
-
     bbox = utils_geo.bbox_from_point(point=point, dist=dist)
     north, south, east, west = bbox
     return _create_footprints_gdf(
@@ -564,7 +558,6 @@ def footprints_from_address(
     -------
     geopandas.GeoDataFrame
     """
-
     # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
 
@@ -613,7 +606,6 @@ def footprints_from_polygon(
     -------
     geopandas.GeoDataFrame
     """
-
     return _create_footprints_gdf(
         polygon=polygon,
         footprint_type=footprint_type,
@@ -665,7 +657,6 @@ def footprints_from_place(
     -------
     geopandas.GeoDataFrame
     """
-
     city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city["geometry"].iloc[0]
     return _create_footprints_gdf(
