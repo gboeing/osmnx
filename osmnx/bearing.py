@@ -24,7 +24,7 @@ def get_bearing(origin_point, destination_point):
         to the destination point
     """
     if not (isinstance(origin_point, tuple) and isinstance(destination_point, tuple)):
-        raise TypeError("origin_point and destination_point must be (lat, lng) tuples")
+        raise TypeError("origin_point and destination_point must be xxxxxxxxxxxxxxxxxxxxxxx (lat, lng) tuples")
 
     # get latitudes and the difference in longitude, as radians
     lat1 = math.radians(origin_point[0])
