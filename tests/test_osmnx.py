@@ -3,6 +3,7 @@
 # use agg backend so you don't need a display on travis-ci
 # do this first before pyplot is imported by anything
 import matplotlib as mpl
+
 mpl.use("Agg")
 
 import bz2

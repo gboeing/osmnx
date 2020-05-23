@@ -30,45 +30,51 @@ See the examples and demos on `GitHub`_ or read more about `OSMnx`_.
 """
 
 # list of classifiers from the PyPI classifiers trove
-CLASSIFIERS = ['Development Status :: 5 - Production/Stable',
-               'License :: OSI Approved :: MIT License',
-               'Operating System :: OS Independent',
-               'Intended Audience :: Science/Research',
-               'Topic :: Scientific/Engineering :: GIS',
-               'Topic :: Scientific/Engineering :: Visualization',
-               'Topic :: Scientific/Engineering :: Physics',
-               'Topic :: Scientific/Engineering :: Mathematics',
-               'Topic :: Scientific/Engineering :: Information Analysis',
-               'Programming Language :: Python',
-               'Programming Language :: Python :: 3',
-               'Programming Language :: Python :: 3.6',
-               'Programming Language :: Python :: 3.7',
-               'Programming Language :: Python :: 3.8']
+CLASSIFIERS = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+]
 
 DESC = """Retrieve, model, analyze, and visualize OpenStreetMap street
 networks and other spatial data"""
 
 # only specify install_requires if not in RTD environment
-if os.getenv('READTHEDOCS') == 'True':
+if os.getenv("READTHEDOCS") == "True":
     INSTALL_REQUIRES = []
 else:
-    with open('requirements.txt') as f:
+    with open("requirements.txt") as f:
         INSTALL_REQUIRES = [line.strip() for line in f.readlines()]
 
 # now call setup
-setup(name='osmnx',
-      version='0.13',
-      description=DESC,
-      long_description=LONG_DESCRIPTION,
-      classifiers=CLASSIFIERS,
-      url='https://github.com/gboeing/osmnx',
-      author='Geoff Boeing',
-      author_email='boeing@usc.edu',
-      license='MIT',
-      platforms='any',
-      packages=['osmnx'],
-      python_requires='>=3.6',
-      install_requires=INSTALL_REQUIRES,
-      extras_require={'folium': ['folium>=0.10'],
-                      'kdtree': ['scipy>=1.3'],
-                      'balltree': ['scikit-learn>=0.22']})
+setup(
+    name="osmnx",
+    version="0.13",
+    description=DESC,
+    long_description=LONG_DESCRIPTION,
+    classifiers=CLASSIFIERS,
+    url="https://github.com/gboeing/osmnx",
+    author="Geoff Boeing",
+    author_email="boeing@usc.edu",
+    license="MIT",
+    platforms="any",
+    packages=["osmnx"],
+    python_requires=">=3.6",
+    install_requires=INSTALL_REQUIRES,
+    extras_require={
+        "folium": ["folium>=0.10"],
+        "kdtree": ["scipy>=1.3"],
+        "balltree": ["scikit-learn>=0.22"],
+    },
+)
