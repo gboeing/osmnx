@@ -713,6 +713,7 @@ def _overpass_json_from_file(filename):
     -------
     OSMContentHandler object
     """
+
     def _opener(filename):
         _, ext = os.path.splitext(filename)
         if ext == ".bz2":
