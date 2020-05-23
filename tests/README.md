@@ -1,17 +1,17 @@
 # OSMnx tests
 
-Use the scripts in this folder to:
+First, ensure that you have installed the dependencies in `requirements-dev.txt`. Then use the scripts in this folder to:
 
   - format the code according to the project's style
   - lint the code
-  - lint the docstrings (numpy style)
+  - lint the docstrings
   - run unit tests and coverage
 
-First, ensure that you have installed the dependencies in `requirements-dev.txt`.
+You can read more about the project's standards and code/docstring style in the [contributing guidelines](../CONTRIBUTING.md).
 
 ## Code format
 
-Run black to format the code according to the project's style by changing directories to the repository's root and running: 
+Format the code according to the project's style by changing directories to the repository's root and running: 
 
 ```
 bash ./tests/run_black.sh
