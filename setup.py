@@ -5,7 +5,6 @@ See license in LICENSE.txt.
 """
 
 import os
-from osmnx._version import __version__
 from setuptools import setup
 
 # provide a long description using reStructuredText
@@ -61,7 +60,7 @@ else:
 # now call setup
 setup(
     name="osmnx",
-    version=__version__,
+    version="0.13",
     description=DESC,
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
