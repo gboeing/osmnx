@@ -1,8 +1,10 @@
 coverage
 coveralls
 flake8
+flake8-bugbear
 flake8-docstrings
 folium
+pydocstyle
 pytest
 scikit-learn
 scipy
