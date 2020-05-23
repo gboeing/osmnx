@@ -323,8 +323,8 @@ def test_network_saving_loading():
     ox.save_graph_geopackage(G)
 
     # save/load graph as graphml file
-    ox.save_graphml(G, gephi=False)
     ox.save_graphml(G, gephi=True)
+    ox.save_graphml(G, gephi=False)
     filepath = os.path.join(ox.settings.data_folder, "graph.graphml")
     G = ox.load_graphml(filepath, node_type=str)
 
