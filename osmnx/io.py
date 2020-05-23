@@ -333,7 +333,7 @@ def save_graph_xml(
     edge_tag_aggs=None,
 ):
     """
-    Save graph to disk as .osm formatted XML file.
+    Save graph to disk as an OSM-formatted XML .osm file.
 
     Note: for large networks this function can take a long time to run.
 

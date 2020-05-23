@@ -635,7 +635,7 @@ def graph_from_place(
     return G
 
 
-def graph_from_file(filename, bidirectional=False, simplify=True, retain_all=False):
+def graph_from_file(filepath, bidirectional=False, simplify=True, retain_all=False):
     """
     Pass-through function just calls graph_from_xml.
 
@@ -643,8 +643,8 @@ def graph_from_file(filename, bidirectional=False, simplify=True, retain_all=Fal
 
     Parameters
     ----------
-    filename : string
-        the name of a file containing OSM XML data
+    filepath : string
+        path to file containing OSM XML data
     bidirectional : bool
         if True, create bidirectional edges for one-way streets
     simplify : bool
@@ -664,17 +664,17 @@ def graph_from_file(filename, bidirectional=False, simplify=True, retain_all=Fal
         "function instead."
     )
     warn(msg)
-    return graph_from_xml(filename, bidirectional, simplify, retain_all)
+    return graph_from_xml(filepath, bidirectional, simplify, retain_all)
 
 
-def graph_from_xml(filename, bidirectional=False, simplify=True, retain_all=False):
+def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=False):
     """
-    Create a graph from OSM data in an XML file.
+    Create a graph from data in an OSM-formatted XML file.
 
     Parameters
     ----------
-    filename : string
-        the name of a file containing OSM XML data
+    filepath : string
+        path to file containing OSM XML data
     bidirectional : bool
         if True, create bidirectional edges for one-way streets
     simplify : bool
@@ -687,7 +687,7 @@ def graph_from_xml(filename, bidirectional=False, simplify=True, retain_all=Fals
     networkx.MultiDiGraph
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [_overpass_json_from_file(filename)]
+    response_jsons = [_overpass_json_from_file(filepath)]
 
     # create graph using this response JSON
     G = _create_graph(response_jsons, bidirectional=bidirectional, retain_all=retain_all)
@@ -700,30 +700,30 @@ def graph_from_xml(filename, bidirectional=False, simplify=True, retain_all=Fals
     return G
 
 
-def _overpass_json_from_file(filename):
+def _overpass_json_from_file(filepath):
     """
-    Read OSM XML from input filename and return Overpass-like JSON.
+    Read OSM XML from file and return Overpass-like JSON.
 
     Parameters
     ----------
-    filename : string
-        name of file containing OSM XML data
+    filepath : string
+        path to file containing OSM XML data
 
     Returns
     -------
     OSMContentHandler object
     """
 
-    def _opener(filename):
-        _, ext = os.path.splitext(filename)
+    def _opener(filepath):
+        _, ext = os.path.splitext(filepath)
         if ext == ".bz2":
             # Use Python 2/3 compatible BZ2File()
-            return bz2.BZ2File(filename)
+            return bz2.BZ2File(filepath)
         else:
             # Assume an unrecognized file extension is just XML
-            return open(filename, mode="rb")
+            return open(filepath, mode="rb")
 
-    with _opener(filename) as file:
+    with _opener(filepath) as file:
         handler = _OSMContentHandler()
         xml.sax.parse(file, handler)
         return handler.object
