@@ -56,7 +56,7 @@ def _osm_footprints_download(
 
     Returns
     -------
-    list
+    response_jsons : list
         list of response_json dicts
     """
     # check if we're querying by polygon or by bounding box based on which
@@ -181,7 +181,7 @@ def _create_footprints_gdf(
 
     Returns
     -------
-    geopandas.GeoDataFrame
+    gdf : geopandas.GeoDataFrame
     """
     # allow pickling between downloading footprints and converting them to a GeoDataFrame
     if responses is None:
@@ -239,25 +239,28 @@ def _create_footprints_gdf(
 
 def _responses_to_dicts(responses, footprint_type):
     """
-    Parse a list of json responses into dictionaries of vertices, footprints, and relations.
+    Parse list of json responses into dicts of vertices, footprints, relations.
 
-    Note: OSM's data model and the Overpass API will return open ways (lines) as part of
-    a 'polygon' query. These may be fragments of the inner and outer rings of relations or
-    they may be open ways mistakenly tagged with 'polygon' type tags.
+    Note: OSM's data model and the Overpass API will return open ways (lines)
+    as part of a 'polygon' query. These may be fragments of the inner and
+    outer rings of relations or they may be open ways mistakenly tagged with
+    'polygon' type tags.
 
-    Ways not directly tagged with the footprint type are added to the untagged_ways set for
-    removal from the footprints dictionary at the end of the process.
+    Ways not directly tagged with the footprint type are added to the
+    untagged_ways set for removal from the footprints dictionary at the end of
+    the process.
 
-    Some inner ways of relations may be tagged with the footprint type in their own right e.g.
-    landuse=meadow as an inner way in a landuse=forest relation and need to be kept. These are
-    created here.
+    Some inner ways of relations may be tagged with the footprint type in
+    their own right e.g. landuse=meadow as an inner way in a landuse=forest
+    relation and need to be kept. These are created here.
 
     Parameters
     ----------
     responses : list
         list of json responses
     footprint_type : string
-        type of footprint downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
+        type of footprint downloaded. OSM tag key e.g. 'building', 'landuse',
+        'place', etc.
 
     Returns
     -------
@@ -269,7 +272,8 @@ def _responses_to_dicts(responses, footprint_type):
         relations
             dictionary of OSM relations including member ids and tags
         untagged_footprints
-            set of ids for ways or relations not directly tagged with footprint_type
+            set of ids for ways or relations not directly tagged with
+            footprint_type
     """
     # create dictionaries to hold vertices, footprints and relations
     vertices = {}
@@ -292,7 +296,8 @@ def _responses_to_dicts(responses, footprint_type):
                     for tag in element["tags"]:
                         footprint[tag] = element["tags"][tag]
                 footprints[element["id"]] = footprint
-                # add ways not individually tagged with footprint_type to the untagged_footprints set
+                # add ways not individually tagged with footprint_type to the
+                # untagged_footprints set
                 if ("tags" not in element) or (footprint_type not in element["tags"]):
                     untagged_footprints.add(element["id"])
             # RELATIONS
@@ -305,7 +310,8 @@ def _responses_to_dicts(responses, footprint_type):
                     for tag in element["tags"]:
                         relation[tag] = element["tags"][tag]
                 relations[element["id"]] = relation
-                # add relations not individually tagged with footprint_type to the untagged_footprints set
+                # add relations not individually tagged with footprint_type to
+                # the untagged_footprints set
                 if ("tags" not in element) or (footprint_type not in element["tags"]):
                     untagged_footprints.add(element["id"])
             else:
@@ -428,7 +434,8 @@ def _create_relation_geometry(relation_key, relation_val, footprints):
                     temp_poly = temp_poly.difference(inner_poly)
             multipoly.append(temp_poly)
 
-    # return relations with one outer way as Polygons, multiple outer ways as MultiPolygons
+    # return relations with one outer way as Polygons, multiple outer ways
+    # as MultiPolygons
     if len(multipoly) == 1:
         return multipoly[0]
     elif len(multipoly) > 1:
@@ -492,7 +499,8 @@ def footprints_from_point(
     dist : numeric
         distance in meters
     footprint_type : string
-        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
+        type of footprint to be downloaded. OSM tag key e.g. 'building',
+        'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
     timeout : int
@@ -501,8 +509,7 @@ def footprints_from_point(
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in overpass query instead of the defaults
 
     Returns
     -------
@@ -542,7 +549,8 @@ def footprints_from_address(
     dist : numeric
         distance in meters
     footprint_type : string
-        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
+        type of footprint to be downloaded. OSM tag key e.g. 'building',
+        'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
     timeout : int
@@ -551,8 +559,7 @@ def footprints_from_address(
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in overpass query instead of the defaults
 
     Returns
     -------
@@ -590,7 +597,8 @@ def footprints_from_polygon(
         the shape to get data within. coordinates should be in units of
         latitude-longitude degrees.
     footprint_type : string
-        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
+        type of footprint to be downloaded. OSM tag key e.g. 'building',
+        'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
     timeout : int
@@ -599,8 +607,7 @@ def footprints_from_polygon(
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in overpass query instead of the defaults
 
     Returns
     -------
@@ -639,7 +646,8 @@ def footprints_from_place(
     place : string
         the query to geocode to get geojson boundary polygon
     footprint_type : string
-        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
+        type of footprint to be downloaded. OSM tag key e.g. 'building',
+        'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
     which_result : int
@@ -650,8 +658,7 @@ def footprints_from_place(
         server memory allocation size for the query, in bytes. If none, server
         will use its default allocation size
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in overpass query instead of the defaults
 
     Returns
     -------

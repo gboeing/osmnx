@@ -240,7 +240,7 @@ def graph_from_point(
 
     Returns
     -------
-    networkx.MultiDiGraph
+    G : networkx.MultiDiGraph
     """
     if dist_type not in ["bbox", "network"]:
         raise InvalidDistanceType('dist_type must be "bbox" or "network"')
@@ -345,8 +345,7 @@ def graph_from_address(
 
     Returns
     -------
-    networkx.MultiDiGraph or tuple
-        multidigraph or optionally (multidigraph, (lat, lng))
+    networkx.MultiDiGraph or optionally (networkx.MultiDiGraph, (lat, lng))
     """
     # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
@@ -429,7 +428,7 @@ def graph_from_polygon(
 
     Returns
     -------
-    networkx.MultiDiGraph
+    G : networkx.MultiDiGraph
     """
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
@@ -595,7 +594,7 @@ def graph_from_place(
         custom settings to be used in overpass query instead of the defaults
     Returns
     -------
-    networkx.MultiDiGraph
+    G : networkx.MultiDiGraph
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, str) or isinstance(query, dict):
@@ -683,7 +682,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
 
     Returns
     -------
-    networkx.MultiDiGraph
+    G : networkx.MultiDiGraph
     """
     # transmogrify file of OSM XML data into JSON
     response_jsons = [_overpass_json_from_file(filepath)]
@@ -743,7 +742,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
 
     Returns
     -------
-    networkx.MultiDiGraph
+    G : networkx.MultiDiGraph
     """
     utils.log("Creating networkx graph from downloaded OSM data...")
 
@@ -802,7 +801,7 @@ def _convert_node(element):
 
     Returns
     -------
-    dict
+    node : dict
     """
     node = {}
     node["y"] = element["lat"]
@@ -826,7 +825,7 @@ def _convert_path(element):
 
     Returns
     -------
-    dict
+    path : dict
     """
     path = {}
     path["osmid"] = element["id"]
@@ -855,7 +854,7 @@ def _parse_osm_nodes_paths(osm_data):
 
     Returns
     -------
-    nodes, paths : tuple
+    nodes, paths : tuple of dicts
     """
     nodes = {}
     paths = {}
@@ -924,7 +923,6 @@ def _add_paths(G, paths, bidirectional=False):
         the paths from OSM
     bidirectional : bool
         if True, create bidirectional edges for one-way streets
-
 
     Returns
     -------

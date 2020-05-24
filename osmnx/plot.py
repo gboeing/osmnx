@@ -53,6 +53,7 @@ def plot_shape(
     Returns
     -------
     fig, ax : tuple
+        matplotlib figure, axis
     """
     # if facecolor or edgecolor is a string instead of a list, make sure we have
     # as many colors as gdf elements
@@ -241,6 +242,7 @@ def _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_
     Returns
     -------
     fig, ax : tuple
+        matplotlib figure, axis
     """
     # save the figure if specified
     if save:
@@ -380,6 +382,7 @@ def plot_graph(
     Returns
     -------
     fig, ax : tuple
+        matplotlib figure, axis
     """
     utils.log("Begin plotting the graph...")
     node_Xs = [float(x) for _, x in G.nodes(data="x")]
@@ -643,6 +646,7 @@ def plot_graph_route(
     Returns
     -------
     fig, ax : tuple
+        matplotlib figure, axis
     """
     # plot the graph but not the route
     fig, ax = plot_graph(
@@ -824,6 +828,7 @@ def plot_graph_routes(
     Returns
     -------
     fig, ax : tuple
+        matplotlib figure, axis
     """
     # plot the graph but not the routes
     fig, ax = plot_graph(
@@ -967,6 +972,7 @@ def plot_figure_ground(
     Returns
     -------
     fig, ax : tuple
+        matplotlib figure, axis
     """
     multiplier = 1.2
 
@@ -1160,7 +1166,7 @@ def plot_footprints(
     Returns
     -------
     fig, ax : tuple
-
+        matplotlib figure, axis
     """
     if fig is None or ax is None:
         fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)
