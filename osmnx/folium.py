@@ -133,7 +133,7 @@ def plot_graph_folium(
 
     # if fit_bounds is True, fit the map to the bounds of the route by passing
     # list of lat-lng points as [southwest, northeast]
-    if fit_bounds and type(graph_map) is folium.Map:
+    if fit_bounds and isinstance(graph_map, folium.Map):
         tb = gdf_edges.total_bounds
         bounds = [(tb[1], tb[0]), (tb[3], tb[2])]
         graph_map.fit_bounds(bounds)
@@ -220,7 +220,7 @@ def plot_route_folium(
 
     # if fit_bounds is True, fit the map to the bounds of the route by passing
     # list of lat-lng points as [southwest, northeast]
-    if fit_bounds and type(route_map) is folium.Map:
+    if fit_bounds and isinstance(route_map, folium.Map):
         tb = gdf_route_edges.total_bounds
         bounds = [(tb[1], tb[0]), (tb[3], tb[2])]
         route_map.fit_bounds(bounds)
