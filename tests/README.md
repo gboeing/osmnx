@@ -24,3 +24,12 @@ Run the tests and linters by changing directories to the repository's root and r
 ```
 bash ./tests/run_tests.sh
 ```
+
+## Continuous integration
+
+All PRs trigger continuous integration tests on Travis CI. See the [configuration](../.travis.yml). The following tests are automatically run:
+
+  - build the docs
+  - unit tests and coverage
+  - code linter
+  - docstrings linter
