@@ -21,8 +21,8 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8"):
     G : networkx.MultiDiGraph
         input graph
     filepath : string
-        path to the GeoPackage file including extension. if None, use
-        default data folder + graph.gpkg
+        path to the GeoPackage file including extension. if None, use default
+        data folder + graph.gpkg
     encoding : string
         the character encoding for the saved file
 
@@ -62,8 +62,8 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8"):
     G : networkx.MultiDiGraph
         input graph
     filepath : string
-        path to the shapefiles folder (no file extension). if None,
-        use default data folder
+        path to the shapefiles folder (no file extension). if None, use
+        default data folder + graph_shapefile
     encoding : string
         the character encoding for the saved files
 
@@ -73,7 +73,7 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8"):
     """
     # default filepath if none was provided
     if filepath is None:
-        filepath = settings.data_folder
+        filepath = os.path.join(settings.data_folder, "graph_shapefile")
 
     # if save folder does not already exist, create it (shapefiles
     # get saved as set of files)
@@ -110,7 +110,8 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     G : networkx.MultiDiGraph
         input graph
     filepath : string
-        path to the GraphML file including extension
+        path to the GraphML file including extension. if None, use
+        default data folder + graph.graphml
     gephi : bool
         if True, give each edge a unique key to work around Gephi's
         restrictive interpretation of the GraphML specification
@@ -184,11 +185,9 @@ def load_graphml(filepath, node_type=int):
     Parameters
     ----------
     filepath : string
-        the name of the graphml file (including file extension)
-    folder : string
-        the folder containing the file, if None, use default data folder
+        path to the GraphML file
     node_type : type
-        convert node ids to this type
+        convert node ids to this data type
 
     Returns
     -------
@@ -351,7 +350,8 @@ def save_graph_xml(
     data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
         geopandas GeoDataFrames
     filepath : string
-        path to the .osm file including extension
+        path to the .osm file including extension. if None, use default data
+        folder + graph.osm
     node_tags : list
         osm node tags to include in output OSM XML
     node_attrs: list
