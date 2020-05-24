@@ -6,6 +6,9 @@ coverage
 coveralls
 cython
 dill
+flake8
+flake8-bugbear
+flake8-docstrings
 folium
 jupyterlab
 nodejs
@@ -15,6 +18,7 @@ pandana
 pillow
 pip
 psycopg2
+pydocstyle
 pyproj
 pysal
 pytest

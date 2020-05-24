@@ -1,8 +1,53 @@
 # Change log
 
+## 0.13 (TBD)
+
+  - major refactor of entire package
+  - clean up API and namespace
+  - new consolidate_intersections function with topological option
+  - generalize POIs module to query with a flexible tags dict
+  - all graph saving functions now take a filepath argument instead of filename/folder
+  - save shapefiles in single folder containing both nodes and edges
+  - optionally return distance and/or geometry in nearest edge search
+  - expose timeout and memory parameters in pois and footprints modules
+  - define default crs via epsg code instead of proj4 string
+  - update and simplify logging with timestamps
+  - graph metadata: add creation date and version, remove name
+  - replace inconsistent distance parameters with consistent dist parameters
+  - deprecate old clean_intersections function in favor of new consolidate_intersections
+  - deprecate old gdfs_to_graph function in favor of graph_from_gdfs
+  - deprecate old graph_from_file function in favor of graph_from_xml
+  - rename save_as_osm function -> save_graph_xml for consistency
+  - rename save_load module -> io
+  - remove old save_gdf_shapefile function
+  - drop support for python 3.5 and lower
+
+## 0.12.1 (2020-05-01)
+
+  - fix handling relations with missing type tag
+  - fix save_graph_geopackage handling numeric attributes
+  - fix load_graphml handling elevation and grade attributes
+  - improve edge finding algorithms to return edge key
+  - more informative graph_from_file data load error message
+  - refactor url-in-cache checking
+  - add timestamp helper function
+  - documentation improvements
+
+## 0.12 (2020-04-10)
+
+  - add ability to save graph as geopackage file
+  - add truncate_by_edge implementation in truncate_graph_polygon
+  - allow flexible overpass settings (e.g., to query by date)
+  - better handling of invalid footprint geometries
+  - geocode function now uses nominatim_request function
+  - improve .osm xml output
+  - improve one-way street handling
+  - fix graph projection overwriting original lat/lng
+  - fix redistribute_vertices function for MultiLineStrings
+
 ## 0.11.4 (2020-01-31)
 
-  - fix OSM XML output 
+  - fix .osm xml output
   - fix for pandas 1.0
 
 ## 0.11.3 (2020-01-09)
@@ -19,7 +64,7 @@
   - fix get_nearest_edges search when not using a spatial index
 
 ## 0.11 (2019-12-04)
-  
+
   - drop formal python 2 support
   - refactor all modules for cleaner package organization
   - make stats betweenness centrality compatible with networkx>=2.4

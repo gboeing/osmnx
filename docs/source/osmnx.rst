@@ -1,13 +1,26 @@
 osmnx package
 =============
 
-Submodules
-----------
+osmnx.bearing module
+--------------------
 
-osmnx.core module
------------------
+.. automodule:: osmnx.bearing
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-.. automodule:: osmnx.core
+osmnx.boundaries module
+-----------------------
+
+.. automodule:: osmnx.boundaries
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+osmnx.distance module
+---------------------
+
+.. automodule:: osmnx.distance
     :members:
     :undoc-members:
     :show-inheritance:
@@ -28,10 +41,10 @@ osmnx.elevation module
     :undoc-members:
     :show-inheritance:
 
-osmnx.errors module
+osmnx.folium module
 -------------------
 
-.. automodule:: osmnx.errors
+.. automodule:: osmnx.folium
     :members:
     :undoc-members:
     :show-inheritance:
@@ -44,18 +57,18 @@ osmnx.footprints module
     :undoc-members:
     :show-inheritance:
 
-osmnx.geo_utils module
-----------------------
+osmnx.graph module
+------------------
 
-.. automodule:: osmnx.geo_utils
+.. automodule:: osmnx.graph
     :members:
     :undoc-members:
     :show-inheritance:
 
-osmnx.osm_content_handler module
---------------------------------
+osmnx.io module
+---------------
 
-.. automodule:: osmnx.osm_content_handler
+.. automodule:: osmnx.io
     :members:
     :undoc-members:
     :show-inheritance:
@@ -84,14 +97,6 @@ osmnx.projection module
     :undoc-members:
     :show-inheritance:
 
-osmnx.save_load module
-----------------------
-
-.. automodule:: osmnx.save_load
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 osmnx.settings module
 ---------------------
 
@@ -100,10 +105,10 @@ osmnx.settings module
     :undoc-members:
     :show-inheritance:
 
-osmnx.simplify module
----------------------
+osmnx.simplification module
+---------------------------
 
-.. automodule:: osmnx.simplify
+.. automodule:: osmnx.simplification
     :members:
     :undoc-members:
     :show-inheritance:
@@ -116,6 +121,14 @@ osmnx.stats module
     :undoc-members:
     :show-inheritance:
 
+osmnx.truncate module
+---------------------
+
+.. automodule:: osmnx.truncate
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 osmnx.utils module
 ------------------
 
@@ -124,11 +137,18 @@ osmnx.utils module
     :undoc-members:
     :show-inheritance:
 
+osmnx.utils_geo module
+----------------------
 
-Module contents
----------------
+.. automodule:: osmnx.utils_geo
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-.. automodule:: osmnx
+osmnx.utils_graph module
+------------------------
+
+.. automodule:: osmnx.utils_graph
     :members:
     :undoc-members:
     :show-inheritance:

@@ -13,7 +13,7 @@ COPY requirements.txt /tmp/
 
 # configure conda and install packages in one RUN to keep image tidy
 RUN conda config --set show_channel_urls true && \
-	conda config --set channel_priority strict && \
+    conda config --set channel_priority strict && \
     conda config --prepend channels conda-forge && \
     conda update --yes -n base conda && \
     conda install --update-all --force-reinstall --yes --file /tmp/requirements.txt python-igraph && \

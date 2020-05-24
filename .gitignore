@@ -11,7 +11,7 @@ tests/run_tests.bat
 *.o
 *.so
 *.pyc
- 
+
 # Packages #
 ############
 # it's better to unpack these files and commit the raw source
@@ -24,13 +24,13 @@ tests/run_tests.bat
 *.rar
 *.tar
 *.zip
- 
+
 # Logs and databases #
 ######################
 *.log
 *.sql
 *.sqlite
- 
+
 # OS generated files #
 ######################
 .DS_Store
@@ -135,3 +135,6 @@ ENV/
 
 # PyCharm IDE idea files
 .idea
+
+# VSCode IDE idea files
+.vscode
