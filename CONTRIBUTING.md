@@ -21,10 +21,10 @@ Thanks for using OSMnx and for considering contributing to it!
 
   - post your proposal on the [issue tracker](https://github.com/gboeing/osmnx/issues) so we can review it together (some proposals may not be a good fit for the project)
   - fork the repo, make your change, [test it](./tests), and submit a PR
+  - respond to code review
   - note the following project standards
     - numpy style docstrings
     - black code style
     - max line length of 100
-  - respond to code review
 
 Every piece of software is a work in progress. This project is the result of many hours of work contributed freely by myself and the many people that build the projects it depends on. Thank you for contributing!
