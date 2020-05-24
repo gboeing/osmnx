@@ -50,9 +50,8 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
 
     Returns
     -------
-    tuple
-        (geometry_proj, crs), the projected shapely geometry and the crs of the
-        projected geometry
+    geometry_proj, crs : tuple
+        the projected shapely geometry and the crs of the projected geometry
     """
     if crs is None:
         crs = settings.default_crs
@@ -77,22 +76,23 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
 
     Parameters
     ----------
-    gdf : GeoDataFrame
+    gdf : geopandas.GeoDataFrame
         the gdf to be projected
     to_crs : dict or string or pyproj.CRS
-        if not None, just project to this CRS instead of to UTM
+        if not None, project to this CRS instead of to UTM
     to_latlong : bool
-        if True, projects to latlong instead of to UTM
+        if True, projects to settings.default_crs instead of to UTM
 
     Returns
     -------
-    GeoDataFrame
+    gdf_proj : geopandas.GeoDataFrame
+        the projected GeoDataFrame
     """
     assert len(gdf) > 0, "You cannot project an empty GeoDataFrame."
 
     # if to_crs was passed-in, use this value to project the gdf
     if to_crs is not None:
-        projected_gdf = gdf.to_crs(to_crs)
+        gdf_proj = gdf.to_crs(to_crs)
 
     # if to_crs was not passed-in, calculate the centroid of the geometry to
     # determine UTM zone
@@ -100,7 +100,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
         if to_latlong:
             # if to_latlong is True, project the gdf to latlong
             latlong_crs = settings.default_crs
-            projected_gdf = gdf.to_crs(latlong_crs)
+            gdf_proj = gdf.to_crs(latlong_crs)
             utils.log("Projected GeoDataFrame to settings.default_crs")
         else:
             # else, project the gdf to UTM
@@ -118,10 +118,10 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
             utm_crs = f"+proj=utm +zone={utm_zone} +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
 
             # project the GeoDataFrame to the UTM CRS
-            projected_gdf = gdf.to_crs(utm_crs)
+            gdf_proj = gdf.to_crs(utm_crs)
             utils.log(f"Projected GeoDataFrame to UTM-{utm_zone}")
 
-    return projected_gdf
+    return gdf_proj
 
 
 def project_graph(G, to_crs=None):
@@ -137,7 +137,8 @@ def project_graph(G, to_crs=None):
 
     Returns
     -------
-    networkx.MultiDiGraph
+    G_proj : networkx.MultiDiGraph
+        the projected graph
     """
     G_proj = G.copy()
 
