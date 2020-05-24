@@ -106,8 +106,8 @@ def test_gdf_from_place():
     ox.plot_shape(city)
 
 
-def test_graph_from_file():
-    # test loading a graph from a local .osm file
+def test_graph_from_xml():
+    # test loading a graph from a local .osm xml file
     node_id = 53098262
     neighbor_ids = 53092170, 53060438, 53027353, 667744075
 
@@ -135,7 +135,7 @@ def test_routing_folium():
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
 
     # give each node a random elevation then calculate edge grades
-    randm = np.random.random(size=len(G.nodes()))
+    randm = np.random.random(size=len(G))
     elevs = {n: e for n, e in zip(G.nodes(), randm)}
     nx.set_node_attributes(G, name="elevation", values=elevs)
     G = ox.add_edge_grades(G, add_absolute=True)
@@ -233,10 +233,10 @@ def test_find_nearest():
     gdf_nodes, gdf_edges = ox.graph_to_gdfs(
         G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True
     )
-    assert len(gdf_nodes) == len(G.nodes())
+    assert len(gdf_nodes) == len(G)
     assert len(gdf_edges) == len(G.edges(keys=True))
     G = ox.gdfs_to_graph(gdf_nodes, gdf_edges)
-    assert len(gdf_nodes) == len(G.nodes())
+    assert len(gdf_nodes) == len(G)
     assert len(gdf_edges) == len(G.edges(keys=True))
 
     # get nearest node
