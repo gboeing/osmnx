@@ -197,11 +197,11 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
 
     Parameters
     ----------
-    user_agent : str
+    user_agent : string
         the user agent string, if None will set with OSMnx default
-    referer : str
+    referer : string
         the referer string, if None will set with OSMnx default
-    accept_language : str
+    accept_language : string
         make accept-language explicit e.g. for consistent nominatim result sorting
 
     Returns

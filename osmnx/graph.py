@@ -73,17 +73,17 @@ def graph_from_bbox(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        download infrastructure of given type (default is streets (ie, 'way["highway"]') but other
-        infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
+        download infrastructure of given type. the default is streets
+        (ie, 'way["highway"]') but other infrastructures may be selected like
+        power grids (ie, 'way["power"~"line"]').
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in overpass query instead of the defaults
 
     Returns
     -------
-    networkx.MultiDiGraph
+    G : networkx.MultiDiGraph
     """
     if clean_periphery and simplify:
         # create a new buffered bbox 0.5km around the desired one
@@ -230,13 +230,13 @@ def graph_from_point(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        download infrastructure of given type (default is streets (ie, 'way["highway"]') but other
-        infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
+        download infrastructure of given type. the default is streets
+        (ie, 'way["highway"]') but other infrastructures may be selected like
+        power grids (ie, 'way["power"~"line"]').
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in overpass query instead of the defaults
 
     Returns
     -------
@@ -335,13 +335,13 @@ def graph_from_address(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        download infrastructure of given type (default is streets (ie, 'way["highway"]') but other
-        infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
+        download infrastructure of given type. the default is streets
+        (ie, 'way["highway"]') but other infrastructures may be selected like
+        power grids (ie, 'way["power"~"line"]').
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in overpass query instead of the defaults
 
     Returns
     -------
@@ -425,8 +425,7 @@ def graph_from_polygon(
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in overpass query instead of the defaults
 
     Returns
     -------
@@ -587,13 +586,13 @@ def graph_from_place(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        download infrastructure of given type (default is streets (ie, 'way["highway"]') but other
-        infrastructures may be selected like power grids (ie, 'way["power"~"line"]'))
+        download infrastructure of given type. the default is streets
+        (ie, 'way["highway"]') but other infrastructures may be selected like
+        power grids (ie, 'way["power"~"line"]').
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        custom settings to be used in overpass query instead of the defaults
     Returns
     -------
     networkx.MultiDiGraph

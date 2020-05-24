@@ -31,7 +31,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     tolerance : numeric
         tolerance value passed along if clean_intersects=True, see
         clean_intersections function documentation for details and usage
-    circuity_dist : str
+    circuity_dist : string
         'gc' or 'euclidean', how to calculate straight-line distances for
         circuity measurement; use former for lat-lng networks and latter for
         projected networks

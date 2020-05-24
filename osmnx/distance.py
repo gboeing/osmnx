@@ -108,7 +108,7 @@ def get_nearest_node(G, point, method="haversine", return_dist=False):
     point : tuple
         The (lat, lng) or (y, x) point for which we will find the nearest node
         in the graph
-    method : str {'haversine', 'euclidean'}
+    method : string {'haversine', 'euclidean'}
         Which method to use for calculating distances to find nearest node.
         If 'haversine', graph nodes' coordinates must be in units of decimal
         degrees. If 'euclidean', graph nodes' coordinates must be projected.
@@ -238,7 +238,7 @@ def get_nearest_nodes(G, X, Y, method=None):
     Y : list-like
         The vector of latitudes or y's for which we will find the nearest
         node in the graph
-    method : str {None, 'kdtree', 'balltree'}
+    method : string {None, 'kdtree', 'balltree'}
         Which method to use for finding nearest node to each point.
         If None, we manually find each node one at a time using
         utils.get_nearest_node and haversine. If 'kdtree' we use
@@ -336,7 +336,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         The vector of latitudes or y's for which we will find the nearest
         edge in the graph. For projected graphs, use the projected coordinates,
         usually in meters.
-    method : str {None, 'kdtree', 'balltree'}
+    method : string {None, 'kdtree', 'balltree'}
         Which method to use for finding nearest edge to each point.
         If None, we manually find each edge one at a time using
         get_nearest_edge. If 'kdtree' we use
