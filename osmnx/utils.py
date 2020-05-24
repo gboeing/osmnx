@@ -15,6 +15,10 @@ def citation():
     Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing,
     and Visualizing Complex Street Networks. Computers, Environment and Urban
     Systems, 65(126-139). https://doi.org/10.1016/j.compenvurbsys.2017.05.004
+
+    Returns
+    -------
+    None
     """
     cite = (
         "Citation:\n\n"
@@ -99,7 +103,10 @@ def config(
     all_oneway=settings.all_oneway,
 ):
     """
-    Configure osmnx by setting the default global settings' values.
+    Configure OSMnx by setting the default global settings' values.
+
+    Note that any parameters not passed-in by the caller are set to their
+    default values.
 
     Parameters
     ----------
@@ -197,7 +204,10 @@ def config(
 
 def log(message, level=None, name=None, filename=None):
     """
-    Write a message to the log file and/or print to the console.
+    Write a message to the logger.
+
+    This logs to file and/or prints to the console, depending on the current
+    configuration of settings.log_file and settings.log_console.
 
     Parameters
     ----------
@@ -269,7 +279,7 @@ def _get_logger(level=None, name=None, filename=None):
 
     Returns
     -------
-    logger.logger
+    logger : logging.logger
     """
     if level is None:
         level = settings.log_level

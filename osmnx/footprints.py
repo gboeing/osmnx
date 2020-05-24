@@ -30,7 +30,7 @@ def _osm_footprints_download(
 
     Parameters
     ----------
-    polygon : shapely Polygon or MultiPolygon
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         geographic shape to fetch the footprints within
     north : float
         northern latitude of bounding box
@@ -154,7 +154,7 @@ def _create_footprints_gdf(
 
     Parameters
     ----------
-    polygon : shapely Polygon or MultiPolygon
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         geographic shape to fetch the footprints within
     north : float
         northern latitude of bounding box
@@ -165,7 +165,8 @@ def _create_footprints_gdf(
     west : float
         western longitude of bounding box
     footprint_type : string
-        type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
+        type of footprint to be downloaded. OSM tag key e.g. 'building',
+        'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
     responses : list
@@ -593,7 +594,7 @@ def footprints_from_polygon(
 
     Parameters
     ----------
-    polygon : shapely Polygon or MultiPolygon
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the shape to get data within. coordinates should be in units of
         latitude-longitude degrees.
     footprint_type : string

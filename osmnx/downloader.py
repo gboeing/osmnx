@@ -335,7 +335,7 @@ def _osm_net_download(
 
     Parameters
     ----------
-    polygon : shapely Polygon or MultiPolygon
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         geographic shape to fetch the street network within
     north : float
         northern latitude of bounding box

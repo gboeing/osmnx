@@ -103,7 +103,7 @@ def _build_path(G, node, endpoints, path):
 
     Returns
     -------
-    paths_to_simplify : list
+    path : list
     """
     # for each successor in the passed-in node
     for successor in G.successors(node):
@@ -219,7 +219,8 @@ def simplify_graph(G, strict=True):
 
     Returns
     -------
-    networkx.MultiDiGraph
+    G : networkx.MultiDiGraph
+        topologically simplified graph
     """
     if _is_simplified(G):
         raise Exception("This graph has already been simplified, cannot simplify it again.")
@@ -391,7 +392,7 @@ def consolidate_intersections(
     -------
     networkx.MultiDiGraph or geopandas.GeoSeries
         if rebuild_graph=True, returns MultiDiGraph with consolidated
-        intersections & reconnected edge geometries. if rebuild_graph=False,
+        intersections and reconnected edge geometries. if rebuild_graph=False,
         returns GeoSeries of shapely Points representing the centroids of
         street intersections
     """
@@ -454,8 +455,8 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, update_edge_length
 
     Returns
     -------
-    networkx.MultiDiGraph
-        the rebuilt graph with consolidated intersections and reconnected
+    H : networkx.MultiDiGraph
+        a rebuilt graph with consolidated intersections and reconnected
         edge geometries
     """
     # STEP 1

@@ -33,7 +33,7 @@ def plot_shape(
 
     Parameters
     ----------
-    gdf : GeoDataFrame
+    gdf : geopandas.GeoDataFrame
         the gdf containing the geometries to plot
     fc : string or list
         the facecolor (or list of facecolors) for the polygons

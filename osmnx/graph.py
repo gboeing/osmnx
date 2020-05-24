@@ -394,7 +394,7 @@ def graph_from_polygon(
 
     Parameters
     ----------
-    polygon : shapely Polygon or MultiPolygon
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the shape to get network data within. coordinates should be in units of
         latitude-longitude degrees.
     network_type : string

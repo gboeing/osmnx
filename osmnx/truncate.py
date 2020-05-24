@@ -31,7 +31,8 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
 
     Returns
     -------
-    networkx.MultiDiGraph
+    G : networkx.MultiDiGraph
+        the truncated graph
     """
     # get the shortest distance between the node and every other node, then
     # remove every node further than max_dist away
@@ -78,7 +79,8 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
 
     Returns
     -------
-    networkx.MultiDiGraph
+    G : networkx.MultiDiGraph
+        the truncated graph
     """
     G = G.copy()
     nodes_outside_bbox = []
@@ -135,7 +137,7 @@ def truncate_graph_polygon(
     ----------
     G : networkx.MultiDiGraph
         input graph
-    polygon : shapely Polygon or MultiPolygon
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         only retain nodes in graph that lie within this geometry
     retain_all : bool
         if True, return the entire graph even if it is not connected
@@ -156,7 +158,8 @@ def truncate_graph_polygon(
 
     Returns
     -------
-    networkx.MultiDiGraph
+    G : networkx.MultiDiGraph
+        the truncated graph
     """
     G = G.copy()
     utils.log("Identifying all nodes that lie outside the polygon...")

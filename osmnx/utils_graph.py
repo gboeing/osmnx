@@ -32,8 +32,8 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
     Returns
     -------
-    GeoDataFrame or tuple
-        gdf_nodes or gdf_edges or both as a tuple
+    geopandas.GeoDataFrame or tuple
+        gdf_nodes or gdf_edges or tuple of (gdf_nodes, gdf_edges)
     """
     if not (nodes or edges):
         raise ValueError("You must request nodes or edges, or both.")
@@ -98,9 +98,9 @@ def gdfs_to_graph(gdf_nodes, gdf_edges):
 
     Parameters
     ----------
-    gdf_nodes : GeoDataFrame
+    gdf_nodes : geopandas.GeoDataFrame
         GeoDataFrame of graph nodes
-    gdf_edges : GeoDataFrame
+    gdf_edges : geopandas.GeoDataFrame
         GeoDataFrame of graph edges
 
     Returns
@@ -124,14 +124,14 @@ def graph_from_gdfs(gdf_nodes, gdf_edges):
 
     Parameters
     ----------
-    gdf_nodes : GeoDataFrame
+    gdf_nodes : geopandas.GeoDataFrame
         GeoDataFrame of graph nodes
-    gdf_edges : GeoDataFrame
+    gdf_edges : geopandas.GeoDataFrame
         GeoDataFrame of graph edges
 
     Returns
     -------
-    networkx.MultiDiGraph
+    G : networkx.MultiDiGraph
     """
     G = nx.MultiDiGraph()
     G.graph["crs"] = gdf_nodes.crs
@@ -373,7 +373,8 @@ def remove_isolated_nodes(G):
 
     Returns
     -------
-    networkx.MultiDiGraph
+    G : networkx.MultiDiGraph
+        graph with all isolated nodes removed
     """
     isolated_nodes = [node for node, degree in dict(G.degree()).items() if degree < 1]
     G.remove_nodes_from(isolated_nodes)
@@ -430,9 +431,9 @@ def _is_same_geometry(ls1, ls2):
 
     Parameters
     ----------
-    ls1 : LineString
+    ls1 : shapely.geometry.LineString
         the first edge's geometry
-    ls2 : LineString
+    ls2 : shapely.geometry.LineString
         the second edge's geometry
 
     Returns
@@ -467,7 +468,7 @@ def _update_edge_keys(G):
 
     Returns
     -------
-    networkx.MultiDiGraph
+    G : networkx.MultiDiGraph
     """
     # identify all the edges that are duplicates based on a sorted combination
     # of their origin, destination, and key. that is, edge uv will match edge vu
@@ -527,7 +528,7 @@ def get_undirected(G):
 
     Returns
     -------
-    networkx.MultiGraph
+    H : networkx.MultiGraph
     """
     # set from/to nodes before making graph undirected
     G = G.copy()

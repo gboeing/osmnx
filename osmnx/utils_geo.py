@@ -61,16 +61,18 @@ def redistribute_vertices(geom, dist):
 
     Parameters
     ----------
-    geom : LineString or MultiLineString
-        a Shapely geometry
+    geom : shapely.geometry.LineString or shapely.geometry.MultiLineString
+        a Shapely geometry (should be projected)
     dist : float
-        spacing length along edges. Units are the same as the geom; Degrees for
-        unprojected geometries and meters for projected geometries. The smaller
-        the value, the more points are created.
+        spacing length along edges. Units are same as the geom: degrees for
+        unprojected geometries and meters for projected geometries. The
+        smaller the dist value, the more points are created.
 
     Returns
     -------
-        list or MultiLineString
+    list or shapely.geometry.MultiLineString
+        the redistributed vertices as a list if geom is a LineString or
+        MultiLineString if geom is a MultiLineString
     """
     if geom.geom_type == "LineString":
         num_vert = int(round(geom.length / dist))
@@ -90,14 +92,14 @@ def _round_polygon_coords(p, precision):
 
     Parameters
     ----------
-    p : shapely Polygon
+    p : shapely.geometry.Polygon
         the polygon to round the coordinates of
     precision : int
         decimal precision to round coordinates to
 
     Returns
     -------
-    new_poly : shapely Polygon
+    new_poly : shapely.geometry.Polygon
         the polygon with rounded coordinates
     """
     # round the coordinates of the Polygon exterior
@@ -120,14 +122,14 @@ def _round_multipolygon_coords(mp, precision):
 
     Parameters
     ----------
-    mp : shapely MultiPolygon
+    mp : shapely.geometry.MultiPolygon
         the MultiPolygon to round the coordinates of
     precision : int
         decimal precision to round coordinates to
 
     Returns
     -------
-    MultiPolygon
+    shapely.geometry.MultiPolygon
     """
     return MultiPolygon([_round_polygon_coords(p, precision) for p in mp])
 
@@ -138,14 +140,14 @@ def _round_point_coords(pt, precision):
 
     Parameters
     ----------
-    pt : shapely Point
+    pt : shapely.geometry.Point
         the Point to round the coordinates of
     precision : int
         decimal precision to round coordinates to
 
     Returns
     -------
-    Point
+    shapely.geometry.Point
     """
     return Point([round(x, precision) for x in pt.coords[0]])
 
@@ -156,14 +158,14 @@ def _round_multipoint_coords(mpt, precision):
 
     Parameters
     ----------
-    mpt : shapely MultiPoint
+    mpt : shapely.geometry.MultiPoint
         the MultiPoint to round the coordinates of
     precision : int
         decimal precision to round coordinates to
 
     Returns
     -------
-    MultiPoint
+    shapely.geometry.MultiPoint
     """
     return MultiPoint([_round_point_coords(pt, precision) for pt in mpt])
 
@@ -174,14 +176,14 @@ def _round_linestring_coords(ls, precision):
 
     Parameters
     ----------
-    ls : shapely LineString
+    ls : shapely.geometry.LineString
         the LineString to round the coordinates of
     precision : int
         decimal precision to round coordinates to
 
     Returns
     -------
-    LineString
+    shapely.geometry.LineString
     """
     return LineString([[round(x, precision) for x in c] for c in ls.coords])
 
@@ -192,14 +194,14 @@ def _round_multilinestring_coords(mls, precision):
 
     Parameters
     ----------
-    mls : shapely MultiLineString
+    mls : shapely.geometry.MultiLineString
         the MultiLineString to round the coordinates of
     precision : int
         decimal precision to round coordinates to
 
     Returns
     -------
-    MultiLineString
+    shapely.geometry.MultiLineString
     """
     return MultiLineString([_round_linestring_coords(ls, precision) for ls in mls])
 
@@ -210,7 +212,7 @@ def round_geometry_coords(shape, precision):
 
     Parameters
     ----------
-    shape : shapely geometry, one of Point, MultiPoint, LineString,
+    shape : shapely.geometry.geometry, either Point, MultiPoint, LineString,
             MultiLineString, Polygon, or MultiPolygon
         the geometry to round the coordinates of
     precision : int
@@ -218,7 +220,7 @@ def round_geometry_coords(shape, precision):
 
     Returns
     -------
-    shapely geometry
+    shapely.geometry.geometry
     """
     if isinstance(shape, Point):
         return _round_point_coords(shape, precision)
@@ -251,7 +253,7 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size):
 
     Parameters
     ----------
-    geometry : shapely Polygon or MultiPolygon
+    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the geometry to consolidate and subdivide
     max_query_area_size : float
         max area for any part of the geometry in geometry's units:
@@ -259,7 +261,7 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size):
 
     Returns
     -------
-    geometry : Polygon or MultiPolygon
+    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
     """
     # let the linear length of the quadrats (with which to subdivide the
     # geometry) be the square root of max area size
@@ -293,7 +295,7 @@ def _get_polygons_coordinates(geometry):
 
     Parameters
     ----------
-    geometry : shapely Polygon or MultiPolygon
+    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the geometry to extract exterior coordinates from
 
     Returns
@@ -333,7 +335,7 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9
 
     Parameters
     ----------
-    geometry : shapely Polygon or MultiPolygon
+    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the geometry to split up into smaller sub-polygons
     quadrat_width : numeric
         the linear width of the quadrats with which to cut up the geometry (in
@@ -346,7 +348,7 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9
 
     Returns
     -------
-    shapely MultiPolygon
+    multipoly : shapely.geometry.MultiPolygon
     """
     # create n evenly spaced points between the min and max x and y bounds
     west, south, east, north = geometry.bounds
@@ -379,9 +381,9 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
 
     Parameters
     ----------
-    gdf : GeoDataFrame
+    gdf : geopandas.GeoDataFrame
         the set of points to intersect
-    geometry : shapely Polygon or MultiPolygon
+    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the geometry to intersect with the points
     quadrat_width : numeric
         the linear length (in degrees) of the quadrats with which to cut up the
@@ -394,7 +396,7 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
 
     Returns
     -------
-    GeoDataFrame
+    points_within_geometry : geopandas.GeoDataFrame
     """
     # create an empty dataframe to append matches to
     points_within_geometry = pd.DataFrame()
@@ -461,8 +463,9 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
 
     Returns
     -------
-    north, south, east, west : tuple, if return_crs=False
-    north, south, east, west, crs_proj : tuple, if return_crs=True
+    tuple
+        (north, south, east, west) if return_crs=False or
+        (north, south, east, west, crs_proj) if return_crs=True
     """
     # reverse the order of the (lat,lng) point so it is (x,y) for shapely, then
     # project to UTM and buffer in meters
@@ -495,7 +498,7 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
 
 def bbox_to_poly(north, south, east, west):
     """
-    Convert bounding box to shapely Polygon.
+    Convert bounding box coordinates to shapely Polygon.
 
     Parameters
     ----------
@@ -510,6 +513,6 @@ def bbox_to_poly(north, south, east, west):
 
     Returns
     -------
-    shapely Polygon
+    shapely.geometry.Polygon
     """
     return Polygon([(west, south), (east, south), (east, north), (west, north)])

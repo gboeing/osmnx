@@ -288,7 +288,7 @@ def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
 
     Parameters
     ----------
-    gdf : gpd.GeoDataFrame
+    gdf : geopandas.GeoDataFrame
         GeoDataFrame with Polygon geometries that should be converted into a
         MultiPolygon object.
     relation : dict
@@ -321,7 +321,7 @@ def _parse_osm_relations(relations, df_osm_ways):
     ----------
     relations : list
         OSM 'relation' items (dictionaries) in a list
-    df_osm_ways : gpd.GeoDataFrame
+    df_osm_ways : geopandas..GeoDataFrame
         OSM 'way' features as a GeoDataFrame that contains all the 'way'
         features that will constitute the multipolygon relations
 
@@ -410,7 +410,7 @@ def _create_poi_gdf(
                 'highway':'bus_stop'}
         would return all amenities, `landuse=retail`, `landuse=commercial`,
         and `highway=bus_stop`.
-    polygon : shapely Polygon or MultiPolygon
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         geographic shape to fetch the POIs within
     north : float
         northern latitude of bounding box
@@ -599,7 +599,7 @@ def pois_from_polygon(polygon, tags, timeout=180, memory=None, custom_settings=N
 
     Parameters
     ----------
-    polygon : Polygon
+    polygon : shapely.geometry.Polygon
         Polygon where the POIs are search from.
     tags : dict
         Dict of tags used for finding POIs from the selected area. Results

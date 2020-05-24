@@ -37,7 +37,7 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
 
     Parameters
     ----------
-    geometry : shapely Polygon or MultiPolygon
+    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the geometry to project
     crs : dict or string or pyproj.CRS
         the starting coordinate reference system of the passed-in geometry,
