@@ -7,6 +7,7 @@ import matplotlib as mpl
 mpl.use("Agg")
 
 import bz2
+import folium
 import json
 import logging as lg
 import networkx as nx
@@ -164,6 +165,17 @@ def test_routing_folium():
 
     graph_map = ox.plot_graph_folium(G, popup_attribute="name")
     route_map = ox.plot_route_folium(G, route)
+
+    # test calling folium plotters with FeatureGroup instead of Map,
+    # and extra kwargs
+    fg = folium.FeatureGroup(name='legend name', show=True)
+
+    graph_map = ox.plot_graph_folium(G, graph_map=fg)
+    assert type(graph_map) is folium.FeatureGroup
+
+    route_map = ox.plot_route_folium(G, route, route_color='green',
+                    route_map=fg, tooltip='some tooltip')
+    assert type(route_map) is folium.FeatureGroup
 
 
 def test_plots():
