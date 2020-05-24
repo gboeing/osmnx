@@ -173,8 +173,9 @@ def test_routing_folium():
     graph_map = ox.plot_graph_folium(G, graph_map=fg)
     assert type(graph_map) is folium.FeatureGroup
 
-    route_map = ox.plot_route_folium(G, route, route_color='green',
-                    route_map=fg, tooltip='some tooltip')
+    route_map = ox.plot_route_folium(
+        G, route, route_color='green', route_map=fg, tooltip='some tooltip'
+    )
     assert type(route_map) is folium.FeatureGroup
 
 
