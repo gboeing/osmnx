@@ -10,7 +10,7 @@ except ImportError:
     folium = None
 
 
-def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attribute=None):
+def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attribute=None, **kwargs):
     """
     Turn row GeoDataFrame into a folium PolyLine with attributes.
 
@@ -27,6 +27,8 @@ def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attr
     popup_attribute : string
         edge attribute to display in a pop-up when an edge is clicked, if None,
         no popup
+    kwargs : dict
+        Extra parameters passed through to folium
 
     Returns
     -------
@@ -52,7 +54,7 @@ def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attr
 
     # create a folium polyline with attributes
     pl = folium.PolyLine(
-        locations=locations, popup=popup, color=edge_color, weight=edge_width, opacity=edge_opacity
+        locations=locations, popup=popup, color=edge_color, weight=edge_width, opacity=edge_opacity, **kwargs,
     )
     return pl
 
@@ -67,6 +69,7 @@ def plot_graph_folium(
     edge_color="#333333",
     edge_width=5,
     edge_opacity=1,
+    **kwargs,
 ):
     """
     Plot a graph on an interactive folium web map.
@@ -78,7 +81,7 @@ def plot_graph_folium(
     ----------
     G : networkx.MultiDiGraph
         input graph
-    graph_map : folium.folium.Map
+    graph_map : folium.folium.Map or folium.FeatureGroup
         if not None, plot the graph on this preexisting folium map object
     popup_attribute : string
         edge attribute to display in a pop-up when an edge is clicked
@@ -94,6 +97,8 @@ def plot_graph_folium(
         width of the edge lines
     edge_opacity : numeric
         opacity of the edge lines
+    kwargs : dict
+        Extra keyword arguments passed through to folium
 
     Returns
     -------
@@ -122,12 +127,13 @@ def plot_graph_folium(
             edge_width=edge_width,
             edge_opacity=edge_opacity,
             popup_attribute=popup_attribute,
+            **kwargs,
         )
         pl.add_to(graph_map)
 
     # if fit_bounds is True, fit the map to the bounds of the route by passing
     # list of lat-lng points as [southwest, northeast]
-    if fit_bounds:
+    if fit_bounds and type(graph_map) is folium.Map:
         tb = gdf_edges.total_bounds
         bounds = [(tb[1], tb[0]), (tb[3], tb[2])]
         graph_map.fit_bounds(bounds)
@@ -146,6 +152,7 @@ def plot_route_folium(
     route_color="#cc0000",
     route_width=5,
     route_opacity=1,
+    **kwargs,
 ):
     """
     Plot a route on an interactive folium web map.
@@ -172,6 +179,8 @@ def plot_route_folium(
         width of the route's line
     route_opacity : numeric
         opacity of the route lines
+    kwargs : dict
+        Extra parameters passed through to folium
 
     Returns
     -------
@@ -205,12 +214,13 @@ def plot_route_folium(
             edge_width=route_width,
             edge_opacity=route_opacity,
             popup_attribute=popup_attribute,
+            **kwargs,
         )
         pl.add_to(route_map)
 
     # if fit_bounds is True, fit the map to the bounds of the route by passing
     # list of lat-lng points as [southwest, northeast]
-    if fit_bounds:
+    if fit_bounds and type(route_map) is folium.Map:
         tb = gdf_route_edges.total_bounds
         bounds = [(tb[1], tb[0]), (tb[3], tb[2])]
         route_map.fit_bounds(bounds)
