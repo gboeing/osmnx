@@ -163,20 +163,17 @@ def test_routing_folium():
     # test multiple routes
     fig, ax = ox.plot_graph_routes(G, [route, route])
 
-    graph_map = ox.plot_graph_folium(G, popup_attribute="name")
-    route_map = ox.plot_route_folium(G, route)
+    # test folium
+    gm = ox.plot_graph_folium(G, popup_attribute="name")
+    rm = ox.plot_route_folium(G, route)
 
-    # test calling folium plotters with FeatureGroup instead of Map,
-    # and extra kwargs
-    fg = folium.FeatureGroup(name='legend name', show=True)
+    # test calling folium plotters with FeatureGroup instead of Map, and extra kwargs
+    fg = folium.FeatureGroup(name="legend name", show=True)
+    gm = ox.plot_graph_folium(G, graph_map=fg)
+    assert isinstance(gm, folium.FeatureGroup)
 
-    graph_map = ox.plot_graph_folium(G, graph_map=fg)
-    assert type(graph_map) is folium.FeatureGroup
-
-    route_map = ox.plot_route_folium(
-        G, route, route_color='green', route_map=fg, tooltip='some tooltip'
-    )
-    assert type(route_map) is folium.FeatureGroup
+    rm = ox.plot_route_folium(G, route, route_color="g", route_map=fg, tooltip="x")
+    assert isinstance(rm, folium.FeatureGroup)
 
 
 def test_plots():

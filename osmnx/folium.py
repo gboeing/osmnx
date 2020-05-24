@@ -10,7 +10,9 @@ except ImportError:
     folium = None
 
 
-def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attribute=None, **kwargs):
+def _make_folium_polyline(
+    edge, edge_color, edge_width, edge_opacity, popup_attribute=None, **kwargs
+):
     """
     Turn row GeoDataFrame into a folium PolyLine with attributes.
 
@@ -54,7 +56,12 @@ def _make_folium_polyline(edge, edge_color, edge_width, edge_opacity, popup_attr
 
     # create a folium polyline with attributes
     pl = folium.PolyLine(
-        locations=locations, popup=popup, color=edge_color, weight=edge_width, opacity=edge_opacity, **kwargs,
+        locations=locations,
+        popup=popup,
+        color=edge_color,
+        weight=edge_width,
+        opacity=edge_opacity,
+        **kwargs,
     )
     return pl
 
