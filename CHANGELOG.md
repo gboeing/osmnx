@@ -6,6 +6,7 @@
   - clean up API and namespace
   - new consolidate_intersections function with topological option
   - generalize POIs module to query with a flexible tags dict
+  - allow folium functions to accept FeatureGroup and kwargs
   - all graph saving functions now take a filepath argument instead of filename/folder
   - save shapefiles in single folder containing both nodes and edges
   - optionally return distance and/or geometry in nearest edge search
