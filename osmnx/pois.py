@@ -229,7 +229,9 @@ def _parse_polygonal_poi(coords, response):
 
     Returns
     -------
-    dict of POIs containing each's nodes, polygon geometry, and osmid
+    poi : dict
+        dict of POIs containing each's nodes, polygon geometry, and osmid, or
+        None if it cannot
     """
     if "type" in response and response["type"] == "way":
         nodes = response["nodes"]
@@ -256,11 +258,12 @@ def _parse_osm_node(response):
     Parameters
     ----------
     response : JSON
-        Nodes from OSM response.
+        nodes from OSM response
 
     Returns
     -------
-    Dict of vertex IDs and their lat, lng coordinates.
+    poi : dict
+        dict of vertex IDs and their lat, lng coordinates
     """
     try:
         point = Point(response["lon"], response["lat"])
@@ -286,7 +289,8 @@ def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
     Parameters
     ----------
     gdf : gpd.GeoDataFrame
-        GeoDataFrame with Polygon geometries that should be converted into a MultiPolygon object.
+        GeoDataFrame with Polygon geometries that should be converted into a
+        MultiPolygon object.
     relation : dict
         OSM 'relation' dictionary
     way_ids : list
@@ -306,9 +310,9 @@ def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
         return None
 
 
-def _parse_osm_relations(relations, osm_way_df):
+def _parse_osm_relations(relations, df_osm_ways):
     """
-    Parse OSM relations (MultiPolygons) from  ways and nodes.
+    Parse OSM relations (MultiPolygons) from ways and nodes.
 
     See more information about relations from OSM documentation:
     http://wiki.openstreetmap.org/wiki/Relation
@@ -316,16 +320,16 @@ def _parse_osm_relations(relations, osm_way_df):
     Parameters
     ----------
     relations : list
-        OSM 'relation' items (dictionaries) in a list.
-    osm_way_df : gpd.GeoDataFrame
-        OSM 'way' features as a GeoDataFrame that contains all the
-        'way' features that will constitute the multipolygon relations.
+        OSM 'relation' items (dictionaries) in a list
+    df_osm_ways : gpd.GeoDataFrame
+        OSM 'way' features as a GeoDataFrame that contains all the 'way'
+        features that will constitute the multipolygon relations
 
     Returns
     -------
-    geopandas.GeoDataFrame
-        A GeoDataFrame with MultiPolygon representations of the
-        relations and the attributes associated with them.
+    df_osm_ways : geopandas.GeoDataFrame
+        GeoDataFrame with MultiPolygon representations of the relations and
+        the attributes associated with them.
     """
     gdf_relations = gpd.GeoDataFrame()
 
@@ -338,7 +342,7 @@ def _parse_osm_relations(relations, osm_way_df):
                     member["ref"] for member in relation["members"] if member["type"] == "way"
                 ]
                 # Extract the ways
-                member_ways = osm_way_df.reindex(member_way_ids)
+                member_ways = df_osm_ways.reindex(member_way_ids)
                 # Extract the nodes of those ways
                 member_nodes = list(member_ways["nodes"].values)
                 try:
@@ -366,14 +370,14 @@ def _parse_osm_relations(relations, osm_way_df):
 
                     # Append to relation GeoDataFrame
                     gdf_relations = gdf_relations.append(geo, sort=False)
-                    # Remove such 'ways' from 'osm_way_df' that are part of the 'relation'
-                    osm_way_df = osm_way_df.drop(member_way_ids)
+                    # Remove such 'ways' from 'df_osm_ways' that are part of the 'relation'
+                    df_osm_ways = df_osm_ways.drop(member_way_ids)
         except Exception:
             utils.log(f'Could not parse OSM relation {relation["id"]}')
 
-    # Merge osm_way_df and the gdf_relations
-    osm_way_df = osm_way_df.append(gdf_relations, sort=False)
-    return osm_way_df
+    # Merge df_osm_ways and the gdf_relations
+    df_osm_ways = df_osm_ways.append(gdf_relations, sort=False)
+    return df_osm_ways
 
 
 def _create_poi_gdf(
@@ -426,7 +430,7 @@ def _create_poi_gdf(
 
     Returns
     -------
-    geopandas.GeoDataFrame
+    gdf : geopandas.GeoDataFrame
         POIs and their associated tags
     """
     responses = _osm_poi_download(
@@ -482,7 +486,7 @@ def _create_poi_gdf(
     gdf_ways.crs = settings.default_crs
 
     # Parse relations (MultiPolygons) from 'ways'
-    gdf_ways = _parse_osm_relations(relations=relations, osm_way_df=gdf_ways)
+    gdf_ways = _parse_osm_relations(relations=relations, df_osm_ways=gdf_ways)
 
     # Combine GeoDataFrames
     gdf = gdf_nodes.append(gdf_ways, sort=False)
@@ -526,7 +530,7 @@ def pois_from_point(point, tags, dist=1000, timeout=180, memory=None, custom_set
 
     Returns
     -------
-    geopandas.GeoDataFrame
+    gdf : geopandas.GeoDataFrame
     """
     bbox = utils_geo.bbox_from_point(point=point, dist=dist)
     north, south, east, west = bbox
@@ -573,7 +577,7 @@ def pois_from_address(address, tags, dist=1000, timeout=180, memory=None, custom
 
     Returns
     -------
-    geopandas.GeoDataFrame
+    gdf : geopandas.GeoDataFrame
     """
     # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
@@ -618,7 +622,7 @@ def pois_from_polygon(polygon, tags, timeout=180, memory=None, custom_settings=N
 
     Returns
     -------
-    geopandas.GeoDataFrame
+    gdf : geopandas.GeoDataFrame
     """
     return _create_poi_gdf(
         tags=tags, polygon=polygon, timeout=timeout, memory=memory, custom_settings=custom_settings
@@ -656,7 +660,7 @@ def pois_from_place(place, tags, which_result=1, timeout=180, memory=None, custo
 
     Returns
     -------
-    geopandas.GeoDataFrame
+    gdf : geopandas.GeoDataFrame
     """
     city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city["geometry"].iloc[0]
