@@ -53,6 +53,9 @@ from .simplification import clean_intersections
 from .simplification import consolidate_intersections
 from .simplification import simplify_graph
 
+from .speed import add_edge_speeds
+from .speed import add_edge_travel_times
+
 from .stats import basic_stats
 from .stats import extended_stats
 
