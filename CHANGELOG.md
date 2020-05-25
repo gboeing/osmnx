@@ -1,6 +1,6 @@
 # Change log
 
-## 0.13 (TBD)
+## 0.13.0 (2020-05-25)
 
   - major refactor of entire package
   - clean up API and namespace
