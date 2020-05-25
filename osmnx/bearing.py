@@ -45,7 +45,7 @@ def get_bearing(origin_point, destination_point):
 
 def add_edge_bearings(G):
     """
-    Add each bearing attributes to all graph edges.
+    Add bearing attributes to all graph edges.
 
     Calculate the compass bearing from origin node to destination
     node for each edge in the directed graph then add each bearing
