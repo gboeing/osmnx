@@ -113,6 +113,14 @@ osmnx.simplification module
     :undoc-members:
     :show-inheritance:
 
+osmnx.speed module
+------------------
+
+.. automodule:: osmnx.speed
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 osmnx.stats module
 ------------------
 
