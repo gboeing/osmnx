@@ -117,7 +117,7 @@ def test_graph_from_xml():
         os.close(handle)
 
     for filename in ("tests/input_data/West-Oakland.osm.bz2", temp_filename):
-        G = ox.graph_from_file(filename)
+        G = ox.graph_from_xml(filename)
         assert node_id in G.nodes
 
         for neighbor_id in neighbor_ids:
@@ -238,7 +238,7 @@ def test_find_nearest():
     )
     assert len(gdf_nodes) == len(G)
     assert len(gdf_edges) == len(G.edges(keys=True))
-    G = ox.gdfs_to_graph(gdf_nodes, gdf_edges)
+    G = ox.graph_from_gdfs(gdf_nodes, gdf_edges)
     assert len(gdf_nodes) == len(G)
     assert len(gdf_edges) == len(G.edges(keys=True))
 
@@ -420,7 +420,7 @@ def test_stats():
     stats = ox.extended_stats(G, connectivity=True, anc=False, ecc=True, bc=True, cc=True)
 
     # test cleaning and rebuilding graph
-    G_clean = ox.clean_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
+    G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
 
 
 def test_footprints():

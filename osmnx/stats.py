@@ -23,14 +23,14 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     G : networkx.MultiDiGraph
         input graph
     area : numeric
-        the area covered by the street network, in square meters (typically land
-        area); if none, will skip all density-based metrics
+        the area covered by the street network, in square meters (typically
+        land area); if none, will skip all density-based metrics
     clean_intersects : bool
-        if True, calculate clean intersections count (and density, if area is
-        provided)
+        if True, calculate consolidated intersections count (and density, if
+        area is provided) via consolidate_intersections function
     tolerance : numeric
         tolerance value passed along if clean_intersects=True, see
-        clean_intersections function documentation for details and usage
+        consolidate_intersections function documentation for details and usage
     circuity_dist : string
         'gc' or 'euclidean', how to calculate straight-line distances for
         circuity measurement; use former for lat-lng networks and latter for
@@ -136,7 +136,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
 
     # calculate clean intersection counts
     if clean_intersects:
-        clean_intersection_points = simplification.clean_intersections(
+        clean_intersection_points = simplification.consolidate_intersections(
             G, tolerance=tolerance, rebuild_graph=False, dead_ends=False
         )
         clean_intersection_count = len(clean_intersection_points)

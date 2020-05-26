@@ -633,38 +633,6 @@ def graph_from_place(
     return G
 
 
-def graph_from_file(filepath, bidirectional=False, simplify=True, retain_all=False):
-    """
-    Pass-through function just calls graph_from_xml.
-
-    Deprecated, will be removed in future release.
-
-    Parameters
-    ----------
-    filepath : string
-        path to file containing OSM XML data
-    bidirectional : bool
-        if True, create bidirectional edges for one-way streets
-    simplify : bool
-        if True, simplify the graph topology
-    retain_all : bool
-        if True, return the entire graph even if it is not connected
-
-    Returns
-    -------
-    networkx.MultiDiGraph
-    """
-    from warnings import warn
-
-    msg = (
-        "The `graph_from_file` function has been deprecated and will be "
-        "removed in the next release. Use the new `graph_from_xml` "
-        "function instead."
-    )
-    warn(msg)
-    return graph_from_xml(filepath, bidirectional, simplify, retain_all)
-
-
 def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=False):
     """
     Create a graph from data in an OSM-formatted XML file.
@@ -694,7 +662,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
     if simplify:
         G = simplification.simplify_graph(G)
 
-    utils.log(f"graph_from_file returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"graph_from_xml returned graph with {len(G)} nodes and {len(G.edges())} edges")
     return G
 
 
