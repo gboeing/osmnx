@@ -50,17 +50,17 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None):
     if fallback is None:
         fallback = np.nan
 
-    edges = utils_graph.graph_to_gdfs(G, nodes=False)
+    edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
 
     # collapse any highway lists (can happen during graph simplification)
     # into string values simply by keeping just the first element of the list
     edges["highway"] = edges["highway"].map(lambda x: x[0] if isinstance(x, list) else x)
 
-    # collapse any maxspeed lists (can happen during graph simplification) by
-    # calling _collapse_multiple_maxspeed_values
-    edges["maxspeed"] = edges["maxspeed"].map(_collapse_multiple_maxspeed_values)
+    if "maxspeed" in edges.columns:
+        # collapse any maxspeed lists (can happen during graph simplification)
+        # into a single value
+        edges["maxspeed"] = edges["maxspeed"].map(_collapse_multiple_maxspeed_values)
 
-    if "maxspeed" in edges:
         # create speed_kph by cleaning maxspeed strings and converting mph to
         # kph if necessary
         edges["speed_kph"] = edges["maxspeed"].astype(str).map(_clean_maxspeed).astype(float)
