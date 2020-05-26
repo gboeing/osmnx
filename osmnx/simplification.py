@@ -303,48 +303,6 @@ def simplify_graph(G, strict=True):
     return G
 
 
-def clean_intersections(
-    G, tolerance=10, dead_ends=False, rebuild_graph=False, update_edge_lengths=False
-):
-    """
-    Pass-through function just calls consolidate_intersections.
-
-    Deprecated: will be removed in future release.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        param for consolidate_intersections
-    tolerance : float
-        param for consolidate_intersections
-    dead_ends : bool
-        param for consolidate_intersections
-    rebuild_graph : bool
-        param for consolidate_intersections
-    update_edge_lengths : bool
-        param for consolidate_intersections
-
-    Returns
-    -------
-    networkx.MultiDiGraph or geopandas.GeoSeries
-    """
-    from warnings import warn
-
-    msg = (
-        "The `clean_intersections` function has been deprecated and will be "
-        "removed in the next release. Use the new `consolidate_intersections` "
-        "function instead."
-    )
-    warn(msg)
-    return consolidate_intersections(
-        G,
-        tolerance=tolerance,
-        dead_ends=dead_ends,
-        rebuild_graph=rebuild_graph,
-        update_edge_lengths=update_edge_lengths,
-    )
-
-
 def consolidate_intersections(
     G, tolerance=10, rebuild_graph=True, dead_ends=False, update_edge_lengths=True
 ):

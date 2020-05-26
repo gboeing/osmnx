@@ -23,7 +23,6 @@ from .footprints import footprints_from_polygon
 
 from .graph import graph_from_address
 from .graph import graph_from_bbox
-from .graph import graph_from_file
 from .graph import graph_from_place
 from .graph import graph_from_point
 from .graph import graph_from_polygon
@@ -49,7 +48,6 @@ from .pois import pois_from_polygon
 
 from .projection import project_graph
 
-from .simplification import clean_intersections
 from .simplification import consolidate_intersections
 from .simplification import simplify_graph
 
@@ -66,7 +64,6 @@ from .utils import ts
 
 from .utils_geo import geocode
 
-from .utils_graph import gdfs_to_graph
 from .utils_graph import get_undirected
 from .utils_graph import graph_from_gdfs
 from .utils_graph import graph_to_gdfs

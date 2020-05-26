@@ -146,7 +146,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
         # gephi doesn't handle node attrs named x and y well, so rename
         gdf_nodes["xcoord"] = gdf_nodes["x"]
         gdf_nodes["ycoord"] = gdf_nodes["y"]
-        G_save = utils_graph.gdfs_to_graph(gdf_nodes, gdf_edges)
+        G_save = utils_graph.graph_from_gdfs(gdf_nodes, gdf_edges)
 
         # remove graph attributes as Gephi only accepts node and edge attrs
         G_save.graph = {}

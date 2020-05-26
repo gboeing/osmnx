@@ -47,7 +47,9 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3.8",
 ]
 
-DESC = """Retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data"""
+DESC = (
+    "Retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data"
+)
 
 # only specify install_requires if not in RTD environment
 if os.getenv("READTHEDOCS") == "True":
