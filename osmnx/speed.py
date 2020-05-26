@@ -51,9 +51,19 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None):
         fallback = np.nan
 
     edges = utils_graph.graph_to_gdfs(G, nodes=False)
+
+    # collapse any highway lists (can happen during graph simplification)
+    # into string values simply by keeping just the first element of the list
+    edges["highway"] = edges["highway"].map(lambda x: x[0] if isinstance(x, list) else x)
+
+    # collapse any maxspeed lists (can happen during graph simplification) by
+    # calling _collapse_multiple_maxspeed_values
+    edges["maxspeed"] = edges["maxspeed"].map(_collapse_multiple_maxspeed_values)
+
     if "maxspeed" in edges:
-        # create speed_kph by cleaning maxspeed strings and converting mph to kph
-        edges["speed_kph"] = edges["maxspeed"].astype(str).map(_clean_speed).astype(float)
+        # create speed_kph by cleaning maxspeed strings and converting mph to
+        # kph if necessary
+        edges["speed_kph"] = edges["maxspeed"].astype(str).map(_clean_maxspeed).astype(float)
     else:
         # if no edges in graph had a maxspeed attribute
         edges["speed_kph"] = None
@@ -64,10 +74,6 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None):
         hwy_speed_avg = pd.Series(dtype=float)
     else:
         hwy_speed_avg = pd.Series(hwy_speeds).dropna()
-
-    # convert any list highway values (can happen during graph simplification)
-    # into string values by simply keeping only the first list element
-    edges["highway"] = edges["highway"].map(lambda x: x[0] if isinstance(x, list) else x)
 
     # for each highway type that caller did not provide in hwy_speeds, impute
     # speed of type by taking the mean of the preexisting speed values of that
@@ -149,28 +155,60 @@ def add_edge_travel_times(G):
     return G
 
 
-def _clean_speed(speed):
+def _clean_maxspeed(value, convert_mph=True):
     """
-    Clean a speed string and convert mph to kph if necessary.
+    Clean a maxspeed string and convert mph to kph if necessary.
 
     Parameters
     ----------
-    speed : string
+    value : string
         an OSM way maxspeed value
+    convert_mph : bool
+        if True, convert mph to kph
 
     Returns
     -------
-    speed_clean : string
+    value_clean : string
     """
     MPH_TO_KPH = 1.60934
-    pattern = re.compile(r"[^\d\.,]")
+    pattern = re.compile(r"[^\d\.,;]")
 
     try:
-        # strip out everything but numbers, periods, and commas
-        speed_clean = float(re.sub(pattern, "", speed).replace(",", "."))
-        if "mph" in speed.lower():
-            speed_clean = speed_clean * MPH_TO_KPH
-        return speed_clean
+        # strip out everything but numbers, periods, commas, semicolons
+        value_clean = float(re.sub(pattern, "", value).replace(",", "."))
+        if convert_mph and "mph" in value.lower():
+            value_clean = value_clean * MPH_TO_KPH
+        return value_clean
 
     except ValueError:
         return None
+
+
+def _collapse_multiple_maxspeed_values(value):
+    """
+    Collapse a list of maxspeed values into its mean value.
+
+    Parameters
+    ----------
+    value : list or string
+        an OSM way maxspeed value, or a list of them
+
+    Returns
+    -------
+    mean_value : int
+        an integer representation of the mean value in the list, converted
+        to kph if original value was in mph.
+    """
+    # if this isn't a list, just return it right back to the caller
+    if not isinstance(value, list):
+        return value
+
+    else:
+        try:
+            # clean each value in list and convert to kph if it is mph then
+            # return mean value
+            values = [_clean_maxspeed(x) for x in value]
+            mean_value = int(pd.Series(values).dropna().mean())
+            return mean_value
+        except ValueError:
+            return None
