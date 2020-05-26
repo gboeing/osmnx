@@ -41,7 +41,7 @@ def _get_osm_filter(network_type):
     # are tagged as providing parking, driveway, private, or emergency-access
     # services
     filters["drive"] = (
-        f'["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
+        f'["highway"]["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
         f'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway|service"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]{settings.default_access}'
         f'["service"!~"parking|parking_aisle|driveway|private|emergency_access"]'
@@ -50,7 +50,7 @@ def _get_osm_filter(network_type):
     # drive+service: allow ways tagged 'service' but filter out certain types of
     # service ways
     filters["drive_service"] = (
-        f'["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
+        f'["highway"]["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
         f'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]{settings.default_access}'
         f'["service"!~"parking|parking_aisle|private|emergency_access"]'
@@ -62,14 +62,14 @@ def _get_osm_filter(network_type):
     # pleasant walks. some cycleways may allow pedestrians, but this filter ignores
     # such cycleways.
     filters["walk"] = (
-        f'["area"!~"yes"]["highway"!~"cycleway|motor|proposed|construction|abandoned|platform|raceway"]'
-        f'["foot"!~"no"]["service"!~"private"]{settings.default_access}'
+        f'["highway"]["area"!~"yes"]["highway"!~"cycleway|motor|proposed|construction|abandoned|'
+        f'platform|raceway"]["foot"!~"no"]["service"!~"private"]{settings.default_access}'
     )
 
     # biking: filter out foot ways, motor ways, private ways, and anything
     # specifying biking=no
     filters["bike"] = (
-        f'["area"!~"yes"]["highway"!~"footway|steps|corridor|elevator|escalator|motor|proposed|'
+        f'["highway"]["area"!~"yes"]["highway"!~"footway|steps|corridor|elevator|escalator|motor|proposed|'
         f'construction|abandoned|platform|raceway"]'
         f'["bicycle"!~"no"]["service"!~"private"]{settings.default_access}'
     )
@@ -77,7 +77,7 @@ def _get_osm_filter(network_type):
     # to download all ways, just filter out everything not currently in use or
     # that is private-access only
     filters["all"] = (
-        f'["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
+        f'["highway"]["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
         f'["service"!~"private"]{settings.default_access}'
     )
 
@@ -85,7 +85,7 @@ def _get_osm_filter(network_type):
     # everything not currently in use
     filters[
         "all_private"
-    ] = '["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
+    ] = '["highway"]["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
 
     # no filter, needed for infrastructures other than "highway"
     filters["none"] = ""
@@ -337,7 +337,7 @@ def _osm_net_download(
     timeout=180,
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
-    infrastructure='way["highway"]',
+    infrastructure="way",
     custom_filter=None,
     custom_settings=None,
 ):
@@ -368,11 +368,10 @@ def _osm_net_download(
         max area for any part of the geometry in meters: any polygon bigger
         will get divided up for multiple queries to API (default 50km x 50km)
     infrastructure : string
-        download infrastructure of given type. default is streets, ie,
-        'way["highway"]') but other infrastructures may be selected like power
-        grids, ie, 'way["power"~"line"]'
+        do not use
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets
+        a custom network filter to be used instead of the network_type presets,
+        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
     custom_settings : string
         custom settings to be used in the overpass query instead of defaults
 
