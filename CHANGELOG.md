@@ -1,13 +1,14 @@
 # Change log
 
-## 0.13 (TBD)
+## 0.13.0 (2020-05-25)
 
   - major refactor of entire package
   - clean up API and namespace
   - new consolidate_intersections function with topological option
+  - new speed module to calculate graph edge speeds and travel times
   - generalize POIs module to query with a flexible tags dict
   - allow folium functions to accept FeatureGroup and kwargs
-  - all graph saving functions now take a filepath argument instead of filename/folder
+  - all graph saving functions now take a filepath argument instead of folder/filename
   - save shapefiles in single folder containing both nodes and edges
   - optionally return distance and/or geometry in nearest edge search
   - expose timeout and memory parameters in pois and footprints modules
