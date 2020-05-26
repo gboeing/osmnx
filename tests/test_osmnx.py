@@ -131,7 +131,6 @@ def test_graph_from_xml():
 
 def test_routing_folium():
 
-    # calculate shortest path and plot as static image and leaflet web map
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
 
     # give each node a random elevation then calculate edge grades
@@ -140,13 +139,17 @@ def test_routing_folium():
     nx.set_node_attributes(G, name="elevation", values=elevs)
     G = ox.add_edge_grades(G, add_absolute=True)
 
+    # give each edge speed and travel time attributes
+    G = ox.add_edge_speeds(G)
+    G = ox.add_edge_travel_times(G)
+
     orig_node = list(G.nodes())[5]
     dest_node = list(G.nodes())[-5]
     orig_pt = (G.nodes[orig_node]["y"], G.nodes[orig_node]["x"])
     dest_pt = (G.nodes[dest_node]["y"], G.nodes[dest_node]["x"])
-    route = nx.shortest_path(G, orig_node, dest_node)
+    route = nx.shortest_path(G, orig_node, dest_node, weight="travel_time")
 
-    attributes = ox.utils_graph.get_route_edge_attributes(G, route, "length")
+    attributes = ox.utils_graph.get_route_edge_attributes(G, route, "travel_time")
 
     fig, ax = ox.plot_graph_route(G, route, save=True, filename="route", file_format="png")
 
