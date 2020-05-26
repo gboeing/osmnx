@@ -15,7 +15,7 @@ docker build -t gboeing/osmnx .
 ### Run bash in this container and export final conda environment to a yml file
 
 ```
-docker run --rm -it -v "%cd%":/home/jovyan/work gboeing/osmnx /bin/bash
+docker run --rm -it -v "$PWD":/home/jovyan/work gboeing/osmnx /bin/bash
 conda env export -n base > /home/jovyan/work/environment.yml
 ```
 
