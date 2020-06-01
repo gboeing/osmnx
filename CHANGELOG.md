@@ -3,7 +3,7 @@
 ## 0.13.0 (2020-05-25)
 
   - major refactor of entire package
-  - clean up API and namespace
+  - clean up API and namespace (see [documentation](https://osmnx.readthedocs.io/en/stable/) for reference and the updated [usage examples](https://github.com/gboeing/osmnx-examples))
   - new consolidate_intersections function with topological option
   - new speed module to calculate graph edge speeds and travel times
   - generalize POIs module to query with a flexible tags dict
