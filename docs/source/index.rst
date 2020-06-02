@@ -22,23 +22,24 @@ Boeing, G. 2017. "`OSMnx: New Methods for Acquiring, Constructing, Analyzing, an
 Features
 --------
 
-OSMnx is built on top of geopandas, networkx, and matplotlib and works with OpenStreetMap's APIs to:
+OSMnx is built on top of geopandas, networkx, and matplotlib and interacts with OpenStreetMap's APIs to:
 
   * Download street networks anywhere in the world with a single line of code
   * Download other infrastructure types, place boundaries, building footprints, and points of interest
   * Download by city name, polygon, bounding box, or point/address + network distance
   * Download drivable, walkable, bikeable, or all street networks
-  * Save/load street network to/from a local .osm xml file
-  * Visualize street network as a static image or interactive leaflet web map
-  * Simplify and correct the network's topology to clean-up nodes and consolidate intersections
-  * Save networks to disk as shapefiles, geopackages, and GraphML
-  * Conduct topological and spatial analyses to automatically calculate dozens of indicators
   * Download node elevations and calculate edge grades (inclines)
-  * Calculate and plot shortest-path routes as a static image or leaflet web map
-  * Visualize travel distance and travel time with isoline and isochrone maps
-  * Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes
-  * Plot figure-ground diagrams of street networks and/or building footprints
+  * Impute missing speeds and calculate graph edge travel times
+  * Simplify and correct the network's topology to clean-up nodes and consolidate intersections
+  * Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes  
+  * Save networks to disk as shapefiles, geopackages, and GraphML
+  * Save/load street network to/from a local .osm xml file
+  * Conduct topological and spatial analyses to automatically calculate dozens of indicators
   * Calculate and visualize street bearings and orientations
+  * Calculate and visualize shortest-path routes that minimize distance, travel time, elevation, etc
+  * Visualize street network as a static map or interactive leaflet web map
+  * Visualize travel distance and travel time with isoline and isochrone maps
+  * Plot figure-ground diagrams of street networks and/or building footprints
 
 Examples and demonstrations of these features are in the GitHub repo (see below). More feature development details are in the `change log`_.
 
