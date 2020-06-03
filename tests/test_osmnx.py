@@ -188,12 +188,9 @@ def test_plots():
     ec = ox.plot.get_edge_colors_by_attr(G, "length")
 
     # plot and save to disk
-    fig, ax = ox.plot_graph(G, save=True, file_format="png")
-
     fig, ax = ox.plot_graph(G, show=False, save=True, close=True, file_format="svg")
-
     fig, ax = ox.plot_graph(
-        ox.project_graph(G),
+        G,
         fig_height=5,
         fig_width=5,
         margin=0.05,
@@ -382,7 +379,7 @@ def test_get_network_methods():
 
     # test custom query filter
     cf = (
-        'way["highway"]'
+        '["highway"]'
         '["area"!~"yes"]'
         '["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
         '["foot"!~"no"]'
