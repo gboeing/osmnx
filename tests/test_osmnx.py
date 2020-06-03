@@ -382,6 +382,7 @@ def test_get_network_methods():
 
     # test custom query filter
     cf = (
+        'way["highway"]'
         '["area"!~"yes"]'
         '["highway"!~"motor|proposed|construction|abandoned|platform|raceway"]'
         '["foot"!~"no"]'

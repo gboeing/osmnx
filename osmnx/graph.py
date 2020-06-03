@@ -35,7 +35,7 @@ def graph_from_bbox(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure="way",
+    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -189,7 +189,7 @@ def graph_from_point(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure="way",
+    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -288,7 +288,7 @@ def graph_from_address(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure="way",
+    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -379,7 +379,7 @@ def graph_from_polygon(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure="way",
+    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -531,7 +531,7 @@ def graph_from_place(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure="way",
+    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):

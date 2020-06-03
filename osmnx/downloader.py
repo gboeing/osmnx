@@ -27,7 +27,7 @@ def _get_osm_filter(network_type):
     Parameters
     ----------
     network_type : string
-        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private', 'none'}
+        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'}
         what type of street or other network to get
 
     Returns
@@ -41,7 +41,7 @@ def _get_osm_filter(network_type):
     # are tagged as providing parking, driveway, private, or emergency-access
     # services
     filters["drive"] = (
-        f'["highway"]["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
+        f'way["highway"]["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
         f'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway|service"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]{settings.default_access}'
         f'["service"!~"parking|parking_aisle|driveway|private|emergency_access"]'
@@ -50,8 +50,8 @@ def _get_osm_filter(network_type):
     # drive+service: allow ways tagged 'service' but filter out certain types of
     # service ways
     filters["drive_service"] = (
-        f'["highway"]["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
-        f'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway"]'
+        f'way["highway"]["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|'
+        f'corridor|elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]{settings.default_access}'
         f'["service"!~"parking|parking_aisle|private|emergency_access"]'
     )
@@ -62,22 +62,22 @@ def _get_osm_filter(network_type):
     # pleasant walks. some cycleways may allow pedestrians, but this filter ignores
     # such cycleways.
     filters["walk"] = (
-        f'["highway"]["area"!~"yes"]["highway"!~"cycleway|motor|proposed|construction|abandoned|'
+        f'way["highway"]["area"!~"yes"]["highway"!~"cycleway|motor|proposed|construction|abandoned|'
         f'platform|raceway"]["foot"!~"no"]["service"!~"private"]{settings.default_access}'
     )
 
     # biking: filter out foot ways, motor ways, private ways, and anything
     # specifying biking=no
     filters["bike"] = (
-        f'["highway"]["area"!~"yes"]["highway"!~"footway|steps|corridor|elevator|escalator|motor|proposed|'
-        f'construction|abandoned|platform|raceway"]'
+        f'way["highway"]["area"!~"yes"]["highway"!~"footway|steps|corridor|elevator|'
+        f'escalator|motor|proposed|construction|abandoned|platform|raceway"]'
         f'["bicycle"!~"no"]["service"!~"private"]{settings.default_access}'
     )
 
     # to download all ways, just filter out everything not currently in use or
     # that is private-access only
     filters["all"] = (
-        f'["highway"]["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
+        f'way["highway"]["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
         f'["service"!~"private"]{settings.default_access}'
     )
 
@@ -85,10 +85,7 @@ def _get_osm_filter(network_type):
     # everything not currently in use
     filters[
         "all_private"
-    ] = '["highway"]["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
-
-    # no filter, needed for infrastructures other than "highway"
-    filters["none"] = ""
+    ] = 'way["highway"]["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
 
     if network_type in filters:
         osm_filter = filters[network_type]
@@ -337,7 +334,7 @@ def _osm_net_download(
     timeout=180,
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
-    infrastructure="way",
+    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -379,8 +376,9 @@ def _osm_net_download(
     -------
     response_jsons : list
     """
-    if infrastructure != 'way':
+    if infrastructure is not None:
         from warnings import warn
+
         msg = (
             "The `infrastructure` parameter has been deprecated and will be "
             "removed in the next release. Use the `custom_filter` parameter instead."
@@ -434,7 +432,7 @@ def _osm_net_download(
             west, south, east, north = poly.bounds
             query_str = (
                 f"{overpass_settings};"
-                f"({infrastructure}{osm_filter}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;"
+                f"({osm_filter}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;"
             )
             response_json = overpass_request(data={"data": query_str}, timeout=timeout)
             response_jsons.append(response_json)
@@ -460,8 +458,7 @@ def _osm_net_download(
         # a time
         for polygon_coord_str in polygon_coord_strs:
             query_str = (
-                f"{overpass_settings};"
-                f"({infrastructure}{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
+                f"{overpass_settings};" f"({osm_filter}(poly:'{polygon_coord_str}');>;);out;"
             )
             response_json = overpass_request(data={"data": query_str}, timeout=timeout)
             response_jsons.append(response_json)
