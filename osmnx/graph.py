@@ -77,7 +77,8 @@ def graph_from_bbox(
     infrastructure : string
         deprecated, use custom_filter instead
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets
+        a custom network filter to be used instead of the network_type presets,
+        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
     custom_settings : string
         custom settings to be used in overpass query instead of the defaults
 
@@ -232,7 +233,8 @@ def graph_from_point(
     infrastructure : string
         deprecated, use custom_filter instead
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets
+        a custom network filter to be used instead of the network_type presets,
+        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
     custom_settings : string
         custom settings to be used in overpass query instead of the defaults
 
@@ -335,7 +337,8 @@ def graph_from_address(
     infrastructure : string
         deprecated, use custom_filter instead
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets
+        a custom network filter to be used instead of the network_type presets,
+        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
     custom_settings : string
         custom settings to be used in overpass query instead of the defaults
 
@@ -416,7 +419,8 @@ def graph_from_polygon(
     infrastructure : string
         deprecated, use custom_filter instead
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets
+        a custom network filter to be used instead of the network_type presets,
+        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
     custom_settings : string
         custom settings to be used in overpass query instead of the defaults
 
@@ -581,7 +585,8 @@ def graph_from_place(
     infrastructure : string
         deprecated, use custom_filter instead
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets
+        a custom network filter to be used instead of the network_type presets,
+        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
     custom_settings : string
         custom settings to be used in overpass query instead of the defaults
     Returns
