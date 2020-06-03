@@ -29,7 +29,8 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
     gdf : geopandas.GeoDataFrame
     """
     # ensure query type
-    assert isinstance(query, dict) or isinstance(query, str), "query must be a dict or a string"
+    if not isinstance(query, (str, dict)):
+        raise ValueError("query must be a dict or a string")
 
     # get the data from OSM
     data = downloader._osm_polygon_download(query, limit=which_result)
@@ -108,13 +109,13 @@ def gdf_from_places(queries, which_results=None, buffer_dist=None):
     # checking for the presence of which_results
     gdf = gpd.GeoDataFrame()
     if which_results is not None:
-        assert len(queries) == len(
-            which_results
-        ), "which_results list length must be the same as queries list length"
+
+        if len(queries) != len(which_results):
+            raise ValueError("which_results length must equal queries length")
+
         for query, which_result in zip(queries, which_results):
-            gdf = gdf.append(
-                gdf_from_place(query, buffer_dist=buffer_dist, which_result=which_result)
-            )
+            gdf_tmp = gdf_from_place(query, buffer_dist=buffer_dist, which_result=which_result)
+            gdf = gdf.append(gdf_tmp)
     else:
         for query in queries:
             gdf = gdf.append(gdf_from_place(query, buffer_dist=buffer_dist))

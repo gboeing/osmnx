@@ -88,7 +88,8 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
     gdf_proj : geopandas.GeoDataFrame
         the projected GeoDataFrame
     """
-    assert len(gdf) > 0, "You cannot project an empty GeoDataFrame."
+    if len(gdf) < 1:
+        raise ValueError("Cannot project an empty GeoDataFrame")
 
     # if to_crs was passed-in, use this value to project the gdf
     if to_crs is not None:
