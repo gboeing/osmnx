@@ -194,7 +194,7 @@ def _get_from_cache(url, check_remark=False):
 
                 # return None if check_remark is True and there is a server
                 # remark in the cached response
-                if check_remark and 'remark' in response_json:
+                if check_remark and "remark" in response_json:
                     utils.log(f'Found remark, so ignoring cache file "{cache_filepath}"')
                     return None
 
