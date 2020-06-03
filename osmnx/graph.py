@@ -587,7 +587,7 @@ def graph_from_place(
     G : networkx.MultiDiGraph
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
-    if isinstance(query, str) or isinstance(query, dict):
+    if isinstance(query, (str, dict)):
         # if it is a string (place name) or dict (structured place query), then
         # it is a single place
         gdf_place = boundaries.gdf_from_place(
@@ -597,7 +597,7 @@ def graph_from_place(
         # if it is a list, it contains multiple places to get
         gdf_place = boundaries.gdf_from_places(query, buffer_dist=buffer_dist)
     else:
-        raise TypeError("query must be a string or a list of query strings")
+        raise TypeError("query must be dict, string, or list of strings")
 
     # extract the geometry from the GeoDataFrame to use in API query
     polygon = gdf_place["geometry"].unary_union
