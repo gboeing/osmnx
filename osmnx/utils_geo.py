@@ -362,6 +362,7 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3):
     horizont_lines = [LineString([(x_points[0], y), (x_points[-1], y)]) for y in y_points]
     lines = vertical_lines + horizont_lines
 
+    # recursively split the geometry by each quadrat line
     for line in lines:
         geometry = MultiPolygon(split(geometry, line))
 
