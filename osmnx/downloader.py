@@ -153,8 +153,7 @@ def _url_in_cache(url):
     Returns
     -------
     filepath : string
-        path to cached response for url if it exists in the cache,
-        otherwise None
+        path to cached response for url if it exists, otherwise None
     """
     # hash the url to generate the cache filename
     filename = hashlib.md5(url.encode("utf-8")).hexdigest()
@@ -163,9 +162,11 @@ def _url_in_cache(url):
     # if this file exists in the cache, return its full path
     if os.path.isfile(filepath):
         return filepath
+    else:
+        return None
 
 
-def _get_from_cache(url):
+def _get_from_cache(url, check_remark=False):
     """
     Retrieve a HTTP response json object from the cache.
 
@@ -173,6 +174,9 @@ def _get_from_cache(url):
     ----------
     url : string
         the url of the request
+    check_remark : string
+        if True, only return filepath if cached response does not have a
+        remark key indicating a server warning
 
     Returns
     -------
@@ -187,6 +191,13 @@ def _get_from_cache(url):
         if cache_filepath is not None:
             with open(cache_filepath, encoding="utf-8") as cache_file:
                 response_json = json.load(cache_file)
+
+                # return None if check_remark is True and there is a server
+                # remark in the cached response
+                if check_remark and "remark" in response_json:
+                    utils.log(f'Found remark, so ignoring cache file "{cache_filepath}"')
+                    return None
+
             utils.log(f'Retrieved response from cache file "{cache_filepath}" for URL "{url}"')
             return response_json
 
@@ -599,7 +610,7 @@ def overpass_request(data, pause=None, timeout=180, error_pause=None):
     # hash to look up/save to cache
     url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
     prepared_url = requests.Request("GET", url, params=data).prepare().url
-    cached_response_json = _get_from_cache(prepared_url)
+    cached_response_json = _get_from_cache(prepared_url, check_remark=True)
 
     if cached_response_json is not None:
         # found this request in the cache, just return it instead of making a
