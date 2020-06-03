@@ -8,7 +8,7 @@ OSMnx documentation
 
    osmnx
 
-**OSMnx**: retrieve, model, analyze, and visualize street networks from OpenStreetMap. OSMnx is a Python package that lets you download spatial geometries and model, project, visualize, and analyze street networks from OpenStreetMap's APIs. Users can download and model walkable, drivable, or bikeable urban networks with a single line of Python code, and then easily analyze and visualize them. You can just as easily download and work with amenities/points of interest, building footprints, elevation data, street bearings/orientations, and network routing.
+**OSMnx**: retrieve, model, analyze, and visualize street networks from OpenStreetMap. OSMnx is a Python package that lets you download spatial geometries and model, project, visualize, and analyze real-world street networks from OpenStreetMap's APIs. Users can download and model walkable, drivable, or bikeable urban networks with a single line of Python code, and then easily analyze and visualize them. You can just as easily download and work with amenities/points of interest, building footprints, elevation data, street bearings/orientations, speed/travel time, and network routing.
 
 
 Citation info
@@ -31,7 +31,7 @@ OSMnx is built on top of geopandas, networkx, and matplotlib and interacts with 
   * Download node elevations and calculate edge grades (inclines)
   * Impute missing speeds and calculate graph edge travel times
   * Simplify and correct the network's topology to clean-up nodes and consolidate intersections
-  * Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes  
+  * Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes
   * Save networks to disk as shapefiles, geopackages, and GraphML
   * Save/load street network to/from a local .osm xml file
   * Conduct topological and spatial analyses to automatically calculate dozens of indicators
