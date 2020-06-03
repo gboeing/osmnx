@@ -488,16 +488,16 @@ def plot_graph(
     return fig, ax
 
 
-def _node_list_to_coordinate_lines(G, node_list, use_geom=True):
+def _node_list_to_coordinate_lines(G, route, use_geom=True):
     """
-    Make list of lines that follow the path defined by the list of nodes.
+    Make list of lines that follow the route defined by the list of nodes.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
-    node_list : list
-        a route as a list of node IDs
+    route : list
+        a valid graph path as a list of node IDs
     use_geom : bool
         if True, use the spatial geometry attribute of the edges to draw
         geographically accurate edges, rather than just lines straight from
@@ -508,7 +508,7 @@ def _node_list_to_coordinate_lines(G, node_list, use_geom=True):
     lines : list
         list of lines as pairs ((x_start, y_start), (x_stop, y_stop))
     """
-    edge_nodes = list(zip(node_list[:-1], node_list[1:]))
+    edge_nodes = list(zip(route[:-1], route[1:]))
     lines = []
     for u, v in edge_nodes:
         # if there are parallel edges, select the shortest in length
