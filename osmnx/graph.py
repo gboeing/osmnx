@@ -37,7 +37,6 @@ def graph_from_bbox(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -74,8 +73,6 @@ def graph_from_bbox(
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
-    infrastructure : string
-        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
@@ -107,7 +104,6 @@ def graph_from_bbox(
             timeout=timeout,
             memory=memory,
             max_query_area_size=max_query_area_size,
-            infrastructure=infrastructure,
             custom_filter=custom_filter,
             custom_settings=custom_settings,
         )
@@ -154,7 +150,6 @@ def graph_from_bbox(
             timeout=timeout,
             memory=memory,
             max_query_area_size=max_query_area_size,
-            infrastructure=infrastructure,
             custom_filter=custom_filter,
             custom_settings=custom_settings,
         )
@@ -192,7 +187,6 @@ def graph_from_point(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -230,8 +224,6 @@ def graph_from_point(
     clean_periphery : bool,
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
-    infrastructure : string
-        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
@@ -263,7 +255,6 @@ def graph_from_point(
         memory=memory,
         max_query_area_size=max_query_area_size,
         clean_periphery=clean_periphery,
-        infrastructure=infrastructure,
         custom_filter=custom_filter,
         custom_settings=custom_settings,
     )
@@ -292,7 +283,6 @@ def graph_from_address(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -334,8 +324,6 @@ def graph_from_address(
     clean_periphery : bool,
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
-    infrastructure : string
-        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
@@ -362,7 +350,6 @@ def graph_from_address(
         memory=memory,
         max_query_area_size=max_query_area_size,
         clean_periphery=clean_periphery,
-        infrastructure=infrastructure,
         custom_filter=custom_filter,
         custom_settings=custom_settings,
     )
@@ -384,7 +371,6 @@ def graph_from_polygon(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -416,8 +402,6 @@ def graph_from_polygon(
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
-    infrastructure : string
-        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
@@ -457,7 +441,6 @@ def graph_from_polygon(
             timeout=timeout,
             memory=memory,
             max_query_area_size=max_query_area_size,
-            infrastructure=infrastructure,
             custom_filter=custom_filter,
             custom_settings=custom_settings,
         )
@@ -497,7 +480,6 @@ def graph_from_polygon(
             timeout=timeout,
             memory=memory,
             max_query_area_size=max_query_area_size,
-            infrastructure=infrastructure,
             custom_filter=custom_filter,
             custom_settings=custom_settings,
         )
@@ -537,7 +519,6 @@ def graph_from_place(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -582,8 +563,6 @@ def graph_from_place(
     clean_periphery : bool
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
-    infrastructure : string
-        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
@@ -621,7 +600,6 @@ def graph_from_place(
         memory=memory,
         max_query_area_size=max_query_area_size,
         clean_periphery=clean_periphery,
-        infrastructure=infrastructure,
         custom_filter=custom_filter,
         custom_settings=custom_settings,
     )
