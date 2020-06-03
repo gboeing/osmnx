@@ -22,4 +22,5 @@ If you're having trouble with OSMnx, first search the open/closed issues (and St
 ```python
 # your code goes here
 # make sure it's complete so we can independently run it from top to bottom
+# do NOT post a screenshot of your code or error message: copy/paste the text
 ```
