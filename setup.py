@@ -62,7 +62,7 @@ else:
 # now call setup
 setup(
     name="osmnx",
-    version="0.13.0",
+    version="0.14.0",
     description=DESC,
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
@@ -75,8 +75,8 @@ setup(
     python_requires=">=3.6",
     install_requires=INSTALL_REQUIRES,
     extras_require={
-        "folium": ["folium>=0.10"],
-        "kdtree": ["scipy>=1.3"],
-        "balltree": ["scikit-learn>=0.22"],
+        "folium": ["folium>=0.11"],
+        "kdtree": ["scipy>=1.4"],
+        "balltree": ["scikit-learn>=0.23"],
     },
 )
