@@ -73,7 +73,7 @@ def graph_from_bbox(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        do not use
+        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
@@ -228,7 +228,7 @@ def graph_from_point(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        do not use
+        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
@@ -331,7 +331,7 @@ def graph_from_address(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        do not use
+        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
@@ -412,7 +412,7 @@ def graph_from_polygon(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        do not use
+        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
@@ -577,7 +577,7 @@ def graph_from_place(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        do not use
+        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
