@@ -35,7 +35,7 @@ def graph_from_bbox(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure='way["highway"]',
+    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -73,9 +73,7 @@ def graph_from_bbox(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        download infrastructure of given type. the default is streets
-        (ie, 'way["highway"]') but other infrastructures may be selected like
-        power grids (ie, 'way["power"~"line"]').
+        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
@@ -191,7 +189,7 @@ def graph_from_point(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure='way["highway"]',
+    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -230,9 +228,7 @@ def graph_from_point(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        download infrastructure of given type. the default is streets
-        (ie, 'way["highway"]') but other infrastructures may be selected like
-        power grids (ie, 'way["power"~"line"]').
+        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
@@ -292,7 +288,7 @@ def graph_from_address(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure='way["highway"]',
+    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -335,9 +331,7 @@ def graph_from_address(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        download infrastructure of given type. the default is streets
-        (ie, 'way["highway"]') but other infrastructures may be selected like
-        power grids (ie, 'way["power"~"line"]').
+        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
@@ -385,7 +379,7 @@ def graph_from_polygon(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure='way["highway"]',
+    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -418,9 +412,7 @@ def graph_from_polygon(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        download infrastructure of given type (default is streets
-        (ie, 'way["highway"]') but other infrastructures may be selected
-        like power grids (ie, 'way["power"~"line"]'))
+        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
@@ -539,7 +531,7 @@ def graph_from_place(
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
-    infrastructure='way["highway"]',
+    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -585,9 +577,7 @@ def graph_from_place(
         if True (and simplify=True), buffer 0.5km to get a graph larger than
         requested, then simplify, then truncate it to requested spatial extent
     infrastructure : string
-        download infrastructure of given type. the default is streets
-        (ie, 'way["highway"]') but other infrastructures may be selected like
-        power grids (ie, 'way["power"~"line"]').
+        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
     custom_settings : string
@@ -597,7 +587,7 @@ def graph_from_place(
     G : networkx.MultiDiGraph
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
-    if isinstance(query, str) or isinstance(query, dict):
+    if isinstance(query, (str, dict)):
         # if it is a string (place name) or dict (structured place query), then
         # it is a single place
         gdf_place = boundaries.gdf_from_place(
@@ -607,7 +597,7 @@ def graph_from_place(
         # if it is a list, it contains multiple places to get
         gdf_place = boundaries.gdf_from_places(query, buffer_dist=buffer_dist)
     else:
-        raise TypeError("query must be a string or a list of query strings")
+        raise TypeError("query must be dict, string, or list of strings")
 
     # extract the geometry from the GeoDataFrame to use in API query
     polygon = gdf_place["geometry"].unary_union

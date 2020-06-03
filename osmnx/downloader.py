@@ -27,13 +27,17 @@ def _get_osm_filter(network_type):
     Parameters
     ----------
     network_type : string
-        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private', 'none'}
+        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'}
         what type of street or other network to get
 
     Returns
     -------
     string
     """
+    # define preset queries to send to the API. specifying way["highway"]
+    # means that all ways returned must have a highway tag. the filters then
+    # remove ways by tag/value. the '>' makes it recurse so we get ways and
+    # the ways' nodes.
     filters = {}
 
     # driving: filter out un-drivable roads, service roads, private ways, and
@@ -41,7 +45,7 @@ def _get_osm_filter(network_type):
     # are tagged as providing parking, driveway, private, or emergency-access
     # services
     filters["drive"] = (
-        f'["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
+        f'["highway"]["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
         f'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway|service"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]{settings.default_access}'
         f'["service"!~"parking|parking_aisle|driveway|private|emergency_access"]'
@@ -50,8 +54,8 @@ def _get_osm_filter(network_type):
     # drive+service: allow ways tagged 'service' but filter out certain types of
     # service ways
     filters["drive_service"] = (
-        f'["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|corridor|'
-        f'elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway"]'
+        f'["highway"]["area"!~"yes"]["highway"!~"cycleway|footway|path|pedestrian|steps|track|'
+        f'corridor|elevator|escalator|proposed|construction|bridleway|abandoned|platform|raceway"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]{settings.default_access}'
         f'["service"!~"parking|parking_aisle|private|emergency_access"]'
     )
@@ -62,22 +66,22 @@ def _get_osm_filter(network_type):
     # pleasant walks. some cycleways may allow pedestrians, but this filter ignores
     # such cycleways.
     filters["walk"] = (
-        f'["area"!~"yes"]["highway"!~"cycleway|motor|proposed|construction|abandoned|platform|raceway"]'
-        f'["foot"!~"no"]["service"!~"private"]{settings.default_access}'
+        f'["highway"]["area"!~"yes"]["highway"!~"cycleway|motor|proposed|construction|abandoned|'
+        f'platform|raceway"]["foot"!~"no"]["service"!~"private"]{settings.default_access}'
     )
 
     # biking: filter out foot ways, motor ways, private ways, and anything
     # specifying biking=no
     filters["bike"] = (
-        f'["area"!~"yes"]["highway"!~"footway|steps|corridor|elevator|escalator|motor|proposed|'
-        f'construction|abandoned|platform|raceway"]'
+        f'["highway"]["area"!~"yes"]["highway"!~"footway|steps|corridor|elevator|'
+        f'escalator|motor|proposed|construction|abandoned|platform|raceway"]'
         f'["bicycle"!~"no"]["service"!~"private"]{settings.default_access}'
     )
 
     # to download all ways, just filter out everything not currently in use or
     # that is private-access only
     filters["all"] = (
-        f'["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
+        f'["highway"]["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
         f'["service"!~"private"]{settings.default_access}'
     )
 
@@ -85,10 +89,7 @@ def _get_osm_filter(network_type):
     # everything not currently in use
     filters[
         "all_private"
-    ] = '["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
-
-    # no filter, needed for infrastructures other than "highway"
-    filters["none"] = ""
+    ] = '["highway"]["area"!~"yes"]["highway"!~"proposed|construction|abandoned|platform|raceway"]'
 
     if network_type in filters:
         osm_filter = filters[network_type]
@@ -198,7 +199,9 @@ def _get_from_cache(url, check_remark=False):
                     utils.log(f'Found remark, so ignoring cache file "{cache_filepath}"')
                     return None
 
-            utils.log(f'Retrieved response from cache file "{cache_filepath}" for URL "{url}"')
+            utils.log(
+                f'Retrieved response from cache file "{cache_filepath}" for URL "{url[:200]}..."'
+            )
             return response_json
 
 
@@ -268,7 +271,7 @@ def _get_pause(recursive_delay=5, default_duration=10):
         # wait required
         _ = int(status_first_token)  # number of available slots
         pause = 0
-    except Exception:
+    except Exception:  # pragma: no cover
         # if first token is 'Slot', it tells you when your slot will be free
         if status_first_token == "Slot":
             utc_time_str = status.split(" ")[3]
@@ -337,7 +340,7 @@ def _osm_net_download(
     timeout=180,
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
-    infrastructure='way["highway"]',
+    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -347,7 +350,7 @@ def _osm_net_download(
     Parameters
     ----------
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        geographic shape to fetch the street network within
+        geographic boundaries to fetch the street network within
     north : float
         northern latitude of bounding box
     south : float
@@ -368,11 +371,10 @@ def _osm_net_download(
         max area for any part of the geometry in meters: any polygon bigger
         will get divided up for multiple queries to API (default 50km x 50km)
     infrastructure : string
-        download infrastructure of given type. default is streets, ie,
-        'way["highway"]') but other infrastructures may be selected like power
-        grids, ie, 'way["power"~"line"]'
+        deprecated, use custom_filter instead
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets
+        a custom network filter to be used instead of the network_type presets,
+        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
     custom_settings : string
         custom settings to be used in the overpass query instead of defaults
 
@@ -380,6 +382,15 @@ def _osm_net_download(
     -------
     response_jsons : list
     """
+    if infrastructure is not None:
+        from warnings import warn
+
+        msg = (
+            "The `infrastructure` parameter has been deprecated and will be "
+            "removed in the next release. Use the `custom_filter` parameter instead."
+        )
+        warn(msg)
+
     # check if we're querying by polygon or by bounding box based on which
     # argument(s) where passed into this function
     by_poly = polygon is not None
@@ -391,7 +402,7 @@ def _osm_net_download(
 
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type
-    if custom_filter:
+    if custom_filter is not None:
         osm_filter = custom_filter
     else:
         osm_filter = _get_osm_filter(network_type)
@@ -399,10 +410,6 @@ def _osm_net_download(
 
     overpass_settings = _make_overpass_settings(custom_settings, timeout, memory)
 
-    # define the query to send the API
-    # specifying way["highway"] means that all ways returned must have a highway
-    # key. the {filters} then remove ways by key/value. the '>' makes it recurse
-    # so we get ways and way nodes. maxsize is in bytes.
     if by_bbox:
         # turn bbox into a polygon and project to local UTM
         polygon = Polygon([(west, south), (east, south), (east, north), (west, north)])
@@ -427,7 +434,7 @@ def _osm_net_download(
             west, south, east, north = poly.bounds
             query_str = (
                 f"{overpass_settings};"
-                f"({infrastructure}{osm_filter}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;"
+                f"(way{osm_filter}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;"
             )
             response_json = overpass_request(data={"data": query_str}, timeout=timeout)
             response_jsons.append(response_json)
@@ -452,10 +459,7 @@ def _osm_net_download(
         # pass each polygon exterior coordinates in the list to the API, one at
         # a time
         for polygon_coord_str in polygon_coord_strs:
-            query_str = (
-                f"{overpass_settings};"
-                f"({infrastructure}{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
-            )
+            query_str = f"{overpass_settings};(way{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
             response_json = overpass_request(data={"data": query_str}, timeout=timeout)
             response_jsons.append(response_json)
         utils.log(
@@ -549,9 +553,9 @@ def nominatim_request(params, request_type="search", pause=1, timeout=30, error_
 
     else:
         # if this URL is not already in the cache, pause, then request it
-        utils.log(f"Pausing {pause} seconds before making API GET request")
+        utils.log(f"Pausing {pause} seconds before making HTTP GET request")
         time.sleep(pause)
-        utils.log(f"Requesting {prepared_url} with timeout={timeout}")
+        utils.log(f"Get {prepared_url} with timeout={timeout}")
         response = requests.get(url, params=params, timeout=timeout, headers=_get_http_headers())
 
         # get the response size and the domain, log result
@@ -562,7 +566,7 @@ def nominatim_request(params, request_type="search", pause=1, timeout=30, error_
         try:
             response_json = response.json()
             _save_to_cache(prepared_url, response_json)
-        except Exception:
+        except Exception:  # pragma: no cover
             # 429 is 'too many requests' and 504 is 'gateway timeout' from server
             # overload - handle these errors by recursively calling
             # nominatim_request until we get a valid response
@@ -621,9 +625,9 @@ def overpass_request(data, pause=None, timeout=180, error_pause=None):
         # if this URL is not already in the cache, pause, then request it
         if pause is None:
             this_pause = _get_pause()
-        utils.log(f"Pausing {this_pause} seconds before making API POST request")
+        utils.log(f"Pausing {this_pause} seconds before making HTTP POST request")
         time.sleep(this_pause)
-        utils.log(f'Posting to {url} with timeout={timeout}, "{data}"')
+        utils.log(f"Post {prepared_url} with timeout={timeout}")
         response = requests.post(url, data=data, timeout=timeout, headers=_get_http_headers())
 
         # get the response size and the domain, log result
@@ -640,7 +644,7 @@ def overpass_request(data, pause=None, timeout=180, error_pause=None):
         # 429 is 'too many requests' and 504 is 'gateway timeout' from server
         # overload - handle these errors by recursively calling overpass_request
         # after a pause until we get a valid response
-        except Exception:
+        except Exception:  # pragma: no cover
             sc = response.status_code
             if sc in [429, 504]:
                 if error_pause is None:
