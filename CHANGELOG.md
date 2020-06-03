@@ -1,5 +1,13 @@
 # Change log
 
+## 0.14.0 (2020-06-03)
+
+  - better geometry subdividing for huge OSM queries
+  - better handling of maxspeed list values for simplified graphs
+  - downloader only retrieves url response from cache if no server remark
+  - deprecate graph creation infrastructure parameter in favor of flexible custom_filter
+  - remove deprecated functions: graph_from_file, clean_intersections, gdfs_to_graph
+
 ## 0.13.0 (2020-05-25)
 
   - major refactor of entire package
