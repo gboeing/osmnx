@@ -5,6 +5,7 @@ from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
 from shapely.ops import polygonize
+
 from . import boundaries
 from . import downloader
 from . import projection

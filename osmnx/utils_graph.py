@@ -1,13 +1,15 @@
 """Graph utility functions."""
 
+from collections import Counter
+from itertools import chain
+
 import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
-from collections import Counter
-from itertools import chain
 from shapely.geometry import LineString
 from shapely.geometry import Point
+
 from . import distance
 from . import utils
 

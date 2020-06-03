@@ -7,20 +7,28 @@ import matplotlib as mpl
 mpl.use("Agg")
 
 import bz2
-import folium
 import json
 import logging as lg
-import networkx as nx
-import numpy as np
 import os
-import osmnx as ox
-import pandas as pd
-import pytest
 import shutil
 import tempfile
 from collections import OrderedDict
+
+import folium
+import networkx as nx
+import numpy as np
+import pandas as pd
+import pytest
 from shapely import wkt
-from shapely.geometry import Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon
+from shapely.geometry import LineString
+from shapely.geometry import MultiLineString
+from shapely.geometry import MultiPoint
+from shapely.geometry import MultiPolygon
+from shapely.geometry import Point
+from shapely.geometry import Polygon
+
+import osmnx as ox
+
 
 # remove the .temp folder and .coverage file if they already
 # exist so we start fresh with these tests

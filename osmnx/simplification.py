@@ -1,11 +1,13 @@
 """Simplify, correct, and consolidate network topology."""
 
-import geopandas as gpd
 import logging as lg
+
+import geopandas as gpd
 import networkx as nx
 from shapely.geometry import LineString
 from shapely.geometry import Point
 from shapely.geometry import Polygon
+
 from . import utils
 from . import utils_graph
 

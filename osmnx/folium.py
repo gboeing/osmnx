@@ -1,6 +1,7 @@
 """Create leaflet web maps via folium."""
 
 import json
+
 from . import utils_graph
 
 # folium is an optional dependency for the folium plotting functions

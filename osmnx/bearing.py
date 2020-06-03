@@ -1,6 +1,7 @@
 """Calculate graph edge bearings."""
 
 import math
+
 import numpy as np
 
 

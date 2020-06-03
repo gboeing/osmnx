@@ -5,6 +5,7 @@ See license in LICENSE.txt.
 """
 
 import os
+
 from setuptools import setup
 
 # provide a long description using reStructuredText

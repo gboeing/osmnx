@@ -4,6 +4,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from shapely.geometry import Point
+
 from . import utils
 from . import utils_geo
 from . import utils_graph

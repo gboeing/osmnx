@@ -1,9 +1,11 @@
 """Calculate graph edge speeds and travel times."""
 
+import re
+
 import networkx as nx
 import numpy as np
 import pandas as pd
-import re
+
 from . import utils_graph
 
 

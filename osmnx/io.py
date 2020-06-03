@@ -2,11 +2,13 @@
 
 import ast
 import os
+from xml.etree import ElementTree as etree
+
 import networkx as nx
 import numpy as np
 import pandas as pd
 from shapely import wkt
-from xml.etree import ElementTree as etree
+
 from . import settings
 from . import utils
 from . import utils_graph

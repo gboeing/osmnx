@@ -1,9 +1,10 @@
 """Geospatial utility functions."""
 
 import math
+from collections import OrderedDict
+
 import numpy as np
 import pandas as pd
-from collections import OrderedDict
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
 from shapely.geometry import MultiPoint
@@ -11,6 +12,7 @@ from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 from shapely.ops import split
+
 from . import downloader
 from . import projection
 from . import utils
