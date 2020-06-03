@@ -1,12 +1,14 @@
 """Graph creation functions."""
 
 import bz2
-import networkx as nx
 import os
 import xml.sax
 from itertools import groupby
+
+import networkx as nx
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
+
 from . import boundaries
 from . import distance
 from . import downloader

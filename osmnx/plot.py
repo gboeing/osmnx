@@ -1,15 +1,17 @@
 """Plot spatial geometries, street networks, and routes."""
 
+import os
+
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import pandas as pd
 from descartes import PolygonPatch
 from matplotlib.collections import LineCollection
 from matplotlib.collections import PatchCollection
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
+
 from . import graph
 from . import settings
 from . import simplification

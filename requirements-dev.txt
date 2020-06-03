@@ -4,6 +4,7 @@ coveralls
 flake8
 flake8-bugbear
 folium
+isort
 pydocstyle
 pytest
 scikit-learn

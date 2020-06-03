@@ -4,6 +4,7 @@ import geopandas as gpd
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
+
 from . import boundaries
 from . import downloader
 from . import settings

@@ -3,6 +3,7 @@
 import networkx as nx
 import numpy as np
 import pandas as pd
+
 from . import distance
 from . import simplification
 from . import utils

@@ -7,11 +7,13 @@ import logging as lg
 import math
 import os
 import re
-import requests
 import time
 from collections import OrderedDict
+
+import requests
 from dateutil import parser as date_parser
 from shapely.geometry import Polygon
+
 from . import projection
 from . import settings
 from . import utils

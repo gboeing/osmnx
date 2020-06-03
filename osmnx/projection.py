@@ -1,10 +1,12 @@
 """Project spatial geometries and street networks."""
 
-import geopandas as gpd
 import math
+
+import geopandas as gpd
 import networkx as nx
 from pyproj import CRS
 from shapely.geometry import Point
+
 from . import settings
 from . import utils
 

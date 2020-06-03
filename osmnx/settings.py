@@ -2,7 +2,6 @@
 
 import logging as lg
 
-
 # locations to save data, logs, images, and cache
 data_folder = "data"
 logs_folder = "logs"

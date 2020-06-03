@@ -1,10 +1,12 @@
 """Get node elevations and calculate edge grades."""
 
 import math
+import time
+
 import networkx as nx
 import pandas as pd
 import requests
-import time
+
 from . import downloader
 from . import utils
 

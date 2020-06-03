@@ -1,7 +1,9 @@
 """Create GeoDataFrames of place boundaries."""
 
-import geopandas as gpd
 import logging as lg
+
+import geopandas as gpd
+
 from . import downloader
 from . import projection
 from . import settings
