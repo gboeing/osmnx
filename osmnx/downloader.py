@@ -342,7 +342,6 @@ def _osm_net_download(
     timeout=180,
     memory=None,
     max_query_area_size=50 * 1000 * 50 * 1000,
-    infrastructure=None,
     custom_filter=None,
     custom_settings=None,
 ):
@@ -372,8 +371,6 @@ def _osm_net_download(
     max_query_area_size : float
         max area for any part of the geometry in meters: any polygon bigger
         will get divided up for multiple queries to API (default 50km x 50km)
-    infrastructure : string
-        deprecated, use custom_filter instead
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
@@ -384,15 +381,6 @@ def _osm_net_download(
     -------
     response_jsons : list
     """
-    if infrastructure is not None:
-        from warnings import warn
-
-        msg = (
-            "The `infrastructure` parameter has been deprecated and will be "
-            "removed in the next release. Use the `custom_filter` parameter instead."
-        )
-        warn(msg)
-
     # check if we're querying by polygon or by bounding box based on which
     # argument(s) where passed into this function
     by_poly = polygon is not None
