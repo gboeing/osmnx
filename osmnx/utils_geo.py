@@ -10,7 +10,7 @@ from shapely.geometry import MultiPoint
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
-from shapely.ops import unary_union
+from shapely.ops import split
 from . import downloader
 from . import projection
 from . import utils
@@ -329,7 +329,7 @@ def _get_polygons_coordinates(geometry):
     return polygon_coord_strs
 
 
-def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9):
+def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3):
     """
     Split a Polygon or MultiPolygon up into sub-polygons of a specified size.
 
@@ -343,12 +343,10 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9
     min_num : int
         the minimum number of linear quadrat lines (e.g., min_num=3 would
         produce a quadrat grid of 4 squares)
-    buffer_amount : numeric
-        buffer the quadrat grid lines by quadrat_width times buffer_amount
 
     Returns
     -------
-    multipoly : shapely.geometry.MultiPolygon
+    geometry : shapely.geometry.MultiPolygon
     """
     # create n evenly spaced points between the min and max x and y bounds
     west, south, east, north = geometry.bounds
@@ -362,17 +360,13 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3, buffer_amount=1e-9
     horizont_lines = [LineString([(x_points[0], y), (x_points[-1], y)]) for y in y_points]
     lines = vertical_lines + horizont_lines
 
-    # buffer each line to distance of the quadrat width divided by 1 billion,
-    # take their union, then cut geometry into pieces by these quadrats
-    buffer_size = quadrat_width * buffer_amount
-    lines_buffered = [line.buffer(buffer_size) for line in lines]
-    quadrats = unary_union(lines_buffered)
-    multipoly = geometry.difference(quadrats)
+    for line in lines:
+        geometry = MultiPolygon(split(geometry, line))
 
-    return multipoly
+    return geometry
 
 
-def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buffer_amount=1e-9):
+def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3):
     """
     Intersect points with a polygon.
 
@@ -386,13 +380,12 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
     geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the geometry to intersect with the points
     quadrat_width : numeric
-        the linear length (in degrees) of the quadrats with which to cut up the
-        geometry (default = 0.05, approx 4km at NYC's latitude)
+        the linear length (in units the geometry is in) of the quadrats with
+        which to cut up the geometry (default = 0.05 degrees, approx 4km at
+        NYC's latitude)
     min_num : int
         the minimum number of linear quadrat lines (e.g., min_num=3 would
         produce a quadrat grid of 4 squares)
-    buffer_amount : numeric
-        buffer the quadrat grid lines by quadrat_width times buffer_amount
 
     Returns
     -------
@@ -402,9 +395,7 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
     points_within_geometry = pd.DataFrame()
 
     # cut the geometry into chunks for r-tree spatial index intersecting
-    multipoly = _quadrat_cut_geometry(
-        geometry, quadrat_width=quadrat_width, buffer_amount=buffer_amount, min_num=min_num
-    )
+    multipoly = _quadrat_cut_geometry(geometry, quadrat_width=quadrat_width, min_num=min_num)
 
     # create an r-tree spatial index for the nodes (ie, points)
     sindex = gdf["geometry"].sindex
@@ -413,12 +404,7 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
     # loop through each chunk of the geometry to find approximate and then
     # precisely intersecting points
     for poly in multipoly:
-
-        # buffer by the tiny distance to account for any space lost in the
-        # quadrat cutting, otherwise may miss point(s) that lay directly on
-        # quadrat line
-        buffer_size = quadrat_width * buffer_amount
-        poly = poly.buffer(buffer_size).buffer(0)
+        poly = poly.buffer(0)
 
         # find approximate matches with r-tree, then precise matches from those
         # approximate ones
@@ -429,8 +415,7 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3, buff
             points_within_geometry = points_within_geometry.append(precise_matches)
 
     if len(points_within_geometry) > 0:
-        # drop duplicate points, if buffered poly caused an overlap on point(s)
-        # that lay directly on a quadrat line
+        # drop duplicate points if any
         points_within_geometry = points_within_geometry.drop_duplicates(subset="node")
     else:
         # after simplifying the graph, and given the requested network type,
