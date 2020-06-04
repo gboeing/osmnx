@@ -20,7 +20,6 @@ from . import utils
 from . import utils_geo
 from . import utils_graph
 from ._errors import EmptyOverpassResponse
-from ._errors import InvalidDistanceType
 from ._version import __version__
 
 
@@ -83,93 +82,23 @@ def graph_from_bbox(
     -------
     G : networkx.MultiDiGraph
     """
-    if clean_periphery and simplify:
-        # create a new buffered bbox 0.5km around the desired one
-        buffer_dist = 500
-        polygon = Polygon([(west, north), (west, south), (east, south), (east, north)])
-        polygon_utm, crs_utm = projection.project_geometry(geometry=polygon)
-        polygon_proj_buff = polygon_utm.buffer(buffer_dist)
-        polygon_buff, _ = projection.project_geometry(
-            geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True
-        )
-        west_buffered, south_buffered, east_buffered, north_buffered = polygon_buff.bounds
+    # convert bounding box to a polygon
+    polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
-        # get the network data from OSM then create the graph
-        response_jsons = downloader._osm_net_download(
-            north=north_buffered,
-            south=south_buffered,
-            east=east_buffered,
-            west=west_buffered,
-            network_type=network_type,
-            timeout=timeout,
-            memory=memory,
-            max_query_area_size=max_query_area_size,
-            custom_filter=custom_filter,
-            custom_settings=custom_settings,
-        )
-        G_buffered = _create_graph(
-            response_jsons,
-            retain_all=retain_all,
-            bidirectional=network_type in settings.bidirectional_network_types,
-        )
-
-        G = truncate.truncate_graph_bbox(
-            G_buffered, north, south, east, west, retain_all=True, truncate_by_edge=truncate_by_edge
-        )
-
-        # simplify the graph topology
-        G_buffered = simplification.simplify_graph(G_buffered)
-
-        # truncate graph by desired bbox to return the graph within the bbox
-        # caller wants
-        G = truncate.truncate_graph_bbox(
-            G_buffered,
-            north,
-            south,
-            east,
-            west,
-            retain_all=retain_all,
-            truncate_by_edge=truncate_by_edge,
-        )
-
-        # count how many street segments in buffered graph emanate from each
-        # intersection in un-buffered graph, to retain true counts for each
-        # intersection, even if some of its neighbors are outside the bbox
-        G.graph["streets_per_node"] = utils_graph.count_streets_per_node(
-            G_buffered, nodes=G.nodes()
-        )
-
-    else:
-        # get the network data from OSM
-        response_jsons = downloader._osm_net_download(
-            north=north,
-            south=south,
-            east=east,
-            west=west,
-            network_type=network_type,
-            timeout=timeout,
-            memory=memory,
-            max_query_area_size=max_query_area_size,
-            custom_filter=custom_filter,
-            custom_settings=custom_settings,
-        )
-
-        # create the graph, then truncate to the bounding box
-        G = _create_graph(
-            response_jsons,
-            retain_all=retain_all,
-            bidirectional=network_type in settings.bidirectional_network_types,
-        )
-        G = truncate.truncate_graph_bbox(
-            G, north, south, east, west, retain_all=retain_all, truncate_by_edge=truncate_by_edge
-        )
-
-        # simplify the graph topology as the last step. don't truncate after
-        # simplifying or you may have simplified out to an endpoint
-        # beyond the truncation distance, in which case you will then strip out
-        # your entire edge
-        if simplify:
-            G = simplification.simplify_graph(G)
+    # create graph using this polygon geometry
+    G = graph_from_polygon(
+        polygon,
+        network_type=network_type,
+        simplify=simplify,
+        retain_all=retain_all,
+        truncate_by_edge=truncate_by_edge,
+        timeout=timeout,
+        memory=memory,
+        max_query_area_size=max_query_area_size,
+        clean_periphery=clean_periphery,
+        custom_filter=custom_filter,
+        custom_settings=custom_settings,
+    )
 
     utils.log(f"graph_from_bbox returned graph with {len(G)} nodes and {len(G.edges())} edges")
     return G
@@ -235,7 +164,7 @@ def graph_from_point(
     G : networkx.MultiDiGraph
     """
     if dist_type not in ["bbox", "network"]:
-        raise InvalidDistanceType('dist_type must be "bbox" or "network"')
+        raise ValueError('dist_type must be "bbox" or "network"')
 
     # create a bounding box from the center point and the distance in each
     # direction
@@ -415,7 +344,7 @@ def graph_from_polygon(
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:
-        raise TypeError("Shape does not have a valid geometry")
+        raise ValueError("The geometry to query within is invalid")
     if not isinstance(polygon, (Polygon, MultiPolygon)):
         raise TypeError(
             "Geometry must be a shapely Polygon or MultiPolygon. If you requested "

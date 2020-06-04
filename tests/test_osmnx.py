@@ -376,6 +376,10 @@ def test_get_network_methods():
         north, south, east, west, network_type="drive_service", truncate_by_edge=True
     )
 
+    # truncate graph by bounding box
+    north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=400)
+    G = ox.truncate.truncate_graph_bbox(G, north, south, east, west)
+
     # graph from address
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
 
