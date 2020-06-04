@@ -136,13 +136,13 @@ def config(
     useful_tags_path : list
         OSM "way" tags to add as graph edge attributes, if present
     osm_xml_node_attrs : list
-        node attributes for .osm XML files
+        node attributes for saving .osm XML files with save_graph_xml function
     osm_xml_node_tags : list
-        node tags for .osm XML files
+        node tags for saving .osm XML files with save_graph_xml function
     osm_xml_way_attrs : list
-        edge attributes for .osm XML files
+        edge attributes for saving .osm XML files with save_graph_xml function
     osm_xml_way_tags : list
-        edge tags for .osm XML files
+        edge tags for for saving .osm XML files with save_graph_xml function
     default_access : string
         default filter for OSM "access" key
     default_crs : string
