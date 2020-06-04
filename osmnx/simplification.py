@@ -113,10 +113,19 @@ def _build_path(G, node, endpoints, path):
             # if this successor is already in the path, ignore it, otherwise add
             # it to the path
             path.append(successor)
-            if successor not in endpoints:
-                # if this successor is not an endpoint, recursively call
-                # build_path until you find an endpoint
-                path = _build_path(G, successor, endpoints, path)
+            while successor not in endpoints:
+                nodes = [n for n in G.successors(successor) if n not in path]
+                # If nodes is empty, we should be on a self contained ring
+                # If nodes is longer than one, we fork into two paths
+                if len(nodes) == 1:
+                    successor = nodes[0]
+                    path.append(successor)
+                else:
+                    # if this successor is not an endpoint, recursively call
+                    # build_path until you find an endpoint
+                    return _build_path(G, successor, endpoints, path)
+
+            # We only enter this else statement if the while loop finishes properly!
             else:
                 # if this successor is an endpoint, we've completed the path,
                 # so return it
