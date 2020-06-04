@@ -122,9 +122,9 @@ def config(
         if True, cache HTTP responses locally instead of calling API
         repetitively for the same request
     log_file : bool
-        if true, save log output to a file in logs_folder
+        if True, save log output to a file in logs_folder
     log_console : bool
-        if true, print log output to the console (terminal window)
+        if True, print log output to the console (terminal window)
     log_level : int
         one of the logger.level constants
     log_name : string
@@ -132,9 +132,9 @@ def config(
     log_filename : string
         name of the log file
     useful_tags_node : list
-        OSM "node" tags to add as graph node attributes, if present
+        OSM "node" tags to add as graph node attributes, when present
     useful_tags_way : list
-        OSM "way" tags to add as graph edge attributes, if present
+        OSM "way" tags to add as graph edge attributes, when present
     osm_xml_node_attrs : list
         node attributes for saving .osm XML files with save_graph_xml function
     osm_xml_node_tags : list
