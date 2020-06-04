@@ -106,48 +106,47 @@ def config(
     """
     Configure OSMnx by setting the default global settings' values.
 
-    Note that any parameters not passed-in by the caller are set to their
-    default values.
+    Any parameters not passed by the caller are set to their default values.
 
     Parameters
     ----------
     data_folder : string
-        where to save and load data files
+        where to save/load data files by default
     logs_folder : string
-        where to write the log files
+        where to save log files
     imgs_folder : string
-        where to save figures
+        where to save figures by default
     cache_folder : string
-        where to save the http response cache
+        where to save HTTP response cache
     use_cache : bool
-        if True, use a local cache to save/retrieve http responses instead of
-        calling API repetitively for the same request URL
+        if True, use a cache HTTP responses locally instead of calling API
+        repetitively for the same request
     log_file : bool
-        if true, save log output to a log file in logs_folder
+        if true, save log output to a file in logs_folder
     log_console : bool
-        if true, print log output to the console
+        if true, print log output to the console (terminal window)
     log_level : int
         one of the logger.level constants
     log_name : string
         name of the logger
     log_filename : string
-        filename of the log
+        name of the log file
     useful_tags_node : list
-        a list of useful OSM tags to attempt to save from node elements
+        OSM "node" tags to add as graph node attributes, if present
     useful_tags_path : list
-        a list of useful OSM tags to attempt to save from path elements
+        OSM "way" tags to add as graph edge attributes, if present
     osm_xml_node_attrs : list
-        list of node attributes for .osm xml files
+        node attributes for .osm XML files
     osm_xml_node_tags : list
-        list of node tags for .osm xml files
+        node tags for .osm XML files
     osm_xml_way_attrs : list
-        list of edge attributes for .osm xml files
+        edge attributes for .osm XML files
     osm_xml_way_tags : list
-        list of edge tags for .osm xml files
+        edge tags for .osm XML files
     default_access : string
         default filter for OSM "access" key
     default_crs : string
-        default CRS to set when creating graphs
+        default coordinate reference system to set when creating graphs
     default_user_agent : string
         HTTP header user-agent
     default_referer : string
@@ -155,15 +154,15 @@ def config(
     default_accept_language : string
         HTTP header accept-language
     nominatim_endpoint : string
-        which API endpoint to use for nominatim queries
+        the API endpoint to use for nominatim queries
     nominatim_key : string
         your API key, if you are using an endpoint that requires one
     overpass_endpoint : string
-        which API endpoint to use for overpass queries
+        the API endpoint to use for overpass queries
     all_oneway : boolean
-        if True, forces all paths to be loaded as oneway ways, preserving
+        if True, forces all ways to be loaded as oneway ways, preserving
         the original order of nodes stored in the OSM way XML. Only use if
-        specifically saving to .osm xml file with save_graph_xml function.
+        specifically saving to .osm XML file with save_graph_xml function.
 
     Returns
     -------
