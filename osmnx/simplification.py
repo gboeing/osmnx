@@ -143,12 +143,10 @@ def _build_path(G, node, endpoints, path):
 
 def _get_paths_to_simplify(G, strict=True):
     """
-    Create a list of all the paths to be simplified between endpoint nodes.
+    Generate all the paths to be simplified between endpoint nodes.
 
     The path is ordered from the first endpoint, through the interstitial nodes,
-    to the second endpoint. If your street network is in a rural area with many
-    interstitial nodes between true edge endpoints, you may want to increase
-    your system's recursion limit to avoid recursion errors.
+    to the second endpoint.
 
     Parameters
     ----------
@@ -158,15 +156,13 @@ def _get_paths_to_simplify(G, strict=True):
         if False, allow nodes to be end points even if they fail all other rules
         but have edges with different OSM IDs
 
-    Returns
-    -------
-    paths_to_simplify : list
+    Yields
+    ------
+    path_to_simplify : list
     """
     # first identify all the nodes that are endpoints
     endpoints = set([node for node in G.nodes() if _is_endpoint(G, node, strict=strict)])
     utils.log(f"Identified {len(endpoints)} edge endpoints")
-
-    paths_to_simplify = []
 
     # for each endpoint node, look at each of its successor nodes
     for node in endpoints:
@@ -175,8 +171,7 @@ def _get_paths_to_simplify(G, strict=True):
                 # if the successor is not an endpoint, build a path from the
                 # endpoint node to the next endpoint node
                 try:
-                    path = _build_path(G, successor, endpoints, path=[node, successor])
-                    paths_to_simplify.append(path)
+                    yield _build_path(G, successor, endpoints, path=[node, successor])
                 except RecursionError:
                     utils.log(
                         "Exceeded max depth, moving on to next endpoint successor", level=lg.WARNING
@@ -187,9 +182,6 @@ def _get_paths_to_simplify(G, strict=True):
                     # rural areas) with too many nodes between true endpoints.
                     # handle it by just ignoring that component and letting its
                     # topology remain intact (this should be a rare occurrence)
-
-    utils.log("Constructed all paths to simplify")
-    return paths_to_simplify
 
 
 def _is_simplified(G):
