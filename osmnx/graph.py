@@ -71,8 +71,8 @@ def graph_from_bbox(
         max area for any part of the geometry in meters: any polygon bigger
         will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool
-        if True (and simplify=True), buffer 0.5km to get a graph larger than
-        requested, then simplify, then truncate it to requested spatial extent
+        if True, buffer 500m to get a graph larger than requested, then
+        simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
@@ -222,8 +222,8 @@ def graph_from_point(
         max area for any part of the geometry in meters: any polygon bigger
         will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool,
-        if True (and simplify=True), buffer 0.5km to get a graph larger than
-        requested, then simplify, then truncate it to requested spatial extent
+        if True, buffer 500m to get a graph larger than requested, then
+        simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
@@ -322,8 +322,8 @@ def graph_from_address(
         float, max size for any part of the geometry, in square degrees: any
         polygon bigger will get divided up for multiple queries to API
     clean_periphery : bool,
-        if True (and simplify=True), buffer 0.5km to get a graph larger than
-        requested, then simplify, then truncate it to requested spatial extent
+        if True, buffer 500m to get a graph larger than requested, then
+        simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
@@ -400,8 +400,8 @@ def graph_from_polygon(
         max area for any part of the geometry in meters: any polygon bigger
         will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool
-        if True (and simplify=True), buffer 0.5km to get a graph larger than
-        requested, then simplify, then truncate it to requested spatial extent
+        if True, buffer 500m to get a graph larger than requested, then
+        simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
@@ -424,7 +424,7 @@ def graph_from_polygon(
             "See OSMnx documentation for details."
         )
 
-    if clean_periphery and simplify:
+    if clean_periphery:
         # create a new buffered polygon 0.5km around the desired one
         buffer_dist = 500
         polygon_utm, crs_utm = projection.project_geometry(geometry=polygon)
@@ -433,8 +433,7 @@ def graph_from_polygon(
             geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True
         )
 
-        # get the network data from OSM,  create the buffered graph, then
-        # truncate it to the buffered polygon
+        # download the network data from OSM
         response_jsons = downloader._osm_net_download(
             polygon=polygon_buffered,
             network_type=network_type,
@@ -444,19 +443,24 @@ def graph_from_polygon(
             custom_filter=custom_filter,
             custom_settings=custom_settings,
         )
+
+        # create the buffered graph
         G_buffered = _create_graph(
             response_jsons,
             retain_all=True,
             bidirectional=network_type in settings.bidirectional_network_types,
         )
+
+        # truncate buffered graph to the buffered polygon
         G_buffered = truncate.truncate_graph_polygon(
             G_buffered, polygon_buffered, retain_all=True, truncate_by_edge=truncate_by_edge
         )
 
         # simplify the graph topology
-        G_buffered = simplification.simplify_graph(G_buffered)
+        if simplify:
+            G_buffered = simplification.simplify_graph(G_buffered)
 
-        # truncate graph by polygon to return the graph within the polygon that
+        # truncate graph by original polygon to return graph within polygon
         # caller wants. don't simplify again - this allows us to retain
         # intersections along the street that may now only connect 2 street
         # segments in the network, but in reality also connect to an
@@ -472,6 +476,7 @@ def graph_from_polygon(
             G_buffered, nodes=G.nodes()
         )
 
+    # if clean_periphery=False
     else:
         # download a list of API responses for the polygon/multipolygon
         response_jsons = downloader._osm_net_download(
@@ -561,8 +566,8 @@ def graph_from_place(
         max area for any part of the geometry in meters: any polygon bigger
         will get divided up for multiple queries to API (default 50km x 50km)
     clean_periphery : bool
-        if True (and simplify=True), buffer 0.5km to get a graph larger than
-        requested, then simplify, then truncate it to requested spatial extent
+        if True, buffer 500m to get a graph larger than requested, then
+        simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
@@ -687,7 +692,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     -------
     G : networkx.MultiDiGraph
     """
-    utils.log("Creating networkx graph from downloaded OSM data...")
+    utils.log("Creating graph from downloaded OSM data...")
 
     # make sure we got data back from the server requests
     elements = []
@@ -715,7 +720,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     for node, data in nodes.items():
         G.add_node(node, **data)
 
-    # add each osm way (aka, path) to the graph
+    # add each osm way (ie, a path of edges) to the graph
     G = _add_paths(G, paths, bidirectional=bidirectional)
 
     # retain only the largest connected component, if caller did not
