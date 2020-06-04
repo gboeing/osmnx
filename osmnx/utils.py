@@ -88,7 +88,7 @@ def config(
     log_name=settings.log_name,
     log_filename=settings.log_filename,
     useful_tags_node=settings.useful_tags_node,
-    useful_tags_path=settings.useful_tags_path,
+    useful_tags_way=settings.useful_tags_way,
     osm_xml_node_attrs=settings.osm_xml_node_attrs,
     osm_xml_node_tags=settings.osm_xml_node_tags,
     osm_xml_way_attrs=settings.osm_xml_way_attrs,
@@ -133,7 +133,7 @@ def config(
         name of the log file
     useful_tags_node : list
         OSM "node" tags to add as graph node attributes, if present
-    useful_tags_path : list
+    useful_tags_way : list
         OSM "way" tags to add as graph edge attributes, if present
     osm_xml_node_attrs : list
         node attributes for saving .osm XML files with save_graph_xml function
@@ -180,7 +180,7 @@ def config(
     settings.log_name = log_name
     settings.log_filename = log_filename
     settings.useful_tags_node = useful_tags_node
-    settings.useful_tags_path = useful_tags_path
+    settings.useful_tags_way = useful_tags_way
     settings.osm_xml_node_attrs = osm_xml_node_attrs
     settings.osm_xml_node_tags = osm_xml_node_tags
     settings.osm_xml_way_attrs = osm_xml_way_attrs

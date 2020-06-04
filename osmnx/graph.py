@@ -778,7 +778,7 @@ def _convert_path(element):
     path["nodes"] = [group[0] for group in grouped_list]
 
     if "tags" in element:
-        for useful_tag in settings.useful_tags_path:
+        for useful_tag in settings.useful_tags_way:
             if useful_tag in element["tags"]:
                 path[useful_tag] = element["tags"][useful_tag]
     return path

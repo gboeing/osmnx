@@ -21,7 +21,7 @@ log_filename = "osmnx"
 # useful osm tags - note that load_graphml expects a consistent set of tag names
 # for parsing
 useful_tags_node = ["ref", "highway"]
-useful_tags_path = [
+useful_tags_way = [
     "bridge",
     "tunnel",
     "oneway",
