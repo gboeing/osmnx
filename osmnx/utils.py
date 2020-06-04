@@ -119,7 +119,7 @@ def config(
     cache_folder : string
         where to save HTTP response cache
     use_cache : bool
-        if True, use a cache HTTP responses locally instead of calling API
+        if True, cache HTTP responses locally instead of calling API
         repetitively for the same request
     log_file : bool
         if true, save log output to a file in logs_folder
