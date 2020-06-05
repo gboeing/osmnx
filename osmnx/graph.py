@@ -356,15 +356,13 @@ def graph_from_polygon(
     if clean_periphery:
         # create a new buffered polygon 0.5km around the desired one
         buffer_dist = 500
-        polygon_utm, crs_utm = projection.project_geometry(geometry=polygon)
-        polygon_proj_buff = polygon_utm.buffer(buffer_dist)
-        polygon_buffered, _ = projection.project_geometry(
-            geometry=polygon_proj_buff, crs=crs_utm, to_latlong=True
-        )
+        poly_proj, crs_utm = projection.project_geometry(polygon)
+        poly_proj_buff = poly_proj.buffer(buffer_dist)
+        poly_buff, _ = projection.project_geometry(poly_proj_buff, crs=crs_utm, to_latlong=True)
 
         # download the network data from OSM
         response_jsons = downloader._osm_net_download(
-            polygon=polygon_buffered,
+            polygon=poly_buff,
             network_type=network_type,
             timeout=timeout,
             memory=memory,
@@ -373,41 +371,40 @@ def graph_from_polygon(
             custom_settings=custom_settings,
         )
 
-        # create the buffered graph
-        G_buffered = _create_graph(
+        # create buffered graph from the downloaded data
+        G_buff = _create_graph(
             response_jsons,
             retain_all=True,
             bidirectional=network_type in settings.bidirectional_network_types,
         )
 
-        # truncate buffered graph to the buffered polygon
-        G_buffered = truncate.truncate_graph_polygon(
-            G_buffered, polygon_buffered, retain_all=True, truncate_by_edge=truncate_by_edge
+        # truncate buffered graph to the buffered polygon and retain all
+        # during this pass
+        G_buff = truncate.truncate_graph_polygon(
+            G_buff, poly_buff, retain_all=True, truncate_by_edge=truncate_by_edge
         )
 
         # simplify the graph topology
         if simplify:
-            G_buffered = simplification.simplify_graph(G_buffered)
+            G_buff = simplification.simplify_graph(G_buff)
 
         # truncate graph by original polygon to return graph within polygon
-        # caller wants. don't simplify again - this allows us to retain
+        # caller wants. don't simplify again: this allows us to retain
         # intersections along the street that may now only connect 2 street
         # segments in the network, but in reality also connect to an
         # intersection just outside the polygon
         G = truncate.truncate_graph_polygon(
-            G_buffered, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge
+            G_buff, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge
         )
 
         # count how many street segments in buffered graph emanate from each
         # intersection in un-buffered graph, to retain true counts for each
         # intersection, even if some of its neighbors are outside the polygon
-        G.graph["streets_per_node"] = utils_graph.count_streets_per_node(
-            G_buffered, nodes=G.nodes()
-        )
+        G.graph["streets_per_node"] = utils_graph.count_streets_per_node(G_buff, nodes=G.nodes())
 
-    # if clean_periphery=False
+    # if clean_periphery=False, just use the polygon as provided
     else:
-        # download a list of API responses for the polygon/multipolygon
+        # download the network data from OSM
         response_jsons = downloader._osm_net_download(
             polygon=polygon,
             network_type=network_type,
@@ -418,7 +415,7 @@ def graph_from_polygon(
             custom_settings=custom_settings,
         )
 
-        # create the graph from the downloaded data
+        # create graph from the downloaded data
         G = _create_graph(
             response_jsons,
             retain_all=True,
