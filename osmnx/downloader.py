@@ -35,8 +35,7 @@ def _get_osm_filter(network_type):
     """
     # define preset queries to send to the API. specifying way["highway"]
     # means that all ways returned must have a highway tag. the filters then
-    # remove ways by tag/value. the '>' makes it recurse so we get ways and
-    # the ways' nodes.
+    # remove ways by tag/value.
     filters = {}
 
     # driving: filter out un-drivable roads, service roads, private ways, and
@@ -345,8 +344,8 @@ def _osm_net_download(polygon, network_type, custom_filter):
         f"Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)"
     )
 
-    # pass each polygon exterior coordinates in the list to the API, one at
-    # a time
+    # pass each polygon exterior coordinates in the list to the API, one at a
+    # time. The '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
         query_str = f"{overpass_settings};(way{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
         response_json = overpass_request(data={"data": query_str})
