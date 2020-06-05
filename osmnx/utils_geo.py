@@ -247,7 +247,7 @@ def round_geometry_coords(shape, precision):
         raise TypeError(f"cannot round coordinates of unhandled geometry type: {type(shape)}")
 
 
-def _consolidate_subdivide_geometry(geometry):
+def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
     """
     Consolidate and subdivide some geometry.
 
@@ -259,14 +259,21 @@ def _consolidate_subdivide_geometry(geometry):
     ----------
     geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the geometry to consolidate and subdivide
+    max_query_area_size : int
+        maximum area for any part of the geometry in meters: any polygon
+        bigger than this will get divided up for multiple queries to API
+        (default 50km x 50km). if None, use settings.max_query_area_size
 
     Returns
     -------
     geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
     """
+    if max_query_area_size is None:
+        max_query_area_size = settings.max_query_area_size
+
     # let the linear length of the quadrats (with which to subdivide the
     # geometry) be the square root of max area size
-    quadrat_width = math.sqrt(settings.max_query_area_size)
+    quadrat_width = math.sqrt(max_query_area_size)
 
     if not isinstance(geometry, (Polygon, MultiPolygon)):
         raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
@@ -274,12 +281,12 @@ def _consolidate_subdivide_geometry(geometry):
     # if geometry is a MultiPolygon OR a single Polygon whose area exceeds the
     # max size, get the convex hull around the geometry
     if isinstance(geometry, MultiPolygon) or (
-        isinstance(geometry, Polygon) and geometry.area > settings.max_query_area_size
+        isinstance(geometry, Polygon) and geometry.area > max_query_area_size
     ):
         geometry = geometry.convex_hull
 
     # if geometry area exceeds max size, subdivide it into smaller sub-polygons
-    if geometry.area > settings.max_query_area_size:
+    if geometry.area > max_query_area_size:
         geometry = _quadrat_cut_geometry(geometry, quadrat_width=quadrat_width)
 
     if isinstance(geometry, Polygon):

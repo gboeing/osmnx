@@ -207,13 +207,16 @@ def config(
     osm_xml_way_tags : list
         edge tags for for saving .osm XML files with save_graph_xml function
     overpass_settings : string
-        settings for overpass queries
+        Settings string for overpass queries. For example, to query historical
+        OSM data as of a certain date:
+        `'[out:json][timeout:90][date:"2019-10-28T19:20:00Z"]'`.
+        Use with caution.
     timeout : int
         the timeout interval for the HTTP request and for API to use while
         running the query
     memory : int
-        overpass server memory allocation size for the query, in bytes. If
-        None, server will use its default allocation size
+        Overpass server memory allocation size for the query, in bytes. If
+        None, server will use its default allocation size. Use with caution.
     max_query_area_size : int
         maximum area for any part of the geometry in meters: any polygon
         bigger than this will get divided up for multiple queries to API

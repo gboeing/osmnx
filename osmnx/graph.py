@@ -53,7 +53,8 @@ def graph_from_bbox(
     west : float
         western longitude of bounding box
     network_type : string
-        what type of street network to get
+        what type of street network to get if custom_filter is None. One of
+        'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
     simplify : bool
         if True, simplify the graph topology
     retain_all : bool
@@ -66,7 +67,9 @@ def graph_from_bbox(
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
+        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
+        in a network_type that is in settings.bidirectional_network_types if
+        you want graph to be fully bidirectional.
     timeout : None
         deprecated, use ox.config(timeout=value) instead to configure this
         setting via the settings module
@@ -136,7 +139,8 @@ def graph_from_point(
         box of the distance parameter. if 'network', retain only those nodes
         within some network distance from the center-most node.
     network_type : string
-        what type of street network to get
+        what type of street network to get if custom_filter is None. One of
+        'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
     simplify : bool
         if True, simplify the graph topology
     retain_all : bool
@@ -149,7 +153,9 @@ def graph_from_point(
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
+        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
+        in a network_type that is in settings.bidirectional_network_types if
+        you want graph to be fully bidirectional.
     timeout : None
         deprecated, use ox.config(timeout=value) instead to configure this
         setting via the settings module
@@ -167,7 +173,7 @@ def graph_from_point(
     -------
     G : networkx.MultiDiGraph
     """
-    if dist_type not in ["bbox", "network"]:
+    if dist_type not in {"bbox", "network"}:
         raise ValueError('dist_type must be "bbox" or "network"')
 
     # create a bounding box from the center point and the distance in each
@@ -236,7 +242,8 @@ def graph_from_address(
         if 'network', retain only those nodes within some network distance from
         the center-most node.
     network_type : string
-        what type of street network to get
+        what type of street network to get if custom_filter is None. One of
+        'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
     simplify : bool
         if True, simplify the graph topology
     retain_all : bool
@@ -251,7 +258,9 @@ def graph_from_address(
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
+        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
+        in a network_type that is in settings.bidirectional_network_types if
+        you want graph to be fully bidirectional.
     timeout : None
         deprecated, use ox.config(timeout=value) instead to configure this
         setting via the settings module
@@ -329,7 +338,8 @@ def graph_from_place(
     query : string or dict or list
         the place(s) to geocode/download data for
     network_type : string
-        what type of street network to get
+        what type of street network to get if custom_filter is None. One of
+        'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
     simplify : bool
         if True, simplify the graph topology
     retain_all : bool
@@ -346,7 +356,9 @@ def graph_from_place(
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
+        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
+        in a network_type that is in settings.bidirectional_network_types if
+        you want graph to be fully bidirectional.
     timeout : None
         deprecated, use ox.config(timeout=value) instead to configure this
         setting via the settings module
@@ -421,7 +433,8 @@ def graph_from_polygon(
         the shape to get network data within. coordinates should be in units of
         latitude-longitude degrees.
     network_type : string
-        what type of street network to get
+        what type of street network to get if custom_filter is None. One of
+        'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
     simplify : bool
         if True, simplify the graph topology
     retain_all : bool
@@ -434,7 +447,9 @@ def graph_from_polygon(
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
+        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
+        in a network_type that is in settings.bidirectional_network_types if
+        you want graph to be fully bidirectional.
     timeout : None
         deprecated, use ox.config(timeout=value) instead to configure this
         setting via the settings module
@@ -478,7 +493,7 @@ def graph_from_polygon(
         poly_proj_buff = poly_proj.buffer(buffer_dist)
         poly_buff, _ = projection.project_geometry(poly_proj_buff, crs=crs_utm, to_latlong=True)
 
-        # download the network data from OSM
+        # download the network data from OSM within buffered polygon
         response_jsons = downloader._osm_net_download(poly_buff, network_type, custom_filter)
 
         # create buffered graph from the downloaded data
@@ -488,8 +503,10 @@ def graph_from_polygon(
             bidirectional=network_type in settings.bidirectional_network_types,
         )
 
-        # truncate buffered graph to the buffered polygon and retain all
-        # during this pass
+        # truncate buffered graph to the buffered polygon and retain_all for
+        # now. needed because overpass returns entire ways that also include
+        # nodes outside the poly if the way (that is, a way with a single OSM
+        # ID) has a node inside the poly at some point.
         G_buff = truncate.truncate_graph_polygon(
             G_buff, poly_buff, retain_all=True, truncate_by_edge=truncate_by_edge
         )
@@ -604,7 +621,7 @@ def _overpass_json_from_file(filepath):
 
 def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     """
-    Create a networkx graph from Overpass API HTTP response objects.
+    Create a networkx MultiDiGraph from Overpass API responses.
 
     Parameters
     ----------
@@ -803,8 +820,7 @@ def _add_paths(G, paths, bidirectional=False):
     -------
     None
     """
-    # the list of values OSM uses in its 'oneway' tag to denote True updated
-    # list of of values OSM uses based on
+    # the list of values OSM uses in its 'oneway' tag to denote True
     # https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf
     osm_oneway_values = ["yes", "true", "1", "-1", "T", "F"]
 
