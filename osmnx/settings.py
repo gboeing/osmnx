@@ -18,10 +18,11 @@ log_level = lg.INFO
 log_name = "osmnx"
 log_filename = "osmnx"
 
-# useful osm tags - note that load_graphml expects a consistent set of tag names
-# for parsing
+# OSM node/way tags to add as graph node/edge attributes when these tags are
+# present in the data retrieved from OSM
+# NOTE: load_graphml function expects a consistent set of tags for parsing
 useful_tags_node = ["ref", "highway"]
-useful_tags_path = [
+useful_tags_way = [
     "bridge",
     "tunnel",
     "oneway",

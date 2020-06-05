@@ -88,7 +88,7 @@ def config(
     log_name=settings.log_name,
     log_filename=settings.log_filename,
     useful_tags_node=settings.useful_tags_node,
-    useful_tags_path=settings.useful_tags_path,
+    useful_tags_way=settings.useful_tags_way,
     osm_xml_node_attrs=settings.osm_xml_node_attrs,
     osm_xml_node_tags=settings.osm_xml_node_tags,
     osm_xml_way_attrs=settings.osm_xml_way_attrs,
@@ -122,9 +122,9 @@ def config(
         if True, cache HTTP responses locally instead of calling API
         repetitively for the same request
     log_file : bool
-        if true, save log output to a file in logs_folder
+        if True, save log output to a file in logs_folder
     log_console : bool
-        if true, print log output to the console (terminal window)
+        if True, print log output to the console (terminal window)
     log_level : int
         one of the logger.level constants
     log_name : string
@@ -132,17 +132,17 @@ def config(
     log_filename : string
         name of the log file
     useful_tags_node : list
-        OSM "node" tags to add as graph node attributes, if present
-    useful_tags_path : list
-        OSM "way" tags to add as graph edge attributes, if present
+        OSM "node" tags to add as graph node attributes, when present
+    useful_tags_way : list
+        OSM "way" tags to add as graph edge attributes, when present
     osm_xml_node_attrs : list
-        node attributes for .osm XML files
+        node attributes for saving .osm XML files with save_graph_xml function
     osm_xml_node_tags : list
-        node tags for .osm XML files
+        node tags for saving .osm XML files with save_graph_xml function
     osm_xml_way_attrs : list
-        edge attributes for .osm XML files
+        edge attributes for saving .osm XML files with save_graph_xml function
     osm_xml_way_tags : list
-        edge tags for .osm XML files
+        edge tags for for saving .osm XML files with save_graph_xml function
     default_access : string
         default filter for OSM "access" key
     default_crs : string
@@ -180,9 +180,7 @@ def config(
     settings.log_name = log_name
     settings.log_filename = log_filename
     settings.useful_tags_node = useful_tags_node
-    settings.useful_tags_path = useful_tags_path
-    settings.useful_tags_node = list(set(useful_tags_node + osm_xml_node_attrs + osm_xml_node_tags))
-    settings.useful_tags_path = list(set(useful_tags_path + osm_xml_way_attrs + osm_xml_way_tags))
+    settings.useful_tags_way = useful_tags_way
     settings.osm_xml_node_attrs = osm_xml_node_attrs
     settings.osm_xml_node_tags = osm_xml_node_tags
     settings.osm_xml_way_attrs = osm_xml_way_attrs
