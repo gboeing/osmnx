@@ -9,6 +9,64 @@ import unicodedata
 from . import settings
 
 
+def _handle_deprecated_params(
+    timeout=None, memory=None, max_query_area_size=None, custom_settings=None
+):
+    """
+    Pass deprecated function parameters into the global settings.
+
+    Parameters
+    ----------
+    timeout : int
+        timeout setting
+    memory : int
+        memory setting
+    max_query_area_size : float
+        max_query_area_size setting
+    custom_settings : string
+        custom_settings setting
+
+    Returns
+    -------
+    None
+    """
+    params = []
+
+    # if any params are not None, set the corresponding setting in the
+    # settings module to that parameters value
+    if timeout is not None:
+        params.append("timeout")
+        settings.timeout = timeout
+
+    if memory is not None:
+        params.append("memory")
+        settings.memory = memory
+
+    if max_query_area_size is not None:
+        params.append("max_query_area_size")
+        settings.max_query_area_size = max_query_area_size
+
+    if custom_settings is not None:
+        params.append("custom_settings")
+        settings.overpass_settings = custom_settings
+
+    # warn user of the deprecation
+    if len(params) > 0:
+        from warnings import warn
+
+        param_str = ",".join([f'"{p}"' for p in params])
+        param_str = f"[{param_str}]"
+        msg = (
+            f"The parameters {param_str} have been deprecated and will be "
+            f"removed in the next release. All of these parameters have been "
+            f"replaced by settings in the settings module, which you can set "
+            f"via ox.config(setting_name=value). Also note that the old "
+            f"custom_settings parameter has been renamed overpass_settings "
+            f"in the settings module."
+        )
+        warn(msg)
+
+
 def citation():
     """
     Print the OSMnx package's citation information.
@@ -93,6 +151,10 @@ def config(
     osm_xml_node_tags=settings.osm_xml_node_tags,
     osm_xml_way_attrs=settings.osm_xml_way_attrs,
     osm_xml_way_tags=settings.osm_xml_way_tags,
+    overpass_settings=settings.overpass_settings,
+    timeout=settings.timeout,
+    memory=settings.memory,
+    max_query_area_size=settings.max_query_area_size,
     default_access=settings.default_access,
     default_crs=settings.default_crs,
     default_user_agent=settings.default_user_agent,
@@ -106,7 +168,8 @@ def config(
     """
     Configure OSMnx by setting the default global settings' values.
 
-    Any parameters not passed by the caller are set to their default values.
+    Any parameters not passed by the caller are set to their original default
+    values.
 
     Parameters
     ----------
@@ -143,6 +206,18 @@ def config(
         edge attributes for saving .osm XML files with save_graph_xml function
     osm_xml_way_tags : list
         edge tags for for saving .osm XML files with save_graph_xml function
+    overpass_settings : string
+        settings for overpass queries
+    timeout : int
+        the timeout interval for the HTTP request and for API to use while
+        running the query
+    memory : int
+        overpass server memory allocation size for the query, in bytes. If
+        None, server will use its default allocation size
+    max_query_area_size : int
+        maximum area for any part of the geometry in meters: any polygon
+        bigger than this will get divided up for multiple queries to API
+        (default 50km x 50km)
     default_access : string
         default filter for OSM "access" key
     default_crs : string
@@ -168,7 +243,7 @@ def config(
     -------
     None
     """
-    # set each global variable to the passed-in parameter value
+    # set each global setting to the passed-in value
     settings.use_cache = use_cache
     settings.cache_folder = cache_folder
     settings.data_folder = data_folder
@@ -185,6 +260,10 @@ def config(
     settings.osm_xml_node_tags = osm_xml_node_tags
     settings.osm_xml_way_attrs = osm_xml_way_attrs
     settings.osm_xml_way_tags = osm_xml_way_tags
+    settings.overpass_settings = overpass_settings
+    settings.timeout = timeout
+    settings.memory = memory
+    settings.max_query_area_size = max_query_area_size
     settings.default_access = default_access
     settings.default_crs = default_crs
     settings.default_user_agent = default_user_agent

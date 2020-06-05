@@ -32,12 +32,12 @@ def graph_from_bbox(
     simplify=True,
     retain_all=False,
     truncate_by_edge=False,
-    timeout=180,
-    memory=None,
-    max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
     custom_filter=None,
+    timeout=None,
+    memory=None,
     custom_settings=None,
+    max_query_area_size=None,
 ):
     """
     Create a graph from OSM within some bounding box.
@@ -55,28 +55,30 @@ def graph_from_bbox(
     network_type : string
         what type of street network to get
     simplify : bool
-        if true, simplify the graph topology
+        if True, simplify the graph topology
     retain_all : bool
         if True, return the entire graph even if it is not connected
     truncate_by_edge : bool
-        if True retain node if it's outside bbox but at least one of node's
-        neighbors are within bbox
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    max_query_area_size : float
-        max area for any part of the geometry in meters: any polygon bigger
-        will get divided up for multiple queries to API (default 50km x 50km)
+        if True, retain node if it's outside bounding box but at least one of
+        node's neighbors are within the bounding box
     clean_periphery : bool
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
-    custom_settings : string
-        custom settings to be used in overpass query instead of the defaults
+    timeout : None
+        deprecated, use ox.config(timeout=value) instead to configure this
+        setting via the settings module
+    memory : None
+        deprecated, use ox.config(memory=value) instead to configure this
+        setting via the settings module
+    custom_settings : None
+        deprecated, use ox.config(custom_settings=value) instead to configure
+        this setting via the settings module
+    max_query_area_size : None
+        deprecated, use ox.config(max_query_area_size=value) instead to
+        configure this setting via the settings module
 
     Returns
     -------
@@ -92,12 +94,12 @@ def graph_from_bbox(
         simplify=simplify,
         retain_all=retain_all,
         truncate_by_edge=truncate_by_edge,
-        timeout=timeout,
-        memory=memory,
-        max_query_area_size=max_query_area_size,
         clean_periphery=clean_periphery,
         custom_filter=custom_filter,
+        timeout=timeout,
+        memory=memory,
         custom_settings=custom_settings,
+        max_query_area_size=max_query_area_size,
     )
 
     utils.log(f"graph_from_bbox returned graph with {len(G)} nodes and {len(G.edges())} edges")
@@ -112,12 +114,12 @@ def graph_from_point(
     simplify=True,
     retain_all=False,
     truncate_by_edge=False,
-    timeout=180,
-    memory=None,
-    max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
     custom_filter=None,
+    timeout=None,
+    memory=None,
     custom_settings=None,
+    max_query_area_size=None,
 ):
     """
     Create a graph from OSM within some distance of some (lat, lng) point.
@@ -136,28 +138,30 @@ def graph_from_point(
     network_type : string
         what type of street network to get
     simplify : bool
-        if true, simplify the graph topology
+        if True, simplify the graph topology
     retain_all : bool
         if True, return the entire graph even if it is not connected
     truncate_by_edge : bool
-        if True retain node if it's outside bbox but at least one of node's
-        neighbors are within bbox
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    max_query_area_size : float
-        max area for any part of the geometry in meters: any polygon bigger
-        will get divided up for multiple queries to API (default 50km x 50km)
+        if True, retain node if it's outside bounding box but at least one of
+        node's neighbors are within bounding box
     clean_periphery : bool,
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
-    custom_settings : string
-        custom settings to be used in overpass query instead of the defaults
+    timeout : None
+        deprecated, use ox.config(timeout=value) instead to configure this
+        setting via the settings module
+    memory : None
+        deprecated, use ox.config(memory=value) instead to configure this
+        setting via the settings module
+    custom_settings : None
+        deprecated, use ox.config(custom_settings=value) instead to configure
+        this setting via the settings module
+    max_query_area_size : None
+        deprecated, use ox.config(max_query_area_size=value) instead to
+        configure this setting via the settings module
 
     Returns
     -------
@@ -180,12 +184,12 @@ def graph_from_point(
         simplify=simplify,
         retain_all=retain_all,
         truncate_by_edge=truncate_by_edge,
-        timeout=timeout,
-        memory=memory,
-        max_query_area_size=max_query_area_size,
         clean_periphery=clean_periphery,
         custom_filter=custom_filter,
+        timeout=timeout,
+        memory=memory,
         custom_settings=custom_settings,
+        max_query_area_size=max_query_area_size,
     )
 
     # if the network dist_type is network, find the node in the graph
@@ -208,12 +212,12 @@ def graph_from_address(
     retain_all=False,
     truncate_by_edge=False,
     return_coords=False,
-    timeout=180,
-    memory=None,
-    max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
     custom_filter=None,
+    timeout=None,
+    memory=None,
     custom_settings=None,
+    max_query_area_size=None,
 ):
     """
     Create a graph from OSM within some distance of some address.
@@ -234,30 +238,32 @@ def graph_from_address(
     network_type : string
         what type of street network to get
     simplify : bool
-        if true, simplify the graph topology
+        if True, simplify the graph topology
     retain_all : bool
         if True, return the entire graph even if it is not connected
     truncate_by_edge : bool
-        if True retain node if it's outside bbox but at least one of node's
-        neighbors are within bbox
+        if True, retain node if it's outside bounding box but at least one of
+        node's neighbors are within bounding box
     return_coords : bool
         optionally also return the geocoded coordinates of the address
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    max_query_area_size
-        float, max size for any part of the geometry, in square degrees: any
-        polygon bigger will get divided up for multiple queries to API
     clean_periphery : bool,
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
-    custom_settings : string
-        custom settings to be used in overpass query instead of the defaults
+    timeout : None
+        deprecated, use ox.config(timeout=value) instead to configure this
+        setting via the settings module
+    memory : None
+        deprecated, use ox.config(memory=value) instead to configure this
+        setting via the settings module
+    custom_settings : None
+        deprecated, use ox.config(custom_settings=value) instead to configure
+        this setting via the settings module
+    max_query_area_size : None
+        deprecated, use ox.config(max_query_area_size=value) instead to
+        configure this setting via the settings module
 
     Returns
     -------
@@ -275,12 +281,12 @@ def graph_from_address(
         simplify=simplify,
         retain_all=retain_all,
         truncate_by_edge=truncate_by_edge,
-        timeout=timeout,
-        memory=memory,
-        max_query_area_size=max_query_area_size,
         clean_periphery=clean_periphery,
         custom_filter=custom_filter,
+        timeout=timeout,
+        memory=memory,
         custom_settings=custom_settings,
+        max_query_area_size=max_query_area_size,
     )
     utils.log(f"graph_from_address returned graph with {len(G)} nodes and {len(G.edges())} edges")
 
@@ -290,18 +296,121 @@ def graph_from_address(
         return G
 
 
+def graph_from_place(
+    query,
+    network_type="all_private",
+    simplify=True,
+    retain_all=False,
+    truncate_by_edge=False,
+    which_result=1,
+    buffer_dist=None,
+    clean_periphery=True,
+    custom_filter=None,
+    timeout=None,
+    memory=None,
+    custom_settings=None,
+    max_query_area_size=None,
+):
+    """
+    Create graph from OSM within the boundaries of some geocodable place(s).
+
+    The query must be geocodable and OSM must have polygon boundaries for the
+    geocode result. If OSM does not have a polygon for this place, you can
+    instead get its street network using the graph_from_address function, which
+    geocodes the place name to a point and gets the network within some distance
+    of that point. Alternatively, you might try to vary the which_result
+    parameter to use a different geocode result. For example, the first geocode
+    result (ie, the default) might resolve to a point geometry, but the second
+    geocode result for this query might resolve to a polygon, in which case you
+    can use graph_from_place with which_result=2.
+
+    Parameters
+    ----------
+    query : string or dict or list
+        the place(s) to geocode/download data for
+    network_type : string
+        what type of street network to get
+    simplify : bool
+        if True, simplify the graph topology
+    retain_all : bool
+        if True, return the entire graph even if it is not connected
+    truncate_by_edge : bool
+        if True, retain node if it's outside polygon but at least one of
+        node's neighbors are within bbox
+    which_result : int
+        max number of results to return and which to process upon receipt
+    buffer_dist : float
+        distance to buffer around the place geometry, in meters
+    clean_periphery : bool
+        if True, buffer 500m to get a graph larger than requested, then
+        simplify, then truncate it to requested spatial boundaries
+    custom_filter : string
+        a custom network filter to be used instead of the network_type presets,
+        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
+    timeout : None
+        deprecated, use ox.config(timeout=value) instead to configure this
+        setting via the settings module
+    memory : None
+        deprecated, use ox.config(memory=value) instead to configure this
+        setting via the settings module
+    custom_settings : None
+        deprecated, use ox.config(custom_settings=value) instead to configure
+        this setting via the settings module
+    max_query_area_size : None
+        deprecated, use ox.config(max_query_area_size=value) instead to
+        configure this setting via the settings module
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+    """
+    # create a GeoDataFrame with the spatial boundaries of the place(s)
+    if isinstance(query, (str, dict)):
+        # if it is a string (place name) or dict (structured place query), then
+        # it is a single place
+        gdf_place = boundaries.gdf_from_place(
+            query, which_result=which_result, buffer_dist=buffer_dist
+        )
+    elif isinstance(query, list):
+        # if it is a list, it contains multiple places to get
+        gdf_place = boundaries.gdf_from_places(query, buffer_dist=buffer_dist)
+    else:
+        raise TypeError("query must be dict, string, or list of strings")
+
+    # extract the geometry from the GeoDataFrame to use in API query
+    polygon = gdf_place["geometry"].unary_union
+    utils.log("Constructed place geometry polygon(s) to query API")
+
+    # create graph using this polygon(s) geometry
+    G = graph_from_polygon(
+        polygon,
+        network_type=network_type,
+        simplify=simplify,
+        retain_all=retain_all,
+        truncate_by_edge=truncate_by_edge,
+        clean_periphery=clean_periphery,
+        custom_filter=custom_filter,
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+        max_query_area_size=max_query_area_size,
+    )
+
+    utils.log(f"graph_from_place returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    return G
+
+
 def graph_from_polygon(
     polygon,
     network_type="all_private",
     simplify=True,
     retain_all=False,
     truncate_by_edge=False,
-    timeout=180,
-    memory=None,
-    max_query_area_size=50 * 1000 * 50 * 1000,
     clean_periphery=True,
     custom_filter=None,
+    timeout=None,
+    memory=None,
     custom_settings=None,
+    max_query_area_size=None,
 ):
     """
     Create a graph from OSM within the boundaries of some shapely polygon.
@@ -314,33 +423,42 @@ def graph_from_polygon(
     network_type : string
         what type of street network to get
     simplify : bool
-        if true, simplify the graph topology
+        if True, simplify the graph topology
     retain_all : bool
         if True, return the entire graph even if it is not connected
     truncate_by_edge : bool
-        if True retain node if it's outside bbox but at least one of node's
-        neighbors are within bbox
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    max_query_area_size : float
-        max area for any part of the geometry in meters: any polygon bigger
-        will get divided up for multiple queries to API (default 50km x 50km)
+        if True, retain node if it's outside polygon but at least one of
+        node's neighbors are within polygon
     clean_periphery : bool
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
-    custom_settings : string
-        custom settings to be used in overpass query instead of the defaults
+    timeout : None
+        deprecated, use ox.config(timeout=value) instead to configure this
+        setting via the settings module
+    memory : None
+        deprecated, use ox.config(memory=value) instead to configure this
+        setting via the settings module
+    custom_settings : None
+        deprecated, use ox.config(custom_settings=value) instead to configure
+        this setting via the settings module
+    max_query_area_size : None
+        deprecated, use ox.config(max_query_area_size=value) instead to
+        configure this setting via the settings module
 
     Returns
     -------
     G : networkx.MultiDiGraph
     """
+    utils._handle_deprecated_params(
+        timeout=timeout,
+        memory=memory,
+        custom_settings=custom_settings,
+        max_query_area_size=max_query_area_size,
+    )
+
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:
@@ -361,15 +479,7 @@ def graph_from_polygon(
         poly_buff, _ = projection.project_geometry(poly_proj_buff, crs=crs_utm, to_latlong=True)
 
         # download the network data from OSM
-        response_jsons = downloader._osm_net_download(
-            polygon=poly_buff,
-            network_type=network_type,
-            timeout=timeout,
-            memory=memory,
-            max_query_area_size=max_query_area_size,
-            custom_filter=custom_filter,
-            custom_settings=custom_settings,
-        )
+        response_jsons = downloader._osm_net_download(poly_buff, network_type, custom_filter)
 
         # create buffered graph from the downloaded data
         G_buff = _create_graph(
@@ -405,15 +515,7 @@ def graph_from_polygon(
     # if clean_periphery=False, just use the polygon as provided
     else:
         # download the network data from OSM
-        response_jsons = downloader._osm_net_download(
-            polygon=polygon,
-            network_type=network_type,
-            timeout=timeout,
-            memory=memory,
-            max_query_area_size=max_query_area_size,
-            custom_filter=custom_filter,
-            custom_settings=custom_settings,
-        )
+        response_jsons = downloader._osm_net_download(polygon, network_type, custom_filter)
 
         # create graph from the downloaded data
         G = _create_graph(
@@ -435,107 +537,6 @@ def graph_from_polygon(
             G = simplification.simplify_graph(G)
 
     utils.log(f"graph_from_polygon returned graph with {len(G)} nodes and {len(G.edges())} edges")
-    return G
-
-
-def graph_from_place(
-    query,
-    network_type="all_private",
-    simplify=True,
-    retain_all=False,
-    truncate_by_edge=False,
-    which_result=1,
-    buffer_dist=None,
-    timeout=180,
-    memory=None,
-    max_query_area_size=50 * 1000 * 50 * 1000,
-    clean_periphery=True,
-    custom_filter=None,
-    custom_settings=None,
-):
-    """
-    Create graph from OSM within the boundaries of some geocodable place(s).
-
-    The query must be geocodable and OSM must have polygon boundaries for the
-    geocode result. If OSM does not have a polygon for this place, you can
-    instead get its street network using the graph_from_address function, which
-    geocodes the place name to a point and gets the network within some distance
-    of that point. Alternatively, you might try to vary the which_result
-    parameter to use a different geocode result. For example, the first geocode
-    result (ie, the default) might resolve to a point geometry, but the second
-    geocode result for this query might resolve to a polygon, in which case you
-    can use graph_from_place with which_result=2.
-
-    Parameters
-    ----------
-    query : string or dict or list
-        the place(s) to geocode/download data for
-    network_type : string
-        what type of street network to get
-    simplify : bool
-        if true, simplify the graph topology
-    retain_all : bool
-        if True, return the entire graph even if it is not connected
-    truncate_by_edge : bool
-        if True retain node if it's outside bbox but at least one of node's
-        neighbors are within bbox
-    which_result : int
-        max number of results to return and which to process upon receipt
-    buffer_dist : float
-        distance to buffer around the place geometry, in meters
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    max_query_area_size : float
-        max area for any part of the geometry in meters: any polygon bigger
-        will get divided up for multiple queries to API (default 50km x 50km)
-    clean_periphery : bool
-        if True, buffer 500m to get a graph larger than requested, then
-        simplify, then truncate it to requested spatial boundaries
-    custom_filter : string
-        a custom network filter to be used instead of the network_type presets,
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
-    custom_settings : string
-        custom settings to be used in overpass query instead of the defaults
-    Returns
-    -------
-    G : networkx.MultiDiGraph
-    """
-    # create a GeoDataFrame with the spatial boundaries of the place(s)
-    if isinstance(query, (str, dict)):
-        # if it is a string (place name) or dict (structured place query), then
-        # it is a single place
-        gdf_place = boundaries.gdf_from_place(
-            query, which_result=which_result, buffer_dist=buffer_dist
-        )
-    elif isinstance(query, list):
-        # if it is a list, it contains multiple places to get
-        gdf_place = boundaries.gdf_from_places(query, buffer_dist=buffer_dist)
-    else:
-        raise TypeError("query must be dict, string, or list of strings")
-
-    # extract the geometry from the GeoDataFrame to use in API query
-    polygon = gdf_place["geometry"].unary_union
-    utils.log("Constructed place geometry polygon(s) to query API")
-
-    # create graph using this polygon(s) geometry
-    G = graph_from_polygon(
-        polygon,
-        network_type=network_type,
-        simplify=simplify,
-        retain_all=retain_all,
-        truncate_by_edge=truncate_by_edge,
-        timeout=timeout,
-        memory=memory,
-        max_query_area_size=max_query_area_size,
-        clean_periphery=clean_periphery,
-        custom_filter=custom_filter,
-        custom_settings=custom_settings,
-    )
-
-    utils.log(f"graph_from_place returned graph with {len(G)} nodes and {len(G.edges())} edges")
     return G
 
 

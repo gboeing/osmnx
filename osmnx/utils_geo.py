@@ -15,6 +15,7 @@ from shapely.ops import split
 
 from . import downloader
 from . import projection
+from . import settings
 from . import utils
 
 
@@ -40,7 +41,7 @@ def geocode(query):
         "dedupe"
     ] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
     params["q"] = query
-    response_json = downloader.nominatim_request(params=params, timeout=30)
+    response_json = downloader.nominatim_request(params=params)
 
     # if results were returned, parse lat and long out of the result
     if len(response_json) > 0 and "lat" in response_json[0] and "lon" in response_json[0]:
@@ -246,20 +247,18 @@ def round_geometry_coords(shape, precision):
         raise TypeError(f"cannot round coordinates of unhandled geometry type: {type(shape)}")
 
 
-def _consolidate_subdivide_geometry(geometry, max_query_area_size):
+def _consolidate_subdivide_geometry(geometry):
     """
     Consolidate and subdivide some geometry.
 
     Consolidate a geometry into a convex hull, then subdivide it into smaller
-    sub-polygons if its area exceeds max size (in geometry's units).
+    sub-polygons if its area exceeds max size (in geometry's units). Configure
+    the max size via max_query_area_size in the settings module.
 
     Parameters
     ----------
     geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the geometry to consolidate and subdivide
-    max_query_area_size : float
-        max area for any part of the geometry in geometry's units:
-        any polygon bigger will get divided up for multiple queries to API
 
     Returns
     -------
@@ -267,7 +266,7 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size):
     """
     # let the linear length of the quadrats (with which to subdivide the
     # geometry) be the square root of max area size
-    quadrat_width = math.sqrt(max_query_area_size)
+    quadrat_width = math.sqrt(settings.max_query_area_size)
 
     if not isinstance(geometry, (Polygon, MultiPolygon)):
         raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
@@ -275,12 +274,12 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size):
     # if geometry is a MultiPolygon OR a single Polygon whose area exceeds the
     # max size, get the convex hull around the geometry
     if isinstance(geometry, MultiPolygon) or (
-        isinstance(geometry, Polygon) and geometry.area > max_query_area_size
+        isinstance(geometry, Polygon) and geometry.area > settings.max_query_area_size
     ):
         geometry = geometry.convex_hull
 
     # if geometry area exceeds max size, subdivide it into smaller sub-polygons
-    if geometry.area > max_query_area_size:
+    if geometry.area > settings.max_query_area_size:
         geometry = _quadrat_cut_geometry(geometry, quadrat_width=quadrat_width)
 
     if isinstance(geometry, Polygon):
