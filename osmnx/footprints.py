@@ -14,141 +14,54 @@ from . import utils
 from . import utils_geo
 
 
-def _osm_footprints_download(
-    polygon=None,
-    north=None,
-    south=None,
-    east=None,
-    west=None,
-    footprint_type="building",
-    timeout=180,
-    memory=None,
-    max_query_area_size=50 * 1000 * 50 * 1000,
-    custom_settings=None,
-):
+def _osm_footprints_download(polygon, footprint_type="building"):
     """
     Download OpenStreetMap footprint data as a list of json responses.
 
     Parameters
     ----------
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        geographic shape to fetch the footprints within
-    north : float
-        northern latitude of bounding box
-    south : float
-        southern latitude of bounding box
-    east : float
-        eastern longitude of bounding box
-    west : float
-        western longitude of bounding box
+        geographic boundaries to fetch the footprints within
     footprint_type : string
         type of footprint to be downloaded. OSM tag key e.g. 'building', 'landuse', 'place', etc.
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    max_query_area_size : float
-        max area for any part of the geometry in meters: any polygon bigger
-        will get divided up for multiple queries to API (default 50km x 50km)
-    custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
 
     Returns
     -------
     response_jsons : list
         list of response_json dicts
     """
-    # check if we're querying by polygon or by bounding box based on which
-    # argument(s) where passed into this function
-    by_poly = polygon is not None
-    by_bbox = not (north is None or south is None or east is None or west is None)
-    if not (by_poly or by_bbox):
-        raise ValueError("You must pass a polygon or north, south, east, and west")
-
     response_jsons = []
+    overpass_settings = downloader._make_overpass_settings()
 
-    overpass_settings = downloader._make_overpass_settings(custom_settings, timeout, memory)
+    # project to utm, divide polygon up into sub-polygons if area exceeds a
+    # max size (in meters), project back to lat-lng, then get a list of polygon(s) exterior coordinates
+    geometry_proj, crs_proj = projection.project_geometry(polygon)
+    gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj)
+    geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
+    polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
+    utils.log(
+        f"Requesting footprints within polygon from API in {len(polygon_coord_strs)} request(s)"
+    )
 
-    # define the query to send the API
-    if by_bbox:
-        # turn bbox into a polygon and project to local UTM
-        polygon = Polygon([(west, south), (east, south), (east, north), (west, north)])
-        geometry_proj, crs_proj = projection.project_geometry(polygon)
-
-        # subdivide it if it exceeds the max area size (in meters), then project
-        # back to lat-lng
-        gpcs = utils_geo._consolidate_subdivide_geometry(
-            geometry_proj, max_query_area_size=max_query_area_size
+    # pass each polygon exterior coordinates in the list to the API, one at
+    # a time
+    for polygon_coord_str in polygon_coord_strs:
+        query_str = (
+            f"{overpass_settings};("
+            f'way(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;);'
+            f'relation(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;););out;'
         )
-        geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
-        utils.log(
-            f"Requesting footprints within bounding box from API in {len(geometry)} request(s)"
-        )
-
-        # loop through each polygon rectangle in the geometry (there will only
-        # be one if original bbox didn't exceed max area size)
-        for poly in geometry:
-            # represent bbox as south,west,north,east and round lat-lngs to 8
-            # decimal places (ie, within 1 mm) so URL strings aren't different
-            # due to float rounding issues (for consistent caching)
-            west, south, east, north = poly.bounds
-            query_str = (
-                f"{overpass_settings};"
-                f'((way["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
-                f"(._;>;););"
-                f'(relation["{footprint_type}"]({south:.8f},{west:.8f},{north:.8f},{east:.8f});'
-                f"(._;>;);););out;"
-            )
-            response_json = downloader.overpass_request(data={"data": query_str}, timeout=timeout)
-            response_jsons.append(response_json)
-        utils.log(
-            f"Got all footprint data within bounding box from API in {len(geometry)} request(s)"
-        )
-
-    elif by_poly:
-        # project to utm, divide polygon up into sub-polygons if area exceeds a
-        # max size (in meters), project back to lat-lng, then get a list of polygon(s) exterior coordinates
-        geometry_proj, crs_proj = projection.project_geometry(polygon)
-        gpcs = utils_geo._consolidate_subdivide_geometry(
-            geometry_proj, max_query_area_size=max_query_area_size
-        )
-        geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
-        polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
-        utils.log(
-            f"Requesting footprints within polygon from API in {len(polygon_coord_strs)} request(s)"
-        )
-
-        # pass each polygon exterior coordinates in the list to the API, one at
-        # a time
-        for polygon_coord_str in polygon_coord_strs:
-            query_str = (
-                f"{overpass_settings};("
-                f'way(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;);'
-                f'relation(poly:"{polygon_coord_str}")["{footprint_type}"];(._;>;););out;'
-            )
-            response_json = downloader.overpass_request(data={"data": query_str}, timeout=timeout)
-            response_jsons.append(response_json)
-        utils.log(
-            f"Got all footprint data within polygon from API in {len(polygon_coord_strs)} request(s)"
-        )
+        response_json = downloader.overpass_request(data={"data": query_str})
+        response_jsons.append(response_json)
+    utils.log(
+        f"Got all footprint data within polygon from API in {len(polygon_coord_strs)} request(s)"
+    )
 
     return response_jsons
 
 
 def _create_footprints_gdf(
-    polygon=None,
-    north=None,
-    south=None,
-    east=None,
-    west=None,
-    footprint_type="building",
-    retain_invalid=False,
-    responses=None,
-    timeout=180,
-    memory=None,
-    custom_settings=None,
+    polygon=None, footprint_type="building", retain_invalid=False, responses=None
 ):
     """
     Get footprint (polygon) data from OSM and convert it into a GeoDataFrame.
@@ -156,48 +69,24 @@ def _create_footprints_gdf(
     Parameters
     ----------
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        geographic shape to fetch the footprints within
-    north : float
-        northern latitude of bounding box
-    south : float
-        southern latitude of bounding box
-    east : float
-        eastern longitude of bounding box
-    west : float
-        western longitude of bounding box
+        geographic boundaries to fetch the footprints within
     footprint_type : string
         type of footprint to be downloaded. OSM tag key e.g. 'building',
         'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
     responses : list
-        list of response jsons
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    custom_settings : string
-        custom settings to be used in the overpass query instead of the default
-        ones
+        list of pre-existing response jsons
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
     """
-    # allow pickling between downloading footprints and converting them to a GeoDataFrame
+    if polygon is None and responses is None:
+        raise ValueError("You must pass a polygon or pre-existing responses.")
+
     if responses is None:
-        responses = _osm_footprints_download(
-            polygon,
-            north,
-            south,
-            east,
-            west,
-            footprint_type,
-            timeout=timeout,
-            memory=memory,
-            custom_settings=custom_settings,
-        )
+        responses = _osm_footprints_download(polygon, footprint_type)
 
     # parse the list of responses into separate dicts of vertices, footprints and relations
     # create a set of ways not directly tagged with footprint_type
@@ -484,10 +373,10 @@ def _members_geom_lists(relation_val, footprints):
 
 def footprints_from_point(
     point,
-    dist,
+    dist=1000,
     footprint_type="building",
     retain_invalid=False,
-    timeout=180,
+    timeout=None,
     memory=None,
     custom_settings=None,
 ):
@@ -505,27 +394,26 @@ def footprints_from_point(
         'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    custom_settings : string
-        custom settings to be used in overpass query instead of the defaults
+    timeout : None
+        deprecated, use ox.config(timeout=value) instead to configure this
+        setting via the settings module
+    memory : None
+        deprecated, use ox.config(memory=value) instead to configure this
+        setting via the settings module
+    custom_settings : None
+        deprecated, use ox.config(custom_settings=value) instead to configure
+        this setting via the settings module
 
     Returns
     -------
     geopandas.GeoDataFrame
     """
-    bbox = utils_geo.bbox_from_point(point=point, dist=dist)
-    north, south, east, west = bbox
-    return _create_footprints_gdf(
-        north=north,
-        south=south,
-        east=east,
-        west=west,
-        footprint_type=footprint_type,
-        retain_invalid=retain_invalid,
+    north, south, east, west = utils_geo.bbox_from_point(point=point, dist=dist)
+    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    return footprints_from_polygon(
+        polygon,
+        footprint_type,
+        retain_invalid,
         timeout=timeout,
         memory=memory,
         custom_settings=custom_settings,
@@ -534,10 +422,10 @@ def footprints_from_point(
 
 def footprints_from_address(
     address,
-    dist,
+    dist=1000,
     footprint_type="building",
     retain_invalid=False,
-    timeout=180,
+    timeout=None,
     memory=None,
     custom_settings=None,
 ):
@@ -555,13 +443,15 @@ def footprints_from_address(
         'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    custom_settings : string
-        custom settings to be used in overpass query instead of the defaults
+    timeout : None
+        deprecated, use ox.config(timeout=value) instead to configure this
+        setting via the settings module
+    memory : None
+        deprecated, use ox.config(memory=value) instead to configure this
+        setting via the settings module
+    custom_settings : None
+        deprecated, use ox.config(custom_settings=value) instead to configure
+        this setting via the settings module
 
     Returns
     -------
@@ -574,51 +464,8 @@ def footprints_from_address(
     return footprints_from_point(
         point,
         dist,
-        footprint_type=footprint_type,
-        retain_invalid=retain_invalid,
-        timeout=timeout,
-        memory=memory,
-        custom_settings=custom_settings,
-    )
-
-
-def footprints_from_polygon(
-    polygon,
-    footprint_type="building",
-    retain_invalid=False,
-    timeout=180,
-    memory=None,
-    custom_settings=None,
-):
-    """
-    Get footprints within some polygon.
-
-    Parameters
-    ----------
-    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the shape to get data within. coordinates should be in units of
-        latitude-longitude degrees.
-    footprint_type : string
-        type of footprint to be downloaded. OSM tag key e.g. 'building',
-        'landuse', 'place', etc.
-    retain_invalid : bool
-        if False discard any footprints with an invalid geometry
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    custom_settings : string
-        custom settings to be used in overpass query instead of the defaults
-
-    Returns
-    -------
-    geopandas.GeoDataFrame
-    """
-    return _create_footprints_gdf(
-        polygon=polygon,
-        footprint_type=footprint_type,
-        retain_invalid=retain_invalid,
+        footprint_type,
+        retain_invalid,
         timeout=timeout,
         memory=memory,
         custom_settings=custom_settings,
@@ -630,7 +477,7 @@ def footprints_from_place(
     footprint_type="building",
     retain_invalid=False,
     which_result=1,
-    timeout=180,
+    timeout=None,
     memory=None,
     custom_settings=None,
 ):
@@ -654,13 +501,15 @@ def footprints_from_place(
         if False discard any footprints with an invalid geometry
     which_result : int
         max number of results to return and which to process upon receipt
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    custom_settings : string
-        custom settings to be used in overpass query instead of the defaults
+    timeout : None
+        deprecated, use ox.config(timeout=value) instead to configure this
+        setting via the settings module
+    memory : None
+        deprecated, use ox.config(memory=value) instead to configure this
+        setting via the settings module
+    custom_settings : None
+        deprecated, use ox.config(custom_settings=value) instead to configure
+        this setting via the settings module
 
     Returns
     -------
@@ -668,11 +517,50 @@ def footprints_from_place(
     """
     city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city["geometry"].iloc[0]
-    return _create_footprints_gdf(
+    return footprints_from_polygon(
         polygon,
-        retain_invalid=retain_invalid,
-        footprint_type=footprint_type,
+        footprint_type,
+        retain_invalid,
         timeout=timeout,
         memory=memory,
         custom_settings=custom_settings,
     )
+
+
+def footprints_from_polygon(
+    polygon,
+    footprint_type="building",
+    retain_invalid=False,
+    timeout=None,
+    memory=None,
+    custom_settings=None,
+):
+    """
+    Get footprints within some polygon.
+
+    Parameters
+    ----------
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
+        the shape to get data within. coordinates should be in units of
+        latitude-longitude degrees.
+    footprint_type : string
+        type of footprint to be downloaded. OSM tag key e.g. 'building',
+        'landuse', 'place', etc.
+    retain_invalid : bool
+        if False discard any footprints with an invalid geometry
+    timeout : None
+        deprecated, use ox.config(timeout=value) instead to configure this
+        setting via the settings module
+    memory : None
+        deprecated, use ox.config(memory=value) instead to configure this
+        setting via the settings module
+    custom_settings : None
+        deprecated, use ox.config(custom_settings=value) instead to configure
+        this setting via the settings module
+
+    Returns
+    -------
+    geopandas.GeoDataFrame
+    """
+    utils._handle_deprecated_params(timeout=timeout, memory=memory, custom_settings=custom_settings)
+    return _create_footprints_gdf(polygon, footprint_type, retain_invalid)
