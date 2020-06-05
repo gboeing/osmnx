@@ -12,49 +12,22 @@ from . import utils
 from . import utils_geo
 
 
-def _create_poi_query(
-    north, south, east, west, tags, timeout=180, memory=None, custom_settings=None
-):
+def _create_poi_query(polygon, tags):
     """
     Create an overpass query string based on passed tags.
 
     Parameters
     ----------
-    north : float
-        Northernmost coordinate from bounding box of the search area.
-    south : float
-        Southernmost coordinate from bounding box of the search area.
-    east : float
-        Easternmost coordinate from bounding box of the search area.
-    west : float
-        Westernmost coordinate of the bounding box of the search area.
+    polygon : shapely.geometry.Polygon
+        geographic boundaries to fetch POIs within
     tags : dict
-        Dict of tags used for finding POIs from the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-            tags = {
-                'amenity':True,
-                'landuse':['retail','commercial'],
-                'highway':'bus_stop'}
-        would return all amenities, `landuse=retail`, `landuse=commercial`,
-        and `highway=bus_stop`.
-    timeout : int
-        Timeout for the API request.
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    custom_settings : string
-        custom settings to be used in the overpass query instead of defaults
+        dict of tags used for finding POIs from the selected area
 
     Returns
     -------
     query : string
     """
-    overpass_settings = downloader._make_overpass_settings(custom_settings, timeout, memory)
+    overpass_settings = downloader._make_overpass_settings()
 
     # make sure every value in dict is bool, str, or list of str
     error_msg = "tags must be a dict with values of bool, str, or list of str"
@@ -88,6 +61,7 @@ def _create_poi_query(
                 tags_list.append({key: value_item})
 
     # create query bounding box
+    west, south, east, north = polygon.bounds
     bbox = f"({south:.6f},{west:.6f},{north:.6f},{east:.6f})"
 
     # add node/way/relation query components one at a time
@@ -112,17 +86,7 @@ def _create_poi_query(
     return query
 
 
-def _osm_poi_download(
-    tags,
-    polygon=None,
-    north=None,
-    south=None,
-    east=None,
-    west=None,
-    timeout=180,
-    memory=None,
-    custom_settings=None,
-):
+def _osm_poi_download(polygon, tags):
     """
     Get points of interests (POIs) from OpenStreetMap based on passed tags.
 
@@ -131,65 +95,22 @@ def _osm_poi_download(
 
     Parameters
     ----------
-    tags : dict
-        Dict of tags used for finding POIs from the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-            tags = {
-                'amenity':True,
-                'landuse':['retail','commercial'],
-                'highway':'bus_stop'}
-        would return all amenities, `landuse=retail`, `landuse=commercial`,
-        and `highway=bus_stop`.
     polygon : shapely.geometry.Polygon
-        Polygon that will be used to limit the POI search.
-    north : float
-        northern latitude of bounding box
-    south : float
-        southern latitude of bounding box
-    east : float
-        eastern longitude of bounding box
-    west : float
-        western longitude of bounding box
-    timeout : int
-        Timeout for the API request.
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    custom_settings : string
-        custom settings to be used in the overpass query instead of defaults
+        geographic boundaries to fetch POIs within
+    tags : dict
+        dict of tags used for finding POIs from the selected area
 
     Returns
     -------
     responses : dict
-        JSON response with POIs from Overpass API server
+        JSON response with POIs from Overpass server
     """
     # TODO: add functionality for subdividing search area geometry
     # TODO: add functionality for constraining query to poly rather than its bbox
-    if polygon is not None:
-        west, south, east, north = polygon.bounds
-    elif not (north is None or south is None or east is None or west is None):
-        pass
-    else:
-        raise ValueError("You must pass a polygon or north, south, east, and west")
 
     # get the POIs
-    query = _create_poi_query(
-        north=north,
-        south=south,
-        east=east,
-        west=west,
-        tags=tags,
-        timeout=timeout,
-        memory=memory,
-        custom_settings=custom_settings,
-    )
-    responses = downloader.overpass_request(data={"data": query}, timeout=timeout)
-
+    query = _create_poi_query(polygon, tags)
+    responses = downloader.overpass_request(data={"data": query})
     return responses
 
 
@@ -248,8 +169,6 @@ def _parse_polygonal_poi(coords, response):
 
         except Exception:
             utils.log(f"Polygon has invalid geometry: {nodes}")
-
-    return None
 
 
 def _parse_osm_node(response):
@@ -381,70 +300,23 @@ def _parse_osm_relations(relations, df_osm_ways):
     return df_osm_ways
 
 
-def _create_poi_gdf(
-    tags,
-    polygon=None,
-    north=None,
-    south=None,
-    east=None,
-    west=None,
-    timeout=180,
-    memory=None,
-    custom_settings=None,
-):
+def _create_poi_gdf(polygon, tags):
     """
     Create GeoDataFrame from POIs json returned by Overpass API.
 
     Parameters
     ----------
+    polygon : shapely.geometry.Polygon
+        geographic boundaries to fetch POIs within
     tags : dict
-        Dict of tags used for finding POIs from the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-            tags = {
-                'amenity':True,
-                'landuse':['retail','commercial'],
-                'highway':'bus_stop'}
-        would return all amenities, `landuse=retail`, `landuse=commercial`,
-        and `highway=bus_stop`.
-    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        geographic shape to fetch the POIs within
-    north : float
-        northern latitude of bounding box
-    south : float
-        southern latitude of bounding box
-    east : float
-        eastern longitude of bounding box
-    west : float
-        western longitude of bounding box
-    timeout : int
-        Timeout for the API request.
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    custom_settings : string
-        custom settings to be used in the overpass query instead of defaults
+        dict of tags used for finding POIs from the selected area
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
         POIs and their associated tags
     """
-    responses = _osm_poi_download(
-        tags,
-        polygon=polygon,
-        north=north,
-        south=south,
-        east=east,
-        west=west,
-        timeout=timeout,
-        memory=memory,
-        custom_settings=custom_settings,
-    )
+    responses = _osm_poi_download(polygon, tags)
 
     # Parse coordinates from all the nodes in the response
     coords = _parse_nodes_coords(responses)
@@ -494,13 +366,13 @@ def _create_poi_gdf(
 
     # if caller requested pois within a polygon, only retain those that
     # fall within the polygon
-    if polygon and len(gdf) > 0:
+    if len(gdf) > 0:
         gdf = gdf.loc[gdf["geometry"].centroid.within(polygon)]
 
     return gdf
 
 
-def pois_from_point(point, tags, dist=1000, timeout=180, memory=None, custom_settings=None):
+def pois_from_point(point, tags, dist=1000, timeout=None, memory=None, custom_settings=None):
     """
     Get point of interests (POIs) within some distance N, S, E, W of a point.
 
@@ -521,33 +393,28 @@ def pois_from_point(point, tags, dist=1000, timeout=180, memory=None, custom_set
         landuse=commercial, and highway=bus_stop.
     dist : numeric
         distance in meters
-    timeout : int
-        timeout for the API request
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    custom_settings : string
-        custom settings to be used in the overpass query instead of defaults
+    timeout : None
+        deprecated, use ox.config(timeout=value) instead to configure this
+        setting via the settings module
+    memory : None
+        deprecated, use ox.config(memory=value) instead to configure this
+        setting via the settings module
+    custom_settings : None
+        deprecated, use ox.config(custom_settings=value) instead to configure
+        this setting via the settings module
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
     """
-    bbox = utils_geo.bbox_from_point(point=point, dist=dist)
-    north, south, east, west = bbox
-    return _create_poi_gdf(
-        tags=tags,
-        north=north,
-        south=south,
-        east=east,
-        west=west,
-        timeout=timeout,
-        memory=memory,
-        custom_settings=custom_settings,
+    north, south, east, west = utils_geo.bbox_from_point(point=point, dist=dist)
+    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    return pois_from_polygon(
+        polygon, tags, timeout=timeout, memory=memory, custom_settings=custom_settings
     )
 
 
-def pois_from_address(address, tags, dist=1000, timeout=180, memory=None, custom_settings=None):
+def pois_from_address(address, tags, dist=1000, timeout=None, memory=None, custom_settings=None):
     """
     Get point of interests (POIs) within some distance N, S, E, W of address.
 
@@ -568,13 +435,15 @@ def pois_from_address(address, tags, dist=1000, timeout=180, memory=None, custom
         landuse=commercial, and highway=bus_stop.
     dist : numeric
         distance in meters
-    timeout : int
-        timeout for the API request
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    custom_settings : string
-        custom settings to be used in the overpass query instead of defaults
+    timeout : None
+        deprecated, use ox.config(timeout=value) instead to configure this
+        setting via the settings module
+    memory : None
+        deprecated, use ox.config(memory=value) instead to configure this
+        setting via the settings module
+    custom_settings : None
+        deprecated, use ox.config(custom_settings=value) instead to configure
+        this setting via the settings module
 
     Returns
     -------
@@ -582,8 +451,6 @@ def pois_from_address(address, tags, dist=1000, timeout=180, memory=None, custom
     """
     # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
-
-    # get POIs within distance of this point
     return pois_from_point(
         point=point,
         tags=tags,
@@ -594,50 +461,14 @@ def pois_from_address(address, tags, dist=1000, timeout=180, memory=None, custom
     )
 
 
-def pois_from_polygon(polygon, tags, timeout=180, memory=None, custom_settings=None):
-    """
-    Get point of interests (POIs) within some polygon.
-
-    Parameters
-    ----------
-    polygon : shapely.geometry.Polygon
-        Polygon where the POIs are search from.
-    tags : dict
-        Dict of tags used for finding POIs from the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
-    timeout : int
-        timeout for the API request
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    custom_settings : string
-        custom settings to be used in the overpass query instead of defaults
-
-    Returns
-    -------
-    gdf : geopandas.GeoDataFrame
-    """
-    return _create_poi_gdf(
-        tags=tags, polygon=polygon, timeout=timeout, memory=memory, custom_settings=custom_settings
-    )
-
-
-def pois_from_place(place, tags, which_result=1, timeout=180, memory=None, custom_settings=None):
+def pois_from_place(place, tags, which_result=1, timeout=None, memory=None, custom_settings=None):
     """
     Get points of interest (POIs) within the boundaries of some place.
 
     Parameters
     ----------
     place : string
-        the query to geocode to get boundary polygon.
+        the query to geocode to get boundary polygon
     tags : dict
         Dict of tags used for finding POIs from the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -651,13 +482,15 @@ def pois_from_place(place, tags, which_result=1, timeout=180, memory=None, custo
         landuse=commercial, and highway=bus_stop.
     which_result : int
         max number of geocoding results to return and which to process
-    timeout : int
-        timeout for the API request
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    custom_settings : string
-        custom settings to be used in the overpass query instead of defaults
+    timeout : None
+        deprecated, use ox.config(timeout=value) instead to configure this
+        setting via the settings module
+    memory : None
+        deprecated, use ox.config(memory=value) instead to configure this
+        setting via the settings module
+    custom_settings : None
+        deprecated, use ox.config(custom_settings=value) instead to configure
+        this setting via the settings module
 
     Returns
     -------
@@ -665,6 +498,43 @@ def pois_from_place(place, tags, which_result=1, timeout=180, memory=None, custo
     """
     city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city["geometry"].iloc[0]
-    return _create_poi_gdf(
-        tags=tags, polygon=polygon, timeout=timeout, memory=memory, custom_settings=custom_settings
+    return pois_from_polygon(
+        polygon, tags, timeout=timeout, memory=memory, custom_settings=custom_settings
     )
+
+
+def pois_from_polygon(polygon, tags, timeout=None, memory=None, custom_settings=None):
+    """
+    Get point of interests (POIs) within some polygon.
+
+    Parameters
+    ----------
+    polygon : shapely.geometry.Polygon
+        geographic boundaries to fetch POIs within
+    tags : dict
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, landuse=retail,
+        landuse=commercial, and highway=bus_stop.
+    timeout : None
+        deprecated, use ox.config(timeout=value) instead to configure this
+        setting via the settings module
+    memory : None
+        deprecated, use ox.config(memory=value) instead to configure this
+        setting via the settings module
+    custom_settings : None
+        deprecated, use ox.config(custom_settings=value) instead to configure
+        this setting via the settings module
+
+    Returns
+    -------
+    gdf : geopandas.GeoDataFrame
+    """
+    utils._handle_deprecated_params(timeout=timeout, memory=memory, custom_settings=custom_settings)
+    return _create_poi_gdf(polygon, tags)

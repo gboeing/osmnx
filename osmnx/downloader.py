@@ -252,7 +252,7 @@ def _get_pause(recursive_delay=5, default_duration=10):
 
     Returns
     -------
-    int
+    pause : int
     """
     try:
         url = settings.overpass_endpoint.rstrip("/") + "/status"
@@ -291,53 +291,22 @@ def _get_pause(recursive_delay=5, default_duration=10):
     return pause
 
 
-def _make_overpass_settings(custom_settings, timeout, memory):
+def _make_overpass_settings():
     """
     Make settings string to send in Overpass query.
 
-    Parameters
-    ----------
-    custom_settings : string
-        custom settings to be used in the overpass query instead of defaults
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-
     Returns
     -------
-    overpass_settings : string
+    string
     """
-    # pass server memory allocation in bytes for the query to the API
-    # if None, pass nothing so the server will use its default allocation size
-    # otherwise, define the query's maxsize parameter value as whatever the
-    # caller passed in
-    if memory is None:
+    if settings.memory is None:
         maxsize = ""
     else:
-        maxsize = f"[maxsize:{memory}]"
-
-    # use custom settings if delivered, otherwise just the default ones
-    if custom_settings:
-        overpass_settings = custom_settings
-    else:
-        overpass_settings = settings.default_overpass_query_settings.format(
-            timeout=timeout, maxsize=maxsize
-        )
-
-    return overpass_settings
+        maxsize = f"[maxsize:{settings.memory}]"
+    return settings.overpass_settings.format(timeout=settings.timeout, maxsize=maxsize)
 
 
-def _osm_net_download(
-    polygon,
-    network_type="all_private",
-    timeout=180,
-    memory=None,
-    max_query_area_size=50 * 1000 * 50 * 1000,
-    custom_filter=None,
-    custom_settings=None,
-):
+def _osm_net_download(polygon, network_type, custom_filter):
     """
     Download OSM ways and nodes within some polygon from the Overpass API.
 
@@ -346,21 +315,9 @@ def _osm_net_download(
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         geographic boundaries to fetch the street network within
     network_type : string
-        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what
-        type of street network to get
-    timeout : int
-        the timeout interval for requests and to pass to API
-    memory : int
-        server memory allocation size for the query, in bytes. If none, server
-        will use its default allocation size
-    max_query_area_size : float
-        max area for any part of the geometry in meters: any polygon bigger
-        will get divided up for multiple queries to API (default 50km x 50km)
+        what type of street network to get if custom_filter is not None
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets,
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'
-    custom_settings : string
-        custom settings to be used in the overpass query instead of defaults
+        a custom network filter to be used instead of the network_type presets
 
     Returns
     -------
@@ -374,15 +331,14 @@ def _osm_net_download(
         osm_filter = _get_osm_filter(network_type)
     response_jsons = []
 
-    overpass_settings = _make_overpass_settings(custom_settings, timeout, memory)
+    # create overpass settings string
+    overpass_settings = _make_overpass_settings()
 
     # project to utm, divide polygon up into sub-polygons if area exceeds a
     # max size (in meters), project back to lat-lng, then get a list of
     # polygon(s) exterior coordinates
     geometry_proj, crs_proj = projection.project_geometry(polygon)
-    gpcs = utils_geo._consolidate_subdivide_geometry(
-        geometry_proj, max_query_area_size=max_query_area_size
-    )
+    gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj)
     geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
     polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
     utils.log(
@@ -393,7 +349,7 @@ def _osm_net_download(
     # a time
     for polygon_coord_str in polygon_coord_strs:
         query_str = f"{overpass_settings};(way{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
-        response_json = overpass_request(data={"data": query_str}, timeout=timeout)
+        response_json = overpass_request(data={"data": query_str})
         response_jsons.append(response_json)
     utils.log(
         f"Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)"
@@ -440,11 +396,11 @@ def _osm_polygon_download(query, limit=1, polygon_geojson=1):
         raise TypeError("query must be a dict or a string")
 
     # request the URL, return the JSON
-    response_json = nominatim_request(params=params, timeout=30)
+    response_json = nominatim_request(params=params)
     return response_json
 
 
-def nominatim_request(params, request_type="search", pause=1, timeout=30, error_pause=180):
+def nominatim_request(params, request_type="search", pause=1, error_pause=180):
     """
     Send a request to the Nominatim API via HTTP GET and return JSON response.
 
@@ -456,8 +412,6 @@ def nominatim_request(params, request_type="search", pause=1, timeout=30, error_
         Type of Nominatim query. One of: search, reverse, or lookup
     pause : int
         how long to pause before requests, in seconds
-    timeout : int
-        the timeout interval for the requests library
     error_pause : int
         how long to pause in seconds before re-trying requests if error
 
@@ -487,8 +441,10 @@ def nominatim_request(params, request_type="search", pause=1, timeout=30, error_
         # if this URL is not already in the cache, pause, then request it
         utils.log(f"Pausing {pause} seconds before making HTTP GET request")
         time.sleep(pause)
-        utils.log(f"Get {prepared_url} with timeout={timeout}")
-        response = requests.get(url, params=params, timeout=timeout, headers=_get_http_headers())
+        utils.log(f"Get {prepared_url} with timeout={settings.timeout}")
+        response = requests.get(
+            url, params=params, timeout=settings.timeout, headers=_get_http_headers()
+        )
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.0
@@ -510,7 +466,9 @@ def nominatim_request(params, request_type="search", pause=1, timeout=30, error_
                     level=lg.WARNING,
                 )
                 time.sleep(error_pause)
-                response_json = nominatim_request(params=params, pause=pause, timeout=timeout)
+                response_json = nominatim_request(
+                    params=params, pause=pause, timeout=settings.timeout
+                )
 
             # else, this was an unhandled status_code, throw an exception
             else:
@@ -522,7 +480,7 @@ def nominatim_request(params, request_type="search", pause=1, timeout=30, error_
         return response_json
 
 
-def overpass_request(data, pause=None, timeout=180, error_pause=None):
+def overpass_request(data, pause=None, error_pause=None):
     """
     Send a request to the Overpass API via HTTP POST and return JSON response.
 
@@ -533,8 +491,6 @@ def overpass_request(data, pause=None, timeout=180, error_pause=None):
     pause : int
         how long to pause in seconds before requests, if None, will query API
         status endpoint to find when next slot is available
-    timeout : int
-        the timeout interval for the requests library
     error_pause : int
         how long to pause in seconds before re-trying requests if error
 
@@ -559,8 +515,10 @@ def overpass_request(data, pause=None, timeout=180, error_pause=None):
             this_pause = _get_pause()
         utils.log(f"Pausing {this_pause} seconds before making HTTP POST request")
         time.sleep(this_pause)
-        utils.log(f"Post {prepared_url} with timeout={timeout}")
-        response = requests.post(url, data=data, timeout=timeout, headers=_get_http_headers())
+        utils.log(f"Post {prepared_url} with timeout={settings.timeout}")
+        response = requests.post(
+            url, data=data, timeout=settings.timeout, headers=_get_http_headers()
+        )
 
         # get the response size and the domain, log result
         size_kb = len(response.content) / 1000.0
@@ -586,7 +544,7 @@ def overpass_request(data, pause=None, timeout=180, error_pause=None):
                     level=lg.WARNING,
                 )
                 time.sleep(error_pause)
-                response_json = overpass_request(data=data, pause=pause, timeout=timeout)
+                response_json = overpass_request(data=data, pause=pause, timeout=settings.timeout)
             # else, this was an unhandled status_code, throw an exception
             else:
                 utils.log(f"{domain} returned {sc} and no data", level=lg.ERROR)

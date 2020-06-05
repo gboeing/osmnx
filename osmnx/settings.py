@@ -46,6 +46,21 @@ osm_xml_node_tags = ["highway"]
 osm_xml_way_attrs = ["id", "timestamp", "uid", "user", "version", "changeset"]
 osm_xml_way_tags = ["highway", "lanes", "maxspeed", "name", "oneway"]
 
+# default settings string for overpass queries: timeout and maxsize need to
+# be dynamically set where used
+overpass_settings = "[out:json][timeout:{timeout}]{maxsize}"
+
+# the timeout interval for the HTTP request and for API to use while running
+# the query
+timeout = 180
+
+# overpass server memory allocation size for the query, in bytes. If None,
+# server will use its default allocation size
+memory = None
+
+# maximum area for any part of the geometry in meters: any polygon bigger than
+# this will get divided up for multiple queries to API (default 50km x 50km)
+max_query_area_size = 50 * 1000 * 50 * 1000
 
 # default filter for OSM "access" key. filtering out "access=no" ways prevents
 # including transit-only bridges like tilikum crossing from appearing in drivable
@@ -58,10 +73,6 @@ default_access = '["access"!~"private"]'
 
 # The network types for which a bidirectional graph will be created
 bidirectional_network_types = ["walk"]
-
-# default settings string for overpass queries: timeout and maxsize need to
-# be dynamically set where used
-default_overpass_query_settings = "[out:json][timeout:{timeout}]{maxsize}"
 
 # all one-way mode to maintain original OSM node order when creating graphs
 # specifically to save to .osm xml file with save_graph_xml function

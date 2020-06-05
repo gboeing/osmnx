@@ -269,17 +269,8 @@ def test_find_nearest():
 def test_pois():
 
     tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
-
     gdf = ox.pois_from_place(place1, tags=tags)
-
-    gdf = ox.pois_from_polygon(polygon, tags={"amenity": "library"})
-
-    cs = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
-    gdf = ox.pois_from_address(address, tags={"amenity": "school"}, custom_settings=cs)
-
-    gdf = ox.pois_from_point(
-        location_point, dist=500, tags={"amenity": "restaurant"}, timeout=200, memory=100000
-    )
+    gdf = ox.pois_from_address(address, tags={"amenity": "school"})
 
 
 def test_api_endpoints():
@@ -402,14 +393,8 @@ def test_get_network_methods():
         location_point, dist=500, custom_filter=cf, dist_type="bbox", network_type="all"
     )
 
-    # test custom settings
-    cs = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
     G = ox.graph_from_point(
-        location_point,
-        dist=500,
-        custom_settings=cs,
-        dist_type="network",
-        network_type="all_private",
+        location_point, dist=500, dist_type="network", network_type="all_private",
     )
 
 
@@ -436,8 +421,8 @@ def test_stats():
 def test_footprints():
 
     # download footprints and plot them
-    cs = '[out:json][timeout:180][date:"2019-10-28T19:20:00Z"]'
-    gdf = ox.footprints_from_place(place2, custom_settings=cs)
+    ox.settings.overpass_settings = '[out:json][timeout:200][date:"2019-10-28T19:20:00Z"]'
+    gdf = ox.footprints_from_place(place2)
     gdf = ox.footprints_from_polygon(polygon)
     gdf = ox.footprints_from_address(address, dist=300)
     fig, ax = ox.plot_footprints(gdf)
@@ -482,9 +467,6 @@ def test_footprints():
     # test plotting multipolygon
     fig, ax = ox.plot_footprints(clapham_common_gdf)
 
-    # should raise an exception
-    # polygon or -north, south, east, west- should be provided
+    # should raise an exception: polygon or responses must be provided
     with pytest.raises(ValueError):
-        ox.footprints._create_footprints_gdf(
-            polygon=None, north=None, south=None, east=None, west=None
-        )
+        ox.footprints._create_footprints_gdf(polygon=None, responses=None)
