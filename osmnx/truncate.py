@@ -12,7 +12,10 @@ from . import utils_graph
 
 def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_all=False):
     """
-    Remove everything farther than some network distance from specified node.
+    Remove every node farther than some network distance from source_node.
+
+    This function can be slow for large graphs, as it must calculate shortest
+    path distances between source_node and every other graph node.
 
     Parameters
     ----------
@@ -41,7 +44,6 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
     distances = nx.shortest_path_length(G, source=source_node, weight=weight)
     distant_nodes = {key: value for key, value in dict(distances).items() if value > max_dist}
     G.remove_nodes_from(distant_nodes.keys())
-    utils.log("Truncated graph by weighted network distance")
 
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
@@ -49,16 +51,23 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
         G = utils_graph.remove_isolated_nodes(G)
         G = utils_graph.get_largest_component(G)
 
+    utils.log(f"Truncated graph by {weight}-weighted network distance")
     return G
 
 
-def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, retain_all=False):
+def truncate_graph_bbox(
+    G,
+    north,
+    south,
+    east,
+    west,
+    truncate_by_edge=False,
+    retain_all=False,
+    quadrat_width=0.05,
+    min_num=3,
+):
     """
     Remove every node in graph that falls outside a bounding box.
-
-    Needed because overpass returns entire ways that also include nodes outside
-    the bbox if the way (that is, a way with a single OSM ID) has a node inside
-    the bbox at some point.
 
     Parameters
     ----------
@@ -77,48 +86,32 @@ def truncate_graph_bbox(G, north, south, east, west, truncate_by_edge=False, ret
         neighbors are within bbox
     retain_all : bool
         if True, return the entire graph even if it is not connected
+    quadrat_width : numeric
+        passed on to intersect_index_quadrats: the linear length (in degrees) of
+        the quadrats with which to cut up the geometry (default = 0.05, approx
+        4km at NYC's latitude)
+    min_num : int
+        passed on to intersect_index_quadrats: the minimum number of linear
+        quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4
+        squares)
 
     Returns
     -------
     G : networkx.MultiDiGraph
         the truncated graph
     """
-    G = G.copy()
-    nodes_outside_bbox = []
+    # convert bounding box to a polygon, then truncate
+    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    G = truncate_graph_polygon(
+        G,
+        polygon,
+        retain_all=retain_all,
+        truncate_by_edge=truncate_by_edge,
+        quadrat_width=quadrat_width,
+        min_num=min_num,
+    )
 
-    for node, data in G.nodes(data=True):
-        if data["y"] > north or data["y"] < south or data["x"] > east or data["x"] < west:
-            # this node is outside the bounding box
-            if not truncate_by_edge:
-                # if we're not truncating by edge, add node to list of nodes
-                # outside the bounding box
-                nodes_outside_bbox.append(node)
-            else:
-                # if we're truncating by edge, see if any of node's neighbors
-                # are within bounding box
-                any_neighbors_in_bbox = False
-                neighbors = list(G.successors(node)) + list(G.predecessors(node))
-                for neighbor in neighbors:
-                    x = G.nodes[neighbor]["x"]
-                    y = G.nodes[neighbor]["y"]
-                    if y < north and y > south and x < east and x > west:
-                        any_neighbors_in_bbox = True
-                        break
-
-                # if none of its neighbors are within the bounding box, add node
-                # to list of nodes outside the bounding box
-                if not any_neighbors_in_bbox:
-                    nodes_outside_bbox.append(node)
-
-    G.remove_nodes_from(nodes_outside_bbox)
     utils.log("Truncated graph by bounding box")
-
-    # remove any isolated nodes and retain only the largest component (if
-    # retain_all is True)
-    if not retain_all:
-        G = utils_graph.remove_isolated_nodes(G)
-        G = utils_graph.get_largest_component(G)
-
     return G
 
 
@@ -126,7 +119,7 @@ def truncate_graph_polygon(
     G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.05, min_num=3
 ):
     """
-    Remove every node in graph that outside a shapely (Multi)Polygon.
+    Remove every node in graph that falls outside a shapely (Multi)Polygon.
 
     Parameters
     ----------
@@ -187,4 +180,5 @@ def truncate_graph_polygon(
         G = utils_graph.remove_isolated_nodes(G)
         G = utils_graph.get_largest_component(G)
 
+    utils.log("Truncated graph by polygon")
     return G

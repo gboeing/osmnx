@@ -12,14 +12,11 @@ from collections import OrderedDict
 
 import requests
 from dateutil import parser as date_parser
-from shapely.geometry import Polygon
 
 from . import projection
 from . import settings
 from . import utils
 from . import utils_geo
-from ._errors import InsufficientNetworkQueryArguments
-from ._errors import UnknownNetworkType
 
 
 def _get_osm_filter(network_type):
@@ -96,7 +93,7 @@ def _get_osm_filter(network_type):
     if network_type in filters:
         osm_filter = filters[network_type]
     else:
-        raise UnknownNetworkType(f'unknown network_type "{network_type}"')
+        raise ValueError(f'Unrecognized network_type "{network_type}"')
 
     return osm_filter
 
@@ -333,11 +330,7 @@ def _make_overpass_settings(custom_settings, timeout, memory):
 
 
 def _osm_net_download(
-    polygon=None,
-    north=None,
-    south=None,
-    east=None,
-    west=None,
+    polygon,
     network_type="all_private",
     timeout=180,
     memory=None,
@@ -346,20 +339,12 @@ def _osm_net_download(
     custom_settings=None,
 ):
     """
-    Download OSM ways and nodes within some bounding box from the Overpass API.
+    Download OSM ways and nodes within some polygon from the Overpass API.
 
     Parameters
     ----------
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         geographic boundaries to fetch the street network within
-    north : float
-        northern latitude of bounding box
-    south : float
-        southern latitude of bounding box
-    east : float
-        eastern longitude of bounding box
-    west : float
-        western longitude of bounding box
     network_type : string
         {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'} what
         type of street network to get
@@ -381,15 +366,6 @@ def _osm_net_download(
     -------
     response_jsons : list
     """
-    # check if we're querying by polygon or by bounding box based on which
-    # argument(s) where passed into this function
-    by_poly = polygon is not None
-    by_bbox = not (north is None or south is None or east is None or west is None)
-    if not (by_poly or by_bbox):
-        raise InsufficientNetworkQueryArguments(
-            "You must pass a polygon or north, south, east, and west"
-        )
-
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type
     if custom_filter is not None:
@@ -400,61 +376,28 @@ def _osm_net_download(
 
     overpass_settings = _make_overpass_settings(custom_settings, timeout, memory)
 
-    if by_bbox:
-        # turn bbox into a polygon and project to local UTM
-        polygon = Polygon([(west, south), (east, south), (east, north), (west, north)])
-        geometry_proj, crs_proj = projection.project_geometry(polygon)
+    # project to utm, divide polygon up into sub-polygons if area exceeds a
+    # max size (in meters), project back to lat-lng, then get a list of
+    # polygon(s) exterior coordinates
+    geometry_proj, crs_proj = projection.project_geometry(polygon)
+    gpcs = utils_geo._consolidate_subdivide_geometry(
+        geometry_proj, max_query_area_size=max_query_area_size
+    )
+    geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
+    polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
+    utils.log(
+        f"Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)"
+    )
 
-        # subdivide it if it exceeds the max area size (in meters), then project
-        # back to lat-lng
-        gpcs = utils_geo._consolidate_subdivide_geometry(
-            geometry_proj, max_query_area_size=max_query_area_size
-        )
-        geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
-        utils.log(
-            f"Requesting network data within bounding box from API in {len(geometry)} request(s)"
-        )
-
-        # loop through each polygon rectangle in the geometry (there will only
-        # be one if original bbox didn't exceed max area size)
-        for poly in geometry:
-            # represent bbox as south,west,north,east and round lat-lngs to 6
-            # decimal places (ie, ~100 mm) so URL strings aren't different
-            # due to float rounding issues (for consistent caching)
-            west, south, east, north = poly.bounds
-            query_str = (
-                f"{overpass_settings};"
-                f"(way{osm_filter}({south:.6f},{west:.6f},{north:.6f},{east:.6f});>;);out;"
-            )
-            response_json = overpass_request(data={"data": query_str}, timeout=timeout)
-            response_jsons.append(response_json)
-        utils.log(
-            f"Got all network data within bounding box from API in {len(geometry)} request(s)"
-        )
-
-    elif by_poly:
-        # project to utm, divide polygon up into sub-polygons if area exceeds a
-        # max size (in meters), project back to lat-lng, then get a list of
-        # polygon(s) exterior coordinates
-        geometry_proj, crs_proj = projection.project_geometry(polygon)
-        gpcs = utils_geo._consolidate_subdivide_geometry(
-            geometry_proj, max_query_area_size=max_query_area_size
-        )
-        geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
-        polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
-        utils.log(
-            f"Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)"
-        )
-
-        # pass each polygon exterior coordinates in the list to the API, one at
-        # a time
-        for polygon_coord_str in polygon_coord_strs:
-            query_str = f"{overpass_settings};(way{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
-            response_json = overpass_request(data={"data": query_str}, timeout=timeout)
-            response_jsons.append(response_json)
-        utils.log(
-            f"Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)"
-        )
+    # pass each polygon exterior coordinates in the list to the API, one at
+    # a time
+    for polygon_coord_str in polygon_coord_strs:
+        query_str = f"{overpass_settings};(way{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
+        response_json = overpass_request(data={"data": query_str}, timeout=timeout)
+        response_jsons.append(response_json)
+    utils.log(
+        f"Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)"
+    )
 
     return response_jsons
 
@@ -480,9 +423,8 @@ def _osm_polygon_download(query, limit=1, polygon_geojson=1):
     params = OrderedDict()
     params["format"] = "json"
     params["limit"] = limit
-    params[
-        "dedupe"
-    ] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
+    # prevent OSM from deduping results so we get precisely 'limit' # of results
+    params["dedupe"] = 0
     params["polygon_geojson"] = polygon_geojson
 
     # add the structured query dict (if provided) to params, otherwise query
