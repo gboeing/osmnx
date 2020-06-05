@@ -351,18 +351,18 @@ def save_graph_xml(
 
     Example
     -------
-    import osmnx as ox
-    utn = ox.settings.useful_tags_node
-    oxna = ox.settings.osm_xml_node_attrs
-    oxnt = ox.settings.osm_xml_node_tags
-    utw = ox.settings.useful_tags_way
-    oxwa = ox.settings.osm_xml_way_attrs
-    oxwt = ox.settings.osm_xml_way_tags
-    utn = list(set(utn + oxna + oxnt))
-    utw = list(set(utw + oxwa + oxwt))
-    ox.config(all_oneway=True, useful_tags_node=utn, useful_tags_way=utw)
-    G = ox.graph_from_place('Piedmont, CA, USA', network_type='drive')
-    ox.save_graph_xml(G, filepath='./data/graph1.osm')
+    >>> import osmnx as ox
+    >>> utn = ox.settings.useful_tags_node
+    >>> oxna = ox.settings.osm_xml_node_attrs
+    >>> oxnt = ox.settings.osm_xml_node_tags
+    >>> utw = ox.settings.useful_tags_way
+    >>> oxwa = ox.settings.osm_xml_way_attrs
+    >>> oxwt = ox.settings.osm_xml_way_tags
+    >>> utn = list(set(utn + oxna + oxnt))
+    >>> utw = list(set(utw + oxwa + oxwt))
+    >>> ox.config(all_oneway=True, useful_tags_node=utn, useful_tags_way=utw)
+    >>> G = ox.graph_from_place('Piedmont, CA, USA', network_type='drive')
+    >>> ox.save_graph_xml(G, filepath='./data/graph1.osm')
 
     Parameters
     ----------
