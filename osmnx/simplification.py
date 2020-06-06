@@ -88,27 +88,34 @@ def _is_endpoint(G, node, strict=True):
         return False
 
 
-def _build_path(G, node, endpoints, path):
+def _build_path(G, endpoint, endpoint_successor, endpoints):
     """
-    Recursively build a path of nodes until you hit an endpoint node.
+    Build a path of nodes from one endpoint node to next endpoint node.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
-    node : int
-        the current node to start from
+    endpoint : int
+        the endpoint node from which to start the path
+    endpoint_successor : int
+        the successor of endpoint through which the path to the next endpoint
+        will be built
     endpoints : set
         the set of all nodes in the graph that are endpoints
-    path : list
-        the list of nodes in order in the path so far
 
     Returns
     -------
     path : list
+        the first and last items in the resulting path list are endpoint
+        nodes, and all other items are interstitial nodes that can be removed
+        subsequently
     """
-    # for each successor in the passed-in node
-    for successor in G.successors(node):
+    # start building path from endpoint node through its successor
+    path = [endpoint, endpoint_successor]
+
+    # for each successor of the endpoint's successor
+    for successor in G.successors(endpoint_successor):
         if successor not in path:
             # if this successor is already in the path, ignore it, otherwise add
             # it to the path
@@ -120,19 +127,17 @@ def _build_path(G, node, endpoints, path):
                     successor = successors[0]
                     path.append(successor)
                 else:
-                    if len(successors) == 0 and path[0] in G.successors(successor):
-                        # we are coming to the end of a self-looping edge, so
-                        # add path's first node to end of path to close it,
-                        # then return
-                        return path + [path[0]]
+                    if len(successors) == 0 and endpoint in G.successors(successor):
+                        # we have come to the end of a self-looping edge, so
+                        # add first node to end of path to close it and return
+                        return path + [endpoint]
                     else:
                         # if len successors > 1, then successor must have been
                         # an endpoint because you can go in 2 new directions.
                         # this should never occur in practice
                         raise Exception("Should never hit this point.")
 
-            # if this successor is an endpoint, we've completed the path,
-            # so return it
+            # if this successor is an endpoint, we've completed the path
             return path
 
 
@@ -156,17 +161,17 @@ def _get_paths_to_simplify(G, strict=True):
     path_to_simplify : list
     """
     # first identify all the nodes that are endpoints
-    endpoints = set([node for node in G.nodes() if _is_endpoint(G, node, strict=strict)])
+    endpoints = set([n for n in G.nodes() if _is_endpoint(G, n, strict=strict)])
     utils.log(f"Identified {len(endpoints)} edge endpoints")
 
     # for each endpoint node, look at each of its successor nodes
-    for node in endpoints:
-        for successor in G.successors(node):
+    for endpoint in endpoints:
+        for successor in G.successors(endpoint):
             if successor not in endpoints:
                 # if endpoint node's successor is not an endpoint, build a path
                 # from the endpoint node, through the successor, and on to the
                 # next endpoint node
-                yield _build_path(G, successor, endpoints, path=[node, successor])
+                yield _build_path(G, endpoint, successor, endpoints)
 
 
 def _is_simplified(G):
