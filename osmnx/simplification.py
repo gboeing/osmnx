@@ -193,7 +193,7 @@ def _is_simplified(G):
     return "simplified" in G.graph and G.graph["simplified"]
 
 
-def simplify_graph(G, strict=True, rings=False):
+def simplify_graph(G, strict=True, remove_rings=True):
     """
     Simplify a graph's topology by removing interstitial nodes.
 
@@ -211,8 +211,8 @@ def simplify_graph(G, strict=True, rings=False):
         rules but have incident edges with different OSM IDs. Lets you keep
         nodes at elbow two-way intersections, but sometimes individual blocks
         have multiple OSM IDs within them too.
-    rings : bool
-        if False, remove isolated self-contained rings without any endpoints
+    remove_rings : bool
+        if True, remove isolated self-contained rings that have no endpoints
 
     Returns
     -------
@@ -291,7 +291,7 @@ def simplify_graph(G, strict=True, rings=False):
     # finally remove all the interstitial nodes between the new edges
     G.remove_nodes_from(set(all_nodes_to_remove))
 
-    if not rings:
+    if remove_rings:
         # remove any connected components that form a self-contained ring
         # without any endpoints
         wccs = nx.weakly_connected_components(G)
@@ -301,7 +301,7 @@ def simplify_graph(G, strict=True, rings=False):
                 nodes_in_rings.update(wcc)
         G.remove_nodes_from(nodes_in_rings)
 
-    # mark graph as simplified
+    # mark graph as having been simplified
     G.graph["simplified"] = True
 
     msg = (
