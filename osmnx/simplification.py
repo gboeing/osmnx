@@ -120,7 +120,7 @@ def _build_path(G, node, endpoints, path):
                     successor = successors[0]
                     path.append(successor)
                 else:
-                    if len(successors) == 0:
+                    if len(successors) == 0 and path[0] in G.successors(successor):
                         # we are coming to the end of a self-looping edge, so
                         # add path's first node to end of path to close it,
                         # then return
