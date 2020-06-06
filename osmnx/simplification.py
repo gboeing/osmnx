@@ -163,20 +163,10 @@ def _get_paths_to_simplify(G, strict=True):
     for node in endpoints:
         for successor in G.successors(node):
             if successor not in endpoints:
-                # if the successor is not an endpoint, build a path from the
-                # endpoint node to the next endpoint node
-                try:
-                    yield _build_path(G, successor, endpoints, path=[node, successor])
-                except RecursionError:
-                    utils.log(
-                        "Exceeded max depth, moving on to next endpoint successor", level=lg.WARNING
-                    )
-                    # recursion errors occur if some connected component is a
-                    # self-contained ring in which all nodes are not end points.
-                    # could also occur in extremely long street segments (eg, in
-                    # rural areas) with too many nodes between true endpoints.
-                    # handle it by just ignoring that component and letting its
-                    # topology remain intact (this should be a rare occurrence)
+                # if endpoint node's successor is not an endpoint, build a path
+                # from the endpoint node, through the successor, and on to the
+                # next endpoint node
+                yield _build_path(G, successor, endpoints, path=[node, successor])
 
 
 def _is_simplified(G):
@@ -244,7 +234,8 @@ def simplify_graph(G, strict=True, rings=False):
         edge_attributes = {}
         for u, v in zip(path[:-1], path[1:]):
 
-            # there shouldn't be multiple edges between interstitial nodes
+            # there should rarely be multiple edges between interstitial nodes
+            # e.g., if the nodes are connected by both a bike lane and a street
             if not G.number_of_edges(u, v) == 1:
                 utils.log(
                     f'Multiple edges between "{u}" and "{v}" found when simplifying',
