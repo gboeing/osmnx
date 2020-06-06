@@ -170,13 +170,12 @@ def truncate_graph_polygon(
     else:
         nodes_to_remove = nodes_outside_polygon["node"]
 
-    # now remove from the graph all those nodes that lie outside the place
-    # polygon
+    # now remove from the graph all those nodes that lie outside the polygon
     G.remove_nodes_from(nodes_to_remove)
     utils.log(f"Removed {len(nodes_outside_polygon)} nodes outside polygon")
 
-    # remove any isolated nodes and retain only the largest component (if retain_all is False)
     if not retain_all:
+        # remove any isolated nodes and retain only the largest component
         G = utils_graph.remove_isolated_nodes(G)
         G = utils_graph.get_largest_component(G)
 
