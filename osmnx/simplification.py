@@ -205,9 +205,9 @@ def simplify_graph(G, strict=True, rings=False):
         if False, allow nodes to be end points even if they fail all other
         rules but have incident edges with different OSM IDs. Lets you keep
         nodes at elbow two-way intersections, but sometimes individual blocks
-        have multiple OSM IDs within them.
+        have multiple OSM IDs within them too.
     rings : bool
-        if False, remove isolated self-contained rings without endpoints
+        if False, remove isolated self-contained rings without any endpoints
 
     Returns
     -------
