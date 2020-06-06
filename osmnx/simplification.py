@@ -114,31 +114,26 @@ def _build_path(G, node, endpoints, path):
             # it to the path
             path.append(successor)
             while successor not in endpoints:
-                nodes = [n for n in G.successors(successor) if n not in path]
-                # If nodes is empty, we should be on a self contained ring
-                # If nodes is longer than one, we fork into two paths
-                if len(nodes) == 1:
-                    successor = nodes[0]
+                # find successors (of current successor) not in path
+                successors = [n for n in G.successors(successor) if n not in path]
+                if len(successors) == 1:
+                    successor = successors[0]
                     path.append(successor)
                 else:
-                    # if this successor is not an endpoint, recursively call
-                    # build_path until you find an endpoint
-                    return _build_path(G, successor, endpoints, path)
+                    if len(successors) == 0:
+                        # we are coming to the end of a self-looping edge, so
+                        # add path's first node to end of path to close it,
+                        # then return
+                        return path + [path[0]]
+                    else:
+                        # if len successors > 1, then successor must have been
+                        # an endpoint because you can go in 2 new directions.
+                        # this should never occur in practice
+                        raise Exception("Should never hit this point.")
 
-            # We only enter this else statement if the while loop finishes properly!
-            else:
-                # if this successor is an endpoint, we've completed the path,
-                # so return it
-                return path
-
-    if (path[-1] not in endpoints) and (path[0] in G.successors(path[-1])):
-        # if the end of the path is not actually an endpoint and the path's
-        # first node is a successor of the path's final node, then this is
-        # actually a self loop, so add path's first node to end of path to
-        # close it
-        path.append(path[0])
-
-    return path
+            # if this successor is an endpoint, we've completed the path,
+            # so return it
+            return path
 
 
 def _get_paths_to_simplify(G, strict=True):
