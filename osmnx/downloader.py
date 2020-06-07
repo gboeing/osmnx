@@ -321,7 +321,7 @@ def _osm_net_download(polygon, network_type, custom_filter):
     response_jsons : list
     """
     # create a filter to exclude certain kinds of ways based on the requested
-    # network_type
+    # network_type, if provided, otherwise use custom_filter
     if custom_filter is not None:
         osm_filter = custom_filter
     else:
@@ -416,12 +416,10 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=180):
     -------
     response_json : dict
     """
-    known_requests = {"search", "reverse", "lookup"}
-    if request_type not in known_requests:
+    if request_type not in {"search", "reverse", "lookup"}:
         raise ValueError('Nominatim request_type must be "search", "reverse", or "lookup"')
 
-    # prepare the Nominatim API URL and see if request already exists in the
-    # cache
+    # prepare Nominatim API URL and see if request already exists in cache
     url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
     prepared_url = requests.Request("GET", url, params=params).prepare().url
     cached_response_json = _get_from_cache(prepared_url)
@@ -430,8 +428,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=180):
         params["key"] = settings.nominatim_key
 
     if cached_response_json is not None:
-        # found this request in the cache, just return it instead of making a
-        # new HTTP call
+        # found response in the cache, return it instead of calling server
         return cached_response_json
 
     else:
@@ -452,23 +449,20 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=180):
             response_json = response.json()
             _save_to_cache(prepared_url, response_json)
         except Exception:  # pragma: no cover
-            # 429 is 'too many requests' and 504 is 'gateway timeout' from server
-            # overload - handle these errors by recursively calling
-            # nominatim_request until we get a valid response
             sc = response.status_code
             if sc in [429, 504]:
-                # pause for error_pause seconds before re-trying request
+                # 429 is 'too many requests' and 504 is 'gateway timeout' from
+                # server overload: handle these by pausing then recursively
+                # re-trying until we get a valid response from the server
                 utils.log(
                     f"{domain} returned {sc} and no data: retrying in {error_pause:.2f} secs",
                     level=lg.WARNING,
                 )
                 time.sleep(error_pause)
-                response_json = nominatim_request(
-                    params=params, pause=pause, timeout=settings.timeout
-                )
+                response_json = nominatim_request(params, request_type, pause, error_pause)
 
-            # else, this was an unhandled status_code, throw an exception
             else:
+                # else, this was an unhandled status code, throw an exception
                 utils.log(f"{domain} returned {sc} and no data", level=lg.ERROR)
                 raise Exception(
                     f"Server returned no JSON data\n{response} {response.reason}\n{response.text}"
@@ -502,8 +496,7 @@ def overpass_request(data, pause=None, error_pause=None):
     cached_response_json = _get_from_cache(prepared_url, check_remark=True)
 
     if cached_response_json is not None:
-        # found this request in the cache, just return it instead of making a
-        # new HTTP call
+        # found response in the cache, return it instead of calling server
         return cached_response_json
 
     else:
@@ -528,12 +521,12 @@ def overpass_request(data, pause=None, error_pause=None):
                 utils.log(f'Server remark: "{response_json["remark"]}"', level=lg.WARNING)
             _save_to_cache(prepared_url, response_json)
 
-        # 429 is 'too many requests' and 504 is 'gateway timeout' from server
-        # overload - handle these errors by recursively calling overpass_request
-        # after a pause until we get a valid response
         except Exception:  # pragma: no cover
             sc = response.status_code
             if sc in [429, 504]:
+                # 429 is 'too many requests' and 504 is 'gateway timeout' from
+                # server overload: handle these by pausing then recursively
+                # re-trying until we get a valid response from the server
                 if error_pause is None:
                     error_pause = _get_pause()
                 utils.log(
@@ -541,9 +534,10 @@ def overpass_request(data, pause=None, error_pause=None):
                     level=lg.WARNING,
                 )
                 time.sleep(error_pause)
-                response_json = overpass_request(data=data, pause=pause, timeout=settings.timeout)
-            # else, this was an unhandled status_code, throw an exception
+                response_json = overpass_request(data, pause, error_pause)
+
             else:
+                # else, this was an unhandled status_code, throw an exception
                 utils.log(f"{domain} returned {sc} and no data", level=lg.ERROR)
                 raise Exception(
                     f"Server returned no JSON data\n{response} {response.reason}\n{response.text}"
