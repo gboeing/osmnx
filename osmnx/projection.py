@@ -35,20 +35,23 @@ def _is_crs_utm(crs):
 
 def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     """
-    Project a shapely (Multi)Polygon from lat-lng to UTM, or vice-versa.
+    Project a shapely geometry from its current CRS to another.
+
+    If to_crs is None, project to the UTM CRS for the UTM zone in which the
+    geometry's centroid lies. Otherwise project to the CRS defined by to_crs.
 
     Parameters
     ----------
     geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the geometry to project
     crs : dict or string or pyproj.CRS
-        the starting coordinate reference system of the passed-in geometry,
-        default value (None) will set settings.default_crs as the CRS
+        the starting CRS of the passed-in geometry. if None, it will be set to
+        settings.default_crs
     to_crs : dict or string or pyproj.CRS
-        if not None, just project to this CRS instead of to UTM
+        if None, project to UTM zone in which geometry's centroid lies,
+        otherwise project to this CRS
     to_latlong : bool
-        if True, project from crs to lat-lng, if False, project from crs to
-        local UTM zone
+        if True, project to settings.default_crs and ignore to_crs
 
     Returns
     -------
@@ -69,21 +72,23 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
 
 def project_gdf(gdf, to_crs=None, to_latlong=False):
     """
-    Project a GeoDataFrame to UTM.
+    Project a GeoDataFrame from its current CRS to another.
 
-    Automatically chooses the UTM zone appropriate for its geometries'
-    centroid. The simple calculation in this function works well for most
-    latitudes, but won't work for some far northern locations like Svalbard
-    and parts of far northern Norway.
+    If to_crs is None, project to the UTM CRS for the UTM zone in which the
+    GeoDataFrame's centroid lies. Otherwise project to the CRS defined by
+    to_crs. The simple UTM zone calculation in this function works well for
+    most latitudes, but may not work for some extreme northern locations like
+    Svalbard or far northern Norway.
 
     Parameters
     ----------
     gdf : geopandas.GeoDataFrame
-        the gdf to be projected
+        the GeoDataFrame to be projected
     to_crs : dict or string or pyproj.CRS
-        if not None, project to this CRS instead of to UTM
+        if None, project to UTM zone in which gdf's centroid lies, otherwise
+        project to this CRS
     to_latlong : bool
-        if True, projects to settings.default_crs instead of to UTM
+        if True, project to settings.default_crs and ignore to_crs
 
     Returns
     -------
@@ -132,7 +137,7 @@ def project_graph(G, to_crs=None):
     Project graph from its current CRS to another.
 
     If to_crs is None, project the graph to the UTM CRS for the UTM zone in
-    which the graph's centroid lies. Otherwise project to graph to the CRS
+    which the graph's centroid lies. Otherwise project the graph to the CRS
     defined by to_crs. Note that graph projection can be very slow for very
     large simplified graphs. If you want a projected graph, it's usually
     faster for large graphs if you create the graph with simplify=False, then
@@ -185,7 +190,7 @@ def project_graph(G, to_crs=None):
     if len(edges_with_geom) > 0:
         gdf_edges = gpd.GeoDataFrame(edges_with_geom)
         gdf_edges.crs = G_proj.graph["crs"]
-        gdf_edges_proj = project_gdf(gdf_edges, to_crs=to_crs)
+        gdf_edges_proj = project_gdf(gdf_edges, to_crs=gdf_nodes_proj.crs)
 
     # extract projected x and y values from the nodes' geometry column
     gdf_nodes_proj["x"] = gdf_nodes_proj["geometry"].map(lambda point: point.x)
