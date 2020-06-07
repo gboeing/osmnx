@@ -147,14 +147,14 @@ def project_graph(G, to_crs=None):
         # if not, you don't have to project these edges because the nodes
         # contain all the spatial data in the graph (unsimplified edges have
         # no geometry attributes)
-        gdf_edges_proj = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
-        gdf_edges_proj = gdf_edges_proj.drop(columns=["geometry"])
+        gdf_edges_proj = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False).drop(
+            columns=["geometry"]
+        )
 
     # STEP 3: REBUILD GRAPH
-    # turn projected node/edge gdfs into a graph
-    G_proj = utils_graph.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj)
-    G_proj.graph = G.graph.copy()
+    # turn projected node/edge gdfs into a graph and update its CRS attribute
+    G_proj = utils_graph.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj, G.graph)
     G_proj.graph["crs"] = gdf_nodes_proj.crs
 
-    utils.log("Rebuilt projected graph")
+    utils.log(f"Finished projecting graph with {len(G)} nodes and {len(G.edges())} edges")
     return G_proj
