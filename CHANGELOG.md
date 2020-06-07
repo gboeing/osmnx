@@ -1,5 +1,17 @@
 # Change log
 
+## 0.14.1 (TBD)
+
+  - fix simplification of graphs with long rural roads
+  - reduce memory footprint of graph simplification
+  - remove disconnected self-contained rings from graph by default when simplifying
+  - fix config function clobber behavior
+  - fix graph periphery cleaning when clean_periphery=True but simplify=False
+  - rename settings useful_tags_path to the more appropriate useful_tags_way
+  - deprecate the timeout, memory, custom_settings, and max_query_area_size function params
+  - the params above are now accessible via config function and settings module
+  - remove previously deprecated infrastructure parameter in favor of custom_filter
+
 ## 0.14.0 (2020-06-03)
 
   - better geometry subdividing for huge OSM queries
