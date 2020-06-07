@@ -91,7 +91,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         return to_return[0]
 
 
-def graph_from_gdfs(gdf_nodes, gdf_edges):
+def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     """
     Convert node and edge GeoDataFrames into a MultiDiGraph.
 
@@ -101,31 +101,29 @@ def graph_from_gdfs(gdf_nodes, gdf_edges):
         GeoDataFrame of graph nodes
     gdf_edges : geopandas.GeoDataFrame
         GeoDataFrame of graph edges
+    graph_attrs : dict
+        the new G.graph attribute dict; if None, add crs as the only
+        graph-level attribute
 
     Returns
     -------
     G : networkx.MultiDiGraph
     """
-    G = nx.MultiDiGraph()
-    G.graph["crs"] = gdf_nodes.crs
+    if graph_attrs is None:
+        graph_attrs = {"crs": gdf_nodes.crs}
+    G = nx.MultiDiGraph(**graph_attrs)
 
-    # add the nodes and their attributes to the graph
+    # add the nodes then each node's non-null attributes
     G.add_nodes_from(gdf_nodes.index)
-    attributes = gdf_nodes.to_dict()
-    for attribute_name in gdf_nodes.columns:
-        # only add this attribute to nodes which have a non-null value for it
-        attribute_values = {k: v for k, v in attributes[attribute_name].items() if pd.notnull(v)}
-        nx.set_node_attributes(G, name=attribute_name, values=attribute_values)
+    for col in gdf_nodes.columns:
+        nx.set_node_attributes(G, name=col, values=gdf_nodes[col].dropna())
 
-    # add the edges and attributes that are not u, v, key (as they're added
-    # separately) or null
-    for _, row in gdf_edges.iterrows():
-        attrs = {}
-        for label, value in row.items():
-            if (label not in ["u", "v", "key"]) and (isinstance(value, list) or pd.notnull(value)):
-                attrs[label] = value
-        G.add_edge(row["u"], row["v"], key=row["key"], **attrs)
+    # add each edge and its non-null attributes
+    for (u, v, k), row in gdf_edges.set_index(["u", "v", "key"]).iterrows():
+        d = {label: val for label, val in row.items() if isinstance(val, list) or pd.notnull(val)}
+        G.add_edge(u, v, k, **d)
 
+    utils.log("Created graph from node/edge GeoDataFrames")
     return G
 
 
