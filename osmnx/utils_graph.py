@@ -29,8 +29,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     node_geometry : bool
         if True, create a geometry column from node x and y data
     fill_edge_geometry : bool
-        if True, fill in missing edge geometry fields using origin and
-        destination nodes
+        if True, fill in missing edge geometry fields using nodes u and v
 
     Returns
     -------
