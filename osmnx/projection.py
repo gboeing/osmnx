@@ -74,7 +74,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
         the projected GeoDataFrame
     """
     if gdf.crs is None or len(gdf) < 1:
-        raise ValueError("GeoDataFrame cannot be empty and must have a valid CRS")
+        raise ValueError("GeoDataFrame must have a valid CRS and cannot be empty")
 
     # if to_latlong is True, project the gdf to latlong
     if to_latlong:
