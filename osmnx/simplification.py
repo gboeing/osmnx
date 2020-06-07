@@ -227,10 +227,8 @@ def simplify_graph(G, strict=True, remove_rings=True):
     all_nodes_to_remove = []
     all_edges_to_add = []
 
-    # construct a list of all the paths that need to be simplified
-    paths = _get_paths_to_simplify(G, strict=strict)
-
-    for path in paths:
+    # generate each path that needs to be simplified
+    for path in _get_paths_to_simplify(G, strict=strict):
 
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
