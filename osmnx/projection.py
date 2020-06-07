@@ -169,8 +169,8 @@ def project_graph(G, to_crs=None):
     gdf_nodes.set_geometry("geometry", inplace=True)
     utils.log("Created a GeoDataFrame from graph")
 
-    # project the nodes GeoDataFrame to UTM
-    gdf_nodes_utm = project_gdf(gdf_nodes, to_crs=to_crs)
+    # project the nodes GeoDataFrame
+    gdf_nodes_proj = project_gdf(gdf_nodes, to_crs=to_crs)
 
     # extract data for all edges that have geometry attribute
     edges_with_geom = []
@@ -178,19 +178,19 @@ def project_graph(G, to_crs=None):
         if "geometry" in data:
             edges_with_geom.append({"u": u, "v": v, "key": key, "geometry": data["geometry"]})
 
-    # create an edges GeoDataFrame and project to UTM, if there were any edges
+    # create an edges GeoDataFrame and project it, if there were any edges
     # with a geometry attribute. geom attr only exists if graph has been
     # simplified, otherwise you don't have to project anything for the edges
     # because the nodes still contain all spatial data
     if len(edges_with_geom) > 0:
         gdf_edges = gpd.GeoDataFrame(edges_with_geom)
         gdf_edges.crs = G_proj.graph["crs"]
-        gdf_edges_utm = project_gdf(gdf_edges, to_crs=to_crs)
+        gdf_edges_proj = project_gdf(gdf_edges, to_crs=to_crs)
 
     # extract projected x and y values from the nodes' geometry column
-    gdf_nodes_utm["x"] = gdf_nodes_utm["geometry"].map(lambda point: point.x)
-    gdf_nodes_utm["y"] = gdf_nodes_utm["geometry"].map(lambda point: point.y)
-    gdf_nodes_utm = gdf_nodes_utm.drop("geometry", axis=1)
+    gdf_nodes_proj["x"] = gdf_nodes_proj["geometry"].map(lambda point: point.x)
+    gdf_nodes_proj["y"] = gdf_nodes_proj["geometry"].map(lambda point: point.y)
+    gdf_nodes_proj = gdf_nodes_proj.drop("geometry", axis=1)
     utils.log("Extracted projected node geometries from GeoDataFrame")
 
     # clear the graph to make it a blank slate for the projected data
@@ -198,9 +198,9 @@ def project_graph(G, to_crs=None):
     G_proj.clear()
 
     # add the projected nodes and all their attributes to the graph
-    G_proj.add_nodes_from(gdf_nodes_utm.index)
-    attributes = gdf_nodes_utm.to_dict()
-    for label in gdf_nodes_utm.columns:
+    G_proj.add_nodes_from(gdf_nodes_proj.index)
+    attributes = gdf_nodes_proj.to_dict()
+    for label in gdf_nodes_proj.columns:
         nx.set_node_attributes(G_proj, name=label, values=attributes[label])
 
     # add the edges and all their attributes (including reconstructed geometry,
@@ -208,11 +208,11 @@ def project_graph(G, to_crs=None):
     for u, v, key, attributes in edges:
         if "geometry" in attributes:
             mask = (
-                (gdf_edges_utm["u"] == u)
-                & (gdf_edges_utm["v"] == v)
-                & (gdf_edges_utm["key"] == key)
+                (gdf_edges_proj["u"] == u)
+                & (gdf_edges_proj["v"] == v)
+                & (gdf_edges_proj["key"] == key)
             )
-            row = gdf_edges_utm[mask]
+            row = gdf_edges_proj[mask]
             attributes["geometry"] = row["geometry"].iloc[0]
 
         # attributes dict contains key, so we don't need to explicitly pass it here
@@ -220,7 +220,7 @@ def project_graph(G, to_crs=None):
 
     # set the graph's CRS attribute to the new, projected CRS and return the
     # projected graph
-    G_proj.graph["crs"] = gdf_nodes_utm.crs
+    G_proj.graph["crs"] = gdf_nodes_proj.crs
     if "streets_per_node" in G.graph:
         G_proj.graph["streets_per_node"] = G.graph["streets_per_node"]
     utils.log("Rebuilt projected graph")
