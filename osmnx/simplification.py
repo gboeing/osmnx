@@ -138,6 +138,10 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
             # if this successor is an endpoint, we've completed the path
             return path
 
+    # if endpoint_successor has no successors (usually due to a digitization
+    # issue on OSM), return the path
+    return path
+
 
 def _get_paths_to_simplify(G, strict=True):
     """
