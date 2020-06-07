@@ -34,15 +34,12 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     Returns
     -------
     geometry_proj, crs : tuple
-        the projected shapely geometry and the crs of the projected geometry
+        the projected geometry and its new CRS
     """
     if crs is None:
         crs = settings.default_crs
 
-    gdf = gpd.GeoDataFrame()
-    gdf.crs = crs
-    gdf["geometry"] = None
-    gdf.loc[0, "geometry"] = geometry
+    gdf = gpd.GeoDataFrame(geometry=[geometry], crs=crs)
     gdf_proj = project_gdf(gdf, to_crs=to_crs, to_latlong=to_latlong)
     geometry_proj = gdf_proj["geometry"].iloc[0]
     return geometry_proj, gdf_proj.crs
