@@ -197,9 +197,7 @@ def _get_from_cache(url, check_remark=False):
                     utils.log(f'Found remark, so ignoring cache file "{cache_filepath}"')
                     return None
 
-            utils.log(
-                f'Retrieved response from cache file "{cache_filepath}" for URL "{url[:200]}..."'
-            )
+            utils.log(f'Retrieved response from cache file "{cache_filepath}"')
             return response_json
 
 
