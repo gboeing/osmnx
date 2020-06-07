@@ -11,10 +11,10 @@ You can read more about the project's standards and code/docstring style in the 
 
 ## Code format
 
-Format the code according to the project's style by changing directories to the repository's root and running: 
+Format the code according to the project's style by changing directories to the repository's root and running:
 
 ```
-bash ./tests/run_black.sh
+bash ./tests/black.sh
 ```
 
 ## Run tests
@@ -22,7 +22,7 @@ bash ./tests/run_black.sh
 Run the tests and linters by changing directories to the repository's root and running:
 
 ```
-bash ./tests/run_tests.sh
+bash ./tests/test.sh
 ```
 
 ## Continuous integration
