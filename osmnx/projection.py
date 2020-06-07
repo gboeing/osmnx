@@ -129,10 +129,11 @@ def project_graph(G, to_crs=None):
     G_proj : networkx.MultiDiGraph
         the projected graph
     """
-    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
+    # STEP 1: PROJECT THE NODES
+    gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False)
 
-    # create new lat-lng columns just to save that data for later reference
-    # if they do not already exist (i.e., don't overwrite in subsequent re-projections)
+    # create new lat/lng columns to preserve lat/lng for later reference if
+    # cols do not already exist (ie, don't overwrite in later re-projections)
     if "lon" not in gdf_nodes.columns or "lat" not in gdf_nodes.columns:
         gdf_nodes["lon"] = gdf_nodes["x"]
         gdf_nodes["lat"] = gdf_nodes["y"]
@@ -143,14 +144,19 @@ def project_graph(G, to_crs=None):
     gdf_nodes_proj["y"] = gdf_nodes_proj["geometry"].y
     gdf_nodes_proj = gdf_nodes_proj.drop(columns=["geometry"])
 
-    # if graph has been simplified, project the edge geometries. if not, then
-    # you don't have to project these edges because the nodes contain all the
-    # spatial data in the graph
+    # STEP 2: PROJECT THE EDGES
     if simplification._is_simplified(G):
+        # if graph has previously been simplified, project the edge geometries
+        gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
         gdf_edges_proj = project_gdf(gdf_edges, to_crs=gdf_nodes_proj.crs)
     else:
-        gdf_edges_proj = gdf_edges.drop(columns=["geometry"])
+        # if not, you don't have to project these edges because the nodes
+        # contain all the spatial data in the graph (unsimplified edges have
+        # no geometry attributes)
+        gdf_edges_proj = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
+        gdf_edges_proj = gdf_edges_proj.drop(columns=["geometry"])
 
+    # STEP 3: REBUILD GRAPH
     # turn projected node/edge gdfs into a graph
     G_proj = utils_graph.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj)
     G_proj.graph = G.graph.copy()
