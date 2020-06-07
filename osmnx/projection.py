@@ -129,14 +129,22 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
 
 def project_graph(G, to_crs=None):
     """
-    Project graph from lat-lng to UTM zone appropriate for its centroid.
+    Project graph from its current CRS to another.
+
+    If to_crs is None, project the graph to the UTM CRS for the UTM zone in
+    which the graph's centroid lies. Otherwise project to graph to the CRS
+    defined by to_crs. Note that graph projection can be very slow for very
+    large simplified graphs. If you want a projected graph, it's usually
+    faster for large graphs if you create the graph with simplify=False, then
+    project the graph, and then simplify it.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        the networkx graph to be projected
+        the graph to be projected
     to_crs : dict or string or pyproj.CRS
-        if not None, just project to this CRS instead of to UTM
+        if None, project graph to UTM zone in which graph centroid lies,
+        otherwise project graph to this CRS
 
     Returns
     -------
