@@ -138,8 +138,8 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
             # if this successor is an endpoint, we've completed the path
             return path
 
-    # if endpoint_successor has no successors (usually due to a digitization
-    # issue on OSM), return the path
+    # if endpoint_successor has no successors not already in the path, return
+    # the current path. this is usually due to a digitization quirk on OSM.
     return path
 
 
