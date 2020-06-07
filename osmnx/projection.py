@@ -107,11 +107,8 @@ def project_graph(G, to_crs=None):
     Project graph from its current CRS to another.
 
     If to_crs is None, project the graph to the UTM CRS for the UTM zone in
-    which the graph's centroid lies. Otherwise project the graph to the CRS
-    defined by to_crs. Note that graph projection can be very slow for very
-    large simplified graphs. If you want a projected graph, it's usually
-    faster for large graphs if you create the graph with simplify=False, then
-    project the graph, and then simplify it.
+    which the graph's centroid lies. Otherwise, project the graph to the CRS
+    defined by to_crs.
 
     Parameters
     ----------
