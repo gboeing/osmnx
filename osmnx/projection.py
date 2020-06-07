@@ -79,7 +79,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
     # if to_latlong is True, project the gdf to latlong
     if to_latlong:
         gdf_proj = gdf.to_crs(settings.default_crs)
-        utils.log("Projected GeoDataFrame to settings.default_crs")
+        utils.log(f"Projected GeoDataFrame to {settings.default_crs}")
 
     # else if to_crs was passed-in, project gdf to this CRS
     elif to_crs is not None:
@@ -100,7 +100,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
 
         # project the GeoDataFrame to the UTM CRS
         gdf_proj = gdf.to_crs(utm_crs)
-        utils.log(f"Projected GeoDataFrame to UTM-{utm_zone}")
+        utils.log(f"Projected GeoDataFrame to {gdf_proj.crs}")
 
     return gdf_proj
 
