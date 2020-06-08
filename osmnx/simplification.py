@@ -88,58 +88,81 @@ def _is_endpoint(G, node, strict=True):
         return False
 
 
-def _build_path(G, node, endpoints, path):
+def _build_path(G, endpoint, endpoint_successor, endpoints):
     """
-    Recursively build a path of nodes until you hit an endpoint node.
+    Build a path of nodes from one endpoint node to next endpoint node.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
-    node : int
-        the current node to start from
+    endpoint : int
+        the endpoint node from which to start the path
+    endpoint_successor : int
+        the successor of endpoint through which the path to the next endpoint
+        will be built
     endpoints : set
         the set of all nodes in the graph that are endpoints
-    path : list
-        the list of nodes in order in the path so far
 
     Returns
     -------
     path : list
+        the first and last items in the resulting path list are endpoint
+        nodes, and all other items are interstitial nodes that can be removed
+        subsequently
     """
-    # for each successor in the passed-in node
-    for successor in G.successors(node):
+    # start building path from endpoint node through its successor
+    path = [endpoint, endpoint_successor]
+
+    # for each successor of the endpoint's successor
+    for successor in G.successors(endpoint_successor):
         if successor not in path:
             # if this successor is already in the path, ignore it, otherwise add
             # it to the path
             path.append(successor)
-            if successor not in endpoints:
-                # if this successor is not an endpoint, recursively call
-                # build_path until you find an endpoint
-                path = _build_path(G, successor, endpoints, path)
-            else:
-                # if this successor is an endpoint, we've completed the path,
-                # so return it
-                return path
+            while successor not in endpoints:
+                # find successors (of current successor) not in path
+                successors = [n for n in G.successors(successor) if n not in path]
 
-    if (path[-1] not in endpoints) and (path[0] in G.successors(path[-1])):
-        # if the end of the path is not actually an endpoint and the path's
-        # first node is a successor of the path's final node, then this is
-        # actually a self loop, so add path's first node to end of path to
-        # close it
-        path.append(path[0])
+                # 99%+ of the time there will be only 1 successor: add to path
+                if len(successors) == 1:
+                    successor = successors[0]
+                    path.append(successor)
 
+                # handle relatively rare cases or OSM digitization quirks
+                elif len(successors) == 0:
+                    if endpoint in G.successors(successor):
+                        # we have come to the end of a self-looping edge, so
+                        # add first node to end of path to close it and return
+                        return path + [endpoint]
+                    else:
+                        # this can happen due to OSM digitization error where
+                        # a one-way street turns into a two-way here, but
+                        # duplicate incoming one-way edges are present
+                        utils.log(
+                            f"Unexpected simplify pattern handled near {successor}", level=lg.WARN
+                        )
+                        return path
+                else:
+                    # if successor has >1 successors, then successor must have
+                    # been an endpoint because you can go in 2 new directions.
+                    # this should never occur in practice
+                    raise Exception(f"Unexpected simplify pattern failed near {successor}")
+
+            # if this successor is an endpoint, we've completed the path
+            return path
+
+    # if endpoint_successor has no successors not already in the path, return
+    # the current path: this is usually due to a digitization quirk on OSM
     return path
 
 
 def _get_paths_to_simplify(G, strict=True):
     """
-    Create a list of all the paths to be simplified between endpoint nodes.
+    Generate all the paths to be simplified between endpoint nodes.
 
     The path is ordered from the first endpoint, through the interstitial nodes,
-    to the second endpoint. If your street network is in a rural area with many
-    interstitial nodes between true edge endpoints, you may want to increase
-    your system's recursion limit to avoid recursion errors.
+    to the second endpoint.
 
     Parameters
     ----------
@@ -149,38 +172,22 @@ def _get_paths_to_simplify(G, strict=True):
         if False, allow nodes to be end points even if they fail all other rules
         but have edges with different OSM IDs
 
-    Returns
-    -------
-    paths_to_simplify : list
+    Yields
+    ------
+    path_to_simplify : list
     """
     # first identify all the nodes that are endpoints
-    endpoints = set([node for node in G.nodes() if _is_endpoint(G, node, strict=strict)])
+    endpoints = set([n for n in G.nodes() if _is_endpoint(G, n, strict=strict)])
     utils.log(f"Identified {len(endpoints)} edge endpoints")
 
-    paths_to_simplify = []
-
     # for each endpoint node, look at each of its successor nodes
-    for node in endpoints:
-        for successor in G.successors(node):
+    for endpoint in endpoints:
+        for successor in G.successors(endpoint):
             if successor not in endpoints:
-                # if the successor is not an endpoint, build a path from the
-                # endpoint node to the next endpoint node
-                try:
-                    path = _build_path(G, successor, endpoints, path=[node, successor])
-                    paths_to_simplify.append(path)
-                except RecursionError:
-                    utils.log(
-                        "Exceeded max depth, moving on to next endpoint successor", level=lg.WARNING
-                    )
-                    # recursion errors occur if some connected component is a
-                    # self-contained ring in which all nodes are not end points.
-                    # could also occur in extremely long street segments (eg, in
-                    # rural areas) with too many nodes between true endpoints.
-                    # handle it by just ignoring that component and letting its
-                    # topology remain intact (this should be a rare occurrence)
-
-    utils.log("Constructed all paths to simplify")
-    return paths_to_simplify
+                # if endpoint node's successor is not an endpoint, build a path
+                # from the endpoint node, through the successor, and on to the
+                # next endpoint node
+                yield _build_path(G, endpoint, successor, endpoints)
 
 
 def _is_simplified(G):
@@ -202,7 +209,7 @@ def _is_simplified(G):
     return "simplified" in G.graph and G.graph["simplified"]
 
 
-def simplify_graph(G, strict=True):
+def simplify_graph(G, strict=True, remove_rings=True):
     """
     Simplify a graph's topology by removing interstitial nodes.
 
@@ -217,7 +224,11 @@ def simplify_graph(G, strict=True):
         input graph
     strict : bool
         if False, allow nodes to be end points even if they fail all other
-        rules but have edges with different OSM IDs
+        rules but have incident edges with different OSM IDs. Lets you keep
+        nodes at elbow two-way intersections, but sometimes individual blocks
+        have multiple OSM IDs within them too.
+    remove_rings : bool
+        if True, remove isolated self-contained rings that have no endpoints
 
     Returns
     -------
@@ -234,26 +245,22 @@ def simplify_graph(G, strict=True):
     all_nodes_to_remove = []
     all_edges_to_add = []
 
-    # construct a list of all the paths that need to be simplified
-    paths = _get_paths_to_simplify(G, strict=strict)
-
-    for path in paths:
+    # generate each path that needs to be simplified
+    for path in _get_paths_to_simplify(G, strict=strict):
 
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
         edge_attributes = {}
         for u, v in zip(path[:-1], path[1:]):
 
-            # there shouldn't be multiple edges between interstitial nodes
+            # there should rarely be multiple edges between interstitial nodes
+            # usually happens if OSM has duplicate ways digitized for just one
+            # street... we will keep only one of the edges (see below)
             if not G.number_of_edges(u, v) == 1:
-                utils.log(
-                    f'Multiple edges between "{u}" and "{v}" found when simplifying',
-                    level=lg.WARNING,
-                )
+                utils.log(f"Found multiple edges between {u} and {v} when simplifying")
 
-            # the only element in this list as long as above check is True
-            # (MultiGraphs use keys (the 0 here), indexed with ints from 0 and
-            # up)
+            # get edge between these nodes: if multiple edges exist between
+            # them (see above), we retain only one in the simplified graph
             edge = G.edges[u, v, 0]
             for key in edge:
                 if key in edge_attributes:
@@ -295,6 +302,17 @@ def simplify_graph(G, strict=True):
     # finally remove all the interstitial nodes between the new edges
     G.remove_nodes_from(set(all_nodes_to_remove))
 
+    if remove_rings:
+        # remove any connected components that form a self-contained ring
+        # without any endpoints
+        wccs = nx.weakly_connected_components(G)
+        nodes_in_rings = set()
+        for wcc in wccs:
+            if all([not _is_endpoint(G, n) for n in wcc]):
+                nodes_in_rings.update(wcc)
+        G.remove_nodes_from(nodes_in_rings)
+
+    # mark graph as having been simplified
     G.graph["simplified"] = True
 
     msg = (
