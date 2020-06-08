@@ -331,11 +331,7 @@ def count_streets_per_node(G, nodes=None):
     # count how often each node appears in the list of flattened edge endpoints
     counts = Counter(edges_flat)
     streets_per_node = {node: counts[node] for node in nodes}
-    msg = (
-        "Got the counts of undirected street segments incident to each node "
-        "(before removing peripheral edges)"
-    )
-    utils.log(msg)
+    utils.log("Counted undirected street segments incident to each node")
     return streets_per_node
 
 
