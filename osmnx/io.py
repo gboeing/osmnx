@@ -332,6 +332,10 @@ def _convert_edge_attr_types(G, node_type):
         if "geometry" in data:
             data["geometry"] = wkt.loads(data["geometry"])
 
+        # delete the extraneous id attribute added by graphml saving
+        if "id" in data:
+            del data["id"]
+
     return G
 
 
