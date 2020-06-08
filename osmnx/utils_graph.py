@@ -16,7 +16,7 @@ from . import utils
 
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
     """
-    Convert a graph into node and/or edge GeoDataFrames.
+    Convert a graph to node and/or edge GeoDataFrames.
 
     Parameters
     ----------
@@ -39,24 +39,26 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     if not (nodes or edges):
         raise ValueError("You must request nodes or edges, or both.")
 
+    crs = G.graph["crs"]
     to_return = []
 
     if nodes:
 
         nodes, data = zip(*G.nodes(data=True))
-        gdf_nodes = gpd.GeoDataFrame(list(data), index=nodes)
+
         if node_geometry:
-            gdf_nodes["geometry"] = gdf_nodes.apply(lambda row: Point(row["x"], row["y"]), axis=1)
-            gdf_nodes.set_geometry("geometry", inplace=True)
-        gdf_nodes.crs = G.graph["crs"]
+            # convert node x/y attributes to Points for geometry column
+            geom = map(lambda d: Point(d["x"], d["y"]), data)
+            gdf_nodes = gpd.GeoDataFrame(data, index=nodes, crs=crs, geometry=list(geom))
+        else:
+            gdf_nodes = gpd.GeoDataFrame(data, index=nodes, crs=crs)
 
         to_return.append(gdf_nodes)
         utils.log("Created nodes GeoDataFrame from graph")
 
     if edges:
 
-        # create a list to hold our edges, then loop through each edge in the
-        # graph
+        # create list to hold edges, then loop through each edge in graph
         edges = []
         for u, v, key, data in G.edges(keys=True, data=True):
 
@@ -80,7 +82,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
         # create a GeoDataFrame from the list of edges and set the CRS
         gdf_edges = gpd.GeoDataFrame(edges)
-        gdf_edges.crs = G.graph["crs"]
+        gdf_edges.crs = crs
 
         to_return.append(gdf_edges)
         utils.log("Created edges GeoDataFrame from graph")
