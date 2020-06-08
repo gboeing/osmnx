@@ -232,23 +232,21 @@ def _convert_node_attr_types(G, node_type):
     G : networkx.MultiDiGraph
         input graph
     node_type : type
-        convert osmid to this type
+        convert node ID (osmid) to this type
 
     Returns
     -------
     G : networkx.MultiDiGraph
     """
-    # convert numeric node tags from string to numeric data types
     for _, data in G.nodes(data=True):
+
+        # convert node ID to user-requested type
         data["osmid"] = node_type(data["osmid"])
-        data["x"] = float(data["x"])
-        data["y"] = float(data["y"])
 
-        if "elevation" in data:
-            data["elevation"] = float(data["elevation"])
-
-        if "elevation_res" in data:
-            data["elevation_res"] = float(data["elevation_res"])
+        # convert numeric node attributes from string to float
+        for attr in {"elevation", "elevation_res", "lat", "lon", "x", "y"}:
+            if attr in data:
+                data[attr] = float(data[attr])
 
     return G
 
@@ -285,7 +283,7 @@ def _convert_edge_attr_types(G, node_type):
 
         # convert to float any possible OSMnx-added edge attributes, which may
         # have multiple values if graph was simplified after they were added
-        for attr in ["grade", "grade_abs", "bearing", "speed_kph", "travel_time"]:
+        for attr in {"grade", "grade_abs", "bearing", "speed_kph", "travel_time"}:
             if attr in data:
                 if data[attr].startswith("[") and data[attr].endswith("]"):
                     # if it's a list, eval it then convert each item to float
@@ -295,7 +293,7 @@ def _convert_edge_attr_types(G, node_type):
 
         # these attributes might have a single value, or a list if edge's
         # topology was simplified
-        for attr in [
+        for attr in {
             "highway",
             "name",
             "bridge",
@@ -309,7 +307,7 @@ def _convert_edge_attr_types(G, node_type):
             "landuse",
             "width",
             "est_width",
-        ]:
+        }:
             # if this edge has this attribute, and it starts with '[' and ends
             # with ']', then it's a list to be parsed
             if attr in data and data[attr].startswith("[") and data[attr].endswith("]"):
