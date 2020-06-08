@@ -98,7 +98,7 @@ def get_nearest_node(G, point, method="haversine", return_dist=False):
     """
     Find node nearest to a point.
 
-    Return the graph node nearest to some specified (lat, lng) or (y, x) point,
+    Return the graph node nearest to some specified (lat, lng) or (y, x) point
     and optionally the distance between the node and the point. This function
     can use either a haversine or euclidean distance calculator.
 
@@ -116,54 +116,47 @@ def get_nearest_node(G, point, method="haversine", return_dist=False):
     return_dist : bool
         Optionally also return the distance (in meters if haversine, or graph
         node coordinate units if euclidean) between the point and the nearest
-        node.
+        node
 
     Returns
     -------
     int or tuple of (int, float)
-        Nearest node ID or optionally a tuple of (node ID, dist), where dist is
-        the distance (in meters if haversine, or graph node coordinate units
-        if euclidean) between the point and nearest node
+        Nearest node ID or optionally a tuple of (node ID, dist), where dist
+        is the distance (in meters if haversine, or graph node coordinate
+        units if euclidean) between the point and nearest node
     """
-    if not G or (G.number_of_nodes() == 0):
-        raise ValueError("G argument must be not be empty or should contain at least one node")
+    if len(G) < 1:
+        raise ValueError("G must contain at least one node")
 
     # dump graph node coordinates into a pandas dataframe indexed by node id
     # with x and y columns
-    coords = [[node, data["x"], data["y"]] for node, data in G.nodes(data=True)]
+    coords = ((n, d["x"], d["y"]) for n, d in G.nodes(data=True))
     df = pd.DataFrame(coords, columns=["node", "x", "y"]).set_index("node")
 
-    # add columns to the dataframe representing the (constant) coordinates of
-    # the reference point
-    df["reference_y"] = point[0]
-    df["reference_x"] = point[1]
+    # add columns to df for the (constant) coordinates of reference point
+    df["ref_y"] = point[0]
+    df["ref_x"] = point[1]
 
     # calculate the distance between each node and the reference point
     if method == "haversine":
-        # calculate distance vector using haversine (ie, for
-        # spherical lat-lng geometries)
-        distances = great_circle_vec(
-            lat1=df["reference_y"], lng1=df["reference_x"], lat2=df["y"], lng2=df["x"]
-        )
+        # calculate distances using haversine for spherical lat-lng geometries
+        dists = great_circle_vec(lat1=df["ref_y"], lng1=df["ref_x"], lat2=df["y"], lng2=df["x"])
 
     elif method == "euclidean":
-        # calculate distance vector using euclidean distances (ie, for projected
-        # planar geometries)
-        distances = euclidean_dist_vec(
-            y1=df["reference_y"], x1=df["reference_x"], y2=df["y"], x2=df["x"]
-        )
+        # calculate distances using euclid's formula for projected geometries
+        dists = euclidean_dist_vec(y1=df["ref_y"], x1=df["ref_x"], y2=df["y"], x2=df["x"])
 
     else:
         raise ValueError('method argument must be either "haversine" or "euclidean"')
 
     # nearest node's ID is the index label of the minimum distance
-    nearest_node = distances.idxmin()
+    nearest_node = dists.idxmin()
     utils.log(f"Found nearest node ({nearest_node}) to point {point}")
 
     # if caller requested return_dist, return distance between the point and the
     # nearest node as well
     if return_dist:
-        return nearest_node, distances.loc[nearest_node]
+        return nearest_node, dists.loc[nearest_node]
     else:
         return nearest_node
 
@@ -183,7 +176,7 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
         Optionally return the geometry of the nearest edge
     return_dist : bool
         Optionally return the distance in graph's coordinates' units between
-        the point and the nearest node
+        the point and the nearest edge
 
     Returns
     -------
@@ -197,7 +190,7 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
     edges = gdf_edges[["u", "v", "key", "geometry"]].values
 
-    # convert lat-lng point to x-y for shapely distance operation
+    # convert lat/lng point to x/y for shapely distance operation
     xy_point = Point(reversed(point))
 
     # calculate euclidean distance from each edge's geometry to this point
@@ -259,7 +252,7 @@ def get_nearest_nodes(G, X, Y, method=None):
 
     elif method == "kdtree":
 
-        # check if we were able to import scipy.spatial.cKDTree successfully
+        # check if we were able to import scipy.spatial.cKDTree
         if not cKDTree:
             raise ImportError("The scipy package must be installed to use this optional feature.")
 
@@ -276,13 +269,14 @@ def get_nearest_nodes(G, X, Y, method=None):
 
     elif method == "balltree":
 
-        # check if we were able to import sklearn.neighbors.BallTree successfully
+        # check if we were able to import sklearn.neighbors.BallTree
         if not BallTree:
             raise ImportError(
                 "The scikit-learn package must be installed to use this optional feature."
             )
 
-        # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
+        # haversine requires data in form of [lat, lng] and inputs/outputs in
+        # units of radians
         nodes = pd.DataFrame(
             {"x": nx.get_node_attributes(G, "x"), "y": nx.get_node_attributes(G, "y")}
         )
@@ -353,8 +347,8 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     Returns
     -------
     ne : np.array
-        array of nearest edges represented by their startpoint and endpoint ids,
-        u and v, the OSM ids of the nodes, and the edge key.
+        array of nearest edges represented by u and v (the IDs of the nodes
+        they link) and key
     """
     if method is None:
         # calculate nearest edge one at a time for each (y, x) point

@@ -28,8 +28,8 @@ def _make_folium_polyline(
     edge_opacity : numeric
         opacity of the edge lines
     popup_attribute : string
-        edge attribute to display in a pop-up when an edge is clicked, if None,
-        no popup
+        edge attribute to display in a pop-up when an edge is clicked, if
+        None, no popup
     kwargs : dict
         Extra parameters passed through to folium
 
@@ -82,8 +82,8 @@ def plot_graph_folium(
     """
     Plot a graph on an interactive folium web map.
 
-    Note that anything larger than a small city can take a long time to plot and
-    create a large web map file that is very slow to load as JavaScript.
+    Note that anything larger than a small city can take a long time to plot
+    and create a large web map file that is very slow to load as JavaScript.
 
     Parameters
     ----------
