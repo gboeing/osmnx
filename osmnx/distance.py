@@ -150,13 +150,13 @@ def get_nearest_node(G, point, method="haversine", return_dist=False):
         raise ValueError('method argument must be either "haversine" or "euclidean"')
 
     # nearest node's ID is the index label of the minimum distance
-    nearest_node = distances.idxmin()
+    nearest_node = dists.idxmin()
     utils.log(f"Found nearest node ({nearest_node}) to point {point}")
 
     # if caller requested return_dist, return distance between the point and the
     # nearest node as well
     if return_dist:
-        return nearest_node, distances.loc[nearest_node]
+        return nearest_node, dists.loc[nearest_node]
     else:
         return nearest_node
 
