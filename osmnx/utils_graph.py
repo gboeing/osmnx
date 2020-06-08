@@ -58,31 +58,35 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
     if edges:
 
-        # create list to hold edges, then loop through each edge in graph
-        edges = []
-        for u, v, key, data in G.edges(keys=True, data=True):
+        u, v, k, data = zip(*G.edges(keys=True, data=True))
 
-            # for each edge, add key and all attributes in data dict to the
-            # edge_details
-            edge_details = {"u": u, "v": v, "key": key}
-            for attr_key in data:
-                edge_details[attr_key] = data[attr_key]
+        if fill_edge_geometry:
 
-            # if edge doesn't already have a geometry attribute, create one now
-            # if fill_edge_geometry==True
-            if "geometry" not in data:
-                if fill_edge_geometry:
-                    point_u = Point((G.nodes[u]["x"], G.nodes[u]["y"]))
-                    point_v = Point((G.nodes[v]["x"], G.nodes[v]["y"]))
-                    edge_details["geometry"] = LineString([point_u, point_v])
+            x_lookup = nx.get_node_attributes(G, "x")
+            y_lookup = nx.get_node_attributes(G, "y")
+
+            # function to get geometry for every edge: if edge already has
+            # geometry return it, otherwise create it using the incident nodes
+            def make_geom(u, v, data, x=x_lookup, y=y_lookup):
+                if "geometry" in data:
+                    return data["geometry"]
                 else:
-                    edge_details["geometry"] = np.nan
+                    return LineString((Point((x[u], y[u])), Point((x[v], y[v]))))
 
-            edges.append(edge_details)
+            geom = map(make_geom, u, v, data)
+            gdf_edges = gpd.GeoDataFrame(data, crs=crs, geometry=list(geom))
 
-        # create a GeoDataFrame from the list of edges and set the CRS
-        gdf_edges = gpd.GeoDataFrame(edges)
-        gdf_edges.crs = crs
+        else:
+            gdf_edges = gpd.GeoDataFrame(data, crs=crs)
+            # if edges didn't have geometry attributes, create null column
+            if "geometry" not in gdf_edges.columns:
+                gdf_edges["geometry"] = np.nan
+            gdf_edges.set_geometry("geometry")
+
+        # add u, v, key attributes as columns
+        gdf_edges["u"] = u
+        gdf_edges["v"] = v
+        gdf_edges["key"] = k
 
         to_return.append(gdf_edges)
         utils.log("Created edges GeoDataFrame from graph")
