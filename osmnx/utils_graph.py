@@ -18,6 +18,8 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     """
     Convert a graph to node and/or edge GeoDataFrames.
 
+    This function is the inverse of graph_from_gdfs.
+
     Parameters
     ----------
     G : networkx.MultiDiGraph
@@ -48,7 +50,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
         if node_geometry:
             # convert node x/y attributes to Points for geometry column
-            geom = map(lambda d: Point(d["x"], d["y"]), data)
+            geom = (Point(d["x"], d["y"]) for d in data)
             gdf_nodes = gpd.GeoDataFrame(data, index=nodes, crs=crs, geometry=list(geom))
         else:
             gdf_nodes = gpd.GeoDataFrame(data, index=nodes, crs=crs)
@@ -62,11 +64,10 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
         if fill_edge_geometry:
 
+            # subroutine to get geometry for every edge: if edge already has
+            # geometry return it, otherwise create it using the incident nodes
             x_lookup = nx.get_node_attributes(G, "x")
             y_lookup = nx.get_node_attributes(G, "y")
-
-            # function to get geometry for every edge: if edge already has
-            # geometry return it, otherwise create it using the incident nodes
             def make_geom(u, v, data, x=x_lookup, y=y_lookup):
                 if "geometry" in data:
                     return data["geometry"]
@@ -78,7 +79,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
         else:
             gdf_edges = gpd.GeoDataFrame(data, crs=crs)
-            # if edges didn't have geometry attributes, create null column
+            # if no edges had a geometry attribute, create null column
             if "geometry" not in gdf_edges.columns:
                 gdf_edges["geometry"] = np.nan
             gdf_edges.set_geometry("geometry")
@@ -99,7 +100,9 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
 def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     """
-    Convert node and edge GeoDataFrames into a MultiDiGraph.
+    Convert node and edge GeoDataFrames to a MultiDiGraph.
+
+    This function is the inverse of graph_to_gdfs.
 
     Parameters
     ----------
