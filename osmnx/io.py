@@ -274,11 +274,10 @@ def _convert_edge_attr_types(G, node_type):
 
         try:
             data["oneway"] = ast.literal_eval(data["oneway"])
-        except KeyError:
-            # may lack oneway if settings.all_oneway=True when you created graph
-            pass
-        except ValueError:
-            # may have values it can't eval if settings.all_oneway=True
+            raise ValueError()
+        except (KeyError, ValueError):
+            # may lack oneway if settings.all_oneway=True when you created
+            # graph, or values it can't eval if settings.all_oneway=True
             pass
 
         # convert to float any possible OSMnx-added edge attributes, which may
@@ -331,6 +330,10 @@ def _convert_edge_attr_types(G, node_type):
         # shapely LineString
         if "geometry" in data:
             data["geometry"] = wkt.loads(data["geometry"])
+
+        # delete the extraneous id attribute added by graphml saving
+        if "id" in data:
+            del data["id"]
 
     return G
 
