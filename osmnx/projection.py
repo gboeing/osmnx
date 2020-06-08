@@ -156,5 +156,5 @@ def project_graph(G, to_crs=None):
     G_proj = utils_graph.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj, G.graph)
     G_proj.graph["crs"] = gdf_nodes_proj.crs
 
-    utils.log(f"Finished projecting graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"Projected graph with {len(G)} nodes and {len(G.edges())} edges")
     return G_proj

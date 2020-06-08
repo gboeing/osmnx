@@ -15,9 +15,9 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     Calculate basic descriptive metric and topological stats for a graph.
 
     For an unprojected lat-lng graph, tolerance and graph units should be in
-    degrees, and circuity_dist should be 'gc'. For a projected graph, tolerance
-    and graph units should be in meters (or similar) and circuity_dist should be
-    'euclidean'.
+    degrees, and circuity_dist should be 'gc'. For a projected graph,
+    tolerance and graph units should be in meters (or similar) and
+    circuity_dist should be 'euclidean'.
 
     Parameters
     ----------
@@ -84,8 +84,8 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     G_undirected = None
 
     # calculate the number of nodes, n, and the number of edges, m, in the graph
-    n = len(list(G.nodes()))
-    m = len(list(G.edges()))
+    n = len(G)
+    m = len(G.edges())
 
     # calculate the average degree of the graph
     k_avg = 2 * m / n
@@ -132,7 +132,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     if G_undirected is None:
         G_undirected = G.to_undirected(reciprocal=False)
     street_length_total = sum([d["length"] for u, v, d in G_undirected.edges(data=True)])
-    street_segments_count = len(list(G_undirected.edges(keys=True)))
+    street_segments_count = len(G_undirected.edges(keys=True))
     street_length_avg = street_length_total / street_segments_count
 
     # calculate clean intersection counts
@@ -256,8 +256,8 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     anc : bool
         if True, calculate average node connectivity
     ecc : bool
-        if True, calculate shortest paths, eccentricity, and topological metrics
-        that use eccentricity
+        if True, calculate shortest paths, eccentricity, and topological
+        metrics that use eccentricity
     bc : bool
         if True, calculate node betweenness centrality
     cc : bool
