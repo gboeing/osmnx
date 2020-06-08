@@ -103,11 +103,11 @@ def _save_to_cache(url, response_json):
 
     If the request was sent to server via POST instead of GET, then URL should
     be a GET-style representation of request. Users should always pass
-    OrderedDicts instead of dicts of parameters into request functions, so that
-    the parameters stay in the same order each time, producing the same URL
-    string, and thus the same hash. Otherwise the cache will eventually contain
-    multiple saved responses for the same request because the URL's parameters
-    appeared in a different order each time.
+    OrderedDicts instead of dicts of parameters into request functions, so
+    that the parameters stay in the same order each time, producing the same
+    URL string, and thus the same hash. Otherwise the cache will eventually
+    contain multiple saved responses for the same request because the URL's
+    parameters appeared in a different order each time.
 
     Parameters
     ----------
@@ -185,7 +185,7 @@ def _get_from_cache(url, check_remark=False):
     # if the tool is configured to use the cache
     if settings.use_cache:
 
-        # return cached response for this url if it exists, otherwise return None
+        # return cached response for this url if exists, otherwise return None
         cache_filepath = _url_in_cache(url)
         if cache_filepath is not None:
             with open(cache_filepath, encoding="utf-8") as cache_file:
@@ -212,7 +212,8 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     referer : string
         the referer string, if None will set with OSMnx default
     accept_language : string
-        make accept-language explicit e.g. for consistent nominatim result sorting
+        make accept-language explicit e.g. for consistent nominatim result
+        sorting
 
     Returns
     -------
@@ -232,7 +233,7 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     return headers
 
 
-def _get_pause(recursive_delay=5, default_duration=10):
+def _get_pause(recursive_delay=5, default_duration=60):
     """
     Get a pause duration from the Overpass API status endpoint.
 
@@ -242,10 +243,10 @@ def _get_pause(recursive_delay=5, default_duration=10):
     Parameters
     ----------
     recursive_delay : int
-        how long to wait between recursive calls if server is currently running
-        a query
+        how long to wait between recursive calls if the server is currently
+        running a query
     default_duration : int
-        if fatal error, function falls back on returning this value
+        if fatal error, fall back on returning this value
 
     Returns
     -------
@@ -259,7 +260,8 @@ def _get_pause(recursive_delay=5, default_duration=10):
     # if we cannot reach the status endpoint or parse its output, log an
     # error and return default duration
     except Exception:
-        utils.log(f"Unable to query {url}", level=lg.ERROR)
+        sc = response.status_code
+        utils.log(f"Unable to query {url} got status {sc}", level=lg.ERROR)
         return default_duration
 
     try:
