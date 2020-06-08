@@ -59,6 +59,10 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8"):
     """
     Save graph nodes and edges to disk as ESRI shapefiles.
 
+    The shapefile format is proprietary and outdated. Whenever possible, you
+    should use the superior GeoPackage file format instead, for instance, via
+    the save_graph_geopackage function.
+
     Parameters
     ----------
     G : networkx.MultiDiGraph
@@ -138,9 +142,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
 
     if gephi:
 
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(
-            G_save, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True
-        )
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G_save)
 
         # turn each edge's key into a unique ID for Gephi compatibility
         gdf_edges["key"] = range(len(gdf_edges))
@@ -182,7 +184,7 @@ def load_graphml(filepath, node_type=int):
     """
     Load an OSMnx-saved GraphML file from disk.
 
-    Then convert the node/edge attributes to appropriate data types.
+    Converts the node/edge attributes to appropriate data types.
 
     Parameters
     ----------
@@ -281,11 +283,15 @@ def _convert_edge_attr_types(G, node_type):
             # may have values it can't eval if settings.all_oneway=True
             pass
 
-        # parse grade attrs to float: should always have only 1 value each
-        if "grade" in data:
-            data["grade"] = float(data["grade"])
-        if "grade_abs" in data:
-            data["grade_abs"] = float(data["grade_abs"])
+        # convert to float any possible OSMnx-added edge attributes, which may
+        # have multiple values if graph was simplified after they were added
+        for attr in ["grade", "grade_abs", "bearing", "speed_kph", "travel_time"]:
+            if attr in data:
+                if data[attr].startswith("[") and data[attr].endswith("]"):
+                    # if it's a list, eval it then convert each item to float
+                    data[attr] = [float(a) for a in ast.literal_eval(data[attr])]
+                else:
+                    data[attr] = float(data[attr])
 
         # these attributes might have a single value, or a list if edge's
         # topology was simplified
