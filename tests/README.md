@@ -22,7 +22,7 @@ bash ./tests/black.sh
 Run the tests and linters by changing directories to the repository's root and running:
 
 ```
-bash ./tests/test.sh
+bash ./tests/run_tests.sh
 ```
 
 ## Continuous integration
