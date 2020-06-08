@@ -21,8 +21,8 @@ def get_bearing(origin_point, destination_point):
     Returns
     -------
     bearing : float
-        the compass bearing in decimal degrees from the origin point
-        to the destination point
+        the compass bearing in decimal degrees from the origin point to the
+        destination point
     """
     if not (isinstance(origin_point, tuple) and isinstance(destination_point, tuple)):
         raise TypeError("origin_point and destination_point must be (lat, lng) tuples")
@@ -37,25 +37,27 @@ def get_bearing(origin_point, destination_point):
     y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1) * math.cos(lat2) * math.cos(diff_lng))
     initial_bearing = math.atan2(x, y)
 
-    # normalize initial bearing to 0 degrees to 360 degrees to get compass bearing
+    # normalize initial bearing to 0-360 degrees to get compass bearing
     initial_bearing = math.degrees(initial_bearing)
     bearing = (initial_bearing + 360) % 360
 
     return bearing
 
 
-def add_edge_bearings(G):
+def add_edge_bearings(G, precision=3):
     """
     Add bearing attributes to all graph edges.
 
-    Calculate the compass bearing from origin node to destination
-    node for each edge in the directed graph then add each bearing
-    as a new edge attribute.
+    Calculate the compass bearing from origin node to destination node for
+    each edge in the directed graph then add each bearing as a new edge
+    attribute.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
+    precision : int
+        decimal precision to round bearing
 
     Returns
     -------
@@ -75,6 +77,6 @@ def add_edge_bearings(G):
             bearing = get_bearing(origin_point, destination_point)
 
             # round to thousandth of a degree
-            data["bearing"] = round(bearing, 3)
+            data["bearing"] = round(bearing, precision)
 
     return G
