@@ -44,9 +44,9 @@ def get_bearing(origin_point, destination_point):
     return bearing
 
 
-def add_edge_bearings(G, precision=3):
+def add_edge_bearings(G, precision=1):
     """
-    Add bearing attributes to all graph edges.
+    Add `bearing` attributes to all graph edges.
 
     Calculate the compass bearing from origin node to destination node for
     each edge in the directed graph then add each bearing as a new edge
@@ -75,8 +75,6 @@ def add_edge_bearings(G, precision=3):
             origin_point = (G.nodes[u]["y"], G.nodes[u]["x"])
             destination_point = (G.nodes[v]["y"], G.nodes[v]["x"])
             bearing = get_bearing(origin_point, destination_point)
-
-            # round to thousandth of a degree
             data["bearing"] = round(bearing, precision)
 
     return G

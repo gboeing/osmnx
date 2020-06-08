@@ -12,12 +12,12 @@ from . import utils
 
 
 def add_node_elevations(
-    G, api_key, max_locations_per_batch=350, pause_duration=0.02
+    G, api_key, max_locations_per_batch=350, pause_duration=0.02, precision=3
 ):  # pragma: no cover
     """
-    Get the elevation (meters) of each node.
+    Add `elevation` (meters) attribute to each node.
 
-    Add it to the node as an attribute.
+    Uses the google maps elevation API.
 
     Parameters
     ----------
@@ -31,10 +31,13 @@ def add_node_elevations(
         limit exceeds the max)
     pause_duration : float
         time to pause between API calls
+    precision : int
+        decimal precision to round elevation
 
     Returns
     -------
     G : networkx.MultiDiGraph
+        graph with node elevation attributes
     """
     # google maps elevation API endpoint
     url_template = "https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}"
@@ -88,16 +91,16 @@ def add_node_elevations(
     # add elevation as an attribute to the nodes
     df = pd.DataFrame(node_points, columns=["node_points"])
     df["elevation"] = [result["elevation"] for result in results]
-    df["elevation"] = df["elevation"].round(3)  # round to millimeter
+    df["elevation"] = df["elevation"].round(precision)
     nx.set_node_attributes(G, name="elevation", values=df["elevation"].to_dict())
     utils.log("Added elevation data to all nodes.")
 
     return G
 
 
-def add_edge_grades(G, add_absolute=True):
+def add_edge_grades(G, add_absolute=True, precision=3):
     """
-    Add grade attribute to each graph edge.
+    Add `grade` attribute to each graph edge.
 
     Get the directed grade (ie, rise over run) for each edge in the network and
     add it to the edge as an attribute. Nodes must have elevation attributes to
@@ -109,10 +112,14 @@ def add_edge_grades(G, add_absolute=True):
         input graph
     add_absolute : bool
         if True, also add the absolute value of the grade as an edge attribute
+        called grade_abs
+    precision : int
+        decimal precision to round grades
 
     Returns
     -------
     G : networkx.MultiDiGraph
+        graph with edge grade (and optionally grade_abs) attributes
     """
     # for each edge, calculate the difference in elevation from origin to
     # destination, then divide by edge length
@@ -121,7 +128,7 @@ def add_edge_grades(G, add_absolute=True):
 
         # round to ten-thousandths decimal place
         try:
-            grade = round(elevation_change / data["length"], 4)
+            grade = round(elevation_change / data["length"], precision)
         except ZeroDivisionError:
             grade = None
 

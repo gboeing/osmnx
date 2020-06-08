@@ -561,9 +561,9 @@ def get_undirected(G):
     return H
 
 
-def add_edge_lengths(G):
+def add_edge_lengths(G, precision=3):
     """
-    Add length (meters) attribute to each edge.
+    Add `length` (meters) attribute to each edge.
 
     Calculate via great circle distance between nodes u and v.
 
@@ -571,10 +571,13 @@ def add_edge_lengths(G):
     ----------
     G : networkx.MultiDiGraph
         input graph
+    precision : int
+        decimal precision to round lengths
 
     Returns
     -------
     G : networkx.MultiDiGraph
+        graph with edge length attributes
     """
     # first load all the edges' origin and destination coordinates as a
     # dataframe indexed by u, v, key
@@ -605,8 +608,8 @@ def add_edge_lengths(G):
         lat1=df_coords["u_y"], lng1=df_coords["u_x"], lat2=df_coords["v_y"], lng2=df_coords["v_x"]
     )
 
-    # fill nulls with zeros and round to the millimeter
-    gc_distances = gc_distances.fillna(value=0).round(3)
+    # fill nulls with zeros and round
+    gc_distances = gc_distances.fillna(value=0).round(precision)
     nx.set_edge_attributes(G, name="length", values=gc_distances.to_dict())
 
     utils.log("Added edge lengths to graph")

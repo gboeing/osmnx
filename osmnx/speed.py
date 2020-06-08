@@ -9,7 +9,7 @@ import pandas as pd
 from . import utils_graph
 
 
-def add_edge_speeds(G, hwy_speeds=None, fallback=None):
+def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=1):
     """
     Add edge speeds (km per hour) to graph as new `speed_kph` edge attributes.
 
@@ -43,11 +43,13 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None):
         default speed value (km per hour) to assign to edges whose highway
         type did not appear in `hwy_speeds` and had no preexisting speed
         values on any edge
+    precision : int
+        decimal precision to round speed_kph
 
     Returns
     -------
     G : networkx.MultiDiGraph
-        graph with speed attributes on all edges
+        graph with speed_kph attributes on all edges
     """
     if fallback is None:
         fallback = np.nan
@@ -107,14 +109,14 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None):
         )
 
     # add speed kph attribute to graph edges
-    edges["speed_kph"] = speed_kph.values
+    edges["speed_kph"] = speed_kph.round(precision).values
     edge_speed_kph = edges[["u", "v", "key", "speed_kph"]].set_index(["u", "v", "key"]).iloc[:, 0]
     nx.set_edge_attributes(G, values=edge_speed_kph, name="speed_kph")
 
     return G
 
 
-def add_edge_travel_times(G):
+def add_edge_travel_times(G, precision=1):
     """
     Add edge travel time (seconds) to graph as new `travel_time` edge attributes.
 
@@ -127,11 +129,13 @@ def add_edge_travel_times(G):
     ----------
     G : networkx.MultiDiGraph
         input graph
+    precision : int
+        decimal precision to round travel_time
 
     Returns
     -------
     G : networkx.MultiDiGraph
-        graph with travel time attributes on all edges
+        graph with travel_time attributes on all edges
     """
     edges = utils_graph.graph_to_gdfs(G, nodes=False)
 
@@ -150,7 +154,7 @@ def add_edge_travel_times(G):
     travel_time = distance_km / speed_km_sec
 
     # add travel time attribute to graph edges
-    edges["travel_time"] = travel_time.values
+    edges["travel_time"] = travel_time.round(precision).values
     edge_times = edges[["u", "v", "key", "travel_time"]].set_index(["u", "v", "key"]).iloc[:, 0]
     nx.set_edge_attributes(G, values=edge_times, name="travel_time")
 
