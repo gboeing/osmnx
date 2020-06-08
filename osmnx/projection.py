@@ -34,15 +34,12 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     Returns
     -------
     geometry_proj, crs : tuple
-        the projected shapely geometry and the crs of the projected geometry
+        the projected geometry and its new CRS
     """
     if crs is None:
         crs = settings.default_crs
 
-    gdf = gpd.GeoDataFrame()
-    gdf.crs = crs
-    gdf["geometry"] = None
-    gdf.loc[0, "geometry"] = geometry
+    gdf = gpd.GeoDataFrame(geometry=[geometry], crs=crs)
     gdf_proj = project_gdf(gdf, to_crs=to_crs, to_latlong=to_latlong)
     geometry_proj = gdf_proj["geometry"].iloc[0]
     return geometry_proj, gdf_proj.crs
@@ -110,11 +107,8 @@ def project_graph(G, to_crs=None):
     Project graph from its current CRS to another.
 
     If to_crs is None, project the graph to the UTM CRS for the UTM zone in
-    which the graph's centroid lies. Otherwise project the graph to the CRS
-    defined by to_crs. Note that graph projection can be very slow for very
-    large simplified graphs. If you want a projected graph, it's usually
-    faster for large graphs if you create the graph with simplify=False, then
-    project the graph, and then simplify it.
+    which the graph's centroid lies. Otherwise, project the graph to the CRS
+    defined by to_crs.
 
     Parameters
     ----------
@@ -129,10 +123,11 @@ def project_graph(G, to_crs=None):
     G_proj : networkx.MultiDiGraph
         the projected graph
     """
-    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
+    # STEP 1: PROJECT THE NODES
+    gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False)
 
-    # create new lat-lng columns just to save that data for later reference
-    # if they do not already exist (i.e., don't overwrite in subsequent re-projections)
+    # create new lat/lng columns to preserve lat/lng for later reference if
+    # cols do not already exist (ie, don't overwrite in later re-projections)
     if "lon" not in gdf_nodes.columns or "lat" not in gdf_nodes.columns:
         gdf_nodes["lon"] = gdf_nodes["x"]
         gdf_nodes["lat"] = gdf_nodes["y"]
@@ -143,18 +138,23 @@ def project_graph(G, to_crs=None):
     gdf_nodes_proj["y"] = gdf_nodes_proj["geometry"].y
     gdf_nodes_proj = gdf_nodes_proj.drop(columns=["geometry"])
 
-    # if graph has been simplified, project the edge geometries. if not, then
-    # you don't have to project these edges because the nodes contain all the
-    # spatial data in the graph
+    # STEP 2: PROJECT THE EDGES
     if simplification._is_simplified(G):
+        # if graph has previously been simplified, project the edge geometries
+        gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
         gdf_edges_proj = project_gdf(gdf_edges, to_crs=gdf_nodes_proj.crs)
     else:
-        gdf_edges_proj = gdf_edges.drop(columns=["geometry"])
+        # if not, you don't have to project these edges because the nodes
+        # contain all the spatial data in the graph (unsimplified edges have
+        # no geometry attributes)
+        gdf_edges_proj = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False).drop(
+            columns=["geometry"]
+        )
 
-    # turn projected node/edge gdfs into a graph
-    G_proj = utils_graph.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj)
-    G_proj.graph = G.graph.copy()
+    # STEP 3: REBUILD GRAPH
+    # turn projected node/edge gdfs into a graph and update its CRS attribute
+    G_proj = utils_graph.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj, G.graph)
     G_proj.graph["crs"] = gdf_nodes_proj.crs
 
-    utils.log("Rebuilt projected graph")
+    utils.log(f"Finished projecting graph with {len(G)} nodes and {len(G.edges())} edges")
     return G_proj
