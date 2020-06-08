@@ -1,5 +1,7 @@
 """Simplify, correct, and consolidate network topology."""
 
+import logging as lg
+
 import geopandas as gpd
 import networkx as nx
 from shapely.geometry import LineString
@@ -121,25 +123,37 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
             while successor not in endpoints:
                 # find successors (of current successor) not in path
                 successors = [n for n in G.successors(successor) if n not in path]
+
+                # 99%+ of the time there will be only 1 successor: add to path
                 if len(successors) == 1:
                     successor = successors[0]
                     path.append(successor)
-                else:
-                    if len(successors) == 0 and endpoint in G.successors(successor):
+
+                # handle relatively rare cases or OSM digitization quirks
+                elif len(successors) == 0:
+                    if endpoint in G.successors(successor):
                         # we have come to the end of a self-looping edge, so
                         # add first node to end of path to close it and return
                         return path + [endpoint]
                     else:
-                        # if len successors > 1, then successor must have been
-                        # an endpoint because you can go in 2 new directions.
-                        # this should never occur in practice
-                        raise Exception("Should never hit this point.")
+                        # this can happen due to OSM digitization error where
+                        # a one-way street turns into a two-way here, but
+                        # duplicate incoming one-way edges are present
+                        utils.log(
+                            f"Unexpected simplify pattern handled near {successor}", level=lg.WARN
+                        )
+                        return path
+                else:
+                    # if successor has >1 successors, then successor must have
+                    # been an endpoint because you can go in 2 new directions.
+                    # this should never occur in practice
+                    raise Exception(f"Unexpected simplify pattern failed near {successor}")
 
             # if this successor is an endpoint, we've completed the path
             return path
 
     # if endpoint_successor has no successors not already in the path, return
-    # the current path. this is usually due to a digitization quirk on OSM.
+    # the current path: this is usually due to a digitization quirk on OSM
     return path
 
 
