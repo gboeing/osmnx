@@ -68,6 +68,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             # geometry return it, otherwise create it using the incident nodes
             x_lookup = nx.get_node_attributes(G, "x")
             y_lookup = nx.get_node_attributes(G, "y")
+
             def make_geom(u, v, data, x=x_lookup, y=y_lookup):
                 if "geometry" in data:
                     return data["geometry"]
