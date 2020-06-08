@@ -257,7 +257,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
             # usually happens if OSM has duplicate ways digitized for just one
             # street... we will keep only one of the edges (see below)
             if not G.number_of_edges(u, v) == 1:
-                utils.log(f'Multiple edges between "{u}" and "{v}" found when simplifying')
+                utils.log(f"Found multiple edges between {u} and {v} when simplifying")
 
             # get edge between these nodes: if multiple edges exist between
             # them (see above), we retain only one in the simplified graph
