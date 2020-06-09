@@ -347,16 +347,37 @@ def _save_and_show(
 
 
 def _config_ax(ax, axis_off, equal_aspect, top, bottom, crs):
+    """
+    Configure axes for plotting.
 
+    Parameters
+    ----------
+    ax : matplotlib axes
+        the axes containing the plot
+    axis_off : bool
+        if True, turn off the axis
+    equal_aspect : bool
+        if True, set the axes aspect ratio equal
+    top : float
+        top or north coordinate
+    bottom : float
+        bottom or south coordinate
+    crs : dict or string or pyproj.CRS
+        the CRS of the plotted geometries
+
+    Returns
+    -------
+    ax : matplotlib axes
+    """
     xaxis = ax.get_xaxis()
     yaxis = ax.get_yaxis()
 
     xaxis.get_major_formatter().set_useOffset(False)
     yaxis.get_major_formatter().set_useOffset(False)
 
-    # if axis_off, turn off the axes display set the margins to zero and point
-    # the ticks in so there's no space around the plot
     if axis_off:
+        # if axis_off, turn off the axes display, set the margins to zero,
+        # and point the ticks inward so there's no space around the plot
         ax.axis("off")
         ax.margins(0)
         ax.tick_params(which="both", direction="in")
@@ -455,7 +476,7 @@ def plot_graph(
     equal_aspect : bool
         if True, set the axes aspect ratio equal
     axis_off : bool
-        if True, turn off the matplotlib axes
+        if True, turn off the axis
     annotate : bool
         if True, annotate the nodes with their IDs
     draw_graph : bool
@@ -777,7 +798,7 @@ def plot_figure_ground(
         }
 
     # we need an undirected graph to find every edge incident to a node
-    G_undir = G.to_undirected()
+    G_undir = utils_graph.get_undirected(G)
 
     # for each network edge, get a linewidth according to street type (the OSM
     # 'highway' value)
@@ -797,7 +818,7 @@ def plot_figure_ground(
             incident_edges_data = [
                 G_undir.get_edge_data(node, neighbor) for neighbor in G_undir.neighbors(node)
             ]
-            edge_types = [data[0]["highway"] for data in incident_edges_data]
+            edge_types = [data[min(data)]["highway"] for data in incident_edges_data]
             if len(edge_types) < 1:
                 # if node has no incident edges, make size zero
                 node_widths[node] = 0
@@ -838,8 +859,21 @@ def plot_figure_ground(
     bbox = utils_geo.bbox_from_point(point, dist, project_utm=False)
 
     # plot the figure
+    override = {
+        "G",
+        "bbox",
+        "figsize",
+        "margin",
+        "axis_off",
+        "equal_aspect",
+        "node_size",
+        "node_color",
+        "edge_color",
+        "edge_linewidth",
+    }
+    kwargs = {k: v for k, v in pg_kwargs.items() if k not in override}
     fig, ax = plot_graph(
-        G_undir,
+        G=G_undir,
         bbox=bbox,
         figsize=figsize,
         margin=0,
@@ -849,7 +883,7 @@ def plot_figure_ground(
         node_color=edge_color,
         edge_color=edge_color,
         edge_linewidth=edge_linewidths,
-        **pg_kwargs,
+        **kwargs,
     )
 
     return fig, ax
@@ -905,7 +939,7 @@ def plot_footprints(
     equal_aspect : bool
         if True, set the axes aspect ratio equal
     axis_off : bool
-        if True, turn off the matplotlib axes
+        if True, turn off the axis
 
     Returns
     -------
