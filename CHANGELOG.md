@@ -5,6 +5,9 @@
   - fix simplification of graphs with long rural roads
   - reduce memory footprint of graph simplification
   - remove disconnected self-contained rings from graph by default when simplifying
+  - improve speed and efficiency of project_graph, graph_to_gdfs, and graph_from_gdfs
+  - improve attribute value conversion in load_graphml
+  - expose precision parameter for adding bearings, elevations, speeds, and travel times
   - fix config function clobber behavior
   - fix graph periphery cleaning when clean_periphery=True but simplify=False
   - rename settings useful_tags_path to the more appropriate useful_tags_way
