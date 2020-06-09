@@ -159,17 +159,9 @@ def test_routing_folium():
 
     attributes = ox.utils_graph.get_route_edge_attributes(G, route, "travel_time")
 
-    fig, ax = ox.plot_graph_route(G, route, save=True, filename="route", file_format="png")
+    fig, ax = ox.plot_graph_route(G, route, save=True)
 
-    fig, ax = ox.plot_graph_route(
-        G,
-        route,
-        origin_point=orig_pt,
-        destination_point=dest_pt,
-        save=True,
-        filename="route",
-        file_format="png",
-    )
+    fig, ax = ox.plot_graph_route(G, route, save=True)
 
     # test multiple routes
     fig, ax = ox.plot_graph_routes(G, [route, route])
@@ -193,19 +185,17 @@ def test_plots():
     # test getting colors
     co = ox.plot.get_colors(n=5, return_hex=True)
     nc = ox.plot.get_node_colors_by_attr(G, "osmid")
-    ec = ox.plot.get_edge_colors_by_attr(G, "length")
+    ec = ox.plot.get_edge_colors_by_attr(G, "length", num_bins=5)
 
     # plot and save to disk
-    fig, ax = ox.plot_graph(G, show=False, save=True, close=True, file_format="svg")
+    filepath = os.path.join(ox.settings.data_folder, "test.svg")
+    fig, ax = ox.plot_graph(G, show=False, save=True, close=True, filepath=filepath)
     fig, ax = ox.plot_graph(
         G,
-        fig_height=5,
-        fig_width=5,
+        figsize=(5, 5),
         margin=0.05,
         axis_off=False,
         bgcolor="y",
-        file_format="png",
-        filename="x",
         dpi=180,
         annotate=True,
         node_color="k",
@@ -216,20 +206,15 @@ def test_plots():
         edge_color="r",
         edge_linewidth=2,
         edge_alpha=0.1,
-        use_geom=False,
         show=False,
         save=True,
         close=True,
     )
 
     # figure-ground plots
-    fig, ax = ox.plot_figure_ground(G=G, file_format="png")
-    fig, ax = ox.plot_figure_ground(
-        point=location_point, dist=500, network_type="drive", file_format="png"
-    )
-    fig, ax = ox.plot_figure_ground(
-        address=address, dist=500, network_type="bike", file_format="png"
-    )
+    fig, ax = ox.plot_figure_ground(G=G)
+    fig, ax = ox.plot_figure_ground(point=location_point, dist=500, network_type="drive")
+    fig, ax = ox.plot_figure_ground(address=address, dist=500, network_type="bike")
 
 
 def test_find_nearest():
