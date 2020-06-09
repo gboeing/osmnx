@@ -27,7 +27,7 @@ def _rgb_color_list_to_hex(color_list):
     Parameters
     ----------
     color_list : list
-        the list of RGBa colors
+        list of RGBa colors
 
     Returns
     -------
@@ -40,14 +40,14 @@ def _rgb_color_list_to_hex(color_list):
 
 def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=False):
     """
-    Return n-length list of RGBa colors from the passed colormap name and alpha.
+    Return n-length list of RGBa colors from passed colormap name and alpha.
 
     Parameters
     ----------
     n : int
         number of colors
     cmap : string
-        name of a colormap
+        name of a matplotlib colormap
     start : float
         where to start in the colorspace
     stop : float
@@ -79,11 +79,11 @@ def get_node_colors_by_attr(
     G : networkx.MultiDiGraph
         input graph
     attr : string
-        the name of the attribute
+        name of the attribute
     num_bins : int
         how many quantiles (default None assigns each node to its own bin)
     cmap : string
-        name of a colormap
+        name of a matplotlib colormap
     start : float
         where to start in the colorspace
     stop : float
@@ -116,11 +116,11 @@ def get_edge_colors_by_attr(
     G : networkx.MultiDiGraph
         input graph
     attr : string
-        the name of the continuous-variable attribute
+        name of the continuous-variable attribute
     num_bins : int
         how many quantiles
     cmap : string
-        name of a colormap
+        name of a matplotlib colormap
     start : float
         where to start in the colorspace
     stop : float
@@ -142,20 +142,16 @@ def get_edge_colors_by_attr(
     return edge_colors
 
 
-def _node_list_to_coordinate_lines(G, route, use_geom=True):
+def _node_list_to_coordinate_lines(G, route):
     """
-    Make list of lines that follow the route defined by the list of nodes.
+    Create list of lines that follow the route defined by the list of nodes.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
     route : list
-        a valid graph path as a list of node IDs
-    use_geom : bool
-        if True, use the spatial geometry attribute of the edges to draw
-        geographically accurate edges, rather than just lines straight from
-        node to node
+        list of node IDs composing a valid path in G
 
     Returns
     -------
@@ -169,7 +165,7 @@ def _node_list_to_coordinate_lines(G, route, use_geom=True):
         data = min(G.get_edge_data(u, v).values(), key=lambda x: x["length"])
 
         # if it has a geometry attribute (ie, a list of line segments)
-        if "geometry" in data and use_geom:
+        if "geometry" in data:
             # add them to the list of lines to plot
             xs, ys = data["geometry"].xy
             lines.append(list(zip(xs, ys)))
@@ -187,7 +183,7 @@ def _node_list_to_coordinate_lines(G, route, use_geom=True):
 
 def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dpi=300):
     """
-    Save a figure to disk and show it, as specified.
+    Save a figure to disk and/or show it, as specified by args.
 
     Parameters
     ----------
@@ -196,16 +192,16 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
     ax : axes
         matplotlib axes
     save : bool
-        if True, save the figure as an image file to disk
+        if True, save the figure to disk at filepath
     show : bool
-        if True, call plt.show() to show the figure
+        if True, call pyplot.show() to show the figure
     close : bool
-        if True, call plt.close() to close the figure
+        if True, call pyplot.close() to close the figure
     filepath : string
         if save is True, the path to the file. file format determined from
         extension. if None, use default image folder + image.png
     dpi : int
-        if save is True, the resolution of the image file
+        if save is True, the resolution of saved file
 
     Returns
     -------
@@ -217,7 +213,7 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
 
     if save:
 
-        # default filepath, if none was provided
+        # default filepath, if none provided
         if filepath is None:
             filepath = os.path.join(settings.imgs_folder, "image.png")
 
@@ -271,9 +267,9 @@ def _config_ax(ax, top, bottom, crs):
     ax : matplotlib axes
         the axes containing the plot
     top : float
-        top or north coordinate
+        top/north coordinate
     bottom : float
-        bottom or south coordinate
+        bottom/south coordinate
     crs : dict or string or pyproj.CRS
         the CRS of the plotted geometries
 
@@ -338,46 +334,46 @@ def plot_graph(
     ax : matplotlib axes
         if not None, plot on this preexisting axes
     figsize : tuple
-        if ax is None, use figsize (width, height) to determine figure size;
-        if None, default to 6 inch height with proportional width
+        if ax is None, sets figure size as (width, height). if None, default
+        to 6 inch height with proportional width
     bgcolor : string
-        the background color of the plot
+        background color of plot
     node_color : string
-        the color of the nodes. color is passed to matplotlib
+        color of the nodes
     node_size : int
-        the size of the nodes
+        size of the nodes
     node_alpha : float
-        the opacity of the nodes. if you passed RGBA values to node_color,
-        then set this to None to use the alpha channel in node_color. if 0,
-        then skip plotting the nodes.
+        opacity of the nodes. if 0, then skip plotting the nodes. note: if you
+        passed RGBA values to node_color, set node_alpha=None to use the alpha
+        channel in node_color.
     node_edgecolor : string
-        the color of the node's marker's border
+        color of the nodes' markers' borders
     node_zorder : int
-        zorder to plot nodes, edges are always 1, so make node_zorder 0 to
-        plot nodes beneath them or 2 to plot nodes atop them
+        zorder to plot nodes: edges are always 1, so set node_zorder=0 to plot
+        nodes below edges
     edge_color : string
-        the color of the edges' lines. color is passed to matplotlib.
+        color of the edges' lines
     edge_linewidth : float
-        the width of the edges' lines
+        width of the edges' lines
     edge_alpha : float
-        the opacity of the edges' lines. if you passed RGBA values to
-        edge_color, then set this to None to use the alpha channel in
-        edge_color. if 0, then skip plotting the edges.
+        opacity of the edges. if 0, then skip plotting the edges. note: if you
+        passed RGBA values to edge_color, set edge_alpha=None to use the alpha
+        channel in edge_color.
     show : bool
-        if True, call plt.show() to show the figure
+        if True, call pyplot.show() to show the figure
     close : bool
-        if True, call plt.close() to close the figure
+        if True, call pyplot.close() to close the figure
     save : bool
-        if True, save the figure as an image file to disk
+        if True, save the figure to disk at filepath
     filepath : string
         if save is True, the path to the file. file format determined from
         extension. if None, use default image folder + image.png
     dpi : int
-        if save is True, the resolution of the image file
+        if save is True, the resolution of saved file
     bbox : tuple
-        bounding box as (north, south, east, west); if None will calculate
-        from spatial extents of edges; if passing bbox, you probably also want
-        to pass margin=0 to constrain it
+        bounding box as (north, south, east, west). if None, will calculate
+        from spatial extents of edges. if passing bbox, you probably also want
+        to pass margin=0 to constrain it.
     margin : float
         relative margin around the figure
     draw_graph : bool
@@ -478,15 +474,15 @@ def plot_graph_route(
     G : networkx.MultiDiGraph
         input graph
     route : list
-        the route as a list of nodes
+        route as a list of node IDs
     route_color : string
-        the color of the route
+        color of the route
     route_linewidth : int
-        the width of the route line
+        width of the route line
     route_alpha : float
-        the opacity of the route line
+        opacity of the route line
     orig_dest_size : int
-        the size of the origin and destination nodes
+        size of the origin and destination nodes
     **pg_kwargs
         keyword arguments to pass to plot_graph
 
@@ -537,7 +533,7 @@ def plot_graph_routes(G, routes, route_colors="r", **pgr_kwargs):
     G : networkx.MultiDiGraph
         input graph
     routes : list
-        the routes as a list of lists of nodes
+        routes as a list of lists of node IDs
     route_colors : list
         if string, the color for all routes; if list, the color for each route
     pgr_kwargs
@@ -608,32 +604,30 @@ def plot_figure_ground(
     **pg_kwargs,
 ):
     """
-    Plot figure-ground diagram of a street network.
-
-    Defaults to one square mile.
+    Plot a figure-ground diagram of a street network.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph, must be unprojected
     address : string
-        the address to geocode as the center point if G is not passed in
+        address to geocode as the center point if G is not passed in
     point : tuple
-        the center point if address and G are not passed in
+        center point if address and G are not passed in
     dist : numeric
         how many meters to extend north, south, east, and west from the center
         point
     network_type : string
         what type of network to get
     street_widths : dict
-        where keys are street types and values are widths to plot in pixels
+        dict keys are street types and values are widths to plot in pixels
     default_width : numeric
-        the default street width in pixels for any street type not found in
+        fallback street width in pixels for any street type not found in
         street_widths dict
     figsize : numeric
-        width, height of figure (should be equal)
+        (width, height) of figure, should be equal
     edge_color : string
-        the color of the edges' lines
+        color of the edges' lines
     smooth_joints : bool
         if True, plot nodes same width as streets to smooth line joints and
         prevent cracks between them from showing
@@ -787,7 +781,6 @@ def plot_footprints(
     figsize=None,
     color="orange",
     bgcolor="#222222",
-    set_bounds=True,
     bbox=None,
     save=False,
     show=True,
@@ -801,31 +794,32 @@ def plot_footprints(
     Parameters
     ----------
     gdf : geopandas.GeoDataFrame
-        GeoDataFrame of footprints
+        GeoDataFrame of footprints (shapely Polygons and MultiPolygons)
     ax : axes
         matplotlib axes
     figsize : tuple
         if ax is None, use figsize (width, height) to determine figure size
     color : string
-        the color of the footprints
+        color of the footprints
     bgcolor : string
-        the background color of the plot
+        background color of the plot
     set_bounds : bool
         if True, set bounds from either passed-in bbox or the spatial extent
         of gdf
     bbox : tuple
-        if True and if set_bounds is True, set the display bounds to this bbox
+        if True, set the figure's extent to this bounding box, otherwise use
+        the spatial extents of the geometries in gdf
     save : bool
-        if True, save the figure as an image file to disk
+        if True, save the figure to disk at filepath
     show : bool
-        if True, call plt.show() to show the figure
+        if True, call pyplot.show() to show the figure
     close : bool
-        if True, call plt.close() to close the figure
+        if True, call pyplot.close() to close the figure
     filepath : string
         if save is True, the path to the file. file format determined from
         extension. if None, use default image folder + image.png
     dpi : int
-        if save is True, the resolution of the image file
+        if save is True, the resolution of saved file
 
     Returns
     -------
@@ -852,14 +846,14 @@ def plot_footprints(
     pc = PatchCollection(patches, facecolor=color, edgecolor=color, linewidth=0, alpha=1)
     ax.add_collection(pc)
 
-    if set_bounds:
-        if bbox is None:
-            # set the figure bounds to the polygons' bounds
-            left, bottom, right, top = gdf.total_bounds
-        else:
-            top, bottom, right, left = bbox
-        ax.set_xlim((left, right))
-        ax.set_ylim((bottom, top))
+    # set figure extents
+    if bbox is None:
+        # set the figure bounds to the polygons' bounds
+        left, bottom, right, top = gdf.total_bounds
+    else:
+        top, bottom, right, left = bbox
+    ax.set_xlim((left, right))
+    ax.set_ylim((bottom, top))
 
     # configure axes appearance
     ax = _config_ax(ax, top, bottom, crs=gdf.crs)
