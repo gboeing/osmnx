@@ -13,16 +13,16 @@ dependencies:
   - beautifulsoup4=4.9.1=py38h32f6830_0
   - black=19.10b0=py38_0
   - bleach=3.1.5=pyh9f0ad1d_0
-  - blosc=1.18.1=h6538335_0
+  - blosc=1.19.0=ha925a31_0
   - bokeh=2.0.1=py38h32f6830_0
   - boost-cpp=1.72.0=h2ba7cf6_1
   - bottleneck=1.3.2=py38h4b8e87e_1
   - branca=0.4.1=py_0
   - brotlipy=0.7.0=py38h1e8a9f7_1000
   - bzip2=1.0.8=hfa6e2cd_2
-  - ca-certificates=2020.4.5.1=hecc5488_0
+  - ca-certificates=2020.4.5.2=hecda079_0
   - cartopy=0.18.0=py38h4990f70_0
-  - certifi=2020.4.5.1=py38h32f6830_0
+  - certifi=2020.4.5.2=py38h32f6830_0
   - cffi=1.14.0=py38ha419a9e_0
   - cfitsio=3.470=he774522_5
   - chardet=3.0.4=py38h32f6830_1006
@@ -67,8 +67,8 @@ dependencies:
   - icu=64.2=he025d50_1
   - idna=2.9=py_1
   - imagesize=1.2.0=py_0
-  - importlib-metadata=1.6.0=py38h32f6830_0
-  - importlib_metadata=1.6.0=0
+  - importlib-metadata=1.6.1=py38h32f6830_0
+  - importlib_metadata=1.6.1=0
   - intel-openmp=2020.0=166
   - ipykernel=5.3.0=py38h5ca1d4c_0
   - ipython=7.15.0=py38h32f6830_0
@@ -133,13 +133,13 @@ dependencies:
   - networkx=2.4=py_1
   - nodejs=14.4.0=0
   - notebook=6.0.3=py38h32f6830_0
-  - numexpr=2.7.1=py38hb99c5c2_1
-  - numpy=1.18.4=py38h72c728b_0
+  - numexpr=2.7.1=py38h7ae7562_1
+  - numpy=1.18.5=py38h72c728b_0
   - olefile=0.46=py_0
   - openjpeg=2.3.1=h57dd2e7_3
   - openssl=1.1.1g=he774522_0
   - osmnet=0.1.5=py_3
-  - owslib=0.19.2=py_1
+  - owslib=0.20.0=py_0
   - packaging=20.4=pyh9f0ad1d_0
   - palettable=3.3.0=py_0
   - pandana=0.4.4=py38he350917_1
@@ -192,7 +192,7 @@ dependencies:
   - qt=5.12.5=h7ef1ec2_0
   - rasterio=1.1.5=py38h151dc71_0
   - readme_renderer=24.0=py_0
-  - regex=2020.5.14=py38h1e8a9f7_0
+  - regex=2020.6.8=py38h1e8a9f7_0
   - requests=2.23.0=pyh8c360ce_2
   - requests-toolbelt=0.9.1=py_0
   - rtree=0.9.4=py38h7ad75cc_1
@@ -206,7 +206,7 @@ dependencies:
   - snowballstemmer=2.0.0=py_0
   - snuggs=1.4.7=py_0
   - soupsieve=2.0.1=py38h32f6830_0
-  - sphinx=3.0.4=py_0
+  - sphinx=3.1.0=py_0
   - sphinxcontrib-applehelp=1.0.2=py_0
   - sphinxcontrib-devhelp=1.0.2=py_0
   - sphinxcontrib-htmlhelp=1.0.3=py_0
@@ -232,7 +232,7 @@ dependencies:
   - urllib3=1.25.9=py_0
   - vc=14.1=h869be7e_1
   - vs2015_runtime=14.16.27012=h30e32a0_2
-  - wcwidth=0.2.3=pyh9f0ad1d_0
+  - wcwidth=0.2.4=pyh9f0ad1d_0
   - webencodings=0.5.1=py_1
   - wheel=0.34.2=py_1
   - win_inet_pton=1.1.0=py38_0

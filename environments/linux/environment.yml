@@ -14,17 +14,17 @@ dependencies:
   - beautifulsoup4=4.9.1=py38h32f6830_0
   - black=19.10b0=py38_0
   - bleach=3.1.5=pyh9f0ad1d_0
-  - blosc=1.18.1=he1b5a44_0
+  - blosc=1.19.0=he1b5a44_0
   - bokeh=2.0.1=py38h32f6830_0
   - boost-cpp=1.72.0=h8e57a91_0
   - bottleneck=1.3.2=py38h8790de6_1
   - branca=0.4.1=py_0
   - brotlipy=0.7.0=py38h1e0a361_1000
   - bzip2=1.0.8=h516909a_2
-  - ca-certificates=2020.4.5.1=hecc5488_0
+  - ca-certificates=2020.4.5.2=hecda079_0
   - cairo=1.16.0=hcf35c78_1003
   - cartopy=0.18.0=py38h172510d_0
-  - certifi=2020.4.5.1=py38h32f6830_0
+  - certifi=2020.4.5.2=py38h32f6830_0
   - cffi=1.14.0=py38hd463f26_0
   - cfitsio=3.470=h3eac812_5
   - chardet=3.0.4=py38h32f6830_1006
@@ -73,8 +73,8 @@ dependencies:
   - icu=64.2=he1b5a44_1
   - idna=2.9=py_1
   - imagesize=1.2.0=py_0
-  - importlib-metadata=1.6.0=py38h32f6830_0
-  - importlib_metadata=1.6.0=0
+  - importlib-metadata=1.6.1=py38h32f6830_0
+  - importlib_metadata=1.6.1=0
   - ipykernel=5.3.0=py38h23f93f0_0
   - ipython=7.15.0=py38h32f6830_0
   - ipython_genutils=0.2.0=py_1
@@ -95,7 +95,7 @@ dependencies:
   - keyring=21.2.1=py38h32f6830_0
   - kiwisolver=1.2.0=py38hbf85e49_0
   - krb5=1.17.1=h2fd8d38_0
-  - ld_impl_linux-64=2.34=h53a641e_4
+  - ld_impl_linux-64=2.34=h53a641e_5
   - libblas=3.8.0=16_openblas
   - libcblas=3.8.0=16_openblas
   - libclang=9.0.1=default_hde54327_0
@@ -147,12 +147,12 @@ dependencies:
   - nspr=4.25=he1b5a44_0
   - nss=3.47=he751ad9_0
   - numexpr=2.7.1=py38hcb8c335_1
-  - numpy=1.18.4=py38h8854b6b_0
+  - numpy=1.18.5=py38h8854b6b_0
   - olefile=0.46=py_0
   - openjpeg=2.3.1=h981e76c_3
   - openssl=1.1.1g=h516909a_0
   - osmnet=0.1.5=py_3
-  - owslib=0.19.2=py_1
+  - owslib=0.20.0=py_0
   - packaging=20.4=pyh9f0ad1d_0
   - palettable=3.3.0=py_0
   - pandana=0.4.4=py38hb3f55d8_1
@@ -208,7 +208,7 @@ dependencies:
   - rasterio=1.1.5=py38h033e0f6_0
   - readline=8.0=hf8c457e_0
   - readme_renderer=24.0=py_0
-  - regex=2020.5.14=py38h1e0a361_0
+  - regex=2020.6.8=py38h1e0a361_0
   - requests=2.23.0=pyh8c360ce_2
   - requests-toolbelt=0.9.1=py_0
   - rtree=0.9.4=py38h08f867b_1
@@ -223,7 +223,7 @@ dependencies:
   - snowballstemmer=2.0.0=py_0
   - snuggs=1.4.7=py_0
   - soupsieve=2.0.1=py38h32f6830_0
-  - sphinx=3.0.4=py_0
+  - sphinx=3.1.0=py_0
   - sphinxcontrib-applehelp=1.0.2=py_0
   - sphinxcontrib-devhelp=1.0.2=py_0
   - sphinxcontrib-htmlhelp=1.0.3=py_0
@@ -249,7 +249,7 @@ dependencies:
   - tzcode=2020a=h516909a_0
   - urbanaccess=0.2.0=py_1
   - urllib3=1.25.9=py_0
-  - wcwidth=0.2.3=pyh9f0ad1d_0
+  - wcwidth=0.2.4=pyh9f0ad1d_0
   - webencodings=0.5.1=py_1
   - wheel=0.34.2=py_1
   - wrapt=1.12.1=py38h1e0a361_1
