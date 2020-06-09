@@ -1,6 +1,7 @@
 """Plot spatial geometries, street networks, and routes."""
 
 import os
+import warnings
 
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
@@ -18,6 +19,40 @@ from . import simplification
 from . import utils
 from . import utils_geo
 from . import utils_graph
+
+
+def _warn_deprecated_params(**kwargs):
+    """
+    Warn about deprecated params.
+
+    Parameters
+    ----------
+    kwargs
+
+    Returns
+    -------
+    None
+    """
+    params = [k for k, v in kwargs.items() if v is not None]
+    if len(params) > 0:
+
+        param_str = ", ".join(params)
+        msg = f"The {param_str} parameter(s) have been deprecated and will be removed in the next release. "
+
+        cond1 = "fig_height" in kwargs and kwargs["fig_height"] is not None
+        cond2 = "fig_width" in kwargs and kwargs["fig_width"] is not None
+        if cond1 or cond2:
+            msg += "Note, fig_height and fig_width are replaced by the figsize parameter, use that instead. "
+
+        cond1 = "filename" in kwargs and kwargs["filename"] is not None
+        cond2 = "file_format" in kwargs and kwargs["file_format"] is not None
+        if cond1 or cond2:
+            msg += "Note, filename and file_format are replaced by the filepath parameter, use that instead. "
+
+        if "orig_dest_node_size" in kwargs and kwargs["orig_dest_node_size"] is not None:
+            msg += "Note, orig_dest_node_size is replaced by the orig_dest_size parameter, use that instead. "
+
+        warnings.warn(msg)
 
 
 def plot_shape(
@@ -57,6 +92,10 @@ def plot_shape(
     fig, ax : tuple
         matplotlib figure, axis
     """
+    warnings.warn(
+        "the plot_shape function has been deprecated and will be removed in the next release, use gdf.plot() instead"
+    )
+
     # if facecolor or edgecolor is a string instead of a list, make sure we have
     # as many colors as gdf elements
     if isinstance(fc, str):
@@ -297,19 +336,19 @@ def _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_
 def plot_graph(
     G,
     bbox=None,
-    fig_height=6,
+    fig_height=None,
     fig_width=None,
     margin=0.02,
-    axis_off=True,
-    equal_aspect=False,
+    axis_off=None,
+    equal_aspect=None,
     bgcolor="w",
     show=True,
     save=False,
     close=True,
-    file_format="png",
-    filename="temp",
+    file_format=None,
+    filename=None,
     dpi=300,
-    annotate=False,
+    annotate=None,
     node_color="#66ccff",
     node_size=15,
     node_alpha=1,
@@ -318,7 +357,9 @@ def plot_graph(
     edge_color="#999999",
     edge_linewidth=1,
     edge_alpha=1,
-    use_geom=True,
+    use_geom=None,
+    figsize=None,
+    filepath=None,
 ):
     """
     Plot a networkx spatial graph.
@@ -332,15 +373,15 @@ def plot_graph(
         spatial extents of data. if passing a bbox, you probably also want to
         pass margin=0 to constrain it.
     fig_height : int
-        matplotlib figure height in inches
+        deprecated, do not use
     fig_width : int
-        matplotlib figure width in inches
+        deprecated, do not use
     margin : float
         relative margin around the figure
     axis_off : bool
-        if True turn off the matplotlib axis
+        deprecated, do not use
     equal_aspect : bool
-        if True set the axis aspect ratio equal
+        deprecated, do not use
     bgcolor : string
         the background color of the figure and axis
     show : bool
@@ -350,13 +391,13 @@ def plot_graph(
     close : bool
         close the figure (only if show equals False) to prevent display
     file_format : string
-        the format of the file to save (e.g., 'jpg', 'png', 'svg')
+        deprecated, do not use
     filename : string
-        the name of the file if saving
+        deprecated, do not use
     dpi : int
         the resolution of the image file if saving
     annotate : bool
-        if True, annotate the nodes in the figure
+        deprecated, do not use
     node_color : string
         the color of the nodes. color is passed to matplotlib
     node_size : int
@@ -377,15 +418,48 @@ def plot_graph(
         the opacity of the edges' lines. if you passed RGBA values to edge_color,
         then set this to None to use the alpha channel in edge_color
     use_geom : bool
-        if True, use the spatial geometry attribute of the edges to draw
-        geographically accurate edges, rather than just lines straight from node
-        to node
+        deprecated, do not use
+    figsize : tuple
+        figure (width, height)
+    filepath : string
+        filename.ext to save image in settings.imgs_folder
 
     Returns
     -------
     fig, ax : tuple
         matplotlib figure, axis
     """
+    _warn_deprecated_params(
+        fig_height=fig_height,
+        fig_width=fig_width,
+        file_format=file_format,
+        filename=filename,
+        annotate=annotate,
+        use_geom=use_geom,
+        axis_off=axis_off,
+        equal_aspect=equal_aspect,
+    )
+    if axis_off is None:
+        axis_off = True
+    if equal_aspect is None:
+        equal_aspect = False
+    if fig_height is None:
+        fig_height = 6
+    if file_format is None:
+        file_format = "png"
+    if filename is None:
+        filename = "temp"
+    if annotate is None:
+        annotate = False
+    if use_geom is None:
+        use_geom = True
+    if figsize is not None:
+        fig_width, fig_height = figsize
+    if filepath is not None:
+        folders, filename_ext = os.path.split(filepath)
+        filename, file_format = os.path.splitext(filename_ext)
+        file_format = file_format.strip(".")
+
     utils.log("Begin plotting the graph...")
     node_Xs = [float(x) for _, x in G.nodes(data="x")]
     node_Ys = [float(y) for _, y in G.nodes(data="y")]
@@ -535,18 +609,18 @@ def plot_graph_route(
     G,
     route,
     bbox=None,
-    fig_height=6,
+    fig_height=None,
     fig_width=None,
     margin=0.02,
     bgcolor="w",
-    axis_off=True,
+    axis_off=None,
     show=True,
     save=False,
     close=True,
-    file_format="png",
-    filename="temp",
+    file_format=None,
+    filename=None,
     dpi=300,
-    annotate=False,
+    annotate=None,
     node_color="#999999",
     node_size=15,
     node_alpha=1,
@@ -555,16 +629,19 @@ def plot_graph_route(
     edge_color="#999999",
     edge_linewidth=1,
     edge_alpha=1,
-    use_geom=True,
+    use_geom=None,
     origin_point=None,
     destination_point=None,
     route_color="r",
     route_linewidth=4,
     route_alpha=0.5,
-    orig_dest_node_alpha=0.5,
-    orig_dest_node_size=100,
-    orig_dest_node_color="r",
-    orig_dest_point_color="b",
+    orig_dest_node_alpha=None,
+    orig_dest_node_size=None,
+    orig_dest_node_color=None,
+    orig_dest_point_color=None,
+    figsize=None,
+    filepath=None,
+    orig_dest_size=None,
 ):
     """
     Plot a route along a networkx spatial graph.
@@ -580,13 +657,13 @@ def plot_graph_route(
         spatial extents of data. if passing a bbox, you probably also want to
         pass margin=0 to constrain it.
     fig_height : int
-        matplotlib figure height in inches
+        deprecated, do not use
     fig_width : int
-        matplotlib figure width in inches
+        deprecated, do not use
     margin : float
         relative margin around the figure
     axis_off : bool
-        if True turn off the matplotlib axis
+        deprecated, do not use
     bgcolor : string
         the background color of the figure and axis
     show : bool
@@ -596,13 +673,13 @@ def plot_graph_route(
     close : bool
         close the figure (only if show equals False) to prevent display
     file_format : string
-        the format of the file to save (e.g., 'jpg', 'png', 'svg')
+        deprecated, do not use
     filename : string
-        the name of the file if saving
+        deprecated, do not use
     dpi : int
         the resolution of the image file if saving
     annotate : bool
-        if True, annotate the nodes in the figure
+        deprecated, do not use
     node_color : string
         the color of the nodes
     node_size : int
@@ -621,14 +698,11 @@ def plot_graph_route(
     edge_alpha : float
         the opacity of the edges' lines
     use_geom : bool
-        if True, use the spatial geometry attribute of the edges to draw
-        geographically accurate edges, rather than just lines straight from node
-        to node
+        deprecated, do not use
     origin_point : tuple
-        optional, an origin (lat, lng) point to plot instead of the origin node
+        deprecated, do not use
     destination_point : tuple
-        optional, a destination (lat, lng) point to plot instead of the
-        destination node
+        deprecated, do not use
     route_color : string
         the color of the route
     route_linewidth : int
@@ -636,45 +710,96 @@ def plot_graph_route(
     route_alpha : float
         the opacity of the route line
     orig_dest_node_alpha : float
-        the opacity of the origin and destination nodes
+        deprecated, do not use
     orig_dest_node_size : int
-        the size of the origin and destination nodes
+        deprecated, do not use
     orig_dest_node_color : string
-        the color of the origin and destination nodes
+        deprecated, do not use
     orig_dest_point_color : string
-        the color of the origin and destination points if being plotted instead
-        of nodes
+        deprecated, do not use
+    figsize : tuple
+        figure (width, height)
+    filepath : string
+        filename.ext to save image in settings.imgs_folder
+    orig_dest_size : int
+        the size of the origin and destination nodes
 
     Returns
     -------
     fig, ax : tuple
         matplotlib figure, axis
     """
-    # plot the graph but not the route
-    fig, ax = plot_graph(
-        G,
-        bbox=bbox,
+    _warn_deprecated_params(
         fig_height=fig_height,
         fig_width=fig_width,
-        margin=margin,
-        axis_off=axis_off,
-        bgcolor=bgcolor,
-        show=False,
-        save=False,
-        close=False,
+        file_format=file_format,
         filename=filename,
-        dpi=dpi,
         annotate=annotate,
-        node_color=node_color,
-        node_size=node_size,
-        node_alpha=node_alpha,
-        node_edgecolor=node_edgecolor,
-        node_zorder=node_zorder,
-        edge_color=edge_color,
-        edge_linewidth=edge_linewidth,
-        edge_alpha=edge_alpha,
         use_geom=use_geom,
+        origin_point=origin_point,
+        destination_point=destination_point,
+        orig_dest_node_alpha=orig_dest_node_alpha,
+        orig_dest_node_color=orig_dest_node_color,
+        orig_dest_point_color=orig_dest_point_color,
+        orig_dest_node_size=orig_dest_node_size,
+        axis_off=axis_off,
     )
+    if axis_off is None:
+        axis_off = True
+    if fig_height is None:
+        fig_height = 6
+    if file_format is None:
+        file_format = "png"
+    if filename is None:
+        filename = "temp"
+    if annotate is None:
+        annotate = False
+    if use_geom is None:
+        use_geom = True
+    if orig_dest_node_alpha is None:
+        orig_dest_node_alpha = 0.5
+    if orig_dest_node_size is None:
+        orig_dest_node_size = 100
+    if orig_dest_node_color is None:
+        orig_dest_node_color = "r"
+    if orig_dest_point_color is None:
+        orig_dest_point_color = "b"
+    if figsize is not None:
+        fig_width, fig_height = figsize
+    if filepath is not None:
+        folders, filename_ext = os.path.split(filepath)
+        filename, file_format = os.path.splitext(filename_ext)
+        file_format = file_format.strip(".")
+    if orig_dest_size is not None:
+        orig_dest_node_size = orig_dest_size
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        # plot the graph but not the route
+        fig, ax = plot_graph(
+            G,
+            bbox=bbox,
+            fig_height=fig_height,
+            fig_width=fig_width,
+            margin=margin,
+            axis_off=axis_off,
+            bgcolor=bgcolor,
+            show=False,
+            save=False,
+            close=False,
+            filename=filename,
+            dpi=dpi,
+            annotate=annotate,
+            node_color=node_color,
+            node_size=node_size,
+            node_alpha=node_alpha,
+            node_edgecolor=node_edgecolor,
+            node_zorder=node_zorder,
+            edge_color=edge_color,
+            edge_linewidth=edge_linewidth,
+            edge_alpha=edge_alpha,
+            use_geom=use_geom,
+        )
 
     # the origin and destination nodes are the first and last nodes in the route
     origin_node = route[0]
@@ -720,18 +845,18 @@ def plot_graph_routes(
     G,
     routes,
     bbox=None,
-    fig_height=6,
+    fig_height=None,
     fig_width=None,
     margin=0.02,
     bgcolor="w",
-    axis_off=True,
+    axis_off=None,
     show=True,
     save=False,
     close=True,
-    file_format="png",
-    filename="temp",
+    file_format=None,
+    filename=None,
     dpi=300,
-    annotate=False,
+    annotate=None,
     node_color="#999999",
     node_size=15,
     node_alpha=1,
@@ -740,15 +865,18 @@ def plot_graph_routes(
     edge_color="#999999",
     edge_linewidth=1,
     edge_alpha=1,
-    use_geom=True,
+    use_geom=None,
     orig_dest_points=None,
     route_color="r",
     route_linewidth=4,
     route_alpha=0.5,
-    orig_dest_node_alpha=0.5,
-    orig_dest_node_size=100,
-    orig_dest_node_color="r",
-    orig_dest_point_color="b",
+    orig_dest_node_alpha=None,
+    orig_dest_node_size=None,
+    orig_dest_node_color=None,
+    orig_dest_point_color=None,
+    figsize=None,
+    filepath=None,
+    orig_dest_size=None,
 ):
     """
     Plot several routes along a networkx spatial graph.
@@ -764,9 +892,9 @@ def plot_graph_routes(
         spatial extents of data. if passing a bbox, you probably also want to
         pass margin=0 to constrain it.
     fig_height : int
-        matplotlib figure height in inches
+        deprecated, do not use
     fig_width : int
-        matplotlib figure width in inches
+        deprecated, do not use
     margin : float
         relative margin around the figure
     axis_off : bool
@@ -780,13 +908,13 @@ def plot_graph_routes(
     close : bool
         close the figure (only if show equals False) to prevent display
     file_format : string
-        the format of the file to save (e.g., 'jpg', 'png', 'svg')
+        deprecated, do not use
     filename : string
-        the name of the file if saving
+        deprecated, do not use
     dpi : int
         the resolution of the image file if saving
     annotate : bool
-        if True, annotate the nodes in the figure
+        deprecated, do not use
     node_color : string
         the color of the nodes
     node_size : int
@@ -805,58 +933,106 @@ def plot_graph_routes(
     edge_alpha : float
         the opacity of the edges' lines
     use_geom : bool
-        if True, use the spatial geometry attribute of the edges to draw
-        geographically accurate edges, rather than just lines straight from node
-        to node
+        deprecated, do not use
     orig_dest_points : list of tuples
-        optional, a group of (lat, lng) points to plot instead of the
-        origins and destinations of each route nodes
+        deprecated, do not use
     route_color : string
-        the color of the route
+        route color (note: will be renamed `route_colors` and take list in
+        next release)
     route_linewidth : int
         the width of the route line
     route_alpha : float
         the opacity of the route line
     orig_dest_node_alpha : float
-        the opacity of the origin and destination nodes
+        deprecated, do not use
     orig_dest_node_size : int
-        the size of the origin and destination nodes
+        deprecated, do not use
     orig_dest_node_color : string
-        the color of the origin and destination nodes
+        deprecated, do not use
     orig_dest_point_color : string
-        the color of the origin and destination points if being plotted instead
-        of nodes
+        deprecated, do not use
+    figsize : tuple
+        figure (width, height)
+    filepath : string
+        filename.ext to save image in settings.imgs_folder
+    orig_dest_size : int
+        the size of the origin and destination nodes
 
     Returns
     -------
     fig, ax : tuple
         matplotlib figure, axis
     """
-    # plot the graph but not the routes
-    fig, ax = plot_graph(
-        G,
-        bbox=bbox,
+    _warn_deprecated_params(
         fig_height=fig_height,
         fig_width=fig_width,
-        margin=margin,
-        axis_off=axis_off,
-        bgcolor=bgcolor,
-        show=False,
-        save=False,
-        close=False,
+        file_format=file_format,
         filename=filename,
-        dpi=dpi,
         annotate=annotate,
-        node_color=node_color,
-        node_size=node_size,
-        node_alpha=node_alpha,
-        node_edgecolor=node_edgecolor,
-        node_zorder=node_zorder,
-        edge_color=edge_color,
-        edge_linewidth=edge_linewidth,
-        edge_alpha=edge_alpha,
         use_geom=use_geom,
+        oorig_dest_points=orig_dest_points,
+        orig_dest_node_alpha=orig_dest_node_alpha,
+        orig_dest_node_color=orig_dest_node_color,
+        orig_dest_point_color=orig_dest_point_color,
+        orig_dest_node_size=orig_dest_node_size,
+        axis_off=axis_off,
     )
+    if axis_off is None:
+        axis_off = True
+    if fig_height is None:
+        fig_height = 6
+    if file_format is None:
+        file_format = "png"
+    if filename is None:
+        filename = "temp"
+    if annotate is None:
+        annotate = False
+    if use_geom is None:
+        use_geom = True
+    if orig_dest_node_alpha is None:
+        orig_dest_node_alpha = 0.5
+    if orig_dest_node_size is None:
+        orig_dest_node_size = 100
+    if orig_dest_node_color is None:
+        orig_dest_node_color = "r"
+    if orig_dest_point_color is None:
+        orig_dest_point_color = "b"
+    if figsize is not None:
+        fig_width, fig_height = figsize
+    if filepath is not None:
+        folders, filename_ext = os.path.split(filepath)
+        filename, file_format = os.path.splitext(filename_ext)
+        file_format = file_format.strip(".")
+    if orig_dest_size is not None:
+        orig_dest_node_size = orig_dest_size
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        # plot the graph but not the routes
+        fig, ax = plot_graph(
+            G,
+            bbox=bbox,
+            fig_height=fig_height,
+            fig_width=fig_width,
+            margin=margin,
+            axis_off=axis_off,
+            bgcolor=bgcolor,
+            show=False,
+            save=False,
+            close=False,
+            filename=filename,
+            dpi=dpi,
+            annotate=annotate,
+            node_color=node_color,
+            node_size=node_size,
+            node_alpha=node_alpha,
+            node_edgecolor=node_edgecolor,
+            node_zorder=node_zorder,
+            edge_color=edge_color,
+            edge_linewidth=edge_linewidth,
+            edge_alpha=edge_alpha,
+            use_geom=use_geom,
+        )
 
     # save coordinates of the given reference points
     orig_dest_points_lats = []
@@ -915,16 +1091,18 @@ def plot_figure_ground(
     network_type="drive_service",
     street_widths=None,
     default_width=4,
-    fig_length=8,
+    fig_length=None,
     edge_color="w",
     bgcolor="#333333",
     smooth_joints=True,
     filename=None,
-    file_format="png",
+    file_format=None,
     show=False,
     save=True,
     close=True,
     dpi=300,
+    figsize=None,
+    filepath=None,
 ):
     """
     Plot figure-ground diagram of a street network.
@@ -950,7 +1128,7 @@ def plot_figure_ground(
         the default street width in pixels for any street type not found in
         street_widths dict
     fig_length : numeric
-        the height and width of this square diagram
+        deprecated, do not use
     edge_color : string
         the color of the streets
     bgcolor : string
@@ -959,9 +1137,9 @@ def plot_figure_ground(
         if True, plot nodes same width as streets to smooth line joints and
         prevent cracks between them from showing
     filename : string
-        filename to save the image as
+        deprecated, do not use
     file_format : string
-        the format of the file to save (e.g., 'jpg', 'png', 'svg')
+        deprecated, do not use
     show : bool
         if True, show the figure
     save : bool
@@ -970,12 +1148,30 @@ def plot_figure_ground(
         close the figure (only if show equals False) to prevent display
     dpi : int
         the resolution of the image file if saving
+    figsize : tuple
+        figure width, height (should be equal to each other)
+    filepath : string
+        filename.ext to save image in settings.imgs_folder
 
     Returns
     -------
     fig, ax : tuple
         matplotlib figure, axis
     """
+    _warn_deprecated_params(fig_length=fig_length, file_format=file_format, filename=filename)
+    if fig_length is None:
+        fig_length = 8
+    if file_format is None:
+        file_format = "png"
+    if filename is None:
+        filename = "temp"
+    if figsize is not None:
+        fig_length = figsize[0]
+    if filepath is not None:
+        folders, filename_ext = os.path.split(filepath)
+        filename, file_format = os.path.splitext(filename_ext)
+        file_format = file_format.strip(".")
+
     multiplier = 1.2
 
     # if G was passed-in, use this graph in the plot, centered on the centroid
@@ -1091,26 +1287,28 @@ def plot_figure_ground(
     if filename is None and save:
         filename = "figure_ground"
 
-    # plot the figure
-    fig, ax = plot_graph(
-        G_undir,
-        bbox=bbox,
-        fig_height=fig_length,
-        margin=0,
-        axis_off=True,
-        equal_aspect=False,
-        bgcolor=bgcolor,
-        node_size=node_sizes,
-        node_color=edge_color,
-        edge_linewidth=edge_linewidths,
-        edge_color=edge_color,
-        show=show,
-        save=save,
-        close=close,
-        filename=filename,
-        file_format=file_format,
-        dpi=dpi,
-    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        # plot the figure
+        fig, ax = plot_graph(
+            G_undir,
+            bbox=bbox,
+            fig_height=fig_length,
+            margin=0,
+            axis_off=True,
+            equal_aspect=False,
+            bgcolor=bgcolor,
+            node_size=node_sizes,
+            node_color=edge_color,
+            edge_linewidth=edge_linewidths,
+            edge_color=edge_color,
+            show=show,
+            save=save,
+            close=close,
+            filename=filename,
+            file_format=file_format,
+            dpi=dpi,
+        )
 
     return fig, ax
 
@@ -1127,9 +1325,10 @@ def plot_footprints(
     save=False,
     show=True,
     close=False,
-    filename="image",
-    file_format="png",
+    filename=None,
+    file_format=None,
     dpi=600,
+    filepath=None,
 ):
     """
     Plot a GeoDataFrame of footprints.
@@ -1159,17 +1358,29 @@ def plot_footprints(
     close : bool
         close the figure (only if show equals False) to prevent display
     filename : string
-        the name of the file to save
+        deprecated, do not use
     file_format : string
-        the format of the file to save (e.g., 'jpg', 'png', 'svg')
+        deprecated, do not use
     dpi : int
         the resolution of the image file if saving
+    filepath : string
+        filename.ext to save image in settings.imgs_folder
 
     Returns
     -------
     fig, ax : tuple
         matplotlib figure, axis
     """
+    _warn_deprecated_params(file_format=file_format, filename=filename)
+    if file_format is None:
+        file_format = "png"
+    if filename is None:
+        filename = "temp"
+    if filepath is not None:
+        folders, filename_ext = os.path.split(filepath)
+        filename, file_format = os.path.splitext(filename_ext)
+        file_format = file_format.strip(".")
+
     if fig is None or ax is None:
         fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)
         ax.set_facecolor(bgcolor)
