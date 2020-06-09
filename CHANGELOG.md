@@ -1,15 +1,19 @@
 # Change log
 
-## 0.14.1 (TBD)
+## 0.14.1 (2020-06-09)
 
   - fix simplification of graphs with long rural roads
   - reduce memory footprint of graph simplification
   - remove disconnected self-contained rings from graph by default when simplifying
+  - improve speed and efficiency of project_graph, graph_to_gdfs, and graph_from_gdfs
+  - improve attribute value conversion in load_graphml
+  - expose precision parameter for adding bearings, elevations, speeds, and travel times
   - fix config function clobber behavior
   - fix graph periphery cleaning when clean_periphery=True but simplify=False
   - rename settings useful_tags_path to the more appropriate useful_tags_way
   - deprecate the timeout, memory, custom_settings, and max_query_area_size function params
   - the params above are now accessible via config function and settings module
+  - deprecate old plot params and plot_shape function
   - remove previously deprecated infrastructure parameter in favor of custom_filter
 
 ## 0.14.0 (2020-06-03)
