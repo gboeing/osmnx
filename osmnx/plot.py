@@ -217,6 +217,49 @@ def get_edge_colors_by_attr(
     return edge_colors
 
 
+def _node_list_to_coordinate_lines(G, route, use_geom=True):
+    """
+    Make list of lines that follow the route defined by the list of nodes.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    route : list
+        a valid graph path as a list of node IDs
+    use_geom : bool
+        if True, use the spatial geometry attribute of the edges to draw
+        geographically accurate edges, rather than just lines straight from
+        node to node
+
+    Returns
+    -------
+    lines : list
+        list of lines as pairs ((x_start, y_start), (x_stop, y_stop))
+    """
+    edge_nodes = list(zip(route[:-1], route[1:]))
+    lines = []
+    for u, v in edge_nodes:
+        # if there are parallel edges, select the shortest in length
+        data = min(G.get_edge_data(u, v).values(), key=lambda x: x["length"])
+
+        # if it has a geometry attribute (ie, a list of line segments)
+        if "geometry" in data and use_geom:
+            # add them to the list of lines to plot
+            xs, ys = data["geometry"].xy
+            lines.append(list(zip(xs, ys)))
+        else:
+            # if it doesn't have a geometry attribute, the edge is a straight
+            # line from node to node
+            x1 = G.nodes[u]["x"]
+            y1 = G.nodes[u]["y"]
+            x2 = G.nodes[v]["x"]
+            y2 = G.nodes[v]["y"]
+            line = [(x1, y1), (x2, y2)]
+            lines.append(line)
+    return lines
+
+
 def _save_and_show(
     fig,
     ax,
@@ -258,6 +301,9 @@ def _save_and_show(
     fig, ax : tuple
         matplotlib figure, axis
     """
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+
     # save the figure if specified
     if save:
         # create the save folder if it doesn't already exist
@@ -330,6 +376,9 @@ def plot_graph(
     edge_linewidth=1,
     edge_alpha=1,
     use_geom=True,
+    fig=None,
+    ax=None,
+    draw_graph=True,
 ):
     """
     Plot a networkx spatial graph.
@@ -391,6 +440,12 @@ def plot_graph(
         if True, use the spatial geometry attribute of the edges to draw
         geographically accurate edges, rather than just lines straight from node
         to node
+    fig : matplotlib figure
+        if not None, plot on this preexisting figure
+    ax : matplotlib axis
+        if not None, plot on this preexisting axis
+    draw_graph : bool
+        if False, create fig/ax but do not plot graph
 
     Returns
     -------
@@ -409,52 +464,54 @@ def plot_graph(
     else:
         north, south, east, west = bbox
 
-    # if caller did not pass in a fig_width, calculate it proportionately from
-    # the fig_height and bounding box aspect ratio
-    bbox_aspect_ratio = (north - south) / (east - west)
-    if fig_width is None:
-        fig_width = fig_height / bbox_aspect_ratio
+    if fig is None or ax is None:
+        # if caller did not pass fig_width, make it proportional to fig_height
+        bbox_aspect_ratio = (north - south) / (east - west)
+        if fig_width is None:
+            fig_width = fig_height / bbox_aspect_ratio
 
-    # create the figure and axis
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=bgcolor)
-    ax.set_facecolor(bgcolor)
+        # create the figure and axis
+        fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=bgcolor)
+        ax.set_facecolor(bgcolor)
 
-    if edge_linewidth > 0 and edge_alpha > 0:
-        # draw the edges as lines from node to node
-        lines = []
-        for u, v, data in G.edges(keys=False, data=True):
-            if use_geom and "geometry" in data:
-                # if edge has geometry attr, add it to list of lines to plot
-                xs, ys = data["geometry"].xy
-                lines.append(list(zip(xs, ys)))
-            else:
-                # if it doesn't have geometry attr, draw straight line from
-                # node to node
-                x1 = G.nodes[u]["x"]
-                y1 = G.nodes[u]["y"]
-                x2 = G.nodes[v]["x"]
-                y2 = G.nodes[v]["y"]
-                line = [(x1, y1), (x2, y2)]
-                lines.append(line)
+    if draw_graph:
 
-        # add the lines to the axis as a LineCollection
-        lc = LineCollection(
-            lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=1
-        )
-        ax.add_collection(lc)
-        utils.log("Drew the graph edges")
+        if edge_linewidth > 0 and edge_alpha > 0:
+            # draw the edges as lines from node to node
+            lines = []
+            for u, v, data in G.edges(keys=False, data=True):
+                if use_geom and "geometry" in data:
+                    # if edge has geometry attr, add it to list of lines to plot
+                    xs, ys = data["geometry"].xy
+                    lines.append(list(zip(xs, ys)))
+                else:
+                    # if it doesn't have geometry attr, draw straight line from
+                    # node to node
+                    x1 = G.nodes[u]["x"]
+                    y1 = G.nodes[u]["y"]
+                    x2 = G.nodes[v]["x"]
+                    y2 = G.nodes[v]["y"]
+                    line = [(x1, y1), (x2, y2)]
+                    lines.append(line)
 
-    if node_size > 0 and node_alpha > 0:
-        # scatter plot the nodes
-        ax.scatter(
-            node_Xs,
-            node_Ys,
-            s=node_size,
-            c=node_color,
-            alpha=node_alpha,
-            edgecolor=node_edgecolor,
-            zorder=node_zorder,
-        )
+            # add the lines to the axis as a LineCollection
+            lc = LineCollection(
+                lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=1
+            )
+            ax.add_collection(lc)
+            utils.log("Drew the graph edges")
+
+        if node_size > 0 and node_alpha > 0:
+            # scatter plot the nodes
+            ax.scatter(
+                node_Xs,
+                node_Ys,
+                s=node_size,
+                c=node_color,
+                alpha=node_alpha,
+                edgecolor=node_edgecolor,
+                zorder=node_zorder,
+            )
 
     # set the extent of the figure
     margin_ns = (north - south) * margin
@@ -499,49 +556,6 @@ def plot_graph(
     return fig, ax
 
 
-def _node_list_to_coordinate_lines(G, route, use_geom=True):
-    """
-    Make list of lines that follow the route defined by the list of nodes.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    route : list
-        a valid graph path as a list of node IDs
-    use_geom : bool
-        if True, use the spatial geometry attribute of the edges to draw
-        geographically accurate edges, rather than just lines straight from
-        node to node
-
-    Returns
-    -------
-    lines : list
-        list of lines as pairs ((x_start, y_start), (x_stop, y_stop))
-    """
-    edge_nodes = list(zip(route[:-1], route[1:]))
-    lines = []
-    for u, v in edge_nodes:
-        # if there are parallel edges, select the shortest in length
-        data = min(G.get_edge_data(u, v).values(), key=lambda x: x["length"])
-
-        # if it has a geometry attribute (ie, a list of line segments)
-        if "geometry" in data and use_geom:
-            # add them to the list of lines to plot
-            xs, ys = data["geometry"].xy
-            lines.append(list(zip(xs, ys)))
-        else:
-            # if it doesn't have a geometry attribute, the edge is a straight
-            # line from node to node
-            x1 = G.nodes[u]["x"]
-            y1 = G.nodes[u]["y"]
-            x2 = G.nodes[v]["x"]
-            y2 = G.nodes[v]["y"]
-            line = [(x1, y1), (x2, y2)]
-            lines.append(line)
-    return lines
-
-
 def plot_graph_route(
     G,
     route,
@@ -554,7 +568,7 @@ def plot_graph_route(
     orig_dest_node_size=100,
     orig_dest_node_color="r",
     orig_dest_point_color="b",
-    **plot_graph_kwargs,
+    **pg_kwargs,
 ):
     """
     Plot a route along a networkx spatial graph.
@@ -585,19 +599,19 @@ def plot_graph_route(
     orig_dest_point_color : string
         the color of the origin and destination points if being plotted instead
         of nodes
-    **plot_graph_kwargs
-        arguments to pass to plot_graph
+    **pg_kwargs
+        keyword arguments to pass to plot_graph
 
     Returns
     -------
     fig, ax : tuple
         matplotlib figure, axis
     """
-    # plot the graph but not the route, and override any user show/close args
-    # for now: we'll do that later
+    # plot the graph but not the route, and override any user show/close
+    # args for now: we'll do that later
     override = {"save", "show", "close"}
-    pg_kwargs = {k: v for k, v in plot_graph_kwargs.items() if k not in override}
-    fig, ax = plot_graph(G, show=False, save=False, close=False, **pg_kwargs)
+    kwargs = {k: v for k, v in pg_kwargs.items() if k not in override}
+    fig, ax = plot_graph(G, show=False, save=False, close=False, **kwargs)
 
     # the origin and destination nodes are the first and last nodes in the route
     origin_node = route[0]
@@ -636,8 +650,8 @@ def plot_graph_route(
 
     # save and show the figure as specified
     sas_params = {"save", "show", "close", "filename", "file_format", "dpi", "axis_off"}
-    sas_kwargs = {k: v for k, v in plot_graph_kwargs.items() if k in sas_params}
-    fig, ax = _save_and_show(fig, ax, **sas_kwargs)
+    kwargs = {k: v for k, v in pg_kwargs.items() if k in sas_params}
+    fig, ax = _save_and_show(fig, ax, **kwargs)
     return fig, ax
 
 
@@ -645,14 +659,7 @@ def plot_graph_routes(
     G,
     routes,
     orig_dest_points=None,
-    route_color="r",
-    route_linewidth=4,
-    route_alpha=0.5,
-    orig_dest_node_alpha=0.5,
-    orig_dest_node_size=100,
-    orig_dest_node_color="r",
-    orig_dest_point_color="b",
-    **plot_graph_kwargs,
+    **pgr_kwargs
 ):
     """
     Plot several routes along a networkx spatial graph.
@@ -666,81 +673,30 @@ def plot_graph_routes(
     orig_dest_points : list of tuples
         optional, a group of (lat, lng) points to plot instead of the
         origins and destinations of each route nodes
-    route_color : string
-        the color of the route
-    route_linewidth : int
-        the width of the route line
-    route_alpha : float
-        the opacity of the route line
-    orig_dest_node_alpha : float
-        the opacity of the origin and destination nodes
-    orig_dest_node_size : int
-        the size of the origin and destination nodes
-    orig_dest_node_color : string
-        the color of the origin and destination nodes
-    orig_dest_point_color : string
-        the color of the origin and destination points if being plotted instead
-        of nodes
+    pgr_kwargs
+        keyword arguments to pass to plot_graph_route
 
     Returns
     -------
     fig, ax : tuple
         matplotlib figure, axis
     """
-    # plot the graph but not the routes, and override any user show/close args
-    # for now: we'll do that later
+    if len(routes) < 2:
+        raise ValueError("You must pass at least 2 routes")
+
     override = {"save", "show", "close"}
-    pg_kwargs = {k: v for k, v in plot_graph_kwargs.items() if k not in override}
-    fig, ax = plot_graph(G, show=False, save=False, close=False, **pg_kwargs)
+    kwargs = {k: v for k, v in pgr_kwargs.items() if k not in override}
+    fig, ax = plot_graph_route(G, routes[0], **kwargs)
 
-    # save coordinates of the given reference points
-    orig_dest_points_lats = []
-    orig_dest_points_lons = []
-
-    if orig_dest_points is None:
-        # if caller didn't pass points, use the first and last node in each route as
-        # origin/destination points
-        for route in routes:
-            origin_node = route[0]
-            destination_node = route[-1]
-            orig_dest_points_lats.append(G.nodes[origin_node]["y"])
-            orig_dest_points_lats.append(G.nodes[destination_node]["y"])
-            orig_dest_points_lons.append(G.nodes[origin_node]["x"])
-            orig_dest_points_lons.append(G.nodes[destination_node]["x"])
-
-    else:
-        # otherwise, use the passed points as origin/destination points
-        for point in orig_dest_points:
-            orig_dest_points_lats.append(point[0])
-            orig_dest_points_lons.append(point[1])
-        orig_dest_node_color = orig_dest_point_color
-
-    # scatter the origin and destination points
-    ax.scatter(
-        orig_dest_points_lons,
-        orig_dest_points_lats,
-        s=orig_dest_node_size,
-        c=orig_dest_node_color,
-        alpha=orig_dest_node_alpha,
-        edgecolor="none",
-        zorder=3,
-    )
-
-    # plot the routes lines
-    lines = []
-    for route in routes:
-        lines.extend(_node_list_to_coordinate_lines(G, route))
-
-    # add the lines to the axis as a linecollection
-    lc = LineCollection(
-        lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=2
-    )
-    ax.add_collection(lc)
+    override.update({"fig", "ax", "draw_graph"})
+    kwargs = {k: v for k, v in pgr_kwargs.items() if k not in override}
+    for route in routes[1:]:
+        fig, ax = plot_graph_route(G, route, fig=fig, ax=ax, draw_graph=False, show=False, save=False, close=False, **kwargs)
 
     # save and show the figure as specified
     sas_params = {"save", "show", "close", "filename", "file_format", "dpi", "axis_off"}
-    sas_kwargs = {k: v for k, v in plot_graph_kwargs.items() if k in sas_params}
-    fig, ax = _save_and_show(fig, ax, **sas_kwargs)
+    kwargs = {k: v for k, v in pgr_kwargs.items() if k in sas_params}
+    fig, ax = _save_and_show(fig, ax, **kwargs)
     return fig, ax
 
 
