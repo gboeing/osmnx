@@ -340,12 +340,10 @@ def _save_and_show(
             )
         utils.log(f"Saved figure to disk at {filepath}")
 
-    # show the figure if specified
     if show:
         plt.show()
-        utils.log("Showed the plot")
-    # if show=False, close the figure if close=True to prevent display
-    elif close:
+
+    if close:
         plt.close()
 
     return fig, ax
@@ -686,7 +684,7 @@ def plot_graph_routes(
 
     override = {"save", "show", "close"}
     kwargs = {k: v for k, v in pgr_kwargs.items() if k not in override}
-    fig, ax = plot_graph_route(G, routes[0], **kwargs)
+    fig, ax = plot_graph_route(G, routes[0], show=False, save=False, close=False, **kwargs)
 
     override.update({"fig", "ax", "draw_graph"})
     kwargs = {k: v for k, v in pgr_kwargs.items() if k not in override}
