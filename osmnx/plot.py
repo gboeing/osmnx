@@ -46,7 +46,7 @@ def plot_shape(
     alpha : numeric
         the opacity
     figsize : tuple
-        the size of the plotting figure
+        width, height of plotting figure
     margin : numeric
         the size of the figure margins
     axis_off : bool
@@ -55,7 +55,7 @@ def plot_shape(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axis
+        matplotlib figure, axes
     """
     # if facecolor or edgecolor is a string instead of a list, make sure we have
     # as many colors as gdf elements
@@ -80,7 +80,7 @@ def plot_shape(
                 "All geometries in GeoDataFrame must be shapely Polygons or MultiPolygons"
             )
 
-    # adjust the axis margins and limits around the image and make axes
+    # adjust the axes margins and limits around the image and make axes
     # equal-aspect
     west, south, east, north = gdf.unary_union.bounds
     margin_ns = (north - south) * margin
@@ -180,7 +180,9 @@ def get_node_colors_by_attr(
     return node_colors
 
 
-def get_edge_colors_by_attr(G, attr, num_bins=5, cmap="viridis", start=0, stop=1, na_color="none"):
+def get_edge_colors_by_attr(
+    G, attr, num_bins=None, cmap="viridis", start=0, stop=1, na_color="none"
+):
     """
     Get a list of edge colors by binning continuous attribute into quantiles.
 
@@ -213,279 +215,6 @@ def get_edge_colors_by_attr(G, attr, num_bins=5, cmap="viridis", start=0, stop=1
     colors = get_colors(num_bins, cmap, start, stop)
     edge_colors = [colors[int(cat)] if pd.notnull(cat) else na_color for cat in cats]
     return edge_colors
-
-
-def _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off):
-    """
-    Save a figure to disk and show it, as specified.
-
-    Parameters
-    ----------
-    fig : figure
-        matplotlib figure
-    ax : axis
-        matplotlib axis
-    save : bool
-        whether to save the figure to disk or not
-    show : bool
-        whether to display the figure or not
-    close : bool
-        close the figure (only if show equals False) to prevent display
-    filename : string
-        the name of the file to save
-    file_format : string
-        the format of the file to save (e.g., 'jpg', 'png', 'svg')
-    dpi : int
-        the resolution of the image file if saving
-    axis_off : bool
-        if True matplotlib axis was turned off by plot_graph so constrain the
-        saved figure's extent to the interior of the axis
-
-    Returns
-    -------
-    fig, ax : tuple
-        matplotlib figure, axis
-    """
-    # save the figure if specified
-    if save:
-        # create the save folder if it doesn't already exist
-        if not os.path.exists(settings.imgs_folder):
-            os.makedirs(settings.imgs_folder)
-        path_filename = os.path.join(settings.imgs_folder, os.extsep.join([filename, file_format]))
-
-        if file_format == "svg":
-            # if the file_format is svg, prep the fig/ax a bit for saving
-            ax.axis("off")
-            ax.set_position([0, 0, 1, 1])
-            ax.patch.set_alpha(0.0)
-            fig.patch.set_alpha(0.0)
-            fig.savefig(
-                path_filename,
-                bbox_inches=0,
-                format=file_format,
-                facecolor=fig.get_facecolor(),
-                transparent=True,
-            )
-        else:
-            if axis_off:
-                # if axis is turned off, constrain the saved figure's extent to
-                # the interior of the axis
-                extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-            else:
-                extent = "tight"
-            fig.savefig(
-                path_filename,
-                dpi=dpi,
-                bbox_inches=extent,
-                format=file_format,
-                facecolor=fig.get_facecolor(),
-                transparent=True,
-            )
-        utils.log("Saved the figure to disk")
-
-    # show the figure if specified
-    if show:
-        plt.show()
-        utils.log("Showed the plot")
-    # if show=False, close the figure if close=True to prevent display
-    elif close:
-        plt.close()
-
-    return fig, ax
-
-
-def plot_graph(
-    G,
-    bbox=None,
-    fig_height=6,
-    fig_width=None,
-    margin=0.02,
-    axis_off=True,
-    equal_aspect=False,
-    bgcolor="w",
-    show=True,
-    save=False,
-    close=True,
-    file_format="png",
-    filename="temp",
-    dpi=300,
-    annotate=False,
-    node_color="#66ccff",
-    node_size=15,
-    node_alpha=1,
-    node_edgecolor="none",
-    node_zorder=1,
-    edge_color="#999999",
-    edge_linewidth=1,
-    edge_alpha=1,
-    use_geom=True,
-):
-    """
-    Plot a networkx spatial graph.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    bbox : tuple
-        bounding box as north,south,east,west - if None will calculate from
-        spatial extents of data. if passing a bbox, you probably also want to
-        pass margin=0 to constrain it.
-    fig_height : int
-        matplotlib figure height in inches
-    fig_width : int
-        matplotlib figure width in inches
-    margin : float
-        relative margin around the figure
-    axis_off : bool
-        if True turn off the matplotlib axis
-    equal_aspect : bool
-        if True set the axis aspect ratio equal
-    bgcolor : string
-        the background color of the figure and axis
-    show : bool
-        if True, show the figure
-    save : bool
-        if True, save the figure as an image file to disk
-    close : bool
-        close the figure (only if show equals False) to prevent display
-    file_format : string
-        the format of the file to save (e.g., 'jpg', 'png', 'svg')
-    filename : string
-        the name of the file if saving
-    dpi : int
-        the resolution of the image file if saving
-    annotate : bool
-        if True, annotate the nodes in the figure
-    node_color : string
-        the color of the nodes. color is passed to matplotlib
-    node_size : int
-        the size of the nodes
-    node_alpha : float
-        the opacity of the nodes. if you passed RGBA values to node_color,
-        then set this to None to use the alpha channel in node_color
-    node_edgecolor : string
-        the color of the node's marker's border
-    node_zorder : int
-        zorder to plot nodes, edges are always 2, so make node_zorder 1 to plot
-        nodes beneath them or 3 to plot nodes atop them
-    edge_color : string
-        the color of the edges' lines. color is passed to matplotlib.
-    edge_linewidth : float
-        the width of the edges' lines
-    edge_alpha : float
-        the opacity of the edges' lines. if you passed RGBA values to edge_color,
-        then set this to None to use the alpha channel in edge_color
-    use_geom : bool
-        if True, use the spatial geometry attribute of the edges to draw
-        geographically accurate edges, rather than just lines straight from node
-        to node
-
-    Returns
-    -------
-    fig, ax : tuple
-        matplotlib figure, axis
-    """
-    utils.log("Begin plotting the graph...")
-    node_Xs = [float(x) for _, x in G.nodes(data="x")]
-    node_Ys = [float(y) for _, y in G.nodes(data="y")]
-
-    # get north, south, east, west values either from bbox parameter or from the
-    # spatial extent of the edges' geometries
-    if bbox is None:
-        edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
-        west, south, east, north = edges.total_bounds
-    else:
-        north, south, east, west = bbox
-
-    # if caller did not pass in a fig_width, calculate it proportionately from
-    # the fig_height and bounding box aspect ratio
-    bbox_aspect_ratio = (north - south) / (east - west)
-    if fig_width is None:
-        fig_width = fig_height / bbox_aspect_ratio
-
-    # create the figure and axis
-    fig, ax = plt.subplots(figsize=(fig_width, fig_height), facecolor=bgcolor)
-    ax.set_facecolor(bgcolor)
-
-    # draw the edges as lines from node to node
-    lines = []
-    for u, v, data in G.edges(keys=False, data=True):
-        if "geometry" in data and use_geom:
-            # if it has a geometry attribute (a list of line segments), add them
-            # to the list of lines to plot
-            xs, ys = data["geometry"].xy
-            lines.append(list(zip(xs, ys)))
-        else:
-            # if it doesn't have a geometry attribute, the edge is a straight
-            # line from node to node
-            x1 = G.nodes[u]["x"]
-            y1 = G.nodes[u]["y"]
-            x2 = G.nodes[v]["x"]
-            y2 = G.nodes[v]["y"]
-            line = [(x1, y1), (x2, y2)]
-            lines.append(line)
-
-    # add the lines to the axis as a linecollection
-    lc = LineCollection(
-        lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=2
-    )
-    ax.add_collection(lc)
-    utils.log("Drew the graph edges")
-
-    # scatter plot the nodes
-    ax.scatter(
-        node_Xs,
-        node_Ys,
-        s=node_size,
-        c=node_color,
-        alpha=node_alpha,
-        edgecolor=node_edgecolor,
-        zorder=node_zorder,
-    )
-
-    # set the extent of the figure
-    margin_ns = (north - south) * margin
-    margin_ew = (east - west) * margin
-    ax.set_ylim((south - margin_ns, north + margin_ns))
-    ax.set_xlim((west - margin_ew, east + margin_ew))
-
-    # configure axis appearance
-    xaxis = ax.get_xaxis()
-    yaxis = ax.get_yaxis()
-
-    xaxis.get_major_formatter().set_useOffset(False)
-    yaxis.get_major_formatter().set_useOffset(False)
-
-    # if axis_off, turn off the axis display set the margins to zero and point
-    # the ticks in so there's no space around the plot
-    if axis_off:
-        ax.axis("off")
-        ax.margins(0)
-        ax.tick_params(which="both", direction="in")
-        xaxis.set_visible(False)
-        yaxis.set_visible(False)
-        fig.canvas.draw()
-
-    if equal_aspect:
-        # make everything square
-        ax.set_aspect("equal")
-        fig.canvas.draw()
-    else:
-        # if the graph is not projected, conform the aspect ratio to not stretch the plot
-        if G.graph["crs"] == settings.default_crs:
-            coslat = np.cos((min(node_Ys) + max(node_Ys)) / 2.0 / 180.0 * np.pi)
-            ax.set_aspect(1.0 / coslat)
-            fig.canvas.draw()
-
-    # annotate the axis with node IDs if annotate=True
-    if annotate:
-        for node, data in G.nodes(data=True):
-            ax.annotate(node, xy=(data["x"], data["y"]))
-
-    # save and show the figure as specified
-    fig, ax = _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
-    return fig, ax
 
 
 def _node_list_to_coordinate_lines(G, route, use_geom=True):
@@ -531,23 +260,148 @@ def _node_list_to_coordinate_lines(G, route, use_geom=True):
     return lines
 
 
-def plot_graph_route(
+def _save_and_show(
+    fig, ax, save=False, show=True, close=True, filepath=None, dpi=300, axis_off=True,
+):
+    """
+    Save a figure to disk and show it, as specified.
+
+    Parameters
+    ----------
+    fig : figure
+        matplotlib figure
+    ax : axes
+        matplotlib axes
+    save : bool
+        if True, save the figure as an image file to disk
+    show : bool
+        if True, call plt.show() to show the figure
+    close : bool
+        if True, call plt.close() to close the figure
+    filepath : string
+        if save is True, the path to the file. file format determined from
+        extension. if None, use default image folder + image.png
+    dpi : int
+        if save is True, the resolution of the image file
+    axis_off : bool
+        if True, matplotlib axes was turned off by plot_graph so constrain the
+        saved figure's extent to the interior of the axes
+
+    Returns
+    -------
+    fig, ax : tuple
+        matplotlib figure, axes
+    """
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+
+    if save:
+
+        # default filepath, if none was provided
+        if filepath is None:
+            filepath = os.path.join(settings.imgs_folder, "image.png")
+
+        # if save folder does not already exist, create it
+        folder, _ = os.path.split(filepath)
+        if not folder == "" and not os.path.exists(folder):
+            os.makedirs(folder)
+
+        fc = fig.get_facecolor()
+
+        _, extension = os.path.splitext(filepath)
+        extension = extension.strip(".")
+
+        if extension == "svg":
+            # if the file format is svg, prep the fig/ax a bit for saving
+            ax.axis("off")
+            ax.set_position([0, 0, 1, 1])
+            ax.patch.set_alpha(0.0)
+            fig.patch.set_alpha(0.0)
+            fig.savefig(
+                filepath, bbox_inches=0, format=extension, facecolor=fc, transparent=True,
+            )
+        else:
+            if axis_off:
+                # if axis is turned off, constrain the saved figure's extent to
+                # the interior of the axes
+                extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+            else:
+                extent = "tight"
+            fig.savefig(
+                filepath,
+                dpi=dpi,
+                bbox_inches=extent,
+                format=extension,
+                facecolor=fc,
+                transparent=True,
+            )
+        utils.log(f"Saved figure to disk at {filepath}")
+
+    if show:
+        plt.show()
+
+    if close:
+        plt.close()
+
+    return fig, ax
+
+
+def _config_ax(ax, axis_off, equal_aspect, top, bottom, crs):
+    """
+    Configure axes for plotting.
+
+    Parameters
+    ----------
+    ax : matplotlib axes
+        the axes containing the plot
+    axis_off : bool
+        if True, turn off the axis
+    equal_aspect : bool
+        if True, set the axes aspect ratio equal
+    top : float
+        top or north coordinate
+    bottom : float
+        bottom or south coordinate
+    crs : dict or string or pyproj.CRS
+        the CRS of the plotted geometries
+
+    Returns
+    -------
+    ax : matplotlib axes
+    """
+    xaxis = ax.get_xaxis()
+    yaxis = ax.get_yaxis()
+
+    xaxis.get_major_formatter().set_useOffset(False)
+    yaxis.get_major_formatter().set_useOffset(False)
+
+    if axis_off:
+        # if axis_off, turn off the axes display, set the margins to zero,
+        # and point the ticks inward so there's no space around the plot
+        ax.axis("off")
+        ax.margins(0)
+        ax.tick_params(which="both", direction="in")
+        xaxis.set_visible(False)
+        yaxis.set_visible(False)
+
+    if equal_aspect:
+        # make everything square
+        ax.set_aspect("equal")
+
+    elif crs == settings.default_crs:
+        # if data are not projected, conform aspect ratio to not stretch plot
+        coslat = np.cos((bottom + top) / 2.0 / 180.0 * np.pi)
+        ax.set_aspect(1.0 / coslat)
+
+    return ax
+
+
+def plot_graph(
     G,
-    route,
-    bbox=None,
-    fig_height=6,
-    fig_width=None,
-    margin=0.02,
-    bgcolor="w",
-    axis_off=True,
-    show=True,
-    save=False,
-    close=True,
-    file_format="png",
-    filename="temp",
-    dpi=300,
-    annotate=False,
-    node_color="#999999",
+    ax=None,
+    figsize=None,
+    bgcolor="#222222",
+    node_color="w",
     node_size=15,
     node_alpha=1,
     node_edgecolor="none",
@@ -555,19 +409,173 @@ def plot_graph_route(
     edge_color="#999999",
     edge_linewidth=1,
     edge_alpha=1,
-    use_geom=True,
-    origin_point=None,
-    destination_point=None,
-    route_color="r",
-    route_linewidth=4,
-    route_alpha=0.5,
-    orig_dest_node_alpha=0.5,
-    orig_dest_node_size=100,
-    orig_dest_node_color="r",
-    orig_dest_point_color="b",
+    show=True,
+    close=False,
+    save=False,
+    filepath=None,
+    dpi=300,
+    bbox=None,
+    margin=0.02,
+    equal_aspect=False,
+    axis_off=True,
+    annotate=False,
+    draw_graph=True,
 ):
     """
-    Plot a route along a networkx spatial graph.
+    Plot a graph.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    ax : matplotlib axes
+        if not None, plot on this preexisting axes
+    figsize : tuple
+        if ax is None, use figsize (width, height) to determine figure size;
+        if None, default to 6 inch height with proportional width
+    bgcolor : string
+        the background color of the plot
+    node_color : string
+        the color of the nodes. color is passed to matplotlib
+    node_size : int
+        the size of the nodes
+    node_alpha : float
+        the opacity of the nodes. if you passed RGBA values to node_color,
+        then set this to None to use the alpha channel in node_color. if 0,
+        then skip plotting the nodes.
+    node_edgecolor : string
+        the color of the node's marker's border
+    node_zorder : int
+        zorder to plot nodes, edges are always 1, so make node_zorder 0 to
+        plot nodes beneath them or 2 to plot nodes atop them
+    edge_color : string
+        the color of the edges' lines. color is passed to matplotlib.
+    edge_linewidth : float
+        the width of the edges' lines
+    edge_alpha : float
+        the opacity of the edges' lines. if you passed RGBA values to
+        edge_color, then set this to None to use the alpha channel in
+        edge_color. if 0, then skip plotting the edges.
+    show : bool
+        if True, call plt.show() to show the figure
+    close : bool
+        if True, call plt.close() to close the figure
+    save : bool
+        if True, save the figure as an image file to disk
+    filepath : string
+        if save is True, the path to the file. file format determined from
+        extension. if None, use default image folder + image.png
+    dpi : int
+        if save is True, the resolution of the image file
+    bbox : tuple
+        bounding box as (north, south, east, west); if None will calculate
+        from spatial extents of edges; if passing bbox, you probably also want
+        to pass margin=0 to constrain it
+    margin : float
+        relative margin around the figure
+    equal_aspect : bool
+        if True, set the axes aspect ratio equal
+    axis_off : bool
+        if True, turn off the axis
+    annotate : bool
+        if True, annotate the nodes with their IDs
+    draw_graph : bool
+        if False, create and style fig and ax, but do not draw graph on them
+
+    Returns
+    -------
+    fig, ax : tuple
+        matplotlib figure, axes
+    """
+    utils.log("Begin plotting the graph...")
+    node_Xs = [float(x) for _, x in G.nodes(data="x")]
+    node_Ys = [float(y) for _, y in G.nodes(data="y")]
+
+    # get north, south, east, west values either from bbox parameter or from the
+    # spatial extent of the edges' geometries
+    if bbox is None:
+        edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+        west, south, east, north = edges.total_bounds
+    else:
+        north, south, east, west = bbox
+
+    if ax is not None:
+        fig = ax.figure
+    else:
+        if figsize is None:
+            # if figsize not passed in, make height=6in and proportional width
+            bbox_aspect_ratio = (north - south) / (east - west)
+            fig_height = 6
+            fig_width = fig_height / bbox_aspect_ratio
+            figsize = (fig_width, fig_height)
+
+        # create the figure and axes
+        fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)
+        ax.set_facecolor(bgcolor)
+
+    if draw_graph:
+
+        if edge_alpha > 0:
+            # draw the edges as lines from node to node
+            lines = []
+            for u, v, data in G.edges(keys=False, data=True):
+                if "geometry" in data:
+                    # if edge has geometry attr, add it to list of lines to plot
+                    xs, ys = data["geometry"].xy
+                    lines.append(list(zip(xs, ys)))
+                else:
+                    # if it doesn't have geometry attr, draw straight line from
+                    # node to node
+                    x1 = G.nodes[u]["x"]
+                    y1 = G.nodes[u]["y"]
+                    x2 = G.nodes[v]["x"]
+                    y2 = G.nodes[v]["y"]
+                    line = [(x1, y1), (x2, y2)]
+                    lines.append(line)
+
+            # add the lines to the axes as a LineCollection
+            lc = LineCollection(
+                lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=1
+            )
+            ax.add_collection(lc)
+            utils.log("Drew the graph edges")
+
+        if node_alpha > 0:
+            # scatter plot the nodes
+            ax.scatter(
+                node_Xs,
+                node_Ys,
+                s=node_size,
+                c=node_color,
+                alpha=node_alpha,
+                edgecolor=node_edgecolor,
+                zorder=node_zorder,
+            )
+
+    # set the extent of the figure
+    margin_ns = (north - south) * margin
+    margin_ew = (east - west) * margin
+    ax.set_ylim((south - margin_ns, north + margin_ns))
+    ax.set_xlim((west - margin_ew, east + margin_ew))
+
+    # configure axes appearance
+    ax = _config_ax(ax, axis_off, equal_aspect, north, south, crs=G.graph["crs"])
+
+    # annotate the nodes with their IDs if annotate=True
+    if annotate:
+        for node, data in G.nodes(data=True):
+            ax.annotate(node, xy=(data["x"], data["y"]))
+
+    # save and show the figure as specified
+    fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi, axis_off)
+    return fig, ax
+
+
+def plot_graph_route(
+    G, route, route_color="r", route_linewidth=4, route_alpha=0.5, orig_dest_size=100, **pg_kwargs,
+):
+    """
+    Plot a route along a graph.
 
     Parameters
     ----------
@@ -575,183 +583,58 @@ def plot_graph_route(
         input graph
     route : list
         the route as a list of nodes
-    bbox : tuple
-        bounding box as north,south,east,west - if None will calculate from
-        spatial extents of data. if passing a bbox, you probably also want to
-        pass margin=0 to constrain it.
-    fig_height : int
-        matplotlib figure height in inches
-    fig_width : int
-        matplotlib figure width in inches
-    margin : float
-        relative margin around the figure
-    axis_off : bool
-        if True turn off the matplotlib axis
-    bgcolor : string
-        the background color of the figure and axis
-    show : bool
-        if True, show the figure
-    save : bool
-        if True, save the figure as an image file to disk
-    close : bool
-        close the figure (only if show equals False) to prevent display
-    file_format : string
-        the format of the file to save (e.g., 'jpg', 'png', 'svg')
-    filename : string
-        the name of the file if saving
-    dpi : int
-        the resolution of the image file if saving
-    annotate : bool
-        if True, annotate the nodes in the figure
-    node_color : string
-        the color of the nodes
-    node_size : int
-        the size of the nodes
-    node_alpha : float
-        the opacity of the nodes
-    node_edgecolor : string
-        the color of the node's marker's border
-    node_zorder : int
-        zorder to plot nodes, edges are always 2, so make node_zorder 1 to plot
-        nodes beneath them or 3 to plot nodes atop them
-    edge_color : string
-        the color of the edges' lines
-    edge_linewidth : float
-        the width of the edges' lines
-    edge_alpha : float
-        the opacity of the edges' lines
-    use_geom : bool
-        if True, use the spatial geometry attribute of the edges to draw
-        geographically accurate edges, rather than just lines straight from node
-        to node
-    origin_point : tuple
-        optional, an origin (lat, lng) point to plot instead of the origin node
-    destination_point : tuple
-        optional, a destination (lat, lng) point to plot instead of the
-        destination node
     route_color : string
         the color of the route
     route_linewidth : int
         the width of the route line
     route_alpha : float
         the opacity of the route line
-    orig_dest_node_alpha : float
-        the opacity of the origin and destination nodes
-    orig_dest_node_size : int
+    orig_dest_size : int
         the size of the origin and destination nodes
-    orig_dest_node_color : string
-        the color of the origin and destination nodes
-    orig_dest_point_color : string
-        the color of the origin and destination points if being plotted instead
-        of nodes
+    **pg_kwargs
+        keyword arguments to pass to plot_graph
 
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axis
+        matplotlib figure, axes
     """
-    # plot the graph but not the route
-    fig, ax = plot_graph(
-        G,
-        bbox=bbox,
-        fig_height=fig_height,
-        fig_width=fig_width,
-        margin=margin,
-        axis_off=axis_off,
-        bgcolor=bgcolor,
-        show=False,
-        save=False,
-        close=False,
-        filename=filename,
-        dpi=dpi,
-        annotate=annotate,
-        node_color=node_color,
-        node_size=node_size,
-        node_alpha=node_alpha,
-        node_edgecolor=node_edgecolor,
-        node_zorder=node_zorder,
-        edge_color=edge_color,
-        edge_linewidth=edge_linewidth,
-        edge_alpha=edge_alpha,
-        use_geom=use_geom,
-    )
+    # plot the graph but not the route, and override any user show/close
+    # args for now: we'll do that later
+    override = {"G", "show", "save", "close"}
+    kwargs = {k: v for k, v in pg_kwargs.items() if k not in override}
+    fig, ax = plot_graph(G, show=False, save=False, close=False, **kwargs)
 
-    # the origin and destination nodes are the first and last nodes in the route
-    origin_node = route[0]
-    destination_node = route[-1]
-
-    if origin_point is None or destination_point is None:
-        # if caller didn't pass points, use the first and last node in route as
-        # origin/destination
-        origin_destination_lats = (G.nodes[origin_node]["y"], G.nodes[destination_node]["y"])
-        origin_destination_lons = (G.nodes[origin_node]["x"], G.nodes[destination_node]["x"])
-    else:
-        # otherwise, use the passed points as origin/destination
-        origin_destination_lats = (origin_point[0], destination_point[0])
-        origin_destination_lons = (origin_point[1], destination_point[1])
-        orig_dest_node_color = orig_dest_point_color
-
-    # scatter the origin and destination points
+    # scatterplot origin and destination points (first/last nodes in route)
+    orig_dest_Xs = (G.nodes[route[0]]["x"], G.nodes[route[-1]]["x"])
+    orig_dest_Ys = (G.nodes[route[0]]["y"], G.nodes[route[-1]]["y"])
     ax.scatter(
-        origin_destination_lons,
-        origin_destination_lats,
-        s=orig_dest_node_size,
-        c=orig_dest_node_color,
-        alpha=orig_dest_node_alpha,
-        edgecolor=node_edgecolor,
-        zorder=4,
+        orig_dest_Xs,
+        orig_dest_Ys,
+        s=orig_dest_size,
+        c=route_color,
+        alpha=route_alpha,
+        edgecolor="none",
+        zorder=3,
     )
 
-    # plot the route lines
-    lines = _node_list_to_coordinate_lines(G, route, use_geom)
-
-    # add the lines to the axis as a linecollection
+    # add the routes to the axes as a LineCollection
+    lines = _node_list_to_coordinate_lines(G, route)
     lc = LineCollection(
-        lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3
+        lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=2
     )
     ax.add_collection(lc)
 
-    # save and show the figure as specified
-    fig, ax = _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
+    # save and show the figure as specified, passing relevant kwargs
+    sas_kwargs = {"save", "show", "close", "filepath", "file_format", "dpi", "axis_off"}
+    kwargs = {k: v for k, v in pg_kwargs.items() if k in sas_kwargs}
+    fig, ax = _save_and_show(fig, ax, **kwargs)
     return fig, ax
 
 
-def plot_graph_routes(
-    G,
-    routes,
-    bbox=None,
-    fig_height=6,
-    fig_width=None,
-    margin=0.02,
-    bgcolor="w",
-    axis_off=True,
-    show=True,
-    save=False,
-    close=True,
-    file_format="png",
-    filename="temp",
-    dpi=300,
-    annotate=False,
-    node_color="#999999",
-    node_size=15,
-    node_alpha=1,
-    node_edgecolor="none",
-    node_zorder=1,
-    edge_color="#999999",
-    edge_linewidth=1,
-    edge_alpha=1,
-    use_geom=True,
-    orig_dest_points=None,
-    route_color="r",
-    route_linewidth=4,
-    route_alpha=0.5,
-    orig_dest_node_alpha=0.5,
-    orig_dest_node_size=100,
-    orig_dest_node_color="r",
-    orig_dest_point_color="b",
-):
+def plot_graph_routes(G, routes, route_colors="r", **pgr_kwargs):
     """
-    Plot several routes along a networkx spatial graph.
+    Plot several routes along a graph.
 
     Parameters
     ----------
@@ -759,151 +642,59 @@ def plot_graph_routes(
         input graph
     routes : list
         the routes as a list of lists of nodes
-    bbox : tuple
-        bounding box as north,south,east,west - if None will calculate from
-        spatial extents of data. if passing a bbox, you probably also want to
-        pass margin=0 to constrain it.
-    fig_height : int
-        matplotlib figure height in inches
-    fig_width : int
-        matplotlib figure width in inches
-    margin : float
-        relative margin around the figure
-    axis_off : bool
-        if True turn off the matplotlib axis
-    bgcolor : string
-        the background color of the figure and axis
-    show : bool
-        if True, show the figure
-    save : bool
-        if True, save the figure as an image file to disk
-    close : bool
-        close the figure (only if show equals False) to prevent display
-    file_format : string
-        the format of the file to save (e.g., 'jpg', 'png', 'svg')
-    filename : string
-        the name of the file if saving
-    dpi : int
-        the resolution of the image file if saving
-    annotate : bool
-        if True, annotate the nodes in the figure
-    node_color : string
-        the color of the nodes
-    node_size : int
-        the size of the nodes
-    node_alpha : float
-        the opacity of the nodes
-    node_edgecolor : string
-        the color of the node's marker's border
-    node_zorder : int
-        zorder to plot nodes, edges are always 2, so make node_zorder 1 to plot
-        nodes beneath them or 3 to plot nodes atop them
-    edge_color : string
-        the color of the edges' lines
-    edge_linewidth : float
-        the width of the edges' lines
-    edge_alpha : float
-        the opacity of the edges' lines
-    use_geom : bool
-        if True, use the spatial geometry attribute of the edges to draw
-        geographically accurate edges, rather than just lines straight from node
-        to node
-    orig_dest_points : list of tuples
-        optional, a group of (lat, lng) points to plot instead of the
-        origins and destinations of each route nodes
-    route_color : string
-        the color of the route
-    route_linewidth : int
-        the width of the route line
-    route_alpha : float
-        the opacity of the route line
-    orig_dest_node_alpha : float
-        the opacity of the origin and destination nodes
-    orig_dest_node_size : int
-        the size of the origin and destination nodes
-    orig_dest_node_color : string
-        the color of the origin and destination nodes
-    orig_dest_point_color : string
-        the color of the origin and destination points if being plotted instead
-        of nodes
+    route_colors : list
+        if string, the color for all routes; if list, the color for each route
+    pgr_kwargs
+        keyword arguments to pass to plot_graph_route
 
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axis
+        matplotlib figure, axes
     """
-    # plot the graph but not the routes
-    fig, ax = plot_graph(
+    # initial checks
+    if not all([isinstance(r, list) for r in routes]):
+        raise ValueError("routes must be a list of route lists")
+    if len(routes) < 2:
+        raise ValueError("You must pass more than 1 route")
+    if isinstance(route_colors, str):
+        route_colors = [route_colors] * len(routes)
+    if len(routes) != len(route_colors):
+        raise ValueError("route_colors list must have same length as routes")
+
+    # plot the first route on top of the graph
+    override = {"G", "route", "route_color", "show", "save", "close"}
+    kwargs = {k: v for k, v in pgr_kwargs.items() if k not in override}
+    fig, ax = plot_graph_route(
         G,
-        bbox=bbox,
-        fig_height=fig_height,
-        fig_width=fig_width,
-        margin=margin,
-        axis_off=axis_off,
-        bgcolor=bgcolor,
+        route=routes[0],
+        route_color=route_colors[0],
         show=False,
         save=False,
         close=False,
-        filename=filename,
-        dpi=dpi,
-        annotate=annotate,
-        node_color=node_color,
-        node_size=node_size,
-        node_alpha=node_alpha,
-        node_edgecolor=node_edgecolor,
-        node_zorder=node_zorder,
-        edge_color=edge_color,
-        edge_linewidth=edge_linewidth,
-        edge_alpha=edge_alpha,
-        use_geom=use_geom,
+        **kwargs,
     )
 
-    # save coordinates of the given reference points
-    orig_dest_points_lats = []
-    orig_dest_points_lons = []
+    # plot the subsequent routes on top of ax, without replotting the graph
+    override.update({"fig", "ax", "draw_graph"})
+    kwargs = {k: v for k, v in pgr_kwargs.items() if k not in override}
+    for route, route_color in zip(routes[1:], route_colors[1:]):
+        fig, ax = plot_graph_route(
+            G,
+            route=route,
+            route_color=route_color,
+            ax=ax,
+            draw_graph=False,
+            show=False,
+            save=False,
+            close=False,
+            **kwargs,
+        )
 
-    if orig_dest_points is None:
-        # if caller didn't pass points, use the first and last node in each route as
-        # origin/destination points
-        for route in routes:
-            origin_node = route[0]
-            destination_node = route[-1]
-            orig_dest_points_lats.append(G.nodes[origin_node]["y"])
-            orig_dest_points_lats.append(G.nodes[destination_node]["y"])
-            orig_dest_points_lons.append(G.nodes[origin_node]["x"])
-            orig_dest_points_lons.append(G.nodes[destination_node]["x"])
-
-    else:
-        # otherwise, use the passed points as origin/destination points
-        for point in orig_dest_points:
-            orig_dest_points_lats.append(point[0])
-            orig_dest_points_lons.append(point[1])
-        orig_dest_node_color = orig_dest_point_color
-
-    # scatter the origin and destination points
-    ax.scatter(
-        orig_dest_points_lons,
-        orig_dest_points_lats,
-        s=orig_dest_node_size,
-        c=orig_dest_node_color,
-        alpha=orig_dest_node_alpha,
-        edgecolor=node_edgecolor,
-        zorder=4,
-    )
-
-    # plot the routes lines
-    lines = []
-    for route in routes:
-        lines.extend(_node_list_to_coordinate_lines(G, route, use_geom))
-
-    # add the lines to the axis as a linecollection
-    lc = LineCollection(
-        lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=3
-    )
-    ax.add_collection(lc)
-
-    # save and show the figure as specified
-    fig, ax = _save_and_show(fig, ax, save, show, close, filename, file_format, dpi, axis_off)
+    # save and show the figure as specified, passing relevant kwargs
+    sas_kwargs = {"save", "show", "close", "filepath", "file_format", "dpi", "axis_off"}
+    kwargs = {k: v for k, v in pgr_kwargs.items() if k in sas_kwargs}
+    fig, ax = _save_and_show(fig, ax, **kwargs)
     return fig, ax
 
 
@@ -915,16 +706,10 @@ def plot_figure_ground(
     network_type="drive_service",
     street_widths=None,
     default_width=4,
-    fig_length=8,
+    figsize=(8, 8),
     edge_color="w",
-    bgcolor="#333333",
     smooth_joints=True,
-    filename=None,
-    file_format="png",
-    show=False,
-    save=True,
-    close=True,
-    dpi=300,
+    **pg_kwargs,
 ):
     """
     Plot figure-ground diagram of a street network.
@@ -949,32 +734,18 @@ def plot_figure_ground(
     default_width : numeric
         the default street width in pixels for any street type not found in
         street_widths dict
-    fig_length : numeric
-        the height and width of this square diagram
+    figsize : numeric
+        width, height of figure (should be equal)
     edge_color : string
-        the color of the streets
-    bgcolor : string
-        the color of the background
+        the color of the edges' lines
     smooth_joints : bool
         if True, plot nodes same width as streets to smooth line joints and
         prevent cracks between them from showing
-    filename : string
-        filename to save the image as
-    file_format : string
-        the format of the file to save (e.g., 'jpg', 'png', 'svg')
-    show : bool
-        if True, show the figure
-    save : bool
-        if True, save the figure as an image file to disk
-    close : bool
-        close the figure (only if show equals False) to prevent display
-    dpi : int
-        the resolution of the image file if saving
 
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axis
+        matplotlib figure, axes
     """
     multiplier = 1.2
 
@@ -1027,7 +798,7 @@ def plot_figure_ground(
         }
 
     # we need an undirected graph to find every edge incident to a node
-    G_undir = G.to_undirected()
+    G_undir = utils_graph.get_undirected(G)
 
     # for each network edge, get a linewidth according to street type (the OSM
     # 'highway' value)
@@ -1047,7 +818,7 @@ def plot_figure_ground(
             incident_edges_data = [
                 G_undir.get_edge_data(node, neighbor) for neighbor in G_undir.neighbors(node)
             ]
-            edge_types = [data[0]["highway"] for data in incident_edges_data]
+            edge_types = [data[min(data)]["highway"] for data in incident_edges_data]
             if len(edge_types) < 1:
                 # if node has no incident edges, make size zero
                 node_widths[node] = 0
@@ -1087,29 +858,32 @@ def plot_figure_ground(
     # projected units, and cropped to the desired area
     bbox = utils_geo.bbox_from_point(point, dist, project_utm=False)
 
-    # create a filename if one was not passed
-    if filename is None and save:
-        filename = "figure_ground"
-
     # plot the figure
+    override = {
+        "G",
+        "bbox",
+        "figsize",
+        "margin",
+        "axis_off",
+        "equal_aspect",
+        "node_size",
+        "node_color",
+        "edge_color",
+        "edge_linewidth",
+    }
+    kwargs = {k: v for k, v in pg_kwargs.items() if k not in override}
     fig, ax = plot_graph(
-        G_undir,
+        G=G_undir,
         bbox=bbox,
-        fig_height=fig_length,
+        figsize=figsize,
         margin=0,
         axis_off=True,
         equal_aspect=False,
-        bgcolor=bgcolor,
         node_size=node_sizes,
         node_color=edge_color,
-        edge_linewidth=edge_linewidths,
         edge_color=edge_color,
-        show=show,
-        save=save,
-        close=close,
-        filename=filename,
-        file_format=file_format,
-        dpi=dpi,
+        edge_linewidth=edge_linewidths,
+        **kwargs,
     )
 
     return fig, ax
@@ -1117,19 +891,19 @@ def plot_figure_ground(
 
 def plot_footprints(
     gdf,
-    fig=None,
     ax=None,
     figsize=None,
-    color="#333333",
-    bgcolor="w",
+    color="orange",
+    bgcolor="#222222",
     set_bounds=True,
     bbox=None,
     save=False,
     show=True,
     close=False,
-    filename="image",
-    file_format="png",
+    filepath=None,
     dpi=600,
+    equal_aspect=False,
+    axis_off=True,
 ):
     """
     Plot a GeoDataFrame of footprints.
@@ -1138,41 +912,45 @@ def plot_footprints(
     ----------
     gdf : geopandas.GeoDataFrame
         GeoDataFrame of footprints
-    fig : figure
-        matplotlib figure
-    ax : axis
-        matplotlib axis
+    ax : axes
+        matplotlib axes
     figsize : tuple
-        (width, height) size of matplotlib figure
+        if ax is None, use figsize (width, height) to determine figure size
     color : string
         the color of the footprints
     bgcolor : string
         the background color of the plot
     set_bounds : bool
-        if True, set bounds from either passed-in bbox or the spatial extent of the gdf
+        if True, set bounds from either passed-in bbox or the spatial extent
+        of gdf
     bbox : tuple
         if True and if set_bounds is True, set the display bounds to this bbox
     save : bool
-        whether to save the figure to disk or not
+        if True, save the figure as an image file to disk
     show : bool
-        whether to display the figure or not
+        if True, call plt.show() to show the figure
     close : bool
-        close the figure (only if show equals False) to prevent display
-    filename : string
-        the name of the file to save
-    file_format : string
-        the format of the file to save (e.g., 'jpg', 'png', 'svg')
+        if True, call plt.close() to close the figure
+    filepath : string
+        if save is True, the path to the file. file format determined from
+        extension. if None, use default image folder + image.png
     dpi : int
-        the resolution of the image file if saving
+        if save is True, the resolution of the image file
+    equal_aspect : bool
+        if True, set the axes aspect ratio equal
+    axis_off : bool
+        if True, turn off the axis
 
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axis
+        matplotlib figure, axes
     """
-    if fig is None or ax is None:
+    if ax is None:
         fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)
         ax.set_facecolor(bgcolor)
+    else:
+        fig = ax.figure
 
     # extract each polygon as a descartes patch, and add to a matplotlib patch
     # collection
@@ -1197,16 +975,8 @@ def plot_footprints(
         ax.set_xlim((left, right))
         ax.set_ylim((bottom, top))
 
-    # turn off the axis display set the margins to zero and point the ticks in
-    # so there's no space around the plot
-    ax.axis("off")
-    ax.margins(0)
-    ax.tick_params(which="both", direction="in")
-    fig.canvas.draw()
-
-    # make everything square
-    ax.set_aspect("equal")
-    fig.canvas.draw()
+    # configure axes appearance
+    ax = _config_ax(ax, axis_off, equal_aspect, top, bottom, crs=gdf.crs)
 
     fig, ax = _save_and_show(
         fig=fig,
@@ -1214,10 +984,9 @@ def plot_footprints(
         save=save,
         show=show,
         close=close,
-        filename=filename,
-        file_format=file_format,
+        filepath=filepath,
         dpi=dpi,
-        axis_off=True,
+        axis_off=axis_off,
     )
 
     return fig, ax
