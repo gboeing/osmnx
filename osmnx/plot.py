@@ -20,81 +20,6 @@ from . import utils_geo
 from . import utils_graph
 
 
-def plot_shape(
-    gdf,
-    fc="#cbe0f0",
-    ec="#999999",
-    linewidth=1,
-    alpha=1,
-    figsize=(6, 6),
-    margin=0.02,
-    axis_off=True,
-):
-    """
-    Plot a GeoDataFrame of place boundary geometries.
-
-    Parameters
-    ----------
-    gdf : geopandas.GeoDataFrame
-        the gdf containing the geometries to plot
-    fc : string or list
-        the facecolor (or list of facecolors) for the polygons
-    ec : string or list
-        the edgecolor (or list of edgecolors) for the polygons
-    linewidth : numeric
-        the width of the polygon edge lines
-    alpha : numeric
-        the opacity
-    figsize : tuple
-        width, height of plotting figure
-    margin : numeric
-        the size of the figure margins
-    axis_off : bool
-        if True, disable the matplotlib axes display
-
-    Returns
-    -------
-    fig, ax : tuple
-        matplotlib figure, axes
-    """
-    # if facecolor or edgecolor is a string instead of a list, make sure we have
-    # as many colors as gdf elements
-    if isinstance(fc, str):
-        fc = [fc] * len(gdf)
-    if isinstance(ec, str):
-        ec = [ec] * len(gdf)
-
-    # plot the geometries one at a time
-    fig, ax = plt.subplots(figsize=figsize)
-    for geometry, facecolor, edgecolor in zip(gdf["geometry"], fc, ec):
-        if isinstance(geometry, (Polygon, MultiPolygon)):
-            if isinstance(geometry, Polygon):
-                geometry = MultiPolygon([geometry])
-            for polygon in geometry:
-                patch = PolygonPatch(
-                    polygon, fc=facecolor, ec=edgecolor, linewidth=linewidth, alpha=alpha
-                )
-                ax.add_patch(patch)
-        else:
-            raise ValueError(
-                "All geometries in GeoDataFrame must be shapely Polygons or MultiPolygons"
-            )
-
-    # adjust the axes margins and limits around the image and make axes
-    # equal-aspect
-    west, south, east, north = gdf.unary_union.bounds
-    margin_ns = (north - south) * margin
-    margin_ew = (east - west) * margin
-    ax.set_ylim((south - margin_ns, north + margin_ns))
-    ax.set_xlim((west - margin_ew, east + margin_ew))
-    ax.set_aspect(aspect="equal", adjustable="box")
-    if axis_off:
-        ax.axis("off")
-
-    plt.show()
-    return fig, ax
-
-
 def _rgb_color_list_to_hex(color_list):
     """
     Convert a list of RGBa colors to a list of hexadecimal color codes.
@@ -260,9 +185,7 @@ def _node_list_to_coordinate_lines(G, route, use_geom=True):
     return lines
 
 
-def _save_and_show(
-    fig, ax, save=False, show=True, close=True, filepath=None, dpi=300, axis_off=True,
-):
+def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dpi=300):
     """
     Save a figure to disk and show it, as specified.
 
@@ -283,9 +206,6 @@ def _save_and_show(
         extension. if None, use default image folder + image.png
     dpi : int
         if save is True, the resolution of the image file
-    axis_off : bool
-        if True, matplotlib axes was turned off by plot_graph so constrain the
-        saved figure's extent to the interior of the axes
 
     Returns
     -------
@@ -321,12 +241,8 @@ def _save_and_show(
                 filepath, bbox_inches=0, format=extension, facecolor=fc, transparent=True,
             )
         else:
-            if axis_off:
-                # if axis is turned off, constrain the saved figure's extent to
-                # the interior of the axes
-                extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
-            else:
-                extent = "tight"
+            # constrain saved figure's extent to interior of the axes
+            extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
             fig.savefig(
                 filepath,
                 dpi=dpi,
@@ -346,7 +262,7 @@ def _save_and_show(
     return fig, ax
 
 
-def _config_ax(ax, axis_off, equal_aspect, top, bottom, crs):
+def _config_ax(ax, top, bottom, crs):
     """
     Configure axes for plotting.
 
@@ -354,10 +270,6 @@ def _config_ax(ax, axis_off, equal_aspect, top, bottom, crs):
     ----------
     ax : matplotlib axes
         the axes containing the plot
-    axis_off : bool
-        if True, turn off the axis
-    equal_aspect : bool
-        if True, set the axes aspect ratio equal
     top : float
         top or north coordinate
     bottom : float
@@ -375,23 +287,21 @@ def _config_ax(ax, axis_off, equal_aspect, top, bottom, crs):
     xaxis.get_major_formatter().set_useOffset(False)
     yaxis.get_major_formatter().set_useOffset(False)
 
-    if axis_off:
-        # if axis_off, turn off the axes display, set the margins to zero,
-        # and point the ticks inward so there's no space around the plot
-        ax.axis("off")
-        ax.margins(0)
-        ax.tick_params(which="both", direction="in")
-        xaxis.set_visible(False)
-        yaxis.set_visible(False)
+    # turn off the axes display, set the margins to zero, and point the ticks
+    # inward so there's no space around the plot
+    ax.axis("off")
+    ax.margins(0)
+    ax.tick_params(which="both", direction="in")
+    xaxis.set_visible(False)
+    yaxis.set_visible(False)
 
-    if equal_aspect:
-        # make everything square
-        ax.set_aspect("equal")
-
-    elif crs == settings.default_crs:
+    if crs == settings.default_crs:
         # if data are not projected, conform aspect ratio to not stretch plot
         coslat = np.cos((bottom + top) / 2.0 / 180.0 * np.pi)
         ax.set_aspect(1.0 / coslat)
+    else:
+        # if projected, make everything square
+        ax.set_aspect("equal")
 
     return ax
 
@@ -416,9 +326,6 @@ def plot_graph(
     dpi=300,
     bbox=None,
     margin=0.02,
-    equal_aspect=False,
-    axis_off=True,
-    annotate=False,
     draw_graph=True,
 ):
     """
@@ -473,12 +380,6 @@ def plot_graph(
         to pass margin=0 to constrain it
     margin : float
         relative margin around the figure
-    equal_aspect : bool
-        if True, set the axes aspect ratio equal
-    axis_off : bool
-        if True, turn off the axis
-    annotate : bool
-        if True, annotate the nodes with their IDs
     draw_graph : bool
         if False, create and style fig and ax, but do not draw graph on them
 
@@ -559,15 +460,10 @@ def plot_graph(
     ax.set_xlim((west - margin_ew, east + margin_ew))
 
     # configure axes appearance
-    ax = _config_ax(ax, axis_off, equal_aspect, north, south, crs=G.graph["crs"])
-
-    # annotate the nodes with their IDs if annotate=True
-    if annotate:
-        for node, data in G.nodes(data=True):
-            ax.annotate(node, xy=(data["x"], data["y"]))
+    ax = _config_ax(ax, north, south, crs=G.graph["crs"])
 
     # save and show the figure as specified
-    fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi, axis_off)
+    fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi)
     return fig, ax
 
 
@@ -626,7 +522,7 @@ def plot_graph_route(
     ax.add_collection(lc)
 
     # save and show the figure as specified, passing relevant kwargs
-    sas_kwargs = {"save", "show", "close", "filepath", "file_format", "dpi", "axis_off"}
+    sas_kwargs = {"save", "show", "close", "filepath", "file_format", "dpi"}
     kwargs = {k: v for k, v in pg_kwargs.items() if k in sas_kwargs}
     fig, ax = _save_and_show(fig, ax, **kwargs)
     return fig, ax
@@ -692,7 +588,7 @@ def plot_graph_routes(G, routes, route_colors="r", **pgr_kwargs):
         )
 
     # save and show the figure as specified, passing relevant kwargs
-    sas_kwargs = {"save", "show", "close", "filepath", "file_format", "dpi", "axis_off"}
+    sas_kwargs = {"save", "show", "close", "filepath", "file_format", "dpi"}
     kwargs = {k: v for k, v in pgr_kwargs.items() if k in sas_kwargs}
     fig, ax = _save_and_show(fig, ax, **kwargs)
     return fig, ax
@@ -864,8 +760,6 @@ def plot_figure_ground(
         "bbox",
         "figsize",
         "margin",
-        "axis_off",
-        "equal_aspect",
         "node_size",
         "node_color",
         "edge_color",
@@ -877,8 +771,6 @@ def plot_figure_ground(
         bbox=bbox,
         figsize=figsize,
         margin=0,
-        axis_off=True,
-        equal_aspect=False,
         node_size=node_sizes,
         node_color=edge_color,
         edge_color=edge_color,
@@ -902,8 +794,6 @@ def plot_footprints(
     close=False,
     filepath=None,
     dpi=600,
-    equal_aspect=False,
-    axis_off=True,
 ):
     """
     Plot a GeoDataFrame of footprints.
@@ -936,10 +826,6 @@ def plot_footprints(
         extension. if None, use default image folder + image.png
     dpi : int
         if save is True, the resolution of the image file
-    equal_aspect : bool
-        if True, set the axes aspect ratio equal
-    axis_off : bool
-        if True, turn off the axis
 
     Returns
     -------
@@ -976,17 +862,10 @@ def plot_footprints(
         ax.set_ylim((bottom, top))
 
     # configure axes appearance
-    ax = _config_ax(ax, axis_off, equal_aspect, top, bottom, crs=gdf.crs)
+    ax = _config_ax(ax, top, bottom, crs=gdf.crs)
 
     fig, ax = _save_and_show(
-        fig=fig,
-        ax=ax,
-        save=save,
-        show=show,
-        close=close,
-        filepath=filepath,
-        dpi=dpi,
-        axis_off=axis_off,
+        fig=fig, ax=ax, save=save, show=show, close=close, filepath=filepath, dpi=dpi,
     )
 
     return fig, ax

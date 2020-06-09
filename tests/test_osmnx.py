@@ -107,11 +107,8 @@ def test_geometry_coords_rounding():
 
 def test_gdf_from_place():
     # test loading spatial boundaries and plotting
-    city = ox.gdf_from_place(place1)
-    city_projected = ox.projection.project_gdf(city, to_crs="epsg:3395")
-
     city = ox.gdf_from_place(place1, buffer_dist=100)
-    ox.plot_shape(city)
+    city_projected = ox.projection.project_gdf(city, to_crs="epsg:3395")
 
 
 def test_graph_from_xml():
@@ -194,10 +191,8 @@ def test_plots():
         G,
         figsize=(5, 5),
         margin=0.05,
-        axis_off=False,
         bgcolor="y",
         dpi=180,
-        annotate=True,
         node_color="k",
         node_size=5,
         node_alpha=0.1,

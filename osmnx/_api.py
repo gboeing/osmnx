@@ -31,7 +31,6 @@ from .plot import plot_footprints
 from .plot import plot_graph
 from .plot import plot_graph_route
 from .plot import plot_graph_routes
-from .plot import plot_shape
 from .pois import pois_from_address
 from .pois import pois_from_place
 from .pois import pois_from_point
