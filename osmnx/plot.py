@@ -970,7 +970,7 @@ def plot_graph_routes(
         filename=filename,
         annotate=annotate,
         use_geom=use_geom,
-        oorig_dest_points=orig_dest_points,
+        orig_dest_points=orig_dest_points,
         orig_dest_node_alpha=orig_dest_node_alpha,
         orig_dest_node_color=orig_dest_node_color,
         orig_dest_point_color=orig_dest_point_color,
