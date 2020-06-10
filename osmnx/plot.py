@@ -258,42 +258,50 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
     return fig, ax
 
 
-def _config_ax(ax, top, bottom, crs):
+def _config_ax(ax, crs, bbox, padding=0):
     """
-    Configure axes for plotting.
+    Configure axes for display.
 
     Parameters
     ----------
     ax : matplotlib axes
         the axes containing the plot
-    top : float
-        top/north coordinate
-    bottom : float
-        bottom/south coordinate
     crs : dict or string or pyproj.CRS
         the CRS of the plotted geometries
+    bbox : tuple
+        bounding box as (north, south, east, west)
+    padding : float
+        relative padding to add around the plot's bbox
 
     Returns
     -------
     ax : matplotlib axes
+        the configured/styled axes
     """
-    xaxis = ax.get_xaxis()
-    yaxis = ax.get_yaxis()
+    # set the axes view limits
+    north, south, east, west = bbox
+    padding_ns = (north - south) * padding
+    padding_ew = (east - west) * padding
+    ax.set_ylim((south - padding_ns, north + padding_ns))
+    ax.set_xlim((west - padding_ew, east + padding_ew))
 
-    xaxis.get_major_formatter().set_useOffset(False)
-    yaxis.get_major_formatter().set_useOffset(False)
-
-    # turn off the axes display, set the margins to zero, and point the ticks
-    # inward so there's no space around the plot
+    # turn off the axes display, set margins to zero, and point ticks inward
+    # so there's no space around the plot
     ax.axis("off")
     ax.margins(0)
     ax.tick_params(which="both", direction="in")
+
+    xaxis = ax.get_xaxis()
+    yaxis = ax.get_yaxis()
+    xaxis.get_major_formatter().set_useOffset(False)
+    yaxis.get_major_formatter().set_useOffset(False)
     xaxis.set_visible(False)
     yaxis.set_visible(False)
 
+    # set aspect ratio
     if crs == settings.default_crs:
         # if data are not projected, conform aspect ratio to not stretch plot
-        coslat = np.cos((bottom + top) / 2.0 / 180.0 * np.pi)
+        coslat = np.cos((south + north) / 2.0 / 180.0 * np.pi)
         ax.set_aspect(1.0 / coslat)
     else:
         # if projected, make everything square
@@ -305,7 +313,7 @@ def _config_ax(ax, top, bottom, crs):
 def plot_graph(
     G,
     ax=None,
-    figsize=None,
+    figsize=(8, 8),
     bgcolor="#222222",
     node_color="w",
     node_size=15,
@@ -321,7 +329,6 @@ def plot_graph(
     filepath=None,
     dpi=300,
     bbox=None,
-    margin=0.02,
 ):
     """
     Plot a graph.
@@ -340,11 +347,10 @@ def plot_graph(
     node_color : string
         color of the nodes
     node_size : int
-        size of the nodes
+        size of the nodes: if 0, then skip plotting the nodes
     node_alpha : float
-        opacity of the nodes. if 0, then skip plotting the nodes. note: if you
-        passed RGBA values to node_color, set node_alpha=None to use the alpha
-        channel in node_color.
+        opacity of the nodes, note: if you passed RGBA values to node_color,
+        set node_alpha=None to use the alpha channel in node_color
     node_edgecolor : string
         color of the nodes' markers' borders
     node_zorder : int
@@ -353,11 +359,10 @@ def plot_graph(
     edge_color : string
         color of the edges' lines
     edge_linewidth : float
-        width of the edges' lines
+        width of the edges' lines: if 0, then skip plotting the edges
     edge_alpha : float
-        opacity of the edges. if 0, then skip plotting the edges. note: if you
-        passed RGBA values to edge_color, set edge_alpha=None to use the alpha
-        channel in edge_color.
+        opacity of the edges, note: if you passed RGBA values to edge_color,
+        set edge_alpha=None to use the alpha channel in edge_color
     show : bool
         if True, call pyplot.show() to show the figure
     close : bool
@@ -371,72 +376,35 @@ def plot_graph(
         if save is True, the resolution of saved file
     bbox : tuple
         bounding box as (north, south, east, west). if None, will calculate
-        from spatial extents of edges. if passing bbox, you probably also want
-        to pass margin=0 to constrain it.
-    margin : float
-        relative margin around the figure
+        from spatial extents of edges.
 
     Returns
     -------
     fig, ax : tuple
         matplotlib figure, axes
     """
+    if node_size <= 0 and edge_linewidth <= 0:
+        raise ValueError("Either node_size or edge_linewidth must be > 0 to plot something.")
+
+    # create fig, ax as needed
     utils.log("Begin plotting the graph...")
-    node_Xs = [float(x) for _, x in G.nodes(data="x")]
-    node_Ys = [float(y) for _, y in G.nodes(data="y")]
-
-    # get north, south, east, west values either from bbox parameter or from the
-    # spatial extent of the edges' geometries
-    if bbox is None:
-        edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
-        west, south, east, north = edges.total_bounds
-    else:
-        north, south, east, west = bbox
-
-    if ax is not None:
-        fig = ax.figure
-    else:
-        if figsize is None:
-            # if figsize not passed in, make height=6in and proportional width
-            bbox_aspect_ratio = (north - south) / (east - west)
-            fig_height = 6
-            fig_width = fig_height / bbox_aspect_ratio
-            figsize = (fig_width, fig_height)
-
-        # create the figure and axes
+    if ax is None:
         fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)
         ax.set_facecolor(bgcolor)
+    else:
+        fig = ax.figure
 
-    if edge_alpha > 0:
-        # draw the edges as lines from node to node
-        lines = []
-        for u, v, data in G.edges(keys=False, data=True):
-            if "geometry" in data:
-                # if edge has geometry attr, add it to list of lines to plot
-                xs, ys = data["geometry"].xy
-                lines.append(list(zip(xs, ys)))
-            else:
-                # if it doesn't have geometry attr, draw straight line from
-                # node to node
-                x1 = G.nodes[u]["x"]
-                y1 = G.nodes[u]["y"]
-                x2 = G.nodes[v]["x"]
-                y2 = G.nodes[v]["y"]
-                line = [(x1, y1), (x2, y2)]
-                lines.append(line)
+    if edge_linewidth > 0:
+        # plot the edges' geometries
+        gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)
+        ax = gdf_edges.plot(ax=ax, color=edge_color, lw=edge_linewidth, alpha=edge_alpha, zorder=1)
 
-        # add the lines to the axes as a LineCollection
-        lc = LineCollection(
-            lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=1
-        )
-        ax.add_collection(lc)
-        utils.log("Drew the graph edges")
-
-    if node_alpha > 0:
-        # scatter plot the nodes
+    if node_size > 0:
+        # scatter plot the nodes' x/y coordinates
+        gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
         ax.scatter(
-            node_Xs,
-            node_Ys,
+            x=gdf_nodes["x"],
+            y=gdf_nodes["y"],
             s=node_size,
             c=node_color,
             alpha=node_alpha,
@@ -444,17 +412,21 @@ def plot_graph(
             zorder=node_zorder,
         )
 
-    # set the extent of the figure
-    margin_ns = (north - south) * margin
-    margin_ew = (east - west) * margin
-    ax.set_ylim((south - margin_ns, north + margin_ns))
-    ax.set_xlim((west - margin_ew, east + margin_ew))
+    # get spatial extents from bbox parameter or the edges' geometries
+    padding = 0
+    if bbox is None:
+        try:
+            west, south, east, north = gdf_edges.total_bounds
+        except NameError:
+            west, south = gdf_nodes.min()
+            east, north = gdf_nodes.max()
+        bbox = north, south, east, west
+        padding = 0.02  # pad 2% to not trim nodes' circles
 
-    # configure axes appearance
-    ax = _config_ax(ax, north, south, crs=G.graph["crs"])
-
-    # save and show the figure as specified
+    # configure axes appearance, save/show figure as specified, and return
+    ax = _config_ax(ax, G.graph["crs"], bbox, padding)
     fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi)
+    utils.log("Finished plotting the graph")
     return fig, ax
 
 
@@ -486,8 +458,8 @@ def plot_graph_route(
     orig_dest_size : int
         size of the origin and destination nodes
     ax : matplotlib axes
-        if not None, plot route on this preexisting axes instead of drawing
-        the underlying graph
+        if not None, plot route on this preexisting axes instead of creating a
+        new fig, ax and drawing the underlying graph
     pg_kwargs
         keyword arguments to pass to plot_graph
 
@@ -746,13 +718,12 @@ def plot_figure_ground(
     bbox = utils_geo.bbox_from_point(point, dist, project_utm=False)
 
     # plot the figure
-    override = {"bbox", "margin", "node_size", "node_color", "edge_linewidth"}
+    override = {"bbox", "node_size", "node_color", "edge_linewidth"}
     kwargs = {k: v for k, v in pg_kwargs.items() if k not in override}
     fig, ax = plot_graph(
         G=G_undir,
         bbox=bbox,
         figsize=figsize,
-        margin=0,
         node_size=node_sizes,
         node_color=edge_color,
         edge_color=edge_color,
@@ -834,20 +805,14 @@ def plot_footprints(
     pc = PatchCollection(patches, facecolor=color, edgecolor=color, linewidth=0, alpha=1)
     ax.add_collection(pc)
 
-    # set figure extents
+    # determine figure extents
     if bbox is None:
         # set the figure bounds to the polygons' bounds
-        left, bottom, right, top = gdf.total_bounds
+        west, south, east, north = gdf.total_bounds
     else:
-        top, bottom, right, left = bbox
-    ax.set_xlim((left, right))
-    ax.set_ylim((bottom, top))
+        north, south, east, west = bbox
 
-    # configure axes appearance
-    ax = _config_ax(ax, top, bottom, crs=gdf.crs)
-
-    fig, ax = _save_and_show(
-        fig=fig, ax=ax, save=save, show=show, close=close, filepath=filepath, dpi=dpi,
-    )
-
+    # configure axes appearance, save/show figure as specified, and return
+    ax = _config_ax(ax, gdf.crs, (north, south, east, west))
+    fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi)
     return fig, ax
