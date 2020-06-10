@@ -322,7 +322,6 @@ def plot_graph(
     dpi=300,
     bbox=None,
     margin=0.02,
-    draw_graph=True,
 ):
     """
     Plot a graph.
@@ -376,8 +375,6 @@ def plot_graph(
         to pass margin=0 to constrain it.
     margin : float
         relative margin around the figure
-    draw_graph : bool
-        if False, create and style fig and ax, but do not draw graph on them
 
     Returns
     -------
@@ -410,44 +407,42 @@ def plot_graph(
         fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)
         ax.set_facecolor(bgcolor)
 
-    if draw_graph:
+    if edge_alpha > 0:
+        # draw the edges as lines from node to node
+        lines = []
+        for u, v, data in G.edges(keys=False, data=True):
+            if "geometry" in data:
+                # if edge has geometry attr, add it to list of lines to plot
+                xs, ys = data["geometry"].xy
+                lines.append(list(zip(xs, ys)))
+            else:
+                # if it doesn't have geometry attr, draw straight line from
+                # node to node
+                x1 = G.nodes[u]["x"]
+                y1 = G.nodes[u]["y"]
+                x2 = G.nodes[v]["x"]
+                y2 = G.nodes[v]["y"]
+                line = [(x1, y1), (x2, y2)]
+                lines.append(line)
 
-        if edge_alpha > 0:
-            # draw the edges as lines from node to node
-            lines = []
-            for u, v, data in G.edges(keys=False, data=True):
-                if "geometry" in data:
-                    # if edge has geometry attr, add it to list of lines to plot
-                    xs, ys = data["geometry"].xy
-                    lines.append(list(zip(xs, ys)))
-                else:
-                    # if it doesn't have geometry attr, draw straight line from
-                    # node to node
-                    x1 = G.nodes[u]["x"]
-                    y1 = G.nodes[u]["y"]
-                    x2 = G.nodes[v]["x"]
-                    y2 = G.nodes[v]["y"]
-                    line = [(x1, y1), (x2, y2)]
-                    lines.append(line)
+        # add the lines to the axes as a LineCollection
+        lc = LineCollection(
+            lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=1
+        )
+        ax.add_collection(lc)
+        utils.log("Drew the graph edges")
 
-            # add the lines to the axes as a LineCollection
-            lc = LineCollection(
-                lines, colors=edge_color, linewidths=edge_linewidth, alpha=edge_alpha, zorder=1
-            )
-            ax.add_collection(lc)
-            utils.log("Drew the graph edges")
-
-        if node_alpha > 0:
-            # scatter plot the nodes
-            ax.scatter(
-                node_Xs,
-                node_Ys,
-                s=node_size,
-                c=node_color,
-                alpha=node_alpha,
-                edgecolor=node_edgecolor,
-                zorder=node_zorder,
-            )
+    if node_alpha > 0:
+        # scatter plot the nodes
+        ax.scatter(
+            node_Xs,
+            node_Ys,
+            s=node_size,
+            c=node_color,
+            alpha=node_alpha,
+            edgecolor=node_edgecolor,
+            zorder=node_zorder,
+        )
 
     # set the extent of the figure
     margin_ns = (north - south) * margin
@@ -464,7 +459,14 @@ def plot_graph(
 
 
 def plot_graph_route(
-    G, route, route_color="r", route_linewidth=4, route_alpha=0.5, orig_dest_size=100, **pg_kwargs,
+    G,
+    route,
+    route_color="r",
+    route_linewidth=4,
+    route_alpha=0.5,
+    orig_dest_size=100,
+    ax=None,
+    **pg_kwargs,
 ):
     """
     Plot a route along a graph.
@@ -483,7 +485,10 @@ def plot_graph_route(
         opacity of the route line
     orig_dest_size : int
         size of the origin and destination nodes
-    **pg_kwargs
+    ax : matplotlib axes
+        if not None, plot route on this preexisting axes instead of drawing
+        the underlying graph
+    pg_kwargs
         keyword arguments to pass to plot_graph
 
     Returns
@@ -491,30 +496,23 @@ def plot_graph_route(
     fig, ax : tuple
         matplotlib figure, axes
     """
-    # plot the graph but not the route, and override any user show/close
-    # args for now: we'll do that later
-    override = {"G", "show", "save", "close"}
-    kwargs = {k: v for k, v in pg_kwargs.items() if k not in override}
-    fig, ax = plot_graph(G, show=False, save=False, close=False, **kwargs)
+    if ax is None:
+        # plot the graph but not the route, and override any user show/close
+        # args for now: we'll do that later
+        override = {"G", "show", "save", "close"}
+        kwargs = {k: v for k, v in pg_kwargs.items() if k not in override}
+        fig, ax = plot_graph(G, show=False, save=False, close=False, **kwargs)
+    else:
+        fig = ax.figure
 
     # scatterplot origin and destination points (first/last nodes in route)
-    orig_dest_Xs = (G.nodes[route[0]]["x"], G.nodes[route[-1]]["x"])
-    orig_dest_Ys = (G.nodes[route[0]]["y"], G.nodes[route[-1]]["y"])
-    ax.scatter(
-        orig_dest_Xs,
-        orig_dest_Ys,
-        s=orig_dest_size,
-        c=route_color,
-        alpha=route_alpha,
-        edgecolor="none",
-        zorder=3,
-    )
+    x = (G.nodes[route[0]]["x"], G.nodes[route[-1]]["x"])
+    y = (G.nodes[route[0]]["y"], G.nodes[route[-1]]["y"])
+    ax.scatter(x, y, s=orig_dest_size, c=route_color, alpha=route_alpha, edgecolor="none")
 
     # add the routes to the axes as a LineCollection
     lines = _node_list_to_coordinate_lines(G, route)
-    lc = LineCollection(
-        lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha, zorder=2
-    )
+    lc = LineCollection(lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha)
     ax.add_collection(lc)
 
     # save and show the figure as specified, passing relevant kwargs
@@ -554,7 +552,7 @@ def plot_graph_routes(G, routes, route_colors="r", **pgr_kwargs):
     if len(routes) != len(route_colors):
         raise ValueError("route_colors list must have same length as routes")
 
-    # plot the first route on top of the graph
+    # plot the graph and the first route
     override = {"G", "route", "route_color", "show", "save", "close"}
     kwargs = {k: v for k, v in pgr_kwargs.items() if k not in override}
     fig, ax = plot_graph_route(
@@ -567,8 +565,8 @@ def plot_graph_routes(G, routes, route_colors="r", **pgr_kwargs):
         **kwargs,
     )
 
-    # plot the subsequent routes on top of ax, without replotting the graph
-    override.update({"fig", "ax", "draw_graph"})
+    # plot the subsequent routes on top of existing ax
+    override.update({"ax"})
     kwargs = {k: v for k, v in pgr_kwargs.items() if k not in override}
     for route, route_color in zip(routes[1:], route_colors[1:]):
         fig, ax = plot_graph_route(
@@ -576,7 +574,6 @@ def plot_graph_routes(G, routes, route_colors="r", **pgr_kwargs):
             route=route,
             route_color=route_color,
             ax=ax,
-            draw_graph=False,
             show=False,
             save=False,
             close=False,
@@ -796,7 +793,7 @@ def plot_footprints(
     gdf : geopandas.GeoDataFrame
         GeoDataFrame of footprints (shapely Polygons and MultiPolygons)
     ax : axes
-        matplotlib axes
+        if not None, plot on this preexisting axes
     figsize : tuple
         if ax is None, use figsize (width, height) to determine figure size
     color : string
