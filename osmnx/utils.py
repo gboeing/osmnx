@@ -9,64 +9,6 @@ import unicodedata
 from . import settings
 
 
-def _handle_deprecated_params(
-    timeout=None, memory=None, max_query_area_size=None, custom_settings=None
-):
-    """
-    Pass deprecated function parameters into the global settings.
-
-    Parameters
-    ----------
-    timeout : int
-        timeout setting
-    memory : int
-        memory setting
-    max_query_area_size : float
-        max_query_area_size setting
-    custom_settings : string
-        custom_settings setting
-
-    Returns
-    -------
-    None
-    """
-    params = []
-
-    # if any params are not None, set the corresponding setting in the
-    # settings module to that parameters value
-    if timeout is not None:
-        params.append("timeout")
-        settings.timeout = timeout
-
-    if memory is not None:
-        params.append("memory")
-        settings.memory = memory
-
-    if max_query_area_size is not None:
-        params.append("max_query_area_size")
-        settings.max_query_area_size = max_query_area_size
-
-    if custom_settings is not None:
-        params.append("custom_settings")
-        settings.overpass_settings = custom_settings
-
-    # warn user of the deprecation
-    if len(params) > 0:
-        from warnings import warn
-
-        param_str = ",".join([f'"{p}"' for p in params])
-        param_str = f"[{param_str}]"
-        msg = (
-            f"The parameters {param_str} have been deprecated and will be "
-            f"removed in the next release. All of these parameters have been "
-            f"replaced by settings in the settings module, which you can set "
-            f"via ox.config(setting_name=value). Also note that the old "
-            f"custom_settings parameter has been renamed overpass_settings "
-            f"in the settings module."
-        )
-        warn(msg)
-
-
 def citation():
     """
     Print the OSMnx package's citation information.
