@@ -372,7 +372,7 @@ def _create_poi_gdf(polygon, tags):
     return gdf
 
 
-def pois_from_point(point, tags, dist=1000, timeout=None, memory=None, custom_settings=None):
+def pois_from_point(point, tags, dist=1000):
     """
     Get point of interests (POIs) within some distance N, S, E, W of a point.
 
@@ -393,15 +393,6 @@ def pois_from_point(point, tags, dist=1000, timeout=None, memory=None, custom_se
         landuse=commercial, and highway=bus_stop.
     dist : numeric
         distance in meters
-    timeout : None
-        deprecated, use ox.config(timeout=value) instead to configure this
-        setting via the settings module
-    memory : None
-        deprecated, use ox.config(memory=value) instead to configure this
-        setting via the settings module
-    custom_settings : None
-        deprecated, use ox.config(custom_settings=value) instead to configure
-        this setting via the settings module
 
     Returns
     -------
@@ -409,12 +400,10 @@ def pois_from_point(point, tags, dist=1000, timeout=None, memory=None, custom_se
     """
     north, south, east, west = utils_geo.bbox_from_point(point=point, dist=dist)
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
-    return pois_from_polygon(
-        polygon, tags, timeout=timeout, memory=memory, custom_settings=custom_settings
-    )
+    return pois_from_polygon(polygon, tags)
 
 
-def pois_from_address(address, tags, dist=1000, timeout=None, memory=None, custom_settings=None):
+def pois_from_address(address, tags, dist=1000):
     """
     Get point of interests (POIs) within some distance N, S, E, W of address.
 
@@ -435,15 +424,6 @@ def pois_from_address(address, tags, dist=1000, timeout=None, memory=None, custo
         landuse=commercial, and highway=bus_stop.
     dist : numeric
         distance in meters
-    timeout : None
-        deprecated, use ox.config(timeout=value) instead to configure this
-        setting via the settings module
-    memory : None
-        deprecated, use ox.config(memory=value) instead to configure this
-        setting via the settings module
-    custom_settings : None
-        deprecated, use ox.config(custom_settings=value) instead to configure
-        this setting via the settings module
 
     Returns
     -------
@@ -451,17 +431,10 @@ def pois_from_address(address, tags, dist=1000, timeout=None, memory=None, custo
     """
     # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
-    return pois_from_point(
-        point=point,
-        tags=tags,
-        dist=dist,
-        timeout=timeout,
-        memory=memory,
-        custom_settings=custom_settings,
-    )
+    return pois_from_point(point=point, tags=tags, dist=dist)
 
 
-def pois_from_place(place, tags, which_result=1, timeout=None, memory=None, custom_settings=None):
+def pois_from_place(place, tags, which_result=1):
     """
     Get points of interest (POIs) within the boundaries of some place.
 
@@ -482,15 +455,6 @@ def pois_from_place(place, tags, which_result=1, timeout=None, memory=None, cust
         landuse=commercial, and highway=bus_stop.
     which_result : int
         max number of geocoding results to return and which to process
-    timeout : None
-        deprecated, use ox.config(timeout=value) instead to configure this
-        setting via the settings module
-    memory : None
-        deprecated, use ox.config(memory=value) instead to configure this
-        setting via the settings module
-    custom_settings : None
-        deprecated, use ox.config(custom_settings=value) instead to configure
-        this setting via the settings module
 
     Returns
     -------
@@ -498,12 +462,10 @@ def pois_from_place(place, tags, which_result=1, timeout=None, memory=None, cust
     """
     city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city["geometry"].iloc[0]
-    return pois_from_polygon(
-        polygon, tags, timeout=timeout, memory=memory, custom_settings=custom_settings
-    )
+    return pois_from_polygon(polygon, tags)
 
 
-def pois_from_polygon(polygon, tags, timeout=None, memory=None, custom_settings=None):
+def pois_from_polygon(polygon, tags):
     """
     Get point of interests (POIs) within some polygon.
 
@@ -522,19 +484,9 @@ def pois_from_polygon(polygon, tags, timeout=None, memory=None, custom_settings=
         `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
-    timeout : None
-        deprecated, use ox.config(timeout=value) instead to configure this
-        setting via the settings module
-    memory : None
-        deprecated, use ox.config(memory=value) instead to configure this
-        setting via the settings module
-    custom_settings : None
-        deprecated, use ox.config(custom_settings=value) instead to configure
-        this setting via the settings module
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
     """
-    utils._handle_deprecated_params(timeout=timeout, memory=memory, custom_settings=custom_settings)
     return _create_poi_gdf(polygon, tags)
