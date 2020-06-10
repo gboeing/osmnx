@@ -371,15 +371,7 @@ def _members_geom_lists(relation_val, footprints):
     return outer_polys, outer_lines, inner_polys, inner_lines
 
 
-def footprints_from_point(
-    point,
-    dist=1000,
-    footprint_type="building",
-    retain_invalid=False,
-    timeout=None,
-    memory=None,
-    custom_settings=None,
-):
+def footprints_from_point(point, dist=1000, footprint_type="building", retain_invalid=False):
     """
     Get footprints within some distance N, S, E, W of a lat-lng point.
 
@@ -394,15 +386,6 @@ def footprints_from_point(
         'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
-    timeout : None
-        deprecated, use ox.config(timeout=value) instead to configure this
-        setting via the settings module
-    memory : None
-        deprecated, use ox.config(memory=value) instead to configure this
-        setting via the settings module
-    custom_settings : None
-        deprecated, use ox.config(custom_settings=value) instead to configure
-        this setting via the settings module
 
     Returns
     -------
@@ -410,25 +393,10 @@ def footprints_from_point(
     """
     north, south, east, west = utils_geo.bbox_from_point(point=point, dist=dist)
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
-    return footprints_from_polygon(
-        polygon,
-        footprint_type,
-        retain_invalid,
-        timeout=timeout,
-        memory=memory,
-        custom_settings=custom_settings,
-    )
+    return footprints_from_polygon(polygon, footprint_type, retain_invalid)
 
 
-def footprints_from_address(
-    address,
-    dist=1000,
-    footprint_type="building",
-    retain_invalid=False,
-    timeout=None,
-    memory=None,
-    custom_settings=None,
-):
+def footprints_from_address(address, dist=1000, footprint_type="building", retain_invalid=False):
     """
     Get footprints within some distance N, S, E, W of an address.
 
@@ -443,15 +411,6 @@ def footprints_from_address(
         'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
-    timeout : None
-        deprecated, use ox.config(timeout=value) instead to configure this
-        setting via the settings module
-    memory : None
-        deprecated, use ox.config(memory=value) instead to configure this
-        setting via the settings module
-    custom_settings : None
-        deprecated, use ox.config(custom_settings=value) instead to configure
-        this setting via the settings module
 
     Returns
     -------
@@ -461,26 +420,10 @@ def footprints_from_address(
     point = utils_geo.geocode(query=address)
 
     # get footprints within distance of this point
-    return footprints_from_point(
-        point,
-        dist,
-        footprint_type,
-        retain_invalid,
-        timeout=timeout,
-        memory=memory,
-        custom_settings=custom_settings,
-    )
+    return footprints_from_point(point, dist, footprint_type, retain_invalid)
 
 
-def footprints_from_place(
-    place,
-    footprint_type="building",
-    retain_invalid=False,
-    which_result=1,
-    timeout=None,
-    memory=None,
-    custom_settings=None,
-):
+def footprints_from_place(place, footprint_type="building", retain_invalid=False, which_result=1):
     """
     Get footprints within the boundaries of some place.
 
@@ -501,15 +444,6 @@ def footprints_from_place(
         if False discard any footprints with an invalid geometry
     which_result : int
         max number of results to return and which to process upon receipt
-    timeout : None
-        deprecated, use ox.config(timeout=value) instead to configure this
-        setting via the settings module
-    memory : None
-        deprecated, use ox.config(memory=value) instead to configure this
-        setting via the settings module
-    custom_settings : None
-        deprecated, use ox.config(custom_settings=value) instead to configure
-        this setting via the settings module
 
     Returns
     -------
@@ -517,24 +451,10 @@ def footprints_from_place(
     """
     city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city["geometry"].iloc[0]
-    return footprints_from_polygon(
-        polygon,
-        footprint_type,
-        retain_invalid,
-        timeout=timeout,
-        memory=memory,
-        custom_settings=custom_settings,
-    )
+    return footprints_from_polygon(polygon, footprint_type, retain_invalid)
 
 
-def footprints_from_polygon(
-    polygon,
-    footprint_type="building",
-    retain_invalid=False,
-    timeout=None,
-    memory=None,
-    custom_settings=None,
-):
+def footprints_from_polygon(polygon, footprint_type="building", retain_invalid=False):
     """
     Get footprints within some polygon.
 
@@ -548,19 +468,9 @@ def footprints_from_polygon(
         'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
-    timeout : None
-        deprecated, use ox.config(timeout=value) instead to configure this
-        setting via the settings module
-    memory : None
-        deprecated, use ox.config(memory=value) instead to configure this
-        setting via the settings module
-    custom_settings : None
-        deprecated, use ox.config(custom_settings=value) instead to configure
-        this setting via the settings module
 
     Returns
     -------
     geopandas.GeoDataFrame
     """
-    utils._handle_deprecated_params(timeout=timeout, memory=memory, custom_settings=custom_settings)
     return _create_footprints_gdf(polygon, footprint_type, retain_invalid)
