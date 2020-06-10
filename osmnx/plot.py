@@ -499,7 +499,7 @@ def plot_graph_route(
     if ax is None:
         # plot the graph but not the route, and override any user show/close
         # args for now: we'll do that later
-        override = {"G", "show", "save", "close"}
+        override = {"show", "save", "close"}
         kwargs = {k: v for k, v in pg_kwargs.items() if k not in override}
         fig, ax = plot_graph(G, show=False, save=False, close=False, **kwargs)
     else:
@@ -542,7 +542,7 @@ def plot_graph_routes(G, routes, route_colors="r", **pgr_kwargs):
     fig, ax : tuple
         matplotlib figure, axes
     """
-    # initial checks
+    # check for valid arguments
     if not all([isinstance(r, list) for r in routes]):
         raise ValueError("routes must be a list of route lists")
     if len(routes) < 2:
@@ -553,7 +553,7 @@ def plot_graph_routes(G, routes, route_colors="r", **pgr_kwargs):
         raise ValueError("route_colors list must have same length as routes")
 
     # plot the graph and the first route
-    override = {"G", "route", "route_color", "show", "save", "close"}
+    override = {"route", "route_color", "show", "save", "close"}
     kwargs = {k: v for k, v in pgr_kwargs.items() if k not in override}
     fig, ax = plot_graph_route(
         G,
@@ -573,10 +573,10 @@ def plot_graph_routes(G, routes, route_colors="r", **pgr_kwargs):
             G,
             route=route,
             route_color=route_color,
-            ax=ax,
             show=False,
             save=False,
             close=False,
+            ax=ax,
             **kwargs,
         )
 
@@ -746,16 +746,7 @@ def plot_figure_ground(
     bbox = utils_geo.bbox_from_point(point, dist, project_utm=False)
 
     # plot the figure
-    override = {
-        "G",
-        "bbox",
-        "figsize",
-        "margin",
-        "node_size",
-        "node_color",
-        "edge_color",
-        "edge_linewidth",
-    }
+    override = {"bbox", "margin", "node_size", "node_color", "edge_linewidth"}
     kwargs = {k: v for k, v in pg_kwargs.items() if k not in override}
     fig, ax = plot_graph(
         G=G_undir,
