@@ -70,6 +70,11 @@ def graph_from_bbox(
     Returns
     -------
     G : networkx.MultiDiGraph
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -136,6 +141,11 @@ def graph_from_point(
     Returns
     -------
     G : networkx.MultiDiGraph
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     if dist_type not in {"bbox", "network"}:
         raise ValueError('dist_type must be "bbox" or "network"')
@@ -221,6 +231,11 @@ def graph_from_address(
     Returns
     -------
     networkx.MultiDiGraph or optionally (networkx.MultiDiGraph, (lat, lng))
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
@@ -299,6 +314,11 @@ def graph_from_place(
     Returns
     -------
     G : networkx.MultiDiGraph
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, (str, dict)):
@@ -371,6 +391,11 @@ def graph_from_polygon(
     Returns
     -------
     G : networkx.MultiDiGraph
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding

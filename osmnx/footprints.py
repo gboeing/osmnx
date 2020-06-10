@@ -390,6 +390,11 @@ def footprints_from_point(point, dist=1000, footprint_type="building", retain_in
     Returns
     -------
     geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     north, south, east, west = utils_geo.bbox_from_point(point=point, dist=dist)
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -415,6 +420,11 @@ def footprints_from_address(address, dist=1000, footprint_type="building", retai
     Returns
     -------
     geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
@@ -429,9 +439,9 @@ def footprints_from_place(place, footprint_type="building", retain_invalid=False
 
     The query must be geocodable and OSM must have polygon boundaries for the
     geocode result. If OSM does not have a polygon for this place, you can
-    instead get its footprints using the footprints_from_address function, which
-    geocodes the place name to a point and gets the footprints within some distance
-    of that point.
+    instead get its footprints using the footprints_from_address function,
+    which geocodes the place name to a point and gets the footprints within
+    some distance of that point.
 
     Parameters
     ----------
@@ -448,6 +458,11 @@ def footprints_from_place(place, footprint_type="building", retain_invalid=False
     Returns
     -------
     geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city["geometry"].iloc[0]
@@ -472,5 +487,10 @@ def footprints_from_polygon(polygon, footprint_type="building", retain_invalid=F
     Returns
     -------
     geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     return _create_footprints_gdf(polygon, footprint_type, retain_invalid)

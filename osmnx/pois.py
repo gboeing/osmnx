@@ -397,6 +397,11 @@ def pois_from_point(point, tags, dist=1000):
     Returns
     -------
     gdf : geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     north, south, east, west = utils_geo.bbox_from_point(point=point, dist=dist)
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -428,6 +433,11 @@ def pois_from_address(address, tags, dist=1000):
     Returns
     -------
     gdf : geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
@@ -459,6 +469,11 @@ def pois_from_place(place, tags, which_result=1):
     Returns
     -------
     gdf : geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     city = boundaries.gdf_from_place(place, which_result=which_result)
     polygon = city["geometry"].iloc[0]
@@ -488,5 +503,10 @@ def pois_from_polygon(polygon, tags):
     Returns
     -------
     gdf : geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     return _create_poi_gdf(polygon, tags)
