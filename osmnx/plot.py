@@ -231,14 +231,15 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
             fig.patch.set_alpha(0.0)
             fig.savefig(filepath, bbox_inches=0, format=ext, facecolor=fc, transparent=True)
         else:
-            # turn figure frame on to save with facecolor
-            fig.set_frameon(True)
-
             # constrain saved figure's extent to interior of the axis
             extent = ax.bbox.transformed(fig.dpi_scale_trans.inverted())
+
+            # temporarily turn figure frame on to save with facecolor
+            fig.set_frameon(True)
             fig.savefig(
-                filepath, dpi=dpi, bbox_inches=extent, format=ext, facecolor=fc, transparent=True,
+                filepath, dpi=dpi, bbox_inches=extent, format=ext, facecolor=fc, transparent=True
             )
+            fig.set_frameon(False)  # and turn it back off again
         utils.log(f"Saved figure to disk at {filepath}")
 
     if show:
