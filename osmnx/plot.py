@@ -6,11 +6,7 @@ import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from descartes import PolygonPatch
 from matplotlib.collections import LineCollection
-from matplotlib.collections import PatchCollection
-from shapely.geometry import MultiPolygon
-from shapely.geometry import Polygon
 
 from . import graph
 from . import settings
@@ -208,6 +204,9 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
     fig, ax : tuple
         matplotlib figure, axis
     """
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+
     if save:
 
         # default filepath, if none provided
@@ -371,8 +370,10 @@ def plot_graph(
     fig, ax : tuple
         matplotlib figure, axis
     """
-    max_node_size = max(node_size) if hasattr(node_size, '__iter__') else node_size
-    max_edge_linewidth = max(edge_linewidth) if hasattr(edge_linewidth, '__iter__') else edge_linewidth
+    max_node_size = max(node_size) if hasattr(node_size, "__iter__") else node_size
+    max_edge_linewidth = (
+        max(edge_linewidth) if hasattr(edge_linewidth, "__iter__") else edge_linewidth
+    )
     if max_node_size <= 0 and max_edge_linewidth <= 0:
         raise ValueError("Either node_size or edge_linewidth must be > 0 to plot something.")
 
@@ -590,6 +591,8 @@ def plot_figure_ground(
     smooth_joints : bool
         if True, plot nodes same width as streets to smooth line joints and
         prevent cracks between them from showing
+    pg_kwargs
+        keyword arguments to pass to plot_graph
 
     Returns
     -------
@@ -598,8 +601,7 @@ def plot_figure_ground(
     """
     multiplier = 1.2
 
-    # if G was passed-in, use this graph in the plot, centered on the centroid
-    # of its nodes
+    # if G was passed-in, plot it centered on its node centroid
     if G is not None:
         gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=True)
         lnglat_point = gdf_nodes.unary_union.centroid.coords[0]
@@ -633,8 +635,7 @@ def plot_figure_ground(
     else:
         raise ValueError("You must pass an address or lat-lng point or graph.")
 
-    # if user did not pass in custom street widths, create a dict of default
-    # values
+    # if user did not pass in custom street widths, create a dict of defaults
     if street_widths is None:
         street_widths = {
             "footway": 1.5,
@@ -649,8 +650,7 @@ def plot_figure_ground(
     # we need an undirected graph to find every edge incident to a node
     G_undir = utils_graph.get_undirected(G)
 
-    # for each network edge, get a linewidth according to street type (the OSM
-    # 'highway' value)
+    # for each edge, get a linewidth according to street type
     edge_linewidths = []
     for _, _, data in G_undir.edges(keys=False, data=True):
         street_type = data["highway"][0] if isinstance(data["highway"], list) else data["highway"]
@@ -693,8 +693,7 @@ def plot_figure_ground(
                 # street's line
                 circle_diameter = max(edge_widths)
 
-                # mpl circle marker sizes are in area, so it is the diameter
-                # squared
+                # circle marker sizes are in area, so use diameter squared
                 circle_area = circle_diameter ** 2
                 node_widths[node] = circle_area
 
@@ -703,8 +702,7 @@ def plot_figure_ground(
     else:
         node_sizes = 0
 
-    # define the spatial extents of the plotting figure to make it square, in
-    # projected units, and cropped to the desired area
+    # define the view extents of the plotting figure
     bbox = utils_geo.bbox_from_point(point, dist, project_utm=False)
 
     # plot the figure
@@ -727,7 +725,7 @@ def plot_figure_ground(
 def plot_footprints(
     gdf,
     ax=None,
-    figsize=None,
+    figsize=(8, 8),
     color="orange",
     bgcolor="#222222",
     bbox=None,
@@ -781,23 +779,10 @@ def plot_footprints(
     else:
         fig = ax.figure
 
-    # extract each polygon as a descartes patch, and add to a matplotlib patch
-    # collection
-    patches = []
-    for geometry in gdf["geometry"]:
-        if isinstance(geometry, Polygon):
-            patches.append(PolygonPatch(geometry))
-        elif isinstance(geometry, MultiPolygon):
-            for (
-                subpolygon
-            ) in geometry:  # if geometry is multipolygon, go through each constituent subpolygon
-                patches.append(PolygonPatch(subpolygon))
-    pc = PatchCollection(patches, facecolor=color, edgecolor=color, linewidth=0, alpha=1)
-    ax.add_collection(pc)
+    ax = gdf.plot(ax=ax, facecolor=color, edgecolor="none", linewidth=0, alpha=1)
 
     # determine figure extents
     if bbox is None:
-        # set the figure bounds to the polygons' bounds
         west, south, east, north = gdf.total_bounds
     else:
         north, south, east, west = bbox
