@@ -96,7 +96,7 @@ def get_edge_colors_by_attr(
     G : networkx.MultiDiGraph
         input graph
     attr : string
-        name of the edgeattribute
+        name of the edge attribute
     num_bins : int
         if 0, linearly map a color to each edge. if > 0, assign edges to this
         many color bins.
@@ -297,7 +297,7 @@ def plot_graph_route(
     y = (G.nodes[route[0]]["y"], G.nodes[route[-1]]["y"])
     ax.scatter(x, y, s=orig_dest_size, c=route_color, alpha=route_alpha, edgecolor="none")
 
-    # add the routes to the axis as a LineCollection
+    # plot the route as a line
     x, y = _node_list_to_coords(G, route)
     ax.plot(x, y, c=route_color, lw=route_linewidth, alpha=route_alpha)
 
