@@ -190,7 +190,6 @@ def test_plots():
     fig, ax = ox.plot_graph(
         G,
         figsize=(5, 5),
-        margin=0.05,
         bgcolor="y",
         dpi=180,
         node_color="k",

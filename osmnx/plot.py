@@ -189,8 +189,8 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
     ----------
     fig : figure
         matplotlib figure
-    ax : axes
-        matplotlib axes
+    ax : axis
+        matplotlib axis
     save : bool
         if True, save the figure to disk at filepath
     show : bool
@@ -206,11 +206,8 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axes
+        matplotlib figure, axis
     """
-    fig.canvas.draw()
-    fig.canvas.flush_events()
-
     if save:
 
         # default filepath, if none provided
@@ -222,30 +219,26 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
         if not folder == "" and not os.path.exists(folder):
             os.makedirs(folder)
 
+        # get the file extension and figure facecolor
+        _, ext = os.path.splitext(filepath)
+        ext = ext.strip(".")
         fc = fig.get_facecolor()
 
-        _, extension = os.path.splitext(filepath)
-        extension = extension.strip(".")
-
-        if extension == "svg":
+        if ext == "svg":
             # if the file format is svg, prep the fig/ax a bit for saving
             ax.axis("off")
             ax.set_position([0, 0, 1, 1])
             ax.patch.set_alpha(0.0)
             fig.patch.set_alpha(0.0)
-            fig.savefig(
-                filepath, bbox_inches=0, format=extension, facecolor=fc, transparent=True,
-            )
+            fig.savefig(filepath, bbox_inches=0, format=ext, facecolor=fc, transparent=True)
         else:
-            # constrain saved figure's extent to interior of the axes
-            extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+            # turn figure frame on to save with facecolor
+            fig.set_frameon(True)
+
+            # constrain saved figure's extent to interior of the axis
+            extent = ax.bbox.transformed(fig.dpi_scale_trans.inverted())
             fig.savefig(
-                filepath,
-                dpi=dpi,
-                bbox_inches=extent,
-                format=extension,
-                facecolor=fc,
-                transparent=True,
+                filepath, dpi=dpi, bbox_inches=extent, format=ext, facecolor=fc, transparent=True,
             )
         utils.log(f"Saved figure to disk at {filepath}")
 
@@ -260,12 +253,12 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
 
 def _config_ax(ax, crs, bbox, padding=0):
     """
-    Configure axes for display.
+    Configure axis for display.
 
     Parameters
     ----------
-    ax : matplotlib axes
-        the axes containing the plot
+    ax : matplotlib axis
+        the axis containing the plot
     crs : dict or string or pyproj.CRS
         the CRS of the plotted geometries
     bbox : tuple
@@ -275,28 +268,23 @@ def _config_ax(ax, crs, bbox, padding=0):
 
     Returns
     -------
-    ax : matplotlib axes
-        the configured/styled axes
+    ax : matplotlib axis
+        the configured/styled axis
     """
-    # set the axes view limits
+    # set the axis view limits
     north, south, east, west = bbox
     padding_ns = (north - south) * padding
     padding_ew = (east - west) * padding
     ax.set_ylim((south - padding_ns, north + padding_ns))
     ax.set_xlim((west - padding_ew, east + padding_ew))
 
-    # turn off the axes display, set margins to zero, and point ticks inward
-    # so there's no space around the plot
-    ax.axis("off")
+    # set margins to zero, point ticks inward, turn off ax border and x/y axis
+    # so there is no space around the plot
     ax.margins(0)
     ax.tick_params(which="both", direction="in")
-
-    xaxis = ax.get_xaxis()
-    yaxis = ax.get_yaxis()
-    xaxis.get_major_formatter().set_useOffset(False)
-    yaxis.get_major_formatter().set_useOffset(False)
-    xaxis.set_visible(False)
-    yaxis.set_visible(False)
+    _ = [s.set_visible(False) for s in ax.spines.values()]
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
 
     # set aspect ratio
     if crs == settings.default_crs:
@@ -337,8 +325,8 @@ def plot_graph(
     ----------
     G : networkx.MultiDiGraph
         input graph
-    ax : matplotlib axes
-        if not None, plot on this preexisting axes
+    ax : matplotlib axis
+        if not None, plot on this preexisting axis
     figsize : tuple
         if ax is None, sets figure size as (width, height). if None, default
         to 6 inch height with proportional width
@@ -381,25 +369,27 @@ def plot_graph(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axes
+        matplotlib figure, axis
     """
-    if node_size <= 0 and edge_linewidth <= 0:
+    min_node_size = min(node_size) if hasattr(node_size, '__iter__') else node_size
+    min_edge_linewidth = min(edge_linewidth) if hasattr(edge_linewidth, '__iter__') else edge_linewidth
+    if min_node_size <= 0 and min_edge_linewidth <= 0:
         raise ValueError("Either node_size or edge_linewidth must be > 0 to plot something.")
 
     # create fig, ax as needed
     utils.log("Begin plotting the graph...")
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)
+        fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor, frameon=False)
         ax.set_facecolor(bgcolor)
     else:
         fig = ax.figure
 
-    if edge_linewidth > 0:
+    if min_edge_linewidth > 0:
         # plot the edges' geometries
         gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)
         ax = gdf_edges.plot(ax=ax, color=edge_color, lw=edge_linewidth, alpha=edge_alpha, zorder=1)
 
-    if node_size > 0:
+    if min_node_size > 0:
         # scatter plot the nodes' x/y coordinates
         gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
         ax.scatter(
@@ -423,7 +413,7 @@ def plot_graph(
         bbox = north, south, east, west
         padding = 0.02  # pad 2% to not trim nodes' circles
 
-    # configure axes appearance, save/show figure as specified, and return
+    # configure axis appearance, save/show figure as specified, and return
     ax = _config_ax(ax, G.graph["crs"], bbox, padding)
     fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi)
     utils.log("Finished plotting the graph")
@@ -457,8 +447,8 @@ def plot_graph_route(
         opacity of the route line
     orig_dest_size : int
         size of the origin and destination nodes
-    ax : matplotlib axes
-        if not None, plot route on this preexisting axes instead of creating a
+    ax : matplotlib axis
+        if not None, plot route on this preexisting axis instead of creating a
         new fig, ax and drawing the underlying graph
     pg_kwargs
         keyword arguments to pass to plot_graph
@@ -466,7 +456,7 @@ def plot_graph_route(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axes
+        matplotlib figure, axis
     """
     if ax is None:
         # plot the graph but not the route, and override any user show/close
@@ -482,7 +472,7 @@ def plot_graph_route(
     y = (G.nodes[route[0]]["y"], G.nodes[route[-1]]["y"])
     ax.scatter(x, y, s=orig_dest_size, c=route_color, alpha=route_alpha, edgecolor="none")
 
-    # add the routes to the axes as a LineCollection
+    # add the routes to the axis as a LineCollection
     lines = _node_list_to_coordinate_lines(G, route)
     lc = LineCollection(lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha)
     ax.add_collection(lc)
@@ -512,7 +502,7 @@ def plot_graph_routes(G, routes, route_colors="r", **pgr_kwargs):
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axes
+        matplotlib figure, axis
     """
     # check for valid arguments
     if not all([isinstance(r, list) for r in routes]):
@@ -604,7 +594,7 @@ def plot_figure_ground(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axes
+        matplotlib figure, axis
     """
     multiplier = 1.2
 
@@ -754,8 +744,8 @@ def plot_footprints(
     ----------
     gdf : geopandas.GeoDataFrame
         GeoDataFrame of footprints (shapely Polygons and MultiPolygons)
-    ax : axes
-        if not None, plot on this preexisting axes
+    ax : axis
+        if not None, plot on this preexisting axis
     figsize : tuple
         if ax is None, use figsize (width, height) to determine figure size
     color : string
@@ -783,10 +773,10 @@ def plot_footprints(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axes
+        matplotlib figure, axis
     """
     if ax is None:
-        fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor)
+        fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor, frameon=False)
         ax.set_facecolor(bgcolor)
     else:
         fig = ax.figure
@@ -812,7 +802,7 @@ def plot_footprints(
     else:
         north, south, east, west = bbox
 
-    # configure axes appearance, save/show figure as specified, and return
+    # configure axis appearance, save/show figure as specified, and return
     ax = _config_ax(ax, gdf.crs, (north, south, east, west))
     fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi)
     return fig, ax
