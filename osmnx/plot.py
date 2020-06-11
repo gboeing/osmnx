@@ -294,9 +294,8 @@ def plot_graph_route(
     ax.scatter(x, y, s=orig_dest_size, c=route_color, alpha=route_alpha, edgecolor="none")
 
     # add the routes to the axis as a LineCollection
-    lines = _node_list_to_coordinate_lines(G, route)
-    lc = LineCollection(lines, colors=route_color, linewidths=route_linewidth, alpha=route_alpha)
-    ax.add_collection(lc)
+    x, y = _node_list_to_coords(G, route)
+    ax.plot(x, y, c=route_color, lw=route_linewidth, alpha=route_alpha)
 
     # save and show the figure as specified, passing relevant kwargs
     sas_kwargs = {"save", "show", "close", "filepath", "file_format", "dpi"}
@@ -644,43 +643,39 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
     return color_series
 
 
-def _node_list_to_coordinate_lines(G, route):
+def _node_list_to_coords(G, route):
     """
-    Create list of lines that follow the route defined by the list of nodes.
+    Create lists of x and y coordinates that define a route's edge geometry.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
     route : list
-        list of node IDs composing a valid path in G
+        list of node IDs composing a valid path of edges in G
 
     Returns
     -------
-    lines : list
-        list of lines as pairs ((x_start, y_start), (x_stop, y_stop))
+    x, y : tuple
+        tuple of lists, x coordinates and y coordinates
     """
-    edge_nodes = list(zip(route[:-1], route[1:]))
-    lines = []
+    edge_nodes = zip(route[:-1], route[1:])
+    x = []
+    y = []
     for u, v in edge_nodes:
         # if there are parallel edges, select the shortest in length
-        data = min(G.get_edge_data(u, v).values(), key=lambda x: x["length"])
-
-        # if it has a geometry attribute (ie, a list of line segments)
+        data = min(G.get_edge_data(u, v).values(), key=lambda d: d["length"])
         if "geometry" in data:
-            # add them to the list of lines to plot
-            xs, ys = data["geometry"].xy
-            lines.append(list(zip(xs, ys)))
+            # if geometry attribute exists, add its coords to list
+            xcoords, ycoords = data["geometry"].xy
+            x.extend(xcoords)
+            y.extend(ycoords)
         else:
-            # if it doesn't have a geometry attribute, the edge is a straight
-            # line from node to node
-            x1 = G.nodes[u]["x"]
-            y1 = G.nodes[u]["y"]
-            x2 = G.nodes[v]["x"]
-            y2 = G.nodes[v]["y"]
-            line = [(x1, y1), (x2, y2)]
-            lines.append(line)
-    return lines
+            # otherwise, the edge is a straight line from node to node
+            x.extend((G.nodes[u]["x"], G.nodes[v]["x"]))
+            y.extend((G.nodes[u]["y"], G.nodes[v]["y"]))
+
+    return x, y
 
 
 def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dpi=300):
