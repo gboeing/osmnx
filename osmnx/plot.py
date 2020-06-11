@@ -17,9 +17,9 @@ from . import utils_geo
 from . import utils_graph
 
 
-def get_colors(n=5, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=False):
+def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=False):
     """
-    Return n evenly-spaced colors from a colormap.
+    Get n evenly-spaced colors from a matplotlib colormap.
 
     Parameters
     ----------
@@ -42,26 +42,26 @@ def get_colors(n=5, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=F
     color_list : list
     """
     color_list = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, n)]
-    color_list = [(r, g, b, alpha) for r, g, b, _ in color_list]
     if return_hex:
         color_list = [colors.to_hex(c) for c in color_list]
+    else:
+        color_list = [(r, g, b, alpha) for r, g, b, _ in color_list]
     return color_list
 
 
-def get_node_colors_by_attr(
-    G, attr, num_bins=None, cmap="viridis", start=0, stop=1, na_color="none"
-):
+def get_node_colors_by_attr(G, attr, num_bins=0, cmap="viridis", start=0, stop=1, na_color='none', equal_size=False):
     """
-    Get a list of node colors by binning continuous attribute into quantiles.
+    Get node colors based on node attribute values.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
     attr : string
-        name of the attribute
+        name of the node attribute
     num_bins : int
-        how many quantiles (default None assigns each node to its own bin)
+        if 0, linearly map a color to each node. if > 0, assign nodes to this
+        many color bins.
     cmap : string
         name of a matplotlib colormap
     start : float
@@ -69,36 +69,33 @@ def get_node_colors_by_attr(
     stop : float
         where to end in the colorspace
     na_color : string
-        what color to assign nodes with null attribute values
+        what color to assign nodes with missing attribute values
+    equal_size : bool
+        if True, bin into equal-sized quantiles (requires unique bin edges).
+        if False, bin into unequal-sized but equal-spaced bins.
 
     Returns
     -------
-    node_colors : list
+    node_colors : pandas.Series
+        series labels are node IDs and values are colors
     """
-    if num_bins is None:
-        num_bins = len(G)
-    bin_labels = range(num_bins)
-    attr_values = pd.Series([data[attr] for node, data in G.nodes(data=True)])
-    cats = pd.qcut(x=attr_values, q=num_bins, labels=bin_labels)
-    color_list = get_colors(num_bins, cmap, start, stop)
-    node_colors = [color_list[int(cat)] if pd.notnull(cat) else na_color for cat in cats]
-    return node_colors
+    vals = pd.Series(nx.get_node_attributes(G, attr))
+    return _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size)
 
 
-def get_edge_colors_by_attr(
-    G, attr, num_bins=None, cmap="viridis", start=0, stop=1, na_color="none"
-):
+def get_edge_colors_by_attr(G, attr, num_bins=0, cmap="viridis", start=0, stop=1, na_color='none', equal_size=False):
     """
-    Get a list of edge colors by binning continuous attribute into quantiles.
+    Get edge colors based on edge attribute values.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
     attr : string
-        name of the continuous-variable attribute
+        name of the edgeattribute
     num_bins : int
-        how many quantiles
+        if 0, linearly map a color to each edge. if > 0, assign edges to this
+        many color bins.
     cmap : string
         name of a matplotlib colormap
     start : float
@@ -106,180 +103,18 @@ def get_edge_colors_by_attr(
     stop : float
         where to end in the colorspace
     na_color : string
-        what color to assign nodes with null attribute values
+        what color to assign edges with missing attribute values
+    equal_size : bool
+        if True, bin into equal-sized quantiles (requires unique bin edges).
+        if False, bin into unequal-sized but equal-spaced bins.
 
     Returns
     -------
-    edge_colors : list
+    edge_colors : pandas.Series
+        series labels are edge IDs (u, v, k) and values are colors
     """
-    if num_bins is None:
-        num_bins = len(G.edges())
-    bin_labels = range(num_bins)
-    attr_values = pd.Series([data[attr] for u, v, key, data in G.edges(keys=True, data=True)])
-    cats = pd.qcut(x=attr_values, q=num_bins, labels=bin_labels)
-    color_list = get_colors(num_bins, cmap, start, stop)
-    edge_colors = [color_list[int(cat)] if pd.notnull(cat) else na_color for cat in cats]
-    return edge_colors
-
-
-def _node_list_to_coordinate_lines(G, route):
-    """
-    Create list of lines that follow the route defined by the list of nodes.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    route : list
-        list of node IDs composing a valid path in G
-
-    Returns
-    -------
-    lines : list
-        list of lines as pairs ((x_start, y_start), (x_stop, y_stop))
-    """
-    edge_nodes = list(zip(route[:-1], route[1:]))
-    lines = []
-    for u, v in edge_nodes:
-        # if there are parallel edges, select the shortest in length
-        data = min(G.get_edge_data(u, v).values(), key=lambda x: x["length"])
-
-        # if it has a geometry attribute (ie, a list of line segments)
-        if "geometry" in data:
-            # add them to the list of lines to plot
-            xs, ys = data["geometry"].xy
-            lines.append(list(zip(xs, ys)))
-        else:
-            # if it doesn't have a geometry attribute, the edge is a straight
-            # line from node to node
-            x1 = G.nodes[u]["x"]
-            y1 = G.nodes[u]["y"]
-            x2 = G.nodes[v]["x"]
-            y2 = G.nodes[v]["y"]
-            line = [(x1, y1), (x2, y2)]
-            lines.append(line)
-    return lines
-
-
-def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dpi=300):
-    """
-    Save a figure to disk and/or show it, as specified by args.
-
-    Parameters
-    ----------
-    fig : figure
-        matplotlib figure
-    ax : axis
-        matplotlib axis
-    save : bool
-        if True, save the figure to disk at filepath
-    show : bool
-        if True, call pyplot.show() to show the figure
-    close : bool
-        if True, call pyplot.close() to close the figure
-    filepath : string
-        if save is True, the path to the file. file format determined from
-        extension. if None, use default image folder + image.png
-    dpi : int
-        if save is True, the resolution of saved file
-
-    Returns
-    -------
-    fig, ax : tuple
-        matplotlib figure, axis
-    """
-    fig.canvas.draw()
-    fig.canvas.flush_events()
-
-    if save:
-
-        # default filepath, if none provided
-        if filepath is None:
-            filepath = os.path.join(settings.imgs_folder, "image.png")
-
-        # if save folder does not already exist, create it
-        folder, _ = os.path.split(filepath)
-        if not folder == "" and not os.path.exists(folder):
-            os.makedirs(folder)
-
-        # get the file extension and figure facecolor
-        _, ext = os.path.splitext(filepath)
-        ext = ext.strip(".")
-        fc = fig.get_facecolor()
-
-        if ext == "svg":
-            # if the file format is svg, prep the fig/ax a bit for saving
-            ax.axis("off")
-            ax.set_position([0, 0, 1, 1])
-            ax.patch.set_alpha(0.0)
-            fig.patch.set_alpha(0.0)
-            fig.savefig(filepath, bbox_inches=0, format=ext, facecolor=fc, transparent=True)
-        else:
-            # constrain saved figure's extent to interior of the axis
-            extent = ax.bbox.transformed(fig.dpi_scale_trans.inverted())
-
-            # temporarily turn figure frame on to save with facecolor
-            fig.set_frameon(True)
-            fig.savefig(
-                filepath, dpi=dpi, bbox_inches=extent, format=ext, facecolor=fc, transparent=True
-            )
-            fig.set_frameon(False)  # and turn it back off again
-        utils.log(f"Saved figure to disk at {filepath}")
-
-    if show:
-        plt.show()
-
-    if close:
-        plt.close()
-
-    return fig, ax
-
-
-def _config_ax(ax, crs, bbox, padding=0):
-    """
-    Configure axis for display.
-
-    Parameters
-    ----------
-    ax : matplotlib axis
-        the axis containing the plot
-    crs : dict or string or pyproj.CRS
-        the CRS of the plotted geometries
-    bbox : tuple
-        bounding box as (north, south, east, west)
-    padding : float
-        relative padding to add around the plot's bbox
-
-    Returns
-    -------
-    ax : matplotlib axis
-        the configured/styled axis
-    """
-    # set the axis view limits
-    north, south, east, west = bbox
-    padding_ns = (north - south) * padding
-    padding_ew = (east - west) * padding
-    ax.set_ylim((south - padding_ns, north + padding_ns))
-    ax.set_xlim((west - padding_ew, east + padding_ew))
-
-    # set margins to zero, point ticks inward, turn off ax border and x/y axis
-    # so there is no space around the plot
-    ax.margins(0)
-    ax.tick_params(which="both", direction="in")
-    _ = [s.set_visible(False) for s in ax.spines.values()]
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
-
-    # set aspect ratio
-    if crs == settings.default_crs:
-        # if data are not projected, conform aspect ratio to not stretch plot
-        coslat = np.cos((south + north) / 2.0 / 180.0 * np.pi)
-        ax.set_aspect(1.0 / coslat)
-    else:
-        # if projected, make everything square
-        ax.set_aspect("equal")
-
-    return ax
+    vals = pd.Series(nx.get_edge_attributes(G, attr))
+    return _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size)
 
 
 def plot_graph(
@@ -289,12 +124,12 @@ def plot_graph(
     bgcolor="#222222",
     node_color="w",
     node_size=15,
-    node_alpha=1,
+    node_alpha=None,
     node_edgecolor="none",
     node_zorder=1,
     edge_color="#999999",
     edge_linewidth=1,
-    edge_alpha=1,
+    edge_alpha=None,
     show=True,
     close=False,
     save=False,
@@ -776,3 +611,194 @@ def plot_footprints(
     ax = _config_ax(ax, gdf.crs, (north, south, east, west))
     fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi)
     return fig, ax
+
+
+def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size):
+    """
+    Get colors based on values.
+    """
+    if num_bins == 0:
+
+        # calculate min/max values based on start/stop and data range
+        vals_min = vals.dropna().min()
+        vals_max = vals.dropna().max()
+        fullrange = (vals_max - vals_min) / (stop - start)
+        fullmin = vals_min - fullrange * start
+        fullmax = fullmin + fullrange
+
+        # linearly map a color to each attribute value
+        normalizer = colors.Normalize(fullmin, fullmax)
+        scalar_mapper = cm.ScalarMappable(norm=normalizer, cmap=cm.get_cmap(cmap))
+        color_series = vals.map(scalar_mapper.to_rgba)
+
+    else:
+
+        # bin values, then assign colors to bins
+        cut_func = pd.qcut if equal_size else pd.cut
+        bins = cut_func(vals, num_bins, labels=range(num_bins))
+        color_list = ox.plot.get_colors(num_bins, cmap, start, stop)
+        color_series = pd.Series([color_list[b] for b in bins], index=bins.index)
+
+    # replace colors of null values with na_color then return
+    color_series.loc[pd.isnull(vals)] = na_color
+    return color_series
+
+
+def _node_list_to_coordinate_lines(G, route):
+    """
+    Create list of lines that follow the route defined by the list of nodes.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    route : list
+        list of node IDs composing a valid path in G
+
+    Returns
+    -------
+    lines : list
+        list of lines as pairs ((x_start, y_start), (x_stop, y_stop))
+    """
+    edge_nodes = list(zip(route[:-1], route[1:]))
+    lines = []
+    for u, v in edge_nodes:
+        # if there are parallel edges, select the shortest in length
+        data = min(G.get_edge_data(u, v).values(), key=lambda x: x["length"])
+
+        # if it has a geometry attribute (ie, a list of line segments)
+        if "geometry" in data:
+            # add them to the list of lines to plot
+            xs, ys = data["geometry"].xy
+            lines.append(list(zip(xs, ys)))
+        else:
+            # if it doesn't have a geometry attribute, the edge is a straight
+            # line from node to node
+            x1 = G.nodes[u]["x"]
+            y1 = G.nodes[u]["y"]
+            x2 = G.nodes[v]["x"]
+            y2 = G.nodes[v]["y"]
+            line = [(x1, y1), (x2, y2)]
+            lines.append(line)
+    return lines
+
+
+def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dpi=300):
+    """
+    Save a figure to disk and/or show it, as specified by args.
+
+    Parameters
+    ----------
+    fig : figure
+        matplotlib figure
+    ax : axis
+        matplotlib axis
+    save : bool
+        if True, save the figure to disk at filepath
+    show : bool
+        if True, call pyplot.show() to show the figure
+    close : bool
+        if True, call pyplot.close() to close the figure
+    filepath : string
+        if save is True, the path to the file. file format determined from
+        extension. if None, use default image folder + image.png
+    dpi : int
+        if save is True, the resolution of saved file
+
+    Returns
+    -------
+    fig, ax : tuple
+        matplotlib figure, axis
+    """
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+
+    if save:
+
+        # default filepath, if none provided
+        if filepath is None:
+            filepath = os.path.join(settings.imgs_folder, "image.png")
+
+        # if save folder does not already exist, create it
+        folder, _ = os.path.split(filepath)
+        if not folder == "" and not os.path.exists(folder):
+            os.makedirs(folder)
+
+        # get the file extension and figure facecolor
+        _, ext = os.path.splitext(filepath)
+        ext = ext.strip(".")
+        fc = fig.get_facecolor()
+
+        if ext == "svg":
+            # if the file format is svg, prep the fig/ax a bit for saving
+            ax.axis("off")
+            ax.set_position([0, 0, 1, 1])
+            ax.patch.set_alpha(0.0)
+            fig.patch.set_alpha(0.0)
+            fig.savefig(filepath, bbox_inches=0, format=ext, facecolor=fc, transparent=True)
+        else:
+            # constrain saved figure's extent to interior of the axis
+            extent = ax.bbox.transformed(fig.dpi_scale_trans.inverted())
+
+            # temporarily turn figure frame on to save with facecolor
+            fig.set_frameon(True)
+            fig.savefig(
+                filepath, dpi=dpi, bbox_inches=extent, format=ext, facecolor=fc, transparent=True
+            )
+            fig.set_frameon(False)  # and turn it back off again
+        utils.log(f"Saved figure to disk at {filepath}")
+
+    if show:
+        plt.show()
+
+    if close:
+        plt.close()
+
+    return fig, ax
+
+
+def _config_ax(ax, crs, bbox, padding=0):
+    """
+    Configure axis for display.
+
+    Parameters
+    ----------
+    ax : matplotlib axis
+        the axis containing the plot
+    crs : dict or string or pyproj.CRS
+        the CRS of the plotted geometries
+    bbox : tuple
+        bounding box as (north, south, east, west)
+    padding : float
+        relative padding to add around the plot's bbox
+
+    Returns
+    -------
+    ax : matplotlib axis
+        the configured/styled axis
+    """
+    # set the axis view limits
+    north, south, east, west = bbox
+    padding_ns = (north - south) * padding
+    padding_ew = (east - west) * padding
+    ax.set_ylim((south - padding_ns, north + padding_ns))
+    ax.set_xlim((west - padding_ew, east + padding_ew))
+
+    # set margins to zero, point ticks inward, turn off ax border and x/y axis
+    # so there is no space around the plot
+    ax.margins(0)
+    ax.tick_params(which="both", direction="in")
+    _ = [s.set_visible(False) for s in ax.spines.values()]
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+
+    # set aspect ratio
+    if crs == settings.default_crs:
+        # if data are not projected, conform aspect ratio to not stretch plot
+        coslat = np.cos((south + north) / 2.0 / 180.0 * np.pi)
+        ax.set_aspect(1.0 / coslat)
+    else:
+        # if projected, make everything square
+        ax.set_aspect("equal")
+
+    return ax
