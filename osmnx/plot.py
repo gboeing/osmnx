@@ -371,9 +371,9 @@ def plot_graph(
     fig, ax : tuple
         matplotlib figure, axis
     """
-    min_node_size = min(node_size) if hasattr(node_size, '__iter__') else node_size
-    min_edge_linewidth = min(edge_linewidth) if hasattr(edge_linewidth, '__iter__') else edge_linewidth
-    if min_node_size <= 0 and min_edge_linewidth <= 0:
+    max_node_size = max(node_size) if hasattr(node_size, '__iter__') else node_size
+    max_edge_linewidth = max(edge_linewidth) if hasattr(edge_linewidth, '__iter__') else edge_linewidth
+    if max_node_size <= 0 and max_edge_linewidth <= 0:
         raise ValueError("Either node_size or edge_linewidth must be > 0 to plot something.")
 
     # create fig, ax as needed
@@ -384,12 +384,12 @@ def plot_graph(
     else:
         fig = ax.figure
 
-    if min_edge_linewidth > 0:
+    if max_edge_linewidth > 0:
         # plot the edges' geometries
         gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)
         ax = gdf_edges.plot(ax=ax, color=edge_color, lw=edge_linewidth, alpha=edge_alpha, zorder=1)
 
-    if min_node_size > 0:
+    if max_node_size > 0:
         # scatter plot the nodes' x/y coordinates
         gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
         ax.scatter(
