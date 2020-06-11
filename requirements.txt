@@ -1,3 +1,4 @@
+descartes>=1.1
 geopandas>=0.7
 matplotlib>=3.2
 networkx>=2.4
