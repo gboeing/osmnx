@@ -3,6 +3,7 @@
 import os
 
 import matplotlib.cm as cm
+import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -16,27 +17,9 @@ from . import utils_geo
 from . import utils_graph
 
 
-def _rgb_color_list_to_hex(color_list):
+def get_colors(n=5, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=False):
     """
-    Convert a list of RGBa colors to a list of hexadecimal color codes.
-
-    Parameters
-    ----------
-    color_list : list
-        list of RGBa colors
-
-    Returns
-    -------
-    color_list_hex : list
-    """
-    color_list_rgb = [[int(x * 255) for x in c[0:3]] for c in color_list]
-    color_list_hex = [f"#{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X}" for rgb in color_list_rgb]
-    return color_list_hex
-
-
-def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=False):
-    """
-    Return n-length list of RGBa colors from passed colormap name and alpha.
+    Return n evenly-spaced colors from a colormap.
 
     Parameters
     ----------
@@ -51,17 +34,18 @@ def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=Fal
     alpha : float
         opacity, the alpha channel for the RGBa colors
     return_hex : bool
-        if True, convert RGBa colors to a hexadecimal string
+        if True, convert RGBa colors to HTML-like hexadecimal RGB strings. if
+        False, return colors as (R, G, B, alpha) tuples.
 
     Returns
     -------
-    colors : list
+    color_list : list
     """
-    colors = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, n)]
-    colors = [(r, g, b, alpha) for r, g, b, _ in colors]
+    color_list = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, n)]
+    color_list = [(r, g, b, alpha) for r, g, b, _ in color_list]
     if return_hex:
-        colors = _rgb_color_list_to_hex(colors)
-    return colors
+        color_list = [colors.to_hex(c) for c in color_list]
+    return color_list
 
 
 def get_node_colors_by_attr(
@@ -96,8 +80,8 @@ def get_node_colors_by_attr(
     bin_labels = range(num_bins)
     attr_values = pd.Series([data[attr] for node, data in G.nodes(data=True)])
     cats = pd.qcut(x=attr_values, q=num_bins, labels=bin_labels)
-    colors = get_colors(num_bins, cmap, start, stop)
-    node_colors = [colors[int(cat)] if pd.notnull(cat) else na_color for cat in cats]
+    color_list = get_colors(num_bins, cmap, start, stop)
+    node_colors = [color_list[int(cat)] if pd.notnull(cat) else na_color for cat in cats]
     return node_colors
 
 
@@ -133,8 +117,8 @@ def get_edge_colors_by_attr(
     bin_labels = range(num_bins)
     attr_values = pd.Series([data[attr] for u, v, key, data in G.edges(keys=True, data=True)])
     cats = pd.qcut(x=attr_values, q=num_bins, labels=bin_labels)
-    colors = get_colors(num_bins, cmap, start, stop)
-    edge_colors = [colors[int(cat)] if pd.notnull(cat) else na_color for cat in cats]
+    color_list = get_colors(num_bins, cmap, start, stop)
+    edge_colors = [color_list[int(cat)] if pd.notnull(cat) else na_color for cat in cats]
     return edge_colors
 
 
