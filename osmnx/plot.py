@@ -5,9 +5,9 @@ import os
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 import pandas as pd
-from matplotlib.collections import LineCollection
 
 from . import graph
 from . import settings
@@ -49,7 +49,9 @@ def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=Fal
     return color_list
 
 
-def get_node_colors_by_attr(G, attr, num_bins=0, cmap="viridis", start=0, stop=1, na_color='none', equal_size=False):
+def get_node_colors_by_attr(
+    G, attr, num_bins=0, cmap="viridis", start=0, stop=1, na_color="none", equal_size=False
+):
     """
     Get node colors based on node attribute values.
 
@@ -83,7 +85,9 @@ def get_node_colors_by_attr(G, attr, num_bins=0, cmap="viridis", start=0, stop=1
     return _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size)
 
 
-def get_edge_colors_by_attr(G, attr, num_bins=0, cmap="viridis", start=0, stop=1, na_color='none', equal_size=False):
+def get_edge_colors_by_attr(
+    G, attr, num_bins=0, cmap="viridis", start=0, stop=1, na_color="none", equal_size=False
+):
     """
     Get edge colors based on edge attribute values.
 
@@ -614,7 +618,31 @@ def plot_footprints(
 
 def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size):
     """
-    Get colors based on values.
+    Map colors to the values in a series.
+
+    Parameters
+    ----------
+    vals : pandas.Series
+        series labels are node/edge IDs and values are attribute values
+    num_bins : int
+        if 0, linearly map a color to each value. if > 0, assign values to
+        this many color bins.
+    cmap : string
+        name of a matplotlib colormap
+    start : float
+        where to start in the colorspace
+    stop : float
+        where to end in the colorspace
+    na_color : string
+        what color to assign to missing values
+    equal_size : bool
+        if True, bin into equal-sized quantiles (requires unique bin edges).
+        if False, bin into unequal-sized but equal-spaced bins.
+
+    Returns
+    -------
+    color_series : pandas.Series
+        series labels are node/edge IDs and values are colors
     """
     if num_bins == 0:
 
@@ -635,7 +663,7 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
         # bin values, then assign colors to bins
         cut_func = pd.qcut if equal_size else pd.cut
         bins = cut_func(vals, num_bins, labels=range(num_bins))
-        color_list = ox.plot.get_colors(num_bins, cmap, start, stop)
+        color_list = get_colors(num_bins, cmap, start, stop)
         color_series = pd.Series([color_list[b] for b in bins], index=bins.index)
 
     # replace colors of null values with na_color then return
