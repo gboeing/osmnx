@@ -120,7 +120,7 @@ You can also specify several different built-in network types:
   - `all` - download all non-private OSM streets and paths
   - `all_private` - download all OSM streets and paths, including private-access ones
 
-Or you can define your own fine-tuned network type using OSMnx's `infrastructure` parameter (to get railways, powerlines, canals, or other networked infrastructure types) or `custom_filter` parameter (to get only highways, or only walkable + bikeable routes, etc). For an in-depth demonstration of creating street networks, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/03-example-osm-place-network.ipynb).
+Or you can define your own fine-tuned network type using OSMnx's `custom_filter` parameter (to get just highways, or railways, canals, etc). For an in-depth demonstration of creating street networks, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/03-graph-place-queries.ipynb).
 
 
 
@@ -130,7 +130,7 @@ OSMnx allows you to calculate origin-destination routes along the network and qu
 
 You can also calculate shortest paths with different impedances for network routing and trip simulation, calculate street bearings to analyze network orientation, or snap your own data to the network using OSMnx's fast get nearest node and get nearest edge functions.
 
-For examples of analyzing street networks with OSMnx, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/06-example-osmnx-networkx.ipynb).
+For examples of analyzing street networks with OSMnx, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/06-stats-indicators-centrality.ipynb).
 
 
 
@@ -138,7 +138,7 @@ For examples of analyzing street networks with OSMnx, see [this notebook](https:
 
 Simplification is normally done by OSMnx automatically under the hood, but we can break it out to see how it works. OpenStreetMap nodes include intersections, but they also include all the points along a single block where the street curves. The latter are not nodes in the graph theory sense, so we remove them algorithmically and consolidate the set of edges between "true" network nodes into a single edge, but retain the actual spatial geometry. There are two simplification modes, strict and non-strict. The main difference is that unlike strict mode, non-strict mode allows simplification to an expansion graph.
 
-For an in-depth demonstration of topological simplification with OSMnx, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/04-example-simplify-network.ipynb).
+For an in-depth demonstration of topological simplification with OSMnx, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/04-simplify-graph-consolidate-nodes.ipynb).
 
 
 
@@ -146,7 +146,7 @@ For an in-depth demonstration of topological simplification with OSMnx, see [thi
 
 OSMnx allows users to save street networks to disk as .osm files, as shapefiles or geopackages to work with in GIS software, as GraphML files to work with in Gephi or NetworkX, and as SVG files to work with in Illustrator. It also allows you to save place boundary geometries, building footprints, or amenities/points of interest to disk as shapefiles or geojson/geopackages via geopandas.
 
-For examples of saving and loading networks to/from disk, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/05-example-save-load-networks-shapes.ipynb).
+For examples of saving and loading networks to/from disk, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/05-save-load-networks.ipynb).
 
 
 
