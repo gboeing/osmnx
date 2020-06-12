@@ -34,10 +34,6 @@ def graph_from_bbox(
     truncate_by_edge=False,
     clean_periphery=True,
     custom_filter=None,
-    timeout=None,
-    memory=None,
-    custom_settings=None,
-    max_query_area_size=None,
 ):
     """
     Create a graph from OSM within some bounding box.
@@ -70,22 +66,15 @@ def graph_from_bbox(
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bidirectional.
-    timeout : None
-        deprecated, use ox.config(timeout=value) instead to configure this
-        setting via the settings module
-    memory : None
-        deprecated, use ox.config(memory=value) instead to configure this
-        setting via the settings module
-    custom_settings : None
-        deprecated, use ox.config(custom_settings=value) instead to configure
-        this setting via the settings module
-    max_query_area_size : None
-        deprecated, use ox.config(max_query_area_size=value) instead to
-        configure this setting via the settings module
 
     Returns
     -------
     G : networkx.MultiDiGraph
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -99,10 +88,6 @@ def graph_from_bbox(
         truncate_by_edge=truncate_by_edge,
         clean_periphery=clean_periphery,
         custom_filter=custom_filter,
-        timeout=timeout,
-        memory=memory,
-        custom_settings=custom_settings,
-        max_query_area_size=max_query_area_size,
     )
 
     utils.log(f"graph_from_bbox returned graph with {len(G)} nodes and {len(G.edges())} edges")
@@ -119,10 +104,6 @@ def graph_from_point(
     truncate_by_edge=False,
     clean_periphery=True,
     custom_filter=None,
-    timeout=None,
-    memory=None,
-    custom_settings=None,
-    max_query_area_size=None,
 ):
     """
     Create a graph from OSM within some distance of some (lat, lng) point.
@@ -156,22 +137,15 @@ def graph_from_point(
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bidirectional.
-    timeout : None
-        deprecated, use ox.config(timeout=value) instead to configure this
-        setting via the settings module
-    memory : None
-        deprecated, use ox.config(memory=value) instead to configure this
-        setting via the settings module
-    custom_settings : None
-        deprecated, use ox.config(custom_settings=value) instead to configure
-        this setting via the settings module
-    max_query_area_size : None
-        deprecated, use ox.config(max_query_area_size=value) instead to
-        configure this setting via the settings module
 
     Returns
     -------
     G : networkx.MultiDiGraph
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     if dist_type not in {"bbox", "network"}:
         raise ValueError('dist_type must be "bbox" or "network"')
@@ -192,10 +166,6 @@ def graph_from_point(
         truncate_by_edge=truncate_by_edge,
         clean_periphery=clean_periphery,
         custom_filter=custom_filter,
-        timeout=timeout,
-        memory=memory,
-        custom_settings=custom_settings,
-        max_query_area_size=max_query_area_size,
     )
 
     # if the network dist_type is network, find the node in the graph
@@ -220,10 +190,6 @@ def graph_from_address(
     return_coords=False,
     clean_periphery=True,
     custom_filter=None,
-    timeout=None,
-    memory=None,
-    custom_settings=None,
-    max_query_area_size=None,
 ):
     """
     Create a graph from OSM within some distance of some address.
@@ -261,22 +227,15 @@ def graph_from_address(
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bidirectional.
-    timeout : None
-        deprecated, use ox.config(timeout=value) instead to configure this
-        setting via the settings module
-    memory : None
-        deprecated, use ox.config(memory=value) instead to configure this
-        setting via the settings module
-    custom_settings : None
-        deprecated, use ox.config(custom_settings=value) instead to configure
-        this setting via the settings module
-    max_query_area_size : None
-        deprecated, use ox.config(max_query_area_size=value) instead to
-        configure this setting via the settings module
 
     Returns
     -------
     networkx.MultiDiGraph or optionally (networkx.MultiDiGraph, (lat, lng))
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     # geocode the address string to a (lat, lng) point
     point = utils_geo.geocode(query=address)
@@ -292,10 +251,6 @@ def graph_from_address(
         truncate_by_edge=truncate_by_edge,
         clean_periphery=clean_periphery,
         custom_filter=custom_filter,
-        timeout=timeout,
-        memory=memory,
-        custom_settings=custom_settings,
-        max_query_area_size=max_query_area_size,
     )
     utils.log(f"graph_from_address returned graph with {len(G)} nodes and {len(G.edges())} edges")
 
@@ -315,10 +270,6 @@ def graph_from_place(
     buffer_dist=None,
     clean_periphery=True,
     custom_filter=None,
-    timeout=None,
-    memory=None,
-    custom_settings=None,
-    max_query_area_size=None,
 ):
     """
     Create graph from OSM within the boundaries of some geocodable place(s).
@@ -359,21 +310,15 @@ def graph_from_place(
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bidirectional.
-    timeout : None
-        deprecated, use ox.config(timeout=value) instead to configure this
-        setting via the settings module
-    memory : None
-        deprecated, use ox.config(memory=value) instead to configure this
-        setting via the settings module
-    custom_settings : None
-        deprecated, use ox.config(custom_settings=value) instead to configure
-        this setting via the settings module
-    max_query_area_size : None
-        deprecated, use ox.config(max_query_area_size=value) instead to
-        configure this setting via the settings module
+
     Returns
     -------
     G : networkx.MultiDiGraph
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, (str, dict)):
@@ -401,10 +346,6 @@ def graph_from_place(
         truncate_by_edge=truncate_by_edge,
         clean_periphery=clean_periphery,
         custom_filter=custom_filter,
-        timeout=timeout,
-        memory=memory,
-        custom_settings=custom_settings,
-        max_query_area_size=max_query_area_size,
     )
 
     utils.log(f"graph_from_place returned graph with {len(G)} nodes and {len(G.edges())} edges")
@@ -419,10 +360,6 @@ def graph_from_polygon(
     truncate_by_edge=False,
     clean_periphery=True,
     custom_filter=None,
-    timeout=None,
-    memory=None,
-    custom_settings=None,
-    max_query_area_size=None,
 ):
     """
     Create a graph from OSM within the boundaries of some shapely polygon.
@@ -450,30 +387,16 @@ def graph_from_polygon(
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bidirectional.
-    timeout : None
-        deprecated, use ox.config(timeout=value) instead to configure this
-        setting via the settings module
-    memory : None
-        deprecated, use ox.config(memory=value) instead to configure this
-        setting via the settings module
-    custom_settings : None
-        deprecated, use ox.config(custom_settings=value) instead to configure
-        this setting via the settings module
-    max_query_area_size : None
-        deprecated, use ox.config(max_query_area_size=value) instead to
-        configure this setting via the settings module
 
     Returns
     -------
     G : networkx.MultiDiGraph
-    """
-    utils._handle_deprecated_params(
-        timeout=timeout,
-        memory=memory,
-        custom_settings=custom_settings,
-        max_query_area_size=max_query_area_size,
-    )
 
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
+    """
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:
