@@ -637,6 +637,9 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
     color_series : pandas.Series
         series labels are node/edge IDs and values are colors
     """
+    if len(vals) == 0:
+        raise ValueError("There are no attribute values.")
+
     if num_bins == 0:
 
         # calculate min/max values based on start/stop and data range
