@@ -50,7 +50,7 @@ def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=Fal
 
 
 def get_node_colors_by_attr(
-    G, attr, num_bins=0, cmap="viridis", start=0, stop=1, na_color="none", equal_size=False
+    G, attr, num_bins=None, cmap="viridis", start=0, stop=1, na_color="none", equal_size=False
 ):
     """
     Get colors based on node attribute values.
@@ -60,10 +60,10 @@ def get_node_colors_by_attr(
     G : networkx.MultiDiGraph
         input graph
     attr : string
-        name of the node attribute
+        name of a numerical node attribute
     num_bins : int
-        if 0, linearly map a color to each edge. if > 0, try to assign edges
-        to this many bins (by attr value) then assign a color to each bin.
+        if None, linearly map a color to each value. otherwise, assign values
+        to this many bins then assign a color to each bin.
     cmap : string
         name of a matplotlib colormap
     start : float
@@ -73,7 +73,7 @@ def get_node_colors_by_attr(
     na_color : string
         what color to assign nodes with missing attr values
     equal_size : bool
-        ignored if num_bins=0. if True, bin into equal-sized quantiles
+        ignored if num_bins is None. if True, bin into equal-sized quantiles
         (requires unique bin edges). if False, bin into equal-spaced bins.
 
     Returns
@@ -86,7 +86,7 @@ def get_node_colors_by_attr(
 
 
 def get_edge_colors_by_attr(
-    G, attr, num_bins=0, cmap="viridis", start=0, stop=1, na_color="none", equal_size=False
+    G, attr, num_bins=None, cmap="viridis", start=0, stop=1, na_color="none", equal_size=False
 ):
     """
     Get colors based on edge attribute values.
@@ -96,10 +96,10 @@ def get_edge_colors_by_attr(
     G : networkx.MultiDiGraph
         input graph
     attr : string
-        name of the edge attribute
+        name of a numerical edge attribute
     num_bins : int
-        if 0, linearly map a color to each edge. if > 0, assign edges to this
-        many bins (by attr value) then map a color to each bin.
+        if None, linearly map a color to each value. otherwise, assign values
+        to this many bins then assign a color to each bin.
     cmap : string
         name of a matplotlib colormap
     start : float
@@ -109,7 +109,7 @@ def get_edge_colors_by_attr(
     na_color : string
         what color to assign edges with missing attr values
     equal_size : bool
-        ignored if num_bins=0. if True, bin into equal-sized quantiles
+        ignored if num_bins is None. if True, bin into equal-sized quantiles
         (requires unique bin edges). if False, bin into equal-spaced bins.
 
     Returns
@@ -624,7 +624,7 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
     vals : pandas.Series
         series labels are node/edge IDs and values are attribute values
     num_bins : int
-        if 0, linearly map a color to each value. if > 0, try to assign values
+        if None, linearly map a color to each value. otherwise, assign values
         to this many bins then assign a color to each bin.
     cmap : string
         name of a matplotlib colormap
@@ -635,7 +635,7 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
     na_color : string
         what color to assign to missing values
     equal_size : bool
-        ignored if num_bins=0. if True, bin into equal-sized quantiles
+        ignored if num_bins is None. if True, bin into equal-sized quantiles
         (requires unique bin edges). if False, bin into equal-spaced bins.
 
     Returns
@@ -646,7 +646,7 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
     if len(vals) == 0:
         raise ValueError("There are no attribute values.")
 
-    if num_bins == 0:
+    if num_bins is None:
         # calculate min/max values based on start/stop and data range
         vals_min = vals.dropna().min()
         vals_max = vals.dropna().max()
@@ -658,16 +658,16 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
         normalizer = colors.Normalize(full_min, full_max)
         scalar_mapper = cm.ScalarMappable(normalizer, cm.get_cmap(cmap))
         color_series = vals.map(scalar_mapper.to_rgba)
+        color_series.loc[pd.isnull(vals)] = na_color
 
     else:
-        # bin values, then assign colors to bins
+        # otherwise, bin values then assign colors to bins
         cut_func = pd.qcut if equal_size else pd.cut
         bins = cut_func(vals, num_bins, labels=range(num_bins))
-        color_list = get_colors(num_bins, cmap, start, stop)
-        color_series = pd.Series([color_list[b] for b in bins], index=bins.index)
+        bin_colors = get_colors(num_bins, cmap, start, stop)
+        color_list = [bin_colors[b] if pd.notnull(b) else na_color for b in bins]
+        color_series = pd.Series(color_list, index=bins.index)
 
-    # replace colors of null values with na_color then return
-    color_series.loc[pd.isnull(vals)] = na_color
     return color_series
 
 
