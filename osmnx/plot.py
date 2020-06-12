@@ -62,8 +62,8 @@ def get_node_colors_by_attr(
     attr : string
         name of the node attribute
     num_bins : int
-        if 0, linearly map a color to each node. if > 0, assign nodes to this
-        many color bins.
+        if 0, linearly map a color to each edge. if > 0, try to assign edges
+        to this many bins (by attr value) then assign a color to each bin.
     cmap : string
         name of a matplotlib colormap
     start : float
@@ -71,10 +71,10 @@ def get_node_colors_by_attr(
     stop : float
         where to end in the colorspace
     na_color : string
-        what color to assign nodes with missing attribute values
+        what color to assign nodes with missing attr values
     equal_size : bool
-        if True, bin into equal-sized quantiles (requires unique bin edges).
-        if False, bin into unequal-sized but equal-spaced bins.
+        ignored if num_bins=0. if True, bin into equal-sized quantiles
+        (requires unique bin edges). if False, bin into equal-spaced bins.
 
     Returns
     -------
@@ -99,7 +99,7 @@ def get_edge_colors_by_attr(
         name of the edge attribute
     num_bins : int
         if 0, linearly map a color to each edge. if > 0, assign edges to this
-        many color bins.
+        many bins (by attr value) then map a color to each bin.
     cmap : string
         name of a matplotlib colormap
     start : float
@@ -107,10 +107,10 @@ def get_edge_colors_by_attr(
     stop : float
         where to end in the colorspace
     na_color : string
-        what color to assign edges with missing attribute values
+        what color to assign edges with missing attr values
     equal_size : bool
-        if True, bin into equal-sized quantiles (requires unique bin edges).
-        if False, bin into unequal-sized but equal-spaced bins.
+        ignored if num_bins=0. if True, bin into equal-sized quantiles
+        (requires unique bin edges). if False, bin into equal-spaced bins.
 
     Returns
     -------
@@ -151,8 +151,7 @@ def plot_graph(
     ax : matplotlib axis
         if not None, plot on this preexisting axis
     figsize : tuple
-        if ax is None, sets figure size as (width, height). if None, default
-        to 6 inch height with proportional width
+        if ax is None, create new figure with size (width, height)
     bgcolor : string
         background color of plot
     node_color : string
@@ -295,8 +294,21 @@ def plot_graph_route(
     y = (G.nodes[route[0]]["y"], G.nodes[route[-1]]["y"])
     ax.scatter(x, y, s=orig_dest_size, c=route_color, alpha=route_alpha, edgecolor="none")
 
-    # plot the route as a line
-    x, y = _node_list_to_coords(G, route)
+    # assemble the route edge geometries' x and y coords then plot the line
+    x = []
+    y = []
+    for u, v in zip(route[:-1], route[1:]):
+        # if there are parallel edges, select the shortest in length
+        data = min(G.get_edge_data(u, v).values(), key=lambda d: d["length"])
+        if "geometry" in data:
+            # if geometry attribute exists, add all its coords to list
+            xs, ys = data["geometry"].xy
+            x.extend(xs)
+            y.extend(ys)
+        else:
+            # otherwise, the edge is a straight line from node to node
+            x.extend((G.nodes[u]["x"], G.nodes[v]["x"]))
+            y.extend((G.nodes[u]["y"], G.nodes[v]["y"]))
     ax.plot(x, y, c=route_color, lw=route_linewidth, alpha=route_alpha)
 
     # save and show the figure as specified, passing relevant kwargs
@@ -316,8 +328,8 @@ def plot_graph_routes(G, routes, route_colors="r", **pgr_kwargs):
         input graph
     routes : list
         routes as a list of lists of node IDs
-    route_colors : list
-        if string, the color for all routes; if list, the color for each route
+    route_colors : string or list
+        if string, 1 color for all routes. if list, the colors for each route.
     pgr_kwargs
         keyword arguments to pass to plot_graph_route
 
@@ -396,15 +408,13 @@ def plot_figure_ground(
     point : tuple
         center point if address and G are not passed in
     dist : numeric
-        how many meters to extend north, south, east, and west from the center
-        point
+        how many meters to extend north, south, east, west from center point
     network_type : string
         what type of network to get
     street_widths : dict
         dict keys are street types and values are widths to plot in pixels
     default_width : numeric
-        fallback street width in pixels for any street type not found in
-        street_widths dict
+        fallback width in pixels for any street type not in street_widths
     figsize : numeric
         (width, height) of figure, should be equal
     edge_color : string
@@ -422,16 +432,27 @@ def plot_figure_ground(
     """
     multiplier = 1.2
 
-    # if G was passed-in, plot it centered on its node centroid
+    # if user did not pass in custom street widths, create a dict of defaults
+    if street_widths is None:
+        street_widths = {
+            "footway": 1.5,
+            "steps": 1.5,
+            "pedestrian": 1.5,
+            "service": 1.5,
+            "path": 1.5,
+            "track": 1.5,
+            "motorway": 6,
+        }
+
+    # if G was passed in, plot it centered on its node centroid
     if G is not None:
         gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=True)
         lnglat_point = gdf_nodes.unary_union.centroid.coords[0]
         point = tuple(reversed(lnglat_point))
 
-    # otherwise, get the network by either address or point, whichever was
-    # passed-in, using a distance multiplier to make sure we get more than
-    # enough network. simplify in non-strict mode to not combine multiple street
-    # types into single edge
+    # otherwise get network by address or point (whichever was passed) using a
+    # dist multiplier to ensure we get more than enough network. simplify in
+    # non-strict mode to not combine multiple street types into single edge
     elif address is not None:
         G, point = graph.graph_from_address(
             address,
@@ -455,18 +476,6 @@ def plot_figure_ground(
         G = simplification.simplify_graph(G, strict=False)
     else:
         raise ValueError("You must pass an address or lat-lng point or graph.")
-
-    # if user did not pass in custom street widths, create a dict of defaults
-    if street_widths is None:
-        street_widths = {
-            "footway": 1.5,
-            "steps": 1.5,
-            "pedestrian": 1.5,
-            "service": 1.5,
-            "path": 1.5,
-            "track": 1.5,
-            "motorway": 6,
-        }
 
     # we need an undirected graph to find every edge incident to a node
     G_undir = G.to_undirected()
@@ -561,17 +570,14 @@ def plot_footprints(
     ax : axis
         if not None, plot on this preexisting axis
     figsize : tuple
-        if ax is None, use figsize (width, height) to determine figure size
+        if ax is None, create new figure with size (width, height)
     color : string
         color of the footprints
     bgcolor : string
         background color of the plot
-    set_bounds : bool
-        if True, set bounds from either passed-in bbox or the spatial extent
-        of gdf
     bbox : tuple
-        if True, set the figure's extent to this bounding box, otherwise use
-        the spatial extents of the geometries in gdf
+        bounding box as (north, south, east, west). if None, will calculate
+        from the spatial extents of the geometries in gdf
     save : bool
         if True, save the figure to disk at filepath
     show : bool
@@ -618,8 +624,8 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
     vals : pandas.Series
         series labels are node/edge IDs and values are attribute values
     num_bins : int
-        if 0, linearly map a color to each value. if > 0, assign values to
-        this many color bins.
+        if 0, linearly map a color to each value. if > 0, try to assign values
+        to this many bins then assign a color to each bin.
     cmap : string
         name of a matplotlib colormap
     start : float
@@ -629,8 +635,8 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
     na_color : string
         what color to assign to missing values
     equal_size : bool
-        if True, bin into equal-sized quantiles (requires unique bin edges).
-        if False, bin into unequal-sized but equal-spaced bins.
+        ignored if num_bins=0. if True, bin into equal-sized quantiles
+        (requires unique bin edges). if False, bin into equal-spaced bins.
 
     Returns
     -------
@@ -641,7 +647,6 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
         raise ValueError("There are no attribute values.")
 
     if num_bins == 0:
-
         # calculate min/max values based on start/stop and data range
         vals_min = vals.dropna().min()
         vals_max = vals.dropna().max()
@@ -655,7 +660,6 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
         color_series = vals.map(scalar_mapper.to_rgba)
 
     else:
-
         # bin values, then assign colors to bins
         cut_func = pd.qcut if equal_size else pd.cut
         bins = cut_func(vals, num_bins, labels=range(num_bins))
@@ -665,40 +669,6 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
     # replace colors of null values with na_color then return
     color_series.loc[pd.isnull(vals)] = na_color
     return color_series
-
-
-def _node_list_to_coords(G, route):
-    """
-    Create lists of x and y coordinates that define a route's edge geometry.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    route : list
-        list of node IDs composing a valid path of edges in G
-
-    Returns
-    -------
-    x, y : tuple
-        tuple of lists, x coordinates and y coordinates
-    """
-    edge_nodes = zip(route[:-1], route[1:])
-    x = []
-    y = []
-    for u, v in edge_nodes:
-        # if there are parallel edges, select the shortest in length
-        data = min(G.get_edge_data(u, v).values(), key=lambda d: d["length"])
-        if "geometry" in data:
-            # if geometry attribute exists, add its coords to list
-            xcoords, ycoords = data["geometry"].xy
-            x.extend(xcoords)
-            y.extend(ycoords)
-        else:
-            # otherwise, the edge is a straight line from node to node
-            x.extend((G.nodes[u]["x"], G.nodes[v]["x"]))
-            y.extend((G.nodes[u]["y"], G.nodes[v]["y"]))
-    return x, y
 
 
 def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dpi=300):
@@ -795,7 +765,7 @@ def _config_ax(ax, crs, bbox, padding):
     ax : matplotlib axis
         the configured/styled axis
     """
-    # set the axis view limits
+    # set the axis view limits to bbox + relative padding
     north, south, east, west = bbox
     padding_ns = (north - south) * padding
     padding_ew = (east - west) * padding
