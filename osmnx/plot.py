@@ -53,7 +53,7 @@ def get_node_colors_by_attr(
     G, attr, num_bins=0, cmap="viridis", start=0, stop=1, na_color="none", equal_size=False
 ):
     """
-    Get node colors based on node attribute values.
+    Get colors based on node attribute values.
 
     Parameters
     ----------
@@ -89,7 +89,7 @@ def get_edge_colors_by_attr(
     G, attr, num_bins=0, cmap="viridis", start=0, stop=1, na_color="none", equal_size=False
 ):
     """
-    Get edge colors based on edge attribute values.
+    Get colors based on edge attribute values.
 
     Parameters
     ----------
@@ -195,10 +195,8 @@ def plot_graph(
         matplotlib figure, axis
     """
     max_node_size = max(node_size) if hasattr(node_size, "__iter__") else node_size
-    max_edge_linewidth = (
-        max(edge_linewidth) if hasattr(edge_linewidth, "__iter__") else edge_linewidth
-    )
-    if max_node_size <= 0 and max_edge_linewidth <= 0:
+    max_edge_lw = max(edge_linewidth) if hasattr(edge_linewidth, "__iter__") else edge_linewidth
+    if max_node_size <= 0 and max_edge_lw <= 0:
         raise ValueError("Either node_size or edge_linewidth must be > 0 to plot something.")
 
     # create fig, ax as needed
@@ -209,9 +207,9 @@ def plot_graph(
     else:
         fig = ax.figure
 
-    if max_edge_linewidth > 0:
+    if max_edge_lw > 0:
         # plot the edges' geometries
-        gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)
+        gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
         ax = gdf_edges.plot(ax=ax, color=edge_color, lw=edge_linewidth, alpha=edge_alpha, zorder=1)
 
     if max_node_size > 0:
@@ -236,7 +234,7 @@ def plot_graph(
             west, south = gdf_nodes.min()
             east, north = gdf_nodes.max()
         bbox = north, south, east, west
-        padding = 0.02  # pad 2% to not trim nodes' circles
+        padding = 0.02  # pad 2% to not cut off peripheral nodes' circles
 
     # configure axis appearance, save/show figure as specified, and return
     ax = _config_ax(ax, G.graph["crs"], bbox, padding)
@@ -471,7 +469,7 @@ def plot_figure_ground(
         }
 
     # we need an undirected graph to find every edge incident to a node
-    G_undir = utils_graph.get_undirected(G)
+    G_undir = G.to_undirected()
 
     # for each edge, get a linewidth according to street type
     edge_linewidths = []
@@ -490,33 +488,29 @@ def plot_figure_ground(
             incident_edges_data = [
                 G_undir.get_edge_data(node, neighbor) for neighbor in G_undir.neighbors(node)
             ]
-            edge_types = [data[min(data)]["highway"] for data in incident_edges_data]
+            edge_types = [data[0]["highway"] for data in incident_edges_data]
             if len(edge_types) < 1:
                 # if node has no incident edges, make size zero
                 node_widths[node] = 0
             else:
                 # flatten the list of edge types
-                edge_types_flat = []
+                et_flat = []
                 for et in edge_types:
                     if isinstance(et, list):
-                        edge_types_flat.extend(et)
+                        et_flat.extend(et)
                     else:
-                        edge_types_flat.append(et)
+                        et_flat.append(et)
 
-                # for each edge type in the flattened list, lookup the
-                # corresponding width
+                # lookup corresponding width for each edge type in flat list
                 edge_widths = [
-                    street_widths[edge_type] if edge_type in street_widths else default_width
-                    for edge_type in edge_types_flat
+                    street_widths[et] if et in street_widths else default_width for et in et_flat
                 ]
 
-                # the node diameter will be the biggest of the edge widths, to
-                # make joints perfectly smooth alternatively, use min (?) to
-                # prevent anything larger from extending past smallest
-                # street's line
+                # node diameter should equal largest edge width to make joints
+                # perfectly smooth. alternatively use min(?) to prevent
+                # anything larger from extending past smallest street's line.
+                # circle marker sizes are in area, so use diameter squared.
                 circle_diameter = max(edge_widths)
-
-                # circle marker sizes are in area, so use diameter squared
                 circle_area = circle_diameter ** 2
                 node_widths[node] = circle_area
 
@@ -541,7 +535,6 @@ def plot_figure_ground(
         edge_linewidth=edge_linewidths,
         **kwargs,
     )
-
     return fig, ax
 
 
@@ -611,7 +604,7 @@ def plot_footprints(
         north, south, east, west = bbox
 
     # configure axis appearance, save/show figure as specified, and return
-    ax = _config_ax(ax, gdf.crs, (north, south, east, west))
+    ax = _config_ax(ax, gdf.crs, (north, south, east, west), 0)
     fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi)
     return fig, ax
 
@@ -649,13 +642,13 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
         # calculate min/max values based on start/stop and data range
         vals_min = vals.dropna().min()
         vals_max = vals.dropna().max()
-        fullrange = (vals_max - vals_min) / (stop - start)
-        fullmin = vals_min - fullrange * start
-        fullmax = fullmin + fullrange
+        full_range = (vals_max - vals_min) / (stop - start)
+        full_min = vals_min - full_range * start
+        full_max = full_min + full_range
 
         # linearly map a color to each attribute value
-        normalizer = colors.Normalize(fullmin, fullmax)
-        scalar_mapper = cm.ScalarMappable(norm=normalizer, cmap=cm.get_cmap(cmap))
+        normalizer = colors.Normalize(full_min, full_max)
+        scalar_mapper = cm.ScalarMappable(normalizer, cm.get_cmap(cmap))
         color_series = vals.map(scalar_mapper.to_rgba)
 
     else:
@@ -702,7 +695,6 @@ def _node_list_to_coords(G, route):
             # otherwise, the edge is a straight line from node to node
             x.extend((G.nodes[u]["x"], G.nodes[v]["x"]))
             y.extend((G.nodes[u]["y"], G.nodes[v]["y"]))
-
     return x, y
 
 
@@ -753,7 +745,7 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
         fc = fig.get_facecolor()
 
         if ext == "svg":
-            # if the file format is svg, prep the fig/ax a bit for saving
+            # if the file format is svg, prep the fig/ax for saving
             ax.axis("off")
             ax.set_position([0, 0, 1, 1])
             ax.patch.set_alpha(0.0)
@@ -780,7 +772,7 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
     return fig, ax
 
 
-def _config_ax(ax, crs, bbox, padding=0):
+def _config_ax(ax, crs, bbox, padding):
     """
     Configure axis for display.
 
