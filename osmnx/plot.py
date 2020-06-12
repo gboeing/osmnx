@@ -154,8 +154,8 @@ def plot_graph(
         if ax is None, create new figure with size (width, height)
     bgcolor : string
         background color of plot
-    node_color : string
-        color of the nodes
+    node_color : string or list
+        color(s) of the nodes
     node_size : int
         size of the nodes: if 0, then skip plotting the nodes
     node_alpha : float
@@ -166,8 +166,8 @@ def plot_graph(
     node_zorder : int
         zorder to plot nodes: edges are always 1, so set node_zorder=0 to plot
         nodes below edges
-    edge_color : string
-        color of the edges' lines
+    edge_color : string or list
+        color(s) of the edges' lines
     edge_linewidth : float
         width of the edges' lines: if 0, then skip plotting the edges
     edge_alpha : float
@@ -186,7 +186,7 @@ def plot_graph(
         if save is True, the resolution of saved file
     bbox : tuple
         bounding box as (north, south, east, west). if None, will calculate
-        from spatial extents of edges.
+        from spatial extents of plotted geometries.
 
     Returns
     -------
