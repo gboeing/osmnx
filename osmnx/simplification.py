@@ -324,7 +324,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
 
 
 def consolidate_intersections(
-    G, tolerance=10, rebuild_graph=True, dead_ends=False, update_edge_lengths=True
+    G, tolerance=10, rebuild_graph=True, dead_ends=False, reconnect_edges=True
 ):
     """
     Consolidate intersections comprising clusters of nearby nodes.
@@ -361,10 +361,11 @@ def consolidate_intersections(
     dead_ends : bool
         if False, discard dead-end nodes to return only street-intersection
         points
-    update_edge_lengths : bool
-        just passed to consolidate_intersections_rebuild_graph.
-        if True, update the length attribute of edges reconnected to a new
-        merged node; if False, just retain the original edge length.
+    reconnect_edges : bool
+        ignored if rebuild_graph is not True. if True, reconnect edges and
+        their geometries in rebuilt graph to the consolidated nodes and update
+        edge length attributes; if False, returned graph has no edges (which
+        is faster if you just need consolidated intersection counts).
 
     Returns
     -------
@@ -387,7 +388,7 @@ def consolidate_intersections(
 
     if rebuild_graph:
         return _consolidate_intersections_rebuild_graph(
-            G=G, tolerance=tolerance, update_edge_lengths=update_edge_lengths
+            G=G, tolerance=tolerance, reconnect_edges=reconnect_edges
         )
 
     else:
@@ -404,7 +405,7 @@ def consolidate_intersections(
         return intersection_centroids
 
 
-def _consolidate_intersections_rebuild_graph(G, tolerance=10, update_edge_lengths=True):
+def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=True):
     """
     Consolidate intersections comprising clusters of nearby nodes.
 
@@ -427,9 +428,11 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, update_edge_length
         nodes within this distance (in graph's geometry's units) will be
         dissolved into a single node, with edges reconnected to this new
         node
-    update_edge_lengths : bool
-        if True, update the length attribute of edges reconnected to a new
-        merged node; if False, just retain the original edge length
+    reconnect_edges : bool
+        ignored if rebuild_graph is not True. if True, reconnect edges and
+        their geometries in rebuilt graph to the consolidated nodes and update
+        edge length attributes; if False, returned graph has no edges (which
+        is faster if you just need consolidated intersection counts).
 
     Returns
     -------
@@ -439,8 +442,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, update_edge_length
     """
     # STEP 1
     # buffer nodes to passed-in distance, merge overlaps
-    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
-    gdf_edges = gdf_edges.set_index(["u", "v", "key"])
+    gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False)
     buffered_nodes = gdf_nodes.buffer(tolerance).unary_union
     if isinstance(buffered_nodes, Polygon):
         # if only a single node results, make iterable to convert to GeoSeries
@@ -508,9 +510,14 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, update_edge_length
                 y=nodes_subset["y"].iloc[0],
             )
 
+    if len(G.edges()) == 0 or not reconnect_edges:
+        # if reconnect_edges is False or there are no edges in original graph
+        # (after dead-end removed), then skip edges and return new graph as-is
+        return H
+
     # STEP 6
-    # create a new edge for each edge in original graph
-    # but from cluster to cluster
+    # create new edge from cluster to cluster for each edge in original graph
+    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False).set_index(["u", "v", "key"])
     for u, v, k, data in G.edges(keys=True, data=True):
         u2 = gdf.loc[u, "cluster"]
         v2 = gdf.loc[v, "cluster"]
@@ -525,8 +532,8 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, update_edge_length
             H.add_edge(u2, v2, **data)
 
     # STEP 7
-    # for every group of merged nodes with more than 1 node in it,
-    # extend the edge geometries to reach the new node point
+    # for every group of merged nodes with more than 1 node in it, extend the
+    # edge geometries to reach the new node point
     new_edges = utils_graph.graph_to_gdfs(H, nodes=False)
     for cluster_label, nodes_subset in groups:
 
@@ -549,9 +556,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, update_edge_length
                 new_geom = LineString(new_coords)
                 H.edges[u, v, k]["geometry"] = new_geom
 
-                # update the edge length attribute if parameterized to do so
-                # otherwise just keep using the original edge length
-                if update_edge_lengths:
-                    H.edges[u, v, k]["length"] = new_geom.length
+                # update the edge length attribute, given the new geometry
+                H.edges[u, v, k]["length"] = new_geom.length
 
     return H
