@@ -1,5 +1,6 @@
 """Expose the core OSMnx API."""
 
+from . import boundaries
 from .bearing import add_edge_bearings
 from .distance import get_nearest_edge
 from .distance import get_nearest_edges
