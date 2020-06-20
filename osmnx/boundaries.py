@@ -1,6 +1,7 @@
 """Create GeoDataFrames of place boundaries."""
 
 import logging as lg
+import warnings
 
 import geopandas as gpd
 
@@ -12,10 +13,7 @@ from . import utils
 
 def gdf_from_place(query, which_result=1, buffer_dist=None):
     """
-    Create a GeoDataFrame from a single place name query.
-
-    Geocode the query with Nominatim then turn it into a GeoDataFrame with
-    a geometry column.
+    Use `geocoding.geocode_to_gdf()` instead (deprecated).
 
     Parameters
     ----------
@@ -30,6 +28,13 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
     -------
     gdf : geopandas.GeoDataFrame
     """
+    msg = (
+        "The `boundaries` module has been deprecated and will be removed "
+        "in a future relase. Use the `geocoding` module's `geocode_to_gdf` "
+        "function instead."
+    )
+    warnings.warn(msg)
+
     # ensure query type
     if not isinstance(query, (str, dict)):
         raise ValueError("query must be a dict or a string")
@@ -87,10 +92,7 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
 
 def gdf_from_places(queries, which_results=None, buffer_dist=None):
     """
-    Create a GeoDataFrame from a list of place name queries.
-
-    Geocode the queries with Nominatim then turn result into GeoDataFrame with
-    a geometry column.
+    Use `geocoding.geocode_to_gdf()` instead (deprecated).
 
     Parameters
     ----------
@@ -107,6 +109,13 @@ def gdf_from_places(queries, which_results=None, buffer_dist=None):
     -------
     gdf : geopandas.GeoDataFrame
     """
+    msg = (
+        "The `boundaries` module has been deprecated and will be removed "
+        "in a future relase. Use the `geocoding` module's `geocode_to_gdf` "
+        "function instead."
+    )
+    warnings.warn(msg)
+
     # create an empty GeoDataFrame then append each result as a new row,
     # checking for the presence of which_results
     gdf = gpd.GeoDataFrame()

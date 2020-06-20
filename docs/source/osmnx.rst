@@ -9,14 +9,6 @@ osmnx.bearing module
     :undoc-members:
     :show-inheritance:
 
-osmnx.boundaries module
------------------------
-
-.. automodule:: osmnx.boundaries
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 osmnx.distance module
 ---------------------
 
@@ -53,6 +45,14 @@ osmnx.footprints module
 -----------------------
 
 .. automodule:: osmnx.footprints
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+osmnx.geocoding module
+----------------------
+
+.. automodule:: osmnx.geocoding
     :members:
     :undoc-members:
     :show-inheritance:
