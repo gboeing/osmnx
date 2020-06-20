@@ -5,8 +5,8 @@ from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 
-from . import boundaries
 from . import downloader
+from . import geocoding
 from . import settings
 from . import utils
 from . import utils_geo
@@ -475,7 +475,7 @@ def pois_from_place(place, tags, which_result=1):
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
-    city = boundaries.gdf_from_place(place, which_result=which_result)
+    city = geocoding.gdf_from_place(place, which_result=which_result)
     polygon = city["geometry"].iloc[0]
     return pois_from_polygon(polygon, tags)
 

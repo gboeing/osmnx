@@ -1,8 +1,6 @@
 """Expose the core OSMnx API."""
 
 from .bearing import add_edge_bearings
-from .boundaries import gdf_from_place
-from .boundaries import gdf_from_places
 from .distance import get_nearest_edge
 from .distance import get_nearest_edges
 from .distance import get_nearest_node
@@ -15,6 +13,9 @@ from .footprints import footprints_from_address
 from .footprints import footprints_from_place
 from .footprints import footprints_from_point
 from .footprints import footprints_from_polygon
+from .geocoding import gdf_from_place
+from .geocoding import gdf_from_places
+from .geocoding import geocode
 from .graph import graph_from_address
 from .graph import graph_from_bbox
 from .graph import graph_from_place
@@ -46,7 +47,6 @@ from .utils import citation
 from .utils import config
 from .utils import log
 from .utils import ts
-from .utils_geo import geocode
 from .utils_graph import get_undirected
 from .utils_graph import graph_from_gdfs
 from .utils_graph import graph_to_gdfs

@@ -1,6 +1,7 @@
 """Geospatial utility functions."""
 
 import math
+import warnings
 from collections import OrderedDict
 
 import numpy as np
@@ -33,6 +34,12 @@ def geocode(query):
     point : tuple
         the (lat, lng) coordinates returned by the geocoder
     """
+    msg = (
+        "The `geocode` function has been moved from `utils_geo` to the "
+        "new `geocoding` module. Access it there accordingly."
+    )
+    warnings.warn(msg)
+
     # define the parameters
     params = OrderedDict()
     params["format"] = "json"

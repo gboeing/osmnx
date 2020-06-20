@@ -1,7 +1,7 @@
-"""Create GeoDataFrames of place boundaries."""
+"""Geocode queries and create GeoDataFrames of place boundaries."""
 
 import logging as lg
-import warnings
+from collections import OrderedDict
 
 import geopandas as gpd
 
@@ -9,6 +9,41 @@ from . import downloader
 from . import projection
 from . import settings
 from . import utils
+
+
+def geocode(query):
+    """
+    Geocode a query string to (lat, lng) with the Nominatim geocoder.
+
+    Parameters
+    ----------
+    query : string
+        the query string to geocode
+
+    Returns
+    -------
+    point : tuple
+        the (lat, lng) coordinates returned by the geocoder
+    """
+    # define the parameters
+    params = OrderedDict()
+    params["format"] = "json"
+    params["limit"] = 1
+    params[
+        "dedupe"
+    ] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
+    params["q"] = query
+    response_json = downloader.nominatim_request(params=params)
+
+    # if results were returned, parse lat and long out of the result
+    if len(response_json) > 0 and "lat" in response_json[0] and "lon" in response_json[0]:
+        lat = float(response_json[0]["lat"])
+        lng = float(response_json[0]["lon"])
+        point = (lat, lng)
+        utils.log(f'Geocoded "{query}" to {point}')
+        return point
+    else:
+        raise Exception(f'Nominatim geocoder returned no results for query "{query}"')
 
 
 def gdf_from_place(query, which_result=1, buffer_dist=None):
@@ -31,13 +66,6 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    msg = (
-        "The `boundaries` module has been deprecated and will be removed "
-        "in a future relase. Use the `geocoding` module's `geocode_to_gdf` "
-        "function instead."
-    )
-    warnings.warn(msg)
-
     # ensure query type
     if not isinstance(query, (str, dict)):
         raise ValueError("query must be a dict or a string")
@@ -115,13 +143,6 @@ def gdf_from_places(queries, which_results=None, buffer_dist=None):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    msg = (
-        "The `boundaries` module has been deprecated and will be removed "
-        "in a future relase. Use the `geocoding` module's `geocode_to_gdf` "
-        "function instead."
-    )
-    warnings.warn(msg)
-
     # create an empty GeoDataFrame then append each result as a new row,
     # checking for the presence of which_results
     gdf = gpd.GeoDataFrame()

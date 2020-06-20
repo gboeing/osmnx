@@ -6,8 +6,8 @@ from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
 from shapely.ops import polygonize
 
-from . import boundaries
 from . import downloader
+from . import geocoding
 from . import projection
 from . import settings
 from . import utils
@@ -464,7 +464,7 @@ def footprints_from_place(place, footprint_type="building", retain_invalid=False
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
-    city = boundaries.gdf_from_place(place, which_result=which_result)
+    city = geocoding.gdf_from_place(place, which_result=which_result)
     polygon = city["geometry"].iloc[0]
     return footprints_from_polygon(polygon, footprint_type, retain_invalid)
 
