@@ -22,7 +22,7 @@ from . import utils
 
 def geocode(query):
     """
-    Geocode a query string to (lat, lng) with the Nominatim geocoder.
+    Use `geocoding.geocode()` instead (deprecated).
 
     Parameters
     ----------

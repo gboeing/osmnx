@@ -13,10 +13,7 @@ from . import utils
 
 def gdf_from_place(query, which_result=1, buffer_dist=None):
     """
-    Create a GeoDataFrame from a single place name query.
-
-    Geocode the query with Nominatim then turn it into a GeoDataFrame with
-    a geometry column.
+    Use `geocoding.geocode_to_gdf()` instead (deprecated).
 
     Parameters
     ----------
@@ -95,10 +92,7 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
 
 def gdf_from_places(queries, which_results=None, buffer_dist=None):
     """
-    Create a GeoDataFrame from a list of place name queries.
-
-    Geocode the queries with Nominatim then turn result into GeoDataFrame with
-    a geometry column.
+    Use `geocoding.geocode_to_gdf()` instead (deprecated).
 
     Parameters
     ----------
