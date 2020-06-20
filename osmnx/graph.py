@@ -324,12 +324,12 @@ def graph_from_place(
     if isinstance(query, (str, dict)):
         # if it is a string (place name) or dict (structured place query), then
         # it is a single place
-        gdf_place = geocoding.gdf_from_place(
+        gdf_place = geocoding.geocode_to_gdf(
             query, which_result=which_result, buffer_dist=buffer_dist
         )
     elif isinstance(query, list):
         # if it is a list, it contains multiple places to get
-        gdf_place = geocoding.gdf_from_places(query, buffer_dist=buffer_dist)
+        gdf_place = geocoding.geocode_to_gdf(query, buffer_dist=buffer_dist)
     else:
         raise TypeError("query must be dict, string, or list of strings")
 

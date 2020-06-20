@@ -475,7 +475,7 @@ def pois_from_place(place, tags, which_result=1):
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
-    city = geocoding.gdf_from_place(place, which_result=which_result)
+    city = geocoding.geocode_to_gdf(place, which_result=which_result)
     polygon = city["geometry"].iloc[0]
     return pois_from_polygon(polygon, tags)
 
