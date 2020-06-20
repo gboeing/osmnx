@@ -238,7 +238,7 @@ def graph_from_address(
     other custom settings via ox.config().
     """
     # geocode the address string to a (lat, lng) point
-    point = utils_geo.geocode(query=address)
+    point = geocoding.geocode(query=address)
 
     # then create a graph from this point
     G = graph_from_point(

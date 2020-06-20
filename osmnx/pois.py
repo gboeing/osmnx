@@ -440,7 +440,7 @@ def pois_from_address(address, tags, dist=1000):
     other custom settings via ox.config().
     """
     # geocode the address string to a (lat, lng) point
-    point = utils_geo.geocode(query=address)
+    point = geocoding.geocode(query=address)
     return pois_from_point(point=point, tags=tags, dist=dist)
 
 

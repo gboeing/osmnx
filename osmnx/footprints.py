@@ -427,7 +427,7 @@ def footprints_from_address(address, dist=1000, footprint_type="building", retai
     other custom settings via ox.config().
     """
     # geocode the address string to a (lat, lng) point
-    point = utils_geo.geocode(query=address)
+    point = geocoding.geocode(query=address)
 
     # get footprints within distance of this point
     return footprints_from_point(point, dist, footprint_type, retain_invalid)
