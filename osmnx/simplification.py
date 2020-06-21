@@ -21,7 +21,7 @@ def _is_endpoint(G, node, strict=True):
     to help streets bend around curves. An end point is a node that either:
     1) is its own neighbor, ie, it self-loops.
     2) or, has no incoming edges or no outgoing edges, ie, all its incident
-       edges point inward or all its incident edges point outward.
+    edges point inward or all its incident edges point outward.
     3) or, it does not have exactly two neighbors and degree of 2 or 4.
     4) or, if strict mode is false, if its edges have different OSM IDs.
 

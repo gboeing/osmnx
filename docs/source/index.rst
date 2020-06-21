@@ -54,7 +54,7 @@ You can install OSMnx with conda:
     conda config --prepend channels conda-forge
     conda create -n ox --strict-channel-priority osmnx
 
-Alternatively, you can run OSMnx + Jupyter directly from its official `docker container`_, or you can install OSMnx via pip if you already have all of its dependencies installed on your system.
+Alternatively, you can run OSMnx + Jupyter directly from its official `docker container`_, or you can install OSMnx via `pip`_ if you already have all of its dependencies installed on your system.
 
 
 Examples
@@ -82,6 +82,11 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Complete reference, including private internal functions:
+
+   osmnx-complete
 
 .. _change log: https://github.com/gboeing/osmnx/blob/master/CHANGELOG.md
 .. _docker container: https://hub.docker.com/r/gboeing/osmnx
@@ -89,5 +94,6 @@ Indices and tables
 .. _examples: https://github.com/gboeing/osmnx-examples
 .. _issue: https://github.com/gboeing/osmnx/issues
 .. _OSMnx GitHub repo: https://github.com/gboeing/osmnx
+.. _pip: https://pypi.python.org/pypi/OSMnx
 .. _StackOverflow: https://stackoverflow.com/search?q=osmnx
 .. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: http://geoffboeing.com/publications/osmnx-complex-street-networks/
