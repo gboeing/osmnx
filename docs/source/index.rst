@@ -84,7 +84,7 @@ Indices and tables
 
 .. toctree::
    :maxdepth: 1
-   :caption: Complete reference, including private internal functions:
+   :caption: Internals reference:
 
    osmnx-complete
 
