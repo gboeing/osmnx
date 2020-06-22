@@ -29,13 +29,11 @@ def geocode(query):
     params = OrderedDict()
     params["format"] = "json"
     params["limit"] = 1
-    params[
-        "dedupe"
-    ] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
+    params["dedupe"] = 0  # prevent OSM deduping results so we get precisely 'limit' # of results
     params["q"] = query
     response_json = downloader.nominatim_request(params=params)
 
-    # if results were returned, parse lat and long out of the result
+    # if results were returned, parse lat and lng out of the result
     if len(response_json) > 0 and "lat" in response_json[0] and "lon" in response_json[0]:
         lat = float(response_json[0]["lat"])
         lng = float(response_json[0]["lon"])
@@ -61,7 +59,7 @@ def geocode_to_gdf(query, which_result=1, buffer_dist=None):
         query string or structured dict to geocode/download
     which_result : int or list
         max number of results to return and which to process upon receipt; if
-        passing a list then it must be same length as query
+        passing a list then it must be same length as query list
     buffer_dist : float
         distance to buffer around the place geometry, in meters
 
@@ -92,8 +90,7 @@ def geocode_to_gdf(query, which_result=1, buffer_dist=None):
     # geocode each query and add to GeoDataFrame as a new row
     gdf = gpd.GeoDataFrame()
     for q, wr in zip(query, which_result):
-        gdf_tmp = _geocode_query_to_gdf(q, wr)
-        gdf = gdf.append(gdf_tmp)
+        gdf.append(_geocode_query_to_gdf(q, wr))
 
     # reset GeoDataFrame index and set its CRS
     gdf = gdf.reset_index(drop=True)
@@ -149,7 +146,7 @@ def _geocode_query_to_gdf(query, which_result=1):
         ]
 
         # if we got an unexpected geometry type (like a point), log a warning
-        if geometry["type"] not in ["Polygon", "MultiPolygon"]:
+        if geometry["type"] not in {"Polygon", "MultiPolygon"}:
             utils.log(f'OSM returned a {geometry["type"]} as the geometry', level=lg.WARNING)
 
         # create the GeoDataFrame
