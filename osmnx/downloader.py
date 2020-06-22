@@ -488,7 +488,7 @@ def overpass_request(data, pause=None, error_pause=60):
 
     Returns
     -------
-    dict
+    response_json : dict
     """
     # define the Overpass API URL, then construct a GET-style URL as a string to
     # hash to look up/save to cache

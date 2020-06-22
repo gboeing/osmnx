@@ -228,8 +228,8 @@ def log(message, level=None, name=None, filename=None):
     """
     Write a message to the logger.
 
-    This logs to file and/or prints to the console, depending on the current
-    configuration of settings.log_file and settings.log_console.
+    This logs to file and/or prints to the console (terminal), depending on
+    the current configuration of settings.log_file and settings.log_console.
 
     Parameters
     ----------

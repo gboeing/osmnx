@@ -119,7 +119,7 @@ def truncate_graph_polygon(
     G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.05, min_num=3
 ):
     """
-    Remove every node in graph that falls outside a shapely (Multi)Polygon.
+    Remove every node in graph that falls outside a (Multi)Polygon.
 
     Parameters
     ----------

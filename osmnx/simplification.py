@@ -194,9 +194,6 @@ def _is_simplified(G):
     """
     Determine if a graph has already had its topology simplified.
 
-    If any of its edges have a geometry attribute, we know that it has
-    previously been simplified.
-
     Parameters
     ----------
     G : networkx.MultiDiGraph
@@ -416,8 +413,8 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     design standards in the specific street network, and you should always use
     a projected graph to work in meaningful and consistent units like meters.
 
-    Returned graph's node IDs represent clusters rather than OSMIDs. Refer to
-    nodes' osmid attributes for original OSMIDs. If multiple nodes were merged
+    Returned graph's node IDs represent clusters rather than osmids. Refer to
+    nodes' osmid attributes for original osmids. If multiple nodes were merged
     together, the osmid attribute is a list of merged nodes' osmids.
 
     Parameters

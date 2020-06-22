@@ -222,9 +222,9 @@ def round_geometry_coords(shape, precision):
 
     Parameters
     ----------
-    shape : shapely.geometry.geometry, either Point, MultiPoint, LineString,
-            MultiLineString, Polygon, or MultiPolygon
-        the geometry to round the coordinates of
+    shape : shapely.geometry.geometry
+        the geometry to round the coordinates of; must be one of {Point,
+        MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon}
     precision : int
         decimal precision to round coordinates to
 
