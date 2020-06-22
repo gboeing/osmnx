@@ -45,7 +45,7 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8"):
     gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
 
     # make every non-numeric edge attribute (besides geometry) a string
-    for col in [c for c in gdf_edges.columns if not c == "geometry"]:
+    for col in (c for c in gdf_edges.columns if not c == "geometry"):
         if not pd.api.types.is_numeric_dtype(gdf_edges[col]):
             gdf_edges[col] = gdf_edges[col].fillna("").astype(str)
 
@@ -92,12 +92,12 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8"):
     gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
 
     # make every non-numeric edge attribute (besides geometry) a string
-    for col in [c for c in gdf_edges.columns if not c == "geometry"]:
+    for col in (c for c in gdf_edges.columns if not c == "geometry"):
         if not pd.api.types.is_numeric_dtype(gdf_edges[col]):
             gdf_edges[col] = gdf_edges[col].fillna("").astype(str)
 
     # make every non-numeric node attribute (besides geometry) a string
-    for col in [c for c in gdf_nodes.columns if not c == "geometry"]:
+    for col in (c for c in gdf_nodes.columns if not c == "geometry"):
         if not pd.api.types.is_numeric_dtype(gdf_nodes[col]):
             gdf_nodes[col] = gdf_nodes[col].fillna("").astype(str)
 
@@ -164,7 +164,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     # stringify node and edge attributes
     for _, data in G_save.nodes(data=True):
         for dict_key in data:
-            if gephi and dict_key in ["xcoord", "ycoord"]:
+            if gephi and dict_key in {"xcoord", "ycoord"}:
                 # don't convert x y values to string if saving for gephi
                 continue
             else:
@@ -244,7 +244,7 @@ def _convert_node_attr_types(G, node_type):
         data["osmid"] = node_type(data["osmid"])
 
         # convert numeric node attributes from string to float
-        for attr in ["elevation", "elevation_res", "lat", "lon", "x", "y"]:
+        for attr in {"elevation", "elevation_res", "lat", "lon", "x", "y"}:
             if attr in data:
                 data[attr] = float(data[attr])
 
@@ -282,7 +282,7 @@ def _convert_edge_attr_types(G, node_type):
 
         # convert to float any possible OSMnx-added edge attributes, which may
         # have multiple values if graph was simplified after they were added
-        for attr in ["grade", "grade_abs", "bearing", "speed_kph", "travel_time"]:
+        for attr in {"grade", "grade_abs", "bearing", "speed_kph", "travel_time"}:
             if attr in data:
                 if data[attr].startswith("[") and data[attr].endswith("]"):
                     # if it's a list, eval it then convert each item to float
@@ -292,7 +292,7 @@ def _convert_edge_attr_types(G, node_type):
 
         # these attributes might have a single value, or a list if edge's
         # topology was simplified
-        for attr in [
+        for attr in {
             "highway",
             "name",
             "bridge",
@@ -306,7 +306,7 @@ def _convert_edge_attr_types(G, node_type):
             "landuse",
             "width",
             "est_width",
-        ]:
+        }:
             # if this edge has this attribute, and it starts with '[' and ends
             # with ']', then it's a list to be parsed
             if attr in data and data[attr].startswith("[") and data[attr].endswith("]"):
@@ -440,7 +440,7 @@ def save_graph_xml(
         gdf_edges = gdf_edges.reset_index().rename(columns={"index": "id"})
 
     # add default values for required attributes
-    for table in [gdf_nodes, gdf_edges]:
+    for table in (gdf_nodes, gdf_edges):
         table["uid"] = "1"
         table["user"] = "osmnx"
         table["version"] = "1"
@@ -558,7 +558,7 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
             else:
                 for tag in edge_tags:
                     if (tag in all_way_edges.columns) and (
-                        tag not in [t for t, agg in edge_tag_aggs]
+                        tag not in (t for t, agg in edge_tag_aggs)
                     ):
                         etree.SubElement(edge, "tag", attrib={"k": tag, "v": first[tag]})
 

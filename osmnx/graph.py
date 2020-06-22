@@ -792,16 +792,16 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
 
     def startElement(self, name, attrs):
         if name == "osm":
-            self.object.update({k: attrs[k] for k in attrs.keys() if k in ("version", "generator")})
+            self.object.update({k: attrs[k] for k in attrs.keys() if k in {"version", "generator"}})
 
-        elif name in ("node", "way"):
+        elif name in {"node", "way"}:
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
-            self._element.update({k: float(attrs[k]) for k in attrs.keys() if k in ("lat", "lon")})
+            self._element.update({k: float(attrs[k]) for k in attrs.keys() if k in {"lat", "lon"}})
             self._element.update(
                 {
                     k: int(attrs[k])
                     for k in attrs.keys()
-                    if k in ("id", "uid", "version", "changeset")
+                    if k in {"id", "uid", "version", "changeset"}
                 }
             )
 
@@ -817,5 +817,5 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
             pass
 
     def endElement(self, name):
-        if name in ("node", "way"):
+        if name in {"node", "way"}:
             self.object["elements"].append(self._element)

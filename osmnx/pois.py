@@ -76,7 +76,7 @@ def _create_poi_query(polygon, tags):
                 # otherwise, pass "key"="value"
                 tag_str = f'["{key}"="{value}"]{bbox};(._;>;);'
 
-            for kind in ["node", "way", "relation"]:
+            for kind in ("node", "way", "relation"):
                 components.append(f"({kind}{tag_str});")
 
     # finalize query and return

@@ -454,7 +454,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
 
         except Exception:  # pragma: no cover
             sc = response.status_code
-            if sc in [429, 504]:
+            if sc in {429, 504}:
                 # 429 is 'too many requests' and 504 is 'gateway timeout' from
                 # server overload: handle these by pausing then recursively
                 # re-trying until we get a valid response from the server
@@ -524,7 +524,7 @@ def overpass_request(data, pause=None, error_pause=60):
 
         except Exception:  # pragma: no cover
             sc = response.status_code
-            if sc in [429, 504]:
+            if sc in {429, 504}:
                 # 429 is 'too many requests' and 504 is 'gateway timeout' from
                 # server overload: handle these by pausing then recursively
                 # re-trying until we get a valid response from the server

@@ -63,7 +63,7 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
         ]
 
         # if we got an unexpected geometry type (like a point), log a warning
-        if geometry["type"] not in ["Polygon", "MultiPolygon"]:
+        if geometry["type"] not in {"Polygon", "MultiPolygon"}:
             utils.log(f'OSM returned a {geometry["type"]} as the geometry', level=lg.WARNING)
 
         # create the GeoDataFrame, name it, and set its original CRS to default_crs

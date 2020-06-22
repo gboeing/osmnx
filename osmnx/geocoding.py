@@ -90,7 +90,7 @@ def geocode_to_gdf(query, which_result=1, buffer_dist=None):
     # geocode each query and add to GeoDataFrame as a new row
     gdf = gpd.GeoDataFrame()
     for q, wr in zip(query, which_result):
-        gdf.append(_geocode_query_to_gdf(q, wr))
+        gdf = gdf.append(_geocode_query_to_gdf(q, wr))
 
     # reset GeoDataFrame index and set its CRS
     gdf = gdf.reset_index(drop=True)
