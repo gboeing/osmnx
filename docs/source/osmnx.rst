@@ -1,6 +1,8 @@
 osmnx package
 =============
 
+Users' reference for the OSMnx API.
+
 osmnx.bearing module
 --------------------
 

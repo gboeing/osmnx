@@ -1,7 +1,7 @@
 osmnx package
 =============
 
-The complete OSMnx module/function reference, including private and internal functions.
+This is the complete OSMnx internals reference, including private internal functions. If you are looking instead for the users' reference guide to OSMnx's public-facing API, you can find `it here`_.
 
 osmnx.bearing module
 --------------------
@@ -162,3 +162,6 @@ osmnx.utils_graph module
     :members:
     :private-members:
     :noindex:
+
+
+.. _it here: osmnx.html

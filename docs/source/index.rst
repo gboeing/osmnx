@@ -81,12 +81,7 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Internals reference
-
-   osmnx-complete
+* `Internals reference`_
 
 .. _change log: https://github.com/gboeing/osmnx/blob/master/CHANGELOG.md
 .. _docker container: https://hub.docker.com/r/gboeing/osmnx
@@ -97,3 +92,4 @@ Indices and tables
 .. _pip: https://pypi.python.org/pypi/OSMnx
 .. _StackOverflow: https://stackoverflow.com/search?q=osmnx
 .. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: http://geoffboeing.com/publications/osmnx-complex-street-networks/
+.. _Internals reference: osmnx-complete.html
