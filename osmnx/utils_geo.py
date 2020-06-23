@@ -22,7 +22,7 @@ from . import utils
 
 def geocode(query):
     """
-    Use `geocoding.geocode()` instead (deprecated).
+    Use `geocoder.geocode()` instead (deprecated).
 
     Parameters
     ----------
@@ -36,7 +36,7 @@ def geocode(query):
     """
     msg = (
         "The `geocode` function has been moved from `utils_geo` to the "
-        "new `geocoding` module. Access it there accordingly."
+        "new `geocoder` module. Access it there accordingly."
     )
     warnings.warn(msg)
 
@@ -222,9 +222,9 @@ def round_geometry_coords(shape, precision):
 
     Parameters
     ----------
-    shape : shapely.geometry.geometry, either Point, MultiPoint, LineString,
-            MultiLineString, Polygon, or MultiPolygon
-        the geometry to round the coordinates of
+    shape : shapely.geometry.geometry
+        the geometry to round the coordinates of; must be one of {Point,
+        MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon}
     precision : int
         decimal precision to round coordinates to
 

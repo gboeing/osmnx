@@ -11,7 +11,7 @@ from shapely.geometry import Polygon
 
 from . import distance
 from . import downloader
-from . import geocoding
+from . import geocoder
 from . import projection
 from . import settings
 from . import simplification
@@ -238,7 +238,7 @@ def graph_from_address(
     other custom settings via ox.config().
     """
     # geocode the address string to a (lat, lng) point
-    point = geocoding.geocode(query=address)
+    point = geocoder.geocode(query=address)
 
     # then create a graph from this point
     G = graph_from_point(
@@ -324,12 +324,12 @@ def graph_from_place(
     if isinstance(query, (str, dict)):
         # if it is a string (place name) or dict (structured place query), then
         # it is a single place
-        gdf_place = geocoding.geocode_to_gdf(
+        gdf_place = geocoder.geocode_to_gdf(
             query, which_result=which_result, buffer_dist=buffer_dist
         )
     elif isinstance(query, list):
         # if it is a list, it contains multiple places to get
-        gdf_place = geocoding.geocode_to_gdf(query, buffer_dist=buffer_dist)
+        gdf_place = geocoder.geocode_to_gdf(query, buffer_dist=buffer_dist)
     else:
         raise TypeError("query must be dict, string, or list of strings")
 
@@ -792,16 +792,16 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
 
     def startElement(self, name, attrs):
         if name == "osm":
-            self.object.update({k: attrs[k] for k in attrs.keys() if k in ("version", "generator")})
+            self.object.update({k: attrs[k] for k in attrs.keys() if k in {"version", "generator"}})
 
-        elif name in ("node", "way"):
+        elif name in {"node", "way"}:
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
-            self._element.update({k: float(attrs[k]) for k in attrs.keys() if k in ("lat", "lon")})
+            self._element.update({k: float(attrs[k]) for k in attrs.keys() if k in {"lat", "lon"}})
             self._element.update(
                 {
                     k: int(attrs[k])
                     for k in attrs.keys()
-                    if k in ("id", "uid", "version", "changeset")
+                    if k in {"id", "uid", "version", "changeset"}
                 }
             )
 
@@ -817,5 +817,5 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
             pass
 
     def endElement(self, name):
-        if name in ("node", "way"):
+        if name in {"node", "way"}:
             self.object["elements"].append(self._element)
