@@ -15,8 +15,8 @@ from .footprints import footprints_from_address
 from .footprints import footprints_from_place
 from .footprints import footprints_from_point
 from .footprints import footprints_from_polygon
-from .geocoding import geocode
-from .geocoding import geocode_to_gdf
+from .geocoder import geocode
+from .geocoder import geocode_to_gdf
 from .graph import graph_from_address
 from .graph import graph_from_bbox
 from .graph import graph_from_place

@@ -13,7 +13,7 @@ from . import utils
 
 def gdf_from_place(query, which_result=1, buffer_dist=None):
     """
-    Use `geocoding.geocode_to_gdf()` instead (deprecated).
+    Use `geocoder.geocode_to_gdf()` instead (deprecated).
 
     Parameters
     ----------
@@ -30,7 +30,7 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
     """
     msg = (
         "The `boundaries` module has been deprecated and will be removed "
-        "in a future relase. Use the `geocoding` module's `geocode_to_gdf` "
+        "in a future relase. Use the `geocoder` module's `geocode_to_gdf` "
         "function instead."
     )
     warnings.warn(msg)
@@ -92,7 +92,7 @@ def gdf_from_place(query, which_result=1, buffer_dist=None):
 
 def gdf_from_places(queries, which_results=None, buffer_dist=None):
     """
-    Use `geocoding.geocode_to_gdf()` instead (deprecated).
+    Use `geocoder.geocode_to_gdf()` instead (deprecated).
 
     Parameters
     ----------
@@ -111,7 +111,7 @@ def gdf_from_places(queries, which_results=None, buffer_dist=None):
     """
     msg = (
         "The `boundaries` module has been deprecated and will be removed "
-        "in a future relase. Use the `geocoding` module's `geocode_to_gdf` "
+        "in a future relase. Use the `geocoder` module's `geocode_to_gdf` "
         "function instead."
     )
     warnings.warn(msg)

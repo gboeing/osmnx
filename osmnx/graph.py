@@ -11,7 +11,7 @@ from shapely.geometry import Polygon
 
 from . import distance
 from . import downloader
-from . import geocoding
+from . import geocoder
 from . import projection
 from . import settings
 from . import simplification
@@ -238,7 +238,7 @@ def graph_from_address(
     other custom settings via ox.config().
     """
     # geocode the address string to a (lat, lng) point
-    point = geocoding.geocode(query=address)
+    point = geocoder.geocode(query=address)
 
     # then create a graph from this point
     G = graph_from_point(
@@ -324,12 +324,12 @@ def graph_from_place(
     if isinstance(query, (str, dict)):
         # if it is a string (place name) or dict (structured place query), then
         # it is a single place
-        gdf_place = geocoding.geocode_to_gdf(
+        gdf_place = geocoder.geocode_to_gdf(
             query, which_result=which_result, buffer_dist=buffer_dist
         )
     elif isinstance(query, list):
         # if it is a list, it contains multiple places to get
-        gdf_place = geocoding.geocode_to_gdf(query, buffer_dist=buffer_dist)
+        gdf_place = geocoder.geocode_to_gdf(query, buffer_dist=buffer_dist)
     else:
         raise TypeError("query must be dict, string, or list of strings")
 

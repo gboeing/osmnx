@@ -22,7 +22,7 @@ from . import utils
 
 def geocode(query):
     """
-    Use `geocoding.geocode()` instead (deprecated).
+    Use `geocoder.geocode()` instead (deprecated).
 
     Parameters
     ----------
@@ -36,7 +36,7 @@ def geocode(query):
     """
     msg = (
         "The `geocode` function has been moved from `utils_geo` to the "
-        "new `geocoding` module. Access it there accordingly."
+        "new `geocoder` module. Access it there accordingly."
     )
     warnings.warn(msg)
 
