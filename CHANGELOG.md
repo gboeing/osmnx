@@ -5,7 +5,7 @@
   - improve plotting defaults and streamline plot module speed and efficiency
   - improve color handling in plot module
   - improve route plotting
-  - plot_graph_routes function nows accept multiple route colors
+  - plot_graph_routes function now accepts multiple route colors
   - consolidate_intersections function now accepts reconnect_edges param
   - add new geocoder module and move utils_geo.geocode function into it
   - replace gdf_from_place/s functions with geocoder.geocode_to_gdf
