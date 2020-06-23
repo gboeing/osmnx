@@ -21,7 +21,10 @@ install:
   - conda list
 
 script:
+  - make -C ./docs html
   - coverage run --source osmnx -m pytest --verbose
+  - flake8 .
+  - pydocstyle .
 
 after_success:
   - coverage report -m

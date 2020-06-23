@@ -1,4 +1,5 @@
 beautifulsoup4
+black
 bokeh
 bottleneck
 cartopy
@@ -6,7 +7,10 @@ coverage
 coveralls
 cython
 dill
+flake8
+flake8-bugbear
 folium
+isort
 jupyterlab
 nodejs
 numexpr
@@ -15,6 +19,7 @@ pandana
 pillow
 pip
 psycopg2
+pydocstyle
 pyproj
 pysal
 pytest
