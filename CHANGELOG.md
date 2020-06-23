@@ -1,5 +1,18 @@
 # Change log
 
+## 0.15.0 (T.B.D.)
+
+  - improve plotting defaults and streamline plot module speed and efficiency
+  - improve color handling in plot module
+  - improve route plotting
+  - plot_graph_routes function nows accept multiple route colors
+  - consolidate_intersections function now accepts reconnect_edges param
+  - add new geocoder module and move utils_geo.geocode function into it
+  - replace gdf_from_place/s functions with geocoder.geocode_to_gdf
+  - deprecate boundaries module
+  - remove deprecated timeout, memory, custom_settings, and max_query_area_size function params
+  - remove deprecated plotting params and plot_shape function
+
 ## 0.14.1 (2020-06-09)
 
   - fix simplification of graphs with long rural roads
@@ -27,7 +40,7 @@
 ## 0.13.0 (2020-05-25)
 
   - major refactor of entire package
-  - clean up API and namespace (see [documentation](https://osmnx.readthedocs.io/en/stable/) for reference and the updated [usage examples](https://github.com/gboeing/osmnx-examples))
+  - clean up API and namespace (see [documentation](https://osmnx.readthedocs.io/) for reference and the updated [usage examples](https://github.com/gboeing/osmnx-examples))
   - new consolidate_intersections function with topological option
   - new speed module to calculate graph edge speeds and travel times
   - generalize POIs module to query with a flexible tags dict
