@@ -181,7 +181,7 @@ def plot_graph(
         if True, save the figure to disk at filepath
     filepath : string
         if save is True, the path to the file. file format determined from
-        extension. if None, use default image folder + image.png
+        extension. if None, use settings.imgs_folder/image.png
     dpi : int
         if save is True, the resolution of saved file
     bbox : tuple
@@ -586,7 +586,7 @@ def plot_footprints(
         if True, call pyplot.close() to close the figure
     filepath : string
         if save is True, the path to the file. file format determined from
-        extension. if None, use default image folder + image.png
+        extension. if None, use settings.imgs_folder/image.png
     dpi : int
         if save is True, the resolution of saved file
 
@@ -689,7 +689,7 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
         if True, call pyplot.close() to close the figure
     filepath : string
         if save is True, the path to the file. file format determined from
-        extension. if None, use default image folder + image.png
+        extension. if None, use settings.imgs_folder/image.png
     dpi : int
         if save is True, the resolution of saved file
 
