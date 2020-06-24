@@ -1,4 +1,4 @@
-"""Download points of interests (POIs) from OpenStreetMap."""
+"""Download geometries from OpenStreetMap."""
 
 import geopandas as gpd
 from shapely.geometry import MultiPolygon
@@ -198,6 +198,36 @@ def _parse_osm_way(coords, response):
 
         except Exception:
             utils.log(f"Polygon has invalid geometry: {nodes}")
+
+
+def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
+    """
+    Handle invalid multipolygon geometries.
+
+    For example, when there exists a feature without geometry (geometry==NaN).
+
+    Parameters
+    ----------
+    gdf : geopandas.GeoDataFrame
+        GeoDataFrame with Polygon geometries that should be converted into a
+        MultiPolygon object.
+    relation : dict
+        OSM 'relation' dictionary
+    way_ids : list
+        A list of 'way' ids that should be converted into a MultiPolygon object.
+
+    Returns
+    -------
+    shapely.geometry.MultiPolygon
+    """
+    try:
+        gdf_clean = gdf.dropna(subset=["geometry"])
+        multipoly = MultiPolygon(list(gdf_clean["geometry"]))
+        return multipoly
+
+    except Exception:
+        utils.log(f'Invalid geometry at relation "{relation["id"]}", way IDs: {way_ids}')
+        return None
 
 
 def _parse_osm_relations(relations, df_osm_ways):
