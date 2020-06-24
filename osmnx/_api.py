@@ -17,10 +17,10 @@ from .footprints import footprints_from_point
 from .footprints import footprints_from_polygon
 from .geocoder import geocode
 from .geocoder import geocode_to_gdf
-from .geometry import gdf_from_address
-from .geometry import gdf_from_place
-from .geometry import gdf_from_point
-from .geometry import gdf_from_polygon
+from .geometries import gdf_from_address
+from .geometries import gdf_from_place
+from .geometries import gdf_from_point
+from .geometries import gdf_from_polygon
 from .graph import graph_from_address
 from .graph import graph_from_bbox
 from .graph import graph_from_place
