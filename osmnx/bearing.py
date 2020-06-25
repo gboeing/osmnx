@@ -9,7 +9,9 @@ def get_bearing(origin_point, destination_point):
     """
     Calculate the bearing between two lat-lng points.
 
-    Each tuple should represent (lat, lng) as decimal degrees.
+    Each argument tuple should represent (lat, lng) as decimal degrees.
+    Bearing represents angle in degrees (clockwise) between north and the
+    direction from the origin point to the destination point.
 
     Parameters
     ----------
@@ -50,7 +52,8 @@ def add_edge_bearings(G, precision=1):
 
     Calculate the compass bearing from origin node to destination node for
     each edge in the directed graph then add each bearing as a new edge
-    attribute.
+    attribute. Bearing represents angle in degrees (clockwise) between north
+    and the direction from the origin node to the destination node.
 
     Parameters
     ----------
