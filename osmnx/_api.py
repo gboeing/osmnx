@@ -1,4 +1,4 @@
-"""Expose the core OSMnx API."""
+"""Expose most common parts of public API directly in `osmnx.` namespace."""
 
 from .bearing import add_edge_bearings
 from .boundaries import gdf_from_place
