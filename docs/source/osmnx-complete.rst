@@ -51,10 +51,10 @@ osmnx.footprints module
     :private-members:
     :noindex:
 
-osmnx.geocoding module
-----------------------
+osmnx.geocoder module
+---------------------
 
-.. automodule:: osmnx.geocoding
+.. automodule:: osmnx.geocoder
     :members:
     :private-members:
     :noindex:
