@@ -185,8 +185,8 @@ def config(
         the original order of nodes stored in the OSM way XML. Only use if
         specifically saving to .osm XML file with save_graph_xml function.
     elevation_provider : string
-        the API provider to use for adding node elevations, accepting
-        "google" and "airmap".
+        the API provider to use for adding node elevations, can be either
+        "google" or "airmap"
 
     Returns
     -------
