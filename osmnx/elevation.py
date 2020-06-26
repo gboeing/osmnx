@@ -18,15 +18,16 @@ def add_node_elevations(
     """
     Add `elevation` (meters) attribute to each node.
 
-    Uses the google maps elevation API.
+    Uses the Google Maps Elevation API by default, but you can configure
+    this to a different provider via ox.config()
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
     api_key : string
-        your google maps elevation API key,
-        your airmap API key, if osmnx.config(elevation_provider='airmap')
+        your google maps elevation API key, or equivalent if using a different
+        provider
     max_locations_per_batch : int
         max number of coordinate pairs to submit in each API call (if this is
         too high, the server will reject the request because its character
