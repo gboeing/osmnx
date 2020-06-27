@@ -138,31 +138,31 @@ def _parse_nodes_coords(osm_response):
     return coords
 
 
-def _parse_osm_node(response):
+def _parse_osm_node(element):
     """
-    Parse points from OSM nodes.
+    Parse point from OSM node element.
 
     Parameters
     ----------
-    response : JSON
-        nodes from OSM response
+    element : JSON
+        element type "node" from OSM response
 
     Returns
     -------
     poi : dict
-        dict of vertex IDs and their lat, lng coordinates
+        dict of OSM ID, Point geometry, and any tags
     """
     try:
-        point = Point(response["lon"], response["lat"])
+        point = Point(element["lon"], element["lat"])
 
-        poi = {"osmid": response["id"], "geometry": point}
+        poi = {"osmid": element["id"], "geometry": point}
 
-        if "tags" in response:
-            for tag in response["tags"]:
-                poi[tag] = response["tags"][tag]
+        if "tags" in element:
+            for tag in element["tags"]:
+                poi[tag] = element["tags"][tag]
 
     except Exception:
-        utils.log(f'Point has invalid geometry: {response["id"]}')
+        utils.log(f'Point has invalid geometry: {element["id"]}')
 
     return poi
 
@@ -332,7 +332,7 @@ def _create_gdf(polygon, tags):
 
     for result in responses["elements"]:
         if result["type"] == "node" and "tags" in result:
-            poi = _parse_osm_node(response=result)
+            poi = _parse_osm_node(element=result)
             # Add element_type
             poi["element_type"] = "node"
             # Add to 'pois'
