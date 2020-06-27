@@ -161,6 +161,9 @@ def _parse_osm_node(element):
             for tag in element["tags"]:
                 poi[tag] = element["tags"][tag]
 
+        # Add element_type
+        poi["element_type"] = "node"
+
     except Exception:
         utils.log(f'Point has invalid geometry: {element["id"]}')
 
@@ -194,6 +197,10 @@ def _parse_osm_way(coords, element):
             if "tags" in element:
                 for tag in element["tags"]:
                     poi[tag] = element["tags"][tag]
+            
+            # Add element_type
+            poi["element_type"] = "way"
+
             return poi
 
         except Exception:
@@ -333,16 +340,12 @@ def _create_gdf(polygon, tags):
     for element in response["elements"]:
         if element["type"] == "node" and "tags" in element:
             poi = _parse_osm_node(element=element)
-            # Add element_type
-            poi["element_type"] = "node"
             # Add to 'pois'
             poi_nodes[element["id"]] = poi
         elif element["type"] == "way":
             # Parse POI area Polygon
             poi_area = _parse_osm_way(coords=coords, element=element)
             if poi_area:
-                # Add element_type
-                poi_area["element_type"] = "way"
                 # Add to 'poi_ways'
                 poi_ways[element["id"]] = poi_area
 
