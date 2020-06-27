@@ -114,17 +114,17 @@ def _get_overpass_response(polygon, tags):
     return response
 
 
-def _parse_nodes_coords(osm_response):
+def _parse_nodes_coords(response):
     """
-    Parse node coordinates from overpass response.
+    Parse id and coordinates of all nodes in the overpass response.
 
     Some nodes are standalone points of interest, others are vertices in
     other geometry.
 
     Parameters
     ----------
-    osm_response : string
-        OSM response JSON string
+    response : string
+        overpass response JSON string
 
     Returns
     -------
@@ -132,7 +132,7 @@ def _parse_nodes_coords(osm_response):
         dict of node IDs and their lat, lng coordinates
     """
     coords = {}
-    for element in osm_response["elements"]:
+    for element in response["elements"]:
         if "type" in element and element["type"] == "node":
             coords[element["id"]] = {"lat": element["lat"], "lon": element["lon"]}
     return coords
