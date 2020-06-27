@@ -316,10 +316,10 @@ def _create_gdf(polygon, tags):
     gdf : geopandas.GeoDataFrame
         geometries and their associated tags
     """
-    responses = _get_overpass_response(polygon, tags)
+    response = _get_overpass_response(polygon, tags)
 
     # Parse coordinates from all the nodes in the response
-    coords = _parse_nodes_coords(responses)
+    coords = _parse_nodes_coords(response)
 
     # POI nodes
     poi_nodes = {}
@@ -330,26 +330,26 @@ def _create_gdf(polygon, tags):
     # A list of POI relations
     relations = []
 
-    for result in responses["elements"]:
-        if result["type"] == "node" and "tags" in result:
-            poi = _parse_osm_node(element=result)
+    for element in response["elements"]:
+        if element["type"] == "node" and "tags" in element:
+            poi = _parse_osm_node(element=element)
             # Add element_type
             poi["element_type"] = "node"
             # Add to 'pois'
-            poi_nodes[result["id"]] = poi
-        elif result["type"] == "way":
+            poi_nodes[element["id"]] = poi
+        elif element["type"] == "way":
             # Parse POI area Polygon
-            poi_area = _parse_osm_way(coords=coords, element=result)
+            poi_area = _parse_osm_way(coords=coords, element=element)
             if poi_area:
                 # Add element_type
                 poi_area["element_type"] = "way"
                 # Add to 'poi_ways'
-                poi_ways[result["id"]] = poi_area
+                poi_ways[element["id"]] = poi_area
 
-        elif result["type"] == "relation":
+        elif element["type"] == "relation":
             # Add relation to a relation list (needs to be parsed after
             # all nodes and ways have been parsed)
-            relations.append(result)
+            relations.append(element)
 
     # Create GeoDataFrames
     gdf_nodes = gpd.GeoDataFrame(poi_nodes).T
