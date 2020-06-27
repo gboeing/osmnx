@@ -144,7 +144,7 @@ def _parse_osm_node(element):
 
     Parameters
     ----------
-    element : JSON
+    element : JSON string
         element type "node" from OSM response
 
     Returns
@@ -167,7 +167,7 @@ def _parse_osm_node(element):
     return poi
 
 
-def _parse_osm_way(coords, response):
+def _parse_osm_way(coords, element):
     """
     Parse areal POI way polygons from OSM node coords.
 
@@ -175,25 +175,25 @@ def _parse_osm_way(coords, response):
     ----------
     coords : dict
         dict of node IDs and their lat, lng coordinates
-    response : string
-        OSM response JSON string
+    element : JSON string
+        element type "node" from OSM response
 
     Returns
     -------
     poi : dict
-        dict of POIs containing each's nodes, polygon geometry, and osmid, or
+        dict of OSM ID, Polygon geometry, and any tags or
         None if it cannot
     """
-    if "type" in response and response["type"] == "way":
-        nodes = response["nodes"]
+    if "type" in element and element["type"] == "way":
+        nodes = element["nodes"]
         try:
             polygon = Polygon([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
 
-            poi = {"nodes": nodes, "geometry": polygon, "osmid": response["id"]}
+            poi = {"nodes": nodes, "geometry": polygon, "osmid": element["id"]}
 
-            if "tags" in response:
-                for tag in response["tags"]:
-                    poi[tag] = response["tags"][tag]
+            if "tags" in element:
+                for tag in element["tags"]:
+                    poi[tag] = element["tags"][tag]
             return poi
 
         except Exception:
@@ -339,7 +339,7 @@ def _create_gdf(polygon, tags):
             poi_nodes[result["id"]] = poi
         elif result["type"] == "way":
             # Parse POI area Polygon
-            poi_area = _parse_osm_way(coords=coords, response=result)
+            poi_area = _parse_osm_way(coords=coords, element=result)
             if poi_area:
                 # Add element_type
                 poi_area["element_type"] = "way"
