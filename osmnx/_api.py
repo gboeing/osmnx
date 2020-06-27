@@ -1,4 +1,4 @@
-"""Expose the core OSMnx API."""
+"""Expose most common parts of public API directly in `osmnx.` namespace."""
 
 from .bearing import add_edge_bearings
 from .boundaries import gdf_from_place
@@ -37,6 +37,7 @@ from .pois import pois_from_address
 from .pois import pois_from_place
 from .pois import pois_from_point
 from .pois import pois_from_polygon
+from .projection import project_gdf
 from .projection import project_graph
 from .simplification import consolidate_intersections
 from .simplification import simplify_graph
