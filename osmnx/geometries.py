@@ -144,65 +144,67 @@ def _parse_node_to_point(element):
     Parameters
     ----------
     element : JSON string
-        element type "node" from OSM response
+        element type "node" from overpass response JSON
 
     Returns
     -------
-    point : dict
+    point_geometry : dict
         dict of OSM ID, Point geometry, and any tags
     """
     try:
         geometry = Point(element["lon"], element["lat"])
 
-        point = {"osmid": element["id"], "geometry": geometry}
+        point_geometry = {"osmid": element["id"], "geometry": geometry}
 
         for tag in element["tags"]:
-            point[tag] = element["tags"][tag]
+            point_geometry[tag] = element["tags"][tag]
 
         # Add element_type
-        point["element_type"] = "node"
+        point_geometry["element_type"] = "node"
 
     except Exception:
         utils.log(f'Point has invalid geometry: {element["id"]}')
 
-    return point
+    return point_geometry
 
 
-def _parse_osm_way(coords, element):
+def _parse_way_to_polygon(coords, element):
     """
-    Parse areal POI way polygons from OSM node coords.
+    Parse polygon from OSM element, type='way'.
 
     Parameters
     ----------
     coords : dict
         dict of node IDs and their lat, lng coordinates
     element : JSON string
-        element type "node" from OSM response
+        element type "way" in OSM response with matching start and end point
 
     Returns
     -------
-    poi : dict
+    polygon_geometry : dict
         dict of OSM ID, Polygon geometry, and any tags or
         None if it cannot
     """
-    if "type" in element and element["type"] == "way":
-        nodes = element["nodes"]
-        try:
-            polygon = Polygon([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
+    nodes = element["nodes"]
+    
+    try:
+        geometry = Polygon([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
 
-            poi = {"nodes": nodes, "geometry": polygon, "osmid": element["id"]}
+        polygon_geometry = {"nodes": nodes, "geometry": geometry, "osmid": element["id"]}
 
-            if "tags" in element:
-                for tag in element["tags"]:
-                    poi[tag] = element["tags"][tag]
-            
-            # Add element_type
-            poi["element_type"] = "way"
+        if "tags" in element:
+            for tag in element["tags"]:
+                polygon_geometry[tag] = element["tags"][tag]
+        
+        # Add element_type
+        polygon_geometry["element_type"] = "way"
 
-            return poi
+        return polygon_geometry
 
-        except Exception:
-            utils.log(f"Polygon has invalid geometry: {nodes}")
+    except Exception:
+        # Don't think this will be triggered
+        # By design, Shapely will build invalid Polygons without complaint
+        utils.log(f'Polygon {element["id"]} has invalid geometry.')
 
 
 def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
@@ -327,10 +329,10 @@ def _create_gdf(polygon, tags):
     coords = {}
 
     # Points
-    points = {}
+    point_geometries = {}
 
-    # POI ways
-    poi_ways = {}
+    # Polygons
+    polygon_geometries = {}
 
     # A list of POI relations
     relations = []
@@ -343,16 +345,16 @@ def _create_gdf(polygon, tags):
             coords[element["id"]] = coord
 
             if "tags" in element:
-                point = _parse_node_to_point(element=element)
+                point_geometry = _parse_node_to_point(element=element)
                 # Add to 'points'
-                points[element["id"]] = point
+                point_geometries[element["id"]] = point_geometry
 
         elif element["type"] == "way":
-            # Parse POI area Polygon
-            poi_area = _parse_osm_way(coords=coords, element=element)
-            if poi_area:
-                # Add to 'poi_ways'
-                poi_ways[element["id"]] = poi_area
+            # Parse Polygon
+            polygon_geometry = _parse_way_to_polygon(coords=coords, element=element)
+            if polygon_geometry:
+                # Add to 'polygons'
+                polygon_geometries[element["id"]] = polygon_geometry
 
         elif element["type"] == "relation":
             # Add relation to a relation list (needs to be parsed after
@@ -360,17 +362,17 @@ def _create_gdf(polygon, tags):
             relations.append(element)
 
     # Create GeoDataFrames
-    gdf_points = gpd.GeoDataFrame(points).T
+    gdf_points = gpd.GeoDataFrame(point_geometries).T
     gdf_points.crs = settings.default_crs
 
-    gdf_ways = gpd.GeoDataFrame(poi_ways).T
-    gdf_ways.crs = settings.default_crs
+    gdf_polygons = gpd.GeoDataFrame(polygon_geometries).T
+    gdf_polygons.crs = settings.default_crs
 
     # Parse relations (MultiPolygons) from 'ways'
-    gdf_ways = _parse_osm_relations(relations=relations, df_osm_ways=gdf_ways)
+    gdf_polygons = _parse_osm_relations(relations=relations, df_osm_ways=gdf_polygons)
 
     # Combine GeoDataFrames
-    gdf = gdf_points.append(gdf_ways, sort=False)
+    gdf = gdf_points.append(gdf_polygons, sort=False)
 
     # if caller requested pois within a polygon, only retain those that
     # fall within the polygon
