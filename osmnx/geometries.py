@@ -114,31 +114,30 @@ def _get_overpass_response(polygon, tags):
     return response
 
 
-def _parse_nodes_coords(response):
+def _parse_node_to_coord(element):
     """
-    Parse id and coordinates of all nodes in the overpass response.
+    Parse id and coordinates from a node in the overpass response.
 
     Some nodes are standalone points of interest, others are vertices in
     other geometry.
 
     Parameters
     ----------
-    response : string
-        overpass response JSON string
+    element : string
+        element type "node" from OSM response
 
     Returns
     -------
-    coords : dict
-        dict of node IDs and their lat, lng coordinates
+    coord : dict
+        dict of node ID and its lat, lng coordinates
     """
-    coords = {}
-    for element in response["elements"]:
-        if "type" in element and element["type"] == "node":
-            coords[element["id"]] = {"lat": element["lat"], "lon": element["lon"]}
-    return coords
+    # return the coordinate of a single node element
+    coord = {"lat": element["lat"], "lon": element["lon"]}
+
+    return coord
 
 
-def _parse_osm_node(element):
+def _parse_node_to_point(element):
     """
     Parse point from OSM node element.
 
@@ -149,25 +148,24 @@ def _parse_osm_node(element):
 
     Returns
     -------
-    poi : dict
+    point : dict
         dict of OSM ID, Point geometry, and any tags
     """
     try:
-        point = Point(element["lon"], element["lat"])
+        geometry = Point(element["lon"], element["lat"])
 
-        poi = {"osmid": element["id"], "geometry": point}
+        point = {"osmid": element["id"], "geometry": geometry}
 
-        if "tags" in element:
-            for tag in element["tags"]:
-                poi[tag] = element["tags"][tag]
+        for tag in element["tags"]:
+            point[tag] = element["tags"][tag]
 
         # Add element_type
-        poi["element_type"] = "node"
+        point["element_type"] = "node"
 
     except Exception:
         utils.log(f'Point has invalid geometry: {element["id"]}')
 
-    return poi
+    return point
 
 
 def _parse_osm_way(coords, element):
@@ -325,11 +323,11 @@ def _create_gdf(polygon, tags):
     """
     response = _get_overpass_response(polygon, tags)
 
-    # Parse coordinates from all the nodes in the response
-    coords = _parse_nodes_coords(response)
+    # Dict to hold all node coordinates in the response
+    coords = {}
 
-    # POI nodes
-    poi_nodes = {}
+    # Points
+    points = {}
 
     # POI ways
     poi_ways = {}
@@ -338,10 +336,17 @@ def _create_gdf(polygon, tags):
     relations = []
 
     for element in response["elements"]:
-        if element["type"] == "node" and "tags" in element:
-            poi = _parse_osm_node(element=element)
-            # Add to 'pois'
-            poi_nodes[element["id"]] = poi
+
+        if element["type"] == "node":
+            coord = _parse_node_to_coord(element=element)
+            # Add to coords
+            coords[element["id"]] = coord
+
+            if "tags" in element:
+                point = _parse_node_to_point(element=element)
+                # Add to 'points'
+                points[element["id"]] = point
+
         elif element["type"] == "way":
             # Parse POI area Polygon
             poi_area = _parse_osm_way(coords=coords, element=element)
@@ -355,8 +360,8 @@ def _create_gdf(polygon, tags):
             relations.append(element)
 
     # Create GeoDataFrames
-    gdf_nodes = gpd.GeoDataFrame(poi_nodes).T
-    gdf_nodes.crs = settings.default_crs
+    gdf_points = gpd.GeoDataFrame(points).T
+    gdf_points.crs = settings.default_crs
 
     gdf_ways = gpd.GeoDataFrame(poi_ways).T
     gdf_ways.crs = settings.default_crs
@@ -365,7 +370,7 @@ def _create_gdf(polygon, tags):
     gdf_ways = _parse_osm_relations(relations=relations, df_osm_ways=gdf_ways)
 
     # Combine GeoDataFrames
-    gdf = gdf_nodes.append(gdf_ways, sort=False)
+    gdf = gdf_points.append(gdf_ways, sort=False)
 
     # if caller requested pois within a polygon, only retain those that
     # fall within the polygon
