@@ -3,6 +3,7 @@
 import geopandas as gpd
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
+from shapely.geometry import LineString
 from shapely.geometry import Polygon
 
 from . import downloader
@@ -163,14 +164,53 @@ def _parse_node_to_point(element):
         point_geometry["element_type"] = "node"
 
     except Exception:
-        utils.log(f'Point has invalid geometry: {element["id"]}')
+        utils.log(f'OSM node {element["id"]} has invalid point geometry')
 
     return point_geometry
 
 
+def _parse_way_to_linestring(coords, element):
+    """
+    Parse linestring from open OSM 'way' element
+
+    Parameters
+    ----------
+    coords : dict
+        dict of node IDs and their lat, lng coordinates
+    element : JSON string
+        element type "way" in OSM response with matching start and end point
+
+    Returns
+    -------
+    linestring_geometry : dict
+        dict of OSM ID, LineString geometry, and any tags or
+        None if it cannot
+    """
+    nodes = element["nodes"]
+    
+    try:
+        geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
+
+        linestring_geometry = {"nodes": nodes, "geometry": geometry, "osmid": element["id"]}
+
+        if "tags" in element:
+            for tag in element["tags"]:
+                linestring_geometry[tag] = element["tags"][tag]
+        
+        # Add element_type
+        linestring_geometry["element_type"] = "way"
+
+        return linestring_geometry
+
+    except Exception:
+        # Don't think this will be triggered
+        # By design, Shapely will build invalid Polygons without complaint
+        utils.log(f'OSM way {element["id"]} has invalid LineString geometry.')
+
+
 def _parse_way_to_polygon(coords, element):
     """
-    Parse polygon from OSM element, type='way'.
+    Parse polygon from closed OSM 'way' element
 
     Parameters
     ----------
@@ -204,7 +244,7 @@ def _parse_way_to_polygon(coords, element):
     except Exception:
         # Don't think this will be triggered
         # By design, Shapely will build invalid Polygons without complaint
-        utils.log(f'Polygon {element["id"]} has invalid geometry.')
+        utils.log(f'OSM way {element["id"]} has invalid polygon geometry.')
 
 
 def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
@@ -331,6 +371,9 @@ def _create_gdf(polygon, tags):
     # Points
     point_geometries = {}
 
+    # LineStrings
+    linestring_geometries = {}
+
     # Polygons
     polygon_geometries = {}
 
@@ -350,11 +393,20 @@ def _create_gdf(polygon, tags):
                 point_geometries[element["id"]] = point_geometry
 
         elif element["type"] == "way":
-            # Parse Polygon
-            polygon_geometry = _parse_way_to_polygon(coords=coords, element=element)
-            if polygon_geometry:
-                # Add to 'polygons'
-                polygon_geometries[element["id"]] = polygon_geometry
+            # If the way is open, parse it as a LineString
+            if element["nodes"][0] != element["nodes"][-1]:
+                linestring_geometry = _parse_way_to_linestring(coords=coords, element=element)
+                if linestring_geometry:
+                    # Add to 'linestrings'
+                    linestring_geometries[element["id"]] = linestring_geometry
+
+            # If the way is closed, parse it as a Polygon
+            elif element["nodes"][0] == element["nodes"][-1]:
+                polygon_geometry = _parse_way_to_polygon(coords=coords, element=element)
+                if polygon_geometry:
+                    # Add to 'polygons'
+                    polygon_geometries[element["id"]] = polygon_geometry
+
 
         elif element["type"] == "relation":
             # Add relation to a relation list (needs to be parsed after
@@ -365,6 +417,9 @@ def _create_gdf(polygon, tags):
     gdf_points = gpd.GeoDataFrame(point_geometries).T
     gdf_points.crs = settings.default_crs
 
+    gdf_linestrings = gpd.GeoDataFrame(linestring_geometries).T
+    gdf_linestrings.crs = settings.default_crs
+
     gdf_polygons = gpd.GeoDataFrame(polygon_geometries).T
     gdf_polygons.crs = settings.default_crs
 
@@ -372,7 +427,8 @@ def _create_gdf(polygon, tags):
     gdf_polygons = _parse_osm_relations(relations=relations, df_osm_ways=gdf_polygons)
 
     # Combine GeoDataFrames
-    gdf = gdf_points.append(gdf_polygons, sort=False)
+    gdf = gdf_points.append(gdf_linestrings, sort=False)
+    gdf = gdf.append(gdf_polygons, sort=False)
 
     # if caller requested pois within a polygon, only retain those that
     # fall within the polygon
