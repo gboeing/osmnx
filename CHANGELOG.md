@@ -1,13 +1,14 @@
 # Change log
 
-## 0.15.0 (T.B.D.)
+## 0.15.0 (2020-06-30)
 
   - improve plotting defaults and streamline plot module speed and efficiency
   - improve color handling in plot module
   - improve route plotting
   - plot_graph_routes function now accepts multiple route colors
   - allow multiple elevation API providers
-  - consolidate_intersections function now accepts reconnect_edges param
+  - consolidate_intersections replaces update_edge_lengths param with reconnect_edges param
+  - fix geopackage file saving after consolidating intersections
   - add new geocoder module and move utils_geo.geocode function into it
   - replace gdf_from_place/s functions with geocoder.geocode_to_gdf
   - deprecate boundaries module
