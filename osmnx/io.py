@@ -41,13 +41,10 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8"):
     if not folder == "" and not os.path.exists(folder):
         os.makedirs(folder)
 
-    # convert undirected graph to geodataframes
+    # convert undirected graph to gdfs and stringify non-numeric columns
     gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
-
-    # make every non-numeric edge attribute (besides geometry) a string
-    for col in (c for c in gdf_edges.columns if not c == "geometry"):
-        if not pd.api.types.is_numeric_dtype(gdf_edges[col]):
-            gdf_edges[col] = gdf_edges[col].fillna("").astype(str)
+    gdf_nodes = _stringify_nonnumeric_cols(gdf_nodes)
+    gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
 
     # save the nodes and edges as GeoPackage layers
     gdf_nodes.to_file(filepath, layer="nodes", driver="GPKG", encoding=encoding)
@@ -88,18 +85,10 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8"):
     filepath_nodes = os.path.join(filepath, "nodes.shp")
     filepath_edges = os.path.join(filepath, "edges.shp")
 
-    # convert undirected graph to geodataframes
+    # convert undirected graph to gdfs and stringify non-numeric columns
     gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
-
-    # make every non-numeric edge attribute (besides geometry) a string
-    for col in (c for c in gdf_edges.columns if not c == "geometry"):
-        if not pd.api.types.is_numeric_dtype(gdf_edges[col]):
-            gdf_edges[col] = gdf_edges[col].fillna("").astype(str)
-
-    # make every non-numeric node attribute (besides geometry) a string
-    for col in (c for c in gdf_nodes.columns if not c == "geometry"):
-        if not pd.api.types.is_numeric_dtype(gdf_nodes[col]):
-            gdf_nodes[col] = gdf_nodes[col].fillna("").astype(str)
+    gdf_nodes = _stringify_nonnumeric_cols(gdf_nodes)
+    gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
 
     # save the nodes and edges as separate ESRI shapefiles
     gdf_nodes.to_file(filepath_nodes, encoding=encoding)
@@ -336,6 +325,31 @@ def _convert_edge_attr_types(G, node_type):
             del data["id"]
 
     return G
+
+
+def _stringify_nonnumeric_cols(gdf):
+    """
+    Make every non-numeric GeoDataFrame column (besides geometry) a string.
+
+    This allows proper serializing via Fiona of GeoDataFrames with mixed types
+    such as strings and ints in the same column.
+
+    Parameters
+    ----------
+    gdf : geopandas.GeoDataFrame
+        gdf to stringify non-numeric columns of
+
+    Returns
+    -------
+    gdf : geopandas.GeoDataFrame
+        gdf with non-numeric columns stringified
+    """
+    # stringify every non-numeric column other than geometry column
+    for col in (c for c in gdf.columns if not c == "geometry"):
+        if not pd.api.types.is_numeric_dtype(gdf[col]):
+            gdf[col] = gdf[col].fillna("").astype(str)
+
+    return gdf
 
 
 def save_graph_xml(
