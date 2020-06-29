@@ -105,10 +105,10 @@ def test_geometry_coords_rounding():
     shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
 
 
-def test_gdf_from_place():
+def test_geocode_to_gdf():
     # test loading spatial boundaries and plotting
-    city = ox.gdf_from_place(place1, buffer_dist=100)
-    city_projected = ox.projection.project_gdf(city, to_crs="epsg:3395")
+    city = ox.geocode_to_gdf(place1, buffer_dist=100)
+    city_projected = ox.project_gdf(city, to_crs="epsg:3395")
 
 
 def test_graph_from_xml():
