@@ -5,6 +5,7 @@ from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import LineString
 from shapely.geometry import Polygon
+from shapely.ops import polygonize
 
 from . import downloader
 from . import geocoder
@@ -152,33 +153,31 @@ def _parse_node_to_point(element):
     point_geometry : dict
         dict of OSM ID, Point geometry, and any tags
     """
-    try:
-        geometry = Point(element["lon"], element["lat"])
+    point = {}
+    point["osmid"] = element["id"]
+    point["element_type"] = "node"
 
-        point_geometry = {"osmid": element["id"], "geometry": geometry}
-
+    if "tags" in element:
         for tag in element["tags"]:
-            point_geometry[tag] = element["tags"][tag]
+            point[tag] = element["tags"][tag]
 
-        # Add element_type
-        point_geometry["element_type"] = "node"
+    geometry = Point(element["lon"], element["lat"])
 
-    except Exception:
-        utils.log(f'OSM node {element["id"]} has invalid point geometry')
+    point["geometry"] = geometry
 
-    return point_geometry
+    return point
 
 
-def _parse_way_to_line_or_polygon(coords, element):
+def _parse_way_to_linestring_or_polygon(element, coords):
     """
     Parse linestring or polygon from OSM 'way'
 
     Parameters
     ----------
-    coords : dict
-        dict of node IDs and their lat, lng coordinates
     element : JSON string
         element type "way" in OSM response with matching start and end point
+    coords : dict
+        dict of node IDs and their lat, lng coordinates
 
     Returns
     -------
@@ -187,30 +186,115 @@ def _parse_way_to_line_or_polygon(coords, element):
         None if it cannot
     """
     nodes = element["nodes"]
+
+    linestring_or_polygon = {}
+    linestring_or_polygon["osmid"] = element["id"]
+    linestring_or_polygon["element_type"] = "way"
+    linestring_or_polygon["nodes"] = nodes
+
+    if "tags" in element:
+        for tag in element["tags"]:
+            linestring_or_polygon[tag] = element["tags"][tag]
     
-    try:
-        # If the way is open, parse it as a LineString
-        if element["nodes"][0] != element["nodes"][-1]:
-            geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
-        # If the way is closed, parse it as a Polygon
-        elif element["nodes"][0] == element["nodes"][-1]:
-            geometry = Polygon([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
+    # If the way is open, parse it as a LineString
+    # If the way is closed, parse it as a Polygon
+    if element["nodes"][0] != element["nodes"][-1]:
+        geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
+    elif element["nodes"][0] == element["nodes"][-1]:
+        geometry = Polygon([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
 
-        line_or_polygon = {"nodes": nodes, "geometry": geometry, "osmid": element["id"]}
-
-        if "tags" in element:
-            for tag in element["tags"]:
-                line_or_polygon[tag] = element["tags"][tag]
+    linestring_or_polygon["geometry"] = geometry
         
-        # Add element_type
-        line_or_polygon["element_type"] = "way"
+    return linestring_or_polygon
 
-        return line_or_polygon
 
-    except Exception:
-        # Don't think this will be triggered
-        # By design, Shapely will build invalid Polygons without complaint
-        utils.log(f'OSM way {element["id"]} has invalid geometry.')
+def _parse_relation_to_multipolygon(element, linestrings_and_polygons):
+    """
+    Parse multipolygon from OSM relation (type:MultiPolygon).
+
+    See more information about relations from OSM documentation:
+    http://wiki.openstreetmap.org/wiki/Relation
+
+    Parameters
+    ----------
+    relations : list
+        OSM 'relation' items (dictionaries) in a list
+    df_osm_ways : geopandas..GeoDataFrame
+        OSM 'way' features as a GeoDataFrame that contains all the 'way'
+        features that will constitute the multipolygon relations
+
+    Returns
+    -------
+    df_osm_ways : geopandas.GeoDataFrame
+        GeoDataFrame with MultiPolygon representations of the relations and
+        the attributes associated with them.
+    """
+    # Parse member 'way' ids
+    member_way_refs = [
+        member["ref"] for member in element["members"] if member["type"] == "way"
+    ]
+    # Extract the ways
+    member_ways = [
+        linestrings_and_polygons[member_way_ref] for member_way_ref in member_way_refs
+    ]
+    # Extract the nodes of those ways
+    member_nodes = [
+        [member_way["nodes"] for member_way in member_ways]
+    ]
+
+    multipolygon = {}
+    multipolygon["osmid"] = element["id"]
+    multipolygon["element_type"] = "relation"
+    multipolygon["ways"] = member_way_refs
+    multipolygon["nodes"] = member_nodes
+
+    if "tags" in element:
+        for tag in element["tags"]:
+            multipolygon[tag] = element["tags"][tag]
+
+    try:
+        # Assemble MultiPolygon from linestrings and polygons
+        geometry = _assemble_multipolygon_geometry(element, linestrings_and_polygons)
+
+        multipolygon["geometry"] = geometry
+
+        return multipolygon
+
+    except Exception as e:
+        print(e)
+        utils.log(f'Could not parse OSM relation {element["id"]}')
+
+
+def _assemble_multipolygon_geometry(element, linestrings_and_polygons):
+    """
+
+    """
+    outer_member_geometries = []
+    inner_member_geometries = []
+
+    for member in element["members"]:
+        if ("type" in member) and (member["type"] == "way"):
+            if ("role" in member) and (member["role"] == "outer"):
+                outer_member_geometry = linestrings_and_polygons.get(member["ref"])["geometry"]
+                outer_member_geometries.append(outer_member_geometry)
+            elif ("role" in member) and (member["role"] == "inner"):
+                inner_member_geometry = linestrings_and_polygons.get(member["ref"])["geometry"]
+                inner_member_geometries.append(inner_member_geometry)
+
+    outer_polygons = list(polygonize(outer_member_geometries))
+    inner_polygons = list(polygonize(inner_member_geometries))
+
+    outer_polygons_with_holes = []
+
+    for outer_polygon in outer_polygons:
+        for inner_polygon in inner_polygons:
+            if inner_polygon.within(outer_polygon):
+                outer_polygon = outer_polygon.difference(inner_polygon)
+        outer_polygons_with_holes.append(outer_polygon)
+
+    geometry = MultiPolygon(outer_polygons_with_holes)
+
+    return geometry
 
 
 def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
@@ -243,77 +327,7 @@ def _invalid_multipoly_handler(gdf, relation, way_ids):  # pragma: no cover
         return None
 
 
-def _parse_osm_relations(relations, df_osm_ways):
-    """
-    Parse OSM relations (MultiPolygons) from ways and nodes.
-
-    See more information about relations from OSM documentation:
-    http://wiki.openstreetmap.org/wiki/Relation
-
-    Parameters
-    ----------
-    relations : list
-        OSM 'relation' items (dictionaries) in a list
-    df_osm_ways : geopandas..GeoDataFrame
-        OSM 'way' features as a GeoDataFrame that contains all the 'way'
-        features that will constitute the multipolygon relations
-
-    Returns
-    -------
-    df_osm_ways : geopandas.GeoDataFrame
-        GeoDataFrame with MultiPolygon representations of the relations and
-        the attributes associated with them.
-    """
-    gdf_relations = gpd.GeoDataFrame()
-
-    # Iterate over relations and extract the items
-    for relation in relations:
-        try:
-            if relation["tags"]["type"] == "multipolygon":
-                # Parse member 'way' ids
-                member_way_ids = [
-                    member["ref"] for member in relation["members"] if member["type"] == "way"
-                ]
-                # Extract the ways
-                member_ways = df_osm_ways.reindex(member_way_ids)
-                # Extract the nodes of those ways
-                member_nodes = list(member_ways["nodes"].values)
-                try:
-                    # Create MultiPolygon from geometries (exclude NaNs)
-                    multipoly = MultiPolygon(list(member_ways["geometry"]))
-                except Exception:
-                    multipoly = _invalid_multipoly_handler(
-                        gdf=member_ways, relation=relation, way_ids=member_way_ids
-                    )
-
-                if multipoly:
-                    # Create GeoDataFrame with the tags and the MultiPolygon and its
-                    # 'ways' (ids), and the 'nodes' of those ways
-                    geo = gpd.GeoDataFrame(relation["tags"], index=[relation["id"]])
-                    # Initialize columns (needed for .loc inserts)
-                    geo = geo.assign(
-                        geometry=None, ways=None, nodes=None, element_type=None, osmid=None
-                    )
-                    # Add attributes
-                    geo.loc[relation["id"], "geometry"] = multipoly
-                    geo.loc[relation["id"], "ways"] = member_way_ids
-                    geo.loc[relation["id"], "nodes"] = member_nodes
-                    geo.loc[relation["id"], "element_type"] = "relation"
-                    geo.loc[relation["id"], "osmid"] = relation["id"]
-
-                    # Append to relation GeoDataFrame
-                    gdf_relations = gdf_relations.append(geo, sort=False)
-                    # Remove such 'ways' from 'df_osm_ways' that are part of the 'relation'
-                    df_osm_ways = df_osm_ways.drop(member_way_ids)
-        except Exception:
-            utils.log(f'Could not parse OSM relation {relation["id"]}')
-
-    # Merge df_osm_ways and the gdf_relations
-    df_osm_ways = df_osm_ways.append(gdf_relations, sort=False)
-    return df_osm_ways
-
-
-def _create_gdf(polygon, tags):
+def _create_gdf(polygon, tags, response=None):
     """
     Create GeoDataFrame from json returned by Overpass API.
 
@@ -329,56 +343,50 @@ def _create_gdf(polygon, tags):
     gdf : geopandas.GeoDataFrame
         geometries and their associated tags
     """
-    response = _get_overpass_response(polygon, tags)
+    if response is None:
+        response = _get_overpass_response(polygon, tags)
 
-    # Dict to hold all node coordinates in the response
+    # Dictionaries to hold intermediate geometries
     coords = {}
-
-    # Points
-    point_geometries = {}
-
-    # Lines and Polygons
-    line_and_polygon_geometries = {}
-
-    # A list of POI relations
-    relations = []
+    points = {}
+    linestrings_and_polygons = {}
+    multipolygons = {}
 
     for element in response["elements"]:
 
         if element["type"] == "node":
+            # Parse all nodes to coords
             coord = _parse_node_to_coord(element=element)
-            # Add to coords
             coords[element["id"]] = coord
 
-            if "tags" in element:
-                point_geometry = _parse_node_to_point(element=element)
-                # Add to 'points'
-                point_geometries[element["id"]] = point_geometry
+            # Parse nodes tagged with requested tags to points
+            if "tags" in element and (any([key in element["tags"].keys() for key in tags.keys()])):
+                point = _parse_node_to_point(element=element)
+                points[element["id"]] = point
 
         elif element["type"] == "way":
+            # Parse all ways to linestrings or polygons
+            linestring_or_polygon = _parse_way_to_linestring_or_polygon(element=element, coords=coords)
+            if linestring_or_polygon:
+                linestrings_and_polygons[element["id"]] = linestring_or_polygon
 
-                line_or_polygon = _parse_way_to_line_or_polygon(coords=coords, element=element)
-                if line_or_polygon:
-                    # Add to 'line_and_polygon_geometries'
-                    line_and_polygon_geometries[element["id"]] = line_or_polygon
-
-        elif element["type"] == "relation":
-            # Add relation to a relation list (needs to be parsed after
-            # all nodes and ways have been parsed)
-            relations.append(element)
+        elif element["type"] == "relation" and element["tags"]["type"] == "multipolygon":
+            # Parse all multipolygon relations to multipolygons
+            multipolygon = _parse_relation_to_multipolygon(element=element, linestrings_and_polygons=linestrings_and_polygons)
+            if multipolygon:
+                multipolygons[element["id"]] = multipolygon
 
     # Create GeoDataFrames
-    gdf_points = gpd.GeoDataFrame(point_geometries).T
-    gdf_points.crs = settings.default_crs
-
-    gdf_lines_and_polygons = gpd.GeoDataFrame(line_and_polygon_geometries).T
-    gdf_lines_and_polygons.crs = settings.default_crs
-
-    # Parse relations (MultiPolygons) from 'ways'
-    gdf_lines_and_polygons = _parse_osm_relations(relations=relations, df_osm_ways=gdf_lines_and_polygons)
+    gdf_points = gpd.GeoDataFrame.from_dict(points, orient="index")
+    gdf_lines_and_polygons = gpd.GeoDataFrame.from_dict(linestrings_and_polygons, orient="index")
+    gdf_multipolygons = gpd.GeoDataFrame.from_dict(multipolygons, orient="index")
 
     # Combine GeoDataFrames
     gdf = gdf_points.append(gdf_lines_and_polygons, sort=False)
+    gdf = gdf.append(gdf_multipolygons, sort=False)
+
+    # Set default crs
+    gdf.crs = settings.default_crs
 
     # if caller requested pois within a polygon, only retain those that
     # fall within the polygon
