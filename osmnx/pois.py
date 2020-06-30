@@ -369,8 +369,9 @@ def _create_poi_gdf(polygon, tags):
     # within the polygon
     if len(gdf) > 0:
         gdf_proj = projection.project_gdf(gdf)
-        polygon_proj, crs = projection.project_geometry(polygon)
-        gdf_proj.loc[gdf_proj["geometry"].centroid.within(polygon_proj)]
+        poly_proj, crs = projection.project_geometry(polygon)
+        to_keep = gdf_proj.centroid.within(poly_proj)
+        gdf_proj = gdf_proj.loc[to_keep]
         gdf = projection.project_gdf(gdf_proj, to_latlong=True)
 
     return gdf
