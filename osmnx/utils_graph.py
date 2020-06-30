@@ -53,7 +53,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             geom = (Point(d["x"], d["y"]) for d in data)
             gdf_nodes = gpd.GeoDataFrame(data, index=nodes, crs=crs, geometry=list(geom))
         else:
-            gdf_nodes = gpd.GeoDataFrame(data, index=nodes, crs=crs)
+            gdf_nodes = gpd.GeoDataFrame(data, index=nodes)
 
         to_return.append(gdf_nodes)
         utils.log("Created nodes GeoDataFrame from graph")
@@ -82,11 +82,12 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             gdf_edges = gpd.GeoDataFrame(data, crs=crs, geometry=list(geom))
 
         else:
-            gdf_edges = gpd.GeoDataFrame(data, crs=crs)
-            # if no edges had a geometry attribute, create null column
+            gdf_edges = gpd.GeoDataFrame(data)
             if "geometry" not in gdf_edges.columns:
+                # if no edges have a geometry attribute, create null column
                 gdf_edges["geometry"] = np.nan
             gdf_edges.set_geometry("geometry")
+            gdf_edges.crs = crs
 
         # add u, v, key attributes as columns
         gdf_edges["u"] = u
@@ -123,7 +124,8 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     G : networkx.MultiDiGraph
     """
     if graph_attrs is None:
-        graph_attrs = {"crs": gdf_nodes.crs}
+        crs = gdf_nodes.crs if gdf_nodes.crs is not None else gdf_edges.crs
+        graph_attrs = {"crs": crs}
     G = nx.MultiDiGraph(**graph_attrs)
 
     # add the nodes then each node's non-null attributes
