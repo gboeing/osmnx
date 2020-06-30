@@ -1,6 +1,7 @@
 """Download and plot footprints from OpenStreetMap."""
 
 import geopandas as gpd
+import numpy as np
 from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
@@ -114,6 +115,10 @@ def _create_footprints_gdf(
 
     # Convert footprints dictionary to a GeoDataFrame
     gdf = gpd.GeoDataFrame.from_dict(footprints, orient="index")
+    if "geometry" not in gdf.columns:
+        # if there is no geometry column, create a null column
+        gdf["geometry"] = np.nan
+    gdf.set_geometry("geometry")
     gdf.crs = settings.default_crs
 
     # filter the gdf to only include valid Polygons/MultiPolygons if retain_invalid is False

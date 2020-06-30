@@ -7,6 +7,7 @@ from shapely.geometry import Polygon
 
 from . import downloader
 from . import geocoder
+from . import projection
 from . import settings
 from . import utils
 from . import utils_geo
@@ -364,10 +365,14 @@ def _create_poi_gdf(polygon, tags):
     # Combine GeoDataFrames
     gdf = gdf_nodes.append(gdf_ways, sort=False)
 
-    # if caller requested pois within a polygon, only retain those that
-    # fall within the polygon
+    # if caller requested pois within a polygon, only retain those that fall
+    # within the polygon
     if len(gdf) > 0:
-        gdf = gdf.loc[gdf["geometry"].centroid.within(polygon)]
+        gdf_proj = projection.project_gdf(gdf)
+        poly_proj, crs = projection.project_geometry(polygon)
+        to_keep = gdf_proj.centroid.within(poly_proj)
+        gdf_proj = gdf_proj.loc[to_keep]
+        gdf = projection.project_gdf(gdf_proj, to_latlong=True)
 
     return gdf
 
