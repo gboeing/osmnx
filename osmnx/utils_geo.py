@@ -1,8 +1,6 @@
 """Geospatial utility functions."""
 
 import math
-import warnings
-from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
@@ -14,51 +12,9 @@ from shapely.geometry import Point
 from shapely.geometry import Polygon
 from shapely.ops import split
 
-from . import downloader
 from . import projection
 from . import settings
 from . import utils
-
-
-def geocode(query):
-    """
-    Use `geocoder.geocode()` instead (deprecated).
-
-    Parameters
-    ----------
-    query : string
-        the query string to geocode
-
-    Returns
-    -------
-    point : tuple
-        the (lat, lng) coordinates returned by the geocoder
-    """
-    msg = (
-        "The `geocode` function has been moved from `utils_geo` to the "
-        "new `geocoder` module. Access it there accordingly."
-    )
-    warnings.warn(msg)
-
-    # define the parameters
-    params = OrderedDict()
-    params["format"] = "json"
-    params["limit"] = 1
-    params[
-        "dedupe"
-    ] = 0  # prevent OSM from deduping results so we get precisely 'limit' # of results
-    params["q"] = query
-    response_json = downloader.nominatim_request(params=params)
-
-    # if results were returned, parse lat and long out of the result
-    if len(response_json) > 0 and "lat" in response_json[0] and "lon" in response_json[0]:
-        lat = float(response_json[0]["lat"])
-        lng = float(response_json[0]["lon"])
-        point = (lat, lng)
-        utils.log(f'Geocoded "{query}" to {point}')
-        return point
-    else:
-        raise Exception(f'Nominatim geocoder returned no results for query "{query}"')
 
 
 def redistribute_vertices(geom, dist):

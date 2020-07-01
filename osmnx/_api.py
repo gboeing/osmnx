@@ -1,8 +1,6 @@
 """Expose most common parts of public API directly in `osmnx.` namespace."""
 
 from .bearing import add_edge_bearings
-from .boundaries import gdf_from_place
-from .boundaries import gdf_from_places
 from .distance import get_nearest_edge
 from .distance import get_nearest_edges
 from .distance import get_nearest_node
