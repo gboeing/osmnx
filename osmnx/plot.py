@@ -478,12 +478,12 @@ def plot_figure_ground(
         raise ValueError("You must pass an address or lat-lng point or graph.")
 
     # we need an undirected graph to find every edge incident to a node
-    G_undir = utils_graph.get_undirected(G)
+    Gu = utils_graph.get_undirected(G)
 
     # for each edge, get a linewidth according to street type
     edge_linewidths = []
-    for _, _, data in G_undir.edges(keys=False, data=True):
-        street_type = data["highway"][0] if isinstance(data["highway"], list) else data["highway"]
+    for _, _, d in Gu.edges(keys=False, data=True):
+        street_type = d["highway"][0] if isinstance(d["highway"], list) else d["highway"]
         if street_type in street_widths:
             edge_linewidths.append(street_widths[street_type])
         else:
@@ -492,12 +492,10 @@ def plot_figure_ground(
     if smooth_joints:
         # for each node, get a nodesize according to the narrowest incident edge
         node_widths = {}
-        for node in G_undir.nodes():
+        for node in Gu.nodes():
             # first, identify all the highway types of this node's incident edges
-            incident_edges_data = [
-                G_undir.get_edge_data(node, neighbor) for neighbor in G_undir.neighbors(node)
-            ]
-            edge_types = [data[0]["highway"] for data in incident_edges_data]
+            ie_data = [Gu.get_edge_data(node, nbr) for nbr in Gu.neighbors(node)]
+            edge_types = [d[min(d)]["highway"] for d in ie_data]
             if len(edge_types) < 1:
                 # if node has no incident edges, make size zero
                 node_widths[node] = 0
@@ -524,7 +522,7 @@ def plot_figure_ground(
                 node_widths[node] = circle_area
 
         # assign the node size to each node in the graph
-        node_sizes = [node_widths[node] for node in G_undir.nodes()]
+        node_sizes = [node_widths[node] for node in Gu.nodes()]
     else:
         node_sizes = 0
 
@@ -535,7 +533,7 @@ def plot_figure_ground(
     override = {"bbox", "node_size", "node_color", "edge_linewidth"}
     kwargs = {k: v for k, v in pg_kwargs.items() if k not in override}
     fig, ax = plot_graph(
-        G=G_undir,
+        G=Gu,
         bbox=bbox,
         figsize=figsize,
         node_size=node_sizes,
