@@ -300,15 +300,14 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     """
     stats = {}
 
-    # create a DiGraph from the MultiDiGraph, for those metrics that require it
-    G_dir = nx.DiGraph(G)
+    # create DiGraph from the MultiDiGraph, for those metrics that need it
+    G_dir = utils_graph.get_digraph(G, weight="length")
 
-    # create an undirected Graph from the MultiDiGraph, for those metrics that
-    # require it
-    G_undir = nx.Graph(G)
+    # create undirected Graph from the DiGraph, for those metrics that need it
+    G_undir = nx.Graph(D)
 
-    # get the largest strongly connected component, for those metrics that
-    # require strongly connected graphs
+    # get largest strongly connected component, for those metrics that require
+    # strongly connected graphs
     G_strong = utils_graph.get_largest_component(G, strongly=True)
 
     # average degree of the neighborhood of each node, and average for the graph
@@ -316,8 +315,7 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     stats["avg_neighbor_degree"] = avg_neighbor_degree
     stats["avg_neighbor_degree_avg"] = sum(avg_neighbor_degree.values()) / len(avg_neighbor_degree)
 
-    # average weighted degree of the neighborhood of each node, and average for
-    # the graph
+    # avg weighted degree of neighborhood of each node, and average for graph
     avg_wtd_nbr_deg = nx.average_neighbor_degree(G, weight="length")
     stats["avg_weighted_neighbor_degree"] = avg_wtd_nbr_deg
     stats["avg_weighted_neighbor_degree_avg"] = sum(avg_wtd_nbr_deg.values()) / len(avg_wtd_nbr_deg)
