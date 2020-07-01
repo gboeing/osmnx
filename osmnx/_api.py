@@ -52,3 +52,5 @@ from .utils import ts
 from .utils_graph import get_undirected
 from .utils_graph import graph_from_gdfs
 from .utils_graph import graph_to_gdfs
+from .utils_graph import k_shortest_paths
+from .utils_graph import shortest_path
