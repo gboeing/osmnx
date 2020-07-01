@@ -38,11 +38,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     geopandas.GeoDataFrame or tuple
         gdf_nodes or gdf_edges or tuple of (gdf_nodes, gdf_edges)
     """
-    if not (nodes or edges):
-        raise ValueError("You must request nodes or edges, or both.")
-
     crs = G.graph["crs"]
-    to_return = []
 
     if nodes:
 
@@ -55,7 +51,6 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         else:
             gdf_nodes = gpd.GeoDataFrame(data, index=nodes)
 
-        to_return.append(gdf_nodes)
         utils.log("Created nodes GeoDataFrame from graph")
 
     if edges:
@@ -94,13 +89,16 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         gdf_edges["v"] = v
         gdf_edges["key"] = k
 
-        to_return.append(gdf_edges)
         utils.log("Created edges GeoDataFrame from graph")
 
-    if len(to_return) > 1:
-        return tuple(to_return)
+    if nodes and edges:
+        return gdf_nodes, gdf_edges
+    elif nodes:
+        return gdf_nodes
+    elif edges:
+        return gdf_edges
     else:
-        return to_return[0]
+        raise ValueError("You must request nodes or edges or both.")
 
 
 def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
