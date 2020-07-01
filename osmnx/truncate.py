@@ -149,22 +149,16 @@ def truncate_graph_polygon(
     G = G.copy()
     utils.log("Identifying all nodes that lie outside the polygon...")
 
-    # get a GeoDataFrame of all the nodes
-    node_geom = [Point(data["x"], data["y"]) for _, data in G.nodes(data=True)]
-    gdf_nodes = gpd.GeoDataFrame({"node": list(G.nodes()), "geometry": node_geom})
-    gdf_nodes.crs = G.graph["crs"]
-
-    # find all the nodes in the graph that lie outside the polygon
-    points_within_geometry = utils_geo._intersect_index_quadrats(
-        gdf_nodes, polygon, quadrat_width=quadrat_width, min_num=min_num
-    )
-    nodes_outside_polygon = gdf_nodes[~gdf_nodes.index.isin(points_within_geometry.index)]
+    # find all the nodes that lie outside the polygon
+    gdf_nodes = utils_graph.graph_to_gdfs(edges=False, node_geometry=True)
+    to_keep = utils_geo._intersect_index_quadrats(gdf_nodes, polygon, quadrat_width, min_num)
+    nodes_outside_polygon = gdf_nodes[~gdf_nodes.index.isin(to_keep.index)]
 
     if truncate_by_edge:
         nodes_to_remove = []
         for node in nodes_outside_polygon["node"]:
-            neighbors = pd.Series(list(G.successors(node)) + list(G.predecessors(node)))
             # check if all the neighbors of this node also lie outside polygon
+            neighbors = pd.Series(list(G.successors(node)) + list(G.predecessors(node)))
             if neighbors.isin(nodes_outside_polygon["node"]).all():
                 nodes_to_remove.append(node)
     else:
@@ -172,7 +166,7 @@ def truncate_graph_polygon(
 
     # now remove from the graph all those nodes that lie outside the polygon
     G.remove_nodes_from(nodes_to_remove)
-    utils.log(f"Removed {len(nodes_outside_polygon)} nodes outside polygon")
+    utils.log(f"Removed {len(nodes_to_remove)} nodes outside polygon")
 
     if not retain_all:
         # remove any isolated nodes and retain only the largest component
