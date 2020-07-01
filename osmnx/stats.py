@@ -129,7 +129,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     # calculate the total and average street segment lengths (so, edges without
     # double-counting two-way streets)
     if Gu is None:
-        Gu = G.to_undirected(reciprocal=False)
+        Gu = utils_graph.get_undirected(G)
     street_length_total = sum([d["length"] for u, v, d in Gu.edges(data=True)])
     street_segments_count = len(Gu.edges(keys=True))
     street_length_avg = street_length_total / street_segments_count

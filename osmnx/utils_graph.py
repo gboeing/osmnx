@@ -593,7 +593,7 @@ def get_undirected(G):
     """
     Convert MultiDiGraph to MultiGraph.
 
-    Maintains parallel edges if their geometries differ. Note: see also
+    Maintains parallel edges only if their geometries differ. Note: see also
     `get_digraph` to convert MultiDiGraph to DiGraph.
 
     Parameters

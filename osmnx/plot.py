@@ -478,7 +478,7 @@ def plot_figure_ground(
         raise ValueError("You must pass an address or lat-lng point or graph.")
 
     # we need an undirected graph to find every edge incident to a node
-    G_undir = G.to_undirected()
+    G_undir = utils_graph.get_undirected(G)
 
     # for each edge, get a linewidth according to street type
     edge_linewidths = []
