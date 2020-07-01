@@ -81,7 +81,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
                 area in square kilometers
     """
     sq_m_in_sq_km = 1e6  # there are 1 million sq meters in 1 sq km
-    G_undirected = None
+    Gu = None
 
     # calculate the number of nodes, n, and the number of edges, m, in the graph
     n = len(G)
@@ -96,32 +96,31 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
         # the directed graph, but rather represents the number of streets
         # (unidirected edges) emanating from each node. see
         # count_streets_per_node function.
-        streets_per_node = G.graph["streets_per_node"]
+        spn = G.graph["streets_per_node"]
     else:
         # count how many street segments emanate from each node in this graph
-        streets_per_node = utils_graph.count_streets_per_node(G)
+        spn = utils_graph.count_streets_per_node(G)
 
     # count number of intersections in graph, as nodes with >1 street emanating
     # from them
     node_ids = set(G.nodes())
     intersection_count = len(
-        [True for node, count in streets_per_node.items() if (count > 1) and (node in node_ids)]
+        [True for node, count in spn.items() if (count > 1) and (node in node_ids)]
     )
 
-    # calculate the average number of streets (unidirected edges) incident to
-    # each node
-    streets_per_node_avg = sum(streets_per_node.values()) / n
+    # calculate streets-per-node average: the average number of streets
+    # (unidirected edges) incident to each node
+    spna = sum(spn.values()) / n
 
+    # calculate streets-per-node counts
     # create a dict where key = number of streets (unidirected edges) incident
     # to each node, and value = how many nodes are of this number in the graph
-    streets_per_node_counts = {
-        num: list(streets_per_node.values()).count(num)
-        for num in range(max(streets_per_node.values()) + 1)
-    }
+    spnc = {num: list(spn.values()).count(num) for num in range(max(spn.values()) + 1)}
 
+    # calculate streets-per-node proportion
     # degree proportions: dict where key = each degree and value = what
     # proportion of nodes are of this degree in the graph
-    streets_per_node_proportion = {num: count / n for num, count in streets_per_node_counts.items()}
+    spnp = {num: count / n for num, count in spnc.items()}
 
     # calculate the total and average edge lengths
     edge_length_total = sum([d["length"] for u, v, d in G.edges(data=True)])
@@ -129,18 +128,16 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
 
     # calculate the total and average street segment lengths (so, edges without
     # double-counting two-way streets)
-    if G_undirected is None:
-        G_undirected = G.to_undirected(reciprocal=False)
-    street_length_total = sum([d["length"] for u, v, d in G_undirected.edges(data=True)])
-    street_segments_count = len(G_undirected.edges(keys=True))
+    if Gu is None:
+        Gu = G.to_undirected(reciprocal=False)
+    street_length_total = sum([d["length"] for u, v, d in Gu.edges(data=True)])
+    street_segments_count = len(Gu.edges(keys=True))
     street_length_avg = street_length_total / street_segments_count
 
     # calculate clean intersection counts
     if clean_intersects:
-        clean_intersection_points = simplification.consolidate_intersections(
-            G, tolerance=tolerance, rebuild_graph=False, dead_ends=False
-        )
-        clean_intersection_count = len(clean_intersection_points)
+        points = simplification.consolidate_intersections(G, tolerance, False, False)
+        clean_intersection_count = len(points)
     else:
         clean_intersection_count = None
 
@@ -215,9 +212,9 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
         "m": m,
         "k_avg": k_avg,
         "intersection_count": intersection_count,
-        "streets_per_node_avg": streets_per_node_avg,
-        "streets_per_node_counts": streets_per_node_counts,
-        "streets_per_node_proportion": streets_per_node_proportion,
+        "streets_per_node_avg": spna,
+        "streets_per_node_counts": spnc,
+        "streets_per_node_proportion": spnp,
         "edge_length_total": edge_length_total,
         "edge_length_avg": edge_length_avg,
         "street_length_total": street_length_total,
@@ -301,14 +298,14 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     stats = {}
 
     # create DiGraph from the MultiDiGraph, for those metrics that need it
-    G_dir = utils_graph.get_digraph(G, weight="length")
+    D = utils_graph.get_digraph(G, weight="length")
 
     # create undirected Graph from the DiGraph, for those metrics that need it
-    G_undir = nx.Graph(D)
+    Gu = nx.Graph(D)
 
     # get largest strongly connected component, for those metrics that require
     # strongly connected graphs
-    G_strong = utils_graph.get_largest_component(G, strongly=True)
+    Gs = utils_graph.get_largest_component(G, strongly=True)
 
     # average degree of the neighborhood of each node, and average for the graph
     avg_neighbor_degree = nx.average_neighbor_degree(G)
@@ -326,20 +323,20 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     stats["degree_centrality_avg"] = sum(degree_centrality.values()) / len(degree_centrality)
 
     # calculate clustering coefficient for the nodes
-    stats["clustering_coefficient"] = nx.clustering(G_undir)
+    stats["clustering_coefficient"] = nx.clustering(Gu)
 
     # average clustering coefficient for the graph
-    stats["clustering_coefficient_avg"] = nx.average_clustering(G_undir)
+    stats["clustering_coefficient_avg"] = nx.average_clustering(Gu)
 
     # calculate weighted clustering coefficient for the nodes
-    stats["clustering_coefficient_weighted"] = nx.clustering(G_undir, weight="length")
+    stats["clustering_coefficient_weighted"] = nx.clustering(Gu, weight="length")
 
     # average clustering coefficient (weighted) for the graph
-    stats["clustering_coefficient_weighted_avg"] = nx.average_clustering(G_undir, weight="length")
+    stats["clustering_coefficient_weighted_avg"] = nx.average_clustering(Gu, weight="length")
 
     # pagerank: a ranking of the nodes in the graph based on the structure of
     # the incoming links
-    pagerank = nx.pagerank(G_dir, weight="length")
+    pagerank = nx.pagerank(D, weight="length")
     stats["pagerank"] = pagerank
 
     # node with the highest page rank, and its value
@@ -357,11 +354,11 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
 
         # node connectivity is the minimum number of nodes that must be removed
         # to disconnect G or render it trivial
-        stats["node_connectivity"] = nx.node_connectivity(G_strong)
+        stats["node_connectivity"] = nx.node_connectivity(Gs)
 
         # edge connectivity is equal to the minimum number of edges that must be
         # removed to disconnect G or render it trivial
-        stats["edge_connectivity"] = nx.edge_connectivity(G_strong)
+        stats["edge_connectivity"] = nx.edge_connectivity(Gs)
         utils.log("Calculated node and edge connectivity")
 
     # if True, calculate average node connectivity
@@ -378,31 +375,31 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
         # precompute shortest paths between all nodes for eccentricity-based
         # stats
         sp = {
-            source: dict(nx.single_source_dijkstra_path_length(G_strong, source, weight="length"))
-            for source in G_strong.nodes()
+            source: dict(nx.single_source_dijkstra_path_length(Gs, source, weight="length"))
+            for source in Gs.nodes()
         }
 
         utils.log("Calculated shortest path lengths")
 
         # eccentricity of a node v is the maximum distance from v to all other
         # nodes in G
-        eccentricity = nx.eccentricity(G_strong, sp=sp)
+        eccentricity = nx.eccentricity(Gs, sp=sp)
         stats["eccentricity"] = eccentricity
 
         # diameter is the maximum eccentricity
-        diameter = nx.diameter(G_strong, e=eccentricity)
+        diameter = nx.diameter(Gs, e=eccentricity)
         stats["diameter"] = diameter
 
         # radius is the minimum eccentricity
-        radius = nx.radius(G_strong, e=eccentricity)
+        radius = nx.radius(Gs, e=eccentricity)
         stats["radius"] = radius
 
         # center is the set of nodes with eccentricity equal to radius
-        center = nx.center(G_strong, e=eccentricity)
+        center = nx.center(Gs, e=eccentricity)
         stats["center"] = center
 
         # periphery is the set of nodes with eccentricity equal to the diameter
-        periphery = nx.periphery(G_strong, e=eccentricity)
+        periphery = nx.periphery(Gs, e=eccentricity)
         stats["periphery"] = periphery
 
     # if True, calculate node closeness centrality
@@ -421,7 +418,7 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
         # betweenness centrality of a node is the sum of the fraction of
         # all-pairs shortest paths that pass through node
         # networkx 2.4+ implementation cannot run on Multi(Di)Graphs, so use DiGraph
-        betweenness_centrality = nx.betweenness_centrality(G_dir, weight="length")
+        betweenness_centrality = nx.betweenness_centrality(D, weight="length")
         stats["betweenness_centrality"] = betweenness_centrality
         stats["betweenness_centrality_avg"] = sum(betweenness_centrality.values()) / len(
             betweenness_centrality
