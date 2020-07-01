@@ -1,7 +1,7 @@
 """Graph utility functions."""
 
-from collections import Counter
 import itertools
+from collections import Counter
 
 import geopandas as gpd
 import networkx as nx
@@ -141,7 +141,7 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     return G
 
 
-def shortest_path(G, orig, dest, weight='length'):
+def shortest_path(G, orig, dest, weight="length"):
     """
     Get shortest path from origin node to destination node.
 
@@ -168,7 +168,7 @@ def shortest_path(G, orig, dest, weight='length'):
     return path
 
 
-def k_shortest_paths(G, orig, dest, k, weight='length'):
+def k_shortest_paths(G, orig, dest, k, weight="length"):
     """
     Get k shortest paths from origin node to destination node.
 
@@ -318,6 +318,7 @@ def get_route_edge_attributes(
         function called with the edge nodes as parameters to retrieve a
         default value, if the edge does not contain the given attribute
         (otherwise a `KeyError` is raised)
+
     Returns
     -------
     attribute_values : list
@@ -554,7 +555,7 @@ def _update_edge_keys(G):
     return G
 
 
-def get_digraph(G, weight='length'):
+def get_digraph(G, weight="length"):
     """
     Convert MultiDiGraph to DiGraph.
 
