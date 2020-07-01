@@ -145,6 +145,8 @@ def shortest_path(G, orig, dest, weight='length'):
     """
     Get shortest path from origin node to destination node.
 
+    See also `k_shortest_paths` to get multiple shortest paths.
+
     Parameters
     ----------
     G : networkx.MultiDiGraph
@@ -170,6 +172,8 @@ def k_shortest_paths(G, orig, dest, k, weight='length'):
     """
     Get k shortest paths from origin node to destination node.
 
+    See also `shortest_path` to get just the one shortest path.
+
     Parameters
     ----------
     G : networkx.MultiDiGraph
@@ -187,8 +191,8 @@ def k_shortest_paths(G, orig, dest, k, weight='length'):
     Returns
     -------
     generator
-        a generator of k shortest paths ordered by length. each path is a list
-        of node IDs.
+        a generator of k shortest paths ordered by total weight. each path is
+        a list of node IDs.
     """
     paths_gen = nx.shortest_simple_paths(get_digraph(G, weight), orig, dest, weight)
     for path in itertools.islice(paths_gen, 0, k):
