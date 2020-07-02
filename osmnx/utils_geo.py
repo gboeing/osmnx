@@ -3,7 +3,6 @@
 import math
 
 import numpy as np
-import pandas as pd
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
 from shapely.geometry import MultiPoint
@@ -338,7 +337,7 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3):
     return geometry
 
 
-def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3):
+def _intersect_index_quadrats(points, geometry, quadrat_width=0.05, min_num=3):
     """
     Intersect points with a polygon.
 
@@ -347,8 +346,8 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3):
 
     Parameters
     ----------
-    gdf : geopandas.GeoDataFrame
-        the set of points to intersect
+    points : geopandas.GeoSeries
+        the points to intersect
     geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the geometry to intersect with the points
     quadrat_width : numeric
@@ -361,42 +360,36 @@ def _intersect_index_quadrats(gdf, geometry, quadrat_width=0.05, min_num=3):
 
     Returns
     -------
-    points_within_geometry : geopandas.GeoDataFrame
+    points_in_geom : set
     """
-    # create an empty dataframe to append matches to
-    points_within_geometry = pd.DataFrame()
-
     # cut the geometry into chunks for r-tree spatial index intersecting
     multipoly = _quadrat_cut_geometry(geometry, quadrat_width=quadrat_width, min_num=min_num)
 
     # create an r-tree spatial index for the nodes (ie, points)
-    sindex = gdf["geometry"].sindex
-    utils.log(f"Created r-tree spatial index for {len(gdf)} points")
+    sindex = points.sindex
+    utils.log(f"Created r-tree spatial index for {len(points)} points")
 
     # loop through each chunk of the geometry to find approximate and then
     # precisely intersecting points
+    points_in_geom = set()
     for poly in multipoly:
+        # find approximate matches with spatial index, then precise matches
+        # from those approximate ones
         poly = poly.buffer(0)
-
-        # find approximate matches with r-tree, then precise matches from those
-        # approximate ones
         if poly.is_valid and poly.area > 0:
-            possible_matches_index = list(sindex.intersection(poly.bounds))
-            possible_matches = gdf.iloc[possible_matches_index]
+            possible_matches_iloc = sindex.intersection(poly.bounds)
+            possible_matches = points.iloc[list(possible_matches_iloc)]
             precise_matches = possible_matches[possible_matches.intersects(poly)]
-            points_within_geometry = points_within_geometry.append(precise_matches)
+            points_in_geom.update(precise_matches.index)
 
-    if len(points_within_geometry) > 0:
-        # drop duplicate points if any
-        points_within_geometry = points_within_geometry.drop_duplicates(subset="node")
-    else:
+    if len(points_in_geom) < 1:
         # after simplifying the graph, and given the requested network type,
         # there are no nodes inside the polygon - can't create graph from that
         # so throw error
         raise Exception("There are no nodes within the requested geometry")
 
-    utils.log(f"Identified {len(points_within_geometry)} nodes inside polygon")
-    return points_within_geometry
+    utils.log(f"Identified {len(points_in_geom)} nodes inside polygon")
+    return points_in_geom
 
 
 def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
