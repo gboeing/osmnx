@@ -416,6 +416,11 @@ def _create_gdf(polygon, tags, response=None):
     # Set default crs
     gdf.crs = settings.default_crs
 
+    # Intersect the tags and column names to be sure the tags are present in the columns
+    tags_present_in_columns = set(tags.keys()).intersection(set(gdf.columns))
+    # Select rows which have any non-null value in those columns
+    gdf = gdf[gdf[tags_present_in_columns].notna().any(axis=1)]
+
     # if caller requested pois within a polygon, only retain those that
     # fall within the polygon
     if len(gdf) > 0:
