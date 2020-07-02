@@ -1,10 +1,11 @@
 """Download geometries from OpenStreetMap."""
 
 import geopandas as gpd
-from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import LineString
 from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon
+from shapely.ops import linemerge
 from shapely.ops import polygonize
 
 from . import downloader
@@ -252,37 +253,59 @@ def _parse_relation_to_multipolygon(element, linestrings_and_polygons):
         for tag in element["tags"]:
             multipolygon[tag] = element["tags"][tag]
 
-    try:
-        # Assemble MultiPolygon from linestrings and polygons
-        geometry = _assemble_multipolygon_geometry(element, linestrings_and_polygons)
+    # Assemble MultiPolygon from linestrings and polygons
+    geometry = _assemble_multipolygon_geometry(element, linestrings_and_polygons)
 
-        multipolygon["geometry"] = geometry
+    multipolygon["geometry"] = geometry
 
-        return multipolygon
-
-    except Exception as e:
-        print(e)
-        utils.log(f'Could not parse OSM relation {element["id"]}')
+    return multipolygon
 
 
 def _assemble_multipolygon_geometry(element, linestrings_and_polygons):
     """
 
     """
-    outer_member_geometries = []
-    inner_member_geometries = []
+    outer_polygons = []
+    inner_polygons = []
+    outer_linestrings = []
+    inner_linestrings = []
 
+    # get the ways that make up the multipolygon relation from linestrings_and_polygons
     for member in element["members"]:
-        if ("type" in member) and (member["type"] == "way"):
-            if ("role" in member) and (member["role"] == "outer"):
-                outer_member_geometry = linestrings_and_polygons.get(member["ref"])["geometry"]
-                outer_member_geometries.append(outer_member_geometry)
-            elif ("role" in member) and (member["role"] == "inner"):
-                inner_member_geometry = linestrings_and_polygons.get(member["ref"])["geometry"]
-                inner_member_geometries.append(inner_member_geometry)
+        if (member.get("type") == "way"):
+            # get the referenced linestring or polygon
+            linestring_or_polygon = linestrings_and_polygons.get(member["ref"])
+            # sort it into one of the lists according to its role and geometry
+            if (member.get("role") == "outer") and (linestring_or_polygon["geometry"].geom_type == 'Polygon'):
+                outer_polygons.append(linestring_or_polygon["geometry"])
+            elif (member.get("role") == "inner") and (linestring_or_polygon["geometry"].geom_type == 'Polygon'):
+                inner_polygons.append(linestring_or_polygon["geometry"])
+            elif (member.get("role") == "outer") and (linestring_or_polygon["geometry"].geom_type == 'LineString'):
+                outer_linestrings.append(linestring_or_polygon["geometry"])
+            elif (member.get("role") == "inner") and (linestring_or_polygon["geometry"].geom_type == 'LineString'):
+                inner_linestrings.append(linestring_or_polygon["geometry"])
 
-    outer_polygons = list(polygonize(outer_member_geometries))
-    inner_polygons = list(polygonize(inner_member_geometries))
+    print('element["id"]:', element["id"])
+    print("outer_polygons:", outer_polygons)
+    print("inner_polygons:", inner_polygons)
+    print("outer_linestrings:", outer_linestrings)
+    print("inner_linestrings:", inner_linestrings)
+
+    # merge the open linestring fragments to complete closed linestrings
+    merged_outer_linestrings = linemerge(outer_linestrings)
+    if merged_outer_linestrings.geom_type == 'LineString':
+        outer_polygons += polygonize(merged_outer_linestrings)
+    elif merged_outer_linestrings.geom_type == 'MultiLineString':
+        outer_polygons += list(polygonize(merged_outer_linestrings))
+
+    merged_inner_linestrings = linemerge(inner_linestrings)
+    if merged_inner_linestrings.geom_type == 'LineString':
+        inner_polygons += polygonize(merged_inner_linestrings)
+    elif merged_inner_linestrings.geom_type == 'MultiLineString':
+        inner_polygons += list(polygonize(merged_inner_linestrings))
+
+    print("outer_polygons:", outer_polygons)
+    print("inner polygons:", inner_polygons)
 
     outer_polygons_with_holes = []
 
@@ -291,6 +314,8 @@ def _assemble_multipolygon_geometry(element, linestrings_and_polygons):
             if inner_polygon.within(outer_polygon):
                 outer_polygon = outer_polygon.difference(inner_polygon)
         outer_polygons_with_holes.append(outer_polygon)
+
+    print("outer_polygons_with_holes:", outer_polygons_with_holes)
 
     geometry = MultiPolygon(outer_polygons_with_holes)
 
