@@ -236,9 +236,11 @@ def simplify_graph(G, strict=True, remove_rings=True):
         raise Exception("This graph has already been simplified, cannot simplify it again.")
 
     utils.log("Begin topologically simplifying the graph...")
+
+    # make a copy to not edit the original graph object the caller passed in
     G = G.copy()
-    initial_node_count = len(list(G.nodes()))
-    initial_edge_count = len(list(G.edges()))
+    initial_node_count = len(G)
+    initial_edge_count = len(G.edges())
     all_nodes_to_remove = []
     all_edges_to_add = []
 
@@ -380,6 +382,8 @@ def consolidate_intersections(
             streets_per_node = utils_graph.count_streets_per_node(G)
 
         dead_end_nodes = [node for node, count in streets_per_node.items() if count <= 1]
+
+        # make a copy to not edit the original graph object the caller passed in
         G = G.copy()
         G.remove_nodes_from(dead_end_nodes)
 
