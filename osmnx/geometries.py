@@ -270,7 +270,7 @@ def _assemble_multipolygon_geometry(element, linestrings_and_polygons):
     outer_linestrings = []
     inner_linestrings = []
 
-    # get the ways that make up the multipolygon relation from linestrings_and_polygons
+    # get the linestrings and polygons that make up the multipolygon
     for member in element["members"]:
         if (member.get("type") == "way"):
             # get the referenced linestring or polygon
@@ -291,18 +291,21 @@ def _assemble_multipolygon_geometry(element, linestrings_and_polygons):
     print("outer_linestrings:", outer_linestrings)
     print("inner_linestrings:", inner_linestrings)
 
-    # merge the open linestring fragments to complete closed linestrings
+    # merge the open linestring fragments to a single LineString or a MultiLineString collection
+    # polygonize each closed linestring separately
     merged_outer_linestrings = linemerge(outer_linestrings)
     if merged_outer_linestrings.geom_type == 'LineString':
         outer_polygons += polygonize(merged_outer_linestrings)
     elif merged_outer_linestrings.geom_type == 'MultiLineString':
-        outer_polygons += list(polygonize(merged_outer_linestrings))
+        for merged_outer_linestring in list(merged_outer_linestrings):
+            outer_polygons += polygonize(merged_outer_linestring)
 
     merged_inner_linestrings = linemerge(inner_linestrings)
     if merged_inner_linestrings.geom_type == 'LineString':
         inner_polygons += polygonize(merged_inner_linestrings)
     elif merged_inner_linestrings.geom_type == 'MultiLineString':
-        inner_polygons += list(polygonize(merged_inner_linestrings))
+        for merged_inner_linestring in list(merged_inner_linestrings):
+            inner_polygons += polygonize(merged_inner_linestring)
 
     print("outer_polygons:", outer_polygons)
     print("inner polygons:", inner_polygons)
