@@ -339,7 +339,7 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3):
 
 def _intersect_index_quadrats(points, geometry, quadrat_width=0.05, min_num=3):
     """
-    Intersect points with a polygon.
+    Identify points that intersect a (multi)polygon.
 
     Use an r-tree spatial index and cut the polygon up into smaller
     sub-polygons for r-tree acceleration.
@@ -361,6 +361,7 @@ def _intersect_index_quadrats(points, geometry, quadrat_width=0.05, min_num=3):
     Returns
     -------
     points_in_geom : set
+        index labels of points that intersected geometry
     """
     # cut the geometry into chunks for r-tree spatial index intersecting
     multipoly = _quadrat_cut_geometry(geometry, quadrat_width=quadrat_width, min_num=min_num)
