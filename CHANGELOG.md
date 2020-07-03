@@ -1,5 +1,9 @@
 # Change log
 
+## 0.15.1 (2020-07-03)
+
+  - fix geopandas future warnings
+
 ## 0.15.0 (2020-06-30)
 
   - improve plotting defaults and streamline plot module speed and efficiency
