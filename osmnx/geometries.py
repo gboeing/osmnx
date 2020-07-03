@@ -7,6 +7,7 @@ from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
 from shapely.ops import linemerge
 from shapely.ops import polygonize
+from shapely.geos import TopologicalError
 
 from . import downloader
 from . import geocoder
@@ -315,7 +316,11 @@ def _assemble_multipolygon_geometry(element, linestrings_and_polygons):
     for outer_polygon in outer_polygons:
         for inner_polygon in inner_polygons:
             if inner_polygon.within(outer_polygon):
-                outer_polygon = outer_polygon.difference(inner_polygon)
+                try:
+                    outer_polygon = outer_polygon.difference(inner_polygon)
+                except TopologicalError as e:
+                    print(e, f"\n MultiPolygon Relation OSM id {element['id']} difference failed, trying with geometries buffered by 0")
+                    outer_polygon = outer_polygon.buffer(0).difference(inner_polygon.buffer(0))
         outer_polygons_with_holes.append(outer_polygon)
 
     print("outer_polygons_with_holes:", outer_polygons_with_holes)
