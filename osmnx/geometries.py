@@ -286,12 +286,6 @@ def _assemble_multipolygon_geometry(element, linestrings_and_polygons):
             elif (member.get("role") == "inner") and (linestring_or_polygon["geometry"].geom_type == 'LineString'):
                 inner_linestrings.append(linestring_or_polygon["geometry"])
 
-    print('element["id"]:', element["id"])
-    print("outer_polygons:", outer_polygons)
-    print("inner_polygons:", inner_polygons)
-    print("outer_linestrings:", outer_linestrings)
-    print("inner_linestrings:", inner_linestrings)
-
     # merge the open linestring fragments to a single LineString or a MultiLineString collection
     # polygonize each closed linestring separately
     merged_outer_linestrings = linemerge(outer_linestrings)
@@ -308,9 +302,6 @@ def _assemble_multipolygon_geometry(element, linestrings_and_polygons):
         for merged_inner_linestring in list(merged_inner_linestrings):
             inner_polygons += polygonize(merged_inner_linestring)
 
-    print("outer_polygons:", outer_polygons)
-    print("inner polygons:", inner_polygons)
-
     outer_polygons_with_holes = []
 
     for outer_polygon in outer_polygons:
@@ -322,8 +313,6 @@ def _assemble_multipolygon_geometry(element, linestrings_and_polygons):
                     print(e, f"\n MultiPolygon Relation OSM id {element['id']} difference failed, trying with geometries buffered by 0")
                     outer_polygon = outer_polygon.buffer(0).difference(inner_polygon.buffer(0))
         outer_polygons_with_holes.append(outer_polygon)
-
-    print("outer_polygons_with_holes:", outer_polygons_with_holes)
 
     geometry = MultiPolygon(outer_polygons_with_holes)
 
