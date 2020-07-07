@@ -1,5 +1,14 @@
 # Change log
 
+## 0.16.0 (T.B.D.)
+
+  - miscellaneous performance improvements and optimizations
+  - new k_shortest_paths function to solve *k* shortest paths from origin to destination
+  - new shortest_path convenience function
+  - new get_digraph function to correctly convert MultiDiGraph to DiGraph
+  - remove deprecated boundaries module (replaced by geocoder module in v0.15.0)
+  - remove deprecated utils_geo.geocode function (replaced by geocoder.geocode function in v0.15.0)
+
 ## 0.15.0 (2020-06-30)
 
   - improve plotting defaults and streamline plot module speed and efficiency
