@@ -9,6 +9,10 @@
   - remove deprecated boundaries module (replaced by geocoder module in v0.15.0)
   - remove deprecated utils_geo.geocode function (replaced by geocoder.geocode function in v0.15.0)
 
+## 0.15.1 (2020-07-03)
+
+  - fix geopandas future warnings
+
 ## 0.15.0 (2020-06-30)
 
   - improve plotting defaults and streamline plot module speed and efficiency
