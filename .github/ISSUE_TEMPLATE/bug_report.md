@@ -9,11 +9,9 @@ assignees: ''
 
 **Read these instructions carefully**
 
-Bug reports are for reporting a bug you have found in OSMnx's code. Your issue will be closed automatically if you don't provide the requested information that we need in order to help you. Before you proceed, review the contributing guidelines in this repo's CONTRIBUTING.md file. If you installed OSMnx via conda and are experiencing installation problems, please open an issue at the [feedstock](https://github.com/conda-forge/osmnx-feedstock/issues).
-
 Please don't use the issue tracker to ask "how-to" or usage questions. If asked here, they will be closed automatically. Instead, ask "how-to" and usage questions on [StackOverflow](https://stackoverflow.com/).
 
-If you're having trouble with OSMnx, first search the open/closed issues and StackOverflow to see if the problem has already been noted. If not, fill in the bug reporting template below. We need this information to assist you:
+Bug reports are for reporting a bug you have found in OSMnx's codebase. Your issue will be closed automatically if you don't provide the requested information that we need in order to help you. Before you proceed, review the contributing guidelines in this repo's CONTRIBUTING.md file. If you installed OSMnx via conda and are experiencing installation problems, please open an issue at its [feedstock](https://github.com/conda-forge/osmnx-feedstock/issues). If you've found a problem in OSMnx itself, first search the open/closed issues and StackOverflow to see if the problem has already been noted. If it hasn't, fill in the bug reporting template below. We need this information to assist you:
 
 **Problem description**
   - What did you do?
