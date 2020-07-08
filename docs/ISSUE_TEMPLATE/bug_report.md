@@ -24,7 +24,12 @@ If you're having trouble with OSMnx, first search the open/closed issues and Sta
   - What operating system are you using?
   - What Python version are you using?
   - What OSMnx version are you using?
-  - Provide a complete list of your environment's packages and their versions (for example, run `conda list` or `pip list` then copy/paste the output here)
+  - Provide a complete list of your environment's packages and their versions (for example, run `conda list` or `pip list` then paste the output between the two "details" tags below)
+
+<details>
+# paste the output of your Python packages/versions here between these two "details" tags
+
+</details>
 
 **Provide a complete minimal reproducible example**
 
