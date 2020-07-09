@@ -628,7 +628,6 @@ def get_undirected(G):
     H.add_nodes_from(G.nodes(data=True))
     H.add_edges_from(G.edges(keys=True, data=True))
     H.graph = G.graph
-    H.name = G.name
 
     # the previous operation added all directed edges from G as undirected
     # edges in H. this means we have duplicate edges for every bi-directional
@@ -654,7 +653,7 @@ def get_undirected(G):
                         duplicate_edges.append((u, v, key_other))
 
     H.remove_edges_from(duplicate_edges)
-    utils.log("Made undirected graph")
+    utils.log("Converted MultiDiGraph to undirected MultiGraph")
 
     return H
 
