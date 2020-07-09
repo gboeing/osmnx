@@ -50,7 +50,7 @@ autodoc_mock_imports = [
 
 # General information about the project.
 project = "OSMnx"
-copyright = "2020, Geoff Boeing"
+copyright = "2016–2020, Geoff Boeing"
 author = "Geoff Boeing"
 
 # The version info for the project you're documenting, acts as replacement for
