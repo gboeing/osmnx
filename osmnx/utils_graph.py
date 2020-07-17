@@ -216,6 +216,13 @@ def induce_subgraph(G, node_subset):
     networkx.MultiDiGraph
         the subgraph of G induced by node_subset
     """
+    import warnings
+
+    msg = (
+        "The induce_subgraph function has been deprecated and will be "
+        "removed in a future release. Use G.subgraph(nodes) instead."
+    )
+    warnings.warn(msg)
     return G.subgraph(node_subset)
 
 
