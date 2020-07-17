@@ -50,13 +50,13 @@ autodoc_mock_imports = [
 
 # General information about the project.
 project = "OSMnx"
-copyright = "2020, Geoff Boeing"
+copyright = "2016–2020, Geoff Boeing"
 author = "Geoff Boeing"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-version = release = "0.15.1"
+version = release = "0.16.0dev"
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #

@@ -1,7 +1,7 @@
 """Graph utility functions."""
 
+import itertools
 from collections import Counter
-from itertools import chain
 
 import geopandas as gpd
 import networkx as nx
@@ -38,11 +38,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     geopandas.GeoDataFrame or tuple
         gdf_nodes or gdf_edges or tuple of (gdf_nodes, gdf_edges)
     """
-    if not (nodes or edges):
-        raise ValueError("You must request nodes or edges, or both.")
-
     crs = G.graph["crs"]
-    to_return = []
 
     if nodes:
 
@@ -55,7 +51,6 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         else:
             gdf_nodes = gpd.GeoDataFrame(data, index=nodes)
 
-        to_return.append(gdf_nodes)
         utils.log("Created nodes GeoDataFrame from graph")
 
     if edges:
@@ -94,13 +89,16 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         gdf_edges["v"] = v
         gdf_edges["key"] = k
 
-        to_return.append(gdf_edges)
         utils.log("Created edges GeoDataFrame from graph")
 
-    if len(to_return) > 1:
-        return tuple(to_return)
+    if nodes and edges:
+        return gdf_nodes, gdf_edges
+    elif nodes:
+        return gdf_nodes
+    elif edges:
+        return gdf_edges
     else:
-        return to_return[0]
+        raise ValueError("You must request nodes or edges or both.")
 
 
 def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
@@ -139,6 +137,64 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
 
     utils.log("Created graph from node/edge GeoDataFrames")
     return G
+
+
+def shortest_path(G, orig, dest, weight="length"):
+    """
+    Get shortest path from origin node to destination node.
+
+    See also `k_shortest_paths` to get multiple shortest paths.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    orig : int
+        origin node ID
+    dest : int
+        destination node ID
+    weight : string
+        edge attribute to minimize when solving shortest path. default is edge
+        length in meters.
+
+    Returns
+    -------
+    path : list
+        list of node IDs consituting the shortest path
+    """
+    path = nx.shortest_path(G, orig, dest, weight=weight)
+    return path
+
+
+def k_shortest_paths(G, orig, dest, k, weight="length"):
+    """
+    Get k shortest paths from origin node to destination node.
+
+    See also `shortest_path` to get just the one shortest path.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    orig : int
+        origin node ID
+    dest : int
+        destination node ID
+    k : int
+        number of shortest paths to get
+    weight : string
+        edge attribute to minimize when solving shortest paths. default is
+        edge length in meters.
+
+    Returns
+    -------
+    generator
+        a generator of k shortest paths ordered by total weight. each path is
+        a list of node IDs.
+    """
+    paths_gen = nx.shortest_simple_paths(get_digraph(G, weight), orig, dest, weight)
+    for path in itertools.islice(paths_gen, 0, k):
+        yield path
 
 
 def induce_subgraph(G, node_subset):
@@ -249,17 +305,18 @@ def get_route_edge_attributes(
     G : networkx.MultiDiGraph
         input graph
     route : list
-        list of nodes in the path
+        list of nodes IDs constituting the path
     attribute : string
-        the name of the attribute to get the value of for each edge.
-        If not specified, the complete data dict is returned for each edge.
+        the name of the attribute to get the value of for each edge. If None,
+        the complete data dict is returned for each edge.
     minimize_key : string
         if there are parallel edges between two nodes, select the one with the
         lowest value of minimize_key
     retrieve_default : Callable[Tuple[Any, Any], Any]
-        Function called with the edge nodes as parameters to retrieve a
-        default value, if the edge does not contain the given attribute. Per
-        default, a `KeyError` is raised
+        function called with the edge nodes as parameters to retrieve a
+        default value, if the edge does not contain the given attribute
+        (otherwise a `KeyError` is raised)
+
     Returns
     -------
     attribute_values : list
@@ -334,7 +391,7 @@ def count_streets_per_node(G, nodes=None):
     edges = non_self_loop_edges + self_loop_edges
 
     # flatten the list of (u,v) tuples
-    edges_flat = list(chain.from_iterable(edges))
+    edges_flat = list(itertools.chain.from_iterable(edges))
 
     # count how often each node appears in the list of flattened edge endpoints
     counts = Counter(edges_flat)
@@ -350,14 +407,14 @@ def remove_isolated_nodes(G):
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        graph from which to remove nodes
+        graph from which to remove isolated nodes
 
     Returns
     -------
     G : networkx.MultiDiGraph
         graph with all isolated nodes removed
     """
-    isolated_nodes = [node for node, degree in dict(G.degree()).items() if degree < 1]
+    isolated_nodes = [node for node, degree in G.degree() if degree < 1]
     G.remove_nodes_from(isolated_nodes)
     utils.log(f"Removed {len(isolated_nodes)} isolated nodes")
     return G
@@ -496,11 +553,46 @@ def _update_edge_keys(G):
     return G
 
 
+def get_digraph(G, weight="length"):
+    """
+    Convert MultiDiGraph to DiGraph.
+
+    Chooses between parallel edges by minimizing `weight` attribute value.
+    Note: see also `get_undirected` to convert MultiDiGraph to MultiGraph.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    weight : string
+        attribute value to minimize when choosing between parallel edges
+
+    Returns
+    -------
+    networkx.DiGraph
+    """
+    # make a copy to not edit the original graph object the caller passed in
+    G = G.copy()
+    to_remove = []
+
+    # identify all the parallel edges in the MultiDiGraph
+    parallels = ((u, v) for u, v, k in G.edges(keys=True) if k > 0)
+
+    # remove the parallel edge with greater "weight" attribute value
+    for u, v in set(parallels):
+        k, d = max(G.get_edge_data(u, v).items(), key=lambda x: x[1][weight])
+        to_remove.append((u, v, k))
+
+    G.remove_edges_from(to_remove)
+    return nx.DiGraph(G)
+
+
 def get_undirected(G):
     """
     Convert MultiDiGraph to MultiGraph.
 
-    Maintains parallel edges if their geometries differ.
+    Maintains parallel edges only if their geometries differ. Note: see also
+    `get_digraph` to convert MultiDiGraph to DiGraph.
 
     Parameters
     ----------
@@ -509,10 +601,12 @@ def get_undirected(G):
 
     Returns
     -------
-    H : networkx.MultiGraph
+    networkx.MultiGraph
     """
-    # set from/to nodes before making graph undirected
+    # make a copy to not edit the original graph object the caller passed in
     G = G.copy()
+
+    # set from/to nodes before making graph undirected
     for u, v, k, data in G.edges(keys=True, data=True):
         G.edges[u, v, k]["from"] = u
         G.edges[u, v, k]["to"] = v
@@ -534,7 +628,6 @@ def get_undirected(G):
     H.add_nodes_from(G.nodes(data=True))
     H.add_edges_from(G.edges(keys=True, data=True))
     H.graph = G.graph
-    H.name = G.name
 
     # the previous operation added all directed edges from G as undirected
     # edges in H. this means we have duplicate edges for every bi-directional
@@ -560,7 +653,7 @@ def get_undirected(G):
                         duplicate_edges.append((u, v, key_other))
 
     H.remove_edges_from(duplicate_edges)
-    utils.log("Made undirected graph")
+    utils.log("Converted MultiDiGraph to undirected MultiGraph")
 
     return H
 
@@ -569,7 +662,8 @@ def add_edge_lengths(G, precision=3):
     """
     Add `length` (meters) attribute to each edge.
 
-    Calculate via great circle distance between nodes u and v.
+    Calculated via great-circle distance between each edge's incidents nodes,
+    so ensure graph is in unprojected coordinates.
 
     Parameters
     ----------

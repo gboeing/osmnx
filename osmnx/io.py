@@ -126,12 +126,12 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     if not folder == "" and not os.path.exists(folder):
         os.makedirs(folder)
 
-    # create a copy to convert all the node/edge attribute values to string
-    G_save = G.copy()
+    # make a copy to not edit the original graph object the caller passed in
+    G = G.copy()
 
     if gephi:
 
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G_save)
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
 
         # turn each edge's key into a unique ID for Gephi compatibility
         gdf_edges["key"] = range(len(gdf_edges))
@@ -139,19 +139,19 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
         # gephi doesn't handle node attrs named x and y well, so rename
         gdf_nodes["xcoord"] = gdf_nodes["x"]
         gdf_nodes["ycoord"] = gdf_nodes["y"]
-        G_save = utils_graph.graph_from_gdfs(gdf_nodes, gdf_edges)
+        G = utils_graph.graph_from_gdfs(gdf_nodes, gdf_edges)
 
         # remove graph attributes as Gephi only accepts node and edge attrs
-        G_save.graph = {}
+        G.graph = {}
 
     else:
         # if not gephi, keep graph attrs and stringify them
-        for dict_key in G_save.graph:
+        for dict_key in G.graph:
             # convert all the graph attribute values to strings
-            G_save.graph[dict_key] = str(G_save.graph[dict_key])
+            G.graph[dict_key] = str(G.graph[dict_key])
 
     # stringify node and edge attributes
-    for _, data in G_save.nodes(data=True):
+    for _, data in G.nodes(data=True):
         for dict_key in data:
             if gephi and dict_key in {"xcoord", "ycoord"}:
                 # don't convert x y values to string if saving for gephi
@@ -160,12 +160,12 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
                 # convert all the node attribute values to strings
                 data[dict_key] = str(data[dict_key])
 
-    for _, _, data in G_save.edges(keys=False, data=True):
+    for _, _, data in G.edges(keys=False, data=True):
         for dict_key in data:
             # convert all the edge attribute values to strings
             data[dict_key] = str(data[dict_key])
 
-    nx.write_graphml(G_save, path=filepath, encoding=encoding)
+    nx.write_graphml(G, path=filepath, encoding=encoding)
     utils.log(f'Saved graph as GraphML file at "{filepath}"')
 
 
