@@ -54,7 +54,7 @@ conda config --prepend channels conda-forge
 conda create -n ox --strict-channel-priority osmnx
 ```
 
-Alternatively, you can run OSMnx + Jupyter directly from its official [docker container](https://hub.docker.com/r/gboeing/osmnx) or you can install OSMnx via pip if you already have its dependencies installed on your system.
+Alternatively, you can run OSMnx + Jupyter directly from its official [docker container](https://hub.docker.com/r/gboeing/osmnx).
 
 
 
