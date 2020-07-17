@@ -223,7 +223,9 @@ def induce_subgraph(G, node_subset):
         "removed in a future release. Use G.subgraph(nodes) instead."
     )
     warnings.warn(msg)
-    return G.subgraph(node_subset)
+
+    # induce a (frozen) subgraph then unfreeze it by making new MultiDiGraph
+    return nx.MultiDiGraph(G.subgraph(node_subset))
 
 
 def get_largest_component(G, strongly=False):
@@ -252,19 +254,14 @@ def get_largest_component(G, strongly=False):
         is_connected = nx.is_weakly_connected
         connected_components = nx.weakly_connected_components
 
-    # if the graph is not connected, retain only largest connected component
     if not is_connected(G):
-
         # get all the connected components in graph then identify the largest
-        original_len = len(G)
         largest_cc = max(connected_components(G), key=len)
-        G = G.subgraph(largest_cc)
+        n = len(G)
 
-        msg = (
-            f"Graph was not connected, retained only the largest {kind} "
-            f"connected component ({len(G)} of {original_len} total nodes)"
-        )
-        utils.log(msg)
+        # induce (frozen) subgraph then unfreeze it by making new MultiDiGraph
+        G = nx.MultiDiGraph(G.subgraph(largest_cc))
+        utils.log(f"Got largest {kind} connected component ({len(G)} of {n} total nodes)")
 
     return G
 
