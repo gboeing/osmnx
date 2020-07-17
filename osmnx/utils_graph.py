@@ -145,8 +145,8 @@ def shortest_path(G, orig, dest, weight="length"):
 
     See also `k_shortest_paths` to get multiple shortest paths.
 
-    This function is just a convenience wrapper around networkx.shortest_path.
-    For more functionality or different algorithms, use networkx directly.
+    This function is a convenience wrapper around networkx.shortest_path. For
+    more functionality or different algorithms, use networkx directly.
 
     Parameters
     ----------
