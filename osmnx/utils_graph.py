@@ -145,6 +145,9 @@ def shortest_path(G, orig, dest, weight="length"):
 
     See also `k_shortest_paths` to get multiple shortest paths.
 
+    This function is a convenience wrapper around networkx.shortest_path. For
+    more functionality or different algorithms, use networkx directly.
+
     Parameters
     ----------
     G : networkx.MultiDiGraph
@@ -210,37 +213,19 @@ def induce_subgraph(G, node_subset):
 
     Returns
     -------
-    H : networkx.MultiDiGraph
+    networkx.MultiDiGraph
         the subgraph of G induced by node_subset
     """
-    node_subset = set(node_subset)
+    import warnings
 
-    # copy nodes into new graph
-    H = G.__class__()
-    H.add_nodes_from((n, G.nodes[n]) for n in node_subset)
+    msg = (
+        "The induce_subgraph function has been deprecated and will be "
+        "removed in a future release. Use G.subgraph(nodes) instead."
+    )
+    warnings.warn(msg)
 
-    # copy edges to new graph, including parallel edges
-    if H.is_multigraph:
-        H.add_edges_from(
-            (n, nbr, key, d)
-            for n, nbrs in G.adj.items()
-            if n in node_subset
-            for nbr, keydict in nbrs.items()
-            if nbr in node_subset
-            for key, d in keydict.items()
-        )
-    else:
-        H.add_edges_from(
-            (n, nbr, d)
-            for n, nbrs in G.adj.items()
-            if n in node_subset
-            for nbr, d in nbrs.items()
-            if nbr in node_subset
-        )
-
-    # update graph attribute dict, and return graph
-    H.graph.update(G.graph)
-    return H
+    # induce a (frozen) subgraph then unfreeze it by making new MultiDiGraph
+    return nx.MultiDiGraph(G.subgraph(node_subset))
 
 
 def get_largest_component(G, strongly=False):
@@ -258,38 +243,25 @@ def get_largest_component(G, strongly=False):
     Returns
     -------
     G : networkx.MultiDiGraph
-        the largest connected component subgraph from the original graph
+        the largest connected component subgraph of the original graph
     """
-    original_len = len(list(G.nodes()))
-
     if strongly:
-        # if the graph is not connected retain only the largest strongly connected component
-        if not nx.is_strongly_connected(G):
-
-            # get all the strongly connected components in graph then identify the largest
-            sccs = nx.strongly_connected_components(G)
-            largest_scc = max(sccs, key=len)
-            G = induce_subgraph(G, largest_scc)
-
-            msg = (
-                f"Graph was not connected, retained only the largest strongly "
-                f"connected component ({len(G)} of {original_len} total nodes)"
-            )
-            utils.log(msg)
+        kind = "strongly"
+        is_connected = nx.is_strongly_connected
+        connected_components = nx.strongly_connected_components
     else:
-        # if the graph is not connected retain only the largest weakly connected component
-        if not nx.is_weakly_connected(G):
+        kind = "weakly"
+        is_connected = nx.is_weakly_connected
+        connected_components = nx.weakly_connected_components
 
-            # get all the weakly connected components in graph then identify the largest
-            wccs = nx.weakly_connected_components(G)
-            largest_wcc = max(wccs, key=len)
-            G = induce_subgraph(G, largest_wcc)
+    if not is_connected(G):
+        # get all the connected components in graph then identify the largest
+        largest_cc = max(connected_components(G), key=len)
+        n = len(G)
 
-            msg = (
-                f"Graph was not connected, retained only the largest weakly "
-                f"connected component ({len(G)} of {original_len} total nodes)"
-            )
-            utils.log(msg)
+        # induce (frozen) subgraph then unfreeze it by making new MultiDiGraph
+        G = nx.MultiDiGraph(G.subgraph(largest_cc))
+        utils.log(f"Got largest {kind} connected component ({len(G)} of {n} total nodes)")
 
     return G
 
