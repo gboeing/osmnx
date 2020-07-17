@@ -234,38 +234,30 @@ def get_largest_component(G, strongly=False):
     Returns
     -------
     G : networkx.MultiDiGraph
-        the largest connected component subgraph from the original graph
+        the largest connected component subgraph of the original graph
     """
-    original_len = len(list(G.nodes()))
-
     if strongly:
-        # if the graph is not connected retain only the largest strongly connected component
-        if not nx.is_strongly_connected(G):
-
-            # get all the strongly connected components in graph then identify the largest
-            sccs = nx.strongly_connected_components(G)
-            largest_scc = max(sccs, key=len)
-            G = induce_subgraph(G, largest_scc)
-
-            msg = (
-                f"Graph was not connected, retained only the largest strongly "
-                f"connected component ({len(G)} of {original_len} total nodes)"
-            )
-            utils.log(msg)
+        kind = 'strongly'
+        is_connected = nx.is_strongly_connected
+        connected_components = nx.strongly_connected_components
     else:
-        # if the graph is not connected retain only the largest weakly connected component
-        if not nx.is_weakly_connected(G):
+        kind = 'weakly'
+        is_connected = nx.is_weakly_connected
+        connected_components = nx.weakly_connected_components
 
-            # get all the weakly connected components in graph then identify the largest
-            wccs = nx.weakly_connected_components(G)
-            largest_wcc = max(wccs, key=len)
-            G = induce_subgraph(G, largest_wcc)
+    # if the graph is not connected, retain only largest connected component
+    if not is_connected(G):
 
-            msg = (
-                f"Graph was not connected, retained only the largest weakly "
-                f"connected component ({len(G)} of {original_len} total nodes)"
-            )
-            utils.log(msg)
+        # get all the connected components in graph then identify the largest
+        original_len = len(G)
+        largest_cc = max(connected_components(G), key=len)
+        G = G.subgraph(largest_cc)
+
+        msg = (
+            f"Graph was not connected, retained only the largest {kind} "
+            f"connected component ({len(G)} of {original_len} total nodes)"
+        )
+        utils.log(msg)
 
     return G
 
