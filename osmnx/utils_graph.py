@@ -213,37 +213,10 @@ def induce_subgraph(G, node_subset):
 
     Returns
     -------
-    H : networkx.MultiDiGraph
+    networkx.MultiDiGraph
         the subgraph of G induced by node_subset
     """
-    node_subset = set(node_subset)
-
-    # copy nodes into new graph
-    H = G.__class__()
-    H.add_nodes_from((n, G.nodes[n]) for n in node_subset)
-
-    # copy edges to new graph, including parallel edges
-    if H.is_multigraph:
-        H.add_edges_from(
-            (n, nbr, key, d)
-            for n, nbrs in G.adj.items()
-            if n in node_subset
-            for nbr, keydict in nbrs.items()
-            if nbr in node_subset
-            for key, d in keydict.items()
-        )
-    else:
-        H.add_edges_from(
-            (n, nbr, d)
-            for n, nbrs in G.adj.items()
-            if n in node_subset
-            for nbr, d in nbrs.items()
-            if nbr in node_subset
-        )
-
-    # update graph attribute dict, and return graph
-    H.graph.update(G.graph)
-    return H
+    return G.subgraph(node_subset)
 
 
 def get_largest_component(G, strongly=False):
