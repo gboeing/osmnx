@@ -237,11 +237,11 @@ def get_largest_component(G, strongly=False):
         the largest connected component subgraph of the original graph
     """
     if strongly:
-        kind = 'strongly'
+        kind = "strongly"
         is_connected = nx.is_strongly_connected
         connected_components = nx.strongly_connected_components
     else:
-        kind = 'weakly'
+        kind = "weakly"
         is_connected = nx.is_weakly_connected
         connected_components = nx.weakly_connected_components
 
