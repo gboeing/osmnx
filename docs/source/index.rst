@@ -58,7 +58,7 @@ You can install OSMnx with conda:
     conda config --prepend channels conda-forge
     conda create -n ox --strict-channel-priority osmnx
 
-Alternatively, you can run OSMnx + Jupyter directly from the official `docker container`_, or you can install OSMnx via `pip`_ if you already have all of its dependencies installed on your system.
+Alternatively, you can run OSMnx + Jupyter directly from the official `docker container`_, or you can install OSMnx via `pip`_ if you already have all of its dependencies installed and tested on your system. Note: pip installation is nontrivial. If you don't know *exactly* what you're doing, just use conda as described above.
 
 
 Usage examples
