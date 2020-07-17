@@ -2,10 +2,11 @@
 
 ## 0.16.0 (T.B.D.)
 
-  - miscellaneous performance improvements and optimizations
   - new k_shortest_paths function to solve *k* shortest paths from origin to destination
   - new shortest_path convenience function
   - new get_digraph function to correctly convert MultiDiGraph to DiGraph
+  - miscellaneous performance improvements and optimizations
+  - deprecate induce_subgraph function
   - remove deprecated boundaries module (replaced by geocoder module in v0.15.0)
   - remove deprecated utils_geo.geocode function (replaced by geocoder.geocode function in v0.15.0)
 
