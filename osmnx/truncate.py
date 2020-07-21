@@ -28,7 +28,8 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
         how to weight the graph when measuring distance (default 'length' is
         how many meters long the edge is)
     retain_all : bool
-        if True, return the entire graph even if it is not connected
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest connected component.
 
     Returns
     -------
@@ -84,7 +85,8 @@ def truncate_graph_bbox(
         if True retain node if it's outside bbox but at least one of node's
         neighbors are within bbox
     retain_all : bool
-        if True, return the entire graph even if it is not connected
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest connected component.
     quadrat_width : numeric
         passed on to intersect_index_quadrats: the linear length (in degrees) of
         the quadrats with which to cut up the geometry (default = 0.05, approx
@@ -127,7 +129,8 @@ def truncate_graph_polygon(
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         only retain nodes in graph that lie within this geometry
     retain_all : bool
-        if True, return the entire graph even if it is not connected
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest connected component.
     truncate_by_edge : bool
         if True retain node if it's outside polygon but at least one of node's
         neighbors are within polygon
