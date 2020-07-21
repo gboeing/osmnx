@@ -438,7 +438,9 @@ def footprints_from_address(address, dist=1000, footprint_type="building", retai
     return footprints_from_point(point, dist, footprint_type, retain_invalid)
 
 
-def footprints_from_place(place, footprint_type="building", retain_invalid=False, which_result=1):
+def footprints_from_place(
+    place, footprint_type="building", retain_invalid=False, which_result=None
+):
     """
     Get footprints within the boundaries of some place.
 
@@ -451,14 +453,15 @@ def footprints_from_place(place, footprint_type="building", retain_invalid=False
     Parameters
     ----------
     place : string
-        the query to geocode to get geojson boundary polygon
+        the query to geocode to get place boundary polygon
     footprint_type : string
         type of footprint to be downloaded. OSM tag key e.g. 'building',
         'landuse', 'place', etc.
     retain_invalid : bool
         if False discard any footprints with an invalid geometry
     which_result : int
-        max number of results to return and which to process upon receipt
+        which geocoding result to use. if None, auto-select the first
+        multi/polygon or throw an error if OSM doesn't return one.
 
     Returns
     -------

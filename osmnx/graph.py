@@ -54,7 +54,8 @@ def graph_from_bbox(
     simplify : bool
         if True, simplify the graph topology
     retain_all : bool
-        if True, return the entire graph even if it is not connected
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest connected component.
     truncate_by_edge : bool
         if True, retain node if it's outside bounding box but at least one of
         node's neighbors are within the bounding box
@@ -125,7 +126,8 @@ def graph_from_point(
     simplify : bool
         if True, simplify the graph topology
     retain_all : bool
-        if True, return the entire graph even if it is not connected
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest connected component.
     truncate_by_edge : bool
         if True, retain node if it's outside bounding box but at least one of
         node's neighbors are within bounding box
@@ -213,7 +215,8 @@ def graph_from_address(
     simplify : bool
         if True, simplify the graph topology
     retain_all : bool
-        if True, return the entire graph even if it is not connected
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest connected component.
     truncate_by_edge : bool
         if True, retain node if it's outside bounding box but at least one of
         node's neighbors are within bounding box
@@ -266,7 +269,7 @@ def graph_from_place(
     simplify=True,
     retain_all=False,
     truncate_by_edge=False,
-    which_result=1,
+    which_result=None,
     buffer_dist=None,
     clean_periphery=True,
     custom_filter=None,
@@ -282,24 +285,27 @@ def graph_from_place(
     parameter to use a different geocode result. For example, the first geocode
     result (ie, the default) might resolve to a point geometry, but the second
     geocode result for this query might resolve to a polygon, in which case you
-    can use graph_from_place with which_result=2.
+    can use graph_from_place with which_result=2. which_result=None will
+    auto-select the first multi/polygon among the geocoding results.
 
     Parameters
     ----------
     query : string or dict or list
-        the place(s) to geocode/download data for
+        the query or queries to geocode to get place boundary polygon(s)
     network_type : string
         what type of street network to get if custom_filter is None. One of
         'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
     simplify : bool
         if True, simplify the graph topology
     retain_all : bool
-        if True, return the entire graph even if it is not connected
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest connected component.
     truncate_by_edge : bool
         if True, retain node if it's outside polygon but at least one of
-        node's neighbors are within bbox
+        node's neighbors are within polygon
     which_result : int
-        max number of results to return and which to process upon receipt
+        which geocoding result to use. if None, auto-select the first
+        multi/polygon or throw an error if OSM doesn't return one.
     buffer_dist : float
         distance to buffer around the place geometry, in meters
     clean_periphery : bool
@@ -375,7 +381,8 @@ def graph_from_polygon(
     simplify : bool
         if True, simplify the graph topology
     retain_all : bool
-        if True, return the entire graph even if it is not connected
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest connected component.
     truncate_by_edge : bool
         if True, retain node if it's outside polygon but at least one of
         node's neighbors are within polygon
@@ -493,7 +500,8 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
     simplify : bool
         if True, simplify the graph topology
     retain_all : bool
-        if True, return the entire graph even if it is not connected
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest connected component.
 
     Returns
     -------
@@ -551,7 +559,8 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     response_jsons : list
         list of dicts of JSON responses from from the Overpass API
     retain_all : bool
-        if True, return the entire graph even if it is not connected
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest connected component.
     bidirectional : bool
         if True, create bidirectional edges for one-way streets
 
