@@ -170,9 +170,8 @@ def graph_from_point(
         custom_filter=custom_filter,
     )
 
-    # if the network dist_type is network, find the node in the graph
-    # nearest to the center point, and truncate the graph by network distance
-    # from this node
+    # if network dist_type is network, find the node in the graph nearest to
+    # the center point, and truncate the graph by network distance from node
     if dist_type == "network":
         centermost_node = distance.get_nearest_node(G, center_point)
         G = truncate.truncate_graph_dist(G, centermost_node, max_dist=dist)
@@ -411,9 +410,9 @@ def graph_from_polygon(
     if not isinstance(polygon, (Polygon, MultiPolygon)):
         raise TypeError(
             "Geometry must be a shapely Polygon or MultiPolygon. If you requested "
-            "graph from place name or address, make sure your query resolves to a "
-            "Polygon or MultiPolygon, and not some other geometry, like a Point. "
-            "See OSMnx documentation for details."
+            "graph from place name, make sure your query resolves to a Polygon or "
+            "MultiPolygon, and not some other geometry, like a Point. See OSMnx "
+            "documentation for details."
         )
 
     if clean_periphery:
@@ -425,21 +424,16 @@ def graph_from_polygon(
 
         # download the network data from OSM within buffered polygon
         response_jsons = downloader._osm_net_download(poly_buff, network_type, custom_filter)
+        bidirectional = network_type in settings.bidirectional_network_types
 
         # create buffered graph from the downloaded data
-        G_buff = _create_graph(
-            response_jsons,
-            retain_all=True,
-            bidirectional=network_type in settings.bidirectional_network_types,
-        )
+        G_buff = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
 
         # truncate buffered graph to the buffered polygon and retain_all for
         # now. needed because overpass returns entire ways that also include
         # nodes outside the poly if the way (that is, a way with a single OSM
         # ID) has a node inside the poly at some point.
-        G_buff = truncate.truncate_graph_polygon(
-            G_buff, poly_buff, retain_all=True, truncate_by_edge=truncate_by_edge
-        )
+        G_buff = truncate.truncate_graph_polygon(G_buff, poly_buff, True, truncate_by_edge)
 
         # simplify the graph topology
         if simplify:
@@ -450,9 +444,7 @@ def graph_from_polygon(
         # intersections along the street that may now only connect 2 street
         # segments in the network, but in reality also connect to an
         # intersection just outside the polygon
-        G = truncate.truncate_graph_polygon(
-            G_buff, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge
-        )
+        G = truncate.truncate_graph_polygon(G_buff, polygon, retain_all, truncate_by_edge)
 
         # count how many street segments in buffered graph emanate from each
         # intersection in un-buffered graph, to retain true counts for each
@@ -463,23 +455,17 @@ def graph_from_polygon(
     else:
         # download the network data from OSM
         response_jsons = downloader._osm_net_download(polygon, network_type, custom_filter)
+        bidirectional = network_type in settings.bidirectional_network_types
 
         # create graph from the downloaded data
-        G = _create_graph(
-            response_jsons,
-            retain_all=True,
-            bidirectional=network_type in settings.bidirectional_network_types,
-        )
+        G = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
 
         # truncate the graph to the extent of the polygon
-        G = truncate.truncate_graph_polygon(
-            G, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge
-        )
+        G = truncate.truncate_graph_polygon(G, polygon, retain_all, truncate_by_edge)
 
         # simplify the graph topology as the last step. don't truncate after
         # simplifying or you may have simplified out to an endpoint beyond the
-        # truncation distance, in which case you will then strip out your entire
-        # edge
+        # truncation distance, which would strip out the entire edge
         if simplify:
             G = simplification.simplify_graph(G)
 
@@ -513,7 +499,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
     # create graph using this response JSON
     G = _create_graph(response_jsons, bidirectional=bidirectional, retain_all=retain_all)
 
-    # simplify the graph topology as the last step.
+    # simplify the graph topology as the last step
     if simplify:
         G = simplification.simplify_graph(G)
 
@@ -538,10 +524,9 @@ def _overpass_json_from_file(filepath):
     def _opener(filepath):
         _, ext = os.path.splitext(filepath)
         if ext == ".bz2":
-            # Use Python 2/3 compatible BZ2File()
             return bz2.BZ2File(filepath)
         else:
-            # Assume an unrecognized file extension is just XML
+            # assume an unrecognized file extension is just XML
             return open(filepath, mode="rb")
 
     with _opener(filepath) as file:
@@ -599,15 +584,13 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     # add each osm way (ie, a path of edges) to the graph
     G = _add_paths(G, paths, bidirectional=bidirectional)
 
-    # retain only the largest connected component, if caller did not
-    # set retain_all=True
+    # retain only the largest connected component, if retain_all is not True
     if not retain_all:
         G = utils_graph.get_largest_component(G)
 
     utils.log(f"Created graph with {len(G)} nodes and {len(G.edges())} edges")
 
-    # add length (great circle distance between nodes) attribute to each edge to
-    # use as weight
+    # add length (great circle distance between nodes) attribute to each edge
     if len(G.edges) > 0:
         G = utils_graph.add_edge_lengths(G)
 
@@ -704,7 +687,7 @@ def _add_path(G, data, one_way):
     data : dict
         the attributes of the path
     one_way : bool
-        if this path is one-way or if it is bi-directional
+        if this path is one-way or if it is bidirectional
 
     Returns
     -------
@@ -722,15 +705,13 @@ def _add_path(G, data, one_way):
     if not settings.all_oneway:
         data["oneway"] = one_way
 
-    # zip together the path nodes so you get tuples like (0,1), (1,2), (2,3)
-    # and so on
+    # zip together the path nodes so you get tuples like [(0,1), (1,2), (2,3)]
     path_edges = list(zip(path_nodes[:-1], path_nodes[1:]))
     G.add_edges_from(path_edges, **data)
 
-    # if the path is NOT one-way
     if not one_way:
-        # reverse the direction of each edge and add this path going the
-        # opposite direction
+        # if the path is NOT one-way, reverse the direction of each edge and
+        # add this path going the opposite direction
         path_edges_opposite_direction = [(v, u) for u, v in path_edges]
         G.add_edges_from(path_edges_opposite_direction, **data)
 
@@ -754,33 +735,35 @@ def _add_paths(G, paths, bidirectional=False):
     """
     # the list of values OSM uses in its 'oneway' tag to denote True
     # https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf
-    osm_oneway_values = ["yes", "true", "1", "-1", "T", "F"]
+    osm_oneway_values = {"yes", "true", "1", "-1", "T", "F"}
 
     for data in paths.values():
 
         if settings.all_oneway is True:
+            # see all_oneway comments in settings.py
             _add_path(G, data, one_way=True)
-        # if this path is tagged as one-way and if it is not a walking network,
-        # then we'll add the path in one direction only
+
         elif ("oneway" in data and data["oneway"] in osm_oneway_values) and not bidirectional:
+            # if this path is tagged as one-way and if it is not a walking
+            # network, then we'll add the path in one direction only
             if data["oneway"] == "-1" or data["oneway"] == "T":
-                # paths with a one-way value of -1 or T are one-way, but in the
-                # reverse direction of the nodes' order, see osm documentation
+                # paths with a one-way value of -1 or T are one-way, but in
+                # the reverse direction of nodes' order, see OSM documentation
                 data["nodes"] = list(reversed(data["nodes"]))
             # add this path (in only one direction) to the graph
             _add_path(G, data, one_way=True)
 
         elif ("junction" in data and data["junction"] == "roundabout") and not bidirectional:
-            # roundabout are also oneway but not tagged as is
+            # roundabouts are also oneway but not explicitly tagged as such
             _add_path(G, data, one_way=True)
 
-        # else, this path is not tagged as one-way or it is a walking network
-        # (you can walk both directions on a one-way street)
         else:
-            # add this path (in both directions) to the graph and set its
-            # 'oneway' attribute to False. if this is a walking network, this
-            # may very well be a one-way street (as cars/bikes go), but in a
-            # walking-only network it is a bi-directional edge
+            # else, this path is not tagged as one-way or it is a walking
+            # network (you can walk both directions on a one-way street). add
+            # this path (in both directions) to the graph and set its 'oneway'
+            # attribute to False. if this is a walking network, this may very
+            # well be a one-way street (as cars/bikes go), but in a walking-
+            # only network it is a bidirectional edge
             _add_path(G, data, one_way=False)
 
     return G
