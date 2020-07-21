@@ -55,10 +55,10 @@ def graph_from_bbox(
         if True, simplify the graph topology
     retain_all : bool
         if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest connected component.
+        otherwise, retain only the largest weakly connected component.
     truncate_by_edge : bool
-        if True, retain node if it's outside bounding box but at least one of
-        node's neighbors are within the bounding box
+        if True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box
     clean_periphery : bool
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
@@ -127,10 +127,10 @@ def graph_from_point(
         if True, simplify the graph topology
     retain_all : bool
         if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest connected component.
+        otherwise, retain only the largest weakly connected component.
     truncate_by_edge : bool
-        if True, retain node if it's outside bounding box but at least one of
-        node's neighbors are within bounding box
+        if True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box
     clean_periphery : bool,
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
@@ -216,10 +216,10 @@ def graph_from_address(
         if True, simplify the graph topology
     retain_all : bool
         if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest connected component.
+        otherwise, retain only the largest weakly connected component.
     truncate_by_edge : bool
-        if True, retain node if it's outside bounding box but at least one of
-        node's neighbors are within bounding box
+        if True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box
     return_coords : bool
         optionally also return the geocoded coordinates of the address
     clean_periphery : bool,
@@ -299,13 +299,13 @@ def graph_from_place(
         if True, simplify the graph topology
     retain_all : bool
         if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest connected component.
+        otherwise, retain only the largest weakly connected component.
     truncate_by_edge : bool
-        if True, retain node if it's outside polygon but at least one of
-        node's neighbors are within polygon
+        if True, retain nodes outside boundary polygon if at least one of
+        node's neighbors is within the polygon
     which_result : int
         which geocoding result to use. if None, auto-select the first
-        multi/polygon or throw an error if OSM doesn't return one.
+        multi/polygon or raise an error if OSM doesn't return one.
     buffer_dist : float
         distance to buffer around the place geometry, in meters
     clean_periphery : bool
@@ -382,10 +382,10 @@ def graph_from_polygon(
         if True, simplify the graph topology
     retain_all : bool
         if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest connected component.
+        otherwise, retain only the largest weakly connected component.
     truncate_by_edge : bool
-        if True, retain node if it's outside polygon but at least one of
-        node's neighbors are within polygon
+        if True, retain nodes outside boundary polygon if at least one of
+        node's neighbors is within the polygon
     clean_periphery : bool
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
@@ -501,7 +501,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
         if True, simplify the graph topology
     retain_all : bool
         if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest connected component.
+        otherwise, retain only the largest weakly connected component.
 
     Returns
     -------
@@ -560,7 +560,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
         list of dicts of JSON responses from from the Overpass API
     retain_all : bool
         if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest connected component.
+        otherwise, retain only the largest weakly connected component.
     bidirectional : bool
         if True, create bidirectional edges for one-way streets
 

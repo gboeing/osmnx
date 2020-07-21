@@ -29,7 +29,7 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
         how many meters long the edge is)
     retain_all : bool
         if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest connected component.
+        otherwise, retain only the largest weakly connected component.
 
     Returns
     -------
@@ -82,11 +82,11 @@ def truncate_graph_bbox(
     west : float
         western longitude of bounding box
     truncate_by_edge : bool
-        if True retain node if it's outside bbox but at least one of node's
-        neighbors are within bbox
+        if True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box
     retain_all : bool
         if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest connected component.
+        otherwise, retain only the largest weakly connected component.
     quadrat_width : numeric
         passed on to intersect_index_quadrats: the linear length (in degrees) of
         the quadrats with which to cut up the geometry (default = 0.05, approx
@@ -130,14 +130,14 @@ def truncate_graph_polygon(
         only retain nodes in graph that lie within this geometry
     retain_all : bool
         if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest connected component.
+        otherwise, retain only the largest weakly connected component.
     truncate_by_edge : bool
-        if True retain node if it's outside polygon but at least one of node's
-        neighbors are within polygon
+        if True, retain nodes outside boundary polygon if at least one of
+        node's neighbors is within the polygon
     quadrat_width : numeric
-        passed on to intersect_index_quadrats: the linear length (in degrees) of
-        the quadrats with which to cut up the geometry (default = 0.05, approx
-        4km at NYC's latitude)
+        passed on to intersect_index_quadrats: the linear length (in degrees)
+        of the quadrats with which to cut up the geometry (default = 0.05,
+        approx 4km at NYC's latitude)
     min_num : int
         passed on to intersect_index_quadrats: the minimum number of linear
         quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4

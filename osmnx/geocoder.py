@@ -55,11 +55,11 @@ def geocode_to_gdf(query, which_result=None, buffer_dist=None):
 
     Parameters
     ----------
-    query : string or dict
-        query string or structured dict to geocode
+    query : string or dict or list
+        query string(s) or structured dict(s) to geocode
     which_result : int
         which geocoding result to use. if None, auto-select the first
-        multi/polygon or throw an error if OSM doesn't return one.
+        multi/polygon or raise an error if OSM doesn't return one.
     buffer_dist : float
         distance to buffer around the place geometry, in meters
 
@@ -122,12 +122,12 @@ def _geocode_query_to_gdf(query, which_result):
         query string or structured dict to geocode
     which_result : int
         which geocoding result to use. if None, auto-select the first
-        multi/polygon or throw an error if OSM doesn't return one.
+        multi/polygon or raise an error if OSM doesn't return one.
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
-        a GeoDataFrame with one row containing the result of the geocoder
+        a GeoDataFrame with one row containing the result of geocoding
     """
     if which_result is None:
         limit = 50
@@ -154,7 +154,7 @@ def _geocode_query_to_gdf(query, which_result):
         msg = f'OSM returned fewer than `which_result={which_result}` results for query "{query}"'
         raise ValueError(msg)
 
-    # build the geojson features from the chosen result
+    # build the geojson feature from the chosen result
     south, north, west, east = [float(x) for x in result["boundingbox"]]
     place = result["display_name"]
     geometry = result["geojson"]
@@ -177,13 +177,13 @@ def _geocode_query_to_gdf(query, which_result):
         msg = f'OSM returned a {geometry["type"]} as the geometry for query "{query}"'
         utils.log(msg, level=lg.WARNING)
 
-    # create the GeoDataFrame
+    # create and return the GeoDataFrame
     return gpd.GeoDataFrame.from_features(features)
 
 
 def _get_first_polygon(results, query):
     """
-    Choose first result of geometry type multi/polygon in list of results.
+    Choose first result with geometry type multi/polygon from list of results.
 
     Parameters
     ----------

@@ -470,7 +470,7 @@ def pois_from_place(place, tags, which_result=None):
         landuse=commercial, and highway=bus_stop.
     which_result : int
         which geocoding result to use. if None, auto-select the first
-        multi/polygon or throw an error if OSM doesn't return one.
+        multi/polygon or raise an error if OSM doesn't return one.
 
     Returns
     -------

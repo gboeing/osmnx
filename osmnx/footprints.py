@@ -461,7 +461,7 @@ def footprints_from_place(
         if False discard any footprints with an invalid geometry
     which_result : int
         which geocoding result to use. if None, auto-select the first
-        multi/polygon or throw an error if OSM doesn't return one.
+        multi/polygon or raise an error if OSM doesn't return one.
 
     Returns
     -------
