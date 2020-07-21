@@ -50,8 +50,8 @@ def geocode_to_gdf(query, which_result=None, buffer_dist=None):
 
     Geometry column contains place boundaries if they exist in OpenStreetMap.
     Query can be a string or dict, or a list of strings/dicts to send to the
-    geocoder. If query is a list, then which_result should be a scalar or a
-    list of the same length.
+    geocoder. If query is a list, then which_result should be either a single
+    value or a list of the same length as query.
 
     Parameters
     ----------
