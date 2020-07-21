@@ -2,6 +2,7 @@
 
 ## 0.16.0 (T.B.D.)
 
+  - auto-select first Polygon/MultiPolygon when geocoding with which_result=None
   - new k_shortest_paths function to solve *k* shortest paths from origin to destination
   - new shortest_path convenience function
   - new get_digraph function to correctly convert MultiDiGraph to DiGraph
