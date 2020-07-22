@@ -588,7 +588,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
         G.add_node(node, **data)
 
     # add each osm way (ie, a path of edges) to the graph
-    G = _add_paths(G, paths, bidirectional=bidirectional)
+    _add_paths(G, paths, bidirectional=bidirectional)
 
     # retain only the largest connected component, if caller did not
     # set retain_all=True
@@ -815,8 +815,6 @@ def _add_paths(G, paths, bidirectional=False):
             data["nodes"] = list(reversed(data["nodes"]))
 
         _add_path(G, data, one_way=is_one_way)
-
-    return G
 
 
 class _OSMContentHandler(xml.sax.handler.ContentHandler):
