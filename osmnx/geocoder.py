@@ -73,7 +73,7 @@ def geocode_to_gdf(query, which_result=None, buffer_dist=None):
 
     # if caller passed a list of queries but a scalar which_result value, then
     # turn which_result into a list with same length as query list
-    if isinstance(query, list) and isinstance(which_result, int):
+    if isinstance(query, list) and (isinstance(which_result, int) or which_result is None):
         which_result = [which_result] * len(query)
 
     # turn query and which_result into lists if they're not already
