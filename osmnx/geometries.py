@@ -579,13 +579,14 @@ def _filter_final_gdf(gdf, polygon, tags):
     gdf : GeoDataFrame
         final, filtered GeoDataFrame
     """
-    # filter retaining geometries within the bounding polygon
+    if len(gdf) < 1:
+        # if the GeoDataFrame is empty throw error
+        raise Exception("The final GeoDataFrame is empty. Check the original query.")
+
+    # filter retaining geometries within the bounding polygon using spatial index
     if polygon is not None:
-        try:
-            gdf = gdf.loc[gdf["geometry"].centroid.within(polygon)]
-        except KeyError as e:
-            print(e)
-            print("The final GeoDataFrame doesn't include any geometry - check the original query.")
+            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf, polygon)
+            gdf = gdf[gdf.index.isin(gdf_indices_in_polygon)]
 
     # filter retaining geometries with the requested tags
     if tags is not None:
