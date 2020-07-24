@@ -107,7 +107,7 @@ def test_geometry_coords_rounding():
 
 def test_geocode_to_gdf():
     # test loading spatial boundaries and plotting
-    city = ox.geocode_to_gdf(place1, buffer_dist=100)
+    city = ox.geocode_to_gdf(place1, which_result=1, buffer_dist=100)
     city_projected = ox.project_gdf(city, to_crs="epsg:3395")
 
 
