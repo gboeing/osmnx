@@ -581,7 +581,11 @@ def _filter_final_gdf(gdf, polygon, tags):
     """
     # filter retaining geometries within the bounding polygon
     if polygon is not None:
-        gdf = gdf.loc[gdf["geometry"].centroid.within(polygon)]
+        try:
+            gdf = gdf.loc[gdf["geometry"].centroid.within(polygon)]
+        except KeyError as e:
+            print(e)
+            print("The final GeoDataFrame doesn't include any geometry - check the original query.")
 
     # filter retaining geometries with the requested tags
     if tags is not None:
