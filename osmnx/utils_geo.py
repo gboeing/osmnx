@@ -395,10 +395,10 @@ def _intersect_index_quadrats(points, geometry, quadrat_width=0.05, min_num=3):
 
 def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     """
-    Create a bounding box from a point.
+    Create a bounding box from a (lat, lng) point.
 
     Create a bounding box some distance in each direction (north, south, east,
-    and west) from some (lat, lng) point.
+    and west) from the point.
 
     Parameters
     ----------
