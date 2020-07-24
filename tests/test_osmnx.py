@@ -105,10 +105,10 @@ def test_geometry_coords_rounding():
     shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
 
 
-def test_gdf_from_place():
+def test_geocode_to_gdf():
     # test loading spatial boundaries and plotting
-    city = ox.gdf_from_place(place1, buffer_dist=100)
-    city_projected = ox.projection.project_gdf(city, to_crs="epsg:3395")
+    city = ox.geocode_to_gdf(place1, which_result=1, buffer_dist=100)
+    city_projected = ox.project_gdf(city, to_crs="epsg:3395")
 
 
 def test_graph_from_xml():
@@ -134,7 +134,7 @@ def test_graph_from_xml():
     os.remove(temp_filename)
 
 
-def test_routing_folium():
+def test_routing():
 
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
 
@@ -152,7 +152,7 @@ def test_routing_folium():
     dest_node = list(G.nodes())[-5]
     orig_pt = (G.nodes[orig_node]["y"], G.nodes[orig_node]["x"])
     dest_pt = (G.nodes[dest_node]["y"], G.nodes[dest_node]["x"])
-    route = nx.shortest_path(G, orig_node, dest_node, weight="travel_time")
+    route = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
 
     attributes = ox.utils_graph.get_route_edge_attributes(G, route, "travel_time")
 
@@ -161,7 +161,8 @@ def test_routing_folium():
     fig, ax = ox.plot_graph_route(G, route, save=True)
 
     # test multiple routes
-    fig, ax = ox.plot_graph_routes(G, [route, route])
+    routes = ox.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
+    fig, ax = ox.plot_graph_routes(G, list(routes))
 
     # test folium
     gm = ox.plot_graph_folium(G, popup_attribute="name")

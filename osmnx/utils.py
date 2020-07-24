@@ -106,6 +106,7 @@ def config(
     nominatim_key=settings.nominatim_key,
     overpass_endpoint=settings.overpass_endpoint,
     all_oneway=settings.all_oneway,
+    elevation_provider=settings.elevation_provider,
 ):
     """
     Configure OSMnx by setting the default global settings' values.
@@ -183,6 +184,9 @@ def config(
         if True, forces all ways to be loaded as oneway ways, preserving
         the original order of nodes stored in the OSM way XML. Only use if
         specifically saving to .osm XML file with save_graph_xml function.
+    elevation_provider : string
+        the API provider to use for adding node elevations, can be either
+        "google" or "airmap"
 
     Returns
     -------
@@ -218,6 +222,7 @@ def config(
     settings.nominatim_key = nominatim_key
     settings.overpass_endpoint = overpass_endpoint
     settings.all_oneway = all_oneway
+    settings.elevation_provider = elevation_provider
 
     # if logging is turned on, log that we are configured
     if settings.log_file or settings.log_console:

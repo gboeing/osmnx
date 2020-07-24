@@ -1,8 +1,6 @@
-"""Expose the core OSMnx API."""
+"""Expose most common parts of public API directly in `osmnx.` namespace."""
 
 from .bearing import add_edge_bearings
-from .boundaries import gdf_from_place
-from .boundaries import gdf_from_places
 from .distance import get_nearest_edge
 from .distance import get_nearest_edges
 from .distance import get_nearest_node
@@ -41,6 +39,7 @@ from .pois import pois_from_address
 from .pois import pois_from_place
 from .pois import pois_from_point
 from .pois import pois_from_polygon
+from .projection import project_gdf
 from .projection import project_graph
 from .simplification import consolidate_intersections
 from .simplification import simplify_graph
@@ -55,3 +54,5 @@ from .utils import ts
 from .utils_graph import get_undirected
 from .utils_graph import graph_from_gdfs
 from .utils_graph import graph_to_gdfs
+from .utils_graph import k_shortest_paths
+from .utils_graph import shortest_path

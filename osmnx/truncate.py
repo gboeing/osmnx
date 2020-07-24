@@ -1,9 +1,6 @@
 """Truncate graph by distance, bounding box, or polygon."""
 
-import geopandas as gpd
 import networkx as nx
-import pandas as pd
-from shapely.geometry import Point
 
 from . import utils
 from . import utils_geo
@@ -31,19 +28,23 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
         how to weight the graph when measuring distance (default 'length' is
         how many meters long the edge is)
     retain_all : bool
-        if True, return the entire graph even if it is not connected
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest weakly connected component.
 
     Returns
     -------
     G : networkx.MultiDiGraph
         the truncated graph
     """
-    # get the shortest distance between the node and every other node, then
-    # remove every node further than max_dist away
-    G = G.copy()
+    # get the shortest distance between the node and every other node
     distances = nx.shortest_path_length(G, source=source_node, weight=weight)
-    distant_nodes = {key: value for key, value in dict(distances).items() if value > max_dist}
-    G.remove_nodes_from(distant_nodes.keys())
+
+    # then identify every node further than max_dist away
+    distant_nodes = {k: v for k, v in distances.items() if v > max_dist}
+
+    # make a copy to not edit the original graph object the caller passed in
+    G = G.copy()
+    G.remove_nodes_from(distant_nodes)
 
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
@@ -82,10 +83,11 @@ def truncate_graph_bbox(
     west : float
         western longitude of bounding box
     truncate_by_edge : bool
-        if True retain node if it's outside bbox but at least one of node's
-        neighbors are within bbox
+        if True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box
     retain_all : bool
-        if True, return the entire graph even if it is not connected
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest weakly connected component.
     quadrat_width : numeric
         passed on to intersect_index_quadrats: the linear length (in degrees) of
         the quadrats with which to cut up the geometry (default = 0.05, approx
@@ -128,14 +130,15 @@ def truncate_graph_polygon(
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         only retain nodes in graph that lie within this geometry
     retain_all : bool
-        if True, return the entire graph even if it is not connected
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest weakly connected component.
     truncate_by_edge : bool
-        if True retain node if it's outside polygon but at least one of node's
-        neighbors are within polygon
+        if True, retain nodes outside boundary polygon if at least one of
+        node's neighbors is within the polygon
     quadrat_width : numeric
-        passed on to intersect_index_quadrats: the linear length (in degrees) of
-        the quadrats with which to cut up the geometry (default = 0.05, approx
-        4km at NYC's latitude)
+        passed on to intersect_index_quadrats: the linear length (in degrees)
+        of the quadrats with which to cut up the geometry (default = 0.05,
+        approx 4km at NYC's latitude)
     min_num : int
         passed on to intersect_index_quadrats: the minimum number of linear
         quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4
@@ -146,33 +149,30 @@ def truncate_graph_polygon(
     G : networkx.MultiDiGraph
         the truncated graph
     """
-    G = G.copy()
     utils.log("Identifying all nodes that lie outside the polygon...")
 
-    # get a GeoDataFrame of all the nodes
-    node_geom = [Point(data["x"], data["y"]) for _, data in G.nodes(data=True)]
-    gdf_nodes = gpd.GeoDataFrame({"node": list(G.nodes()), "geometry": node_geom})
-    gdf_nodes.crs = G.graph["crs"]
-
-    # find all the nodes in the graph that lie outside the polygon
-    points_within_geometry = utils_geo._intersect_index_quadrats(
-        gdf_nodes, polygon, quadrat_width=quadrat_width, min_num=min_num
-    )
-    nodes_outside_polygon = gdf_nodes[~gdf_nodes.index.isin(points_within_geometry.index)]
+    # identify all the nodes that lie outside the polygon
+    gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
+    to_keep = utils_geo._intersect_index_quadrats(gs_nodes, polygon, quadrat_width, min_num)
+    gs_nodes_outside_geom = gs_nodes[~gs_nodes.index.isin(to_keep)]
+    nodes_outside_geom = set(gs_nodes_outside_geom.index)
 
     if truncate_by_edge:
-        nodes_to_remove = []
-        for node in nodes_outside_polygon["node"]:
-            neighbors = pd.Series(list(G.successors(node)) + list(G.predecessors(node)))
-            # check if all the neighbors of this node also lie outside polygon
-            if neighbors.isin(nodes_outside_polygon["node"]).all():
-                nodes_to_remove.append(node)
+        nodes_to_remove = set()
+        for node in nodes_outside_geom:
+            # if all the neighbors of this node also lie outside polygon, then
+            # mark this node for removal
+            neighbors = set(G.successors(node)) | set(G.predecessors(node))
+            if neighbors.issubset(nodes_outside_geom):
+                nodes_to_remove.add(node)
     else:
-        nodes_to_remove = nodes_outside_polygon["node"]
+        nodes_to_remove = nodes_outside_geom
 
     # now remove from the graph all those nodes that lie outside the polygon
+    # make a copy to not edit the original graph object the caller passed in
+    G = G.copy()
     G.remove_nodes_from(nodes_to_remove)
-    utils.log(f"Removed {len(nodes_outside_polygon)} nodes outside polygon")
+    utils.log(f"Removed {len(nodes_to_remove)} nodes outside polygon")
 
     if not retain_all:
         # remove any isolated nodes and retain only the largest component

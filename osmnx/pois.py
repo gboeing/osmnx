@@ -7,6 +7,7 @@ from shapely.geometry import Polygon
 
 from . import downloader
 from . import geocoder
+from . import projection
 from . import settings
 from . import utils
 from . import utils_geo
@@ -364,10 +365,14 @@ def _create_poi_gdf(polygon, tags):
     # Combine GeoDataFrames
     gdf = gdf_nodes.append(gdf_ways, sort=False)
 
-    # if caller requested pois within a polygon, only retain those that
-    # fall within the polygon
+    # if caller requested pois within a polygon, only retain those that fall
+    # within the polygon
     if len(gdf) > 0:
-        gdf = gdf.loc[gdf["geometry"].centroid.within(polygon)]
+        gdf_proj = projection.project_gdf(gdf)
+        poly_proj, crs = projection.project_geometry(polygon)
+        to_keep = gdf_proj.centroid.within(poly_proj)
+        gdf_proj = gdf_proj.loc[to_keep]
+        gdf = projection.project_gdf(gdf_proj, to_latlong=True)
 
     return gdf
 
@@ -444,14 +449,14 @@ def pois_from_address(address, tags, dist=1000):
     return pois_from_point(point=point, tags=tags, dist=dist)
 
 
-def pois_from_place(place, tags, which_result=1):
+def pois_from_place(place, tags, which_result=None):
     """
     Get points of interest (POIs) within the boundaries of some place.
 
     Parameters
     ----------
     place : string
-        the query to geocode to get boundary polygon
+        the query to geocode to get place boundary polygon
     tags : dict
         Dict of tags used for finding POIs from the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -464,7 +469,8 @@ def pois_from_place(place, tags, which_result=1):
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
     which_result : int
-        max number of geocoding results to return and which to process
+        which geocoding result to use. if None, auto-select the first
+        multi/polygon or raise an error if OSM doesn't return one.
 
     Returns
     -------
