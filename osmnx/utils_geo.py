@@ -414,30 +414,29 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     Returns
     -------
     tuple
-        (north, south, east, west) if return_crs=False or
-        (north, south, east, west, crs_proj) if return_crs=True
+        (north, south, east, west) or (north, south, east, west, crs_proj)
     """
     earth_radius = 6371000  # meters
     lat, lng = point
 
     delta_lat = (dist / earth_radius) * (180 / math.pi)
     delta_lng = (dist / earth_radius) * (180 / math.pi) / math.cos(lat * math.pi / 180)
-
     north = lat + delta_lat
     south = lat - delta_lat
     east = lng + delta_lng
     west = lng - delta_lng
-    to_return = north, south, east, west
 
     if project_utm:
         bbox_poly = bbox_to_poly(north, south, east, west)
         bbox_proj, crs_proj = projection.project_geometry(bbox_poly)
         west, south, east, north = bbox_proj.bounds
-        if return_crs:
-            to_return = north, south, east, west, crs_proj
 
     utils.log(f"Created bbox {dist} m from {point}: {north},{south},{east},{west}")
-    return to_return
+
+    if project_utm and return_crs:
+        return north, south, east, west, crs_proj
+    else:
+        return north, south, east, west
 
 
 def bbox_to_poly(north, south, east, west):
