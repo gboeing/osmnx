@@ -395,22 +395,21 @@ def _intersect_index_quadrats(points, geometry, quadrat_width=0.05, min_num=3):
 
 def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     """
-    Create a bounding box from a (lat, lng) point.
+    Create a bounding box from a (lat, lng) center point.
 
     Create a bounding box some distance in each direction (north, south, east,
-    and west) from the point.
+    and west) from the center point and optionally project it.
 
     Parameters
     ----------
     point : tuple
-        the (lat, lng) point to create the bounding box around
+        the (lat, lng) center point to create the bounding box around
     dist : int
-        how many meters the north, south, east, and west sides of the box should
-        each be from the point
+        bounding box distance in meters from the center point
     project_utm : bool
-        if True return bbox as UTM coordinates
+        if True, return bounding box as UTM-projected coordinates
     return_crs : bool
-        if True and project_utm=True, return the projected CRS
+        if True, and project_utm=True, return the projected CRS too
 
     Returns
     -------
@@ -418,33 +417,27 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
         (north, south, east, west) if return_crs=False or
         (north, south, east, west, crs_proj) if return_crs=True
     """
-    # reverse the order of the (lat,lng) point so it is (x,y) for shapely, then
-    # project to UTM and buffer in meters
+    earth_radius = 6371000  # meters
     lat, lng = point
-    point_proj, crs_proj = projection.project_geometry(Point((lng, lat)))
-    buffer_proj = point_proj.buffer(dist)
+
+    delta_lat = (dist / earth_radius) * (180 / math.pi)
+    delta_lng = (dist / earth_radius) * (180 / math.pi) / math.cos(lat * math.pi / 180)
+
+    north = lat + delta_lat
+    south = lat - delta_lat
+    east = lng + delta_lng
+    west = lng - delta_lng
+    to_return = north, south, east, west
 
     if project_utm:
-        west, south, east, north = buffer_proj.bounds
-        utils.log(
-            f"Created bbox {dist} m from {point} and projected it: {north},{south},{east},{west}"
-        )
-    else:
-        # if project_utm is False, project back to lat-lng then get the
-        # bounding coordinates
-        buffer_latlong, _ = projection.project_geometry(buffer_proj, crs=crs_proj, to_latlong=True)
-        west, south, east, north = buffer_latlong.bounds
-        utils.log(
-            (
-                f"Created bounding box {dist} meters in each direction "
-                f"from {point}: {north},{south},{east},{west}"
-            )
-        )
+        bbox_poly = bbox_to_poly(north, south, east, west)
+        bbox_proj, crs_proj = projection.project_geometry(bbox_poly)
+        west, south, east, north = bbox_proj.bounds
+        if return_crs:
+            to_return = north, south, east, west, crs_proj
 
-    if return_crs:
-        return north, south, east, west, crs_proj
-    else:
-        return north, south, east, west
+    utils.log(f"Created bbox {dist} m from {point}: {north},{south},{east},{west}")
+    return to_return
 
 
 def bbox_to_poly(north, south, east, west):
