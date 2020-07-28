@@ -135,7 +135,7 @@ def _load_polygon_features_json():
     """
     polygon_features = {}
 
-    with open('../polygon-features.json') as json_file:
+    with open('polygon-features.json') as json_file:
         polygon_features_json = json.load(json_file)
 
     for polygon_feature in polygon_features_json:
@@ -237,14 +237,11 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features):
     # if the OSM element is a closed way (i.e. first and last nodes are the same)
     # depending upon the tags the geometry could be a Shapely LineString or Polygon
     elif element["nodes"][0] == element["nodes"][-1]:
-        # Use the tags to determine whether the way represents a LineString, Polygon or both
-        is_linestring, is_polygon = _closed_way_is_linestring_or_polygon(element, polygon_features)
+        # Use the tags to determine whether the way represents a LineString, Polygon
+        is_polygon = _closed_way_is_linestring_or_polygon(element, polygon_features)
 
-    # TODO: Modify this to return both LineString and Polygon if way is tagged appropriately
         if is_polygon:
             geometry = Polygon([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
-        elif is_linestring:
-            geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
         else:
             geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
 
@@ -261,9 +258,11 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
     round a field) or Polygons (e.g. a building footprint or land use area)
     depending on the tags applied to them.
 
-    It is also possible for a single closed OSM way to represent both a LineString and
-    a Polygon if it is tagged appropriately (e.g. both the field and the hedge around
-    the field).
+    It is possible for a single closed OSM way to have both LineString and
+    Polygon type tags (e.g. both barrier=fence and landuse=agricultural).
+    This is not good practice and OSMnx will return a Polygon for elements
+    tagged in this way. For more information see:
+    https://wiki.openstreetmap.org/wiki/One_feature,_one_OSM_element)
 
     Parameters
     ----------
@@ -274,10 +273,9 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
 
     Returns
     -------
-    is_linestring, is_polygon : tuple of booleans
-        whether the closed way represents a LineString, Polygon or both
+    is_polygon : boolean
+        True if the tags are for a polygon type geometry
     """
-    is_linestring = False
     is_polygon = False
 
     # get the element's tags
@@ -289,7 +287,7 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
     
     # if the element has tags and is tagged 'area':'no' -> LineString
     elif element_tags.get('area') == 'no':
-        is_linestring = True
+        is_polygon = False
 
     # if the element has tags and is not tagged 'area':'no'
     # compare its tags with the polygon-features.json
@@ -318,7 +316,7 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
                     # if the value for that key in the element is in the blocklist -> LineString
                     # if the value for that key in the element is not in the blocklist -> Polygon
                     if key_value in polygon_features_values:
-                        is_linestring = True
+                        is_polygon = False
                     else:
                         is_polygon = True
 
@@ -329,14 +327,14 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
                     if key_value in polygon_features_values:
                         is_polygon = True
                     else:
-                        is_linestring = True
+                        is_polygon = False
 
         # the polygon_features dict is for determining which ways should become Polygons
         # therefore if no common keys are found the geometry should be a LineString by default
         else:
-            is_linestring = True
+            is_polygon = False
         
-    return is_linestring, is_polygon
+    return is_polygon
 
 
 def _parse_relation_to_multipolygon(element, linestrings_and_polygons):
