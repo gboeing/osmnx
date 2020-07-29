@@ -79,4 +79,5 @@ setup(
         "kdtree": ["scipy>=1.4"],
         "balltree": ["scikit-learn>=0.23"],
     },
+    include_package_data = True,
 )
