@@ -135,7 +135,7 @@ def _load_polygon_features_json():
     """
     polygon_features = {}
 
-    with open('polygon-features.json') as json_file:
+    with open('../polygon-features.json') as json_file:
         polygon_features_json = json.load(json_file)
 
     for polygon_feature in polygon_features_json:
@@ -337,7 +337,7 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
     return is_polygon
 
 
-def _parse_relation_to_multipolygon(element, linestrings_and_polygons):
+def _parse_relation_to_multipolygon(element, geometries):
     """
     Parse multipolygon from OSM relation (type:MultiPolygon).
 
@@ -348,7 +348,7 @@ def _parse_relation_to_multipolygon(element, linestrings_and_polygons):
     ----------
     element : dict
         element type "relation" from overpass response JSON
-    linestrings_and_polygons : dict
+    geometries : dict
         dictionary containing all linestrings and polygons generated from OSM ways
 
     Returns
@@ -360,9 +360,9 @@ def _parse_relation_to_multipolygon(element, linestrings_and_polygons):
     member_way_refs = [
         member["ref"] for member in element["members"] if member["type"] == "way"
     ]
-    # Extract the ways
+    # Extract the ways from the geometries dictionary using their unique id
     member_ways = [
-        linestrings_and_polygons[member_way_ref] for member_way_ref in member_way_refs
+        geometries[f"way/{member_way_ref}"] for member_way_ref in member_way_refs
     ]
     # Extract the nodes of those ways
     member_nodes = [
@@ -380,14 +380,14 @@ def _parse_relation_to_multipolygon(element, linestrings_and_polygons):
             multipolygon[tag] = element["tags"][tag]
 
     # Assemble MultiPolygon from component LineStrings and Polygons
-    geometry = _assemble_multipolygon_geometry(element, linestrings_and_polygons)
+    geometry = _assemble_multipolygon_geometry(element, geometries)
 
     multipolygon["geometry"] = geometry
 
     return multipolygon
 
 
-def _assemble_multipolygon_geometry(element, linestrings_and_polygons):
+def _assemble_multipolygon_geometry(element, geometries):
     """
     Assembles a MultiPolygon from its component LineStrings and Polygons.
 
@@ -401,7 +401,7 @@ def _assemble_multipolygon_geometry(element, linestrings_and_polygons):
     ----------
     element : dict
         element type "relation" from overpass response JSON
-    linestrings_and_polygons : dict
+    geometries : dict
         dict containing all linestrings and polygons generated from OSM ways
 
     Returns
@@ -418,7 +418,7 @@ def _assemble_multipolygon_geometry(element, linestrings_and_polygons):
     for member in element["members"]:
         if (member.get("type") == "way"):
             # get the member's geometry from linestrings_and_polygons
-            linestring_or_polygon = linestrings_and_polygons.get(member["ref"])
+            linestring_or_polygon = geometries.get(f"way/{member['ref']}")
             # sort it into one of the lists according to its role and geometry
             if (member.get("role") == "outer") and (linestring_or_polygon["geometry"].geom_type == 'Polygon'):
                 outer_polygons.append(linestring_or_polygon["geometry"])
@@ -502,15 +502,17 @@ def _create_gdf(polygon, tags, response=None):
         # Requests a JSON from the Overpass API
         response = _get_overpass_response(polygon, tags)
 
-    # Dictionaries to hold intermediate geometries
+    # Dictionaries to hold nodes and complete geometries
     coords = {}
-    points = {}
-    linestrings_and_polygons = {}
-    multipolygons = {}
+    geometries = {}
 
     # Parses the JSON of OSM nodes, ways and (multipolygon) relations to dictionaries of
     # coordinates, Shapely Points, LineStrings, Polygons and MultiPolygons
     for element in response["elements"]:
+
+        # id numbers are only unique within element types
+        # create unique id from combination of type and id
+        unique_id = f"{element['type']}/{element['id']}"
 
         if element["type"] == "node":
             # Parse all nodes to coords
@@ -519,7 +521,7 @@ def _create_gdf(polygon, tags, response=None):
             # Parse nodes with tags to points
             if "tags" in element:
                 point = _parse_node_to_point(element=element)
-                points[element["id"]] = point
+                geometries[unique_id] = point
 
         elif element["type"] == "way":
             # Parse all ways to linestrings or polygons
@@ -529,22 +531,16 @@ def _create_gdf(polygon, tags, response=None):
                 polygon_features=polygon_features,
                 )
             if linestring_or_polygon:
-                linestrings_and_polygons[element["id"]] = linestring_or_polygon
+                geometries[unique_id] = linestring_or_polygon
 
         elif element["type"] == "relation" and element.get("tags").get("type") == "multipolygon":
             # Parse all multipolygon relations to multipolygons
-            multipolygon = _parse_relation_to_multipolygon(element=element, linestrings_and_polygons=linestrings_and_polygons)
+            multipolygon = _parse_relation_to_multipolygon(element=element, geometries=geometries)
             if multipolygon:
-                multipolygons[element["id"]] = multipolygon
+                geometries[unique_id] = multipolygon
 
-    # Create GeoDataFrames
-    gdf_points = gpd.GeoDataFrame.from_dict(points, orient="index")
-    gdf_lines_and_polygons = gpd.GeoDataFrame.from_dict(linestrings_and_polygons, orient="index")
-    gdf_multipolygons = gpd.GeoDataFrame.from_dict(multipolygons, orient="index")
-
-    # Combine GeoDataFrames
-    gdf = gdf_points.append(gdf_lines_and_polygons, sort=False)
-    gdf = gdf.append(gdf_multipolygons, sort=False)
+    # Create GeoDataFrame
+    gdf = gpd.GeoDataFrame.from_dict(geometries, orient="index")
 
     # Set default crs
     gdf.crs = settings.default_crs
