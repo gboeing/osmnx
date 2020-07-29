@@ -341,6 +341,7 @@ def test_network_saving_loading():
 def test_get_network_methods():
 
     # graph from bounding box
+    _ = ox.utils_geo.bbox_from_point(location_point, project_utm=True, return_crs=True)
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
     G = ox.graph_from_bbox(north, south, east, west, network_type="drive")
     G = ox.graph_from_bbox(
