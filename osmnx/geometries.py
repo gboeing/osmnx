@@ -135,7 +135,7 @@ def _load_polygon_features_json():
     """
     polygon_features = {}
 
-    with open('polygon-features.json') as json_file:
+    with open('../polygon-features.json') as json_file:
         polygon_features_json = json.load(json_file)
 
     for polygon_feature in polygon_features_json:
@@ -582,9 +582,9 @@ def _filter_final_gdf(gdf, polygon, tags):
         raise Exception("The final GeoDataFrame is empty. Check the original query.")
 
     # filter retaining geometries within the bounding polygon using spatial index
-    if polygon is not None:
-            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf.centroid, polygon)
-            gdf = gdf[gdf.index.isin(gdf_indices_in_polygon)]
+    #if polygon is not None:
+    #        gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf.centroid, polygon)
+    #        gdf = gdf[gdf.index.isin(gdf_indices_in_polygon)]
 
     # filter retaining geometries with the requested tags
     if tags is not None:
