@@ -1,5 +1,7 @@
 """Download geometries from OpenStreetMap."""
 
+from pathlib import Path
+
 import json
 import geopandas as gpd
 
@@ -135,7 +137,10 @@ def _load_polygon_features_json():
     """
     polygon_features = {}
 
-    with open('../polygon-features.json') as json_file:
+    path = Path(__file__).parent / '../polygon-features.json'
+    print(path)
+
+    with path.open() as json_file:
         polygon_features_json = json.load(json_file)
 
     for polygon_feature in polygon_features_json:
