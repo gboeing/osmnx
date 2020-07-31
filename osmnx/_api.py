@@ -16,6 +16,7 @@ from .footprints import footprints_from_polygon
 from .geocoder import geocode
 from .geocoder import geocode_to_gdf
 from .geometries import gdf_from_address
+from .geometries import gdf_from_bbox
 from .geometries import gdf_from_place
 from .geometries import gdf_from_point
 from .geometries import gdf_from_polygon
