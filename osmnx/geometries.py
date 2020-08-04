@@ -741,3 +741,45 @@ def gdf_from_polygon(polygon, tags):
     other custom settings via ox.config().
     """
     return _create_gdf(polygon, tags)
+
+
+def gdf_from_bbox(point, size, tags):
+    """
+    Get geometry within bounding box around a central point.
+
+    Parameters
+    ----------
+    point : tuple
+        a (lat, lng) center of bounding box
+    tags : dict
+        Dict of tags used for finding geometry from the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, landuse=retail,
+        landuse=commercial, and highway=bus_stop.
+    size : tuple
+        a (width, height)
+        Total width and height of the bounding box in meters
+
+    Returns
+    -------
+    gdf : geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
+    """
+
+    lat,   lng               = point
+    width, height            = size
+    north, south, _   , _    = utils_geo.bbox_from_point((lat,lng), dist=height/2)
+    _    , _    , east, west = utils_geo.bbox_from_point((lat,lng), dist=width/2)
+
+    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    return gdf_from_polygon(polygon, tags)
