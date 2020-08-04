@@ -264,8 +264,8 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
 
     It is possible for a single closed OSM way to have both LineString and
     Polygon type tags (e.g. both barrier=fence and landuse=agricultural).
-    This is not good practice and OSMnx will return a Polygon for elements
-    tagged in this way. For more information see:
+    OSMnx will return a single Polygon for elements tagged in this way.
+    For more information see:
     https://wiki.openstreetmap.org/wiki/One_feature,_one_OSM_element)
 
     Parameters
