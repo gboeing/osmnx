@@ -515,6 +515,12 @@ def _create_gdf(polygon, tags, response=None):
     # Create GeoDataFrame
     gdf = gpd.GeoDataFrame.from_dict(geometries, orient="index")
 
+    # ensure gdf has a geometry col before assigning crs
+    if "geometry" not in gdf.columns:
+        # if there is no geometry column, create a null column
+        gdf["geometry"] = np.nan
+    gdf.set_geometry("geometry")
+
     # Set default crs
     gdf.crs = settings.default_crs
 
@@ -546,28 +552,26 @@ def _filter_final_gdf(gdf, polygon, tags):
     gdf : GeoDataFrame
         final, filtered GeoDataFrame
     """
-    if len(gdf) < 1:
-        # if the GeoDataFrame is empty throw error
-        raise Exception("The final GeoDataFrame is empty. Check the original query.")
+    if not gdf.empty:
 
-    # filter retaining geometries within the bounding polygon using spatial index
-    if polygon is not None:
-            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf.centroid, polygon)
-            gdf = gdf[gdf.index.isin(gdf_indices_in_polygon)]
+        # filter retaining geometries within the bounding polygon using spatial index
+        if polygon is not None:
+                gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf.centroid, polygon)
+                gdf = gdf[gdf.index.isin(gdf_indices_in_polygon)]
 
-    # filter retaining geometries with the requested tags
-    if tags is not None:
-        # Intersect the tags and column names to be sure the tags are present in the columns
-        tags_present_in_columns = set(tags.keys()).intersection(set(gdf.columns))
-        # Select rows which have non-null values in any of these columns
-        gdf = gdf[gdf[tags_present_in_columns].notna().any(axis=1)]
+        # filter retaining geometries with the requested tags
+        if tags is not None:
+            # Intersect the tags and column names to be sure the tags are present in the columns
+            tags_present_in_columns = set(tags.keys()).intersection(set(gdf.columns))
+            # Select rows which have non-null values in any of these columns
+            gdf = gdf[gdf[tags_present_in_columns].notna().any(axis=1)]
 
-    # remove columns of all nulls (created by discarded component geometries)
-    gdf.dropna(axis='columns', how='all', inplace=True)
+        # remove columns of all nulls (created by discarded component geometries)
+        gdf.dropna(axis='columns', how='all', inplace=True)
 
-    # reset the index.
-    # Theoretically points, linestrings and polygons, multipolygons could share index numbers
-    gdf.reset_index(drop=True, inplace=True)
+        # reset the index.
+        # Theoretically points, linestrings and polygons, multipolygons could share index numbers
+        gdf.reset_index(drop=True, inplace=True)
 
     return gdf
 
