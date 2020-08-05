@@ -1,6 +1,7 @@
 """Download geometries from OpenStreetMap."""
 
 import geopandas as gpd
+import numpy as np
 from shapely.geometry import Point
 from shapely.geometry import LineString
 from shapely.geometry import Polygon
