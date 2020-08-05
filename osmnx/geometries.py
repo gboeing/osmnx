@@ -18,6 +18,7 @@ from . import geocoder
 from . import settings
 from . import utils
 from . import utils_geo
+from .polygon_features import polygon_features
 
 
 def _create_overpass_query(polygon, tags):
@@ -120,32 +121,6 @@ def _get_overpass_response(polygon, tags):
     query = _create_overpass_query(polygon, tags)
     response = downloader.overpass_request(data={"data": query})
     return response
-
-
-def _load_polygon_features_json():
-    """
-    Loads the polygon-features.json and parses it to a dictionary
-
-    OSM ways represent open LineStrings, closed LineStrings and Polygons.
-    Which one depends in part on their tags. The JSON loaded here is adapted
-    from one used by Overpass Turbo. The original file is linked to from this page:
-    https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features
-    
-    Returns
-    -------
-    polygon_features : dict
-    """
-    polygon_features = {}
-
-    json_path = Path(__file__).parent / 'polygon-features.json'
-
-    with json_path.open() as json_file:
-        polygon_features_json = json.load(json_file)
-
-    for polygon_feature in polygon_features_json:
-        polygon_features[polygon_feature.pop('key')] = polygon_feature
-
-    return polygon_features
 
 
 def _parse_node_to_coord(element):
@@ -294,9 +269,9 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
         is_polygon = False
 
     # if the element has tags and is not tagged 'area':'no'
-    # compare its tags with the polygon-features.json
+    # compare its tags with the polygon_features dictionary
     else:
-        # identify common keys in the element's tags and the polygon-features.json
+        # identify common keys in the element's tags and the polygon_features dictionary
         intersecting_keys = element_tags.keys() & polygon_features.keys()
 
         # if common keys are found
@@ -306,9 +281,9 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
             for key in intersecting_keys:
                 # Get the key's value from the element's tags
                 key_value = element_tags.get(key)
-                # Determine if the key is for a blocklist or passlist in the polygon-features.json
+                # Determine if the key is for a blocklist or passlist in the polygon_features dictionary
                 blocklist_or_passlist = polygon_features.get(key).get('polygon')
-                # Get the values for the key from the polygon_features.json
+                # Get the values for the key from the polygon_features dictionary
                 polygon_features_values = polygon_features.get(key).get('values')
                 
                 # if all features with that key should be polygons -> Polygon
@@ -498,8 +473,6 @@ def _create_gdf(polygon, tags, response=None):
     gdf : geopandas.GeoDataFrame
         geometries and their associated tags
     """
-    # Load the polygon-features.json for resolving closed ways to LineStrings or Polygons
-    polygon_features = _load_polygon_features_json()
 
     # If no pre-saved response is passed in
     if response is None:
