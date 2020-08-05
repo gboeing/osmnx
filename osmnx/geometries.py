@@ -1,10 +1,6 @@
 """Download geometries from OpenStreetMap."""
 
-from pathlib import Path
-
-import json
 import geopandas as gpd
-
 from shapely.geometry import Point
 from shapely.geometry import LineString
 from shapely.geometry import Polygon
