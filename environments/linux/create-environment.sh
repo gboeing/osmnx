@@ -17,4 +17,4 @@ conda clean --all --yes
 conda env export -n ox > environment.yml
 conda list
 jupyter kernelspec list
-ipython -c "import osmnx; print(osmnx.__version__)"
+ipython -c "import osmnx; print('OSMnx version', osmnx.__version__)"
