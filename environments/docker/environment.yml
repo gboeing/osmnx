@@ -9,7 +9,7 @@ dependencies:
   - alabaster=0.7.12=py_0
   - alembic=1.4.2=pyh9f0ad1d_0
   - appdirs=1.4.3=py_1
-  - argon2-cffi=20.1.0=py38h1e0a361_0
+  - argon2-cffi=20.1.0=py38h1e0a361_1
   - async_generator=1.10=py_0
   - attrs=19.3.0=py_0
   - babel=2.8.0=py_0
@@ -89,7 +89,7 @@ dependencies:
   - ipykernel=5.3.4=py38h23f93f0_0
   - ipython=7.17.0=py38h1cdfbd6_0
   - ipython_genutils=0.2.0=py_1
-  - isort=5.2.2=py38h32f6830_0
+  - isort=5.3.0=py38h32f6830_0
   - jedi=0.17.2=py38h32f6830_0
   - jeepney=0.4.3=py_0
   - jinja2=2.11.2=pyh9f0ad1d_0

@@ -12,9 +12,9 @@ eval "$(conda shell.bash hook)"
 conda activate ox
 pip uninstall osmnx --yes
 pip install -e ../../.
-python -m ipykernel install --user --name ox --display-name "Python (ox)"
+python -m ipykernel install --sys-prefix --name ox --display-name "Python (ox)"
 conda clean --all --yes
 conda env export -n ox > environment.yml
 conda list
 jupyter kernelspec list
-ipython -c "import osmnx; print(osmnx.__version__)"
+ipython -c "import osmnx; print('OSMnx version', osmnx.__version__)"
