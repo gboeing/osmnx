@@ -21,13 +21,13 @@ RUN conda config --set show_channel_urls true && \
     python -m ipykernel install --sys-prefix --name ox --display-name "Python (ox)" && \
     conda clean --all --yes && \
     conda info --all && \
-    conda list
+    conda list && \
+    jupyter kernelspec list && \
+    ipython -c "import osmnx; print('OSMnx version', osmnx.__version__)"
 
-# launch jupyter in the local working directory that we mount
+# copy default jupyterlab settings, then set jupyter working directory to map to mounted volume
+COPY overrides.json /opt/conda/share/jupyter/lab/settings/
 WORKDIR /home/jovyan/work
 
 # set default command to launch when container is run
 CMD ["jupyter", "lab", "--ip='0.0.0.0'", "--port=8888", "--no-browser", "--NotebookApp.token=''", "--NotebookApp.password=''"]
-
-# to test, import OSMnx and print its version
-RUN ipython -c "import osmnx; print(osmnx.__version__)"
