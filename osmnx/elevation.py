@@ -8,6 +8,7 @@ import pandas as pd
 import requests
 
 from . import downloader
+from . import settings
 from . import utils
 
 
@@ -17,14 +18,16 @@ def add_node_elevations(
     """
     Add `elevation` (meters) attribute to each node.
 
-    Uses the google maps elevation API.
+    Uses the Google Maps Elevation API by default, but you can configure
+    this to a different provider via ox.config()
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
     api_key : string
-        your google maps elevation API key
+        your google maps elevation API key, or equivalent if using a different
+        provider
     max_locations_per_batch : int
         max number of coordinate pairs to submit in each API call (if this is
         too high, the server will reject the request because its character
@@ -39,8 +42,12 @@ def add_node_elevations(
     G : networkx.MultiDiGraph
         graph with node elevation attributes
     """
-    # google maps elevation API endpoint
-    url_template = "https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}"
+    # different elevation API endpoints formatted ready for use
+    endpoints = {
+        "google": "https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}",
+        "airmap": "https://api.airmap.com/elevation/v1/ele?points={}",
+    }
+    url_template = endpoints[settings.elevation_provider]
 
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
     # round coorindates to 5 decimal places (approx 1 meter) to be able to fit
@@ -56,8 +63,13 @@ def add_node_elevations(
     results = []
     for i in range(0, len(node_points), max_locations_per_batch):
         chunk = node_points.iloc[i : i + max_locations_per_batch]
-        locations = "|".join(chunk)
-        url = url_template.format(locations, api_key)
+
+        if settings.elevation_provider == "google":
+            locations = "|".join(chunk)
+            url = url_template.format(locations, api_key)
+        elif settings.elevation_provider == "airmap":
+            locations = ",".join(chunk)
+            url = url_template.format(locations)
 
         # check if this request is already in the cache (if global use_cache=True)
         cached_response_json = downloader._get_from_cache(url)
@@ -68,7 +80,14 @@ def add_node_elevations(
                 # request the elevations from the API
                 utils.log(f"Requesting node elevations: {url}")
                 time.sleep(pause_duration)
-                response = requests.get(url)
+                if settings.elevation_provider == "google":
+                    response = requests.get(url)
+                elif settings.elevation_provider == "airmap":
+                    headers = {
+                        "X-API-Key": api_key,
+                        "Content-Type": "application/json; charset=utf-8",
+                    }
+                    response = requests.get(url, headers=headers)
                 response_json = response.json()
                 downloader._save_to_cache(url, response_json)
             except Exception as e:
@@ -76,7 +95,10 @@ def add_node_elevations(
                 utils.log(f"Server responded with {response.status_code}: {response.reason}")
 
         # append these elevation results to the list of all results
-        results.extend(response_json["results"])
+        if settings.elevation_provider == "google":
+            results.extend(response_json["results"])
+        elif settings.elevation_provider == "airmap":
+            results.extend(response_json["data"])
 
     # sanity check that all our vectors have the same number of elements
     if not (len(results) == len(G) == len(node_points)):
@@ -90,7 +112,10 @@ def add_node_elevations(
 
     # add elevation as an attribute to the nodes
     df = pd.DataFrame(node_points, columns=["node_points"])
-    df["elevation"] = [result["elevation"] for result in results]
+    if settings.elevation_provider == "google":
+        df["elevation"] = [result["elevation"] for result in results]
+    elif settings.elevation_provider == "airmap":
+        df["elevation"] = results
     df["elevation"] = df["elevation"].round(precision)
     nx.set_node_attributes(G, name="elevation", values=df["elevation"].to_dict())
     utils.log("Added elevation data to all nodes.")

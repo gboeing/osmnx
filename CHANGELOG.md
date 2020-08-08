@@ -1,5 +1,35 @@
 # Change log
 
+## 0.16.0 (T.B.D.)
+
+  - auto-select first Polygon/MultiPolygon when geocoding with which_result=None
+  - new k_shortest_paths function to solve *k* shortest paths from origin to destination
+  - new shortest_path convenience function
+  - new get_digraph function to correctly convert MultiDiGraph to DiGraph
+  - miscellaneous performance improvements and optimizations
+  - deprecate induce_subgraph function
+  - remove deprecated boundaries module (replaced by geocoder module in v0.15.0)
+  - remove deprecated utils_geo.geocode function (replaced by geocoder.geocode function in v0.15.0)
+
+## 0.15.1 (2020-07-03)
+
+  - fix geopandas future warnings
+
+## 0.15.0 (2020-06-30)
+
+  - improve plotting defaults and streamline plot module speed and efficiency
+  - improve color handling in plot module
+  - improve route plotting
+  - plot_graph_routes function now accepts multiple route colors
+  - allow multiple elevation API providers
+  - consolidate_intersections replaces update_edge_lengths param with reconnect_edges param
+  - fix geopackage file saving after consolidating intersections
+  - add new geocoder module and move utils_geo.geocode function into it
+  - replace gdf_from_place/s functions with geocoder.geocode_to_gdf
+  - deprecate boundaries module
+  - remove deprecated timeout, memory, custom_settings, and max_query_area_size function params
+  - remove deprecated plotting params and plot_shape function
+
 ## 0.14.1 (2020-06-09)
 
   - fix simplification of graphs with long rural roads
@@ -27,7 +57,7 @@
 ## 0.13.0 (2020-05-25)
 
   - major refactor of entire package
-  - clean up API and namespace (see [documentation](https://osmnx.readthedocs.io/en/stable/) for reference and the updated [usage examples](https://github.com/gboeing/osmnx-examples))
+  - clean up API and namespace (see [documentation](https://osmnx.readthedocs.io/) for reference and the updated [usage examples](https://github.com/gboeing/osmnx-examples))
   - new consolidate_intersections function with topological option
   - new speed module to calculate graph edge speeds and travel times
   - generalize POIs module to query with a flexible tags dict

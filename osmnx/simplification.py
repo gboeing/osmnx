@@ -236,9 +236,11 @@ def simplify_graph(G, strict=True, remove_rings=True):
         raise Exception("This graph has already been simplified, cannot simplify it again.")
 
     utils.log("Begin topologically simplifying the graph...")
+
+    # make a copy to not edit the original graph object the caller passed in
     G = G.copy()
-    initial_node_count = len(list(G.nodes()))
-    initial_edge_count = len(list(G.edges()))
+    initial_node_count = len(G)
+    initial_edge_count = len(G.edges())
     all_nodes_to_remove = []
     all_edges_to_add = []
 
@@ -326,35 +328,41 @@ def consolidate_intersections(
     """
     Consolidate intersections comprising clusters of nearby nodes.
 
-    Merging nodes and return either their centroids or a rebuilt graph with
-    consolidated intersections and reconnected edge geometries.
+    Merges nearby nodes and returns either their centroids or a rebuilt graph
+    with consolidated intersections and reconnected edge geometries. The
+    tolerance argument should be adjusted to approximately match street design
+    standards in the specific street network, and you should always use a
+    projected graph to work in meaningful and consistent units like meters.
 
-    The tolerance argument should be adjusted to approximately match street
-    design standards in the specific street network, and you should always use
-    a projected graph to work in meaningful and consistent units like meters.
+    When rebuild_graph=False, it uses a purely geometrical (and relatively
+    fast) algorithm to identify "geometrically close" nodes, merge them, and
+    return just the merged intersections' centroids. When rebuild_graph=True,
+    it uses a topological (and slower but more accurate) algorithm to identify
+    "topologically close" nodes, merge them, then rebuild/return the graph.
+    Returned graph's node IDs represent clusters rather than osmids. Refer to
+    nodes' osmid attributes for original osmids. If multiple nodes were merged
+    together, the osmid attribute is a list of merged nodes' osmids.
 
     Divided roads are often represented by separate centerline edges. The
     intersection of two divided roads thus creates 4 nodes, representing where
-    each edge intersects a perpendicular edge. These 4 nodes represent a single
-    intersection in the real world. This function consolidates them up by
-    buffering them to an arbitrary distance, merging overlapping buffers, and
-    taking their centroid. For best results, the tolerance argument should be
-    adjusted to approximately match street design standards in the specific
-    street network.
+    each edge intersects a perpendicular edge. These 4 nodes represent a
+    single intersection in the real world. A similar situation occurs with
+    roundabouts and traffic circles. This function consolidates nearby nodes
+    by buffering them to an arbitrary distance, merging overlapping buffers,
+    and taking their centroid.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         a projected graph
     tolerance : float
-        nodes within this distance (in graph's geometry's units) will be
-        dissolved into a single intersection
+        nodes are buffered to this distance (in graph's geometry's units) and
+        subsequent overlaps are dissolved into a single node
     rebuild_graph : bool
-        if True, use consolidate_intersections_rebuild_graph to consolidate
-        the intersections and rebuild the graph, then return as
-        networkx.MultiDiGraph. if False, just return the consolidated
-        intersection points as a geopandas.GeoSeries (faster than rebuilding
-        graph)
+        if True, consolidate the nodes topologically, rebuild the graph, and
+        return as networkx.MultiDiGraph. if False, consolidate the nodes
+        geometrically and return the consolidated node points as
+        geopandas.GeoSeries
     dead_ends : bool
         if False, discard dead-end nodes to return only street-intersection
         points
@@ -362,7 +370,8 @@ def consolidate_intersections(
         ignored if rebuild_graph is not True. if True, reconnect edges and
         their geometries in rebuilt graph to the consolidated nodes and update
         edge length attributes; if False, returned graph has no edges (which
-        is faster if you just need consolidated intersection counts).
+        is faster if you just need topologically consolidated intersection
+        counts).
 
     Returns
     -------
@@ -380,6 +389,8 @@ def consolidate_intersections(
             streets_per_node = utils_graph.count_streets_per_node(G)
 
         dead_end_nodes = [node for node, count in streets_per_node.items() if count <= 1]
+
+        # make a copy to not edit the original graph object the caller passed in
         G = G.copy()
         G.remove_nodes_from(dead_end_nodes)
 
@@ -422,14 +433,14 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     G : networkx.MultiDiGraph
         a projected graph
     tolerance : float
-        nodes within this distance (in graph's geometry's units) will be
-        dissolved into a single node, with edges reconnected to this new
-        node
+        nodes are buffered to this distance (in graph's geometry's units) and
+        subsequent overlaps are dissolved into a single node
     reconnect_edges : bool
         ignored if rebuild_graph is not True. if True, reconnect edges and
         their geometries in rebuilt graph to the consolidated nodes and update
         edge length attributes; if False, returned graph has no edges (which
-        is faster if you just need consolidated intersection counts).
+        is faster if you just need topologically consolidated intersection
+        counts).
 
     Returns
     -------

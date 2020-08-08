@@ -8,7 +8,11 @@ OSMnx documentation
 
    osmnx
 
-**OSMnx**: retrieve, model, analyze, and visualize street networks from OpenStreetMap. OSMnx is a Python package that lets you download spatial geometries and model, project, visualize, and analyze real-world street networks from OpenStreetMap's APIs. Users can download and model walkable, drivable, or bikeable urban networks with a single line of Python code, and then easily analyze and visualize them. You can just as easily download and work with amenities/points of interest, building footprints, elevation data, street bearings/orientations, speed/travel time, and network routing.
+**OSMnx**: retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data.
+
+OSMnx is a Python package that lets you download spatial geometries and model, project, visualize, and analyze real-world street networks from OpenStreetMap's APIs. Users can download and model walkable, drivable, or bikeable urban networks with a single line of Python code, and then easily analyze and visualize them. You can just as easily download and work with amenities/points of interest, building footprints, elevation data, street bearings/orientations, speed/travel time, and network routing.
+
+The OSMnx project is hosted on `GitHub`_.
 
 
 Citation info
@@ -41,7 +45,7 @@ OSMnx is built on top of geopandas, networkx, and matplotlib and interacts with 
   * Visualize travel distance and travel time with isoline and isochrone maps
   * Plot figure-ground diagrams of street networks and/or building footprints
 
-Examples and demonstrations of these features are in the GitHub repo (see below). More feature development details are in the `change log`_.
+Usage examples and demonstrations of these features are in the `examples`_ GitHub repo. More feature development details are in the `change log`_.
 
 
 Installation
@@ -54,13 +58,13 @@ You can install OSMnx with conda:
     conda config --prepend channels conda-forge
     conda create -n ox --strict-channel-priority osmnx
 
-Alternatively, you can run OSMnx + Jupyter directly from its official `docker container`_, or you can install OSMnx via `pip`_ if you already have all of its dependencies installed on your system.
+Alternatively, you can run OSMnx + Jupyter directly from the official `docker container`_, or you can install OSMnx via `pip`_ if you already have all of its dependencies installed and tested on your system. Note: pip installation is nontrivial. If you don't know *exactly* what you're doing, just use conda as described above.
 
 
-Examples
---------
+Usage examples
+--------------
 
-For code and usage examples/demos, see the `examples`_ GitHub repo.
+For sample code and usage examples/demos, see the `examples`_ GitHub repo.
 
 
 Support
@@ -81,15 +85,16 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-* `Internals reference`_
+* `Internals Reference`_
 
 .. _change log: https://github.com/gboeing/osmnx/blob/master/CHANGELOG.md
 .. _docker container: https://hub.docker.com/r/gboeing/osmnx
 .. _conda environment: https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
 .. _examples: https://github.com/gboeing/osmnx-examples
 .. _issue: https://github.com/gboeing/osmnx/issues
+.. _GitHub: https://github.com/gboeing/osmnx
 .. _OSMnx GitHub repo: https://github.com/gboeing/osmnx
 .. _pip: https://pypi.python.org/pypi/OSMnx
 .. _StackOverflow: https://stackoverflow.com/search?q=osmnx
 .. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: http://geoffboeing.com/publications/osmnx-complex-street-networks/
-.. _Internals reference: osmnx-complete.html
+.. _Internals Reference: osmnx-complete.html
