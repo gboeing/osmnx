@@ -305,6 +305,34 @@ def _make_overpass_settings():
     return settings.overpass_settings.format(timeout=settings.timeout, maxsize=maxsize)
 
 
+def _make_overpass_polygon_coord_strs(polygon):
+    """
+    Subdivide query polygon and return list of sub-divided polygon coordinate strings
+
+    project to utm, divide polygon up into sub-polygons if area exceeds a
+    max size (in meters), project back to lat-lng, then get a list of
+    polygon(s) exterior coordinates
+
+    Parameters
+    ----------
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
+        geographic boundaries to fetch the OSM geometries within
+
+    Returns
+    -------
+    polygon_coord_strs : list
+        list of exterior coordinate strings for smaller sub-divided polygons
+    """
+    geometry_proj, crs_proj = projection.project_geometry(polygon)
+    gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj)
+    geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
+    polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
+    utils.log(
+        f"Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)"
+    )
+    return polygon_coord_strs
+
+
 def _osm_net_download(polygon, network_type, custom_filter):
     """
     Download OSM ways and nodes within some polygon from the Overpass API.
@@ -333,16 +361,8 @@ def _osm_net_download(polygon, network_type, custom_filter):
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
 
-    # project to utm, divide polygon up into sub-polygons if area exceeds a
-    # max size (in meters), project back to lat-lng, then get a list of
-    # polygon(s) exterior coordinates
-    geometry_proj, crs_proj = projection.project_geometry(polygon)
-    gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj)
-    geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
-    polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
-    utils.log(
-        f"Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)"
-    )
+    # subdivide query polygon and get list of sub-divided polygon coordinate strings
+    polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
 
     # pass each polygon exterior coordinates in the list to the API, one at a
     # time. The '>' makes it recurse so we get ways and the ways' nodes.
