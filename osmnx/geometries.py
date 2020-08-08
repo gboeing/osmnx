@@ -687,7 +687,10 @@ def gdf_from_place(place, tags, which_result=1):
     polygon = gdf_place["geometry"].iloc[0]
 
     # create geodataframe using this polygon(s) geometry
-    return gdf_from_polygon(polygon, tags)
+    GDF = gdf_from_polygon(polygon, tags)
+
+    utils.log(f"gdf_from_place returned geodataframe with {len(GDF)} geometries")
+    return GDF
 
 
 def gdf_from_polygon(polygon, tags):
