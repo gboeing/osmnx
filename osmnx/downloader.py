@@ -305,6 +305,77 @@ def _make_overpass_settings():
     return settings.overpass_settings.format(timeout=settings.timeout, maxsize=maxsize)
 
 
+def _create_overpass_query(polygon_coord_str, tags):
+    """
+    Create an overpass query string based on passed tags.
+
+    Parameters
+    ----------
+    polygon_coord_str : 
+        
+    tags : dict
+        dict of tags used for finding geometry in the selected area
+
+    Returns
+    -------
+    query : string
+    """
+    # create overpass settings string
+    overpass_settings = _make_overpass_settings()
+
+    # make sure every value in dict is bool, str, or list of str
+    error_msg = "tags must be a dict with values of bool, str, or list of str"
+    if not isinstance(tags, dict):
+        raise TypeError(error_msg)
+
+    tags_dict = {}
+    for key, value in tags.items():
+
+        if isinstance(value, bool):
+            tags_dict[key] = value
+
+        elif isinstance(value, str):
+            tags_dict[key] = [value]
+
+        elif isinstance(value, list):
+            if not all(isinstance(s, str) for s in value):
+                raise TypeError(error_msg)
+            tags_dict[key] = value
+
+        else:
+            raise TypeError(error_msg)
+
+    # convert the tags dict into a list of {tag:value} dicts
+    tags_list = []
+    for key, value in tags_dict.items():
+        if isinstance(value, bool):
+            tags_list.append({key: value})
+        else:
+            for value_item in value:
+                tags_list.append({key: value_item})
+
+    # add node/way/relation query components one at a time
+    components = []
+    for d in tags_list:
+        for key, value in d.items():
+
+            if isinstance(value, bool):
+                # if bool (ie, True) just pass the key, no value
+                tag_str = f"['{key}'](poly:'{polygon_coord_str}');(._;>;);"
+            else:
+                # otherwise, pass "key"="value"
+                tag_str = f"['{key}'='{value}'](poly:'{polygon_coord_str}');(._;>;);"
+
+            for kind in ("node", "way", "relation"):
+                components.append(f"({kind}{tag_str});")
+
+    # finalize query and return
+    components = "".join(components)
+    query = f"{overpass_settings};({components});out;"
+
+    return query
+
+
 def _osm_net_download(polygon, network_type, custom_filter):
     """
     Download OSM ways and nodes within some polygon from the Overpass API.
@@ -328,6 +399,7 @@ def _osm_net_download(polygon, network_type, custom_filter):
         osm_filter = custom_filter
     else:
         osm_filter = _get_osm_filter(network_type)
+
     response_jsons = []
 
     # create overpass settings string
@@ -352,6 +424,51 @@ def _osm_net_download(polygon, network_type, custom_filter):
         response_jsons.append(response_json)
     utils.log(
         f"Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)"
+    )
+
+    return response_jsons
+
+
+def _osm_geometry_download(polygon, tags):
+    """
+    Get geometry from OpenStreetMap based on passed tags.
+
+    Note that if a polygon is passed-in, the query will be limited to its
+    bounding box rather than to the shape of the polygon itself.
+
+    Parameters
+    ----------
+    polygon : shapely.geometry.Polygon
+        geographic boundaries to fetch geometry within
+    tags : dict
+        dict of tags used for finding geometry in the selected area
+
+    Returns
+    -------
+    responses : dict
+        JSON response from Overpass server
+    """
+    response_jsons = []
+
+    # project to utm, divide polygon up into sub-polygons if area exceeds a
+    # max size (in meters), project back to lat-lng, then get a list of
+    # polygon(s) exterior coordinates
+    geometry_proj, crs_proj = projection.project_geometry(polygon)
+    gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj)
+    geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
+    polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
+    utils.log(
+        f"Requesting OSM data within polygon from API in {len(polygon_coord_strs)} request(s)"
+    )
+
+    # pass the exterior coordinates of each polygon in the list to the API, one at a time
+    for polygon_coord_str in polygon_coord_strs:
+        query_str = _create_overpass_query(polygon_coord_str, tags)
+        response_json = overpass_request(data={"data": query_str})
+        response_jsons.append(response_json)
+
+    utils.log(
+        f"Got all geometry data within polygon from API in {len(polygon_coord_strs)} request(s)"
     )
 
     return response_jsons

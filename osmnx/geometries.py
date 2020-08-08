@@ -15,109 +15,309 @@ from . import geocoder
 from . import settings
 from . import utils
 from . import utils_geo
+from ._errors import EmptyOverpassResponse
 from .polygon_features import polygon_features
 
 
-def _create_overpass_query(polygon, tags):
+def gdf_from_bbox(point, size, tags):
     """
-    Create an overpass query string based on passed tags.
+    Get geometry within bounding box around a central point.
+
+    Parameters
+    ----------
+    point : tuple
+        a (lat, lng) center of bounding box
+    tags : dict
+        Dict of tags used for finding geometry from the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, landuse=retail,
+        landuse=commercial, and highway=bus_stop.
+    size : tuple
+        a (width, height)
+        Total width and height of the bounding box in meters
+
+    Returns
+    -------
+    gdf : geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
+    """
+
+    lat,   lng               = point
+    width, height            = size
+    north, south, _   , _    = utils_geo.bbox_from_point((lat,lng), dist=height/2)
+    _    , _    , east, west = utils_geo.bbox_from_point((lat,lng), dist=width/2)
+
+    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    return gdf_from_polygon(polygon, tags)
+
+
+def gdf_from_point(point, tags, dist=1000):
+    """
+    Get geometry within some distance N, S, E, W of a point.
+
+    Parameters
+    ----------
+    point : tuple
+        a (lat, lng) point
+    tags : dict
+        Dict of tags used for finding geometry from the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, landuse=retail,
+        landuse=commercial, and highway=bus_stop.
+    dist : numeric
+        distance in meters
+
+    Returns
+    -------
+    gdf : geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
+    """
+    north, south, east, west = utils_geo.bbox_from_point(point=point, dist=dist)
+    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    return gdf_from_polygon(polygon, tags)
+
+
+def gdf_from_address(address, tags, dist=1000):
+    """
+    Get geometry within some distance N, S, E, W of address.
+
+    Parameters
+    ----------
+    address : string
+        the address to geocode to a lat-lng point
+    tags : dict
+        Dict of tags used for finding geometry in the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, landuse=retail,
+        landuse=commercial, and highway=bus_stop.
+    dist : numeric
+        distance in meters
+
+    Returns
+    -------
+    gdf : geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
+    """
+    # geocode the address string to a (lat, lng) point
+    point = geocoder.geocode(query=address)
+    return gdf_from_point(point=point, tags=tags, dist=dist)
+
+
+def gdf_from_place(place, tags, which_result=1):
+    """
+    Get geometry within the boundaries of some place.
+
+    Parameters
+    ----------
+    place : string
+        the query to geocode to get boundary polygon
+    tags : dict
+        Dict of tags used for finding geometry in the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, landuse=retail,
+        landuse=commercial, and highway=bus_stop.
+    which_result : int
+        max number of geocoding results to return and which to process
+
+    Returns
+    -------
+    gdf : geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
+    """
+    # create a GeoDataFrame with the spatial boundaries of the place(s)
+    gdf_place = geocoder.geocode_to_gdf(place, which_result=which_result)
+
+    # extract the geometry from the GeoDataFrame to use in API query
+    polygon = gdf_place["geometry"].iloc[0]
+
+    # create geodataframe using this polygon(s) geometry
+    GDF = gdf_from_polygon(polygon, tags)
+
+    utils.log(f"gdf_from_place returned geodataframe with {len(GDF)} geometries")
+    return GDF
+
+
+def gdf_from_polygon(polygon, tags):
+    """
+    Get point of interests (POIs) within some polygon.
 
     Parameters
     ----------
     polygon : shapely.geometry.Polygon
-        geographic boundary to fetch geometry within
+        geographic boundaries to fetch geometries within
     tags : dict
-        dict of tags used for finding geometry in the selected area
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, landuse=retail,
+        landuse=commercial, and highway=bus_stop.
 
     Returns
     -------
-    query : string
+    gdf : geopandas.GeoDataFrame
+
+    Notes
+    -----
+    You can configure the Overpass server timeout, memory allocation, and
+    other custom settings via ox.config().
     """
-    overpass_settings = downloader._make_overpass_settings()
+    # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
+    # before proceeding
+    if not polygon.is_valid:
+        raise ValueError("The geometry to query within is invalid")
+    if not isinstance(polygon, (Polygon, MultiPolygon)):
+        raise TypeError(
+            "Geometry must be a shapely Polygon or MultiPolygon. If you requested "
+            "graph from place name, make sure your query resolves to a Polygon or "
+            "MultiPolygon, and not some other geometry, like a Point. See OSMnx "
+            "documentation for details."
+        )
 
-    # make sure every value in dict is bool, str, or list of str
-    error_msg = "tags must be a dict with values of bool, str, or list of str"
-    if not isinstance(tags, dict):
-        raise TypeError(error_msg)
+    # download the geometry data from OSM
+    response_jsons = downloader._osm_geometry_download(polygon, tags)
 
-    tags_dict = {}
-    for key, value in tags.items():
+    # create geodataframe from the downloaded data
+    GDF = _create_gdf(response_jsons, polygon, tags)
 
-        if isinstance(value, bool):
-            tags_dict[key] = value
-
-        elif isinstance(value, str):
-            tags_dict[key] = [value]
-
-        elif isinstance(value, list):
-            if not all(isinstance(s, str) for s in value):
-                raise TypeError(error_msg)
-            tags_dict[key] = value
-
-        else:
-            raise TypeError(error_msg)
-
-    # convert the tags dict into a list of {tag:value} dicts
-    tags_list = []
-    for key, value in tags_dict.items():
-        if isinstance(value, bool):
-            tags_list.append({key: value})
-        else:
-            for value_item in value:
-                tags_list.append({key: value_item})
-
-    # create query bounding box
-    west, south, east, north = polygon.bounds
-    bbox = f"({south:.6f},{west:.6f},{north:.6f},{east:.6f})"
-
-    # add node/way/relation query components one at a time
-    components = []
-    for d in tags_list:
-        for key, value in d.items():
-
-            if isinstance(value, bool):
-                # if bool (ie, True) just pass the key, no value
-                tag_str = f'["{key}"]{bbox};(._;>;);'
-            else:
-                # otherwise, pass "key"="value"
-                tag_str = f'["{key}"="{value}"]{bbox};(._;>;);'
-
-            for kind in ("node", "way", "relation"):
-                components.append(f"({kind}{tag_str});")
-
-    # finalize query and return
-    components = "".join(components)
-    query = f"{overpass_settings};({components});out;"
-
-    return query
+    utils.log(f"gdf_from_polygon returned geodataframe with {len(GDF)} geometries")
+    return GDF
 
 
-def _get_overpass_response(polygon, tags):
+def _create_gdf(response_jsons, polygon, tags, saved_response_json=None):
     """
-    Get geometry from OpenStreetMap based on passed tags.
-
-    Note that if a polygon is passed-in, the query will be limited to its
-    bounding box rather than to the shape of the polygon itself.
+    Requests and parses a JSON response from the Overpass API to a GeoDataFrame.
 
     Parameters
     ----------
+    response_jsons : list
+        list of dicts of JSON responses from from the Overpass API
     polygon : shapely.geometry.Polygon
-        geographic boundaries to fetch geometry within
+        geographic boundaries to fetch geometries within
     tags : dict
-        dict of tags used for finding geometry in the selected area
+        dict of tags used for finding geometries from the selected area
+    saved_response_json : JSON
+        allows a single saved response JSON to be passed in for parsing
 
     Returns
     -------
-    responses : dict
-        JSON response from Overpass server
+    gdf : geopandas.GeoDataFrame
+        geometries and their associated tags
     """
-    # TODO: add functionality for subdividing search area geometry
-    # TODO: add functionality for constraining query to poly rather than its bbox
+    # RE/MOVE?
+    # If a pre-saved response is passed in
+    if saved_response_json is not None:
+        # Requests a JSON from the Overpass API
+        response_jsons = [saved_response_json]
 
-    # get the geometry
-    query = _create_overpass_query(polygon, tags)
-    response = downloader.overpass_request(data={"data": query})
-    return response
+    utils.log("Creating geodataframe from downloaded OSM data...")
+
+    # make sure we got data back from the server requests
+    elements = []
+    for response_json in response_jsons:
+        elements.extend(response_json["elements"])
+    if len(elements) < 1:
+        raise EmptyOverpassResponse("There are no data elements in the response JSON")
+
+    # Dictionaries to hold nodes and complete geometries
+    coords = {}
+    geometries = {}
+
+    # extract geometries from the downloaded osm data
+    for response_json in response_jsons:
+        # Parses the JSON of OSM nodes, ways and (multipolygon) relations to dictionaries of
+        # coordinates, Shapely Points, LineStrings, Polygons and MultiPolygons
+        for element in response_json["elements"]:
+
+            # id numbers are only unique within element types
+            # create unique id from combination of type and id
+            unique_id = f"{element['type']}/{element['id']}"
+
+            if element["type"] == "node":
+                # Parse all nodes to coords
+                coord = _parse_node_to_coord(element=element)
+                coords[element["id"]] = coord
+                # Parse nodes with tags to points
+                if "tags" in element:
+                    point = _parse_node_to_point(element=element)
+                    geometries[unique_id] = point
+
+            elif element["type"] == "way":
+                # Parse all ways to linestrings or polygons
+                linestring_or_polygon = _parse_way_to_linestring_or_polygon(
+                    element=element,
+                    coords=coords,
+                    polygon_features=polygon_features,
+                    )
+                if linestring_or_polygon:
+                    geometries[unique_id] = linestring_or_polygon
+
+            elif element["type"] == "relation" and element.get("tags").get("type") == "multipolygon":
+                # Parse all multipolygon relations to multipolygons
+                multipolygon = _parse_relation_to_multipolygon(element=element, geometries=geometries)
+                if multipolygon:
+                    geometries[unique_id] = multipolygon
+
+    # Create GeoDataFrame
+    GDF = gpd.GeoDataFrame.from_dict(geometries, orient="index")
+
+    # ensure GDF has a geometry col before assigning crs
+    if "geometry" not in GDF.columns:
+        # if there is no geometry column, create a null column
+        GDF["geometry"] = np.nan
+    GDF.set_geometry("geometry")
+
+    # Set default crs
+    GDF.crs = settings.default_crs
+
+    # Filter final gdf to requested tags and bounding polygon
+    GDF = _filter_final_gdf(gdf=GDF, polygon=polygon, tags=tags)
+
+    return GDF
 
 
 def _parse_node_to_coord(element):
@@ -436,6 +636,7 @@ def _assemble_multipolygon_geometry(element, geometries):
                     outer_polygon = outer_polygon.difference(inner_polygon)
                 except TopologicalError as e:
                     print(e, f"\n MultiPolygon Relation OSM id {element['id']} difference failed, trying with geometries buffered by 0")
+                    utils.log(f"relation https://www.openstreetmap.org/relation/{element['id']} caused a TopologicalError, trying with zero buffer")
                     outer_polygon = outer_polygon.buffer(0).difference(inner_polygon.buffer(0))
 
         # note: .buffer(0) can return either a Polygon or MultiPolygon
@@ -450,85 +651,6 @@ def _assemble_multipolygon_geometry(element, geometries):
     geometry = MultiPolygon(outer_polygons_with_holes)
 
     return geometry
-
-
-def _create_gdf(polygon, tags, response=None):
-    """
-    Requests and parses a JSON response from the Overpass API to a GeoDataFrame.
-
-    Parameters
-    ----------
-    polygon : shapely.geometry.Polygon
-        geographic boundaries to fetch POIs within
-    tags : dict
-        dict of tags used for finding POIs from the selected area
-    response : JSON
-        allows a saved JSON response to be passed in for parsing
-
-    Returns
-    -------
-    gdf : geopandas.GeoDataFrame
-        geometries and their associated tags
-    """
-
-    # If no pre-saved response is passed in
-    if response is None:
-        # Requests a JSON from the Overpass API
-        response = _get_overpass_response(polygon, tags)
-
-    # Dictionaries to hold nodes and complete geometries
-    coords = {}
-    geometries = {}
-
-    # Parses the JSON of OSM nodes, ways and (multipolygon) relations to dictionaries of
-    # coordinates, Shapely Points, LineStrings, Polygons and MultiPolygons
-    for element in response["elements"]:
-
-        # id numbers are only unique within element types
-        # create unique id from combination of type and id
-        unique_id = f"{element['type']}/{element['id']}"
-
-        if element["type"] == "node":
-            # Parse all nodes to coords
-            coord = _parse_node_to_coord(element=element)
-            coords[element["id"]] = coord
-            # Parse nodes with tags to points
-            if "tags" in element:
-                point = _parse_node_to_point(element=element)
-                geometries[unique_id] = point
-
-        elif element["type"] == "way":
-            # Parse all ways to linestrings or polygons
-            linestring_or_polygon = _parse_way_to_linestring_or_polygon(
-                element=element,
-                coords=coords,
-                polygon_features=polygon_features,
-                )
-            if linestring_or_polygon:
-                geometries[unique_id] = linestring_or_polygon
-
-        elif element["type"] == "relation" and element.get("tags").get("type") == "multipolygon":
-            # Parse all multipolygon relations to multipolygons
-            multipolygon = _parse_relation_to_multipolygon(element=element, geometries=geometries)
-            if multipolygon:
-                geometries[unique_id] = multipolygon
-
-    # Create GeoDataFrame
-    gdf = gpd.GeoDataFrame.from_dict(geometries, orient="index")
-
-    # ensure gdf has a geometry col before assigning crs
-    if "geometry" not in gdf.columns:
-        # if there is no geometry column, create a null column
-        gdf["geometry"] = np.nan
-    gdf.set_geometry("geometry")
-
-    # Set default crs
-    gdf.crs = settings.default_crs
-
-    # Filter final gdf to requested tags and bounding polygon
-    gdf = _filter_final_gdf(gdf=gdf, polygon=polygon, tags=tags)
-
-    return gdf
 
 
 def _filter_final_gdf(gdf, polygon, tags):
@@ -575,193 +697,3 @@ def _filter_final_gdf(gdf, polygon, tags):
         gdf.reset_index(drop=True, inplace=True)
 
     return gdf
-
-
-def gdf_from_point(point, tags, dist=1000):
-    """
-    Get geometry within some distance N, S, E, W of a point.
-
-    Parameters
-    ----------
-    point : tuple
-        a (lat, lng) point
-    tags : dict
-        Dict of tags used for finding geometry from the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
-    dist : numeric
-        distance in meters
-
-    Returns
-    -------
-    gdf : geopandas.GeoDataFrame
-
-    Notes
-    -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
-    """
-    north, south, east, west = utils_geo.bbox_from_point(point=point, dist=dist)
-    polygon = utils_geo.bbox_to_poly(north, south, east, west)
-    return gdf_from_polygon(polygon, tags)
-
-
-def gdf_from_address(address, tags, dist=1000):
-    """
-    Get geometry within some distance N, S, E, W of address.
-
-    Parameters
-    ----------
-    address : string
-        the address to geocode to a lat-lng point
-    tags : dict
-        Dict of tags used for finding geometry in the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
-    dist : numeric
-        distance in meters
-
-    Returns
-    -------
-    gdf : geopandas.GeoDataFrame
-
-    Notes
-    -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
-    """
-    # geocode the address string to a (lat, lng) point
-    point = geocoder.geocode(query=address)
-    return gdf_from_point(point=point, tags=tags, dist=dist)
-
-
-def gdf_from_place(place, tags, which_result=1):
-    """
-    Get geometry within the boundaries of some place.
-
-    Parameters
-    ----------
-    place : string
-        the query to geocode to get boundary polygon
-    tags : dict
-        Dict of tags used for finding geometry in the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
-    which_result : int
-        max number of geocoding results to return and which to process
-
-    Returns
-    -------
-    gdf : geopandas.GeoDataFrame
-
-    Notes
-    -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
-    """
-    # create a GeoDataFrame with the spatial boundaries of the place(s)
-    gdf_place = geocoder.geocode_to_gdf(place, which_result=which_result)
-
-    # extract the geometry from the GeoDataFrame to use in API query
-    polygon = gdf_place["geometry"].iloc[0]
-
-    # create geodataframe using this polygon(s) geometry
-    GDF = gdf_from_polygon(polygon, tags)
-
-    utils.log(f"gdf_from_place returned geodataframe with {len(GDF)} geometries")
-    return GDF
-
-
-def gdf_from_polygon(polygon, tags):
-    """
-    Get point of interests (POIs) within some polygon.
-
-    Parameters
-    ----------
-    polygon : shapely.geometry.Polygon
-        geographic boundaries to fetch POIs within
-    tags : dict
-        Dict of tags used for finding POIs from the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
-
-    Returns
-    -------
-    gdf : geopandas.GeoDataFrame
-
-    Notes
-    -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
-    """
-    return _create_gdf(polygon, tags)
-
-
-def gdf_from_bbox(point, size, tags):
-    """
-    Get geometry within bounding box around a central point.
-
-    Parameters
-    ----------
-    point : tuple
-        a (lat, lng) center of bounding box
-    tags : dict
-        Dict of tags used for finding geometry from the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
-    size : tuple
-        a (width, height)
-        Total width and height of the bounding box in meters
-
-    Returns
-    -------
-    gdf : geopandas.GeoDataFrame
-
-    Notes
-    -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
-    """
-
-    lat,   lng               = point
-    width, height            = size
-    north, south, _   , _    = utils_geo.bbox_from_point((lat,lng), dist=height/2)
-    _    , _    , east, west = utils_geo.bbox_from_point((lat,lng), dist=width/2)
-
-    polygon = utils_geo.bbox_to_poly(north, south, east, west)
-    return gdf_from_polygon(polygon, tags)
