@@ -680,8 +680,13 @@ def gdf_from_place(place, tags, which_result=1):
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
-    city = geocoder.geocode_to_gdf(place, which_result=which_result)
-    polygon = city["geometry"].iloc[0]
+    # create a GeoDataFrame with the spatial boundaries of the place(s)
+    gdf_place = geocoder.geocode_to_gdf(place, which_result=which_result)
+
+    # extract the geometry from the GeoDataFrame to use in API query
+    polygon = gdf_place["geometry"].iloc[0]
+
+    # create geodataframe using this polygon(s) geometry
     return gdf_from_polygon(polygon, tags)
 
 
