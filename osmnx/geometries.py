@@ -2,13 +2,13 @@
 
 import geopandas as gpd
 import numpy as np
-from shapely.geometry import Point
 from shapely.geometry import LineString
-from shapely.geometry import Polygon
 from shapely.geometry import MultiPolygon
+from shapely.geometry import Point
+from shapely.geometry import Polygon
+from shapely.geos import TopologicalError
 from shapely.ops import linemerge
 from shapely.ops import polygonize
-from shapely.geos import TopologicalError
 
 from . import downloader
 from . import geocoder
@@ -16,8 +16,8 @@ from . import settings
 from . import utils
 from . import utils_geo
 from ._errors import EmptyOverpassResponse
-from .polygon_features import polygon_features
 from .graph import _overpass_json_from_file
+from .polygon_features import polygon_features
 
 
 def gdf_from_bbox(point, size, tags):
@@ -341,16 +341,18 @@ def _create_gdf(response_jsons, polygon, tags):
             elif element["type"] == "way":
                 # Parse all ways to linestrings or polygons
                 linestring_or_polygon = _parse_way_to_linestring_or_polygon(
-                    element=element,
-                    coords=coords,
-                    polygon_features=polygon_features,
+                    element=element, coords=coords, polygon_features=polygon_features,
                 )
                 if linestring_or_polygon:
                     geometries[unique_id] = linestring_or_polygon
 
-            elif element["type"] == "relation" and element.get("tags").get("type") == "multipolygon":
+            elif (
+                element["type"] == "relation" and element.get("tags").get("type") == "multipolygon"
+            ):
                 # Parse all multipolygon relations to multipolygons
-                multipolygon = _parse_relation_to_multipolygon(element=element, geometries=geometries)
+                multipolygon = _parse_relation_to_multipolygon(
+                    element=element, geometries=geometries
+                )
                 if multipolygon:
                     geometries[unique_id] = multipolygon
 
@@ -512,13 +514,13 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
     is_polygon = False
 
     # get the element's tags
-    element_tags = element.get('tags')
+    element_tags = element.get("tags")
 
     # if the element doesn't have any tags leave it as a Linestring
     if element_tags is not None:
 
         # if the element is specifically tagged 'area':'no' -> LineString
-        if element_tags.get('area') == 'no':
+        if element_tags.get("area") == "no":
             is_polygon = False
 
         # if the element has tags and is not tagged 'area':'no'
@@ -535,22 +537,22 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
                     # Get the key's value from the element's tags
                     key_value = element_tags.get(key)
                     # Determine if the key is for a blocklist or passlist in the polygon_features dictionary
-                    blocklist_or_passlist = polygon_features.get(key).get('polygon')
+                    blocklist_or_passlist = polygon_features.get(key).get("polygon")
                     # Get the values for the key from the polygon_features dictionary
-                    polygon_features_values = polygon_features.get(key).get('values')
+                    polygon_features_values = polygon_features.get(key).get("values")
 
                     # if all features with that key should be polygons -> Polygon
-                    if blocklist_or_passlist == 'all':
+                    if blocklist_or_passlist == "all":
                         is_polygon = True
 
                     # if the key is for a blocklist i.e. tags that should not become Polygons
-                    elif blocklist_or_passlist == 'blocklist':
+                    elif blocklist_or_passlist == "blocklist":
                         # if the value for that key in the element is not in the blocklist -> Polygon
                         if key_value not in polygon_features_values:
                             is_polygon = True
 
                     # if the key is for a passlist i.e. specific tags should become Polygons
-                    elif blocklist_or_passlist == 'passlist':
+                    elif blocklist_or_passlist == "passlist":
                         # if the value for that key in the element is in the passlist -> Polygon
                         if key_value in polygon_features_values:
                             is_polygon = True
@@ -578,17 +580,11 @@ def _parse_relation_to_multipolygon(element, geometries):
         dictionary of tags and geometry for a single multipolygon
     """
     # Parse member 'way' ids
-    member_way_refs = [
-        member["ref"] for member in element["members"] if member["type"] == "way"
-    ]
+    member_way_refs = [member["ref"] for member in element["members"] if member["type"] == "way"]
     # Extract the ways from the geometries dictionary using their unique id
-    member_ways = [
-        geometries[f"way/{member_way_ref}"] for member_way_ref in member_way_refs
-    ]
+    member_ways = [geometries[f"way/{member_way_ref}"] for member_way_ref in member_way_refs]
     # Extract the nodes of those ways
-    member_nodes = [
-        [member_way["nodes"] for member_way in member_ways]
-    ]
+    member_nodes = [[member_way["nodes"] for member_way in member_ways]]
 
     multipolygon = {}
     multipolygon["osmid"] = element["id"]
@@ -601,13 +597,10 @@ def _parse_relation_to_multipolygon(element, geometries):
             multipolygon[tag] = element["tags"][tag]
 
     # Assemble MultiPolygon component polygons from component LineStrings and Polygons
-    outer_polygons, inner_polygons = _assemble_multipolygon_component_polygons(element,
-                                                                               geometries)
+    outer_polygons, inner_polygons = _assemble_multipolygon_component_polygons(element, geometries)
 
     # Subtract inner polygons from outer polygons
-    geometry = _subtract_inner_polygons_from_outer_polygons(element,
-                                                            outer_polygons,
-                                                            inner_polygons)
+    geometry = _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_polygons)
 
     multipolygon["geometry"] = geometry
 
@@ -643,30 +636,34 @@ def _assemble_multipolygon_component_polygons(element, geometries):
 
     # get the linestrings and polygons that make up the multipolygon
     for member in element["members"]:
-        if (member.get("type") == "way"):
+        if member.get("type") == "way":
             # get the member's geometry from linestrings_and_polygons
             linestring_or_polygon = geometries.get(f"way/{member['ref']}")
             # sort it into one of the lists according to its role and geometry
-            if (member.get("role") == "outer") and \
-               (linestring_or_polygon["geometry"].geom_type == 'Polygon'):
+            if (member.get("role") == "outer") and (
+                linestring_or_polygon["geometry"].geom_type == "Polygon"
+            ):
                 outer_polygons.append(linestring_or_polygon["geometry"])
-            elif (member.get("role") == "inner") and \
-                 (linestring_or_polygon["geometry"].geom_type == 'Polygon'):
+            elif (member.get("role") == "inner") and (
+                linestring_or_polygon["geometry"].geom_type == "Polygon"
+            ):
                 inner_polygons.append(linestring_or_polygon["geometry"])
-            elif (member.get("role") == "outer") and \
-                 (linestring_or_polygon["geometry"].geom_type == 'LineString'):
+            elif (member.get("role") == "outer") and (
+                linestring_or_polygon["geometry"].geom_type == "LineString"
+            ):
                 outer_linestrings.append(linestring_or_polygon["geometry"])
-            elif (member.get("role") == "inner") and \
-                 (linestring_or_polygon["geometry"].geom_type == 'LineString'):
+            elif (member.get("role") == "inner") and (
+                linestring_or_polygon["geometry"].geom_type == "LineString"
+            ):
                 inner_linestrings.append(linestring_or_polygon["geometry"])
 
     # Merge outer linestring fragments. Returns a single LineString or MultiLineString collection
     merged_outer_linestrings = linemerge(outer_linestrings)
 
     # polygonize each linestring separately and append to the list of outer polygons
-    if merged_outer_linestrings.geom_type == 'LineString':
+    if merged_outer_linestrings.geom_type == "LineString":
         outer_polygons += polygonize(merged_outer_linestrings)
-    elif merged_outer_linestrings.geom_type == 'MultiLineString':
+    elif merged_outer_linestrings.geom_type == "MultiLineString":
         for merged_outer_linestring in list(merged_outer_linestrings):
             outer_polygons += polygonize(merged_outer_linestring)
 
@@ -674,9 +671,9 @@ def _assemble_multipolygon_component_polygons(element, geometries):
     merged_inner_linestrings = linemerge(inner_linestrings)
 
     # polygonize each linestring separately and append to the list of inner polygons
-    if merged_inner_linestrings.geom_type == 'LineString':
+    if merged_inner_linestrings.geom_type == "LineString":
         inner_polygons += polygonize(merged_inner_linestrings)
-    elif merged_inner_linestrings.geom_type == 'MultiLineString':
+    elif merged_inner_linestrings.geom_type == "MultiLineString":
         for merged_inner_linestring in list(merged_inner_linestrings):
             inner_polygons += polygonize(merged_inner_linestring)
 
@@ -716,7 +713,7 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
                     print(
                         e,
                         f"\n MultiPolygon Relation OSM id {element['id']} difference failed,"
-                        " trying with geometries buffered by 0."
+                        " trying with geometries buffered by 0.",
                     )
                     utils.log(
                         f"relation https://www.openstreetmap.org/relation/{element['id']} caused"
@@ -727,9 +724,9 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
         # note: .buffer(0) can return either a Polygon or MultiPolygon
         # if it returns a MultiPolygon we need to extract the component
         # sub Polygons to add to outer_polygons_with_holes
-        if outer_polygon.geom_type == 'Polygon':
+        if outer_polygon.geom_type == "Polygon":
             outer_polygons_with_holes.append(outer_polygon)
-        elif outer_polygon.geom_type == 'MultiPolygon':
+        elif outer_polygon.geom_type == "MultiPolygon":
             outer_polygons_with_holes.extend(list(outer_polygon))
 
     # create a multipolygon from the list of outer polygons with holes
@@ -775,7 +772,7 @@ def _filter_final_gdf(gdf, polygon, tags):
             gdf = gdf[gdf[tags_present_in_columns].notna().any(axis=1)]
 
         # remove columns of all nulls (created by discarded component geometries)
-        gdf.dropna(axis='columns', how='all', inplace=True)
+        gdf.dropna(axis="columns", how="all", inplace=True)
 
         # reset the index.
         # Theoretically points, linestrings and polygons, multipolygons could share index numbers
