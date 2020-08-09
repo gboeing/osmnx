@@ -764,7 +764,7 @@ def _filter_final_gdf(gdf, polygon, tags):
 
         # filter retaining geometries within the bounding polygon using spatial index
         if polygon is not None:
-            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf.centroid, polygon)
+            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf, polygon)
             gdf = gdf[gdf.index.isin(gdf_indices_in_polygon)]
 
         # filter retaining geometries with the requested tags
