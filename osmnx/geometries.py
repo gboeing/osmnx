@@ -288,7 +288,7 @@ def gdf_from_xml(filepath, tags=None):
     return GDF
 
 
-def _create_gdf(response_jsons, polygon, tags, saved_response_json=None):
+def _create_gdf(response_jsons, polygon, tags):
     """
     Requests and parses a JSON response from the Overpass API to a GeoDataFrame.
 
@@ -308,12 +308,6 @@ def _create_gdf(response_jsons, polygon, tags, saved_response_json=None):
     gdf : geopandas.GeoDataFrame
         geometries and their associated tags
     """
-    # RE/MOVE?
-    # If a pre-saved response is passed in
-    if saved_response_json is not None:
-        # Requests a JSON from the Overpass API
-        response_jsons = [saved_response_json]
-
     utils.log("Creating geodataframe from downloaded OSM data...")
 
     # make sure we got data back from the server requests
