@@ -459,4 +459,4 @@ def test_geometries():
     gdf = ox.gdf_from_place(place1, tags=tags)
     gdf = ox.gdf_from_address(address, tags={"amenity": "school"})
     # tests multipolygon creation
-    gdf = ox.gdf_from_point((48.1, 10), tags={'landuse': True}, dist=2000)
+    gdf = ox.gdf_from_point((48.15, 10.02), tags={'landuse': True}, dist=1000)
