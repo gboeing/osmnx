@@ -55,8 +55,8 @@ def gdf_from_bbox(point, size, tags):
     # NOTE: Suggest making this consistent with graph_from_bbox()
     lat, lng = point
     width, height = size
-    north, south, _, _ = utils_geo.bbox_from_point((lat, lng), dist = height / 2)
-    _, _, east, west = utils_geo.bbox_from_point((lat, lng), dist = width / 2)
+    north, south, _, _ = utils_geo.bbox_from_point((lat, lng), dist=height / 2)
+    _, _, east, west = utils_geo.bbox_from_point((lat, lng), dist=width / 2)
 
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -605,8 +605,8 @@ def _parse_relation_to_multipolygon(element, geometries):
                                                                                geometries)
 
     # Subtract inner polygons from outer polygons
-    geometry = _subtract_inner_polygons_from_outer_polygons(element, 
-                                                            outer_polygons, 
+    geometry = _subtract_inner_polygons_from_outer_polygons(element,
+                                                            outer_polygons,
                                                             inner_polygons)
 
     multipolygon["geometry"] = geometry
@@ -616,7 +616,7 @@ def _parse_relation_to_multipolygon(element, geometries):
 
 def _assemble_multipolygon_component_polygons(element, geometries):
     """
-    Assembles a MultiPolygon from its component LineStrings and Polygons.
+    Assemble a MultiPolygon from its component LineStrings and Polygons.
 
     The OSM wiki suggests an algorithm for assembling multipolygon geometries
     https://wiki.openstreetmap.org/wiki/Relation:multipolygon/Algorithm.
@@ -691,6 +691,8 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
 
     Parameters
     ----------
+    element : dict
+        element type "relation" from overpass response JSON
     outer_polygons : list
         list of outer polygons that are part of a multipolygon
     inner_polygons : list
