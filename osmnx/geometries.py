@@ -154,13 +154,13 @@ def gdf_from_address(address, tags, dist=1000):
     return GDF
 
 
-def gdf_from_place(place, tags, which_result=1):
+def gdf_from_place(query, tags, which_result=1):
     """
-    Get geometry within the boundaries of some place.
+    Get geometries within the boundaries of a place.
 
     Parameters
     ----------
-    place : string
+    query : string
         the query to geocode to get boundary polygon
     tags : dict
         Dict of tags used for finding geometry in the selected area. Results
@@ -185,8 +185,10 @@ def gdf_from_place(place, tags, which_result=1):
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
+    # NOTE: Potential for further consistency here with graph_from_place()
+
     # create a GeoDataFrame with the spatial boundaries of the place(s)
-    gdf_place = geocoder.geocode_to_gdf(place, which_result=which_result)
+    gdf_place = geocoder.geocode_to_gdf(query, which_result=which_result)
 
     # extract the geometry from the GeoDataFrame to use in API query
     polygon = gdf_place["geometry"].iloc[0]
@@ -200,7 +202,7 @@ def gdf_from_place(place, tags, which_result=1):
 
 def gdf_from_polygon(polygon, tags):
     """
-    Get point of interests (POIs) within some polygon.
+    Get geometries within the boundaries of some shapely polygon.
 
     Parameters
     ----------
@@ -220,13 +222,15 @@ def gdf_from_polygon(polygon, tags):
 
     Returns
     -------
-    gdf : geopandas.GeoDataFrame
+    GDF : geopandas.GeoDataFrame
 
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
+    # NOTE: Potential for further consistency with graph_from_polygon()
+
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:
