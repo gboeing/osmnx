@@ -53,10 +53,10 @@ def gdf_from_bbox(point, size, tags):
     other custom settings via ox.config().
     """
     # NOTE: Suggest making this consistent with graph_from_bbox()
-    lat,   lng               = point
-    width, height            = size
-    north, south, _   , _    = utils_geo.bbox_from_point((lat,lng), dist=height/2)
-    _    , _    , east, west = utils_geo.bbox_from_point((lat,lng), dist=width/2)
+    lat, lng = point
+    width, height = size
+    north, south, _, _ = utils_geo.bbox_from_point((lat,lng), dist=height/2)
+    _, _, east, west = utils_geo.bbox_from_point((lat,lng), dist=width/2)
 
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -290,18 +290,16 @@ def gdf_from_xml(filepath, tags=None):
 
 def _create_gdf(response_jsons, polygon, tags):
     """
-    Requests and parses a JSON response from the Overpass API to a GeoDataFrame.
+    Parse JSON responses from the Overpass API to a GeoDataFrame.
 
     Parameters
     ----------
     response_jsons : list
-        list of dicts of JSON responses from from the Overpass API
+        list of JSON responses from from the Overpass API
     polygon : shapely.geometry.Polygon
         geographic boundaries to fetch geometries within
     tags : dict
         dict of tags used for finding geometries from the selected area
-    saved_response_json : JSON
-        allows a single saved response JSON to be passed in for parsing
 
     Returns
     -------
@@ -346,7 +344,7 @@ def _create_gdf(response_jsons, polygon, tags):
                     element=element,
                     coords=coords,
                     polygon_features=polygon_features,
-                    )
+                )
                 if linestring_or_polygon:
                     geometries[unique_id] = linestring_or_polygon
 
@@ -476,13 +474,13 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features):
             geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
 
     linestring_or_polygon["geometry"] = geometry
-        
+
     return linestring_or_polygon
 
 
 def _closed_way_is_linestring_or_polygon(element, polygon_features):
     """
-    Determines whether a closed OSM way represents a LineString or Polygon.
+    Determine whether a closed OSM way represents a LineString or Polygon.
 
     Closed OSM ways may represent LineStrings (e.g. a roundabout or hedge
     round a field) or Polygons (e.g. a building footprint or land use area)
@@ -515,7 +513,7 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
 
     # get the element's tags
     element_tags = element.get('tags')
-    
+
     # if the element is specifically tagged 'area':'no' -> LineString
     if element_tags.get('area') == 'no':
         is_polygon = False
@@ -537,7 +535,7 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
                 blocklist_or_passlist = polygon_features.get(key).get('polygon')
                 # Get the values for the key from the polygon_features dictionary
                 polygon_features_values = polygon_features.get(key).get('values')
-                
+
                 # if all features with that key should be polygons -> Polygon
                 if blocklist_or_passlist == 'all':
                     is_polygon = True
@@ -553,7 +551,7 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
                     # if the value for that key in the element is in the passlist -> Polygon
                     if key_value in polygon_features_values:
                         is_polygon = True
-        
+
     return is_polygon
 
 
@@ -640,13 +638,17 @@ def _assemble_multipolygon_geometry(element, geometries):
             # get the member's geometry from linestrings_and_polygons
             linestring_or_polygon = geometries.get(f"way/{member['ref']}")
             # sort it into one of the lists according to its role and geometry
-            if (member.get("role") == "outer") and (linestring_or_polygon["geometry"].geom_type == 'Polygon'):
+            if (member.get("role") == "outer") and \
+               (linestring_or_polygon["geometry"].geom_type == 'Polygon'):
                 outer_polygons.append(linestring_or_polygon["geometry"])
-            elif (member.get("role") == "inner") and (linestring_or_polygon["geometry"].geom_type == 'Polygon'):
+            elif (member.get("role") == "inner") and \
+                 (linestring_or_polygon["geometry"].geom_type == 'Polygon'):
                 inner_polygons.append(linestring_or_polygon["geometry"])
-            elif (member.get("role") == "outer") and (linestring_or_polygon["geometry"].geom_type == 'LineString'):
+            elif (member.get("role") == "outer") and \
+                 (linestring_or_polygon["geometry"].geom_type == 'LineString'):
                 outer_linestrings.append(linestring_or_polygon["geometry"])
-            elif (member.get("role") == "inner") and (linestring_or_polygon["geometry"].geom_type == 'LineString'):
+            elif (member.get("role") == "inner") and \
+                 (linestring_or_polygon["geometry"].geom_type == 'LineString'):
                 inner_linestrings.append(linestring_or_polygon["geometry"])
 
     # Merge outer linestring fragments. Returns a single LineString or MultiLineString collection
@@ -679,8 +681,15 @@ def _assemble_multipolygon_geometry(element, geometries):
                 try:
                     outer_polygon = outer_polygon.difference(inner_polygon)
                 except TopologicalError as e:
-                    print(e, f"\n MultiPolygon Relation OSM id {element['id']} difference failed, trying with geometries buffered by 0")
-                    utils.log(f"relation https://www.openstreetmap.org/relation/{element['id']} caused a TopologicalError, trying with zero buffer")
+                    print(
+                        e, 
+                        f"\n MultiPolygon Relation OSM id {element['id']} difference failed,"
+                        " trying with geometries buffered by 0."
+                    )
+                    utils.log(
+                        f"relation https://www.openstreetmap.org/relation/{element['id']} caused"
+                        " a TopologicalError, trying with zero buffer."
+                    )
                     outer_polygon = outer_polygon.buffer(0).difference(inner_polygon.buffer(0))
 
         # note: .buffer(0) can return either a Polygon or MultiPolygon
@@ -699,7 +708,7 @@ def _assemble_multipolygon_geometry(element, geometries):
 
 def _filter_final_gdf(gdf, polygon, tags):
     """
-    Filters the final gdf to the requested tags and bounding polygon.
+    Filter the final gdf to the requested tags and bounding polygon.
 
     Filters the final gdf to the requested tags and bounding polygon. Removes
     columns of all NaNs (that held values only in rows removed by the filters).
@@ -723,8 +732,8 @@ def _filter_final_gdf(gdf, polygon, tags):
 
         # filter retaining geometries within the bounding polygon using spatial index
         if polygon is not None:
-                gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf.centroid, polygon)
-                gdf = gdf[gdf.index.isin(gdf_indices_in_polygon)]
+            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf.centroid, polygon)
+            gdf = gdf[gdf.index.isin(gdf_indices_in_polygon)]
 
         # filter retaining geometries with the requested tags
         if tags is not None:

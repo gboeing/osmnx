@@ -311,8 +311,8 @@ def _create_overpass_query(polygon_coord_str, tags):
 
     Parameters
     ----------
-    polygon_coord_str : 
-        
+    polygon_coord_str : list
+        list of lat lng coordinates
     tags : dict
         dict of tags used for finding geometry in the selected area
 

@@ -38,4 +38,4 @@ polygon_features = {
     'craft': {'polygon': 'all'},
     'golf': {'polygon': 'all'},
     'indoor': {'polygon': 'all'}
-    }
+}
