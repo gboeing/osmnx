@@ -451,3 +451,9 @@ def test_footprints():
     # should raise an exception: polygon or responses must be provided
     with pytest.raises(ValueError):
         ox.footprints._create_footprints_gdf(polygon=None, responses=None)
+
+def test_geometries():
+
+    tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
+    gdf = ox.gdf_from_place(place1, tags=tags)
+    gdf = ox.gdf_from_address(address, tags={"amenity": "school"})
