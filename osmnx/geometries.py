@@ -488,6 +488,9 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
     round a field) or Polygons (e.g. a building footprint or land use area)
     depending on the tags applied to them.
 
+    The starting assumption is that it is not a polygon, however any polygon
+    type tagging will return a polygon unless explicitly tagged with area:no.
+
     It is possible for a single closed OSM way to have both LineString and
     Polygon type tags (e.g. both barrier=fence and landuse=agricultural).
     OSMnx will return a single Polygon for elements tagged in this way.
@@ -506,17 +509,15 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
     is_polygon : boolean
         True if the tags are for a polygon type geometry
     """
+    # the polygon_features dict is for determining which ways should become Polygons
+    # therefore the starting assumption is that the geometry is a LineString
     is_polygon = False
 
     # get the element's tags
     element_tags = element.get('tags')
-
-    # if the element doesn't have any tags it is a component of a multipolygon -> Polygon
-    if element_tags is None:
-        is_polygon = True
     
-    # if the element has tags and is tagged 'area':'no' -> LineString
-    elif element_tags.get('area') == 'no':
+    # if the element is specifically tagged 'area':'no' -> LineString
+    if element_tags.get('area') == 'no':
         is_polygon = False
 
     # if the element has tags and is not tagged 'area':'no'
@@ -541,28 +542,17 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
                 if blocklist_or_passlist == 'all':
                     is_polygon = True
 
-                # if the key is for a blocklist
+                # if the key is for a blocklist i.e. tags that should not become Polygons
                 elif blocklist_or_passlist == 'blocklist':
-                    # if the value for that key in the element is in the blocklist -> LineString
                     # if the value for that key in the element is not in the blocklist -> Polygon
-                    if key_value in polygon_features_values:
-                        is_polygon = False
-                    else:
+                    if key_value not in polygon_features_values:
                         is_polygon = True
 
-                # if the key is for a passlist
+                # if the key is for a passlist i.e. specific tags should become Polygons
                 elif blocklist_or_passlist == 'passlist':
                     # if the value for that key in the element is in the passlist -> Polygon
-                    # if the value for that key in the element is not in the passlist -> LineString
                     if key_value in polygon_features_values:
                         is_polygon = True
-                    else:
-                        is_polygon = False
-
-        # the polygon_features dict is for determining which ways should become Polygons
-        # therefore if no common keys are found the geometry should be a LineString by default
-        else:
-            is_polygon = False
         
     return is_polygon
 
