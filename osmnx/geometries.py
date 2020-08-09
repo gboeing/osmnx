@@ -55,8 +55,8 @@ def gdf_from_bbox(point, size, tags):
     # NOTE: Suggest making this consistent with graph_from_bbox()
     lat, lng = point
     width, height = size
-    north, south, _, _ = utils_geo.bbox_from_point((lat,lng), dist=height/2)
-    _, _, east, west = utils_geo.bbox_from_point((lat,lng), dist=width/2)
+    north, south, _, _ = utils_geo.bbox_from_point((lat, lng), dist = height / 2)
+    _, _, east, west = utils_geo.bbox_from_point((lat, lng), dist = width / 2)
 
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -514,43 +514,46 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
     # get the element's tags
     element_tags = element.get('tags')
 
-    # if the element is specifically tagged 'area':'no' -> LineString
-    if element_tags.get('area') == 'no':
-        is_polygon = False
+    # if the element doesn't have any tags leave it as a Linestring
+    if element_tags is not None:
 
-    # if the element has tags and is not tagged 'area':'no'
-    # compare its tags with the polygon_features dictionary
-    else:
-        # identify common keys in the element's tags and the polygon_features dictionary
-        intersecting_keys = element_tags.keys() & polygon_features.keys()
+        # if the element is specifically tagged 'area':'no' -> LineString
+        if element_tags.get('area') == 'no':
+            is_polygon = False
 
-        # if common keys are found
-        if len(intersecting_keys) > 0:
+        # if the element has tags and is not tagged 'area':'no'
+        # compare its tags with the polygon_features dictionary
+        else:
+            # identify common keys in the element's tags and the polygon_features dictionary
+            intersecting_keys = element_tags.keys() & polygon_features.keys()
 
-            # for each key in the intersecting keys
-            for key in intersecting_keys:
-                # Get the key's value from the element's tags
-                key_value = element_tags.get(key)
-                # Determine if the key is for a blocklist or passlist in the polygon_features dictionary
-                blocklist_or_passlist = polygon_features.get(key).get('polygon')
-                # Get the values for the key from the polygon_features dictionary
-                polygon_features_values = polygon_features.get(key).get('values')
+            # if common keys are found
+            if len(intersecting_keys) > 0:
 
-                # if all features with that key should be polygons -> Polygon
-                if blocklist_or_passlist == 'all':
-                    is_polygon = True
+                # for each key in the intersecting keys
+                for key in intersecting_keys:
+                    # Get the key's value from the element's tags
+                    key_value = element_tags.get(key)
+                    # Determine if the key is for a blocklist or passlist in the polygon_features dictionary
+                    blocklist_or_passlist = polygon_features.get(key).get('polygon')
+                    # Get the values for the key from the polygon_features dictionary
+                    polygon_features_values = polygon_features.get(key).get('values')
 
-                # if the key is for a blocklist i.e. tags that should not become Polygons
-                elif blocklist_or_passlist == 'blocklist':
-                    # if the value for that key in the element is not in the blocklist -> Polygon
-                    if key_value not in polygon_features_values:
+                    # if all features with that key should be polygons -> Polygon
+                    if blocklist_or_passlist == 'all':
                         is_polygon = True
 
-                # if the key is for a passlist i.e. specific tags should become Polygons
-                elif blocklist_or_passlist == 'passlist':
-                    # if the value for that key in the element is in the passlist -> Polygon
-                    if key_value in polygon_features_values:
-                        is_polygon = True
+                    # if the key is for a blocklist i.e. tags that should not become Polygons
+                    elif blocklist_or_passlist == 'blocklist':
+                        # if the value for that key in the element is not in the blocklist -> Polygon
+                        if key_value not in polygon_features_values:
+                            is_polygon = True
+
+                    # if the key is for a passlist i.e. specific tags should become Polygons
+                    elif blocklist_or_passlist == 'passlist':
+                        # if the value for that key in the element is in the passlist -> Polygon
+                        if key_value in polygon_features_values:
+                            is_polygon = True
 
     return is_polygon
 
@@ -597,15 +600,21 @@ def _parse_relation_to_multipolygon(element, geometries):
         for tag in element["tags"]:
             multipolygon[tag] = element["tags"][tag]
 
-    # Assemble MultiPolygon from component LineStrings and Polygons
-    geometry = _assemble_multipolygon_geometry(element, geometries)
+    # Assemble MultiPolygon component polygons from component LineStrings and Polygons
+    outer_polygons, inner_polygons = _assemble_multipolygon_component_polygons(element,
+                                                                               geometries)
+
+    # Subtract inner polygons from outer polygons
+    geometry = _subtract_inner_polygons_from_outer_polygons(element, 
+                                                            outer_polygons, 
+                                                            inner_polygons)
 
     multipolygon["geometry"] = geometry
 
     return multipolygon
 
 
-def _assemble_multipolygon_geometry(element, geometries):
+def _assemble_multipolygon_component_polygons(element, geometries):
     """
     Assembles a MultiPolygon from its component LineStrings and Polygons.
 
@@ -671,6 +680,27 @@ def _assemble_multipolygon_geometry(element, geometries):
         for merged_inner_linestring in list(merged_inner_linestrings):
             inner_polygons += polygonize(merged_inner_linestring)
 
+    return outer_polygons, inner_polygons
+
+
+def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_polygons):
+    """
+    Subtract inner polygons from outer polygons.
+
+    Creates Polygons/MultiPolygons with holes.
+
+    Parameters
+    ----------
+    outer_polygons : list
+        list of outer polygons that are part of a multipolygon
+    inner_polygons : list
+        list of inner polygons that are part of a multipolygon
+
+    Returns
+    -------
+    geometry : MultiPolygon
+        a single Shapely MultiPolygon
+    """
     # create a new list to hold the outer polygons with the inner polygons subtracted
     outer_polygons_with_holes = []
 
@@ -682,7 +712,7 @@ def _assemble_multipolygon_geometry(element, geometries):
                     outer_polygon = outer_polygon.difference(inner_polygon)
                 except TopologicalError as e:
                     print(
-                        e, 
+                        e,
                         f"\n MultiPolygon Relation OSM id {element['id']} difference failed,"
                         " trying with geometries buffered by 0."
                     )
