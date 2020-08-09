@@ -429,7 +429,7 @@ def _parse_node_to_point(element):
 
 def _parse_way_to_linestring_or_polygon(element, coords, polygon_features):
     """
-    Parse open LineString, closed LineString or Polygon from OSM 'way'
+    Parse open LineString, closed LineString or Polygon from OSM 'way'.
 
     Please see https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features
     for more information on which tags should be parsed to polygons
@@ -482,7 +482,7 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features):
 
 def _closed_way_is_linestring_or_polygon(element, polygon_features):
     """
-    Determines whether a closed OSM way represents a LineString or Polygon
+    Determines whether a closed OSM way represents a LineString or Polygon.
 
     Closed OSM ways may represent LineStrings (e.g. a roundabout or hedge
     round a field) or Polygons (e.g. a building footprint or land use area)
@@ -699,7 +699,7 @@ def _assemble_multipolygon_geometry(element, geometries):
 
 def _filter_final_gdf(gdf, polygon, tags):
     """
-    Filters the final gdf to the requested tags and bounding polygon
+    Filters the final gdf to the requested tags and bounding polygon.
 
     Filters the final gdf to the requested tags and bounding polygon. Removes
     columns of all NaNs (that held values only in rows removed by the filters).
