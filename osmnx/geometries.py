@@ -94,7 +94,7 @@ def gdf_from_point(center_point, tags, dist=1000):
     """
     # create a bounding box from the center point and the distance in each
     # direction
-    north, south, east, west = utils_geo.bbox_from_point(point=point, dist=dist)
+    north, south, east, west = utils_geo.bbox_from_point(center_point, dist)
 
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -102,18 +102,19 @@ def gdf_from_point(center_point, tags, dist=1000):
     # create geodataframe using this polygon geometry
     GDF = gdf_from_polygon(polygon, tags)
 
-    utils.log(f"gdf_from_point returned geodataframe with {len(GDF)} geometries")
+    utils.log(f"gdf_from_point returned a geodataframe with {len(GDF)} geometries")
     return GDF
 
 
 def gdf_from_address(address, tags, dist=1000):
     """
-    Get geometry within some distance N, S, E, W of address.
+    Get geometries within some distance N, S, E, W of an address.
 
     Parameters
     ----------
     address : string
-        the address to geocode to a lat-lng point
+        the address to geocode and use as the central point around which to
+        get the geometries
     tags : dict
         Dict of tags used for finding geometry in the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -130,7 +131,7 @@ def gdf_from_address(address, tags, dist=1000):
 
     Returns
     -------
-    gdf : geopandas.GeoDataFrame
+    GDF : geopandas.GeoDataFrame
 
     Notes
     -----
@@ -138,8 +139,13 @@ def gdf_from_address(address, tags, dist=1000):
     other custom settings via ox.config().
     """
     # geocode the address string to a (lat, lng) point
-    point = geocoder.geocode(query=address)
-    return gdf_from_point(point=point, tags=tags, dist=dist)
+    center_point = geocoder.geocode(query=address)
+
+    # get geometries around this point
+    GDF = gdf_from_point(center_point, tags, dist=dist)
+
+    utils.log(f"gdf_from_address returned a geodataframe with {len(GDF)} geometries")
+    return GDF
 
 
 def gdf_from_place(place, tags, which_result=1):
