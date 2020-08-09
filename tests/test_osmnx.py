@@ -455,6 +455,8 @@ def test_footprints():
 
 def test_geometries():
 
-    tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
+    tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "residential"}
     gdf = ox.gdf_from_place(place1, tags=tags)
     gdf = ox.gdf_from_address(address, tags={"amenity": "school"})
+    # tests multipolygon creation
+    gdf = ox.gdf_from_point((48.1, 10), tags={'landuse':True}, dist=10000)
