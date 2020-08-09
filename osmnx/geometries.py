@@ -61,14 +61,14 @@ def gdf_from_bbox(point, size, tags):
     return gdf_from_polygon(polygon, tags)
 
 
-def gdf_from_point(point, tags, dist=1000):
+def gdf_from_point(center_point, tags, dist=1000):
     """
-    Get geometry within some distance N, S, E, W of a point.
+    Get geometries within some distance N, S, E, W of a (lat-lng) point.
 
     Parameters
     ----------
-    point : tuple
-        a (lat, lng) point
+    center_point : tuple
+        the (lat, lng) center point around which to get the geometries
     tags : dict
         Dict of tags used for finding geometry from the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -85,16 +85,25 @@ def gdf_from_point(point, tags, dist=1000):
 
     Returns
     -------
-    gdf : geopandas.GeoDataFrame
+    GDF : geopandas.GeoDataFrame
 
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
+    # create a bounding box from the center point and the distance in each
+    # direction
     north, south, east, west = utils_geo.bbox_from_point(point=point, dist=dist)
+
+    # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
-    return gdf_from_polygon(polygon, tags)
+
+    # create geodataframe using this polygon geometry
+    GDF = gdf_from_polygon(polygon, tags)
+
+    utils.log(f"gdf_from_point returned geodataframe with {len(GDF)} geometries")
+    return GDF
 
 
 def gdf_from_address(address, tags, dist=1000):

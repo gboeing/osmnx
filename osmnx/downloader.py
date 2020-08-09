@@ -431,10 +431,10 @@ def _osm_net_download(polygon, network_type, custom_filter):
 
 def _osm_geometry_download(polygon, tags):
     """
-    Get geometry from OpenStreetMap based on passed tags.
+    Download all OSM geometry within some polygon from the Overpass API.
 
-    Note that if a polygon is passed-in, the query will be limited to its
-    bounding box rather than to the shape of the polygon itself.
+    Note that if a polygon is passed-in, the query will be limited to the
+    exterior ring only.
 
     Parameters
     ----------
@@ -445,8 +445,8 @@ def _osm_geometry_download(polygon, tags):
 
     Returns
     -------
-    responses : dict
-        JSON response from Overpass server
+    response_jsons : list
+        list of JSON responses from the Overpass server
     """
     response_jsons = []
 
