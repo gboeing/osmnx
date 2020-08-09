@@ -17,6 +17,7 @@ from . import utils
 from . import utils_geo
 from ._errors import EmptyOverpassResponse
 from .polygon_features import polygon_features
+from .graph import _overpass_json_from_file
 
 
 def gdf_from_bbox(point, size, tags):
@@ -250,6 +251,40 @@ def gdf_from_polygon(polygon, tags):
     GDF = _create_gdf(response_jsons, polygon, tags)
 
     utils.log(f"gdf_from_polygon returned geodataframe with {len(GDF)} geometries")
+    return GDF
+
+
+def gdf_from_xml(filepath, tags=None):
+    """
+    Create a geodataframe from data in an OSM-formatted XML file.
+
+    Parameters
+    ----------
+    filepath : string
+        path to file containing OSM XML data
+    tags : dict
+        Dict of tags used for finding POIs from the selected area. Results
+        returned are the union, not intersection of each individual tag.
+        Each result matches at least one tag given. The dict keys should be
+        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        values should be either `True` to retrieve all items with the given
+        tag, or a string to get a single tag-value combination, or a list of
+        strings to get multiple values for the given tag. For example,
+        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, landuse=retail,
+        landuse=commercial, and highway=bus_stop.
+
+    Returns
+    -------
+    GDF : geopandas.GeoDataFrame
+    """
+    # transmogrify file of OSM XML data into JSON
+    response_jsons = [_overpass_json_from_file(filepath)]
+
+    # create geodataframe using this response JSON
+    GDF = _create_gdf(response_jsons, polygon=None, tags=tags)
+
+    utils.log(f"gdf_from_xml returned a geodataframe with {len(GDF)} geometries")
     return GDF
 
 
