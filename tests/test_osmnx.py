@@ -452,6 +452,7 @@ def test_footprints():
     with pytest.raises(ValueError):
         ox.footprints._create_footprints_gdf(polygon=None, responses=None)
 
+
 def test_geometries():
 
     tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
