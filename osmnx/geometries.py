@@ -44,21 +44,27 @@ def gdf_from_bbox(point, size, tags):
 
     Returns
     -------
-    gdf : geopandas.GeoDataFrame
+    GDF : geopandas.GeoDataFrame
 
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
-
+    # NOTE: Suggest making this consistent with graph_from_bbox()
     lat,   lng               = point
     width, height            = size
     north, south, _   , _    = utils_geo.bbox_from_point((lat,lng), dist=height/2)
     _    , _    , east, west = utils_geo.bbox_from_point((lat,lng), dist=width/2)
 
+    # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
-    return gdf_from_polygon(polygon, tags)
+
+    # create geodataframe of geometries within this polygon
+    GDF = gdf_from_polygon(polygon, tags)
+
+    utils.log(f"gdf_from_bbox returned a geodataframe with {len(GDF)} geometries")
+    return GDF
 
 
 def gdf_from_point(center_point, tags, dist=1000):
@@ -99,7 +105,7 @@ def gdf_from_point(center_point, tags, dist=1000):
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
-    # create geodataframe using this polygon geometry
+    # create geodataframe of geometries within this polygon
     GDF = gdf_from_polygon(polygon, tags)
 
     utils.log(f"gdf_from_point returned a geodataframe with {len(GDF)} geometries")
@@ -141,7 +147,7 @@ def gdf_from_address(address, tags, dist=1000):
     # geocode the address string to a (lat, lng) point
     center_point = geocoder.geocode(query=address)
 
-    # get geometries around this point
+    # create geodataframe of geometries around this point
     GDF = gdf_from_point(center_point, tags, dist=dist)
 
     utils.log(f"gdf_from_address returned a geodataframe with {len(GDF)} geometries")
