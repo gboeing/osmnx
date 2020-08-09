@@ -307,7 +307,7 @@ def _make_overpass_settings():
 
 def _make_overpass_polygon_coord_strs(polygon):
     """
-    Subdivide query polygon and return list of sub-divided polygon coordinate strings
+    Subdivide query polygon and return list of sub-divided polygon coordinate strings.
 
     project to utm, divide polygon up into sub-polygons if area exceeds a
     max size (in meters), project back to lat-lng, then get a list of
