@@ -455,8 +455,28 @@ def test_footprints():
 
 def test_geometries():
 
-    tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "primary"}
+    tags = {
+        "amenity": True,
+        "landuse": ["retail", "commercial"],
+        "highway": "primary",
+        "power": "substation",
+    }
     gdf = ox.gdf_from_place(place1, tags=tags)
     gdf = ox.gdf_from_address(address, tags={"amenity": "school"})
     # tests multipolygon creation
-    gdf = ox.gdf_from_point((48.15, 10.02), tags={"landuse": True}, dist=1000)
+    gdf = ox.gdf_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)
+
+
+def test_gdf_from_xml():
+    # test loading a geodataframe from a local .osm xml file
+
+    with bz2.BZ2File("tests/input_data/West-Oakland.osm.bz2") as input:
+        handle, temp_filename = tempfile.mkstemp(suffix=".osm")
+        os.write(handle, input.read())
+        os.close(handle)
+
+    for filename in ("tests/input_data/West-Oakland.osm.bz2", temp_filename):
+        GDF = ox.gdf_from_xml(filename)
+        assert "Willow Street" in GDF["name"].values
+
+    os.remove(temp_filename)

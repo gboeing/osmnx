@@ -333,8 +333,10 @@ def _create_gdf(response_jsons, polygon, tags):
                 # Parse all nodes to coords
                 coord = _parse_node_to_coord(element=element)
                 coords[element["id"]] = coord
-                # Parse nodes with tags to points
-                if "tags" in element:
+                # If the node has tags and the tags are not empty parse it to a Point
+                # Empty check is necessary for JSONs created from XML where nodes without tags
+                # are assigned tags = {}
+                if "tags" in element and element["tags"]:
                     point = _parse_node_to_point(element=element)
                     geometries[unique_id] = point
 
