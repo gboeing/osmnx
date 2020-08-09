@@ -14,7 +14,7 @@ polygon_features = {
     'amenity': {'polygon': 'all'},
     'leisure': {'polygon': 'all'},
     'barrier': {'polygon': 'passlist',
-                'values': ['city_wall', 'ditch', 'retaining_wall', 'spikes']},
+                'values': ['city_wall', 'ditch', 'hedge', 'retaining_wall', 'spikes']},
     'railway': {'polygon': 'passlist',
                 'values': ['station', 'turntable', 'roundhouse', 'platform']},
     'area': {'polygon': 'all'},
