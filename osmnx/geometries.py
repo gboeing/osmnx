@@ -20,14 +20,20 @@ from .graph import _overpass_json_from_file
 from .polygon_features import polygon_features
 
 
-def gdf_from_bbox(point, size, tags):
+def gdf_from_bbox(north, south, east, west, tags):
     """
-    Get geometry within bounding box around a central point.
+    Get geometries within some bounding box.
 
     Parameters
     ----------
-    point : tuple
-        a (lat, lng) center of bounding box
+    north : float
+        northern latitude of bounding box
+    south : float
+        southern latitude of bounding box
+    east : float
+        eastern longitude of bounding box
+    west : float
+        western longitude of bounding box
     tags : dict
         Dict of tags used for finding geometry from the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -39,9 +45,6 @@ def gdf_from_bbox(point, size, tags):
         `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
-    size : tuple
-        a (width, height)
-        Total width and height of the bounding box in meters
 
     Returns
     -------
@@ -52,12 +55,6 @@ def gdf_from_bbox(point, size, tags):
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
-    # NOTE: Suggest making this consistent with graph_from_bbox()
-    lat, lng = point
-    width, height = size
-    north, south, _, _ = utils_geo.bbox_from_point((lat, lng), dist=height / 2)
-    _, _, east, west = utils_geo.bbox_from_point((lat, lng), dist=width / 2)
-
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
