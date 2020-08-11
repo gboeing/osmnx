@@ -356,6 +356,7 @@ def _osm_net_download(polygon, network_type, custom_filter):
         osm_filter = custom_filter
     else:
         osm_filter = _get_osm_filter(network_type)
+
     response_jsons = []
 
     # create overpass settings string
@@ -372,6 +373,51 @@ def _osm_net_download(polygon, network_type, custom_filter):
         response_jsons.append(response_json)
     utils.log(
         f"Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)"
+    )
+
+    return response_jsons
+
+
+def _osm_geometry_download(polygon, tags):
+    """
+    Download all OSM geometry within some polygon from the Overpass API.
+
+    Note that if a polygon is passed-in, the query will be limited to the
+    exterior ring only.
+
+    Parameters
+    ----------
+    polygon : shapely.geometry.Polygon
+        geographic boundaries to fetch geometry within
+    tags : dict
+        dict of tags used for finding geometry in the selected area
+
+    Returns
+    -------
+    response_jsons : list
+        list of JSON responses from the Overpass server
+    """
+    response_jsons = []
+
+    # project to utm, divide polygon up into sub-polygons if area exceeds a
+    # max size (in meters), project back to lat-lng, then get a list of
+    # polygon(s) exterior coordinates
+    geometry_proj, crs_proj = projection.project_geometry(polygon)
+    gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj)
+    geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
+    polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
+    utils.log(
+        f"Requesting OSM data within polygon from API in {len(polygon_coord_strs)} request(s)"
+    )
+
+    # pass the exterior coordinates of each polygon in the list to the API, one at a time
+    for polygon_coord_str in polygon_coord_strs:
+        query_str = _create_overpass_query(polygon_coord_str, tags)
+        response_json = overpass_request(data={"data": query_str})
+        response_jsons.append(response_json)
+
+    utils.log(
+        f"Got all geometry data within polygon from API in {len(polygon_coord_strs)} request(s)"
     )
 
     return response_jsons
