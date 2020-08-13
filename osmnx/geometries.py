@@ -2,6 +2,7 @@
 
 import geopandas as gpd
 import numpy as np
+import pandas as pd
 from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
@@ -786,19 +787,43 @@ def _filter_final_gdf(gdf, polygon, tags):
     gdf : GeoDataFrame
         final, filtered GeoDataFrame
     """
+    # only apply the filters if the geodataframe is not empty
     if not gdf.empty:
 
-        # filter retaining geometries within the bounding polygon using spatial index
-        if polygon is not None:
-            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf, polygon)
-            gdf = gdf[gdf.index.isin(gdf_indices_in_polygon)]
+        # create two filters, initially all True
+        polygon_filter = pd.Series(True, index=gdf.index)
+        combined_tag_filter = pd.Series(True, index=gdf.index)
 
-        # filter retaining geometries with the requested tags
-        if tags is not None:
-            # Intersect the tags and column names to be sure the tags are present in the columns
-            tags_present_in_columns = set(tags.keys()).intersection(set(gdf.columns))
-            # Select rows which have non-null values in any of these columns
-            gdf = gdf[gdf[tags_present_in_columns].notna().any(axis=1)]
+        # if a polygon was supplied, create a filter that is True for geometries
+        # that intersect with the polygon
+        if polygon:
+            # get a set of index labels of the geometries that intersect the polygon
+            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf, polygon)
+            # create a boolean series, True for geometries whose index is in the set
+            polygon_filter = gdf.index.isin(gdf_indices_in_polygon)
+
+        # if tags were supplied, create a filter that is True for geometries that have
+        # at least one of the requested tags
+        if tags:
+            # Reset all values in the combined_tag_filter to False
+            combined_tag_filter[:] = False
+
+            # reduce the tags to those that are actually present in the geodataframe columns
+            tags_in_columns = {key: tags[key] for key in tags if key in gdf.columns}
+            print(tags_in_columns)
+
+            for key, value in tags_in_columns.items():
+                if value is True:
+                    tag_filter = gdf[key].notna()
+                elif isinstance(value, str):
+                    tag_filter = gdf[key] == value
+                elif isinstance(value, list):
+                    tag_filter = gdf[key].isin(value)
+
+                combined_tag_filter = combined_tag_filter | tag_filter
+
+        # apply the filters
+        gdf = gdf[polygon_filter & combined_tag_filter].copy()
 
         # remove columns of all nulls (created by discarded component geometries)
         gdf.dropna(axis="columns", how="all", inplace=True)
