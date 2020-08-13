@@ -727,8 +727,8 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
 
     Returns
     -------
-    geometry : MultiPolygon
-        a single Shapely MultiPolygon
+    geometry : Polygon or MultiPolygon
+        a single Shapely Polygon or MultiPolygon
     """
     # create a new list to hold the outer polygons with the inner polygons subtracted
     outer_polygons_with_holes = []
@@ -759,8 +759,12 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
         elif outer_polygon.geom_type == "MultiPolygon":
             outer_polygons_with_holes.extend(list(outer_polygon))
 
-    # create a multipolygon from the list of outer polygons with holes
-    geometry = MultiPolygon(outer_polygons_with_holes)
+    # if only one polygon with holes was created, return that single polygon
+    if len(outer_polygons_with_holes) == 1:
+        geometry = outer_polygons_with_holes[0]
+    # otherwise create a multipolygon from the list of outer polygons with holes
+    else:
+        geometry = MultiPolygon(outer_polygons_with_holes)
 
     return geometry
 
