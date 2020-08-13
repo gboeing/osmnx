@@ -239,8 +239,6 @@ def gdf_from_polygon(polygon, tags):
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
-    # NOTE: Potential for further consistency with graph_from_polygon()
-
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:
