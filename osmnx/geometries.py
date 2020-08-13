@@ -67,7 +67,7 @@ def gdf_from_bbox(north, south, east, west, tags):
 
 def gdf_from_point(center_point, tags, dist=1000):
     """
-    Create a geodataframe of OSM geometries within some distance of a (lat-lng) point.
+    Create a geodataframe of OSM geometries within some distance N, S, E, W of a (lat-lng) point.
 
     Parameters
     ----------
@@ -100,7 +100,7 @@ def gdf_from_point(center_point, tags, dist=1000):
     # direction
     north, south, east, west = utils_geo.bbox_from_point(center_point, dist)
 
-    # convert bounding box to a polygon
+    # convert the bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
     # create geodataframe of geometries within this polygon
@@ -112,7 +112,7 @@ def gdf_from_point(center_point, tags, dist=1000):
 
 def gdf_from_address(address, tags, dist=1000):
     """
-    Create a geodataframe of OSM geometries within some distance of an address.
+    Create a geodataframe of OSM geometries within some distance N, S, E, W of an address.
 
     Parameters
     ----------
@@ -152,14 +152,14 @@ def gdf_from_address(address, tags, dist=1000):
     return GDF
 
 
-def gdf_from_place(query, tags, which_result=1):
+def gdf_from_place(query, tags, which_result=None, buffer_dist=None):
     """
     Create a geodataframe of OSM geometries within the boundaries of a place.
 
     Parameters
     ----------
-    query : string
-        the query to geocode to get boundary polygon
+    query : string or dict or list
+        the query or queries to geocode to get place boundary polygon(s)
     tags : dict
         Dict of tags used for finding geometry in the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -172,24 +172,36 @@ def gdf_from_place(query, tags, which_result=1):
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
     which_result : int
-        max number of geocoding results to return and which to process
+        which geocoding result to use. if None, auto-select the first
+        multi/polygon or raise an error if OSM doesn't return one.
+    buffer_dist : float
+        distance to buffer around the place geometry, in meters
 
     Returns
     -------
-    gdf : geopandas.GeoDataFrame
+    GDF : geopandas.GeoDataFrame
 
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
-    # NOTE: Potential for further consistency here with graph_from_place()
-
     # create a GeoDataFrame with the spatial boundaries of the place(s)
-    gdf_place = geocoder.geocode_to_gdf(query, which_result=which_result)
+    if isinstance(query, (str, dict)):
+        # if it is a string (place name) or dict (structured place query), then
+        # it is a single place
+        gdf_place = geocoder.geocode_to_gdf(
+            query, which_result=which_result, buffer_dist=buffer_dist
+        )
+    elif isinstance(query, list):
+        # if it is a list, it contains multiple places to get
+        gdf_place = geocoder.geocode_to_gdf(query, buffer_dist=buffer_dist)
+    else:
+        raise TypeError("query must be dict, string, or list of strings")
 
     # extract the geometry from the GeoDataFrame to use in API query
-    polygon = gdf_place["geometry"].iloc[0]
+    polygon = gdf_place["geometry"].unary_union
+    utils.log("Constructed place geometry polygon(s) to query API")
 
     # create geodataframe using this polygon(s) geometry
     GDF = gdf_from_polygon(polygon, tags)
