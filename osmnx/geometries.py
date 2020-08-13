@@ -714,7 +714,7 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
     """
     Subtract inner polygons from outer polygons.
 
-    Creates Polygons/MultiPolygons with holes.
+    Creates a Polygon or MultiPolygon with holes.
 
     Parameters
     ----------
