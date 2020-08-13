@@ -22,7 +22,7 @@ from .polygon_features import polygon_features
 
 def gdf_from_bbox(north, south, east, west, tags):
     """
-    Get geometries within some bounding box.
+    Create a geodataframe of OSM geometries within a N, S, E, W bounding box.
 
     Parameters
     ----------
@@ -67,7 +67,7 @@ def gdf_from_bbox(north, south, east, west, tags):
 
 def gdf_from_point(center_point, tags, dist=1000):
     """
-    Get geometries within some distance N, S, E, W of a (lat-lng) point.
+    Create a geodataframe of OSM geometries within some distance of a (lat-lng) point.
 
     Parameters
     ----------
@@ -112,7 +112,7 @@ def gdf_from_point(center_point, tags, dist=1000):
 
 def gdf_from_address(address, tags, dist=1000):
     """
-    Get geometries within some distance N, S, E, W of an address.
+    Create a geodataframe of OSM geometries within some distance of an address.
 
     Parameters
     ----------
@@ -154,7 +154,7 @@ def gdf_from_address(address, tags, dist=1000):
 
 def gdf_from_place(query, tags, which_result=1):
     """
-    Get geometries within the boundaries of a place.
+    Create a geodataframe of OSM geometries within the boundaries of a place.
 
     Parameters
     ----------
@@ -200,7 +200,7 @@ def gdf_from_place(query, tags, which_result=1):
 
 def gdf_from_polygon(polygon, tags):
     """
-    Get geometries within the boundaries of some shapely polygon.
+    Create a geodataframe of OSM geometries within the boundaries of some shapely polygon.
 
     Parameters
     ----------
@@ -253,7 +253,7 @@ def gdf_from_polygon(polygon, tags):
 
 def gdf_from_xml(filepath, tags=None):
     """
-    Create a geodataframe from data in an OSM-formatted XML file.
+    Create a geodataframe of OSM geometries from an OSM-formatted XML file.
 
     Parameters
     ----------
