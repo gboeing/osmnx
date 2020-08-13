@@ -267,9 +267,10 @@ def gdf_from_xml(filepath, polygon=None, tags=None):
 
     Because this function creates a geodataframe of geometries from an
     OSM-formatted XML file that has already been downloaded (i.e. no query
-    is made to the Overpass API) the polygon and tags are not necessary.
+    is made to the Overpass API) the polygon and tags arguments are not required.
     If they are not supplied to the function, gdf_from_xml() will return geometries
-    for all of the tagged elements in the file.
+    for all of the tagged elements in the file. If they are supplied they will be
+    used to filter the final geodataframe.
 
     Parameters
     ----------
