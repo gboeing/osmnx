@@ -251,16 +251,24 @@ def gdf_from_polygon(polygon, tags):
     return GDF
 
 
-def gdf_from_xml(filepath, tags=None):
+def gdf_from_xml(filepath, polygon=None, tags=None):
     """
     Create a geodataframe of OSM geometries from an OSM-formatted XML file.
+
+    Because this function creates a geodataframe of geometries from an
+    OSM-formatted XML file that has already been downloaded (i.e. no query
+    is made to the Overpass API) the polygon and tags are not necessary.
+    If they are not supplied to the function, gdf_from_xml() will return geometries
+    for all of the tagged elements in the file.
 
     Parameters
     ----------
     filepath : string
         path to file containing OSM XML data
+    polygon : shapely.geometry.Polygon
+        optional geographic boundary to filter geometries within
     tags : dict
-        Dict of tags used for finding POIs from the selected area. Results
+        optional dict of tags used for filtering geometries from the XML. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one tag given. The dict keys should be
         OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
@@ -279,7 +287,7 @@ def gdf_from_xml(filepath, tags=None):
     response_jsons = [_overpass_json_from_file(filepath)]
 
     # create geodataframe using this response JSON
-    GDF = _create_gdf(response_jsons, polygon=None, tags=tags)
+    GDF = _create_gdf(response_jsons, polygon=polygon, tags=tags)
 
     utils.log(f"gdf_from_xml returned a geodataframe with {len(GDF)} geometries")
     return GDF
