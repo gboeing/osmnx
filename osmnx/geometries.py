@@ -843,7 +843,6 @@ def _filter_final_gdf(gdf, polygon, tags):
 
             # reduce the tags to those that are actually present in the geodataframe columns
             tags_in_columns = {key: tags[key] for key in tags if key in gdf.columns}
-            print(tags_in_columns)
 
             for key, value in tags_in_columns.items():
                 if value is True:
