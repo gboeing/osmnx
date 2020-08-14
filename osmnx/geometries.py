@@ -389,12 +389,8 @@ def _create_gdf(response_jsons, polygon, tags):
                 if multipolygon:
                     geometries[unique_id] = multipolygon
 
-    utils.log(
-        f"{len(geometries)} geometries in the dictionary"
-    )
-    utils.log(
-        f"{len(untagged_element_ids)} untagged geometries will be removed"
-    )
+    utils.log(f"{len(geometries)} geometries in the dictionary")
+    utils.log(f"{len(untagged_element_ids)} untagged geometries will be removed")
 
     # remove untagged elements from the final dictionary of geometries
     for untagged_element_id in untagged_element_ids:

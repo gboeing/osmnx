@@ -815,10 +815,7 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
 
         elif name == "member":
             self._element["members"].append(
-                {
-                    k: (int(attrs[k]) if k == "ref" else attrs[k])
-                    for k in attrs.keys()
-                }
+                {k: (int(attrs[k]) if k == "ref" else attrs[k]) for k in attrs.keys()}
             )
 
     def endElement(self, name):
