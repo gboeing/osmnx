@@ -309,14 +309,19 @@ def _create_gdf(response_jsons, polygon, tags):
     """
     Parse JSON responses from the Overpass API to a GeoDataFrame.
 
+    Note: the `polygon` and `tags` arguments can both be `None` and
+    the geodataframe will still be created but it won't be filtered
+    at the end i.e. the final geodataframe will contain all tagged
+    geometries in the `response_jsons`.
+
     Parameters
     ----------
     response_jsons : list
         list of JSON responses from from the Overpass API
     polygon : shapely.geometry.Polygon
-        geographic boundaries to fetch geometries within
+        geographic boundary used for filtering the final geodataframe
     tags : dict
-        dict of tags used for finding geometries from the selected area
+        dict of tags used for filtering the final geodataframe
 
     Returns
     -------
@@ -706,6 +711,12 @@ def _assemble_multipolygon_component_polygons(element, geometries):
     elif merged_inner_linestrings.geom_type == "MultiLineString":
         for merged_inner_linestring in list(merged_inner_linestrings):
             inner_polygons += polygonize(merged_inner_linestring)
+
+    if len(outer_polygons) == 0:
+        utils.log(
+            "No outer polygons were created for"
+            f" https://www.openstreetmap.org/{element['type']}/{element['id']}"
+        )
 
     return outer_polygons, inner_polygons
 
