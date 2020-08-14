@@ -797,17 +797,30 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
                 }
             )
 
+        elif name == "relation":
+            self._element = dict(type=name, tags={}, members=[], **attrs)
+            self._element.update(
+                {
+                    k: int(attrs[k])
+                    for k in attrs.keys()
+                    if k in {"id", "uid", "version", "changeset"}
+                }
+            )
+
         elif name == "tag":
             self._element["tags"].update({attrs["k"]: attrs["v"]})
 
         elif name == "nd":
             self._element["nodes"].append(int(attrs["ref"]))
 
-        elif name == "relation":
-            # Placeholder for future relation support.
-            # Look for nested members and tags.
-            pass
+        elif name == "member":
+            self._element["members"].append(
+                {
+                    k: (int(attrs[k]) if k == "ref" else attrs[k])
+                    for k in attrs.keys()
+                }
+            )
 
     def endElement(self, name):
-        if name in {"node", "way"}:
+        if name in {"node", "way", "relation"}:
             self.object["elements"].append(self._element)

@@ -623,22 +623,35 @@ def _parse_relation_to_multipolygon(element, geometries):
     multipolygon : dictionary
         dictionary of tags and geometry for a single multipolygon
     """
-    # Parse member 'way' ids
-    member_way_refs = [member["ref"] for member in element["members"] if member["type"] == "way"]
-    # Extract the ways from the geometries dictionary using their unique id
-    member_ways = [geometries[f"way/{member_way_ref}"] for member_way_ref in member_way_refs]
-    # Extract the nodes of those ways
-    member_nodes = [[member_way["nodes"] for member_way in member_ways]]
-
     multipolygon = {}
     multipolygon["osmid"] = element["id"]
     multipolygon["element_type"] = "relation"
-    multipolygon["ways"] = member_way_refs
-    multipolygon["nodes"] = member_nodes
 
+    # Parse member 'way' ids
+    member_way_refs = [member["ref"] for member in element["members"] if member["type"] == "way"]
+    multipolygon["ways"] = member_way_refs
+
+    # Add the tags
     if "tags" in element:
         for tag in element["tags"]:
             multipolygon[tag] = element["tags"][tag]
+
+    # Extract the ways from the geometries dictionary using their unique id.
+    # XMLs exported from the openstreetmap.org homepage with a bounding box
+    # may include the relation but not the ways outside the bounding box.
+    try:
+        member_ways = [geometries[f"way/{member_way_ref}"] for member_way_ref in member_way_refs]
+    except KeyError as e:
+        utils.log(
+            f"{e} is missing from the parsed geometries. The geometry for "
+            f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
+        )
+        multipolygon["geometry"] = None
+        return multipolygon
+
+    # Extract the nodes of those ways
+    member_nodes = [[member_way["nodes"] for member_way in member_ways]]
+    multipolygon["nodes"] = member_nodes
 
     # Assemble MultiPolygon component polygons from component LineStrings and Polygons
     outer_polygons, inner_polygons = _assemble_multipolygon_component_polygons(element, geometries)
