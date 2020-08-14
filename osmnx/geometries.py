@@ -354,8 +354,10 @@ def _create_gdf(response_jsons, polygon, tags):
             # create unique id from combination of type and id
             unique_id = f"{element['type']}/{element['id']}"
 
-            # add elements without tags or with empty tags to the untagged_element_ids set
-            if ("tags" not in element) or (not element["tags"]):
+            # add elements that are not nodes and that are without tags or with empty tags
+            # to the untagged_element_ids set (untagged nodes are not added to the geometries
+            # dictionary at all)
+            if (element["type"] != "node") & (("tags" not in element) or (not element["tags"])):
                 untagged_element_ids.add(unique_id)
 
             if element["type"] == "node":
@@ -386,6 +388,13 @@ def _create_gdf(response_jsons, polygon, tags):
                 )
                 if multipolygon:
                     geometries[unique_id] = multipolygon
+
+    utils.log(
+        f"{len(geometries)} geometries in the dictionary"
+    )
+    utils.log(
+        f"{len(untagged_element_ids)} untagged geometries will be removed"
+    )
 
     # remove untagged elements from the final dictionary of geometries
     for untagged_element_id in untagged_element_ids:
