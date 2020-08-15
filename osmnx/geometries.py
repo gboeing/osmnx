@@ -17,7 +17,6 @@ from . import settings
 from . import utils
 from . import utils_geo
 from ._errors import EmptyOverpassResponse
-from .graph import _overpass_json_from_file
 from .polygon_features import polygon_features
 
 
@@ -296,7 +295,7 @@ def gdf_from_xml(filepath, polygon=None, tags=None):
     GDF : geopandas.GeoDataFrame
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [_overpass_json_from_file(filepath)]
+    response_jsons = [downloader._overpass_json_from_file(filepath)]
 
     # create geodataframe using this response JSON
     GDF = _create_gdf(response_jsons, polygon=polygon, tags=tags)
