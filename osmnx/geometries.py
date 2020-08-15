@@ -859,8 +859,9 @@ def _filter_final_gdf(gdf, polygon, tags):
         # remove columns of all nulls (created by discarded component geometries)
         gdf.dropna(axis="columns", how="all", inplace=True)
 
-        # reset the index.
-        # Theoretically points, linestrings and polygons, multipolygons could share index numbers
-        gdf.reset_index(drop=True, inplace=True)
+        # reset the index keeping the unique ids
+        gdf.reset_index(inplace=True)
+        # rename the new 'index' column to 'unique_id'
+        gdf.rename(columns={'index': 'unique_id'}, inplace=True)
 
     return gdf
