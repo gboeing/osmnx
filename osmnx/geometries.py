@@ -862,6 +862,6 @@ def _filter_final_gdf(gdf, polygon, tags):
         # reset the index keeping the unique ids
         gdf.reset_index(inplace=True)
         # rename the new 'index' column to 'unique_id'
-        gdf.rename(columns={'index': 'unique_id'}, inplace=True)
+        gdf.rename(columns={"index": "unique_id"}, inplace=True)
 
     return gdf
