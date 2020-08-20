@@ -875,6 +875,11 @@ def _filter_final_gdf(gdf, polygon, tags):
         # remove columns of all nulls (created by discarded component geometries)
         gdf.dropna(axis="columns", how="all", inplace=True)
 
+        # bug in geopandas <=0.8.1 raises a TypeError if trying to plot empty geometries
+        # but missing geometries (gdf['geometry'] = None) cannot be projected e.g. gdf.to_crs()
+        # don't see any option other than to drop rows with missing/empty geometries
+        gdf = gdf[~(gdf['geometry'].isna() | gdf['geometry'].is_empty)].copy()
+
         # reset the index keeping the unique ids
         gdf.reset_index(inplace=True)
         # rename the new 'index' column to 'unique_id'
