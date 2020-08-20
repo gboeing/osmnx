@@ -510,9 +510,25 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features):
         is_polygon = _closed_way_is_linestring_or_polygon(element, polygon_features)
 
         if is_polygon:
-            geometry = Polygon([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
+            try:
+                geometry = Polygon([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
+            except ValueError as e:
+                # XMLs may include geometries that are incomplete, in which case return an empty geometry
+                utils.log(
+                    f"{e} . The geometry for "
+                    f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
+                    )
+                geometry = Polygon()
         else:
-            geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
+            try:
+                geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
+            except ValueError as e:
+                # XMLs may include geometries that are incomplete, in which case return an empty geometry
+                utils.log(
+                    f"{e} . The geometry for "
+                    f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
+                    )
+                geometry = LineString()
 
     linestring_or_polygon["geometry"] = geometry
 
@@ -641,7 +657,7 @@ def _parse_relation_to_multipolygon(element, geometries):
             f"{e} is missing from the parsed geometries. The geometry for "
             f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
         )
-        multipolygon["geometry"] = None
+        multipolygon["geometry"] = MultiPolygon()
         return multipolygon
 
     # Extract the nodes of those ways
