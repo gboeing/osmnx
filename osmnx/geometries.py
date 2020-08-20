@@ -517,17 +517,19 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features):
                 utils.log(
                     f"{e} . The geometry for "
                     f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
-                    )
+                )
                 geometry = Polygon()
         else:
             try:
-                geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
+                geometry = LineString(
+                    [(coords[node]["lon"], coords[node]["lat"]) for node in nodes]
+                )
             except ValueError as e:
                 # XMLs may include geometries that are incomplete, in which case return an empty geometry
                 utils.log(
                     f"{e} . The geometry for "
                     f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
-                    )
+                )
                 geometry = LineString()
 
     linestring_or_polygon["geometry"] = geometry
@@ -878,7 +880,7 @@ def _filter_final_gdf(gdf, polygon, tags):
         # bug in geopandas <=0.8.1 raises a TypeError if trying to plot empty geometries
         # but missing geometries (gdf['geometry'] = None) cannot be projected e.g. gdf.to_crs()
         # don't see any option other than to drop rows with missing/empty geometries
-        gdf = gdf[~(gdf['geometry'].isna() | gdf['geometry'].is_empty)].copy()
+        gdf = gdf[~(gdf["geometry"].isna() | gdf["geometry"].is_empty)].copy()
 
         # reset the index keeping the unique ids
         gdf.reset_index(inplace=True)
