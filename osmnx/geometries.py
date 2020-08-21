@@ -501,7 +501,15 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features):
     # if the OSM element is an open way (i.e. first and last nodes are not the same)
     # the geometry should be a Shapely LineString
     if element["nodes"][0] != element["nodes"][-1]:
-        geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
+        try:
+            geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
+        except KeyError as e:
+            # XMLs may include geometries that are incomplete, in which case return an empty geometry
+            utils.log(
+                f"node/{e} was not found in `coords`.\n"
+                f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
+            )
+            geometry = LineString()
 
     # if the OSM element is a closed way (i.e. first and last nodes are the same)
     # depending upon the tags the geometry could be a Shapely LineString or Polygon
@@ -656,7 +664,7 @@ def _parse_relation_to_multipolygon(element, geometries):
         member_ways = [geometries[f"way/{member_way_ref}"] for member_way_ref in member_way_refs]
     except KeyError as e:
         utils.log(
-            f"{e} is missing from the parsed geometries. The geometry for "
+            f"{e} was not found in `geometries`.\nThe geometry for "
             f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
         )
         multipolygon["geometry"] = MultiPolygon()
