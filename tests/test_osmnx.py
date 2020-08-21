@@ -455,16 +455,32 @@ def test_footprints():
 
 def test_geometries():
 
+    # gdf_from_bbox - bounding box query that should return an empty response
+    with pytest.raises(ox._errors.EmptyOverpassResponse):
+        gdf = ox.gdf_from_bbox(50.5912, 50.5786, -2.4293, -2.4544, tags={"building": True})
+    # gdf_from_bbox - succesful
+    north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
+    gdf = ox.gdf_from_bbox(
+        north, south, east, west, tags={"landuse": True, "building": True, "highway": True}
+    )
+
+    # gdf_from_point - tests multipolygon creation
+    gdf = ox.gdf_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)
+
+    # gdf_from_address
+    gdf = ox.gdf_from_address(address, tags={"amenity": "school"})
+
+    # gdf_from_place - includes test of list of places
     tags = {
         "amenity": True,
         "landuse": ["retail", "commercial"],
         "highway": "primary",
         "power": "substation",
     }
-    gdf = ox.gdf_from_place(place1, tags=tags)
-    gdf = ox.gdf_from_address(address, tags={"amenity": "school"})
-    # tests multipolygon creation
-    gdf = ox.gdf_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)
+    gdf = ox.gdf_from_place([place1], tags=tags)
+
+    # gdf_from_xml - tests error handling of clipped XMLs with incomplete geometry
+    gdf = ox.gdf_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")
 
 
 def test_gdf_from_xml():
