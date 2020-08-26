@@ -1,5 +1,7 @@
 """Download geometries from OpenStreetMap."""
 
+import warnings
+
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -407,8 +409,16 @@ def _create_gdf(response_jsons, polygon, tags):
     # Set default crs
     GDF.crs = settings.default_crs
 
+    # Apply .buffer(0) to any invalid geometries
+    GDF = _buffer_invalid_geometries(GDF)
+
     # Filter final gdf to requested tags and bounding polygon
-    GDF = _filter_final_gdf(gdf=GDF, polygon=polygon, tags=tags)
+    GDF = _filter_gdf_by_polygon_and_tags(GDF, polygon=polygon, tags=tags)
+
+    # bug in geopandas <=0.8.1 raises a TypeError if trying to plot empty geometries
+    # but missing geometries (gdf['geometry'] = None) cannot be projected e.g. gdf.to_crs()
+    # don't see any option other than to drop rows with missing/empty geometries
+    GDF = GDF[~(GDF["geometry"].isna() | GDF["geometry"].is_empty)].copy()
 
     return GDF
 
@@ -823,17 +833,71 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
     return geometry
 
 
-def _filter_final_gdf(gdf, polygon, tags):
+def _buffer_invalid_geometries(GDF):
     """
-    Filter the final gdf to the requested tags and bounding polygon.
+    Buffer any invalid geometries remaining in the GeoDataFrame.
 
-    Filters the final gdf to the requested tags and bounding polygon. Removes
-    columns of all NaNs (that held values only in rows removed by the filters).
-    Resets the gdf index.
+    Invalid geometries in the GeoDataFrame (which may accurately
+    reproduce invalid geometries in OpenStreetMap) can cause the
+    filtering to the query polygon and other subsequent geometric
+    operations to fail. This function logs the ids of the invalid
+    geometries and applies a buffer of zero to try to make them valid.
+
+    Note: the resulting geometries may differ from the originals
+    - please check them against OpenStreetMap
 
     Parameters
     ----------
-    gdf : GeoDataFrame
+    GDF : GeoDataFrame
+        the GeoDataFrame with potential invalid geometries
+
+    Returns
+    -------
+    GDF : GeoDataFrame
+        the GeoDataFrame with .buffer(0) applied to invalid geometries
+    """
+    # only apply the filters if the GeoDataFrame is not empty
+    if not GDF.empty:
+
+        # create a filter for rows with invalid geometries
+        invalid_geometry_filter = ~GDF['geometry'].is_valid
+
+        # if there are invalid geometries
+        if sum(invalid_geometry_filter) > 0:
+
+            # get their unique_ids from the index
+            invalid_geometry_ids = GDF.loc[invalid_geometry_filter].index.to_list()
+
+            # show a warning
+            warnings.warn(
+                "Some invalid geometries were created and included in the GeoDataFrame. "
+                "A buffer of 0 has been applied to try to make them valid "
+                f"and their unique ids have been logged. {invalid_geometry_ids}",
+                stacklevel=2)
+
+            # create a list of their urls and log them
+            osm_url = "https://www.openstreetmap.org/"
+            invalid_geom_urls = [osm_url + unique_id for unique_id in invalid_geometry_ids]
+            utils.log(f"Invalid geometries that had .buffer(0) applied: {invalid_geom_urls}")
+
+            # apply .buffer(0)
+            GDF.loc[invalid_geometry_filter, 'geometry'] = GDF.loc[invalid_geometry_filter, 'geometry'].buffer(0)
+
+    return GDF
+
+
+def _filter_gdf_by_polygon_and_tags(GDF, polygon, tags):
+    """
+    Filter the GeoDataFrame to the requested bounding polygon and tags.
+
+    Filters the GeoDataFrame to the query polygon and tags. Removes
+    columns of all NaNs (that held values only in rows removed by the filters).
+    Resets the index of the GeoDataFrame, writing it into a new column called
+    'unique_id'.
+
+    Parameters
+    ----------
+    GDF : GeoDataFrame
         the GeoDataFrame to filter
     polygon : Polygon
         Shapely polygon defining the boundary of the requested area
@@ -842,23 +906,23 @@ def _filter_final_gdf(gdf, polygon, tags):
 
     Returns
     -------
-    gdf : GeoDataFrame
+    GDF : GeoDataFrame
         final, filtered GeoDataFrame
     """
-    # only apply the filters if the geodataframe is not empty
-    if not gdf.empty:
+    # only apply the filters if the GeoDataFrame is not empty
+    if not GDF.empty:
 
         # create two filters, initially all True
-        polygon_filter = pd.Series(True, index=gdf.index)
-        combined_tag_filter = pd.Series(True, index=gdf.index)
+        polygon_filter = pd.Series(True, index=GDF.index)
+        combined_tag_filter = pd.Series(True, index=GDF.index)
 
         # if a polygon was supplied, create a filter that is True for geometries
         # that intersect with the polygon
         if polygon:
             # get a set of index labels of the geometries that intersect the polygon
-            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf.buffer(0), polygon)
+            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(GDF, polygon)
             # create a boolean series, True for geometries whose index is in the set
-            polygon_filter = gdf.index.isin(gdf_indices_in_polygon)
+            polygon_filter = GDF.index.isin(gdf_indices_in_polygon)
 
         # if tags were supplied, create a filter that is True for geometries that have
         # at least one of the requested tags
@@ -866,33 +930,28 @@ def _filter_final_gdf(gdf, polygon, tags):
             # Reset all values in the combined_tag_filter to False
             combined_tag_filter[:] = False
 
-            # reduce the tags to those that are actually present in the geodataframe columns
-            tags_in_columns = {key: tags[key] for key in tags if key in gdf.columns}
+            # reduce the tags to those that are actually present in the GeoDataFrame columns
+            tags_in_columns = {key: tags[key] for key in tags if key in GDF.columns}
 
             for key, value in tags_in_columns.items():
                 if value is True:
-                    tag_filter = gdf[key].notna()
+                    tag_filter = GDF[key].notna()
                 elif isinstance(value, str):
-                    tag_filter = gdf[key] == value
+                    tag_filter = GDF[key] == value
                 elif isinstance(value, list):
-                    tag_filter = gdf[key].isin(value)
+                    tag_filter = GDF[key].isin(value)
 
                 combined_tag_filter = combined_tag_filter | tag_filter
 
         # apply the filters
-        gdf = gdf[polygon_filter & combined_tag_filter].copy()
+        GDF = GDF[polygon_filter & combined_tag_filter].copy()
 
         # remove columns of all nulls (created by discarded component geometries)
-        gdf.dropna(axis="columns", how="all", inplace=True)
-
-        # bug in geopandas <=0.8.1 raises a TypeError if trying to plot empty geometries
-        # but missing geometries (gdf['geometry'] = None) cannot be projected e.g. gdf.to_crs()
-        # don't see any option other than to drop rows with missing/empty geometries
-        gdf = gdf[~(gdf["geometry"].isna() | gdf["geometry"].is_empty)].copy()
+        GDF.dropna(axis="columns", how="all", inplace=True)
 
         # reset the index keeping the unique ids
-        gdf.reset_index(inplace=True)
+        GDF.reset_index(inplace=True)
         # rename the new 'index' column to 'unique_id'
-        gdf.rename(columns={"index": "unique_id"}, inplace=True)
+        GDF.rename(columns={"index": "unique_id"}, inplace=True)
 
-    return gdf
+    return GDF
