@@ -12,6 +12,7 @@ flake8-bugbear
 folium
 isort
 jupyterlab
+mapclassify
 nodejs
 numexpr
 osmnx
