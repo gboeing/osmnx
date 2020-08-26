@@ -860,7 +860,7 @@ def _buffer_invalid_geometries(GDF):
     if not GDF.empty:
 
         # create a filter for rows with invalid geometries
-        invalid_geometry_filter = ~GDF['geometry'].is_valid
+        invalid_geometry_filter = ~GDF["geometry"].is_valid
 
         # if there are invalid geometries
         if sum(invalid_geometry_filter) > 0:
@@ -873,7 +873,8 @@ def _buffer_invalid_geometries(GDF):
                 "Some invalid geometries were created and included in the GeoDataFrame. "
                 "A buffer of 0 has been applied to try to make them valid "
                 f"and their unique ids have been logged. {invalid_geometry_ids}",
-                stacklevel=2)
+                stacklevel=2,
+            )
 
             # create a list of their urls and log them
             osm_url = "https://www.openstreetmap.org/"
@@ -881,7 +882,9 @@ def _buffer_invalid_geometries(GDF):
             utils.log(f"Invalid geometries that had .buffer(0) applied: {invalid_geom_urls}")
 
             # apply .buffer(0)
-            GDF.loc[invalid_geometry_filter, 'geometry'] = GDF.loc[invalid_geometry_filter, 'geometry'].buffer(0)
+            GDF.loc[invalid_geometry_filter, "geometry"] = GDF.loc[
+                invalid_geometry_filter, "geometry"
+            ].buffer(0)
 
     return GDF
 
