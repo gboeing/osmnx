@@ -856,7 +856,7 @@ def _filter_final_gdf(gdf, polygon, tags):
         # that intersect with the polygon
         if polygon:
             # get a set of index labels of the geometries that intersect the polygon
-            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf, polygon)
+            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf.buffer(0), polygon)
             # create a boolean series, True for geometries whose index is in the set
             polygon_filter = gdf.index.isin(gdf_indices_in_polygon)
 
