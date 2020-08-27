@@ -1,7 +1,6 @@
 """Download geometries from OpenStreetMap."""
 
-import warnings
-
+import logging as lg
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -868,18 +867,10 @@ def _buffer_invalid_geometries(gdf):
             # get their unique_ids from the index
             invalid_geometry_ids = gdf.loc[invalid_geometry_filter].index.to_list()
 
-            # show a warning
-            warnings.warn(
-                "Some invalid geometries were created and included in the GeoDataFrame. "
-                "A buffer of 0 has been applied to try to make them valid "
-                f"and their unique ids have been logged. {invalid_geometry_ids}",
-                stacklevel=2,
-            )
-
             # create a list of their urls and log them
             osm_url = "https://www.openstreetmap.org/"
             invalid_geom_urls = [osm_url + unique_id for unique_id in invalid_geometry_ids]
-            utils.log(f"Invalid geometries that had .buffer(0) applied: {invalid_geom_urls}")
+            utils.log(f"Invalid geometries that had .buffer(0) applied: {invalid_geom_urls}.", level=lg.WARNING)
 
             # apply .buffer(0)
             gdf.loc[invalid_geometry_filter, "geometry"] = gdf.loc[
