@@ -1,6 +1,7 @@
 """Download geometries from OpenStreetMap."""
 
 import logging as lg
+
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -870,7 +871,10 @@ def _buffer_invalid_geometries(gdf):
             # create a list of their urls and log them
             osm_url = "https://www.openstreetmap.org/"
             invalid_geom_urls = [osm_url + unique_id for unique_id in invalid_geometry_ids]
-            utils.log(f"Invalid geometries that had .buffer(0) applied: {invalid_geom_urls}.", level=lg.WARNING)
+            utils.log(
+                f"Invalid geometries that had .buffer(0) applied: {invalid_geom_urls}.",
+                level=lg.WARNING,
+            )
 
             # apply .buffer(0)
             gdf.loc[invalid_geometry_filter, "geometry"] = gdf.loc[
