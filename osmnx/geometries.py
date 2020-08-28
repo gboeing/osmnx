@@ -1,5 +1,7 @@
 """Download geometries from OpenStreetMap."""
 
+import logging as lg
+
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -48,7 +50,7 @@ def gdf_from_bbox(north, south, east, west, tags):
 
     Returns
     -------
-    GDF : geopandas.GeoDataFrame
+    gdf : geopandas.GeoDataFrame
 
     Notes
     -----
@@ -59,10 +61,10 @@ def gdf_from_bbox(north, south, east, west, tags):
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
     # create geodataframe of geometries within this polygon
-    GDF = gdf_from_polygon(polygon, tags)
+    gdf = gdf_from_polygon(polygon, tags)
 
-    utils.log(f"gdf_from_bbox returned a geodataframe with {len(GDF)} geometries")
-    return GDF
+    utils.log(f"gdf_from_bbox returned a geodataframe with {len(gdf)} geometries")
+    return gdf
 
 
 def gdf_from_point(center_point, tags, dist=1000):
@@ -89,7 +91,7 @@ def gdf_from_point(center_point, tags, dist=1000):
 
     Returns
     -------
-    GDF : geopandas.GeoDataFrame
+    gdf : geopandas.GeoDataFrame
 
     Notes
     -----
@@ -104,10 +106,10 @@ def gdf_from_point(center_point, tags, dist=1000):
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
     # create geodataframe of geometries within this polygon
-    GDF = gdf_from_polygon(polygon, tags)
+    gdf = gdf_from_polygon(polygon, tags)
 
-    utils.log(f"gdf_from_point returned a geodataframe with {len(GDF)} geometries")
-    return GDF
+    utils.log(f"gdf_from_point returned a geodataframe with {len(gdf)} geometries")
+    return gdf
 
 
 def gdf_from_address(address, tags, dist=1000):
@@ -135,7 +137,7 @@ def gdf_from_address(address, tags, dist=1000):
 
     Returns
     -------
-    GDF : geopandas.GeoDataFrame
+    gdf : geopandas.GeoDataFrame
 
     Notes
     -----
@@ -146,10 +148,10 @@ def gdf_from_address(address, tags, dist=1000):
     center_point = geocoder.geocode(query=address)
 
     # create geodataframe of geometries around this point
-    GDF = gdf_from_point(center_point, tags, dist=dist)
+    gdf = gdf_from_point(center_point, tags, dist=dist)
 
-    utils.log(f"gdf_from_address returned a geodataframe with {len(GDF)} geometries")
-    return GDF
+    utils.log(f"gdf_from_address returned a geodataframe with {len(gdf)} geometries")
+    return gdf
 
 
 def gdf_from_place(query, tags, which_result=None, buffer_dist=None):
@@ -179,7 +181,7 @@ def gdf_from_place(query, tags, which_result=None, buffer_dist=None):
 
     Returns
     -------
-    GDF : geopandas.GeoDataFrame
+    gdf : geopandas.GeoDataFrame
 
     Notes
     -----
@@ -204,10 +206,10 @@ def gdf_from_place(query, tags, which_result=None, buffer_dist=None):
     utils.log("Constructed place geometry polygon(s) to query API")
 
     # create geodataframe using this polygon(s) geometry
-    GDF = gdf_from_polygon(polygon, tags)
+    gdf = gdf_from_polygon(polygon, tags)
 
-    utils.log(f"gdf_from_place returned geodataframe with {len(GDF)} geometries")
-    return GDF
+    utils.log(f"gdf_from_place returned geodataframe with {len(gdf)} geometries")
+    return gdf
 
 
 def gdf_from_polygon(polygon, tags):
@@ -232,7 +234,7 @@ def gdf_from_polygon(polygon, tags):
 
     Returns
     -------
-    GDF : geopandas.GeoDataFrame
+    gdf : geopandas.GeoDataFrame
 
     Notes
     -----
@@ -255,10 +257,10 @@ def gdf_from_polygon(polygon, tags):
     response_jsons = downloader._osm_geometry_download(polygon, tags)
 
     # create geodataframe from the downloaded data
-    GDF = _create_gdf(response_jsons, polygon, tags)
+    gdf = _create_gdf(response_jsons, polygon, tags)
 
-    utils.log(f"gdf_from_polygon returned geodataframe with {len(GDF)} geometries")
-    return GDF
+    utils.log(f"gdf_from_polygon returned geodataframe with {len(gdf)} geometries")
+    return gdf
 
 
 def gdf_from_xml(filepath, polygon=None, tags=None):
@@ -292,16 +294,16 @@ def gdf_from_xml(filepath, polygon=None, tags=None):
 
     Returns
     -------
-    GDF : geopandas.GeoDataFrame
+    gdf : geopandas.GeoDataFrame
     """
     # transmogrify file of OSM XML data into JSON
     response_jsons = [downloader._overpass_json_from_file(filepath)]
 
     # create geodataframe using this response JSON
-    GDF = _create_gdf(response_jsons, polygon=polygon, tags=tags)
+    gdf = _create_gdf(response_jsons, polygon=polygon, tags=tags)
 
-    utils.log(f"gdf_from_xml returned a geodataframe with {len(GDF)} geometries")
-    return GDF
+    utils.log(f"gdf_from_xml returned a geodataframe with {len(gdf)} geometries")
+    return gdf
 
 
 def _create_gdf(response_jsons, polygon, tags):
@@ -396,21 +398,29 @@ def _create_gdf(response_jsons, polygon, tags):
         geometries.pop(untagged_element_id, None)
 
     # Create GeoDataFrame
-    GDF = gpd.GeoDataFrame.from_dict(geometries, orient="index")
+    gdf = gpd.GeoDataFrame.from_dict(geometries, orient="index")
 
-    # ensure GDF has a geometry col before assigning crs
-    if "geometry" not in GDF.columns:
+    # ensure gdf has a geometry col before assigning crs
+    if "geometry" not in gdf.columns:
         # if there is no geometry column, create a null column
-        GDF["geometry"] = np.nan
-    GDF.set_geometry("geometry")
+        gdf["geometry"] = np.nan
+    gdf.set_geometry("geometry")
 
     # Set default crs
-    GDF.crs = settings.default_crs
+    gdf.crs = settings.default_crs
+
+    # Apply .buffer(0) to any invalid geometries
+    gdf = _buffer_invalid_geometries(gdf)
 
     # Filter final gdf to requested tags and bounding polygon
-    GDF = _filter_final_gdf(gdf=GDF, polygon=polygon, tags=tags)
+    gdf = _filter_gdf_by_polygon_and_tags(gdf, polygon=polygon, tags=tags)
 
-    return GDF
+    # bug in geopandas <=0.8.1 raises a TypeError if trying to plot empty geometries
+    # but missing geometries (gdf['geometry'] = None) cannot be projected e.g. gdf.to_crs()
+    # don't see any option other than to drop rows with missing/empty geometries
+    gdf = gdf[~(gdf["geometry"].isna() | gdf["geometry"].is_empty)].copy()
+
+    return gdf
 
 
 def _parse_node_to_coord(element):
@@ -823,13 +833,65 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
     return geometry
 
 
-def _filter_final_gdf(gdf, polygon, tags):
+def _buffer_invalid_geometries(gdf):
     """
-    Filter the final gdf to the requested tags and bounding polygon.
+    Buffer any invalid geometries remaining in the GeoDataFrame.
 
-    Filters the final gdf to the requested tags and bounding polygon. Removes
+    Invalid geometries in the GeoDataFrame (which may accurately
+    reproduce invalid geometries in OpenStreetMap) can cause the
+    filtering to the query polygon and other subsequent geometric
+    operations to fail. This function logs the ids of the invalid
+    geometries and applies a buffer of zero to try to make them valid.
+
+    Note: the resulting geometries may differ from the originals
+    - please check them against OpenStreetMap
+
+    Parameters
+    ----------
+    gdf : GeoDataFrame
+        the GeoDataFrame with potential invalid geometries
+
+    Returns
+    -------
+    gdf : GeoDataFrame
+        the GeoDataFrame with .buffer(0) applied to invalid geometries
+    """
+    # only apply the filters if the GeoDataFrame is not empty
+    if not gdf.empty:
+
+        # create a filter for rows with invalid geometries
+        invalid_geometry_filter = ~gdf["geometry"].is_valid
+
+        # if there are invalid geometries
+        if sum(invalid_geometry_filter) > 0:
+
+            # get their unique_ids from the index
+            invalid_geometry_ids = gdf.loc[invalid_geometry_filter].index.to_list()
+
+            # create a list of their urls and log them
+            osm_url = "https://www.openstreetmap.org/"
+            invalid_geom_urls = [osm_url + unique_id for unique_id in invalid_geometry_ids]
+            utils.log(
+                f"Invalid geometries that had .buffer(0) applied: {invalid_geom_urls}.",
+                level=lg.WARNING,
+            )
+
+            # apply .buffer(0)
+            gdf.loc[invalid_geometry_filter, "geometry"] = gdf.loc[
+                invalid_geometry_filter, "geometry"
+            ].buffer(0)
+
+    return gdf
+
+
+def _filter_gdf_by_polygon_and_tags(gdf, polygon, tags):
+    """
+    Filter the GeoDataFrame to the requested bounding polygon and tags.
+
+    Filters the GeoDataFrame to the query polygon and tags. Removes
     columns of all NaNs (that held values only in rows removed by the filters).
-    Resets the gdf index.
+    Resets the index of the GeoDataFrame, writing it into a new column called
+    'unique_id'.
 
     Parameters
     ----------
@@ -845,7 +907,7 @@ def _filter_final_gdf(gdf, polygon, tags):
     gdf : GeoDataFrame
         final, filtered GeoDataFrame
     """
-    # only apply the filters if the geodataframe is not empty
+    # only apply the filters if the GeoDataFrame is not empty
     if not gdf.empty:
 
         # create two filters, initially all True
@@ -866,7 +928,7 @@ def _filter_final_gdf(gdf, polygon, tags):
             # Reset all values in the combined_tag_filter to False
             combined_tag_filter[:] = False
 
-            # reduce the tags to those that are actually present in the geodataframe columns
+            # reduce the tags to those that are actually present in the GeoDataFrame columns
             tags_in_columns = {key: tags[key] for key in tags if key in gdf.columns}
 
             for key, value in tags_in_columns.items():
@@ -884,11 +946,6 @@ def _filter_final_gdf(gdf, polygon, tags):
 
         # remove columns of all nulls (created by discarded component geometries)
         gdf.dropna(axis="columns", how="all", inplace=True)
-
-        # bug in geopandas <=0.8.1 raises a TypeError if trying to plot empty geometries
-        # but missing geometries (gdf['geometry'] = None) cannot be projected e.g. gdf.to_crs()
-        # don't see any option other than to drop rows with missing/empty geometries
-        gdf = gdf[~(gdf["geometry"].isna() | gdf["geometry"].is_empty)].copy()
 
         # reset the index keeping the unique ids
         gdf.reset_index(inplace=True)
