@@ -1,4 +1,4 @@
-"""Download geometries from OpenStreetMap."""
+"""Download geospatial objects' geometries from OpenStreetMap."""
 
 import logging as lg
 
