@@ -455,9 +455,9 @@ def test_footprints():
 
 def test_geometries():
 
-    # gdf_from_bbox - bounding box query that should return an empty response
-    with pytest.raises(ox._errors.EmptyOverpassResponse):
-        gdf = ox.gdf_from_bbox(50.5912, 50.5786, -2.4293, -2.4544, tags={"building": True})
+    # gdf_from_bbox - bounding box query that should return an empty GeoDataFrame
+    gdf = ox.gdf_from_bbox(50.5912, 50.5786, -2.4293, -2.4544, tags={"building": True})
+
     # gdf_from_bbox - succesful
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
     gdf = ox.gdf_from_bbox(
