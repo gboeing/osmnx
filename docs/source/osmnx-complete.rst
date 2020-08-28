@@ -59,6 +59,14 @@ osmnx.geocoder module
     :private-members:
     :noindex:
 
+osmnx.geometries module
+-----------------------
+
+.. automodule:: osmnx.geometries
+    :members:
+    :private-members:
+    :noindex:
+
 osmnx.graph module
 ------------------
 
