@@ -21,7 +21,7 @@ from . import utils_geo
 from ._polygon_features import polygon_features
 
 
-def gdf_from_bbox(north, south, east, west, tags):
+def geometries_from_bbox(north, south, east, west, tags):
     """
     Create a geodataframe of OSM geometries within a N, S, E, W bounding box.
 
@@ -60,12 +60,12 @@ def gdf_from_bbox(north, south, east, west, tags):
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
     # create geodataframe of geometries within this polygon
-    gdf = gdf_from_polygon(polygon, tags)
+    gdf = geometries_from_polygon(polygon, tags)
 
     return gdf
 
 
-def gdf_from_point(center_point, tags, dist=1000):
+def geometries_from_point(center_point, tags, dist=1000):
     """
     Create a geodataframe of OSM geometries within some distance N, S, E, W of a (lat-lng) point.
 
@@ -104,12 +104,12 @@ def gdf_from_point(center_point, tags, dist=1000):
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
     # create geodataframe of geometries within this polygon
-    gdf = gdf_from_polygon(polygon, tags)
+    gdf = geometries_from_polygon(polygon, tags)
 
     return gdf
 
 
-def gdf_from_address(address, tags, dist=1000):
+def geometries_from_address(address, tags, dist=1000):
     """
     Create a geodataframe of OSM geometries within some distance N, S, E, W of an address.
 
@@ -145,12 +145,12 @@ def gdf_from_address(address, tags, dist=1000):
     center_point = geocoder.geocode(query=address)
 
     # create geodataframe of geometries around this point
-    gdf = gdf_from_point(center_point, tags, dist=dist)
+    gdf = geometries_from_point(center_point, tags, dist=dist)
 
     return gdf
 
 
-def gdf_from_place(query, tags, which_result=None, buffer_dist=None):
+def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     """
     Create a geodataframe of OSM geometries within the boundaries of a place.
 
@@ -202,12 +202,12 @@ def gdf_from_place(query, tags, which_result=None, buffer_dist=None):
     utils.log("Constructed place geometry polygon(s) to query API")
 
     # create geodataframe using this polygon(s) geometry
-    gdf = gdf_from_polygon(polygon, tags)
+    gdf = geometries_from_polygon(polygon, tags)
 
     return gdf
 
 
-def gdf_from_polygon(polygon, tags):
+def geometries_from_polygon(polygon, tags):
     """
     Create a geodataframe of OSM geometries within the boundaries of some shapely polygon.
 
@@ -257,14 +257,14 @@ def gdf_from_polygon(polygon, tags):
     return gdf
 
 
-def gdf_from_xml(filepath, polygon=None, tags=None):
+def geometries_from_xml(filepath, polygon=None, tags=None):
     """
     Create a geodataframe of OSM geometries from an OSM-formatted XML file.
 
     Because this function creates a geodataframe of geometries from an
     OSM-formatted XML file that has already been downloaded (i.e. no query
     is made to the Overpass API) the polygon and tags arguments are not required.
-    If they are not supplied to the function, gdf_from_xml() will return geometries
+    If they are not supplied to the function, geometries_from_xml() will return geometries
     for all of the tagged elements in the file. If they are supplied they will be
     used to filter the final geodataframe.
 

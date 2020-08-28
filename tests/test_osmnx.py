@@ -455,35 +455,35 @@ def test_footprints():
 
 def test_geometries():
 
-    # gdf_from_bbox - bounding box query that should return an empty GeoDataFrame
-    gdf = ox.gdf_from_bbox(50.5912, 50.5786, -2.4293, -2.4544, tags={"building": True})
+    # geometries_from_bbox - bounding box query that should return an empty GeoDataFrame
+    gdf = ox.geometries_from_bbox(50.5912, 50.5786, -2.4293, -2.4544, tags={"building": True})
 
-    # gdf_from_bbox - succesful
+    # geometries_from_bbox - succesful
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
-    gdf = ox.gdf_from_bbox(
+    gdf = ox.geometries_from_bbox(
         north, south, east, west, tags={"landuse": True, "building": True, "highway": True}
     )
 
-    # gdf_from_point - tests multipolygon creation
-    gdf = ox.gdf_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)
+    # geometries_from_point - tests multipolygon creation
+    gdf = ox.geometries_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)
 
-    # gdf_from_address
-    gdf = ox.gdf_from_address(address, tags={"amenity": "school"})
+    # geometries_from_address
+    gdf = ox.geometries_from_address(address, tags={"amenity": "school"})
 
-    # gdf_from_place - includes test of list of places
+    # geometries_from_place - includes test of list of places
     tags = {
         "amenity": True,
         "landuse": ["retail", "commercial"],
         "highway": "primary",
         "power": "substation",
     }
-    gdf = ox.gdf_from_place([place1], tags=tags)
+    gdf = ox.geometries_from_place([place1], tags=tags)
 
-    # gdf_from_xml - tests error handling of clipped XMLs with incomplete geometry
-    gdf = ox.gdf_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")
+    # geometries_from_xml - tests error handling of clipped XMLs with incomplete geometry
+    gdf = ox.geometries_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")
 
 
-def test_gdf_from_xml():
+def test_geometries_from_xml():
     # test loading a geodataframe from a local .osm xml file
 
     with bz2.BZ2File("tests/input_data/West-Oakland.osm.bz2") as input:
@@ -492,7 +492,7 @@ def test_gdf_from_xml():
         os.close(handle)
 
     for filename in ("tests/input_data/West-Oakland.osm.bz2", temp_filename):
-        GDF = ox.gdf_from_xml(filename)
+        GDF = ox.geometries_from_xml(filename)
         assert "Willow Street" in GDF["name"].values
 
     os.remove(temp_filename)
