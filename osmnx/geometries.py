@@ -340,8 +340,7 @@ def _create_gdf(response_jsons, polygon, tags):
 
         # log a warning
         utils.log(
-            "Empty GeoDataFrame returned. Check query tags and location.",
-            level=lg.WARNING,
+            "Empty GeoDataFrame returned. Check query tags and location.", level=lg.WARNING,
         )
 
         return gdf
@@ -394,7 +393,8 @@ def _create_gdf(response_jsons, polygon, tags):
                         geometries[unique_id] = linestring_or_polygon
 
                 elif (
-                    element["type"] == "relation" and element.get("tags").get("type") == "multipolygon"
+                    element["type"] == "relation"
+                    and element.get("tags").get("type") == "multipolygon"
                 ):
                     # Parse all multipolygon relations to multipolygons
                     multipolygon = _parse_relation_to_multipolygon(
@@ -888,7 +888,8 @@ def _buffer_invalid_geometries(gdf):
             osm_url = "https://www.openstreetmap.org/"
             invalid_geom_urls = [osm_url + unique_id for unique_id in invalid_geometry_ids]
             utils.log(
-                f"{len(invalid_geometry_ids)} invalid geometries had .buffer(0) applied:\n {invalid_geom_urls}.",
+                f"{len(invalid_geometry_ids)} invalid geometries"
+                f".buffer(0) applied to {invalid_geom_urls}",
                 level=lg.WARNING,
             )
 
@@ -959,7 +960,7 @@ def _filter_gdf_by_polygon_and_tags(gdf, polygon, tags):
 
                 combined_tag_filter = combined_tag_filter | tag_filter
 
-            utils.log(f"{sum(~combined_tag_filter)} geometries removed by the tag filter") 
+            utils.log(f"{sum(~combined_tag_filter)} geometries removed by the tag filter")
 
         # apply the filters
         gdf = gdf[polygon_filter & combined_tag_filter].copy()
