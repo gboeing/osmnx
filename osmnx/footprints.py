@@ -21,7 +21,7 @@ def footprints_from_point(point, dist=1000, footprint_type="building", retain_in
         type of footprint to be downloaded. OSM tag key e.g. 'building',
         'landuse', 'place', etc.
     retain_invalid : bool
-        if False discard any footprints with an invalid geometry
+        deprecated, is ignored
 
     Returns
     -------
@@ -59,7 +59,7 @@ def footprints_from_address(address, dist=1000, footprint_type="building", retai
         type of footprint to be downloaded. OSM tag key e.g. 'building',
         'landuse', 'place', etc.
     retain_invalid : bool
-        if False discard any footprints with an invalid geometry
+        deprecated, is ignored
 
     Returns
     -------
@@ -103,7 +103,7 @@ def footprints_from_place(
         type of footprint to be downloaded. OSM tag key e.g. 'building',
         'landuse', 'place', etc.
     retain_invalid : bool
-        if False discard any footprints with an invalid geometry
+        deprecated, is ignored
     which_result : int
         which geocoding result to use. if None, auto-select the first
         multi/polygon or raise an error if OSM doesn't return one.
@@ -143,7 +143,7 @@ def footprints_from_polygon(polygon, footprint_type="building", retain_invalid=F
         type of footprint to be downloaded. OSM tag key e.g. 'building',
         'landuse', 'place', etc.
     retain_invalid : bool
-        if False discard any footprints with an invalid geometry
+        deprecated, is ignored
 
     Returns
     -------
