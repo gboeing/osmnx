@@ -18,7 +18,7 @@ from . import geocoder
 from . import settings
 from . import utils
 from . import utils_geo
-from ._polygon_features import polygon_features
+from ._polygon_features import _polygon_features
 
 
 def geometries_from_bbox(north, south, east, west, tags):
@@ -36,9 +36,9 @@ def geometries_from_bbox(north, south, east, west, tags):
     west : float
         western longitude of bounding box
     tags : dict
-        Dict of tags used for finding geometry from the selected area. Results
+        Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
+        Each result matches at least one given tag. The dict keys should be
         OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
@@ -74,9 +74,9 @@ def geometries_from_point(center_point, tags, dist=1000):
     center_point : tuple
         the (lat, lng) center point around which to get the geometries
     tags : dict
-        Dict of tags used for finding geometry from the selected area. Results
+        Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
+        Each result matches at least one given tag. The dict keys should be
         OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
@@ -118,9 +118,9 @@ def geometries_from_address(address, tags, dist=1000):
         the address to geocode and use as the central point around which to
         get the geometries
     tags : dict
-        Dict of tags used for finding geometry in the selected area. Results
+        Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
+        Each result matches at least one given tag. The dict keys should be
         OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
@@ -158,9 +158,9 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     query : string or dict or list
         the query or queries to geocode to get place boundary polygon(s)
     tags : dict
-        Dict of tags used for finding geometry in the selected area. Results
+        Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
+        Each result matches at least one given tag. The dict keys should be
         OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
@@ -215,9 +215,9 @@ def geometries_from_polygon(polygon, tags):
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         geographic boundaries to fetch geometries within
     tags : dict
-        Dict of tags used for finding POIs from the selected area. Results
+        Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
+        Each result matches at least one given tag. The dict keys should be
         OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
@@ -237,7 +237,7 @@ def geometries_from_polygon(polygon, tags):
     """
     # verify that the geometry is valid and a Polygon/MultiPolygon
     if not polygon.is_valid:
-        raise ValueError("The boundaries to query within are invalid")
+        raise ValueError("The geometry of `polygon` is invalid")
     if not isinstance(polygon, (Polygon, MultiPolygon)):
         raise TypeError(
             "Boundaries must be a shapely Polygon or MultiPolygon. If you requested "
@@ -271,11 +271,11 @@ def geometries_from_xml(filepath, polygon=None, tags=None):
     filepath : string
         path to file containing OSM XML data
     polygon : shapely.geometry.Polygon
-        optional geographic boundary to filter geometries within
+        optional geographic boundary to filter objects
     tags : dict
-        optional dict of tags for filtering geometries from the XML. Results
+        optional dict of tags for filtering objects from the XML. Results
         returned are the union, not intersection of each individual tag.
-        Each result matches at least one tag given. The dict keys should be
+        Each result matches at least one given tag. The dict keys should be
         OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
@@ -324,11 +324,11 @@ def _create_gdf(response_jsons, polygon, tags):
     elements = []
     for response_json in response_jsons:
         elements.extend(response_json["elements"])
-    number_of_elements = len(elements)
-    utils.log(f"{number_of_elements} elements in the JSON responses (includes every node).")
+    num_elements = len(elements)
+    utils.log(f"{num_elements} elements in the JSON responses (includes every node).")
 
     # if there are no elements in the responses
-    if number_of_elements < 1:
+    if num_elements < 1:
 
         # create an empty GeoDataFrame
         gdf = gpd.GeoDataFrame()
@@ -338,7 +338,7 @@ def _create_gdf(response_jsons, polygon, tags):
 
         # log a warning
         utils.log(
-            "Empty GeoDataFrame returned. Check query tags and location.", level=lg.WARNING,
+            "OSM returned nothing. Check query tags and location.", level=lg.WARNING,
         )
 
         return gdf
@@ -349,8 +349,8 @@ def _create_gdf(response_jsons, polygon, tags):
         utils.log("Converting elements to geometries")
 
         # Dictionaries to hold nodes and complete geometries
-        coords = {}
-        geometries = {}
+        coords = dict()
+        geometries = dict()
 
         # Set to hold the unique IDs of elements that do not have tags
         untagged_element_ids = set()
@@ -386,7 +386,7 @@ def _create_gdf(response_jsons, polygon, tags):
                 elif element["type"] == "way":
                     # Parse all ways to linestrings or polygons
                     linestring_or_polygon = _parse_way_to_linestring_or_polygon(
-                        element=element, coords=coords, polygon_features=polygon_features,
+                        element=element, coords=coords
                     )
                     if linestring_or_polygon:
                         geometries[unique_id] = linestring_or_polygon
@@ -477,7 +477,7 @@ def _parse_node_to_point(element):
     point : dict
         dict of OSM ID, OSM element type, tags and geometry
     """
-    point = {}
+    point = dict()
     point["osmid"] = element["id"]
     point["element_type"] = "node"
 
@@ -492,7 +492,7 @@ def _parse_node_to_point(element):
     return point
 
 
-def _parse_way_to_linestring_or_polygon(element, coords, polygon_features):
+def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_polygon_features):
     """
     Parse open LineString, closed LineString or Polygon from OSM 'way'.
 
@@ -515,7 +515,7 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features):
     """
     nodes = element["nodes"]
 
-    linestring_or_polygon = {}
+    linestring_or_polygon = dict()
     linestring_or_polygon["osmid"] = element["id"]
     linestring_or_polygon["element_type"] = "way"
     linestring_or_polygon["nodes"] = nodes
@@ -543,7 +543,7 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features):
     # or Polygon
     elif element["nodes"][0] == element["nodes"][-1]:
         # Use tags to determine whether way represents a LineString, Polygon
-        is_polygon = _closed_way_is_linestring_or_polygon(element, polygon_features)
+        is_polygon = _is_closed_way_a_polygon(element)
 
         if is_polygon:
             try:
@@ -575,9 +575,9 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features):
     return linestring_or_polygon
 
 
-def _closed_way_is_linestring_or_polygon(element, polygon_features):
+def _is_closed_way_a_polygon(element, polygon_features=_polygon_features):
     """
-    Determine whether a closed OSM way represents a LineString or Polygon.
+    Determine whether a closed OSM way represents a Polygon, not a LineString.
 
     Closed OSM ways may represent LineStrings (e.g. a roundabout or hedge
     round a field) or Polygons (e.g. a building footprint or land use area)
@@ -684,7 +684,7 @@ def _parse_relation_to_multipolygon(element, geometries):
     multipolygon : dict
         dict of tags and geometry for a single multipolygon
     """
-    multipolygon = {}
+    multipolygon = dict()
     multipolygon["osmid"] = element["id"]
     multipolygon["element_type"] = "relation"
 
