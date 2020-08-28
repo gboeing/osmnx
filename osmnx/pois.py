@@ -40,7 +40,7 @@ def pois_from_point(point, tags, dist=1000):
     """
     msg = (
         "The `pois` module has been deprecated and will be removed in a "
-        "future relase. Use the `geometries` module's `geometries_from_point` "
+        "future release. Use the `geometries` module's `geometries_from_point` "
         "function instead."
     )
     warnings.warn(msg)
@@ -82,7 +82,7 @@ def pois_from_address(address, tags, dist=1000):
     """
     msg = (
         "The `pois` module has been deprecated and will be removed in a "
-        "future relase. Use the `geometries` module's `geometries_from_address` "
+        "future release. Use the `geometries` module's `geometries_from_address` "
         "function instead."
     )
     warnings.warn(msg)
@@ -125,7 +125,7 @@ def pois_from_place(place, tags, which_result=None):
     """
     msg = (
         "The `pois` module has been deprecated and will be removed in a "
-        "future relase. Use the `geometries` module's `geometries_from_place` "
+        "future release. Use the `geometries` module's `geometries_from_place` "
         "function instead."
     )
     warnings.warn(msg)
@@ -165,7 +165,7 @@ def pois_from_polygon(polygon, tags):
     """
     msg = (
         "The `pois` module has been deprecated and will be removed in a "
-        "future relase. Use the `geometries` module's `geometries_from_polygon` "
+        "future release. Use the `geometries` module's `geometries_from_polygon` "
         "function instead."
     )
     warnings.warn(msg)
