@@ -7,7 +7,6 @@ import matplotlib as mpl
 mpl.use("Agg")
 
 import bz2
-import json
 import logging as lg
 import os
 import shutil
@@ -407,50 +406,6 @@ def test_footprints():
     gdf = ox.footprints_from_polygon(polygon)
     gdf = ox.footprints_from_address(address, dist=300)
     fig, ax = ox.plot_footprints(gdf)
-
-    # new_river_head.json contains a relation with 1 outer closed way and 2
-    # inner closed ways inner way 665593284 is directly tagged as a building
-    # and should create its own polygon
-    with open("tests/input_data/new_river_head.json", "r") as read_file:
-        new_river_head_responses = [json.load(read_file)]
-    new_river_head_gdf = ox.footprints._create_footprints_gdf(responses=new_river_head_responses)
-    assert 665593284 in new_river_head_gdf.index
-    assert new_river_head_gdf.loc[9246394]["geometry"].type == "Polygon"
-    assert len(new_river_head_gdf.loc[9246394, "geometry"].interiors) == 2
-
-    # clapham_common.json contains a relation with 5 outer rings and 1
-    # inner ring. One of the outer rings is a chain of open ways
-    with open("tests/input_data/clapham_common.json", "r") as read_file:
-        clapham_common_responses = [json.load(read_file)]
-    clapham_common_gdf = ox.footprints._create_footprints_gdf(
-        footprint_type="leisure", responses=clapham_common_responses
-    )
-    assert clapham_common_gdf.loc[1290065]["geometry"].type == "MultiPolygon"
-
-    # relation_no_outer.json contains a relation with 0 outer rings and 1
-    # inner ring
-    with open("tests/input_data/relation_no_outer.json", "r") as read_file:
-        relation_no_outer_responses = [json.load(read_file)]
-    ox.footprints._create_footprints_gdf(responses=relation_no_outer_responses)
-
-    # inner_chain.json contains a relation with 1 outer rings and several
-    # inner rings one of which is a chain of open ways
-    with open("tests/input_data/inner_chain.json", "r") as read_file:
-        inner_chain_responses = [json.load(read_file)]
-    ox.footprints._create_footprints_gdf(responses=inner_chain_responses)
-
-    # mis_tagged_bus_route.json contains a relation with out 'inner' or
-    # 'inner' rings
-    with open("tests/input_data/mis_tagged_bus_route.json", "r") as read_file:
-        mis_tagged_bus_route_responses = [json.load(read_file)]
-    ox.footprints._create_footprints_gdf(responses=mis_tagged_bus_route_responses)
-
-    # test plotting multipolygon
-    fig, ax = ox.plot_footprints(clapham_common_gdf)
-
-    # should raise an exception: polygon or responses must be provided
-    with pytest.raises(ValueError):
-        ox.footprints._create_footprints_gdf(polygon=None, responses=None)
 
 
 def test_geometries():
