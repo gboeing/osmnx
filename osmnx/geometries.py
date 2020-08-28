@@ -18,7 +18,7 @@ from . import geocoder
 from . import settings
 from . import utils
 from . import utils_geo
-from .polygon_features import polygon_features
+from ._polygon_features import polygon_features
 
 
 def gdf_from_bbox(north, south, east, west, tags):
