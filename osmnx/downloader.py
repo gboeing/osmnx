@@ -309,9 +309,9 @@ def _make_overpass_settings():
 
 def _make_overpass_polygon_coord_strs(polygon):
     """
-    Subdivide query polygon and return list of sub-divided polygon coordinate strings.
+    Subdivide query polygon and return list of coordinate strings.
 
-    project to utm, divide polygon up into sub-polygons if area exceeds a
+    Project to utm, divide polygon up into sub-polygons if area exceeds a
     max size (in meters), project back to lat-lng, then get a list of
     polygon(s) exterior coordinates
 
@@ -435,7 +435,8 @@ def _osm_net_download(polygon, network_type, custom_filter):
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
 
-    # subdivide query polygon and get list of sub-divided polygon coordinate strings
+    # subdivide query polygon and get list of sub-divided polygon coordinate
+    # strings
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
 
     # pass each polygon exterior coordinates in the list to the API, one at a
@@ -472,10 +473,12 @@ def _osm_geometry_download(polygon, tags):
     """
     response_jsons = []
 
-    # subdivide query polygon and get list of sub-divided polygon coordinate strings
+    # subdivide query polygon and get list of sub-divided polygon coordinate
+    # strings
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
 
-    # pass the exterior coordinates of each polygon in the list to the API, one at a time
+    # pass the exterior coordinates of each polygon in the list to the API,
+    # one at a time
     for polygon_coord_str in polygon_coord_strs:
         query_str = _create_overpass_query(polygon_coord_str, tags)
         response_json = overpass_request(data={"data": query_str})
@@ -490,7 +493,7 @@ def _osm_geometry_download(polygon, tags):
 
 def _osm_polygon_download(query, limit=1, polygon_geojson=1):
     """
-    Geocode a place and download its boundary geometry from OSM's Nominatim API.
+    Geocode a place and download its boundary geometry from Nominatim API.
 
     Parameters
     ----------

@@ -23,7 +23,7 @@ from ._polygon_features import polygon_features
 
 def geometries_from_bbox(north, south, east, west, tags):
     """
-    Create a geodataframe of OSM geometries within a N, S, E, W bounding box.
+    Create a GeoDataFrame of OSM geometries within a N, S, E, W bounding box.
 
     Parameters
     ----------
@@ -59,7 +59,7 @@ def geometries_from_bbox(north, south, east, west, tags):
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
-    # create geodataframe of geometries within this polygon
+    # create GeoDataFrame of geometries within this polygon
     gdf = geometries_from_polygon(polygon, tags)
 
     return gdf
@@ -67,7 +67,7 @@ def geometries_from_bbox(north, south, east, west, tags):
 
 def geometries_from_point(center_point, tags, dist=1000):
     """
-    Create a geodataframe of OSM geometries within some distance N, S, E, W of a (lat-lng) point.
+    Create GeoDataFrame of OSM geometries within some distance N, S, E, W of a point.
 
     Parameters
     ----------
@@ -96,14 +96,13 @@ def geometries_from_point(center_point, tags, dist=1000):
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
-    # create a bounding box from the center point and the distance in each
-    # direction
+    # create bounding box from center point and distance in each direction
     north, south, east, west = utils_geo.bbox_from_point(center_point, dist)
 
     # convert the bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
-    # create geodataframe of geometries within this polygon
+    # create GeoDataFrame of geometries within this polygon
     gdf = geometries_from_polygon(polygon, tags)
 
     return gdf
@@ -111,7 +110,7 @@ def geometries_from_point(center_point, tags, dist=1000):
 
 def geometries_from_address(address, tags, dist=1000):
     """
-    Create a geodataframe of OSM geometries within some distance N, S, E, W of an address.
+    Create GeoDataFrame of OSM geometries within some distance N, S, E, W of address.
 
     Parameters
     ----------
@@ -144,7 +143,7 @@ def geometries_from_address(address, tags, dist=1000):
     # geocode the address string to a (lat, lng) point
     center_point = geocoder.geocode(query=address)
 
-    # create geodataframe of geometries around this point
+    # create GeoDataFrame of geometries around this point
     gdf = geometries_from_point(center_point, tags, dist=dist)
 
     return gdf
@@ -152,7 +151,7 @@ def geometries_from_address(address, tags, dist=1000):
 
 def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     """
-    Create a geodataframe of OSM geometries within the boundaries of a place.
+    Create a GeoDataFrame of OSM geometries within the boundaries of a place.
 
     Parameters
     ----------
@@ -186,8 +185,8 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, (str, dict)):
-        # if it is a string (place name) or dict (structured place query), then
-        # it is a single place
+        # if it is a string (place name) or dict (structured place query),
+        # then it is a single place
         gdf_place = geocoder.geocode_to_gdf(
             query, which_result=which_result, buffer_dist=buffer_dist
         )
@@ -201,7 +200,7 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     polygon = gdf_place["geometry"].unary_union
     utils.log("Constructed place geometry polygon(s) to query API")
 
-    # create geodataframe using this polygon(s) geometry
+    # create GeoDataFrame using this polygon(s) geometry
     gdf = geometries_from_polygon(polygon, tags)
 
     return gdf
@@ -209,11 +208,11 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
 
 def geometries_from_polygon(polygon, tags):
     """
-    Create a geodataframe of OSM geometries within the boundaries of some shapely polygon.
+    Create GeoDataFrame of OSM geometries within boundaries of some (multi)polygon.
 
     Parameters
     ----------
-    polygon : shapely.geometry.Polygon
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         geographic boundaries to fetch geometries within
     tags : dict
         Dict of tags used for finding POIs from the selected area. Results
@@ -236,14 +235,13 @@ def geometries_from_polygon(polygon, tags):
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
-    # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
-    # before proceeding
+    # verify that the geometry is valid and a Polygon/MultiPolygon
     if not polygon.is_valid:
-        raise ValueError("The geometry to query within is invalid")
+        raise ValueError("The boundaries to query within are invalid")
     if not isinstance(polygon, (Polygon, MultiPolygon)):
         raise TypeError(
-            "Geometry must be a shapely Polygon or MultiPolygon. If you requested "
-            "graph from place name, make sure your query resolves to a Polygon or "
+            "Boundaries must be a shapely Polygon or MultiPolygon. If you requested "
+            "geometries from place name, make sure your query resolves to a Polygon or "
             "MultiPolygon, and not some other geometry, like a Point. See OSMnx "
             "documentation for details."
         )
@@ -251,7 +249,7 @@ def geometries_from_polygon(polygon, tags):
     # download the geometry data from OSM
     response_jsons = downloader._osm_geometry_download(polygon, tags)
 
-    # create geodataframe from the downloaded data
+    # create GeoDataFrame from the downloaded data
     gdf = _create_gdf(response_jsons, polygon, tags)
 
     return gdf
@@ -259,14 +257,14 @@ def geometries_from_polygon(polygon, tags):
 
 def geometries_from_xml(filepath, polygon=None, tags=None):
     """
-    Create a geodataframe of OSM geometries from an OSM-formatted XML file.
+    Create a GeoDataFrame of OSM geometries from an OSM-formatted XML file.
 
-    Because this function creates a geodataframe of geometries from an
-    OSM-formatted XML file that has already been downloaded (i.e. no query
-    is made to the Overpass API) the polygon and tags arguments are not required.
-    If they are not supplied to the function, geometries_from_xml() will return geometries
-    for all of the tagged elements in the file. If they are supplied they will be
-    used to filter the final geodataframe.
+    Because this function creates a GeoDataFrame of geometries from an
+    OSM-formatted XML file that has already been downloaded (i.e. no query is
+    made to the Overpass API) the polygon and tags arguments are not required.
+    If they are not supplied to the function, geometries_from_xml() will
+    return geometries for all of the tagged elements in the file. If they are
+    supplied they will be used to filter the final GeoDataFrame.
 
     Parameters
     ----------
@@ -275,7 +273,7 @@ def geometries_from_xml(filepath, polygon=None, tags=None):
     polygon : shapely.geometry.Polygon
         optional geographic boundary to filter geometries within
     tags : dict
-        optional dict of tags used for filtering geometries from the XML. Results
+        optional dict of tags for filtering geometries from the XML. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one tag given. The dict keys should be
         OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
@@ -293,7 +291,7 @@ def geometries_from_xml(filepath, polygon=None, tags=None):
     # transmogrify file of OSM XML data into JSON
     response_jsons = [downloader._overpass_json_from_file(filepath)]
 
-    # create geodataframe using this response JSON
+    # create GeoDataFrame using this response JSON
     gdf = _create_gdf(response_jsons, polygon=polygon, tags=tags)
 
     return gdf
@@ -304,8 +302,8 @@ def _create_gdf(response_jsons, polygon, tags):
     Parse JSON responses from the Overpass API to a GeoDataFrame.
 
     Note: the `polygon` and `tags` arguments can both be `None` and
-    the geodataframe will still be created but it won't be filtered
-    at the end i.e. the final geodataframe will contain all tagged
+    the GeoDataFrame will still be created but it won't be filtered
+    at the end i.e. the final GeoDataFrame will contain all tagged
     geometries in the `response_jsons`.
 
     Parameters
@@ -313,14 +311,14 @@ def _create_gdf(response_jsons, polygon, tags):
     response_jsons : list
         list of JSON responses from from the Overpass API
     polygon : shapely.geometry.Polygon
-        geographic boundary used for filtering the final geodataframe
+        geographic boundary used for filtering the final GeoDataFrame
     tags : dict
-        dict of tags used for filtering the final geodataframe
+        dict of tags used for filtering the final GeoDataFrame
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
-        geometries and their associated tags
+        GeoDataFrame of geometries and their associated tags
     """
     # count the number of elements in the JSON responses from the server
     elements = []
@@ -359,17 +357,18 @@ def _create_gdf(response_jsons, polygon, tags):
 
         # extract geometries from the downloaded osm data
         for response_json in response_jsons:
-            # Parses the JSON of OSM nodes, ways and (multipolygon) relations to dictionaries of
-            # coordinates, Shapely Points, LineStrings, Polygons and MultiPolygons
+            # Parses the JSON of OSM nodes, ways and (multipolygon) relations
+            # to dictionaries of coordinates, Shapely Points, LineStrings,
+            # Polygons and MultiPolygons
             for element in response_json["elements"]:
 
                 # id numbers are only unique within element types
                 # create unique id from combination of type and id
                 unique_id = f"{element['type']}/{element['id']}"
 
-                # add elements that are not nodes and that are without tags or with empty tags
-                # to the untagged_element_ids set (untagged nodes are not added to the geometries
-                # dictionary at all)
+                # add elements that are not nodes and that are without tags or
+                # with empty tags to the untagged_element_ids set (untagged
+                # nodes are not added to the geometries dict at all)
                 if (element["type"] != "node") & (("tags" not in element) or (not element["tags"])):
                     untagged_element_ids.add(unique_id)
 
@@ -377,9 +376,9 @@ def _create_gdf(response_jsons, polygon, tags):
                     # Parse all nodes to coords
                     coord = _parse_node_to_coord(element=element)
                     coords[element["id"]] = coord
-                    # If the node has tags and the tags are not empty parse it to a Point
-                    # Empty check is necessary for JSONs created from XML where nodes without tags
-                    # are assigned tags = {}
+                    # If the node has tags and the tags are not empty parse
+                    # it to a Point. Empty check is necessary for JSONs created
+                    # from XML where nodes without tags are assigned tags = {}
                     if "tags" in element and element["tags"]:
                         point = _parse_node_to_point(element=element)
                         geometries[unique_id] = point
@@ -403,9 +402,9 @@ def _create_gdf(response_jsons, polygon, tags):
                     if multipolygon:
                         geometries[unique_id] = multipolygon
 
-        utils.log(f"{len(geometries)} geometries created in the dictionary")
+        utils.log(f"{len(geometries)} geometries created in the dict")
 
-        # remove untagged elements from the final dictionary of geometries
+        # remove untagged elements from the final dict of geometries
         for untagged_element_id in untagged_element_ids:
             geometries.pop(untagged_element_id, None)
 
@@ -429,9 +428,10 @@ def _create_gdf(response_jsons, polygon, tags):
         # Filter final gdf to requested tags and query polygon
         gdf = _filter_gdf_by_polygon_and_tags(gdf, polygon=polygon, tags=tags)
 
-        # bug in geopandas <=0.8.1 raises a TypeError if trying to plot empty geometries
-        # but missing geometries (gdf['geometry'] = None) cannot be projected e.g. gdf.to_crs()
-        # don't see any option other than to drop rows with missing/empty geometries
+        # bug in geopandas <0.9 raises a TypeError if trying to plot empty
+        # geometries but missing geometries (gdf['geometry'] = None) cannot be
+        # projected e.g. gdf.to_crs(). don't see any option other than to drop
+        # rows with missing/empty geometries
         gdf = gdf[~(gdf["geometry"].isna() | gdf["geometry"].is_empty)].copy()
 
         utils.log(f"{len(gdf)} geometries in the final GeoDataFrame")
@@ -524,30 +524,33 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features):
         for tag in element["tags"]:
             linestring_or_polygon[tag] = element["tags"][tag]
 
-    # if the OSM element is an open way (i.e. first and last nodes are not the same)
-    # the geometry should be a Shapely LineString
+    # if the OSM element is an open way (i.e. first and last nodes are not the
+    # same) the geometry should be a Shapely LineString
     if element["nodes"][0] != element["nodes"][-1]:
         try:
             geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
         except KeyError as e:
-            # XMLs may include geometries that are incomplete, in which case return an empty geometry
+            # XMLs may include geometries that are incomplete, in which case
+            # return an empty geometry
             utils.log(
                 f"node/{e} was not found in `coords`.\n"
                 f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
             )
             geometry = LineString()
 
-    # if the OSM element is a closed way (i.e. first and last nodes are the same)
-    # depending upon the tags the geometry could be a Shapely LineString or Polygon
+    # if the OSM element is a closed way (i.e. first and last nodes are the
+    # same) depending upon the tags the geometry could be a Shapely LineString
+    # or Polygon
     elif element["nodes"][0] == element["nodes"][-1]:
-        # Use the tags to determine whether the way represents a LineString, Polygon
+        # Use tags to determine whether way represents a LineString, Polygon
         is_polygon = _closed_way_is_linestring_or_polygon(element, polygon_features)
 
         if is_polygon:
             try:
                 geometry = Polygon([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
             except ValueError as e:
-                # XMLs may include geometries that are incomplete, in which case return an empty geometry
+                # XMLs may include geometries that are incomplete, in which
+                # case return an empty geometry
                 utils.log(
                     f"{e} . The geometry for "
                     f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
@@ -559,7 +562,8 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features):
                     [(coords[node]["lon"], coords[node]["lat"]) for node in nodes]
                 )
             except ValueError as e:
-                # XMLs may include geometries that are incomplete, in which case return an empty geometry
+                # XMLs may include geometries that are incomplete, in which
+                # case return an empty geometry
                 utils.log(
                     f"{e} . The geometry for "
                     f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
@@ -600,7 +604,7 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
     is_polygon : boolean
         True if the tags are for a polygon type geometry
     """
-    # the polygon_features dict is for determining which ways should become Polygons
+    # polygon_features dict is for determining which ways should become Polygons
     # therefore the starting assumption is that the geometry is a LineString
     is_polygon = False
 
@@ -615,9 +619,9 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
             is_polygon = False
 
         # if the element has tags and is not tagged 'area':'no'
-        # compare its tags with the polygon_features dictionary
+        # compare its tags with the polygon_features dict
         else:
-            # identify common keys in the element's tags and the polygon_features dictionary
+            # identify common keys in element's tags and polygon_features dict
             intersecting_keys = element_tags.keys() & polygon_features.keys()
 
             # if common keys are found
@@ -625,26 +629,36 @@ def _closed_way_is_linestring_or_polygon(element, polygon_features):
 
                 # for each key in the intersecting keys
                 for key in intersecting_keys:
+
                     # Get the key's value from the element's tags
                     key_value = element_tags.get(key)
-                    # Determine if the key is for a blocklist or passlist in the polygon_features dictionary
+
+                    # Determine if the key is for a blocklist or passlist in
+                    # polygon_features dict
                     blocklist_or_passlist = polygon_features.get(key).get("polygon")
-                    # Get the values for the key from the polygon_features dictionary
+
+                    # Get values for the key from the polygon_features dict
                     polygon_features_values = polygon_features.get(key).get("values")
 
                     # if all features with that key should be polygons -> Polygon
                     if blocklist_or_passlist == "all":
                         is_polygon = True
 
-                    # if the key is for a blocklist i.e. tags that should not become Polygons
+                    # if the key is for a blocklist i.e. tags that should not
+                    # become Polygons
                     elif blocklist_or_passlist == "blocklist":
-                        # if the value for that key in the element is not in the blocklist -> Polygon
+
+                        # if the value for that key in the element is not in
+                        # the blocklist -> Polygon
                         if key_value not in polygon_features_values:
                             is_polygon = True
 
-                    # if the key is for a passlist i.e. specific tags should become Polygons
+                    # if the key is for a passlist i.e. specific tags should
+                    # become Polygons
                     elif blocklist_or_passlist == "passlist":
-                        # if the value for that key in the element is in the passlist -> Polygon
+
+                        # if the value for that key in the element is in the
+                        # passlist -> Polygon
                         if key_value in polygon_features_values:
                             is_polygon = True
 
@@ -663,12 +677,12 @@ def _parse_relation_to_multipolygon(element, geometries):
     element : dict
         element type "relation" from overpass response JSON
     geometries : dict
-        dictionary containing all linestrings and polygons generated from OSM ways
+        dict containing all linestrings and polygons generated from OSM ways
 
     Returns
     -------
-    multipolygon : dictionary
-        dictionary of tags and geometry for a single multipolygon
+    multipolygon : dict
+        dict of tags and geometry for a single multipolygon
     """
     multipolygon = {}
     multipolygon["osmid"] = element["id"]
@@ -683,7 +697,7 @@ def _parse_relation_to_multipolygon(element, geometries):
         for tag in element["tags"]:
             multipolygon[tag] = element["tags"][tag]
 
-    # Extract the ways from the geometries dictionary using their unique id.
+    # Extract the ways from the geometries dict using their unique id.
     # XMLs exported from the openstreetmap.org homepage with a bounding box
     # may include the relation but not the ways outside the bounding box.
     try:
@@ -700,7 +714,8 @@ def _parse_relation_to_multipolygon(element, geometries):
     member_nodes = [[member_way["nodes"] for member_way in member_ways]]
     multipolygon["nodes"] = member_nodes
 
-    # Assemble MultiPolygon component polygons from component LineStrings and Polygons
+    # Assemble MultiPolygon component polygons from component LineStrings and
+    # Polygons
     outer_polygons, inner_polygons = _assemble_multipolygon_component_polygons(element, geometries)
 
     # Subtract inner polygons from outer polygons
@@ -761,20 +776,22 @@ def _assemble_multipolygon_component_polygons(element, geometries):
             ):
                 inner_linestrings.append(linestring_or_polygon["geometry"])
 
-    # Merge outer linestring fragments. Returns a single LineString or MultiLineString collection
+    # Merge outer linestring fragments.
+    # Returns a single LineString or MultiLineString collection
     merged_outer_linestrings = linemerge(outer_linestrings)
 
-    # polygonize each linestring separately and append to the list of outer polygons
+    # polygonize each linestring separately and append to list of outer polygons
     if merged_outer_linestrings.geom_type == "LineString":
         outer_polygons += polygonize(merged_outer_linestrings)
     elif merged_outer_linestrings.geom_type == "MultiLineString":
         for merged_outer_linestring in list(merged_outer_linestrings):
             outer_polygons += polygonize(merged_outer_linestring)
 
-    # Merge inner linestring fragments. Returns a single LineString or MultiLineString collection
+    # Merge inner linestring fragments.
+    # Returns a single LineString or MultiLineString collection
     merged_inner_linestrings = linemerge(inner_linestrings)
 
-    # polygonize each linestring separately and append to the list of inner polygons
+    # polygonize each linestring separately and append to list of inner polygons
     if merged_inner_linestrings.geom_type == "LineString":
         inner_polygons += polygonize(merged_inner_linestrings)
     elif merged_inner_linestrings.geom_type == "MultiLineString":
@@ -810,10 +827,12 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
     geometry : Polygon or MultiPolygon
         a single Shapely Polygon or MultiPolygon
     """
-    # create a new list to hold the outer polygons with the inner polygons subtracted
+    # create a new list to hold the outer polygons with the inner polygons
+    # subtracted
     outer_polygons_with_holes = []
 
-    # loop through the outer polygons subtracting the inner polygons and appending to the list
+    # loop through the outer polygons subtracting the inner polygons and
+    # appending to the list
     for outer_polygon in outer_polygons:
         for inner_polygon in inner_polygons:
             if inner_polygon.within(outer_polygon):
@@ -842,7 +861,7 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
     # if only one polygon with holes was created, return that single polygon
     if len(outer_polygons_with_holes) == 1:
         geometry = outer_polygons_with_holes[0]
-    # otherwise create a multipolygon from the list of outer polygons with holes
+    # otherwise create a multipolygon from list of outer polygons with holes
     else:
         geometry = MultiPolygon(outer_polygons_with_holes)
 
@@ -905,10 +924,9 @@ def _filter_gdf_by_polygon_and_tags(gdf, polygon, tags):
     """
     Filter the GeoDataFrame to the requested bounding polygon and tags.
 
-    Filters the GeoDataFrame to the query polygon and tags. Removes
-    columns of all NaNs (that held values only in rows removed by the filters).
-    Resets the index of the GeoDataFrame, writing it into a new column called
-    'unique_id'.
+    Filters GeoDataFrame to query polygon and tags. Removes columns of all
+    NaNs (that held values only in rows removed by the filters). Resets the
+    index of GeoDataFrame, writing it into a new column called 'unique_id'.
 
     Parameters
     ----------
@@ -931,23 +949,24 @@ def _filter_gdf_by_polygon_and_tags(gdf, polygon, tags):
         polygon_filter = pd.Series(True, index=gdf.index)
         combined_tag_filter = pd.Series(True, index=gdf.index)
 
-        # if a polygon was supplied, create a filter that is True for geometries
-        # that intersect with the polygon
+        # if a polygon was supplied, create a filter that is True for
+        # geometries that intersect with the polygon
         if polygon:
-            # get a set of index labels of the geometries that intersect the polygon
+            # get set of index labels of geometries that intersect polygon
             gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf, polygon)
-            # create a boolean series, True for geometries whose index is in the set
+            # create boolean series, True for geometries whose index is in set
             polygon_filter = gdf.index.isin(gdf_indices_in_polygon)
 
             utils.log(f"{sum(~polygon_filter)} geometries removed by the polygon filter")
 
-        # if tags were supplied, create a filter that is True for geometries that have
-        # at least one of the requested tags
+        # if tags were supplied, create filter that is True for geometries
+        # that have at least one of the requested tags
         if tags:
             # Reset all values in the combined_tag_filter to False
             combined_tag_filter[:] = False
 
-            # reduce the tags to those that are actually present in the GeoDataFrame columns
+            # reduce the tags to those that are actually present in the
+            # GeoDataFrame columns
             tags_in_columns = {key: tags[key] for key in tags if key in gdf.columns}
 
             for key, value in tags_in_columns.items():
