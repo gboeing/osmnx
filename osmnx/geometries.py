@@ -369,17 +369,19 @@ def _create_gdf(response_jsons, polygon, tags):
                 # add elements that are not nodes and that are without tags or
                 # with empty tags to the untagged_element_ids set (untagged
                 # nodes are not added to the geometries dict at all)
-                if (element["type"] != "node") & (("tags" not in element) or (not element["tags"])):
+                if (element["type"] != "node") and (
+                    ("tags" not in element) or (len(element["tags"]) == 0)
+                ):
                     untagged_element_ids.add(unique_id)
 
                 if element["type"] == "node":
                     # Parse all nodes to coords
-                    coord = _parse_node_to_coord(element=element)
-                    coords[element["id"]] = coord
+                    coords[element["id"]] = _parse_node_to_coords(element=element)
+
                     # If the node has tags and the tags are not empty parse
                     # it to a Point. Empty check is necessary for JSONs created
                     # from XML where nodes without tags are assigned tags = {}
-                    if "tags" in element and element["tags"]:
+                    if "tags" in element and len(element["tags"]) > 0:
                         point = _parse_node_to_point(element=element)
                         geometries[unique_id] = point
 
@@ -439,7 +441,7 @@ def _create_gdf(response_jsons, polygon, tags):
         return gdf
 
 
-def _parse_node_to_coord(element):
+def _parse_node_to_coords(element):
     """
     Parse coordinates from a node in the overpass response.
 
@@ -452,13 +454,12 @@ def _parse_node_to_coord(element):
 
     Returns
     -------
-    coord : dict
+    coords : dict
         dict of lat and lon coordinates
     """
     # return the coordinate of a single node element
-    coord = {"lat": element["lat"], "lon": element["lon"]}
-
-    return coord
+    coords = {"lat": element["lat"], "lon": element["lon"]}
+    return coords
 
 
 def _parse_node_to_point(element):
@@ -485,10 +486,7 @@ def _parse_node_to_point(element):
         for tag in element["tags"]:
             point[tag] = element["tags"][tag]
 
-    geometry = Point(element["lon"], element["lat"])
-
-    point["geometry"] = geometry
-
+    point["geometry"] = Point(element["lon"], element["lat"])
     return point
 
 
@@ -520,6 +518,7 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_polyg
     linestring_or_polygon["element_type"] = "way"
     linestring_or_polygon["nodes"] = nodes
 
+    # un-nest individual tags
     if "tags" in element:
         for tag in element["tags"]:
             linestring_or_polygon[tag] = element["tags"][tag]
@@ -542,10 +541,10 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_polyg
     # same) depending upon the tags the geometry could be a Shapely LineString
     # or Polygon
     elif element["nodes"][0] == element["nodes"][-1]:
-        # Use tags to determine whether way represents a LineString, Polygon
-        is_polygon = _is_closed_way_a_polygon(element)
 
-        if is_polygon:
+        # determine if closed way represents LineString or Polygon
+        if _is_closed_way_a_polygon(element):
+            # if it is a Polygon
             try:
                 geometry = Polygon([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
             except ValueError as e:
@@ -557,6 +556,7 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_polyg
                 )
                 geometry = Polygon()
         else:
+            # if it is a LineString
             try:
                 geometry = LineString(
                     [(coords[node]["lon"], coords[node]["lat"]) for node in nodes]
@@ -571,7 +571,6 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_polyg
                 geometry = LineString()
 
     linestring_or_polygon["geometry"] = geometry
-
     return linestring_or_polygon
 
 
@@ -722,7 +721,6 @@ def _parse_relation_to_multipolygon(element, geometries):
     geometry = _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_polygons)
 
     multipolygon["geometry"] = geometry
-
     return multipolygon
 
 
@@ -872,14 +870,14 @@ def _buffer_invalid_geometries(gdf):
     """
     Buffer any invalid geometries remaining in the GeoDataFrame.
 
-    Invalid geometries in the GeoDataFrame (which may accurately
-    reproduce invalid geometries in OpenStreetMap) can cause the
-    filtering to the query polygon and other subsequent geometric
-    operations to fail. This function logs the ids of the invalid
-    geometries and applies a buffer of zero to try to make them valid.
+    Invalid geometries in the GeoDataFrame (which may accurately reproduce
+    invalid geometries in OpenStreetMap) can cause the filtering to the query
+    polygon and other subsequent geometric operations to fail. This function
+    logs the ids of the invalid geometries and applies a buffer of zero to try
+    to make them valid.
 
-    Note: the resulting geometries may differ from the originals
-    - please check them against OpenStreetMap
+    Note: the resulting geometries may differ from the originals - please
+    check them against OpenStreetMap
 
     Parameters
     ----------
