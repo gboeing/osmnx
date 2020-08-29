@@ -337,22 +337,22 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3):
     return geometry
 
 
-def _intersect_index_quadrats(points, geometry, quadrat_width=0.05, min_num=3):
+def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3):
     """
-    Identify points that intersect a (multi)polygon.
+    Identify geometries that intersect a (multi)polygon.
 
     Use an r-tree spatial index and cut the polygon up into smaller
     sub-polygons for r-tree acceleration.
 
     Parameters
     ----------
-    points : geopandas.GeoSeries
-        the points to intersect
-    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the geometry to intersect with the points
+    geometries : geopandas.GeoSeries
+        the geometries to intersect with the polygon
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
+        the polygon to intersect with the geometries
     quadrat_width : numeric
-        the linear length (in units the geometry is in) of the quadrats with
-        which to cut up the geometry (default = 0.05 degrees, approx 4km at
+        the linear length (in units the polygon is in) of the quadrats with
+        which to cut up the polygon (default = 0.05 degrees, approx 4km at
         NYC's latitude)
     min_num : int
         the minimum number of linear quadrat lines (e.g., min_num=3 would
@@ -360,37 +360,37 @@ def _intersect_index_quadrats(points, geometry, quadrat_width=0.05, min_num=3):
 
     Returns
     -------
-    points_in_geom : set
-        index labels of points that intersected geometry
+    geoms_in_poly : set
+        index labels of geometries that intersected polygon
     """
-    # cut the geometry into chunks for r-tree spatial index intersecting
-    multipoly = _quadrat_cut_geometry(geometry, quadrat_width=quadrat_width, min_num=min_num)
+    # cut the polygon into chunks for r-tree spatial index intersecting
+    multipoly = _quadrat_cut_geometry(polygon, quadrat_width=quadrat_width, min_num=min_num)
 
-    # create an r-tree spatial index for the nodes (ie, points)
-    sindex = points.sindex
-    utils.log(f"Created r-tree spatial index for {len(points)} points")
+    # create an r-tree spatial index for the geometries
+    sindex = geometries.sindex
+    utils.log(f"Created r-tree spatial index for {len(geometries)} geometries")
 
-    # loop through each chunk of the geometry to find approximate and then
-    # precisely intersecting points
-    points_in_geom = set()
+    # loop through each chunk of the polygon to find approximate and then
+    # precisely intersecting geometries
+    geoms_in_poly = set()
     for poly in multipoly:
         # find approximate matches with spatial index, then precise matches
         # from those approximate ones
         poly = poly.buffer(0)
         if poly.is_valid and poly.area > 0:
             possible_matches_iloc = sindex.intersection(poly.bounds)
-            possible_matches = points.iloc[list(possible_matches_iloc)]
+            possible_matches = geometries.iloc[list(possible_matches_iloc)]
             precise_matches = possible_matches[possible_matches.intersects(poly)]
-            points_in_geom.update(precise_matches.index)
+            geoms_in_poly.update(precise_matches.index)
 
-    if len(points_in_geom) < 1:
+    if len(geoms_in_poly) < 1:
         # after simplifying the graph, and given the requested network type,
         # there are no nodes inside the polygon - can't create graph from that
         # so throw error
-        raise Exception("There are no nodes within the requested geometry")
+        raise Exception("Found nothing within the requested polygon")
 
-    utils.log(f"Identified {len(points_in_geom)} nodes inside polygon")
-    return points_in_geom
+    utils.log(f"Identified {len(geoms_in_poly)} geometries inside polygon")
+    return geoms_in_poly
 
 
 def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
