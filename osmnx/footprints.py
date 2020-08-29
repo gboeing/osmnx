@@ -34,8 +34,8 @@ def footprints_from_point(point, dist=1000, footprint_type="building", retain_in
     """
     msg = (
         "The `footprints` module has been deprecated and will be removed in a "
-        "future release. Use the `geometries` module's `geometries_from_point` "
-        "function instead."
+        "future release. Instead, use the `geometries` module's "
+        "`geometries_from_point` function, passing `tags={'building':True}`."
     )
     warnings.warn(msg)
 
@@ -72,8 +72,8 @@ def footprints_from_address(address, dist=1000, footprint_type="building", retai
     """
     msg = (
         "The `footprints` module has been deprecated and will be removed in a "
-        "future release. Use the `geometries` module's `geometries_from_address` "
-        "function instead."
+        "future release. Instead, use the `geometries` module's "
+        "`geometries_from_address` function, passing `tags={'building':True}`."
     )
     warnings.warn(msg)
 
@@ -119,8 +119,8 @@ def footprints_from_place(
     """
     msg = (
         "The `footprints` module has been deprecated and will be removed in a "
-        "future release. Use the `geometries` module's `geometries_from_place` "
-        "function instead."
+        "future release. Instead, use the `geometries` module's "
+        "`geometries_from_place` function, passing `tags={'building':True}`."
     )
     warnings.warn(msg)
 
@@ -156,8 +156,8 @@ def footprints_from_polygon(polygon, footprint_type="building", retain_invalid=F
     """
     msg = (
         "The `footprints` module has been deprecated and will be removed in a "
-        "future release. Use the `geometries` module's `geometries_from_polygon` "
-        "function instead."
+        "future release. Instead, use the `geometries` module's "
+        "`geometries_from_polygon` function, passing `tags={'building':True}`."
     )
     warnings.warn(msg)
 
