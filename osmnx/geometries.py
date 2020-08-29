@@ -390,8 +390,7 @@ def _create_gdf(response_jsons, polygon, tags):
                     linestring_or_polygon = _parse_way_to_linestring_or_polygon(
                         element=element, coords=coords
                     )
-                    if linestring_or_polygon:
-                        geometries[unique_id] = linestring_or_polygon
+                    geometries[unique_id] = linestring_or_polygon
 
                 elif (
                     element["type"] == "relation"
@@ -401,8 +400,7 @@ def _create_gdf(response_jsons, polygon, tags):
                     multipolygon = _parse_relation_to_multipolygon(
                         element=element, geometries=geometries
                     )
-                    if multipolygon:
-                        geometries[unique_id] = multipolygon
+                    geometries[unique_id] = multipolygon
 
         utils.log(f"{len(geometries)} geometries created in the dict")
 
