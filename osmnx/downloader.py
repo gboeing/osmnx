@@ -329,9 +329,7 @@ def _make_overpass_polygon_coord_strs(polygon):
     gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj)
     geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
     polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
-    utils.log(
-        f"Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)"
-    )
+    utils.log(f"Requesting data within polygon from API in {len(polygon_coord_strs)} request(s)")
     return polygon_coord_strs
 
 
