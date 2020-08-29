@@ -47,6 +47,12 @@ osmnx.geocoder module
 .. automodule:: osmnx.geocoder
     :members:
 
+osmnx.geometries module
+-----------------------
+
+.. automodule:: osmnx.geometries
+    :members:
+
 osmnx.graph module
 ------------------
 

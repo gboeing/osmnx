@@ -2,7 +2,7 @@
 
 # Note: The dictionary is based on the JSON linked to from the following page:
 # https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features
-polygon_features = {
+_polygon_features = {
     "building": {"polygon": "all"},
     "highway": {"polygon": "passlist", "values": ["services", "rest_area", "escape", "elevator"]},
     "natural": {
