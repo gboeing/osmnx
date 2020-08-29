@@ -613,7 +613,7 @@ def _is_closed_way_a_polygon(element, polygon_features=_polygon_features):
 
         # if the element is specifically tagged 'area':'no' -> LineString
         if element_tags.get("area") == "no":
-            is_polygon = False
+            pass
 
         # if the element has tags and is not tagged 'area':'no'
         # compare its tags with the polygon_features dict
