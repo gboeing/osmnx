@@ -180,7 +180,7 @@ def config(
         your API key, if you are using an endpoint that requires one
     overpass_endpoint : string
         the API endpoint to use for overpass queries
-    all_oneway : boolean
+    all_oneway : bool
         if True, forces all ways to be loaded as oneway ways, preserving
         the original order of nodes stored in the OSM way XML. Only use if
         specifically saving to .osm XML file with save_graph_xml function.

@@ -301,10 +301,10 @@ def _create_gdf(response_jsons, polygon, tags):
     """
     Parse JSON responses from the Overpass API to a GeoDataFrame.
 
-    Note: the `polygon` and `tags` arguments can both be `None` and
-    the GeoDataFrame will still be created but it won't be filtered
-    at the end i.e. the final GeoDataFrame will contain all tagged
-    geometries in the `response_jsons`.
+    Note: the `polygon` and `tags` arguments can both be `None` and the
+    GeoDataFrame will still be created but it won't be filtered at the end
+    i.e. the final GeoDataFrame will contain all tagged geometries in the
+    `response_jsons`.
 
     Parameters
     ----------
@@ -598,7 +598,7 @@ def _is_closed_way_a_polygon(element, polygon_features=_polygon_features):
 
     Returns
     -------
-    is_polygon : boolean
+    is_polygon : bool
         True if the tags are for a polygon type geometry
     """
     # polygon_features dict is for determining which ways should become Polygons
@@ -741,8 +741,8 @@ def _assemble_multipolygon_component_polygons(element, geometries):
 
     Returns
     -------
-    geometry : MultiPolygon
-        a single Shapely MultiPolygon
+    geometry : shapely.geometry.MultiPolygon
+        a single MultiPolygon object
     """
     outer_polygons = []
     inner_polygons = []
@@ -820,8 +820,8 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
 
     Returns
     -------
-    geometry : Polygon or MultiPolygon
-        a single Shapely Polygon or MultiPolygon
+    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
+        a single Polygon or MultiPolygon
     """
     # create a new list to hold the outer polygons with the inner polygons
     # subtracted
@@ -879,12 +879,12 @@ def _buffer_invalid_geometries(gdf):
 
     Parameters
     ----------
-    gdf : GeoDataFrame
-        the GeoDataFrame with potential invalid geometries
+    gdf : geopandas.GeoDataFrame
+        a GeoDataFrame with possibly invalid geometries
 
     Returns
     -------
-    gdf : GeoDataFrame
+    gdf : geopandas.GeoDataFrame
         the GeoDataFrame with .buffer(0) applied to invalid geometries
     """
     # only apply the filters if the GeoDataFrame is not empty
@@ -926,17 +926,17 @@ def _filter_gdf_by_polygon_and_tags(gdf, polygon, tags):
 
     Parameters
     ----------
-    gdf : GeoDataFrame
+    gdf : geopandas.GeoDataFrame
         the GeoDataFrame to filter
-    polygon : Polygon
-        Shapely polygon defining the boundary of the requested area
+    polygon : shapely.geometry.Polygon
+        polygon defining the boundary of the requested area
     tags : dict
         the tags requested
 
     Returns
     -------
-    gdf : GeoDataFrame
-        final, filtered GeoDataFrame
+    gdf : geopandas.GeoDataFrame
+        final filtered GeoDataFrame
     """
     # only apply the filters if the GeoDataFrame is not empty
     if not gdf.empty:
