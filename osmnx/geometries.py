@@ -1,11 +1,7 @@
 """Download geospatial objects' geometries from OpenStreetMap."""
 
 import logging as lg
-
-# suppress GeoPandas warning caused by calling
-# gdf["geometry"].isna() on GeoDataFrame with empty geometries
 import warnings
-warnings.filterwarnings('ignore', 'GeoSeries.isna', UserWarning)
 
 import geopandas as gpd
 import numpy as np
@@ -24,6 +20,10 @@ from . import settings
 from . import utils
 from . import utils_geo
 from ._polygon_features import _polygon_features
+
+# suppress GeoPandas warning caused by calling
+# gdf["geometry"].isna() on GeoDataFrame with empty geometries
+warnings.filterwarnings("ignore", "GeoSeries.isna", UserWarning)
 
 
 def geometries_from_bbox(north, south, east, west, tags):
