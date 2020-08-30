@@ -2,6 +2,11 @@
 
 import logging as lg
 
+# suppress GeoPandas warning caused by calling
+# gdf["geometry"].isna() on GeoDataFrame with empty geometries
+import warnings
+warnings.filterwarnings('ignore', 'GeoSeries.isna', UserWarning)
+
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -430,9 +435,9 @@ def _create_gdf(response_jsons, polygon, tags):
 
         # bug in geopandas <0.9 raises a TypeError if trying to plot empty
         # geometries but missing geometries (gdf['geometry'] = None) cannot be
-        # projected e.g. gdf.to_crs(). don't see any option other than to drop
-        # rows with missing/empty geometries
-        gdf = gdf[~(gdf["geometry"].isna() | gdf["geometry"].is_empty)].copy()
+        # projected e.g. gdf.to_crs().
+        # Remove rows with empty (e.g. Point()) or missing (e.g. None) geometry
+        gdf = gdf[~(gdf["geometry"].is_empty | gdf["geometry"].isna())].copy()
 
         utils.log(f"{len(gdf)} geometries in the final GeoDataFrame")
 
