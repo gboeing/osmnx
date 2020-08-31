@@ -363,31 +363,24 @@ def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3
     geoms_in_poly : set
         index labels of geometries that intersected polygon
     """
-    # cut the polygon into chunks for r-tree spatial index intersecting
-    multipoly = _quadrat_cut_geometry(polygon, quadrat_width=quadrat_width, min_num=min_num)
-
     # create an r-tree spatial index for the geometries
     sindex = geometries.sindex
     utils.log(f"Created r-tree spatial index for {len(geometries)} geometries")
 
-    # loop through each chunk of the polygon to find approximate and then
-    # precisely intersecting geometries
+    # cut the polygon into chunks for spatial index intersecting
+    multipoly = _quadrat_cut_geometry(polygon, quadrat_width=quadrat_width, min_num=min_num)
     geoms_in_poly = set()
+
+    # loop through each chunk of the polygon to find intersecting geometries
     for poly in multipoly:
-        # find approximate matches with spatial index, then precise matches
-        # from those approximate ones
+        # first find approximate matches with spatial index, then precise
+        # matches from those approximate ones
         poly = poly.buffer(0)
         if poly.is_valid and poly.area > 0:
             possible_matches_iloc = sindex.intersection(poly.bounds)
             possible_matches = geometries.iloc[list(possible_matches_iloc)]
             precise_matches = possible_matches[possible_matches.intersects(poly)]
             geoms_in_poly.update(precise_matches.index)
-
-    if len(geoms_in_poly) < 1:
-        # after simplifying the graph, and given the requested network type,
-        # there are no nodes inside the polygon - can't create graph from that
-        # so throw error
-        raise Exception("Found nothing within the requested polygon")
 
     utils.log(f"Identified {len(geoms_in_poly)} geometries inside polygon")
     return geoms_in_poly
