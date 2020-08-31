@@ -151,13 +151,21 @@ def truncate_graph_polygon(
     """
     utils.log("Identifying all nodes that lie outside the polygon...")
 
-    # identify all nodes whose point geometries lie outside the polygon
+    # first identify all nodes whose point geometries lie within the polygon
     gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
     to_keep = utils_geo._intersect_index_quadrats(gs_nodes, polygon, quadrat_width, min_num)
+
+    if len(to_keep) == 0:
+        # no graph nodes within the polygon: can't create a graph from that
+        raise ValueError("Found no graph nodes within the requested polygon")
+
+    # now identify all nodes whose point geometries lie outside the polygon
     gs_nodes_outside_poly = gs_nodes[~gs_nodes.index.isin(to_keep)]
     nodes_outside_poly = set(gs_nodes_outside_poly.index)
 
     if truncate_by_edge:
+        # retain nodes outside boundary polygon if at least one of node's
+        # neighbors is within the polygon
         nodes_to_remove = set()
         for node in nodes_outside_poly:
             # if all the neighbors of this node also lie outside polygon, then
