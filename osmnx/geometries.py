@@ -21,10 +21,6 @@ from . import utils
 from . import utils_geo
 from ._polygon_features import _polygon_features
 
-# suppress GeoPandas warning caused by calling
-# gdf["geometry"].isna() on GeoDataFrame with empty geometries
-warnings.filterwarnings("ignore", "GeoSeries.isna", UserWarning)
-
 
 def geometries_from_bbox(north, south, east, west, tags):
     """
@@ -435,12 +431,15 @@ def _create_gdf(response_jsons, polygon, tags):
 
         # bug in geopandas <0.9 raises a TypeError if trying to plot empty
         # geometries but missing geometries (gdf['geometry'] = None) cannot be
-        # projected e.g. gdf.to_crs().
-        # Remove rows with empty (e.g. Point()) or missing (e.g. None) geometry
-        gdf = gdf[~(gdf["geometry"].is_empty | gdf["geometry"].isna())].copy()
+        # projected e.g. gdf.to_crs(). Remove rows with empty (e.g. Point())
+        # or missing (e.g. None) geometry, and suppress gpd warning caused by
+        # calling gdf["geometry"].isna() on GeoDataFrame with empty geometries
+        if not gdf.empty:
+            warnings.filterwarnings("ignore", "GeoSeries.isna", UserWarning)
+            gdf = gdf[~(gdf["geometry"].is_empty | gdf["geometry"].isna())].copy()
+            warnings.resetwarnings()
 
         utils.log(f"{len(gdf)} geometries in the final GeoDataFrame")
-
         return gdf
 
 
