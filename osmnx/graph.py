@@ -551,7 +551,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
         G.add_node(node, **data)
 
     # add each osm way (ie, a path of edges) to the graph
-    G = _add_paths(G, paths, bidirectional=bidirectional)
+    _add_paths(G, paths, bidirectional=bidirectional)
 
     # retain only the largest connected component, if retain_all is not True
     if not retain_all:
@@ -685,6 +685,67 @@ def _add_path(G, data, one_way):
         G.add_edges_from(path_edges_opposite_direction, **data)
 
 
+def _is_path_one_way(bidirectional, data, osm_oneway_values):
+    """
+    Evaluate if path is a one-way.
+
+    Parameters
+    ----------
+    bidirectional: bool
+        bidirectional boolean
+    data: dict
+        data from path
+    osm_oneway_values: list
+        particular specification of osm standard
+        https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf
+
+    Returns
+    -------
+    bool
+    """
+    if settings.all_oneway is True:
+        return True
+
+    # if this path is tagged as one-way and if it is not a walking network,
+    # then we'll add the path in one direction only
+    elif ("oneway" in data and data["oneway"] in osm_oneway_values) and not bidirectional:
+        # add this path (in only one direction) to the graph
+        return True
+
+    elif ("junction" in data and data["junction"] == "roundabout") and not bidirectional:
+        # roundabout are also oneway but not tagged as is
+        return True
+
+    # else, this path is not tagged as one-way or it is a walking network
+    # (you can walk both directions on a one-way street)
+    else:
+        # add this path (in both directions) to the graph and set its
+        # 'oneway' attribute to False. if this is a walking network, this
+        # may very well be a one-way street (as cars/bikes go), but in a
+        # walking-only network it is a bi-directional edge
+        return False
+
+
+def _is_path_data_reversed(data):
+    """
+    Check if data is reversed.
+
+    Parameters
+    ----------
+    data: dict
+        path data
+
+    Returns
+    -------
+    bool
+    """
+    try:
+        if data["oneway"] == "-1" or data["oneway"] == "T":
+            return True
+    except KeyError:
+        return False
+
+
 def _add_paths(G, paths, bidirectional=False):
     """
     Add a collection of paths to the graph.
@@ -708,31 +769,8 @@ def _add_paths(G, paths, bidirectional=False):
 
     for data in paths.values():
 
-        if settings.all_oneway is True:
-            # see all_oneway comments in settings.py
-            _add_path(G, data, one_way=True)
+        is_one_way = _is_path_one_way(bidirectional, data, osm_oneway_values)
+        if is_one_way and _is_path_data_reversed(data):
+            data["nodes"] = list(reversed(data["nodes"]))
 
-        elif ("oneway" in data and data["oneway"] in osm_oneway_values) and not bidirectional:
-            # if this path is tagged as one-way and if it is not a walking
-            # network, then we'll add the path in one direction only
-            if data["oneway"] == "-1" or data["oneway"] == "T":
-                # paths with a one-way value of -1 or T are one-way, but in
-                # the reverse direction of nodes' order, see OSM documentation
-                data["nodes"] = list(reversed(data["nodes"]))
-            # add this path (in only one direction) to the graph
-            _add_path(G, data, one_way=True)
-
-        elif ("junction" in data and data["junction"] == "roundabout") and not bidirectional:
-            # roundabouts are also oneway but not explicitly tagged as such
-            _add_path(G, data, one_way=True)
-
-        else:
-            # else, this path is not tagged as one-way or it is a walking
-            # network (you can walk both directions on a one-way street). add
-            # this path (in both directions) to the graph and set its 'oneway'
-            # attribute to False. if this is a walking network, this may very
-            # well be a one-way street (as cars/bikes go), but in a walking-
-            # only network it is a bidirectional edge
-            _add_path(G, data, one_way=False)
-
-    return G
+        _add_path(G, data, one_way=is_one_way)
