@@ -555,27 +555,24 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     """
     utils.log("Creating graph from downloaded OSM data...")
 
-    # make sure we got data back from the server requests
-    elements = []
-    for response_json in response_jsons:
-        elements.extend(response_json["elements"])
-    if len(elements) < 1:
+    # make sure we got data back from the server request(s)
+    element_counts = [len(rj["elements"]) for rj in response_jsons]
+    if sum(element_counts) < 1:
         raise EmptyOverpassResponse("There are no data elements in the response JSON")
 
     # create the graph as a MultiDiGraph and set its meta-attributes
-    G = nx.MultiDiGraph(
-        created_date=utils.ts(), created_with=f"OSMnx {__version__}", crs=settings.default_crs
-    )
+    metadata = {'created_date': utils.ts(),
+                'created_with': f"OSMnx {__version__}",
+                'crs': settings.default_crs}
+    G = nx.MultiDiGraph(**metadata)
 
     # extract nodes and paths from the downloaded osm data
     nodes = {}
     paths = {}
-    for osm_data in response_jsons:
-        nodes_temp, paths_temp = _parse_osm_nodes_paths(osm_data)
-        for key, value in nodes_temp.items():
-            nodes[key] = value
-        for key, value in paths_temp.items():
-            paths[key] = value
+    for response_json in response_jsons:
+        nodes_temp, paths_temp = _parse_osm_nodes_paths(response_json)
+        nodes.update(nodes_temp)
+        paths.update(paths_temp)
 
     # add each osm node to the graph
     for node, data in nodes.items():
@@ -584,7 +581,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     # add each osm way (ie, a path of edges) to the graph
     _add_paths(G, paths, bidirectional=bidirectional)
 
-    # retain only the largest connected component, if retain_all is not True
+    # retain only the largest connected component if retain_all is False
     if not retain_all:
         G = utils_graph.get_largest_component(G)
 
@@ -648,7 +645,7 @@ def _convert_path(element):
     return path
 
 
-def _parse_osm_nodes_paths(osm_data):
+def _parse_osm_nodes_paths(response_json):
     """
     Construct dicts of nodes and paths.
 
@@ -656,8 +653,8 @@ def _parse_osm_nodes_paths(osm_data):
 
     Parameters
     ----------
-    osm_data : dict
-        JSON response from from the Overpass API
+    response_json : dict
+        JSON response from the Overpass API
 
     Returns
     -------
@@ -665,7 +662,7 @@ def _parse_osm_nodes_paths(osm_data):
     """
     nodes = {}
     paths = {}
-    for element in osm_data["elements"]:
+    for element in response_json["elements"]:
         if element["type"] == "node":
             key = element["id"]
             nodes[key] = _convert_node(element)
