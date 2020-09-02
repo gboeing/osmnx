@@ -66,7 +66,7 @@ def graph_from_bbox(
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bidirectional.
+        you want graph to be fully bi-directional.
 
     Returns
     -------
@@ -138,7 +138,7 @@ def graph_from_point(
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bidirectional.
+        you want graph to be fully bi-directional.
 
     Returns
     -------
@@ -228,7 +228,7 @@ def graph_from_address(
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bidirectional.
+        you want graph to be fully bi-directional.
 
     Returns
     -------
@@ -314,7 +314,7 @@ def graph_from_place(
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bidirectional.
+        you want graph to be fully bi-directional.
 
     Returns
     -------
@@ -392,7 +392,7 @@ def graph_from_polygon(
         a custom network filter to be used instead of the network_type presets,
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bidirectional.
+        you want graph to be fully bi-directional.
 
     Returns
     -------
@@ -482,7 +482,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
     filepath : string
         path to file containing OSM XML data
     bidirectional : bool
-        if True, create bidirectional edges for one-way streets
+        if True, create bi-directional edges for one-way streets
     simplify : bool
         if True, simplify the graph topology
     retain_all : bool
@@ -547,7 +547,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
     bidirectional : bool
-        if True, create bidirectional edges for one-way streets
+        if True, create bi-directional edges for one-way streets
 
     Returns
     -------
@@ -570,7 +570,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     nodes = {}
     paths = {}
     for response_json in response_jsons:
-        nodes_temp, paths_temp = _parse_osm_nodes_paths(response_json)
+        nodes_temp, paths_temp = _parse_nodes_paths(response_json)
         nodes.update(nodes_temp)
         paths.update(paths_temp)
 
@@ -579,7 +579,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
         G.add_node(node, **data)
 
     # add each osm way (ie, a path of edges) to the graph
-    _add_paths(G, paths, bidirectional=bidirectional)
+    _add_paths(G, paths.values(), bidirectional)
 
     # retain only the largest connected component if retain_all is False
     if not retain_all:
@@ -607,10 +607,9 @@ def _convert_node(element):
     -------
     node : dict
     """
-    node = {}
-    node["y"] = element["lat"]
-    node["x"] = element["lon"]
-    node["osmid"] = element["id"]
+    node = {"y": element["lat"],
+            "x": element["lon"],
+            "osmid": element["id"]}
     if "tags" in element:
         for useful_tag in settings.useful_tags_node:
             if useful_tag in element["tags"]:
@@ -620,7 +619,7 @@ def _convert_node(element):
 
 def _convert_path(element):
     """
-    Convert an OSM way element into the format for a networkx graph path.
+    Convert an OSM way element into the format for a networkx path.
 
     Parameters
     ----------
@@ -631,8 +630,7 @@ def _convert_path(element):
     -------
     path : dict
     """
-    path = {}
-    path["osmid"] = element["id"]
+    path = {"osmid": element["id"]}
 
     # remove any consecutive duplicate elements in the list of nodes
     grouped_list = groupby(element["nodes"])
@@ -645,11 +643,9 @@ def _convert_path(element):
     return path
 
 
-def _parse_osm_nodes_paths(response_json):
+def _parse_nodes_paths(response_json):
     """
-    Construct dicts of nodes and paths.
-
-    Dict key=osmid and value=dict of attributes.
+    Construct dicts of nodes and paths from an Overpass response.
 
     Parameters
     ----------
@@ -659,149 +655,136 @@ def _parse_osm_nodes_paths(response_json):
     Returns
     -------
     nodes, paths : tuple of dicts
+        dicts' keys = osmid and values = dict of attributes
     """
     nodes = {}
     paths = {}
     for element in response_json["elements"]:
         if element["type"] == "node":
-            key = element["id"]
-            nodes[key] = _convert_node(element)
+            nodes[element["id"]] = _convert_node(element)
         elif element["type"] == "way":
-            key = element["id"]
-            paths[key] = _convert_path(element)
+            paths[element["id"]] = _convert_path(element)
 
     return nodes, paths
 
 
-def _add_path(G, data, one_way):
+def _is_path_one_way(path, bidirectional, oneway_values={"yes", "true", "1", "-1", "reverse", "T", "F"}):
     """
-    Add a path to the graph.
+    Determine if a path of nodes allows travel in only one direction.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    data : dict
-        the attributes of the path
-    one_way : bool
-        if this path is one-way or if it is bidirectional
-
-    Returns
-    -------
-    None
-    """
-    # extract the ordered list of nodes from this path element, then delete it
-    # so we don't add it as an attribute to the edge later
-    path_nodes = data["nodes"]
-    del data["nodes"]
-
-    # set the oneway attribute to the passed-in value, to make it consistent
-    # True/False values, but only do this if you aren't forcing all edges to
-    # oneway with the all_oneway setting. With the all_oneway setting, you
-    # likely still want to preserve the original OSM oneway attribute.
-    if not settings.all_oneway:
-        data["oneway"] = one_way
-
-    # zip together the path nodes so you get tuples like [(0,1), (1,2), (2,3)]
-    path_edges = list(zip(path_nodes[:-1], path_nodes[1:]))
-    G.add_edges_from(path_edges, **data)
-
-    if not one_way:
-        # if the path is NOT one-way, reverse the direction of each edge and
-        # add this path going the opposite direction
-        path_edges_opposite_direction = [(v, u) for u, v in path_edges]
-        G.add_edges_from(path_edges_opposite_direction, **data)
-
-
-def _is_path_one_way(bidirectional, data, osm_oneway_values):
-    """
-    Evaluate if path is a one-way.
-
-    Parameters
-    ----------
-    bidirectional: bool
-        bidirectional boolean
-    data: dict
-        data from path
-    osm_oneway_values: list
-        particular specification of osm standard
-        https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf
+    path : dict
+        a path's tag:value attribute data
+    bidirectional : bool
+        whether this is a bi-directional network type
+    oneway_values : set
+        the values OSM uses in its 'oneway' tag to denote True
 
     Returns
     -------
     bool
     """
-    if settings.all_oneway is True:
+    # rule 1
+    if settings.all_oneway:
+        # if globally configured to set every edge one-way, then it's one-way
         return True
 
-    # if this path is tagged as one-way and if it is not a walking network,
-    # then we'll add the path in one direction only
-    elif ("oneway" in data and data["oneway"] in osm_oneway_values) and not bidirectional:
-        # add this path (in only one direction) to the graph
+    # rule 2
+    elif bidirectional:
+        # if this is a bi-directional network type, then nothing in it is
+        # considered one-way. eg, if this is a walking network, this may very
+        # well be a one-way street (as cars/bikes go), but in a walking-only
+        # network it is a bi-directional edge (you can walk both directions on
+        # a one-way street). so we will add this path (in both directions) to
+        # the graph and set its oneway attribute to False.
+        return False
+
+    # rule 3
+    elif "oneway" in path and path["oneway"] in oneway_values:
+        # see https://wiki.openstreetmap.org/wiki/Key:oneway and
+        # https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf
+        # if this path is tagged as one-way and if it is not a bi-directional
+        # network type then we'll add the path in one direction only
         return True
 
-    elif ("junction" in data and data["junction"] == "roundabout") and not bidirectional:
-        # roundabout are also oneway but not tagged as is
+    # rule 4
+    elif "junction" in path and path["junction"] == "roundabout":
+        # roundabouts are also one-way but are not explicitly tagged as such
         return True
 
-    # else, this path is not tagged as one-way or it is a walking network
-    # (you can walk both directions on a one-way street)
     else:
-        # add this path (in both directions) to the graph and set its
-        # 'oneway' attribute to False. if this is a walking network, this
-        # may very well be a one-way street (as cars/bikes go), but in a
-        # walking-only network it is a bi-directional edge
+        # otherwise this path is not tagged as a one-way
         return False
 
 
-def _is_path_data_reversed(data):
+def _is_path_reversed(path, reversed_values={"-1", "reverse", "T"}):
     """
-    Check if data is reversed.
+    Determine if the order of nodes in path should be reversed.
 
     Parameters
     ----------
-    data: dict
-        path data
+    path : dict
+        a path's tag:value attribute data
+    reversed_values : set
+        the values OSM uses in its 'oneway' tag to denote travel can only
+        occur in the opposite direction of the node order
 
     Returns
     -------
     bool
     """
-    try:
-        if data["oneway"] == "-1" or data["oneway"] == "T":
-            return True
-    except KeyError:
+    if "oneway" in path and path["oneway"] in reversed_values:
+        # see https://wiki.openstreetmap.org/wiki/Key:oneway
+        return True
+    else:
         return False
 
 
 def _add_paths(G, paths, bidirectional=False):
     """
-    Add a collection of paths to the graph.
+    Add a list of paths to the graph as edges.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph
-    paths : dict
-        the paths from OSM
+        graph to add paths to
+    paths : list
+        list of paths' tag:value attribute data dicts
     bidirectional : bool
-        if True, create bidirectional edges for one-way streets
+        if True, create bi-directional edges for one-way streets
 
     Returns
     -------
     None
     """
-    # the list of values OSM uses in its 'oneway' tag to denote True
-    # https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf
-    osm_oneway_values = {"yes", "true", "1", "-1", "T", "F"}
+    for path in paths:
 
-    for data in paths.values():
+        # extract/remove the ordered list of nodes from this path element so
+        # we don't add it as a superfluous attribute to the edge later
+        path_nodes = path.pop("nodes")
 
-        is_one_way = _is_path_one_way(bidirectional, data, osm_oneway_values)
-        if is_one_way and _is_path_data_reversed(data):
-            data["nodes"] = list(reversed(data["nodes"]))
+        # reverse the order of nodes in the path if this path is both one-way
+        # and only allows travel in the reverse direction of nodes' order
+        is_one_way = _is_path_one_way(path, bidirectional)
+        if is_one_way and _is_path_reversed(path):
+            path_nodes.reverse()
 
-        _add_path(G, data, one_way=is_one_way)
+        # set the oneway attribute, but only if when not forcing all edges to
+        # oneway with the all_oneway setting. With the all_oneway setting, you
+        # want to preserve the original OSM oneway attribute for later clarity
+        if not settings.all_oneway:
+            path["oneway"] = is_one_way
+
+        # zip together path nodes to get tuples like [(0,1), (1,2), (2,3)]
+        path_edges = zip(path_nodes[:-1], path_nodes[1:])
+        G.add_edges_from(path_edges, **path)
+
+        # if the path is NOT one-way, reverse direction of each edge and add
+        # this path going the opposite direction too
+        if not is_one_way:
+            path_edges_reversed = ((v, u) for u, v in path_edges)
+            G.add_edges_from(path_edges_reversed, **path)
 
 
 class _OSMContentHandler(xml.sax.handler.ContentHandler):
