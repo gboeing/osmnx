@@ -366,6 +366,11 @@ def save_graph_xml(
     """
     Save graph to disk as an OSM-formatted XML .osm file.
 
+    This function exists only to allow serialization to the .osm file format
+    for applications that require it, and has constraints to conform to that.
+    To save/load full-featured OSMnx graphs to/from disk for later use, use
+    the save_graphml and load_graphml functions instead.
+
     Note: for large networks this function can take a long time to run. Before
     using this function, make sure you configured OSMnx as described in the
     example below when you created the graph.

@@ -202,7 +202,7 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
 
 def induce_subgraph(G, node_subset):
     """
-    Induce a subgraph of G.
+    Induce a subgraph of G: deprecated, do not use.
 
     Parameters
     ----------

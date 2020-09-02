@@ -60,6 +60,8 @@ You can install OSMnx with conda:
 
 Alternatively, you can run OSMnx + Jupyter directly from the official `docker container`_, or you can install OSMnx via `pip`_ if you already have all of its dependencies installed and tested on your system. Note: pip installation is nontrivial. If you don't know *exactly* what you're doing, just use conda as described above.
 
+To upgrade OSMnx to a newer release, just remove the conda environment you created and then create a new one again following the steps above. Don't just run :code:`conda update` or you could get package conflicts.
+
 
 Usage examples
 --------------

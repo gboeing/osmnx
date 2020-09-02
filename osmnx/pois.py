@@ -449,14 +449,14 @@ def pois_from_address(address, tags, dist=1000):
     return pois_from_point(point=point, tags=tags, dist=dist)
 
 
-def pois_from_place(place, tags, which_result=1):
+def pois_from_place(place, tags, which_result=None):
     """
     Get points of interest (POIs) within the boundaries of some place.
 
     Parameters
     ----------
     place : string
-        the query to geocode to get boundary polygon
+        the query to geocode to get place boundary polygon
     tags : dict
         Dict of tags used for finding POIs from the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -469,7 +469,8 @@ def pois_from_place(place, tags, which_result=1):
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
     which_result : int
-        max number of geocoding results to return and which to process
+        which geocoding result to use. if None, auto-select the first
+        multi/polygon or raise an error if OSM doesn't return one.
 
     Returns
     -------

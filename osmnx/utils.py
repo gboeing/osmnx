@@ -117,13 +117,13 @@ def config(
     Parameters
     ----------
     data_folder : string
-        where to save/load data files by default
+        path to folder in which to save/load data files by default
     logs_folder : string
-        where to save log files
+        path to folder in which to save log files
     imgs_folder : string
-        where to save figures by default
+        path to folder in which to save plotted figures by default
     cache_folder : string
-        where to save HTTP response cache
+        path to folder in which to save/load HTTP response cache
     use_cache : bool
         if True, cache HTTP responses locally instead of calling API
         repetitively for the same request
