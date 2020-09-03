@@ -561,9 +561,11 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
         raise EmptyOverpassResponse("There are no data elements in the response JSON")
 
     # create the graph as a MultiDiGraph and set its meta-attributes
-    metadata = {'created_date': utils.ts(),
-                'created_with': f"OSMnx {__version__}",
-                'crs': settings.default_crs}
+    metadata = {
+        "created_date": utils.ts(),
+        "created_with": f"OSMnx {__version__}",
+        "crs": settings.default_crs,
+    }
     G = nx.MultiDiGraph(**metadata)
 
     # extract nodes and paths from the downloaded osm data
@@ -607,9 +609,7 @@ def _convert_node(element):
     -------
     node : dict
     """
-    node = {"y": element["lat"],
-            "x": element["lon"],
-            "osmid": element["id"]}
+    node = {"y": element["lat"], "x": element["lon"], "osmid": element["id"]}
     if "tags" in element:
         for useful_tag in settings.useful_tags_node:
             if useful_tag in element["tags"]:
@@ -668,7 +668,9 @@ def _parse_nodes_paths(response_json):
     return nodes, paths
 
 
-def _is_path_one_way(path, bidirectional, oneway_values={"yes", "true", "1", "-1", "reverse", "T", "F"}):
+def _is_path_one_way(
+    path, bidirectional, oneway_values={"yes", "true", "1", "-1", "reverse", "T", "F"}
+):
     """
     Determine if a path of nodes allows travel in only one direction.
 
