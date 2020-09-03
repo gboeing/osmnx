@@ -687,7 +687,7 @@ def _is_path_one_way(path, bidirectional, oneway_values):
 
 def _is_path_reversed(path, reversed_values):
     """
-    Determine if the order of nodes in path should be reversed.
+    Determine if the order of nodes in a path should be reversed.
 
     Parameters
     ----------
@@ -735,13 +735,13 @@ def _add_paths(G, paths, bidirectional=False):
 
         # extract/remove the ordered list of nodes from this path element so
         # we don't add it as a superfluous attribute to the edge later
-        path_nodes = path.pop("nodes")
+        nodes = path.pop("nodes")
 
         # reverse the order of nodes in the path if this path is both one-way
-        # and only allows travel in the reverse direction of nodes' order
+        # and only allows travel in the opposite direction of nodes' order
         is_one_way = _is_path_one_way(path, bidirectional, oneway_values)
         if is_one_way and _is_path_reversed(path, reversed_values):
-            path_nodes.reverse()
+            nodes.reverse()
 
         # set the oneway attribute, but only if when not forcing all edges to
         # oneway with the all_oneway setting. With the all_oneway setting, you
@@ -749,12 +749,12 @@ def _add_paths(G, paths, bidirectional=False):
         if not settings.all_oneway:
             path["oneway"] = is_one_way
 
-        # zip together path nodes to get tuples like [(0,1), (1,2), (2,3)]
-        path_edges = list(zip(path_nodes[:-1], path_nodes[1:]))
-        G.add_edges_from(path_edges, **path)
-
-        # if the path is NOT one-way, reverse direction of each edge and add
-        # this path going the opposite direction too
+        # zip path nodes to get (u, v) tuples like [(0,1), (1,2), (2,3)]. if
+        # the path is NOT one-way, reverse direction of each edge and add this
+        # path going the opposite direction too
+        edges = list(zip(nodes[:-1], nodes[1:]))
         if not is_one_way:
-            path_edges_reversed = [(v, u) for u, v in path_edges]
-            G.add_edges_from(path_edges_reversed, **path)
+            edges.extend([(v, u) for u, v in edges])
+
+        # add all the edge tuples and give them the path's tag:value attrs
+        G.add_edges_from(edges, **path)
