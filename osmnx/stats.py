@@ -295,7 +295,7 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
           - betweenness_centrality_avg
 
     """
-    stats = {}
+    stats = dict()
 
     # create DiGraph from the MultiDiGraph, for those metrics that need it
     D = utils_graph.get_digraph(G, weight="length")
