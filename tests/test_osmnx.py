@@ -116,9 +116,9 @@ def test_graph_from_xml():
     node_id = 53098262
     neighbor_ids = 53092170, 53060438, 53027353, 667744075
 
-    with bz2.BZ2File("tests/input_data/West-Oakland.osm.bz2") as input:
+    with bz2.BZ2File("tests/input_data/West-Oakland.osm.bz2") as f:
         handle, temp_filename = tempfile.mkstemp(suffix=".osm")
-        os.write(handle, input.read())
+        os.write(handle, f.read())
         os.close(handle)
 
     for filename in ("tests/input_data/West-Oakland.osm.bz2", temp_filename):
