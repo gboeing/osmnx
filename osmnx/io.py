@@ -142,7 +142,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
         G = utils_graph.graph_from_gdfs(gdf_nodes, gdf_edges)
 
         # remove graph attributes as Gephi only accepts node and edge attrs
-        G.graph = {}
+        G.graph = dict()
 
     else:
         # if not gephi, keep graph attrs and stringify them
@@ -208,7 +208,7 @@ def load_graphml(filepath, node_type=int):
     if "edge_default" in G.graph:
         del G.graph["edge_default"]
 
-    utils.log(f'Loaded graph with {len(G)} nodes and {len(G.edges())} edges from "{filepath}"')
+    utils.log(f'Loaded graph with {len(G)} nodes and {len(G.edges)} edges from "{filepath}"')
     return G
 
 
