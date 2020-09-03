@@ -240,7 +240,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
     # make a copy to not edit the original graph object the caller passed in
     G = G.copy()
     initial_node_count = len(G)
-    initial_edge_count = len(G.edges())
+    initial_edge_count = len(G.edges)
     all_nodes_to_remove = []
     all_edges_to_add = []
 
@@ -316,7 +316,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
 
     msg = (
         f"Simplified graph: {initial_node_count} to {len(G)} nodes, "
-        f"{initial_edge_count} to {len(G.edges())} edges"
+        f"{initial_edge_count} to {len(G.edges)} edges"
     )
     utils.log(msg)
     return G
@@ -518,7 +518,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
                 y=nodes_subset["y"].iloc[0],
             )
 
-    if len(G.edges()) == 0 or not reconnect_edges:
+    if len(G.edges) == 0 or not reconnect_edges:
         # if reconnect_edges is False or there are no edges in original graph
         # (after dead-end removed), then skip edges and return new graph as-is
         return H

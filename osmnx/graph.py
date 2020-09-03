@@ -88,7 +88,7 @@ def graph_from_bbox(
         custom_filter=custom_filter,
     )
 
-    utils.log(f"graph_from_bbox returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"graph_from_bbox returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G
 
 
@@ -173,7 +173,7 @@ def graph_from_point(
         centermost_node = distance.get_nearest_node(G, center_point)
         G = truncate.truncate_graph_dist(G, centermost_node, max_dist=dist)
 
-    utils.log(f"graph_from_point returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"graph_from_point returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G
 
 
@@ -251,7 +251,7 @@ def graph_from_address(
         clean_periphery=clean_periphery,
         custom_filter=custom_filter,
     )
-    utils.log(f"graph_from_address returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"graph_from_address returned graph with {len(G)} nodes and {len(G.edges)} edges")
 
     if return_coords:
         return G, point
@@ -350,7 +350,7 @@ def graph_from_place(
         custom_filter=custom_filter,
     )
 
-    utils.log(f"graph_from_place returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"graph_from_place returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G
 
 
@@ -466,7 +466,7 @@ def graph_from_polygon(
         if simplify:
             G = simplification.simplify_graph(G)
 
-    utils.log(f"graph_from_polygon returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"graph_from_polygon returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G
 
 
@@ -500,7 +500,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
     if simplify:
         G = simplification.simplify_graph(G)
 
-    utils.log(f"graph_from_xml returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"graph_from_xml returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G
 
 
@@ -556,7 +556,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     if not retain_all:
         G = utils_graph.get_largest_component(G)
 
-    utils.log(f"Created graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"Created graph with {len(G)} nodes and {len(G.edges)} edges")
 
     # add length (great circle distance between nodes) attribute to each edge
     if len(G.edges) > 0:

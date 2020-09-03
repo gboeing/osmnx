@@ -208,7 +208,7 @@ def load_graphml(filepath, node_type=int):
     if "edge_default" in G.graph:
         del G.graph["edge_default"]
 
-    utils.log(f'Loaded graph with {len(G)} nodes and {len(G.edges())} edges from "{filepath}"')
+    utils.log(f'Loaded graph with {len(G)} nodes and {len(G.edges)} edges from "{filepath}"')
     return G
 
 
