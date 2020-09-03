@@ -668,9 +668,7 @@ def _parse_nodes_paths(response_json):
     return nodes, paths
 
 
-def _is_path_one_way(
-    path, bidirectional, oneway_values={"yes", "true", "1", "-1", "reverse", "T", "F"}
-):
+def _is_path_one_way(path, bidirectional, oneway_values):
     """
     Determine if a path of nodes allows travel in only one direction.
 
@@ -704,8 +702,6 @@ def _is_path_one_way(
 
     # rule 3
     elif "oneway" in path and path["oneway"] in oneway_values:
-        # see https://wiki.openstreetmap.org/wiki/Key:oneway and
-        # https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf
         # if this path is tagged as one-way and if it is not a bi-directional
         # network type then we'll add the path in one direction only
         return True
@@ -720,7 +716,7 @@ def _is_path_one_way(
         return False
 
 
-def _is_path_reversed(path, reversed_values={"-1", "reverse", "T"}):
+def _is_path_reversed(path, reversed_values):
     """
     Determine if the order of nodes in path should be reversed.
 
@@ -737,7 +733,6 @@ def _is_path_reversed(path, reversed_values={"-1", "reverse", "T"}):
     bool
     """
     if "oneway" in path and path["oneway"] in reversed_values:
-        # see https://wiki.openstreetmap.org/wiki/Key:oneway
         return True
     else:
         return False
@@ -760,6 +755,13 @@ def _add_paths(G, paths, bidirectional=False):
     -------
     None
     """
+    # the values OSM uses in its 'oneway' tag to denote True, and to denote
+    # travel can only occur in the opposite direction of the node order. see:
+    # https://wiki.openstreetmap.org/wiki/Key:oneway
+    # https://www.geofabrik.de/de/data/geofabrik-osm-gis-standard-0.7.pdf
+    oneway_values = {"yes", "true", "1", "-1", "reverse", "T", "F"}
+    reversed_values = {"-1", "reverse", "T"}
+
     for path in paths:
 
         # extract/remove the ordered list of nodes from this path element so
@@ -768,8 +770,8 @@ def _add_paths(G, paths, bidirectional=False):
 
         # reverse the order of nodes in the path if this path is both one-way
         # and only allows travel in the reverse direction of nodes' order
-        is_one_way = _is_path_one_way(path, bidirectional)
-        if is_one_way and _is_path_reversed(path):
+        is_one_way = _is_path_one_way(path, bidirectional, oneway_values)
+        if is_one_way and _is_path_reversed(path, reversed_values):
             path_nodes.reverse()
 
         # set the oneway attribute, but only if when not forcing all edges to
