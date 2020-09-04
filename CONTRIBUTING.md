@@ -9,7 +9,7 @@ Thanks for using OSMnx and for considering contributing to it!
   - make sure you've followed the installation instructions in the [documentation](https://osmnx.readthedocs.io/)
   - if you installed OSMnx via conda-forge, please open an issue at its [feedstock](https://github.com/conda-forge/osmnx-feedstock/issues)
 
-#### If you've found an error:
+#### If you've found a bug:
 
   - read the error message and [documentation](https://osmnx.readthedocs.io/)
   - search through the [open issues](https://github.com/gboeing/osmnx/issues?q=is%3Aopen+is%3Aissue) and [closed issues](https://github.com/gboeing/osmnx/issues?q=is%3Aissue+is%3Aclosed) first
