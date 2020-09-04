@@ -321,15 +321,12 @@ def _create_gdf(response_jsons, polygon, tags):
     gdf : geopandas.GeoDataFrame
         GeoDataFrame of geometries and their associated tags
     """
-    # count the number of elements in the JSON responses from the server
-    elements = []
-    for response_json in response_jsons:
-        elements.extend(response_json["elements"])
-    num_elements = len(elements)
-    utils.log(f"{num_elements} elements in the JSON responses (includes every node).")
+    # make sure we got data back from the server request(s)
+    element_counts = [len(rj["elements"]) for rj in response_jsons]
+    utils.log(f"{element_counts} elements in the JSON responses (includes every node).")
 
     # if there are no elements in the responses
-    if num_elements < 1:
+    if element_counts < 1:
 
         # create an empty GeoDataFrame
         gdf = gpd.GeoDataFrame()
@@ -338,10 +335,7 @@ def _create_gdf(response_jsons, polygon, tags):
         gdf.crs = settings.default_crs
 
         # log a warning
-        utils.log(
-            "OSM returned nothing. Check query tags and location.", level=lg.WARNING,
-        )
-
+        utils.log("No data elements: check query tags and location.", level=lg.WARNING)
         return gdf
 
     # else if there were elements in the response
