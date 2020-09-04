@@ -451,7 +451,7 @@ def _parse_node_to_coords(element):
     Returns
     -------
     coords : dict
-        dict of lat and lon coordinates
+        dict of latitude/longitude coordinates
     """
     # return the coordinate of a single node element
     coords = {"lat": element["lat"], "lon": element["lon"]}
@@ -498,7 +498,7 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_polyg
     element : dict
         element type "way" from overpass response JSON
     coords : dict
-        dict of node IDs and their lat, lon coordinates
+        dict of node IDs and their latitude/longitude coordinates
     polygon_features : dict
         dict for determining whether closed ways are LineStrings or Polygons
 
