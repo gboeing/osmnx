@@ -374,7 +374,10 @@ def test_get_network_methods():
     )
 
     G = ox.graph_from_point(
-        location_point, dist=500, dist_type="network", network_type="all_private",
+        location_point,
+        dist=500,
+        dist_type="network",
+        network_type="all_private",
     )
 
 
