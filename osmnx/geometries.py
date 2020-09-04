@@ -322,11 +322,11 @@ def _create_gdf(response_jsons, polygon, tags):
         GeoDataFrame of geometries and their associated tags
     """
     # make sure we got data back from the server request(s)
-    element_counts = [len(rj["elements"]) for rj in response_jsons]
-    utils.log(f"{element_counts} elements in the JSON responses (includes every node).")
+    element_count = sum([len(rj["elements"]) for rj in response_jsons])
+    utils.log(f"{element_count} elements in the JSON responses (includes every node).")
 
     # if there are no elements in the responses
-    if element_counts < 1:
+    if element_count < 1:
 
         # create an empty GeoDataFrame
         gdf = gpd.GeoDataFrame()
