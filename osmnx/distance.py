@@ -22,28 +22,29 @@ except ImportError:
 
 def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
     """
-    Calculate great-circle distances.
+    Calculate great-circle distances between points.
 
     Vectorized function to calculate the great-circle distance between two
-    points or between vectors of points, using haversine.
+    points' coordinates or between arrays of points' coordinates using the
+    haversine formula. Expects coordinates in decimal degrees.
 
     Parameters
     ----------
-    lat1 : float or array of float
-        first lat coord
-    lng1 : float or array of float
-        first lng coord
-    lat2 : float or array of float
-        second lat coord
-    lng2 : float or array of float
-        second lng coord
-    earth_radius : numeric
+    lat1 : float or np.array of float
+        first point's latitude coordinate
+    lng1 : float or np.array of float
+        first point's longitude coordinate
+    lat2 : float or np.array of float
+        second point's latitude coordinate
+    lng2 : float or np.array of float
+        second point's longitude coordinate
+    earth_radius : int or float
         radius of earth in units in which distance will be returned
         (default is meters)
 
     Returns
     -------
-    dist : float or np.array of floats
+    dist : float or np.array
         distance or array of distances from (lat1, lng1) to (lat2, lng2) in
         units of earth_radius
     """
@@ -67,40 +68,41 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
 
 def euclidean_dist_vec(y1, x1, y2, x2):
     """
-    Calculate euclidean distances.
+    Calculate Euclidean distances between points.
 
-    Vectorized function to calculate the euclidean distance between two points
-    or between arrays of points.
+    Vectorized function to calculate the Euclidean distance between two
+    points' coordinates or between arrays of points' coordinates. For most
+    accurate results, use projected coordinates rather than decimal degrees.
 
     Parameters
     ----------
     y1 : float or np.array of float
-        first y coord
+        first point's y coordinate
     x1 : float or np.array of float
-        first x coord
+        first point's x coordinate
     y2 : float or np.array of float
-        second y coord
+        second point's y coordinate
     x2 : float or np.array of float
-        second x coord
+        second point's x coordinate
 
     Returns
     -------
     dist : float or np.array of float
-        distance or vector of distances from (x1, y1) to (x2, y2) in graph
-        units
+        distance or array of distances from (x1, y1) to (x2, y2) in
+        coordinates' units
     """
-    # euclid's formula
+    # Pythagorean theorem
     dist = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
     return dist
 
 
 def get_nearest_node(G, point, method="haversine", return_dist=False):
     """
-    Find node nearest to a point.
+    Find the nearest node to a point.
 
-    Return the graph node nearest to some specified (lat, lng) or (y, x) point
-    and optionally the distance between the node and the point. This function
-    can use either a haversine or euclidean distance calculator.
+    Return the graph node nearest to some (lat, lng) or (y, x) point and
+    optionally the distance between the node and the point. This function can
+    use either the haversine formula or Euclidean distance.
 
     Parameters
     ----------
@@ -163,7 +165,7 @@ def get_nearest_node(G, point, method="haversine", return_dist=False):
 
 def get_nearest_edge(G, point, return_geom=False, return_dist=False):
     """
-    Return the nearest edge to a point, by minimum euclidean distance.
+    Find the nearest edge to a point by minimum Euclidean distance.
 
     Parameters
     ----------
@@ -190,7 +192,7 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
     edges = gdf_edges[["u", "v", "key", "geometry"]].values
 
-    # convert lat/lng point to x/y for shapely distance operation
+    # convert lat,lng (y,x) point to x,y for shapely distance operation
     xy_point = Point(reversed(point))
 
     # calculate euclidean distance from each edge's geometry to this point
@@ -213,9 +215,9 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
 
 def get_nearest_nodes(G, X, Y, method=None):
     """
-    Return the graph nodes nearest to a list of points.
+    Find the nearest node to each point in a list of points.
 
-    Pass in points as separate vectors of X and Y coordinates. The 'kdtree'
+    Pass in points as separate lists of X and Y coordinates. The 'kdtree'
     method is by far the fastest with large data sets, but only finds
     approximate nearest nodes if working in unprojected coordinates like
     lat-lng (it precisely finds the nearest node if working in projected
@@ -227,14 +229,14 @@ def get_nearest_nodes(G, X, Y, method=None):
     G : networkx.MultiDiGraph
         input graph
     X : list-like
-        The vector of longitudes or x's for which we will find the nearest
+        the longitudes or x coordinates for which we will find the nearest
         node in the graph
     Y : list-like
-        The vector of latitudes or y's for which we will find the nearest
-        node in the graph
+        the latitudes or y coordinates for which we will find the nearest node
+        in the graph
     method : string {None, 'kdtree', 'balltree'}
-        Which method to use for finding nearest node to each point.
-        If None, we manually find each node one at a time using
+        Which method to use for finding the nearest node to each point. If
+        None, we manually find each node one at a time using
         utils.get_nearest_node and haversine. If 'kdtree' we use
         scipy.spatial.cKDTree for very fast euclidean search. If
         'balltree', we use sklearn.neighbors.BallTree for fast
@@ -243,7 +245,8 @@ def get_nearest_nodes(G, X, Y, method=None):
     Returns
     -------
     nn : np.array
-        list of nearest node IDs
+        array of node IDs representing the node nearest to each point in the
+        passed-in list of points
     """
     if method is None:
 
@@ -300,9 +303,9 @@ def get_nearest_nodes(G, X, Y, method=None):
 
 def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     """
-    Return the graph edges nearest to a list of points.
+    Find the nearest edge to each point in a list of points.
 
-    Pass in points as separate vectors of X and Y coordinates. The 'kdtree'
+    Pass in points as separate lists of X and Y coordinates. The 'kdtree'
     method is by far the fastest with large data sets, but only finds
     approximate nearest edges if working in unprojected coordinates like
     lat-lng (it precisely finds the nearest edge if working in projected
@@ -315,40 +318,39 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     the X vector corresponds to longitude and the Y vector corresponds
     to latitude. The method creates equally distanced points along the edges
     of the network. Then, these points are used in a kdTree or BallTree search
-    to identify which is nearest.Note that this method will not give the exact
+    to identify which is nearest. Note that this method will not give exact
     perpendicular point along the edge, but the smaller the *dist* parameter,
-    the closer the solution will be.
+    the closer (but slower) the solution will be.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
     X : list-like
-        The vector of longitudes or x's for which we will find the nearest
-        edge in the graph. For projected graphs, use the projected coordinates,
+        the longitudes or x coordinates for which we will find the nearest
+        edge in the graph. For projected graphs use the projected coordinates,
         usually in meters.
     Y : list-like
-        The vector of latitudes or y's for which we will find the nearest
-        edge in the graph. For projected graphs, use the projected coordinates,
+        the latitudes or y coordinates for which we will find the nearest edge
+        in the graph. For projected graphs use the projected coordinates,
         usually in meters.
     method : string {None, 'kdtree', 'balltree'}
-        Which method to use for finding nearest edge to each point.
-        If None, we manually find each edge one at a time using
-        get_nearest_edge. If 'kdtree' we use
-        scipy.spatial.cKDTree for very fast euclidean search. Recommended for
-        projected graphs. If 'balltree', we use sklearn.neighbors.BallTree for
-        fast haversine search. Recommended for unprojected graphs.
-
+        Which method to use for finding nearest edge to each point. If None,
+        we manually find each edge one at a time using get_nearest_edge. If
+        'kdtree' we use scipy.spatial.cKDTree for very fast euclidean search.
+        Recommended for projected graphs. If 'balltree', we use
+        sklearn.neighbors.BallTree for fast haversine search. Recommended for
+        unprojected graphs.
     dist : float
-        spacing length along edges. Units are the same as the geom; Degrees for
-        unprojected geometries and meters for projected geometries. The smaller
-        the value, the more points are created.
+        spacing length along edges. Units are the same as the graph's
+        geometries. The smaller the value, the more points are created.
 
     Returns
     -------
     ne : np.array
-        array of nearest edges represented by u and v (the IDs of the nodes
-        they link) and key
+        array of edge IDs representing the edge nearest to each point in the
+        passed-in list of points. Edge IDs are represented by u, v, key where
+        u and v the node IDs of the nodes the edge links.
     """
     if method is None:
         # calculate nearest edge one at a time for each (y, x) point
