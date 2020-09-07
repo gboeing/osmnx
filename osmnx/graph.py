@@ -1,8 +1,5 @@
 """Graph creation functions."""
 
-import bz2
-import os
-import xml.sax
 from itertools import groupby
 
 import networkx as nx
@@ -91,7 +88,7 @@ def graph_from_bbox(
         custom_filter=custom_filter,
     )
 
-    utils.log(f"graph_from_bbox returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"graph_from_bbox returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G
 
 
@@ -176,7 +173,7 @@ def graph_from_point(
         centermost_node = distance.get_nearest_node(G, center_point)
         G = truncate.truncate_graph_dist(G, centermost_node, max_dist=dist)
 
-    utils.log(f"graph_from_point returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"graph_from_point returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G
 
 
@@ -254,7 +251,7 @@ def graph_from_address(
         clean_periphery=clean_periphery,
         custom_filter=custom_filter,
     )
-    utils.log(f"graph_from_address returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"graph_from_address returned graph with {len(G)} nodes and {len(G.edges)} edges")
 
     if return_coords:
         return G, point
@@ -353,7 +350,7 @@ def graph_from_place(
         custom_filter=custom_filter,
     )
 
-    utils.log(f"graph_from_place returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"graph_from_place returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G
 
 
@@ -469,7 +466,7 @@ def graph_from_polygon(
         if simplify:
             G = simplification.simplify_graph(G)
 
-    utils.log(f"graph_from_polygon returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"graph_from_polygon returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G
 
 
@@ -494,7 +491,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
     G : networkx.MultiDiGraph
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [_overpass_json_from_file(filepath)]
+    response_jsons = [downloader._overpass_json_from_file(filepath)]
 
     # create graph using this response JSON
     G = _create_graph(response_jsons, bidirectional=bidirectional, retain_all=retain_all)
@@ -503,36 +500,8 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
     if simplify:
         G = simplification.simplify_graph(G)
 
-    utils.log(f"graph_from_xml returned graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"graph_from_xml returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G
-
-
-def _overpass_json_from_file(filepath):
-    """
-    Read OSM XML from file and return Overpass-like JSON.
-
-    Parameters
-    ----------
-    filepath : string
-        path to file containing OSM XML data
-
-    Returns
-    -------
-    OSMContentHandler object
-    """
-
-    def _opener(filepath):
-        _, ext = os.path.splitext(filepath)
-        if ext == ".bz2":
-            return bz2.BZ2File(filepath)
-        else:
-            # assume an unrecognized file extension is just XML
-            return open(filepath, mode="rb")
-
-    with _opener(filepath) as file:
-        handler = _OSMContentHandler()
-        xml.sax.parse(file, handler)
-        return handler.object
 
 
 def _create_graph(response_jsons, retain_all=False, bidirectional=False):
@@ -569,8 +538,8 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     G = nx.MultiDiGraph(**metadata)
 
     # extract nodes and paths from the downloaded osm data
-    nodes = {}
-    paths = {}
+    nodes = dict()
+    paths = dict()
     for response_json in response_jsons:
         nodes_temp, paths_temp = _parse_nodes_paths(response_json)
         nodes.update(nodes_temp)
@@ -587,7 +556,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     if not retain_all:
         G = utils_graph.get_largest_component(G)
 
-    utils.log(f"Created graph with {len(G)} nodes and {len(G.edges())} edges")
+    utils.log(f"Created graph with {len(G)} nodes and {len(G.edges)} edges")
 
     # add length (great circle distance between nodes) attribute to each edge
     if len(G.edges) > 0:
@@ -657,8 +626,8 @@ def _parse_nodes_paths(response_json):
     nodes, paths : tuple of dicts
         dicts' keys = osmid and values = dict of attributes
     """
-    nodes = {}
-    paths = {}
+    nodes = dict()
+    paths = dict()
     for element in response_json["elements"]:
         if element["type"] == "node":
             nodes[element["id"]] = _convert_node(element)
@@ -718,7 +687,7 @@ def _is_path_one_way(path, bidirectional, oneway_values):
 
 def _is_path_reversed(path, reversed_values):
     """
-    Determine if the order of nodes in path should be reversed.
+    Determine if the order of nodes in a path should be reversed.
 
     Parameters
     ----------
@@ -766,13 +735,13 @@ def _add_paths(G, paths, bidirectional=False):
 
         # extract/remove the ordered list of nodes from this path element so
         # we don't add it as a superfluous attribute to the edge later
-        path_nodes = path.pop("nodes")
+        nodes = path.pop("nodes")
 
         # reverse the order of nodes in the path if this path is both one-way
-        # and only allows travel in the reverse direction of nodes' order
+        # and only allows travel in the opposite direction of nodes' order
         is_one_way = _is_path_one_way(path, bidirectional, oneway_values)
         if is_one_way and _is_path_reversed(path, reversed_values):
-            path_nodes.reverse()
+            nodes.reverse()
 
         # set the oneway attribute, but only if when not forcing all edges to
         # oneway with the all_oneway setting. With the all_oneway setting, you
@@ -780,56 +749,12 @@ def _add_paths(G, paths, bidirectional=False):
         if not settings.all_oneway:
             path["oneway"] = is_one_way
 
-        # zip together path nodes to get tuples like [(0,1), (1,2), (2,3)]
-        path_edges = list(zip(path_nodes[:-1], path_nodes[1:]))
-        G.add_edges_from(path_edges, **path)
-
-        # if the path is NOT one-way, reverse direction of each edge and add
-        # this path going the opposite direction too
+        # zip path nodes to get (u, v) tuples like [(0,1), (1,2), (2,3)]. if
+        # the path is NOT one-way, reverse direction of each edge and add this
+        # path going the opposite direction too
+        edges = list(zip(nodes[:-1], nodes[1:]))
         if not is_one_way:
-            path_edges_reversed = [(v, u) for u, v in path_edges]
-            G.add_edges_from(path_edges_reversed, **path)
+            edges.extend([(v, u) for u, v in edges])
 
-
-class _OSMContentHandler(xml.sax.handler.ContentHandler):
-    """
-    SAX content handler for OSM XML.
-
-    Used to build an Overpass-like response JSON object in self.object. For format
-    notes, see http://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes
-    and http://overpass-api.de/output_formats.html#json
-    """
-
-    def __init__(self):
-        self._element = None
-        self.object = {"elements": []}
-
-    def startElement(self, name, attrs):
-        if name == "osm":
-            self.object.update({k: attrs[k] for k in attrs.keys() if k in {"version", "generator"}})
-
-        elif name in {"node", "way"}:
-            self._element = dict(type=name, tags={}, nodes=[], **attrs)
-            self._element.update({k: float(attrs[k]) for k in attrs.keys() if k in {"lat", "lon"}})
-            self._element.update(
-                {
-                    k: int(attrs[k])
-                    for k in attrs.keys()
-                    if k in {"id", "uid", "version", "changeset"}
-                }
-            )
-
-        elif name == "tag":
-            self._element["tags"].update({attrs["k"]: attrs["v"]})
-
-        elif name == "nd":
-            self._element["nodes"].append(int(attrs["ref"]))
-
-        elif name == "relation":
-            # Placeholder for future relation support.
-            # Look for nested members and tags.
-            pass
-
-    def endElement(self, name):
-        if name in {"node", "way"}:
-            self.object["elements"].append(self._element)
+        # add all the edge tuples and give them the path's tag:value attrs
+        G.add_edges_from(edges, **path)

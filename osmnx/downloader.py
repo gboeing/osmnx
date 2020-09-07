@@ -1,5 +1,6 @@
 """Interact with the OSM APIs."""
 
+import bz2
 import datetime as dt
 import hashlib
 import json
@@ -8,6 +9,7 @@ import math
 import os
 import re
 import time
+import xml.sax
 from collections import OrderedDict
 
 import requests
@@ -36,7 +38,7 @@ def _get_osm_filter(network_type):
     # define preset queries to send to the API. specifying way["highway"]
     # means that all ways returned must have a highway tag. the filters then
     # remove ways by tag/value.
-    filters = {}
+    filters = dict()
 
     # driving: filter out un-drivable roads, service roads, private ways, and
     # anything specifying motor=no. also filter out any non-service roads that
@@ -307,9 +309,9 @@ def _make_overpass_settings():
 
 def _make_overpass_polygon_coord_strs(polygon):
     """
-    Subdivide query polygon and return list of sub-divided polygon coordinate strings.
+    Subdivide query polygon and return list of coordinate strings.
 
-    project to utm, divide polygon up into sub-polygons if area exceeds a
+    Project to utm, divide polygon up into sub-polygons if area exceeds a
     max size (in meters), project back to lat-lng, then get a list of
     polygon(s) exterior coordinates
 
@@ -327,10 +329,79 @@ def _make_overpass_polygon_coord_strs(polygon):
     gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj)
     geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
     polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
-    utils.log(
-        f"Requesting network data within polygon from API in {len(polygon_coord_strs)} request(s)"
-    )
+    utils.log(f"Requesting data within polygon from API in {len(polygon_coord_strs)} request(s)")
     return polygon_coord_strs
+
+
+def _create_overpass_query(polygon_coord_str, tags):
+    """
+    Create an overpass query string based on passed tags.
+
+    Parameters
+    ----------
+    polygon_coord_str : list
+        list of lat lng coordinates
+    tags : dict
+        dict of tags used for finding geometry in the selected area
+
+    Returns
+    -------
+    query : string
+    """
+    # create overpass settings string
+    overpass_settings = _make_overpass_settings()
+
+    # make sure every value in dict is bool, str, or list of str
+    error_msg = "tags must be a dict with values of bool, str, or list of str"
+    if not isinstance(tags, dict):
+        raise TypeError(error_msg)
+
+    tags_dict = dict()
+    for key, value in tags.items():
+
+        if isinstance(value, bool):
+            tags_dict[key] = value
+
+        elif isinstance(value, str):
+            tags_dict[key] = [value]
+
+        elif isinstance(value, list):
+            if not all(isinstance(s, str) for s in value):
+                raise TypeError(error_msg)
+            tags_dict[key] = value
+
+        else:
+            raise TypeError(error_msg)
+
+    # convert the tags dict into a list of {tag:value} dicts
+    tags_list = []
+    for key, value in tags_dict.items():
+        if isinstance(value, bool):
+            tags_list.append({key: value})
+        else:
+            for value_item in value:
+                tags_list.append({key: value_item})
+
+    # add node/way/relation query components one at a time
+    components = []
+    for d in tags_list:
+        for key, value in d.items():
+
+            if isinstance(value, bool):
+                # if bool (ie, True) just pass the key, no value
+                tag_str = f"['{key}'](poly:'{polygon_coord_str}');(._;>;);"
+            else:
+                # otherwise, pass "key"="value"
+                tag_str = f"['{key}'='{value}'](poly:'{polygon_coord_str}');(._;>;);"
+
+            for kind in ("node", "way", "relation"):
+                components.append(f"({kind}{tag_str});")
+
+    # finalize query and return
+    components = "".join(components)
+    query = f"{overpass_settings};({components});out;"
+
+    return query
 
 
 def _osm_net_download(polygon, network_type, custom_filter):
@@ -356,12 +427,14 @@ def _osm_net_download(polygon, network_type, custom_filter):
         osm_filter = custom_filter
     else:
         osm_filter = _get_osm_filter(network_type)
+
     response_jsons = []
 
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
 
-    # subdivide query polygon and get list of sub-divided polygon coordinate strings
+    # subdivide query polygon and get list of sub-divided polygon coordinate
+    # strings
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
 
     # pass each polygon exterior coordinates in the list to the API, one at a
@@ -377,9 +450,48 @@ def _osm_net_download(polygon, network_type, custom_filter):
     return response_jsons
 
 
+def _osm_geometry_download(polygon, tags):
+    """
+    Download all OSM geometry within some polygon from the Overpass API.
+
+    Note that if a polygon is passed-in, the query will be limited to the
+    exterior ring only.
+
+    Parameters
+    ----------
+    polygon : shapely.geometry.Polygon
+        geographic boundaries to fetch geometry within
+    tags : dict
+        dict of tags used for finding geometry in the selected area
+
+    Returns
+    -------
+    response_jsons : list
+        list of JSON responses from the Overpass server
+    """
+    response_jsons = []
+
+    # subdivide query polygon and get list of sub-divided polygon coordinate
+    # strings
+    polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
+
+    # pass the exterior coordinates of each polygon in the list to the API,
+    # one at a time
+    for polygon_coord_str in polygon_coord_strs:
+        query_str = _create_overpass_query(polygon_coord_str, tags)
+        response_json = overpass_request(data={"data": query_str})
+        response_jsons.append(response_json)
+
+    utils.log(
+        f"Got all geometry data within polygon from API in {len(polygon_coord_strs)} request(s)"
+    )
+
+    return response_jsons
+
+
 def _osm_polygon_download(query, limit=1, polygon_geojson=1):
     """
-    Geocode a place and download its boundary geometry from OSM's Nominatim API.
+    Geocode a place and download its boundary geometry from Nominatim API.
 
     Parameters
     ----------
@@ -560,3 +672,85 @@ def overpass_request(data, pause=None, error_pause=60):
 
         _save_to_cache(prepared_url, response_json)
         return response_json
+
+
+def _overpass_json_from_file(filepath):
+    """
+    Read OSM XML from file and return Overpass-like JSON.
+
+    Parameters
+    ----------
+    filepath : string
+        path to file containing OSM XML data
+
+    Returns
+    -------
+    OSMContentHandler object
+    """
+
+    def _opener(filepath):
+        _, ext = os.path.splitext(filepath)
+        if ext == ".bz2":
+            return bz2.BZ2File(filepath)
+        else:
+            # assume an unrecognized file extension is just XML
+            return open(filepath, mode="rb")
+
+    with _opener(filepath) as file:
+        handler = _OSMContentHandler()
+        xml.sax.parse(file, handler)
+        return handler.object
+
+
+class _OSMContentHandler(xml.sax.handler.ContentHandler):
+    """
+    SAX content handler for OSM XML.
+
+    Used to build an Overpass-like response JSON object in self.object. For format
+    notes, see http://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes
+    and http://overpass-api.de/output_formats.html#json
+    """
+
+    def __init__(self):
+        self._element = None
+        self.object = {"elements": []}
+
+    def startElement(self, name, attrs):
+        if name == "osm":
+            self.object.update({k: attrs[k] for k in attrs.keys() if k in {"version", "generator"}})
+
+        elif name in {"node", "way"}:
+            self._element = dict(type=name, tags={}, nodes=[], **attrs)
+            self._element.update({k: float(attrs[k]) for k in attrs.keys() if k in {"lat", "lon"}})
+            self._element.update(
+                {
+                    k: int(attrs[k])
+                    for k in attrs.keys()
+                    if k in {"id", "uid", "version", "changeset"}
+                }
+            )
+
+        elif name == "relation":
+            self._element = dict(type=name, tags={}, members=[], **attrs)
+            self._element.update(
+                {
+                    k: int(attrs[k])
+                    for k in attrs.keys()
+                    if k in {"id", "uid", "version", "changeset"}
+                }
+            )
+
+        elif name == "tag":
+            self._element["tags"].update({attrs["k"]: attrs["v"]})
+
+        elif name == "nd":
+            self._element["nodes"].append(int(attrs["ref"]))
+
+        elif name == "member":
+            self._element["members"].append(
+                {k: (int(attrs[k]) if k == "ref" else attrs[k]) for k in attrs.keys()}
+            )
+
+    def endElement(self, name):
+        if name in {"node", "way", "relation"}:
+            self.object["elements"].append(self._element)

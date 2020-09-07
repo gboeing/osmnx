@@ -7,7 +7,6 @@ import matplotlib as mpl
 mpl.use("Agg")
 
 import bz2
-import json
 import logging as lg
 import os
 import shutil
@@ -52,7 +51,7 @@ ox.config(
 location_point = (37.791427, -122.410018)
 address = "600 Montgomery St, San Francisco, California, USA"
 place1 = "Piedmont, California, USA"
-place2 = {"neighborhood": "Financial District", "city": "Los Angeles", "state": "California"}
+place2 = "Bunker Hill, Los Angeles, California"
 p = (
     "POLYGON ((-122.262 37.869, -122.255 37.869, -122.255 37.874,"
     "-122.262 37.874, -122.262 37.869))"
@@ -375,7 +374,10 @@ def test_get_network_methods():
     )
 
     G = ox.graph_from_point(
-        location_point, dist=500, dist_type="network", network_type="all_private",
+        location_point,
+        dist=500,
+        dist_type="network",
+        network_type="all_private",
     )
 
 
@@ -408,46 +410,47 @@ def test_footprints():
     gdf = ox.footprints_from_address(address, dist=300)
     fig, ax = ox.plot_footprints(gdf)
 
-    # new_river_head.json contains a relation with 1 outer closed way and 2
-    # inner closed ways inner way 665593284 is directly tagged as a building
-    # and should create its own polygon
-    with open("tests/input_data/new_river_head.json", "r") as read_file:
-        new_river_head_responses = [json.load(read_file)]
-    new_river_head_gdf = ox.footprints._create_footprints_gdf(responses=new_river_head_responses)
-    assert 665593284 in new_river_head_gdf.index
-    assert new_river_head_gdf.loc[9246394]["geometry"].type == "Polygon"
-    assert len(new_river_head_gdf.loc[9246394, "geometry"].interiors) == 2
 
-    # clapham_common.json contains a relation with 5 outer rings and 1
-    # inner ring. One of the outer rings is a chain of open ways
-    with open("tests/input_data/clapham_common.json", "r") as read_file:
-        clapham_common_responses = [json.load(read_file)]
-    clapham_common_gdf = ox.footprints._create_footprints_gdf(
-        footprint_type="leisure", responses=clapham_common_responses
+def test_geometries():
+
+    # geometries_from_bbox - bounding box query that should return an empty GeoDataFrame
+    gdf = ox.geometries_from_bbox(50.5912, 50.5786, -2.4293, -2.4544, tags={"building": True})
+
+    # geometries_from_bbox - succesful
+    north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
+    gdf = ox.geometries_from_bbox(
+        north, south, east, west, tags={"landuse": True, "building": True, "highway": True}
     )
-    assert clapham_common_gdf.loc[1290065]["geometry"].type == "MultiPolygon"
 
-    # relation_no_outer.json contains a relation with 0 outer rings and 1
-    # inner ring
-    with open("tests/input_data/relation_no_outer.json", "r") as read_file:
-        relation_no_outer_responses = [json.load(read_file)]
-    ox.footprints._create_footprints_gdf(responses=relation_no_outer_responses)
+    # geometries_from_point - tests multipolygon creation
+    gdf = ox.geometries_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)
 
-    # inner_chain.json contains a relation with 1 outer rings and several
-    # inner rings one of which is a chain of open ways
-    with open("tests/input_data/inner_chain.json", "r") as read_file:
-        inner_chain_responses = [json.load(read_file)]
-    ox.footprints._create_footprints_gdf(responses=inner_chain_responses)
+    # geometries_from_address
+    gdf = ox.geometries_from_address(address, tags={"amenity": "school"})
 
-    # mis_tagged_bus_route.json contains a relation with out 'inner' or
-    # 'inner' rings
-    with open("tests/input_data/mis_tagged_bus_route.json", "r") as read_file:
-        mis_tagged_bus_route_responses = [json.load(read_file)]
-    ox.footprints._create_footprints_gdf(responses=mis_tagged_bus_route_responses)
+    # geometries_from_place - includes test of list of places
+    tags = {
+        "amenity": True,
+        "landuse": ["retail", "commercial"],
+        "highway": "primary",
+        "power": "substation",
+    }
+    gdf = ox.geometries_from_place([place1], tags=tags)
 
-    # test plotting multipolygon
-    fig, ax = ox.plot_footprints(clapham_common_gdf)
+    # geometries_from_xml - tests error handling of clipped XMLs with incomplete geometry
+    gdf = ox.geometries_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")
 
-    # should raise an exception: polygon or responses must be provided
-    with pytest.raises(ValueError):
-        ox.footprints._create_footprints_gdf(polygon=None, responses=None)
+
+def test_geometries_from_xml():
+    # test loading a geodataframe from a local .osm xml file
+
+    with bz2.BZ2File("tests/input_data/West-Oakland.osm.bz2") as input:
+        handle, temp_filename = tempfile.mkstemp(suffix=".osm")
+        os.write(handle, input.read())
+        os.close(handle)
+
+    for filename in ("tests/input_data/West-Oakland.osm.bz2", temp_filename):
+        GDF = ox.geometries_from_xml(filename)
+        assert "Willow Street" in GDF["name"].values
+
+    os.remove(temp_filename)

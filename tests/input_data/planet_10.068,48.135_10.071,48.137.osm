@@ -1,0 +1,970 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version="0.6" generator="osmconvert 0.8.11" timestamp="2020-08-10T00:00:00Z">
+	<bounds minlat="48.135" minlon="10.068" maxlat="48.137" maxlon="10.071"/>
+	<node id="51283125" lat="48.1352911" lon="10.0689516" version="1"/>
+	<node id="51283128" lat="48.1360672" lon="10.0689326" version="1"/>
+	<node id="51283132" lat="48.1363799" lon="10.0702067" version="1"/>
+	<node id="274969423" lat="48.1360495" lon="10.0704523" version="1"/>
+	<node id="274969425" lat="48.135108" lon="10.0708065" version="1"/>
+	<node id="274969426" lat="48.1354322" lon="10.0707705" version="1"/>
+	<node id="274969427" lat="48.1356574" lon="10.0706984" version="1"/>
+	<node id="274969428" lat="48.1358655" lon="10.0705663" version="1"/>
+	<node id="274969431" lat="48.1357951" lon="10.0697323" version="1">
+		<tag k="highway" v="turning_circle"/>
+	</node>
+	<node id="274969432" lat="48.1357324" lon="10.0697339" version="1"/>
+	<node id="274969433" lat="48.1356495" lon="10.0697486" version="1"/>
+	<node id="274969434" lat="48.1356001" lon="10.069799" version="1"/>
+	<node id="274969435" lat="48.1355744" lon="10.0698671" version="1"/>
+	<node id="274969436" lat="48.135564" lon="10.0699517" version="1"/>
+	<node id="274969437" lat="48.1356178" lon="10.0705644" version="1"/>
+	<node id="274969446" lat="48.1350112" lon="10.069702" version="1"/>
+	<node id="461157922" lat="48.135273" lon="10.0682089" version="1"/>
+	<node id="461157923" lat="48.135273" lon="10.0686018" version="1"/>
+	<node id="461157925" lat="48.1352217" lon="10.0689265" version="1"/>
+	<node id="461157927" lat="48.1350667" lon="10.0694178" version="1"/>
+	<node id="1605430071" lat="48.1353718" lon="10.0690539" version="1"/>
+	<node id="2800657855" lat="48.135994" lon="10.070785" version="1"/>
+	<node id="2800657856" lat="48.1359942" lon="10.0708623" version="1"/>
+	<node id="2800657857" lat="48.1360076" lon="10.0708622" version="1"/>
+	<node id="2800657858" lat="48.1360078" lon="10.0709159" version="1"/>
+	<node id="2800657859" lat="48.1358879" lon="10.0707858" version="1"/>
+	<node id="2800657860" lat="48.135961" lon="10.0707853" version="1"/>
+	<node id="2801219610" lat="48.1358111" lon="10.0702591" version="1"/>
+	<node id="2801219611" lat="48.1358112" lon="10.070352" version="1"/>
+	<node id="2801219612" lat="48.1357941" lon="10.070352" version="1"/>
+	<node id="2801219613" lat="48.1357941" lon="10.0703973" version="1"/>
+	<node id="2801219614" lat="48.1358001" lon="10.0704037" version="1"/>
+	<node id="2801219615" lat="48.1357274" lon="10.0702887" version="1"/>
+	<node id="2801219616" lat="48.1357317" lon="10.0702815" version="1"/>
+	<node id="2801219617" lat="48.1357317" lon="10.0702363" version="1"/>
+	<node id="2801219618" lat="48.1357945" lon="10.0702361" version="1"/>
+	<node id="2801219619" lat="48.1357945" lon="10.0702591" version="1"/>
+	<node id="2801219620" lat="48.1360537" lon="10.0700414" version="1"/>
+	<node id="2801219621" lat="48.1359907" lon="10.0700418" version="1"/>
+	<node id="2801219622" lat="48.1359908" lon="10.070064" version="1"/>
+	<node id="2801219623" lat="48.1359549" lon="10.0700642" version="1"/>
+	<node id="2801219624" lat="48.1360384" lon="10.0700859" version="1"/>
+	<node id="2801219625" lat="48.1360538" lon="10.0700858" version="1"/>
+	<node id="2801219626" lat="48.1359997" lon="10.0697829" version="1"/>
+	<node id="2801219627" lat="48.1359992" lon="10.0698673" version="1"/>
+	<node id="2801219628" lat="48.1359624" lon="10.0698668" version="1"/>
+	<node id="2801219629" lat="48.1359104" lon="10.069866" version="1"/>
+	<node id="2801219630" lat="48.1359108" lon="10.0698114" version="1"/>
+	<node id="2801219631" lat="48.135988" lon="10.0697827" version="1"/>
+	<node id="2801219632" lat="48.1359224" lon="10.0693668" version="1"/>
+	<node id="2801219633" lat="48.1359227" lon="10.0695258" version="1"/>
+	<node id="2801219634" lat="48.1358825" lon="10.0695259" version="1"/>
+	<node id="2801219635" lat="48.1358826" lon="10.0695536" version="1"/>
+	<node id="2801219636" lat="48.1358163" lon="10.0695538" version="1"/>
+	<node id="2801219637" lat="48.1358162" lon="10.0695011" version="1"/>
+	<node id="2801219638" lat="48.1358424" lon="10.0695011" version="1"/>
+	<node id="2801219639" lat="48.1358422" lon="10.0693671" version="1"/>
+	<node id="2801219650" lat="48.135542" lon="10.0705758" version="1"/>
+	<node id="2801219651" lat="48.1354575" lon="10.070576" version="1"/>
+	<node id="2801219652" lat="48.1354574" lon="10.0704849" version="1"/>
+	<node id="2801219653" lat="48.1355316" lon="10.0703895" version="1"/>
+	<node id="2801219654" lat="48.1355318" lon="10.0705121" version="1"/>
+	<node id="2801219655" lat="48.1355419" lon="10.0705121" version="1"/>
+	<node id="2801219656" lat="48.1354033" lon="10.0699695" version="1"/>
+	<node id="2801219657" lat="48.1354579" lon="10.06997" version="1"/>
+	<node id="2801219658" lat="48.1355066" lon="10.0699705" version="1"/>
+	<node id="2801219659" lat="48.1355058" lon="10.0701576" version="1"/>
+	<node id="2801219660" lat="48.1354107" lon="10.0701567" version="1"/>
+	<node id="2801219661" lat="48.135403" lon="10.0700404" version="1"/>
+	<node id="2801219662" lat="48.1354008" lon="10.0695737" version="1"/>
+	<node id="2801219663" lat="48.1354459" lon="10.0695737" version="1"/>
+	<node id="2801219664" lat="48.1354936" lon="10.0695737" version="1"/>
+	<node id="2801219665" lat="48.1354936" lon="10.069761" version="1"/>
+	<node id="2801219666" lat="48.1354009" lon="10.069761" version="1"/>
+	<node id="2801219667" lat="48.1354009" lon="10.0697115" version="1"/>
+	<node id="2801219668" lat="48.1352615" lon="10.0696407" version="1"/>
+	<node id="2801219669" lat="48.1351735" lon="10.0696403" version="1"/>
+	<node id="2801219670" lat="48.1351635" lon="10.0698333" version="1"/>
+	<node id="2801219671" lat="48.1352677" lon="10.0698338" version="1"/>
+	<node id="2801219672" lat="48.1352235" lon="10.0700177" version="1"/>
+	<node id="2801219673" lat="48.1350959" lon="10.0699932" version="1"/>
+	<node id="2801219674" lat="48.135096" lon="10.0700796" version="1"/>
+	<node id="2801219675" lat="48.1351371" lon="10.0700795" version="1"/>
+	<node id="2801219676" lat="48.1351372" lon="10.0701623" version="1"/>
+	<node id="2801219677" lat="48.1352236" lon="10.0701621" version="1"/>
+	<node id="2801219678" lat="48.1351216" lon="10.0704684" version="1"/>
+	<node id="2801219679" lat="48.135039" lon="10.0704435" version="1"/>
+	<node id="2801219680" lat="48.1350375" lon="10.0706011" version="1"/>
+	<node id="2801219682" lat="48.1351162" lon="10.0705319" version="1"/>
+	<node id="2801219683" lat="48.1351212" lon="10.070532" version="1"/>
+	<node id="2801219684" lat="48.1352892" lon="10.070477" version="1"/>
+	<node id="2801219685" lat="48.1352093" lon="10.0704764" version="1"/>
+	<node id="2801219686" lat="48.135209" lon="10.070558" version="1"/>
+	<node id="2801219687" lat="48.135198" lon="10.070558" version="1"/>
+	<node id="2801219688" lat="48.1351976" lon="10.0706681" version="1"/>
+	<node id="2801219689" lat="48.1352386" lon="10.0706684" version="1"/>
+	<node id="2801219690" lat="48.1352886" lon="10.0706688" version="1"/>
+	<node id="2801219691" lat="48.1352889" lon="10.0705644" version="1"/>
+	<node id="2801219724" lat="48.135325" lon="10.0709353" version="1"/>
+	<node id="2801219725" lat="48.1352938" lon="10.0709368" version="1"/>
+	<node id="2801219726" lat="48.1352937" lon="10.0709299" version="1"/>
+	<node id="2823258142" lat="48.1358179" lon="10.0699322" version="1"/>
+	<node id="2823258143" lat="48.1358252" lon="10.0700178" version="1"/>
+	<node id="2823258144" lat="48.135768" lon="10.0700288" version="1"/>
+	<node id="2823258145" lat="48.1357607" lon="10.0699432" version="1"/>
+	<node id="2839402038" lat="48.1359945" lon="10.070916" version="1"/>
+	<node id="2839402039" lat="48.1359947" lon="10.0709784" version="1"/>
+	<node id="2839402040" lat="48.1359498" lon="10.0709787" version="1"/>
+	<node id="2839402041" lat="48.1357011" lon="10.0707609" version="1"/>
+	<node id="2839402042" lat="48.1357218" lon="10.0708552" version="1"/>
+	<node id="2839402044" lat="48.1357165" lon="10.0708735" version="1"/>
+	<node id="2839402045" lat="48.1356833" lon="10.0708898" version="1"/>
+	<node id="2839402046" lat="48.1356714" lon="10.0708816" version="1"/>
+	<node id="2839402047" lat="48.1356533" lon="10.0707991" version="1"/>
+	<node id="2839402048" lat="48.1356589" lon="10.0707816" version="1"/>
+	<node id="2871476945" lat="48.1351577" lon="10.0686231" version="1"/>
+	<node id="2871476946" lat="48.1351071" lon="10.0691144" version="1"/>
+	<node id="4743367117" lat="48.1351634" lon="10.0698888" version="1"/>
+	<node id="4743367118" lat="48.1352134" lon="10.0698891" version="1"/>
+	<node id="4743367119" lat="48.1352135" lon="10.0698335" version="1"/>
+	<node id="4743367120" lat="48.1352679" lon="10.0697328" version="1"/>
+	<node id="4743372521" lat="48.1352613" lon="10.0697328" version="1"/>
+	<node id="4743372522" lat="48.1351732" lon="10.0697673" version="1"/>
+	<node id="4743372523" lat="48.1351637" lon="10.0697672" version="1"/>
+	<node id="4743372524" lat="48.1350379" lon="10.0705533" version="1"/>
+	<node id="4743372525" lat="48.1350276" lon="10.0705532" version="1"/>
+	<node id="4743372526" lat="48.1350386" lon="10.0705007" version="1"/>
+	<node id="4743372527" lat="48.135028" lon="10.0705005" version="1"/>
+	<node id="4743372528" lat="48.1350837" lon="10.0704442" version="1"/>
+	<node id="4743372529" lat="48.1350836" lon="10.0704678" version="1"/>
+	<node id="4743372530" lat="48.1351159" lon="10.0705851" version="1"/>
+	<node id="4743372531" lat="48.1351022" lon="10.0705849" version="1"/>
+	<node id="4743372532" lat="48.1350826" lon="10.0705846" version="1"/>
+	<node id="4743372533" lat="48.1350824" lon="10.0706018" version="1"/>
+	<node id="4743372534" lat="48.135139" lon="10.0700178" version="1"/>
+	<node id="4743372535" lat="48.135139" lon="10.0699931" version="1"/>
+	<node id="5022706396" lat="48.1359619" lon="10.0699559" version="1"/>
+	<node id="5022706397" lat="48.1360164" lon="10.0699567" version="1"/>
+	<node id="5022706398" lat="48.136017" lon="10.0698676" version="1"/>
+	<node id="5022706399" lat="48.135897" lon="10.0698112" version="1"/>
+	<node id="5022706400" lat="48.1358974" lon="10.0697542" version="1"/>
+	<node id="5022706401" lat="48.1358973" lon="10.0697677" version="1"/>
+	<node id="5022706402" lat="48.1358971" lon="10.0697984" version="1"/>
+	<node id="5022706403" lat="48.1359067" lon="10.0698114" version="1"/>
+	<node id="5022706404" lat="48.1359065" lon="10.0697544" version="1"/>
+	<node id="5022706405" lat="48.1359275" lon="10.0697547" version="1"/>
+	<node id="5022706406" lat="48.1359278" lon="10.0697159" version="1"/>
+	<node id="5022706407" lat="48.1359885" lon="10.0697168" version="1"/>
+	<node id="5022706408" lat="48.1359016" lon="10.0696341" version="1"/>
+	<node id="5022706409" lat="48.1359014" lon="10.0695498" version="1"/>
+	<node id="5022706410" lat="48.1359718" lon="10.0695495" version="1"/>
+	<node id="5022706411" lat="48.1359719" lon="10.0696339" version="1"/>
+	<node id="5022706412" lat="48.1356944" lon="10.0694356" version="1"/>
+	<node id="5022706413" lat="48.1357035" lon="10.0694213" version="1"/>
+	<node id="5022706414" lat="48.1357038" lon="10.0694115" version="1"/>
+	<node id="5022706415" lat="48.1357004" lon="10.0694016" version="1"/>
+	<node id="5022706416" lat="48.1357593" lon="10.0691914" version="1"/>
+	<node id="5022706417" lat="48.1357334" lon="10.0691919" version="1"/>
+	<node id="5022706418" lat="48.1357611" lon="10.0693966" version="1"/>
+	<node id="5022706419" lat="48.1357597" lon="10.0692421" version="1"/>
+	<node id="5022706420" lat="48.1357339" lon="10.0692426" version="1"/>
+	<node id="5022707421" lat="48.1357343" lon="10.0692865" version="1"/>
+	<node id="5022707422" lat="48.135679" lon="10.0692876" version="1"/>
+	<node id="5022707423" lat="48.1356621" lon="10.069302" version="1"/>
+	<node id="5022707424" lat="48.1356625" lon="10.069348" version="1"/>
+	<node id="5022707425" lat="48.1356488" lon="10.0693731" version="1"/>
+	<node id="5022707426" lat="48.1355988" lon="10.0694176" version="1"/>
+	<node id="5022707427" lat="48.1355982" lon="10.0694916" version="1"/>
+	<node id="5022707428" lat="48.1356396" lon="10.0695278" version="1"/>
+	<node id="5022707429" lat="48.1356515" lon="10.0695174" version="1"/>
+	<node id="5022707430" lat="48.1356604" lon="10.0695249" version="1"/>
+	<node id="5022707431" lat="48.1356607" lon="10.0695534" version="1"/>
+	<node id="5022707432" lat="48.1356442" lon="10.069568" version="1"/>
+	<node id="5022707433" lat="48.1356446" lon="10.0696192" version="1"/>
+	<node id="5022707434" lat="48.1356684" lon="10.0696405" version="1"/>
+	<node id="5022707435" lat="48.1356951" lon="10.069616" version="1"/>
+	<node id="5022707436" lat="48.1357028" lon="10.0696236" version="1"/>
+	<node id="5022707437" lat="48.1357248" lon="10.0696024" version="1"/>
+	<node id="5022707438" lat="48.135724" lon="10.069516" version="1"/>
+	<node id="5022707439" lat="48.1357127" lon="10.0695054" version="1"/>
+	<node id="5022707440" lat="48.1357123" lon="10.0694579" version="1"/>
+	<node id="5022707441" lat="48.1356959" lon="10.0694438" version="1"/>
+	<node id="5022707442" lat="48.1357062" lon="10.0693977" version="1"/>
+	<node id="5022707443" lat="48.1357052" lon="10.0692871" version="1"/>
+	<node id="5022707444" lat="48.1354459" lon="10.0694933" version="1"/>
+	<node id="5022707445" lat="48.1353877" lon="10.0694933" version="1"/>
+	<node id="5022707446" lat="48.1353877" lon="10.0695737" version="1"/>
+	<node id="5022707447" lat="48.1353884" lon="10.0697115" version="1"/>
+	<node id="5022707448" lat="48.1353884" lon="10.0696288" version="1"/>
+	<node id="5022707449" lat="48.1354008" lon="10.0696288" version="1"/>
+	<node id="5022707450" lat="48.1354583" lon="10.0698752" version="1"/>
+	<node id="5022707451" lat="48.1354037" lon="10.0698747" version="1"/>
+	<node id="5022707452" lat="48.1354037" lon="10.0701459" version="1"/>
+	<node id="5022707453" lat="48.1354037" lon="10.0701239" version="1"/>
+	<node id="5022707454" lat="48.1354104" lon="10.070113" version="1"/>
+	<node id="5022707455" lat="48.1354157" lon="10.070113" version="1"/>
+	<node id="5022707456" lat="48.135416" lon="10.0700405" version="1"/>
+	<node id="5022707457" lat="48.1354989" lon="10.0703895" version="1"/>
+	<node id="5022707458" lat="48.1354988" lon="10.0702844" version="1"/>
+	<node id="5022707459" lat="48.1354438" lon="10.0702845" version="1"/>
+	<node id="5022707460" lat="48.1354439" lon="10.0703897" version="1"/>
+	<node id="5022707461" lat="48.135444" lon="10.070485" version="1"/>
+	<node id="5022759804" lat="48.1350095" lon="10.0709927" version="1"/>
+	<node id="5022759809" lat="48.1351019" lon="10.0706354" version="1"/>
+	<node id="5022759810" lat="48.1351483" lon="10.0706362" version="1"/>
+	<node id="5022759811" lat="48.135149" lon="10.0705324" version="1"/>
+	<node id="5022759812" lat="48.135343" lon="10.0705648" version="1"/>
+	<node id="5022759813" lat="48.1353433" lon="10.0704774" version="1"/>
+	<node id="5022759814" lat="48.1358687" lon="10.0703518" version="1"/>
+	<node id="5022759815" lat="48.1358686" lon="10.0702589" version="1"/>
+	<node id="5022759816" lat="48.1358001" lon="10.0704414" version="1"/>
+	<node id="5022759817" lat="48.1357315" lon="10.0704416" version="1"/>
+	<node id="5022759818" lat="48.1357315" lon="10.0704242" version="1"/>
+	<node id="5022759819" lat="48.1356982" lon="10.0704243" version="1"/>
+	<node id="5022759820" lat="48.1356981" lon="10.0703225" version="1"/>
+	<node id="5022761421" lat="48.1356891" lon="10.070309" version="1"/>
+	<node id="5022761422" lat="48.1356891" lon="10.0702882" version="1"/>
+	<node id="5022761423" lat="48.135698" lon="10.0702741" version="1"/>
+	<node id="5022761424" lat="48.1357105" lon="10.0702741" version="1"/>
+	<node id="5022761425" lat="48.1357204" lon="10.0702887" version="1"/>
+	<node id="5022761426" lat="48.1360282" lon="10.0702922" version="1"/>
+	<node id="5022761427" lat="48.1360624" lon="10.070292" version="1"/>
+	<node id="5022761428" lat="48.1360621" lon="10.0701953" version="1"/>
+	<node id="5022761429" lat="48.1360387" lon="10.0701954" version="1"/>
+	<node id="5022761430" lat="48.1360279" lon="10.0701955" version="1"/>
+	<node id="5022761431" lat="48.136028" lon="10.0702251" version="1"/>
+	<node id="5022761432" lat="48.1360078" lon="10.0702252" version="1"/>
+	<node id="5022761433" lat="48.1360079" lon="10.0702631" version="1"/>
+	<node id="5022761434" lat="48.1359149" lon="10.0702637" version="1"/>
+	<node id="5022761435" lat="48.1359146" lon="10.0701407" version="1"/>
+	<node id="5022761436" lat="48.1359551" lon="10.0701405" version="1"/>
+	<node id="5022817964" lat="48.1360043" lon="10.0709783" version="1"/>
+	<node id="5022817965" lat="48.1360165" lon="10.0707848" version="1"/>
+	<node id="5022817966" lat="48.1360161" lon="10.0706824" version="1"/>
+	<node id="5022817967" lat="48.1359607" lon="10.0706828" version="1"/>
+	<node id="5022817969" lat="48.135911" lon="10.070979" version="1"/>
+	<node id="5022817974" lat="48.135838" lon="10.0709086" version="1"/>
+	<node id="5022817975" lat="48.1358701" lon="10.0709084" version="1"/>
+	<node id="5022817976" lat="48.1358883" lon="10.0709083" version="1"/>
+	<node id="5022817977" lat="48.1358882" lon="10.0708607" version="1"/>
+	<node id="5024186241" lat="48.1352215" lon="10.0709878" version="1"/>
+	<node id="5024186242" lat="48.1352434" lon="10.0709868" version="1"/>
+	<node id="5024186243" lat="48.1352424" lon="10.0709393" version="1"/>
+	<node id="5024186244" lat="48.1352606" lon="10.0709385" version="1"/>
+	<node id="5024186245" lat="48.1352605" lon="10.0709311" version="1"/>
+	<node id="5024186246" lat="48.1352684" lon="10.070917" version="1"/>
+	<node id="5024186247" lat="48.1352836" lon="10.0709163" version="1"/>
+	<node id="5937853361" lat="48.1360884" lon="10.0709714" version="1"/>
+	<node id="5937853362" lat="48.1363985" lon="10.0709026" version="1"/>
+	<node id="5937853375" lat="48.1362678" lon="10.0706391" version="1"/>
+	<node id="5937853376" lat="48.1362571" lon="10.0708055" version="1"/>
+	<node id="5937853377" lat="48.1361733" lon="10.0708214" version="1"/>
+	<node id="5937853378" lat="48.1361596" lon="10.0706595" version="1"/>
+	<node id="6199069340" lat="48.1361912" lon="10.0707279" version="1">
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Richard-Wagner-Straße"/>
+		<tag k="addr:country" v="DE"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="addr:housenumber" v="20"/>
+	</node>
+	<node id="6199069341" lat="48.1362784" lon="10.0707594" version="1"/>
+	<node id="6199069342" lat="48.1363405" lon="10.0707472" version="1"/>
+	<node id="6199069343" lat="48.13633" lon="10.0706269" version="1"/>
+	<node id="6199069344" lat="48.1362505" lon="10.0707272" version="1"/>
+	<node id="6199069345" lat="48.1362751" lon="10.0707226" version="1"/>
+	<node id="6199069346" lat="48.1363353" lon="10.0702491" version="1"/>
+	<node id="6199069347" lat="48.1363389" lon="10.0701874" version="1"/>
+	<node id="6199069349" lat="48.1361867" lon="10.0703028" version="1"/>
+	<node id="7119017425" lat="48.135072" lon="10.0708028" version="1"/>
+	<node id="7119017426" lat="48.1351331" lon="10.0708037" version="1"/>
+	<node id="7119017427" lat="48.1351258" lon="10.0706725" version="1"/>
+	<node id="7119017428" lat="48.1353329" lon="10.0707815" version="1"/>
+	<node id="7119017429" lat="48.1353298" lon="10.0706225" version="1"/>
+	<node id="7119017430" lat="48.135118" lon="10.0701524" version="1"/>
+	<node id="7119017431" lat="48.1351082" lon="10.0698644" version="1"/>
+	<node id="7119017436" lat="48.1355854" lon="10.0698381" version="1"/>
+	<node id="7119017437" lat="48.1355317" lon="10.0697616" version="1"/>
+	<node id="7119017438" lat="48.1355687" lon="10.0699137" version="1"/>
+	<node id="7119017439" lat="48.1355043" lon="10.0698674" version="1"/>
+	<node id="7119017440" lat="48.1359144" lon="10.0699363" version="1"/>
+	<node id="7119017441" lat="48.13582" lon="10.069838" version="1"/>
+	<node id="7119017442" lat="48.1358054" lon="10.069608" version="1"/>
+	<node id="7119017443" lat="48.1358721" lon="10.0695933" version="1"/>
+	<node id="7119017444" lat="48.1357474" lon="10.0696206" version="1"/>
+	<node id="7119017445" lat="48.1358455" lon="10.070411" version="1"/>
+	<node id="7119017446" lat="48.136008" lon="10.070478" version="1"/>
+	<node id="7119017447" lat="48.1360004" lon="10.0703316" version="1"/>
+	<way id="25129578" version="1">
+		<nd ref="274969446"/>
+		<tag k="name" v="Schwendier Weg"/>
+		<tag k="highway" v="residential"/>
+		<tag k="maxspeed" v="30"/>
+	</way>
+	<way id="25216931" version="1">
+		<nd ref="7119017425"/>
+		<nd ref="274969425"/>
+		<nd ref="7119017426"/>
+		<nd ref="7119017428"/>
+		<nd ref="274969426"/>
+		<nd ref="274969427"/>
+		<nd ref="274969428"/>
+		<nd ref="7119017446"/>
+		<nd ref="274969423"/>
+		<tag k="name" v="Goethestraße"/>
+		<tag k="highway" v="residential"/>
+		<tag k="maxspeed" v="30"/>
+	</way>
+	<way id="25216933" version="1">
+		<nd ref="274969431"/>
+		<nd ref="274969432"/>
+		<nd ref="274969433"/>
+		<nd ref="274969434"/>
+		<nd ref="7119017436"/>
+		<nd ref="274969435"/>
+		<nd ref="7119017438"/>
+		<nd ref="274969436"/>
+		<nd ref="274969437"/>
+		<nd ref="274969427"/>
+		<tag k="name" v="Haydnstraße"/>
+		<tag k="highway" v="residential"/>
+		<tag k="maxspeed" v="30"/>
+	</way>
+	<way id="25216934" version="1">
+		<nd ref="274969426"/>
+		<tag k="name" v="Beethovenstraße"/>
+		<tag k="highway" v="residential"/>
+		<tag k="maxspeed" v="30"/>
+	</way>
+	<way id="38842620" version="1">
+		<nd ref="461157922"/>
+		<nd ref="461157923"/>
+		<nd ref="461157925"/>
+		<nd ref="461157927"/>
+		<nd ref="274969446"/>
+		<tag k="highway" v="track"/>
+		<tag k="tracktype" v="grade3"/>
+	</way>
+	<way id="68700040" version="1">
+		<nd ref="1605430071"/>
+		<nd ref="51283128"/>
+		<nd ref="6199069347"/>
+		<nd ref="6199069346"/>
+	</way>
+	<way id="123874631" version="1">
+		<nd ref="274969423"/>
+		<nd ref="6199069349"/>
+		<nd ref="51283132"/>
+		<tag k="highway" v="track"/>
+		<tag k="surface" v="paved"/>
+		<tag k="tracktype" v="grade1"/>
+	</way>
+	<way id="247778550" version="1">
+		<nd ref="6199069347"/>
+		<nd ref="51283128"/>
+		<nd ref="51283125"/>
+		<nd ref="2871476945"/>
+	</way>
+	<way id="275436099" version="1">
+		<nd ref="2800657855"/>
+		<nd ref="2800657856"/>
+		<nd ref="2800657857"/>
+		<nd ref="2800657858"/>
+		<nd ref="2839402038"/>
+		<nd ref="2839402039"/>
+		<nd ref="2839402040"/>
+		<nd ref="5022817969"/>
+		<nd ref="5022817974"/>
+		<nd ref="5022817975"/>
+		<nd ref="5022817976"/>
+		<nd ref="5022817977"/>
+		<nd ref="2800657859"/>
+		<nd ref="2800657860"/>
+		<nd ref="2800657855"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Richard-Wagner-Straße"/>
+		<tag k="addr:housenumber" v="19"/>
+	</way>
+	<way id="275490754" version="1">
+		<nd ref="2801219610"/>
+		<nd ref="2801219611"/>
+		<nd ref="2801219612"/>
+		<nd ref="2801219613"/>
+		<nd ref="2801219614"/>
+		<nd ref="5022759816"/>
+		<nd ref="5022759817"/>
+		<nd ref="5022759818"/>
+		<nd ref="5022759819"/>
+		<nd ref="5022759820"/>
+		<nd ref="5022761421"/>
+		<nd ref="5022761422"/>
+		<nd ref="5022761423"/>
+		<nd ref="5022761424"/>
+		<nd ref="5022761425"/>
+		<nd ref="2801219615"/>
+		<nd ref="2801219616"/>
+		<nd ref="2801219617"/>
+		<nd ref="2801219618"/>
+		<nd ref="2801219619"/>
+		<nd ref="2801219610"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Goethestraße"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="building:levels" v="2"/>
+		<tag k="addr:housenumber" v="13"/>
+	</way>
+	<way id="275490755" version="1">
+		<nd ref="2801219620"/>
+		<nd ref="2801219621"/>
+		<nd ref="2801219622"/>
+		<nd ref="2801219623"/>
+		<nd ref="5022761436"/>
+		<nd ref="5022761435"/>
+		<nd ref="5022761434"/>
+		<nd ref="5022761433"/>
+		<nd ref="5022761432"/>
+		<nd ref="5022761431"/>
+		<nd ref="5022761430"/>
+		<nd ref="5022761429"/>
+		<nd ref="2801219624"/>
+		<nd ref="2801219625"/>
+		<nd ref="2801219620"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Goethestraße"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="building:levels" v="2"/>
+		<tag k="addr:housenumber" v="15"/>
+	</way>
+	<way id="275490756" version="1">
+		<nd ref="2801219626"/>
+		<nd ref="2801219627"/>
+		<nd ref="2801219628"/>
+		<nd ref="2801219629"/>
+		<nd ref="2801219630"/>
+		<nd ref="5022706403"/>
+		<nd ref="5022706399"/>
+		<nd ref="5022706402"/>
+		<nd ref="5022706401"/>
+		<nd ref="5022706400"/>
+		<nd ref="5022706404"/>
+		<nd ref="5022706405"/>
+		<nd ref="5022706406"/>
+		<nd ref="5022706407"/>
+		<nd ref="2801219631"/>
+		<nd ref="2801219626"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Haydnstraße"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="addr:housenumber" v="6"/>
+	</way>
+	<way id="275490757" version="1">
+		<nd ref="2801219632"/>
+		<nd ref="2801219633"/>
+		<nd ref="2801219634"/>
+		<nd ref="2801219635"/>
+		<nd ref="2801219636"/>
+		<nd ref="2801219637"/>
+		<nd ref="2801219638"/>
+		<nd ref="2801219639"/>
+		<nd ref="2801219632"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Haydnstraße"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="building:levels" v="2"/>
+		<tag k="addr:housenumber" v="7"/>
+	</way>
+	<way id="275490759" version="1">
+		<nd ref="2801219650"/>
+		<nd ref="2801219651"/>
+		<nd ref="2801219652"/>
+		<nd ref="5022707461"/>
+		<nd ref="5022707460"/>
+		<nd ref="5022707457"/>
+		<nd ref="2801219653"/>
+		<nd ref="2801219654"/>
+		<nd ref="2801219655"/>
+		<nd ref="2801219650"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Haydnstraße"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="building:levels" v="2"/>
+		<tag k="addr:housenumber" v="1"/>
+	</way>
+	<way id="275490760" version="1">
+		<nd ref="2801219656"/>
+		<nd ref="2801219657"/>
+		<nd ref="2801219658"/>
+		<nd ref="2801219659"/>
+		<nd ref="2801219660"/>
+		<nd ref="5022707452"/>
+		<nd ref="5022707453"/>
+		<nd ref="5022707454"/>
+		<nd ref="5022707455"/>
+		<nd ref="5022707456"/>
+		<nd ref="2801219661"/>
+		<nd ref="2801219656"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Haydnstraße"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="building:levels" v="2"/>
+		<tag k="addr:housenumber" v="3"/>
+	</way>
+	<way id="275490761" version="1">
+		<nd ref="2801219662"/>
+		<nd ref="2801219663"/>
+		<nd ref="2801219664"/>
+		<nd ref="2801219665"/>
+		<nd ref="2801219666"/>
+		<nd ref="2801219667"/>
+		<nd ref="5022707447"/>
+		<nd ref="5022707448"/>
+		<nd ref="5022707449"/>
+		<nd ref="2801219662"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Haydnstraße"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="building:levels" v="2"/>
+		<tag k="addr:housenumber" v="4"/>
+	</way>
+	<way id="275490762" version="1">
+		<nd ref="2801219668"/>
+		<nd ref="2801219669"/>
+		<nd ref="4743372522"/>
+		<nd ref="4743372523"/>
+		<nd ref="2801219670"/>
+		<nd ref="4743367119"/>
+		<nd ref="2801219671"/>
+		<nd ref="4743367120"/>
+		<nd ref="4743372521"/>
+		<nd ref="2801219668"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Schwendier Weg"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="building:levels" v="2"/>
+		<tag k="addr:housenumber" v="20"/>
+	</way>
+	<way id="275490765" version="1">
+		<nd ref="2801219672"/>
+		<nd ref="4743372534"/>
+		<nd ref="4743372535"/>
+		<nd ref="2801219673"/>
+		<nd ref="2801219674"/>
+		<nd ref="2801219675"/>
+		<nd ref="2801219676"/>
+		<nd ref="2801219677"/>
+		<nd ref="2801219672"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Schwendier Weg"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="addr:housenumber" v="18"/>
+	</way>
+	<way id="275490767" version="1">
+		<nd ref="2801219678"/>
+		<nd ref="4743372529"/>
+		<nd ref="4743372528"/>
+		<nd ref="2801219679"/>
+		<nd ref="4743372526"/>
+		<nd ref="4743372527"/>
+		<nd ref="4743372525"/>
+		<nd ref="4743372524"/>
+		<nd ref="2801219680"/>
+		<nd ref="4743372533"/>
+		<nd ref="4743372532"/>
+		<nd ref="4743372531"/>
+		<nd ref="4743372530"/>
+		<nd ref="2801219682"/>
+		<nd ref="2801219683"/>
+		<nd ref="2801219678"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Goethestraße"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="addr:housenumber" v="9"/>
+	</way>
+	<way id="275490770" version="1">
+		<nd ref="2801219684"/>
+		<nd ref="2801219685"/>
+		<nd ref="2801219686"/>
+		<nd ref="2801219687"/>
+		<nd ref="2801219688"/>
+		<nd ref="2801219689"/>
+		<nd ref="2801219690"/>
+		<nd ref="2801219691"/>
+		<nd ref="2801219684"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Goethestraße"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="building:levels" v="2"/>
+		<tag k="addr:housenumber" v="11"/>
+	</way>
+	<way id="275490779" version="1">
+		<nd ref="5022759804"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Goethestraße"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="building:levels" v="2"/>
+		<tag k="addr:housenumber" v="12"/>
+	</way>
+	<way id="275490781" version="1">
+		<nd ref="2801219724"/>
+		<nd ref="2801219725"/>
+		<nd ref="2801219726"/>
+		<nd ref="5024186247"/>
+		<nd ref="5024186246"/>
+		<nd ref="5024186245"/>
+		<nd ref="5024186244"/>
+		<nd ref="5024186243"/>
+		<nd ref="5024186242"/>
+		<nd ref="5024186241"/>
+		<nd ref="2801219724"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Beethovenstraße"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="building:levels" v="2"/>
+		<tag k="addr:housenumber" v="17"/>
+	</way>
+	<way id="275776236" version="1">
+		<nd ref="5937853361"/>
+		<nd ref="274969423"/>
+		<tag k="name" v="Richard-Wagner-Straße"/>
+		<tag k="highway" v="residential"/>
+		<tag k="maxspeed" v="30"/>
+	</way>
+	<way id="277703284" version="1">
+		<nd ref="6199069346"/>
+		<tag k="natural" v="grassland"/>
+	</way>
+	<way id="277881324" version="1">
+		<nd ref="2823258142"/>
+		<nd ref="2823258143"/>
+		<nd ref="2823258144"/>
+		<nd ref="2823258145"/>
+		<nd ref="2823258142"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="279740415" version="1">
+		<nd ref="2839402041"/>
+		<nd ref="2839402042"/>
+		<nd ref="2839402044"/>
+		<nd ref="2839402045"/>
+		<nd ref="2839402046"/>
+		<nd ref="2839402047"/>
+		<nd ref="2839402048"/>
+		<nd ref="2839402041"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Beethovenstraße"/>
+		<tag k="addr:housenumber" v="20"/>
+	</way>
+	<way id="283261654" version="1">
+		<nd ref="2871476945"/>
+		<nd ref="2871476946"/>
+		<tag k="landuse" v="farmland"/>
+	</way>
+	<way id="481398413" version="1">
+		<nd ref="4743367119"/>
+		<nd ref="4743367118"/>
+		<nd ref="4743367117"/>
+		<nd ref="2801219670"/>
+		<nd ref="4743367119"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="513995862" version="1">
+		<nd ref="2801219628"/>
+		<nd ref="2801219627"/>
+		<nd ref="5022706398"/>
+		<nd ref="5022706397"/>
+		<nd ref="5022706396"/>
+		<nd ref="2801219628"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="513995864" version="1">
+		<nd ref="5022706411"/>
+		<nd ref="5022706408"/>
+		<nd ref="5022706409"/>
+		<nd ref="5022706410"/>
+		<nd ref="5022706411"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="513995866" version="1">
+		<nd ref="5022706420"/>
+		<nd ref="5022706417"/>
+		<nd ref="5022706416"/>
+		<nd ref="5022706419"/>
+		<nd ref="5022706420"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="513995868" version="1">
+		<nd ref="5022707442"/>
+		<nd ref="5022707443"/>
+		<nd ref="5022707421"/>
+		<nd ref="5022706420"/>
+		<nd ref="5022706419"/>
+		<nd ref="5022706418"/>
+		<nd ref="5022707442"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="513995870" version="1">
+		<nd ref="5022707443"/>
+		<nd ref="5022707442"/>
+		<nd ref="5022706415"/>
+		<nd ref="5022706414"/>
+		<nd ref="5022706413"/>
+		<nd ref="5022706412"/>
+		<nd ref="5022707441"/>
+		<nd ref="5022707440"/>
+		<nd ref="5022707439"/>
+		<nd ref="5022707438"/>
+		<nd ref="5022707437"/>
+		<nd ref="5022707436"/>
+		<nd ref="5022707435"/>
+		<nd ref="5022707434"/>
+		<nd ref="5022707433"/>
+		<nd ref="5022707432"/>
+		<nd ref="5022707431"/>
+		<nd ref="5022707430"/>
+		<nd ref="5022707429"/>
+		<nd ref="5022707428"/>
+		<nd ref="5022707427"/>
+		<nd ref="5022707426"/>
+		<nd ref="5022707425"/>
+		<nd ref="5022707424"/>
+		<nd ref="5022707423"/>
+		<nd ref="5022707422"/>
+		<nd ref="5022707443"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+		<tag k="addr:city" v="Kirchberg an der Iller"/>
+		<tag k="addr:street" v="Haydnstraße"/>
+		<tag k="addr:postcode" v="88486"/>
+		<tag k="addr:housenumber" v="5"/>
+	</way>
+	<way id="513995874" version="1">
+		<nd ref="2801219663"/>
+		<nd ref="2801219662"/>
+		<nd ref="5022707446"/>
+		<nd ref="5022707445"/>
+		<nd ref="5022707444"/>
+		<nd ref="2801219663"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="513995876" version="1">
+		<nd ref="2801219657"/>
+		<nd ref="2801219656"/>
+		<nd ref="5022707451"/>
+		<nd ref="5022707450"/>
+		<nd ref="2801219657"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="513995877" version="1">
+		<nd ref="5022707460"/>
+		<nd ref="5022707459"/>
+		<nd ref="5022707458"/>
+		<nd ref="5022707457"/>
+		<nd ref="5022707460"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="514001387" version="1">
+		<nd ref="2801219682"/>
+		<nd ref="2801219683"/>
+		<nd ref="5022759811"/>
+		<nd ref="5022759810"/>
+		<nd ref="5022759809"/>
+		<nd ref="4743372531"/>
+		<nd ref="4743372530"/>
+		<nd ref="2801219682"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="514001388" version="1">
+		<nd ref="2801219684"/>
+		<nd ref="5022759813"/>
+		<nd ref="5022759812"/>
+		<nd ref="2801219691"/>
+		<nd ref="2801219684"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="514001389" version="1">
+		<nd ref="2801219610"/>
+		<nd ref="5022759815"/>
+		<nd ref="5022759814"/>
+		<nd ref="2801219611"/>
+		<nd ref="2801219610"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="514001390" version="1">
+		<nd ref="5022761430"/>
+		<nd ref="5022761429"/>
+		<nd ref="5022761428"/>
+		<nd ref="5022761427"/>
+		<nd ref="5022761426"/>
+		<nd ref="5022761431"/>
+		<nd ref="5022761430"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="514007867" version="1">
+		<nd ref="2839402040"/>
+		<nd ref="2839402039"/>
+		<nd ref="5022817964"/>
+		<nd ref="2839402040"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="514007868" version="1">
+		<nd ref="2800657860"/>
+		<nd ref="5022817967"/>
+		<nd ref="5022817966"/>
+		<nd ref="5022817965"/>
+		<nd ref="2800657855"/>
+		<nd ref="2800657860"/>
+		<tag k="source" v="Maps4BW ( LGL, www.lgl-bw.de) / DigitalGlobe Standard Imagery"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="628913513" version="1">
+		<nd ref="5937853361"/>
+		<nd ref="5937853362"/>
+		<tag k="highway" v="residential"/>
+	</way>
+	<way id="628913519" version="1">
+		<nd ref="5937853375"/>
+		<nd ref="6199069345"/>
+		<nd ref="6199069344"/>
+		<nd ref="5937853376"/>
+		<nd ref="5937853377"/>
+		<nd ref="5937853378"/>
+		<nd ref="5937853375"/>
+		<tag k="building" v="house"/>
+	</way>
+	<way id="662142284" version="1">
+		<nd ref="5937853375"/>
+		<nd ref="6199069343"/>
+		<nd ref="6199069342"/>
+		<nd ref="6199069341"/>
+		<nd ref="6199069345"/>
+		<nd ref="5937853375"/>
+		<tag k="building" v="yes"/>
+	</way>
+	<way id="761947188" version="1">
+		<nd ref="7119017425"/>
+		<tag k="access" v="private"/>
+		<tag k="highway" v="service"/>
+		<tag k="service" v="driveway"/>
+	</way>
+	<way id="761947189" version="1">
+		<nd ref="7119017426"/>
+		<nd ref="7119017427"/>
+		<tag k="access" v="private"/>
+		<tag k="highway" v="service"/>
+		<tag k="service" v="driveway"/>
+	</way>
+	<way id="761947190" version="1">
+		<nd ref="7119017428"/>
+		<nd ref="7119017429"/>
+		<tag k="access" v="private"/>
+		<tag k="highway" v="service"/>
+		<tag k="service" v="driveway"/>
+	</way>
+	<way id="761947191" version="1">
+		<nd ref="7119017430"/>
+		<tag k="access" v="private"/>
+		<tag k="highway" v="service"/>
+		<tag k="service" v="driveway"/>
+	</way>
+	<way id="761947192" version="1">
+		<nd ref="7119017431"/>
+		<tag k="access" v="private"/>
+		<tag k="highway" v="service"/>
+		<tag k="service" v="driveway"/>
+	</way>
+	<way id="761947195" version="1">
+		<nd ref="7119017436"/>
+		<nd ref="7119017437"/>
+		<tag k="access" v="private"/>
+		<tag k="highway" v="service"/>
+		<tag k="service" v="driveway"/>
+	</way>
+	<way id="761947196" version="1">
+		<nd ref="7119017438"/>
+		<nd ref="7119017439"/>
+		<tag k="access" v="private"/>
+		<tag k="highway" v="service"/>
+		<tag k="service" v="driveway"/>
+	</way>
+	<way id="761947197" version="1">
+		<nd ref="7119017440"/>
+		<nd ref="7119017441"/>
+		<nd ref="274969431"/>
+		<nd ref="7119017442"/>
+		<nd ref="7119017443"/>
+		<tag k="access" v="private"/>
+		<tag k="highway" v="service"/>
+		<tag k="service" v="driveway"/>
+	</way>
+	<way id="761947198" version="1">
+		<nd ref="274969431"/>
+		<nd ref="7119017444"/>
+		<tag k="access" v="private"/>
+		<tag k="highway" v="service"/>
+		<tag k="service" v="driveway"/>
+	</way>
+	<way id="761947199" version="1">
+		<nd ref="274969428"/>
+		<nd ref="7119017445"/>
+		<tag k="access" v="private"/>
+		<tag k="highway" v="service"/>
+		<tag k="service" v="driveway"/>
+	</way>
+	<way id="761947200" version="1">
+		<nd ref="7119017446"/>
+		<nd ref="7119017447"/>
+		<tag k="access" v="private"/>
+		<tag k="highway" v="service"/>
+		<tag k="service" v="driveway"/>
+	</way>
+	<relation id="14650" version="1">
+		<member type="way" ref="247778550" role="outer"/>
+		<tag k="name" v="Kirchberger Holz"/>
+		<tag k="type" v="multipolygon"/>
+		<tag k="landuse" v="forest"/>
+	</relation>
+	<relation id="9204457" version="1">
+		<member type="way" ref="68700040" role="outer"/>
+		<tag k="type" v="multipolygon"/>
+		<tag k="landuse" v="residential"/>
+	</relation>
+</osm>

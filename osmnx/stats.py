@@ -85,7 +85,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
 
     # calculate the number of nodes, n, and the number of edges, m, in the graph
     n = len(G)
-    m = len(G.edges())
+    m = len(G.edges)
 
     # calculate the average degree of the graph
     k_avg = 2 * m / n
@@ -295,7 +295,7 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
           - betweenness_centrality_avg
 
     """
-    stats = {}
+    stats = dict()
 
     # create DiGraph from the MultiDiGraph, for those metrics that need it
     D = utils_graph.get_digraph(G, weight="length")
