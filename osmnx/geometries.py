@@ -838,12 +838,7 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
             if inner_polygon.within(outer_polygon):
                 try:
                     outer_polygon = outer_polygon.difference(inner_polygon)
-                except TopologicalError as e:
-                    print(
-                        e,
-                        f"\n MultiPolygon Relation OSM id {element['id']} difference failed,"
-                        " trying with geometries buffered by 0.",
-                    )
+                except TopologicalError:
                     utils.log(
                         f"relation https://www.openstreetmap.org/relation/{element['id']} caused"
                         " a TopologicalError, trying with zero buffer."
