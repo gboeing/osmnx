@@ -1,4 +1,10 @@
-"""Download geospatial objects' geometries from OpenStreetMap."""
+"""
+Download geospatial entities' geometries and attributes from OpenStreetMap.
+
+Retrieve points of interest, building footprints, or any other objects from
+OSM, including their geometries and attribute data, and construct a
+GeoDataFrame of them.
+"""
 
 import logging as lg
 import warnings
@@ -24,7 +30,7 @@ from ._polygon_features import _polygon_features
 
 def geometries_from_bbox(north, south, east, west, tags):
     """
-    Create a GeoDataFrame of OSM geometries within a N, S, E, W bounding box.
+    Create a GeoDataFrame of OSM entities within a N, S, E, W bounding box.
 
     Parameters
     ----------
@@ -68,7 +74,7 @@ def geometries_from_bbox(north, south, east, west, tags):
 
 def geometries_from_point(center_point, tags, dist=1000):
     """
-    Create GeoDataFrame of OSM geometries within some distance N, S, E, W of a point.
+    Create GeoDataFrame of OSM entities within some distance N, S, E, W of a point.
 
     Parameters
     ----------
@@ -111,7 +117,7 @@ def geometries_from_point(center_point, tags, dist=1000):
 
 def geometries_from_address(address, tags, dist=1000):
     """
-    Create GeoDataFrame of OSM geometries within some distance N, S, E, W of address.
+    Create GeoDataFrame of OSM entities within some distance N, S, E, W of address.
 
     Parameters
     ----------
@@ -152,7 +158,7 @@ def geometries_from_address(address, tags, dist=1000):
 
 def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     """
-    Create a GeoDataFrame of OSM geometries within the boundaries of a place.
+    Create a GeoDataFrame of OSM entities within the boundaries of a place.
 
     Parameters
     ----------
@@ -209,7 +215,7 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
 
 def geometries_from_polygon(polygon, tags):
     """
-    Create GeoDataFrame of OSM geometries within boundaries of some (multi)polygon.
+    Create GeoDataFrame of OSM entities within boundaries of a (multi)polygon.
 
     Parameters
     ----------
@@ -258,7 +264,7 @@ def geometries_from_polygon(polygon, tags):
 
 def geometries_from_xml(filepath, polygon=None, tags=None):
     """
-    Create a GeoDataFrame of OSM geometries from an OSM-formatted XML file.
+    Create a GeoDataFrame of OSM entities in an OSM-formatted XML file.
 
     Because this function creates a GeoDataFrame of geometries from an
     OSM-formatted XML file that has already been downloaded (i.e. no query is
