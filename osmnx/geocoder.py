@@ -197,8 +197,9 @@ def _get_first_polygon(results, query):
     result : dict
         the chosen result
     """
+    polygon_types = {"Polygon", "MultiPolygon"}
     for result in results:
-        if result["geojson"]["type"] in {"Polygon", "MultiPolygon"}:
+        if result["geojson"]["type"] in polygon_types:
             return result
 
     # if we never found a polygon, throw an error

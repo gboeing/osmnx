@@ -23,10 +23,10 @@ Constructing, Analyzing, and Visualizing Complex Street Networks`_."
 *Computers, Environment and Urban Systems* 65, 126-139.
 doi:10.1016/j.compenvurbsys.2017.05.004
 
-See the examples and demos on `GitHub`_ or read more about `OSMnx`_.
+Read the `docs`_ or see usage examples and demos on `GitHub`_.
 
-.. _GitHub: https://github.com/gboeing/osmnx
-.. _OSMnx: http://geoffboeing.com/2016/11/osmnx-python-street-networks/
+.. _GitHub: https://github.com/gboeing/osmnx-examples
+.. _docs: https://osmnx.readthedocs.io
 .. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: http://geoffboeing.com/publications/osmnx-complex-street-networks/
 """
 
@@ -62,7 +62,7 @@ else:
 # now call setup
 setup(
     name="osmnx",
-    version="0.16.0dev",
+    version="0.16.0",
     description=DESC,
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
@@ -76,7 +76,7 @@ setup(
     install_requires=INSTALL_REQUIRES,
     extras_require={
         "folium": ["folium>=0.11"],
-        "kdtree": ["scipy>=1.4"],
+        "kdtree": ["scipy>=1.5"],
         "balltree": ["scikit-learn>=0.23"],
     },
 )

@@ -1,4 +1,10 @@
-"""Download geospatial objects' geometries from OpenStreetMap."""
+"""
+Download geospatial entities' geometries and attributes from OpenStreetMap.
+
+Retrieve points of interest, building footprints, or any other objects from
+OSM, including their geometries and attribute data, and construct a
+GeoDataFrame of them.
+"""
 
 import logging as lg
 import warnings
@@ -24,7 +30,7 @@ from ._polygon_features import _polygon_features
 
 def geometries_from_bbox(north, south, east, west, tags):
     """
-    Create a GeoDataFrame of OSM geometries within a N, S, E, W bounding box.
+    Create a GeoDataFrame of OSM entities within a N, S, E, W bounding box.
 
     Parameters
     ----------
@@ -40,11 +46,12 @@ def geometries_from_bbox(north, south, east, west, tags):
         Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        `tags = {'building': True}` would return all building footprints in
+        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
 
@@ -68,7 +75,7 @@ def geometries_from_bbox(north, south, east, west, tags):
 
 def geometries_from_point(center_point, tags, dist=1000):
     """
-    Create GeoDataFrame of OSM geometries within some distance N, S, E, W of a point.
+    Create GeoDataFrame of OSM entities within some distance N, S, E, W of a point.
 
     Parameters
     ----------
@@ -78,11 +85,12 @@ def geometries_from_point(center_point, tags, dist=1000):
         Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        `tags = {'building': True}` would return all building footprints in
+        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
     dist : numeric
@@ -111,7 +119,7 @@ def geometries_from_point(center_point, tags, dist=1000):
 
 def geometries_from_address(address, tags, dist=1000):
     """
-    Create GeoDataFrame of OSM geometries within some distance N, S, E, W of address.
+    Create GeoDataFrame of OSM entities within some distance N, S, E, W of address.
 
     Parameters
     ----------
@@ -122,11 +130,12 @@ def geometries_from_address(address, tags, dist=1000):
         Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        `tags = {'building': True}` would return all building footprints in
+        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
     dist : numeric
@@ -152,7 +161,7 @@ def geometries_from_address(address, tags, dist=1000):
 
 def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     """
-    Create a GeoDataFrame of OSM geometries within the boundaries of a place.
+    Create a GeoDataFrame of OSM entities within the boundaries of a place.
 
     Parameters
     ----------
@@ -162,11 +171,12 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
         Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        `tags = {'building': True}` would return all building footprints in
+        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
     which_result : int
@@ -209,7 +219,7 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
 
 def geometries_from_polygon(polygon, tags):
     """
-    Create GeoDataFrame of OSM geometries within boundaries of some (multi)polygon.
+    Create GeoDataFrame of OSM entities within boundaries of a (multi)polygon.
 
     Parameters
     ----------
@@ -219,11 +229,12 @@ def geometries_from_polygon(polygon, tags):
         Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        `tags = {'building': True}` would return all building footprints in
+        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
 
@@ -258,7 +269,7 @@ def geometries_from_polygon(polygon, tags):
 
 def geometries_from_xml(filepath, polygon=None, tags=None):
     """
-    Create a GeoDataFrame of OSM geometries from an OSM-formatted XML file.
+    Create a GeoDataFrame of OSM entities in an OSM-formatted XML file.
 
     Because this function creates a GeoDataFrame of geometries from an
     OSM-formatted XML file that has already been downloaded (i.e. no query is
@@ -277,11 +288,12 @@ def geometries_from_xml(filepath, polygon=None, tags=None):
         optional dict of tags for filtering objects from the XML. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        `tags = {'building': True}` would return all building footprints in
+        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
 
@@ -832,12 +844,7 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
             if inner_polygon.within(outer_polygon):
                 try:
                     outer_polygon = outer_polygon.difference(inner_polygon)
-                except TopologicalError as e:
-                    print(
-                        e,
-                        f"\n MultiPolygon Relation OSM id {element['id']} difference failed,"
-                        " trying with geometries buffered by 0.",
-                    )
+                except TopologicalError:
                     utils.log(
                         f"relation https://www.openstreetmap.org/relation/{element['id']} caused"
                         " a TopologicalError, trying with zero buffer."

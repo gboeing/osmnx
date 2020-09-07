@@ -559,7 +559,7 @@ def plot_footprints(
     dpi=600,
 ):
     """
-    Plot a GeoDataFrame of footprints.
+    Plot a GeoDataFrame of geospatial entities' footprints.
 
     Parameters
     ----------
@@ -599,6 +599,8 @@ def plot_footprints(
     else:
         fig = ax.figure
 
+    # retain only Polygons and MultiPolygons, then plot
+    gdf = gdf[gdf["geometry"].type.isin({"Polygon", "MultiPolygon"})]
     ax = gdf.plot(ax=ax, facecolor=color, edgecolor="none", linewidth=0, alpha=1)
 
     # determine figure extents

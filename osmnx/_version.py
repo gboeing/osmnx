@@ -1,3 +1,3 @@
 """OSMnx package version."""
 
-__version__ = "0.16.0dev"
+__version__ = "0.16.0"
