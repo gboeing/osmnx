@@ -143,7 +143,7 @@ def plot_graph_folium(
     # list of lat-lng points as [southwest, northeast]
     if fit_bounds and isinstance(graph_map, folium.Map):
         tb = gdf_edges.total_bounds
-        bounds = [(tb[1], tb[0]), (tb[3], tb[2])]
+        bounds = [[tb[1], tb[0]], [tb[3], tb[2]]]
         graph_map.fit_bounds(bounds)
 
     return graph_map
