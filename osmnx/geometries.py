@@ -46,11 +46,12 @@ def geometries_from_bbox(north, south, east, west, tags):
         Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        `tags = {'building': True}` would return all building footprints in
+        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
 
@@ -84,11 +85,12 @@ def geometries_from_point(center_point, tags, dist=1000):
         Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        `tags = {'building': True}` would return all building footprints in
+        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
     dist : numeric
@@ -128,11 +130,12 @@ def geometries_from_address(address, tags, dist=1000):
         Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        `tags = {'building': True}` would return all building footprints in
+        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
     dist : numeric
@@ -168,11 +171,12 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
         Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        `tags = {'building': True}` would return all building footprints in
+        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
     which_result : int
@@ -225,11 +229,12 @@ def geometries_from_polygon(polygon, tags):
         Dict of tags used for finding objects in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        `tags = {'building': True}` would return all building footprints in
+        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
 
@@ -283,11 +288,12 @@ def geometries_from_xml(filepath, polygon=None, tags=None):
         optional dict of tags for filtering objects from the XML. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `amenity`, `landuse`, `highway`, etc) and the dict
+        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
         values should be either `True` to retrieve all items with the given
         tag, or a string to get a single tag-value combination, or a list of
         strings to get multiple values for the given tag. For example,
-        `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        `tags = {'building': True}` would return all building footprints in
+        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
 
