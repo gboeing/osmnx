@@ -1,4 +1,8 @@
-"""Download and plot footprints from OpenStreetMap."""
+"""
+Download footprints from OpenStreetMap.
+
+Deprecated: use the new `geometries` module instead.
+"""
 
 import warnings
 

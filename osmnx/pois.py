@@ -1,4 +1,8 @@
-"""Download points of interests (POIs) from OpenStreetMap."""
+"""
+Download points of interests (POIs) from OpenStreetMap.
+
+Deprecated: use the new `geometries` module instead.
+"""
 
 import warnings
 
