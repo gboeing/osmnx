@@ -245,13 +245,6 @@ def test_find_nearest():
     ne3 = ox.get_nearest_edges(G, X, Y, method="balltree", dist=0.0001)
 
 
-def test_pois():
-
-    tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
-    gdf = ox.pois_from_place(place1, tags=tags)
-    gdf = ox.pois_from_address(address, tags={"amenity": "school"})
-
-
 def test_api_endpoints():
 
     params = OrderedDict()
@@ -404,53 +397,49 @@ def test_stats():
 def test_footprints():
 
     # download footprints and plot them
-    ox.settings.overpass_settings = '[out:json][timeout:200][date:"2019-10-28T19:20:00Z"]'
     gdf = ox.footprints_from_place(place2)
     gdf = ox.footprints_from_polygon(polygon)
     gdf = ox.footprints_from_address(address, dist=300)
     fig, ax = ox.plot_footprints(gdf)
 
 
+def test_pois():
+
+    tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
+    gdf = ox.pois_from_place([place1], tags=tags)
+    gdf = ox.pois_from_address(address, tags={"amenity": "school"})
+
+
 def test_geometries():
 
-    # geometries_from_bbox - bounding box query that should return an empty GeoDataFrame
-    gdf = ox.geometries_from_bbox(50.5912, 50.5786, -2.4293, -2.4544, tags={"building": True})
+    # geometries_from_bbox - bounding box query to return empty GeoDataFrame
+    gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
 
-    # geometries_from_bbox - succesful
+    # geometries_from_bbox - successful
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
-    gdf = ox.geometries_from_bbox(
-        north, south, east, west, tags={"landuse": True, "building": True, "highway": True}
-    )
+    tags = {"landuse": True, "building": True, "highway": True}
+    gdf = ox.geometries_from_bbox(north, south, east, west, tags=tags)
 
     # geometries_from_point - tests multipolygon creation
     gdf = ox.geometries_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)
 
-    # geometries_from_address
-    gdf = ox.geometries_from_address(address, tags={"amenity": "school"})
-
     # geometries_from_place - includes test of list of places
-    tags = {
-        "amenity": True,
-        "landuse": ["retail", "commercial"],
-        "highway": "primary",
-        "power": "substation",
-    }
+    tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
     gdf = ox.geometries_from_place([place1], tags=tags)
+
+    # geometries_from_address - includes testing overpass settings and snapshot from 2019
+    ox.settings.overpass_settings = '[out:json][timeout:200][date:"2019-10-28T19:20:00Z"]'
+    gdf = ox.geometries_from_address(address, tags=tags)
 
     # geometries_from_xml - tests error handling of clipped XMLs with incomplete geometry
     gdf = ox.geometries_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")
 
-
-def test_geometries_from_xml():
     # test loading a geodataframe from a local .osm xml file
-
-    with bz2.BZ2File("tests/input_data/West-Oakland.osm.bz2") as input:
+    with bz2.BZ2File("tests/input_data/West-Oakland.osm.bz2") as f:
         handle, temp_filename = tempfile.mkstemp(suffix=".osm")
-        os.write(handle, input.read())
+        os.write(handle, f.read())
         os.close(handle)
-
     for filename in ("tests/input_data/West-Oakland.osm.bz2", temp_filename):
-        GDF = ox.geometries_from_xml(filename)
-        assert "Willow Street" in GDF["name"].values
-
+        gdf = ox.geometries_from_xml(filename)
+        assert "Willow Street" in gdf["name"].values
     os.remove(temp_filename)
