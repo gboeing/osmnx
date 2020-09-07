@@ -22,8 +22,8 @@ Retrieve, model, analyze, and visualize OpenStreetMap street networks and other 
 
 OSMnx is built on top of geopandas, networkx, and matplotlib and interacts with OpenStreetMap's APIs to:
 
-  * Download street networks anywhere in the world with a single line of code
-  * Download other infrastructure types, place boundaries, building footprints, and points of interest
+  * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
+  * Download any other spatial geometries, place boundaries, building footprints, or points of interest as a GeoDataFrame
   * Download by city name, polygon, bounding box, or point/address + network distance
   * Download drivable, walkable, bikeable, or all street networks
   * Download node elevations and calculate edge grades (inclines)
@@ -35,9 +35,9 @@ OSMnx is built on top of geopandas, networkx, and matplotlib and interacts with 
   * Conduct topological and spatial analyses to automatically calculate dozens of indicators
   * Calculate and visualize street bearings and orientations
   * Calculate and visualize shortest-path routes that minimize distance, travel time, elevation, etc
-  * Visualize street network as a static map or interactive leaflet web map
+  * Visualize street networks as a static map or interactive leaflet web map
   * Visualize travel distance and travel time with isoline and isochrone maps
-  * Plot figure-ground diagrams of street networks and/or building footprints
+  * Plot figure-ground diagrams of street networks and building footprints
 
 Examples and demonstrations of these features are in the [examples repo](https://github.com/gboeing/osmnx-examples). More feature development details are in the change log.
 
@@ -45,9 +45,9 @@ Examples and demonstrations of these features are in the [examples repo](https:/
 
 ## Installation
 
-If you have any trouble with the installation, read the [docs](https://osmnx.readthedocs.io/).
+If you have any trouble with the installation, read the [docs](https://osmnx.readthedocs.io/) for more info.
 
-You can install OSMnx with [conda](https://anaconda.org/conda-forge/osmnx):
+Install OSMnx in a clean [conda](https://anaconda.org/conda-forge/osmnx) environment:
 
 ```
 conda config --prepend channels conda-forge
@@ -58,11 +58,11 @@ Alternatively, you can run OSMnx + Jupyter directly from its official [docker co
 
 
 
-## Documentation and Examples
+## Documentation and Usage
 
-Documentation available at [readthedocs](https://osmnx.readthedocs.io/).
+Documentation available on [readthedocs](https://osmnx.readthedocs.io/).
 
-Examples/tutorials available in the [examples repo](https://github.com/gboeing/osmnx-examples).
+"How do I use OSMnx?" Usage examples and tutorials available in the [examples repo](https://github.com/gboeing/osmnx-examples).
 
 Examples of projects and blog posts [using OSMnx](https://geoffboeing.com/2018/03/osmnx-features-roundup/).
 
@@ -147,15 +147,3 @@ For an in-depth demonstration of topological simplification with OSMnx, see [thi
 OSMnx allows users to save street networks to disk as .osm files, as shapefiles or geopackages to work with in GIS software, as GraphML files to work with in Gephi or NetworkX, and as SVG files to work with in Illustrator. It also allows you to save place boundary geometries, building footprints, or amenities/points of interest to disk as shapefiles or geojson/geopackages via geopandas.
 
 For examples of saving and loading networks to/from disk, see [this notebook](https://github.com/gboeing/osmnx-examples/blob/master/notebooks/05-save-load-networks.ipynb).
-
-
-
-## More info
-
-If you use OSMnx in your work, please cite the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/).
-
-For complete documentation and code examples, see the [docs](https://osmnx.readthedocs.io/) and the [examples repo](https://github.com/gboeing/osmnx-examples).
-
-For a more complete overview of [OSMnx, read this](https://geoffboeing.com/2016/11/osmnx-python-street-networks/).
-
-Examples of projects and blog posts [using OSMnx](https://geoffboeing.com/2018/03/osmnx-features-roundup/)

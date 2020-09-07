@@ -28,8 +28,8 @@ Features
 
 OSMnx is built on top of geopandas, networkx, and matplotlib and interacts with OpenStreetMap's APIs to:
 
-  * Download street networks anywhere in the world with a single line of code
-  * Download other infrastructure types, place boundaries, building footprints, and points of interest
+  * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
+  * Download any other spatial geometries, place boundaries, building footprints, or points of interest as a GeoDataFrame
   * Download by city name, polygon, bounding box, or point/address + network distance
   * Download drivable, walkable, bikeable, or all street networks
   * Download node elevations and calculate edge grades (inclines)
@@ -41,9 +41,9 @@ OSMnx is built on top of geopandas, networkx, and matplotlib and interacts with 
   * Conduct topological and spatial analyses to automatically calculate dozens of indicators
   * Calculate and visualize street bearings and orientations
   * Calculate and visualize shortest-path routes that minimize distance, travel time, elevation, etc
-  * Visualize street network as a static map or interactive leaflet web map
+  * Visualize street networks as a static map or interactive leaflet web map
   * Visualize travel distance and travel time with isoline and isochrone maps
-  * Plot figure-ground diagrams of street networks and/or building footprints
+  * Plot figure-ground diagrams of street networks and building footprints
 
 Usage examples and demonstrations of these features are in the `examples`_ GitHub repo. More feature development details are in the `change log`_.
 
