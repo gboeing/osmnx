@@ -1,7 +1,9 @@
 # Change log
 
-## 0.16.0 (T.B.D.)
+## 0.16.0 (2020-09-07)
 
+  - new geometries module for creating GeoDataFrames from tag/value queries
+  - deprecate old pois and fooptrints modules (replaced by geometries module)
   - auto-select first Polygon/MultiPolygon when geocoding with which_result=None
   - new k_shortest_paths function to solve *k* shortest paths from origin to destination
   - new shortest_path convenience function
