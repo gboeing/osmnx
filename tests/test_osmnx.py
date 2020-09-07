@@ -51,7 +51,7 @@ ox.config(
 location_point = (37.791427, -122.410018)
 address = "600 Montgomery St, San Francisco, California, USA"
 place1 = "Piedmont, California, USA"
-place2 = {"neighborhood": "Financial District", "city": "Los Angeles", "state": "California"}
+place2 = "Bunker Hill, Los Angeles, California"
 p = (
     "POLYGON ((-122.262 37.869, -122.255 37.869, -122.255 37.874,"
     "-122.262 37.874, -122.262 37.869))"
