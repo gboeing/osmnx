@@ -23,10 +23,10 @@ Constructing, Analyzing, and Visualizing Complex Street Networks`_."
 *Computers, Environment and Urban Systems* 65, 126-139.
 doi:10.1016/j.compenvurbsys.2017.05.004
 
-See the examples and demos on `GitHub`_ or read more about `OSMnx`_.
+Read the `docs`_ or see usage examples and demos on `GitHub`_.
 
-.. _GitHub: https://github.com/gboeing/osmnx
-.. _OSMnx: http://geoffboeing.com/2016/11/osmnx-python-street-networks/
+.. _GitHub: https://github.com/gboeing/osmnx-examples
+.. _docs: https://osmnx.readthedocs.io
 .. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: http://geoffboeing.com/publications/osmnx-complex-street-networks/
 """
 
