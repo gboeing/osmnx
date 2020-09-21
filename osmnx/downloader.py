@@ -181,7 +181,7 @@ def _url_in_cache(url):
         return None
 
 
-def _get_from_cache(url, check_remark=False):
+def _retrieve_from_cache(url, check_remark=False):
     """
     Retrieve a HTTP response JSON object from the cache, if it exists.
 
@@ -571,7 +571,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
     # prepare Nominatim API URL and see if request already exists in cache
     url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
     prepared_url = requests.Request("GET", url, params=params).prepare().url
-    cached_response_json = _get_from_cache(prepared_url)
+    cached_response_json = _retrieve_from_cache(prepared_url)
 
     if settings.nominatim_key:
         params["key"] = settings.nominatim_key
@@ -640,7 +640,7 @@ def overpass_request(data, pause=None, error_pause=60):
     # hash to look up/save to cache
     url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
     prepared_url = requests.Request("GET", url, params=data).prepare().url
-    cached_response_json = _get_from_cache(prepared_url, check_remark=True)
+    cached_response_json = _retrieve_from_cache(prepared_url, check_remark=True)
 
     if cached_response_json is not None:
         # found response in the cache, return it instead of calling server
