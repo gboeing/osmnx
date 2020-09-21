@@ -537,7 +537,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
 
     Parameters
     ----------
-    params : dict or OrderedDict
+    params : OrderedDict
         key-value pairs of parameters
     request_type : string
         Type of Nominatim query. One of: search, reverse, or lookup
@@ -609,8 +609,8 @@ def overpass_request(data, pause=None, error_pause=60):
 
     Parameters
     ----------
-    data : dict or OrderedDict
-        key-value pairs of parameters to post to the API
+    data : OrderedDict
+        key-value pairs of parameters
     pause : int
         how long to pause in seconds before request, if None, will query API
         status endpoint to find when next slot is available
