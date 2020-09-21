@@ -99,7 +99,7 @@ def _get_osm_filter(network_type):
     return osm_filter
 
 
-def _save_to_cache(url, response_json):
+def _save_to_cache(url, response_json, status_code):
     """
     Save an HTTP response json object to the cache.
 
@@ -123,8 +123,13 @@ def _save_to_cache(url, response_json):
     None
     """
     if settings.use_cache:
-        if response_json is None:
+
+        if status_code != 200:
+            utils.log(f"Did not save to cache because status_code is {status_code}")
+
+        elif response_json is None:
             utils.log("Did not save to cache because response_json is None")
+
         else:
             # create the folder on the disk if it doesn't already exist
             if not os.path.exists(settings.cache_folder):
@@ -576,6 +581,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
         utils.log(f"Get {prepared_url} with timeout={settings.timeout}")
         headers = _get_http_headers()
         response = requests.get(url, params=params, timeout=settings.timeout, headers=headers)
+        sc = response.status_code
 
         # log the response size and domain
         size_kb = len(response.content) / 1000.0
@@ -586,7 +592,6 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
             response_json = response.json()
 
         except Exception:  # pragma: no cover
-            sc = response.status_code
             if sc in {429, 504}:
                 # 429 is 'too many requests' and 504 is 'gateway timeout' from
                 # server overload: handle these by pausing then recursively
@@ -600,7 +605,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
                 utils.log(f"{domain} returned {sc}", level=lg.ERROR)
                 raise Exception(f"Server returned:\n{response} {response.reason}\n{response.text}")
 
-        _save_to_cache(prepared_url, response_json)
+        _save_to_cache(prepared_url, response_json, sc)
         return response_json
 
 
@@ -644,6 +649,7 @@ def overpass_request(data, pause=None, error_pause=60):
         utils.log(f"Post {prepared_url} with timeout={settings.timeout}")
         headers = _get_http_headers()
         response = requests.post(url, data=data, timeout=settings.timeout, headers=headers)
+        sc = response.status_code
 
         # log the response size and domain
         size_kb = len(response.content) / 1000.0
@@ -656,7 +662,6 @@ def overpass_request(data, pause=None, error_pause=60):
                 utils.log(f'Server remark: "{response_json["remark"]}"', level=lg.WARNING)
 
         except Exception:  # pragma: no cover
-            sc = response.status_code
             if sc in {429, 504}:
                 # 429 is 'too many requests' and 504 is 'gateway timeout' from
                 # server overload: handle these by pausing then recursively
@@ -671,7 +676,7 @@ def overpass_request(data, pause=None, error_pause=60):
                 utils.log(f"{domain} returned {sc}", level=lg.ERROR)
                 raise Exception(f"Server returned\n{response} {response.reason}\n{response.text}")
 
-        _save_to_cache(prepared_url, response_json)
+        _save_to_cache(prepared_url, response_json, sc)
         return response_json
 
 
