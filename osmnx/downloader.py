@@ -2,7 +2,6 @@
 
 import bz2
 import datetime as dt
-import hashlib
 import json
 import logging as lg
 import math
@@ -11,6 +10,7 @@ import re
 import time
 import xml.sax
 from collections import OrderedDict
+from hashlib import md5
 
 import requests
 from dateutil import parser as date_parser
@@ -131,7 +131,8 @@ def _save_to_cache(url, response_json):
                 os.makedirs(settings.cache_folder)
 
             # hash the url to make the filename succinct but unique
-            filename = hashlib.md5(url.encode("utf-8")).hexdigest()
+            # md5 digest is 128 bits = 16 bytes = 32 hexadecimal characters
+            filename = md5(url.encode("utf-8")).hexdigest()
             cache_filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, "json"]))
 
             # dump to json, and save to file
@@ -157,7 +158,7 @@ def _url_in_cache(url):
         path to cached response for url if it exists, otherwise None
     """
     # hash the url to generate the cache filename
-    filename = hashlib.md5(url.encode("utf-8")).hexdigest()
+    filename = md5(url.encode("utf-8")).hexdigest()
     filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, "json"]))
 
     # if this file exists in the cache, return its full path
