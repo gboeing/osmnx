@@ -101,22 +101,28 @@ def _get_osm_filter(network_type):
 
 def _save_to_cache(url, response_json, status_code):
     """
-    Save an HTTP response json object to the cache.
+    Save an HTTP response JSON object to a cache file.
 
+    Function calculates the checksum of url to generate the cache file's name.
     If the request was sent to server via POST instead of GET, then URL should
-    be a GET-style representation of request. Users should always pass
-    OrderedDicts instead of dicts of parameters into request functions, so
-    that the parameters stay in the same order each time, producing the same
-    URL string, and thus the same hash. Otherwise the cache will eventually
-    contain multiple saved responses for the same request because the URL's
-    parameters appeared in a different order each time.
+    be a GET-style representation of request. Response is only saved to a
+    cache file if settings.use_cache is True, response_json is not None, and
+    status_code = 200.
+
+    Users should always pass OrderedDicts instead of dicts of parameters into
+    request functions, so the parameters remain in the same order each time,
+    producing the same URL string, and thus the same hash. Otherwise the cache
+    will eventually contain multiple saved responses for the same request
+    because the URL's parameters appeared in a different order each time.
 
     Parameters
     ----------
     url : string
-        the url of the request
+        the URL of the request
     response_json : dict
-        the json response
+        the JSON response
+    status_code : int
+        the response's HTTP status code
 
     Returns
     -------
@@ -152,10 +158,12 @@ def _url_in_cache(url):
     """
     Determine if a URL's response exists in the cache.
 
+    Calculates the checksum of url to determine the cache file's name.
+
     Parameters
     ----------
     url : string
-        the url to look for in the cache
+        the URL to look for in the cache
 
     Returns
     -------
@@ -175,12 +183,12 @@ def _url_in_cache(url):
 
 def _get_from_cache(url, check_remark=False):
     """
-    Retrieve a HTTP response json object from the cache.
+    Retrieve a HTTP response JSON object from the cache, if it exists.
 
     Parameters
     ----------
     url : string
-        the url of the request
+        the URL of the request
     check_remark : string
         if True, only return filepath if cached response does not have a
         remark key indicating a server warning
