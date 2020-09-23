@@ -1,4 +1,6 @@
-"""Functions to calculate distances and find nearest node/edge(s) to point(s)."""
+"""Calculate distances and shortest paths and find nearest node/edge(s) to point(s)."""
+
+import itertools
 
 import networkx as nx
 import numpy as np
@@ -449,3 +451,64 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     utils.log(f"Found nearest edges to {len(X)} points")
 
     return np.array(ne)
+
+
+def shortest_path(G, orig, dest, weight="length"):
+    """
+    Get shortest path from origin node to destination node.
+
+    See also `k_shortest_paths` to get multiple shortest paths.
+
+    This function is a convenience wrapper around networkx.shortest_path. For
+    more functionality or different algorithms, use networkx directly.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    orig : int
+        origin node ID
+    dest : int
+        destination node ID
+    weight : string
+        edge attribute to minimize when solving shortest path. default is edge
+        length in meters.
+
+    Returns
+    -------
+    path : list
+        list of node IDs consituting the shortest path
+    """
+    path = nx.shortest_path(G, orig, dest, weight=weight)
+    return path
+
+
+def k_shortest_paths(G, orig, dest, k, weight="length"):
+    """
+    Get k shortest paths from origin node to destination node.
+
+    See also `shortest_path` to get just the one shortest path.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    orig : int
+        origin node ID
+    dest : int
+        destination node ID
+    k : int
+        number of shortest paths to get
+    weight : string
+        edge attribute to minimize when solving shortest paths. default is
+        edge length in meters.
+
+    Returns
+    -------
+    generator
+        a generator of k shortest paths ordered by total weight. each path is
+        a list of node IDs.
+    """
+    paths_gen = nx.shortest_simple_paths(utils_graph.get_digraph(G, weight), orig, dest, weight)
+    for path in itertools.islice(paths_gen, 0, k):
+        yield path
