@@ -2,7 +2,6 @@
 
 import bz2
 import datetime as dt
-import hashlib
 import json
 import logging as lg
 import math
@@ -11,6 +10,7 @@ import re
 import time
 import xml.sax
 from collections import OrderedDict
+from hashlib import md5
 
 import requests
 from dateutil import parser as date_parser
@@ -99,39 +99,51 @@ def _get_osm_filter(network_type):
     return osm_filter
 
 
-def _save_to_cache(url, response_json):
+def _save_to_cache(url, response_json, sc):
     """
-    Save an HTTP response json object to the cache.
+    Save a HTTP response JSON object to a file in the cache folder.
 
+    Function calculates the checksum of url to generate the cache file's name.
     If the request was sent to server via POST instead of GET, then URL should
-    be a GET-style representation of request. Users should always pass
-    OrderedDicts instead of dicts of parameters into request functions, so
-    that the parameters stay in the same order each time, producing the same
-    URL string, and thus the same hash. Otherwise the cache will eventually
-    contain multiple saved responses for the same request because the URL's
-    parameters appeared in a different order each time.
+    be a GET-style representation of request. Response is only saved to a
+    cache file if settings.use_cache is True, response_json is not None, and
+    sc = 200.
+
+    Users should always pass OrderedDicts instead of dicts of parameters into
+    request functions, so the parameters remain in the same order each time,
+    producing the same URL string, and thus the same hash. Otherwise the cache
+    will eventually contain multiple saved responses for the same request
+    because the URL's parameters appeared in a different order each time.
 
     Parameters
     ----------
     url : string
-        the url of the request
+        the URL of the request
     response_json : dict
-        the json response
+        the JSON response
+    sc : int
+        the response's HTTP status code
 
     Returns
     -------
     None
     """
     if settings.use_cache:
-        if response_json is None:
+
+        if sc != 200:
+            utils.log(f"Did not save to cache because status code is {sc}")
+
+        elif response_json is None:
             utils.log("Did not save to cache because response_json is None")
+
         else:
             # create the folder on the disk if it doesn't already exist
             if not os.path.exists(settings.cache_folder):
                 os.makedirs(settings.cache_folder)
 
             # hash the url to make the filename succinct but unique
-            filename = hashlib.md5(url.encode("utf-8")).hexdigest()
+            # md5 digest is 128 bits = 16 bytes = 32 hexadecimal characters
+            filename = md5(url.encode("utf-8")).hexdigest()
             cache_filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, "json"]))
 
             # dump to json, and save to file
@@ -146,10 +158,12 @@ def _url_in_cache(url):
     """
     Determine if a URL's response exists in the cache.
 
+    Calculates the checksum of url to determine the cache file's name.
+
     Parameters
     ----------
     url : string
-        the url to look for in the cache
+        the URL to look for in the cache
 
     Returns
     -------
@@ -157,7 +171,7 @@ def _url_in_cache(url):
         path to cached response for url if it exists, otherwise None
     """
     # hash the url to generate the cache filename
-    filename = hashlib.md5(url.encode("utf-8")).hexdigest()
+    filename = md5(url.encode("utf-8")).hexdigest()
     filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, "json"]))
 
     # if this file exists in the cache, return its full path
@@ -167,14 +181,14 @@ def _url_in_cache(url):
         return None
 
 
-def _get_from_cache(url, check_remark=False):
+def _retrieve_from_cache(url, check_remark=False):
     """
-    Retrieve a HTTP response json object from the cache.
+    Retrieve a HTTP response JSON object from the cache, if it exists.
 
     Parameters
     ----------
     url : string
-        the url of the request
+        the URL of the request
     check_remark : string
         if True, only return filepath if cached response does not have a
         remark key indicating a server warning
@@ -259,18 +273,20 @@ def _get_pause(recursive_delay=5, default_duration=60):
         response = requests.get(url, headers=_get_http_headers())
         status = response.text.split("\n")[3]
         status_first_token = status.split(" ")[0]
-    # if we cannot reach the status endpoint or parse its output, log an
-    # error and return default duration
+
     except Exception:
+        # if we cannot reach the status endpoint or parse its output, log an
+        # error and return default duration
         sc = response.status_code
         utils.log(f"Unable to query {url} got status {sc}", level=lg.ERROR)
         return default_duration
 
     try:
-        # if first token is numeric, it's how many slots you have available - no
-        # wait required
+        # if first token is numeric, it's how many slots you have available,
+        # no wait required
         _ = int(status_first_token)  # number of available slots
         pause = 0
+
     except Exception:  # pragma: no cover
         # if first token is 'Slot', it tells you when your slot will be free
         if status_first_token == "Slot":
@@ -280,11 +296,12 @@ def _get_pause(recursive_delay=5, default_duration=60):
             pause = max(pause, 1)
 
         # if first token is 'Currently', it is currently running a query so
-        # check back in recursive_delay seconds. any other status is unrecognized,
-        # log an error and return default duration
+        # check back in recursive_delay seconds
         elif status_first_token == "Currently":
             time.sleep(recursive_delay)
             pause = _get_pause()
+
+        # any other status is unrecognized: log error, return default duration
         else:
             utils.log(f'Unrecognized server status: "{status}"', level=lg.ERROR)
             return default_duration
@@ -433,8 +450,7 @@ def _osm_net_download(polygon, network_type, custom_filter):
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
 
-    # subdivide query polygon and get list of sub-divided polygon coordinate
-    # strings
+    # subdivide query polygon to get list of sub-divided polygon coord strings
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
 
     # pass each polygon exterior coordinates in the list to the API, one at a
@@ -471,12 +487,10 @@ def _osm_geometry_download(polygon, tags):
     """
     response_jsons = []
 
-    # subdivide query polygon and get list of sub-divided polygon coordinate
-    # strings
+    # subdivide query polygon to get list of sub-divided polygon coord strings
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
 
-    # pass the exterior coordinates of each polygon in the list to the API,
-    # one at a time
+    # pass exterior coordinates of each polygon in list to API, one at a time
     for polygon_coord_str in polygon_coord_strs:
         query_str = _create_overpass_query(polygon_coord_str, tags)
         response_json = overpass_request(data={"data": query_str})
@@ -537,7 +551,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
 
     Parameters
     ----------
-    params : dict or OrderedDict
+    params : OrderedDict
         key-value pairs of parameters
     request_type : string
         Type of Nominatim query. One of: search, reverse, or lookup
@@ -557,7 +571,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
     # prepare Nominatim API URL and see if request already exists in cache
     url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
     prepared_url = requests.Request("GET", url, params=params).prepare().url
-    cached_response_json = _get_from_cache(prepared_url)
+    cached_response_json = _retrieve_from_cache(prepared_url)
 
     if settings.nominatim_key:
         params["key"] = settings.nominatim_key
@@ -575,6 +589,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
         utils.log(f"Get {prepared_url} with timeout={settings.timeout}")
         headers = _get_http_headers()
         response = requests.get(url, params=params, timeout=settings.timeout, headers=headers)
+        sc = response.status_code
 
         # log the response size and domain
         size_kb = len(response.content) / 1000.0
@@ -585,7 +600,6 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
             response_json = response.json()
 
         except Exception:  # pragma: no cover
-            sc = response.status_code
             if sc in {429, 504}:
                 # 429 is 'too many requests' and 504 is 'gateway timeout' from
                 # server overload: handle these by pausing then recursively
@@ -599,7 +613,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
                 utils.log(f"{domain} returned {sc}", level=lg.ERROR)
                 raise Exception(f"Server returned:\n{response} {response.reason}\n{response.text}")
 
-        _save_to_cache(prepared_url, response_json)
+        _save_to_cache(prepared_url, response_json, sc)
         return response_json
 
 
@@ -609,8 +623,8 @@ def overpass_request(data, pause=None, error_pause=60):
 
     Parameters
     ----------
-    data : dict or OrderedDict
-        key-value pairs of parameters to post to the API
+    data : OrderedDict
+        key-value pairs of parameters
     pause : int
         how long to pause in seconds before request, if None, will query API
         status endpoint to find when next slot is available
@@ -626,7 +640,7 @@ def overpass_request(data, pause=None, error_pause=60):
     # hash to look up/save to cache
     url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
     prepared_url = requests.Request("GET", url, params=data).prepare().url
-    cached_response_json = _get_from_cache(prepared_url, check_remark=True)
+    cached_response_json = _retrieve_from_cache(prepared_url, check_remark=True)
 
     if cached_response_json is not None:
         # found response in the cache, return it instead of calling server
@@ -643,6 +657,7 @@ def overpass_request(data, pause=None, error_pause=60):
         utils.log(f"Post {prepared_url} with timeout={settings.timeout}")
         headers = _get_http_headers()
         response = requests.post(url, data=data, timeout=settings.timeout, headers=headers)
+        sc = response.status_code
 
         # log the response size and domain
         size_kb = len(response.content) / 1000.0
@@ -655,7 +670,6 @@ def overpass_request(data, pause=None, error_pause=60):
                 utils.log(f'Server remark: "{response_json["remark"]}"', level=lg.WARNING)
 
         except Exception:  # pragma: no cover
-            sc = response.status_code
             if sc in {429, 504}:
                 # 429 is 'too many requests' and 504 is 'gateway timeout' from
                 # server overload: handle these by pausing then recursively
@@ -666,11 +680,11 @@ def overpass_request(data, pause=None, error_pause=60):
                 response_json = overpass_request(data, pause, error_pause)
 
             else:
-                # else, this was an unhandled status_code, throw an exception
+                # else, this was an unhandled status code, throw an exception
                 utils.log(f"{domain} returned {sc}", level=lg.ERROR)
                 raise Exception(f"Server returned\n{response} {response.reason}\n{response.text}")
 
-        _save_to_cache(prepared_url, response_json)
+        _save_to_cache(prepared_url, response_json, sc)
         return response_json
 
 

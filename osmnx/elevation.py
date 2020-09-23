@@ -72,7 +72,7 @@ def add_node_elevations(
             url = url_template.format(locations)
 
         # check if this request is already in the cache (if global use_cache=True)
-        cached_response_json = downloader._get_from_cache(url)
+        cached_response_json = downloader._retrieve_from_cache(url)
         if cached_response_json is not None:
             response_json = cached_response_json
         else:
@@ -89,7 +89,7 @@ def add_node_elevations(
                     }
                     response = requests.get(url, headers=headers)
                 response_json = response.json()
-                downloader._save_to_cache(url, response_json)
+                downloader._save_to_cache(url, response_json, response.status_code)
             except Exception as e:
                 utils.log(e)
                 utils.log(f"Server responded with {response.status_code}: {response.reason}")
