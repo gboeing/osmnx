@@ -27,4 +27,4 @@ A clear and concise description of any alternative solutions or features you've 
 
 **Additional context**
 
-Add any code snippets, context, or screenshots about the feature proposal.
+Provide a complete minimal working example of code to demonstrate your use case. Add any additional code snippets, context, or screenshots about the feature proposal to demonstrate its importance and feasibility.
