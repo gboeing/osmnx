@@ -5,6 +5,8 @@ from .distance import get_nearest_edge
 from .distance import get_nearest_edges
 from .distance import get_nearest_node
 from .distance import get_nearest_nodes
+from .distance import k_shortest_paths
+from .distance import shortest_path
 from .elevation import add_edge_grades
 from .elevation import add_node_elevations
 from .folium import plot_graph_folium
@@ -56,5 +58,3 @@ from .utils import ts
 from .utils_graph import get_undirected
 from .utils_graph import graph_from_gdfs
 from .utils_graph import graph_to_gdfs
-from .utils_graph import k_shortest_paths
-from .utils_graph import shortest_path
