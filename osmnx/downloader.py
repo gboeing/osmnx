@@ -99,15 +99,15 @@ def _get_osm_filter(network_type):
     return osm_filter
 
 
-def _save_to_cache(url, response_json, status_code):
+def _save_to_cache(url, response_json, sc):
     """
-    Save an HTTP response JSON object to a cache file.
+    Save a HTTP response JSON object to a file in the cache folder.
 
     Function calculates the checksum of url to generate the cache file's name.
     If the request was sent to server via POST instead of GET, then URL should
     be a GET-style representation of request. Response is only saved to a
     cache file if settings.use_cache is True, response_json is not None, and
-    status_code = 200.
+    sc = 200.
 
     Users should always pass OrderedDicts instead of dicts of parameters into
     request functions, so the parameters remain in the same order each time,
@@ -121,7 +121,7 @@ def _save_to_cache(url, response_json, status_code):
         the URL of the request
     response_json : dict
         the JSON response
-    status_code : int
+    sc : int
         the response's HTTP status code
 
     Returns
@@ -130,8 +130,8 @@ def _save_to_cache(url, response_json, status_code):
     """
     if settings.use_cache:
 
-        if status_code != 200:
-            utils.log(f"Did not save to cache because status_code is {status_code}")
+        if sc != 200:
+            utils.log(f"Did not save to cache because status code is {sc}")
 
         elif response_json is None:
             utils.log("Did not save to cache because response_json is None")
@@ -273,18 +273,20 @@ def _get_pause(recursive_delay=5, default_duration=60):
         response = requests.get(url, headers=_get_http_headers())
         status = response.text.split("\n")[3]
         status_first_token = status.split(" ")[0]
-    # if we cannot reach the status endpoint or parse its output, log an
-    # error and return default duration
+
     except Exception:
+        # if we cannot reach the status endpoint or parse its output, log an
+        # error and return default duration
         sc = response.status_code
         utils.log(f"Unable to query {url} got status {sc}", level=lg.ERROR)
         return default_duration
 
     try:
-        # if first token is numeric, it's how many slots you have available - no
-        # wait required
+        # if first token is numeric, it's how many slots you have available,
+        # no wait required
         _ = int(status_first_token)  # number of available slots
         pause = 0
+
     except Exception:  # pragma: no cover
         # if first token is 'Slot', it tells you when your slot will be free
         if status_first_token == "Slot":
@@ -294,11 +296,12 @@ def _get_pause(recursive_delay=5, default_duration=60):
             pause = max(pause, 1)
 
         # if first token is 'Currently', it is currently running a query so
-        # check back in recursive_delay seconds. any other status is unrecognized,
-        # log an error and return default duration
+        # check back in recursive_delay seconds
         elif status_first_token == "Currently":
             time.sleep(recursive_delay)
             pause = _get_pause()
+
+        # any other status is unrecognized: log error, return default duration
         else:
             utils.log(f'Unrecognized server status: "{status}"', level=lg.ERROR)
             return default_duration
@@ -447,8 +450,7 @@ def _osm_net_download(polygon, network_type, custom_filter):
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
 
-    # subdivide query polygon and get list of sub-divided polygon coordinate
-    # strings
+    # subdivide query polygon to get list of sub-divided polygon coord strings
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
 
     # pass each polygon exterior coordinates in the list to the API, one at a
@@ -485,12 +487,10 @@ def _osm_geometry_download(polygon, tags):
     """
     response_jsons = []
 
-    # subdivide query polygon and get list of sub-divided polygon coordinate
-    # strings
+    # subdivide query polygon to get list of sub-divided polygon coord strings
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
 
-    # pass the exterior coordinates of each polygon in the list to the API,
-    # one at a time
+    # pass exterior coordinates of each polygon in list to API, one at a time
     for polygon_coord_str in polygon_coord_strs:
         query_str = _create_overpass_query(polygon_coord_str, tags)
         response_json = overpass_request(data={"data": query_str})
@@ -680,7 +680,7 @@ def overpass_request(data, pause=None, error_pause=60):
                 response_json = overpass_request(data, pause, error_pause)
 
             else:
-                # else, this was an unhandled status_code, throw an exception
+                # else, this was an unhandled status code, throw an exception
                 utils.log(f"{domain} returned {sc}", level=lg.ERROR)
                 raise Exception(f"Server returned\n{response} {response.reason}\n{response.text}")
 
