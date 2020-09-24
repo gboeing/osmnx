@@ -573,7 +573,7 @@ def add_edge_lengths(G, precision=3):
     """
     Add `length` (meters) attribute to each edge.
 
-    Calculated via great-circle distance between each edge's incidents nodes,
+    Calculated via great-circle distance between each edge's incident nodes,
     so ensure graph is in unprojected coordinates.
 
     Parameters

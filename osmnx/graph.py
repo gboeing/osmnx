@@ -508,6 +508,9 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     """
     Create a networkx MultiDiGraph from Overpass API responses.
 
+    Add length in meters (great-circle distance between endpoints) to all
+    of the graph's (unsimplified, straight-line) edges via add_edge_lengths.
+
     Parameters
     ----------
     response_jsons : list
