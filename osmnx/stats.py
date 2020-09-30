@@ -24,8 +24,8 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     G : networkx.MultiDiGraph
         input graph
     area : numeric
-        the area covered by the street network, in square meters (typically
-        land area); if none, will skip all density-based metrics
+        the land area of this study site, in square meters. must be greater
+        than 0. if None, will skip all density-based metrics.
     clean_intersects : bool
         if True, calculate consolidated intersections count (and density, if
         area is provided) via consolidate_intersections function
