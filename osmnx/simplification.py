@@ -395,22 +395,30 @@ def consolidate_intersections(
         G.remove_nodes_from(dead_end_nodes)
 
     if rebuild_graph:
-        return _consolidate_intersections_rebuild_graph(
-            G=G, tolerance=tolerance, reconnect_edges=reconnect_edges
-        )
+        if len(G) == 0 or len(G.edges) == 0:
+            # cannot rebuild a graph with no nodes or no edges, just return it
+            return G
+        else:
+            return _consolidate_intersections_rebuild_graph(
+                G=G, tolerance=tolerance, reconnect_edges=reconnect_edges
+            )
 
     else:
-        # create a GeoDataFrame of nodes, buffer to passed-in distance, merge overlaps
-        gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False)
-        buffered_nodes = gdf_nodes.buffer(tolerance).unary_union
-        if isinstance(buffered_nodes, Polygon):
-            # if only a single node results, make iterable to convert to GeoSeries
-            buffered_nodes = [buffered_nodes]
+        crs = G.graph["crs"]
+        if len(G) == 0:
+            # if graph has no nodes, just return empty GeoSeries
+            return gpd.GeoSeries(crs=crs)
+        else:
+            # create nodes gdf, buffer to passed-in distance, merge overlaps
+            gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False)
+            merged_nodes = gdf_nodes.buffer(tolerance).unary_union
+            if isinstance(merged_nodes, Polygon):
+                # if only a single node results, make iterable to convert to GeoSeries
+                merged_nodes = [merged_nodes]
 
-        # get the centroids of the merged intersection polygons
-        unified_intersections = gpd.GeoSeries(list(buffered_nodes))
-        intersection_centroids = unified_intersections.centroid
-        return intersection_centroids
+            # get the centroids of the merged intersection polygons
+            intersection_centroids = gpd.GeoSeries(list(merged_nodes), crs=crs).centroid
+            return intersection_centroids
 
 
 def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=True):
