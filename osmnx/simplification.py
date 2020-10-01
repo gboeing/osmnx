@@ -404,19 +404,20 @@ def consolidate_intersections(
             )
 
     else:
+        crs = G.graph["crs"]
         if len(G) == 0:
             # if graph has no nodes, just return empty GeoSeries
-            return gpd.GeoSeries()
+            return gpd.GeoSeries(crs=crs)
         else:
             # create nodes gdf, buffer to passed-in distance, merge overlaps
             gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False)
-            buffered_nodes = gdf_nodes.buffer(tolerance).unary_union
-            if isinstance(buffered_nodes, Polygon):
+            merged_nodes = gdf_nodes.buffer(tolerance).unary_union
+            if isinstance(merged_nodes, Polygon):
                 # if only a single node results, make iterable to convert to GeoSeries
-                buffered_nodes = [buffered_nodes]
+                merged_nodes = [merged_nodes]
 
             # get the centroids of the merged intersection polygons
-            intersection_centroids = gpd.GeoSeries(list(buffered_nodes)).centroid
+            intersection_centroids = gpd.GeoSeries(list(merged_nodes), crs=crs).centroid
             return intersection_centroids
 
 
