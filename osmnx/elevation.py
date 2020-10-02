@@ -4,6 +4,7 @@ import math
 import time
 
 import networkx as nx
+import numpy as np
 import pandas as pd
 import requests
 
@@ -138,7 +139,7 @@ def add_edge_grades(G, add_absolute=True, precision=3):
     add_absolute : bool
         if True, also add absolute value of grade as `grade_abs` attribute
     precision : int
-        decimal precision to round grades
+        decimal precision to round grade values
 
     Returns
     -------
@@ -148,19 +149,18 @@ def add_edge_grades(G, add_absolute=True, precision=3):
     for u, v, data in G.edges(keys=False, data=True):
 
         # for each edge, calculate elevation change from origin to destination
-        # then divide by edge length
         elevation_change = G.nodes[v]["elevation"] - G.nodes[u]["elevation"]
+
         try:
-            data["grade"] = round(elevation_change / data["length"], precision)
+            # divide by edge length then round
+            edge_grade = float(elevation_change) / float(data["length"])
+            data["grade"] = round(edge_grade, precision)
         except ZeroDivisionError:
-            data["grade"] = None
+            data["grade"] = np.nan
 
         # optionally add grade absolute value to the edge attributes
         if add_absolute:
-            if data["grade"] is None:
-                data["grade_abs"] = None
-            else:
-                data["grade_abs"] = abs(data["grade"])
+            data["grade_abs"] = abs(data["grade"])
 
-    utils.log("Added grade data to all edges.")
+    utils.log("Added grade attributes to all edges.")
     return G
