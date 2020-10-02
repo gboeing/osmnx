@@ -5,6 +5,7 @@
   - fix handling graphs with no intersections in consolidate_intersections
   - fix consolidate_intersections returning GeoSeries without CRS attribute
   - fix response caching to save only when status code is 200
+  - fix elevation module's grade absolute value calculation when grade is null
   - move shortest path functions from utils_graph module to distance module
 
 ## 0.16.0 (2020-09-07)
