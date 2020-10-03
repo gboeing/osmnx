@@ -22,6 +22,8 @@ def add_node_elevations(
     Uses the Google Maps Elevation API by default, but you can configure
     this to a different provider via ox.config()
 
+    See also the `add_edge_grades` function.
+
     Parameters
     ----------
     G : networkx.MultiDiGraph
@@ -131,6 +133,8 @@ def add_edge_grades(G, add_absolute=True, precision=3):
     Get the directed grade (ie, rise over run) for each edge in the graph and
     add it to the edge as an attribute. Nodes must have `elevation` attributes
     to use this function.
+
+    See also the `add_node_elevations` function.
 
     Parameters
     ----------
