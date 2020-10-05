@@ -213,7 +213,9 @@ def simplify_graph(G, strict=True, remove_rings=True):
     Simplify graph topology by removing all nodes that are not intersections
     or dead-ends. Create an edge directly between the end points that
     encapsulate them, but retain the geometry of the original edges, saved as
-    attribute in new edge.
+    an attribute in new edge. Some of the resulting consolidated edges may
+    comprise multiple OSM ways, and if so, their multiple attribute values are
+    stored as a list.
 
     Parameters
     ----------
