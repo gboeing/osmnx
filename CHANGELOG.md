@@ -1,6 +1,6 @@
 # Change log
 
-## 0.16.1 (2020-10-01)
+## 0.16.1 (2020-10-05)
 
   - fix handling graphs with no intersections in consolidate_intersections
   - fix consolidate_intersections returning GeoSeries without CRS attribute
