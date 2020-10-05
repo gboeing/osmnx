@@ -4,6 +4,7 @@ import math
 import time
 
 import networkx as nx
+import numpy as np
 import pandas as pd
 import requests
 
@@ -20,6 +21,8 @@ def add_node_elevations(
 
     Uses the Google Maps Elevation API by default, but you can configure
     this to a different provider via ox.config()
+
+    See also the `add_edge_grades` function.
 
     Parameters
     ----------
@@ -50,7 +53,7 @@ def add_node_elevations(
     url_template = endpoints[settings.elevation_provider]
 
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
-    # round coorindates to 5 decimal places (approx 1 meter) to be able to fit
+    # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
     # in more locations per API call
     node_points = pd.Series(
         {node: f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)}
@@ -127,40 +130,41 @@ def add_edge_grades(G, add_absolute=True, precision=3):
     """
     Add `grade` attribute to each graph edge.
 
-    Get the directed grade (ie, rise over run) for each edge in the network and
-    add it to the edge as an attribute. Nodes must have elevation attributes to
-    use this function.
+    Get the directed grade (ie, rise over run) for each edge in the graph and
+    add it to the edge as an attribute. Nodes must have `elevation` attributes
+    to use this function.
+
+    See also the `add_node_elevations` function.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
     add_absolute : bool
-        if True, also add the absolute value of the grade as an edge attribute
-        called grade_abs
+        if True, also add absolute value of grade as `grade_abs` attribute
     precision : int
-        decimal precision to round grades
+        decimal precision to round grade values
 
     Returns
     -------
     G : networkx.MultiDiGraph
-        graph with edge grade (and optionally grade_abs) attributes
+        graph with edge `grade` (and optionally `grade_abs`) attributes
     """
-    # for each edge, calculate the difference in elevation from origin to
-    # destination, then divide by edge length
     for u, v, data in G.edges(keys=False, data=True):
+
+        # for each edge, calculate elevation change from origin to destination
         elevation_change = G.nodes[v]["elevation"] - G.nodes[u]["elevation"]
 
-        # round to ten-thousandths decimal place
         try:
-            grade = round(elevation_change / data["length"], precision)
+            # divide by edge length then round
+            edge_grade = float(elevation_change) / float(data["length"])
+            data["grade"] = round(edge_grade, precision)
         except ZeroDivisionError:
-            grade = None
+            data["grade"] = np.nan
 
-        # add grade and (optionally) grade absolute value to the edge data
-        data["grade"] = grade
+        # optionally add grade absolute value to the edge attributes
         if add_absolute:
-            data["grade_abs"] = abs(grade)
+            data["grade_abs"] = abs(data["grade"])
 
-    utils.log("Added grade data to all edges.")
+    utils.log("Added grade attributes to all edges.")
     return G
