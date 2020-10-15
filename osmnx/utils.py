@@ -77,11 +77,11 @@ def ts(style="datetime", template=None):
 
 
 def config(
-    data_folder=settings.data_folder,
-    logs_folder=settings.logs_folder,
-    imgs_folder=settings.imgs_folder,
-    cache_folder=settings.cache_folder,
     use_cache=settings.use_cache,
+    cache_folder=settings.cache_folder,
+    data_folder=settings.data_folder,
+    imgs_folder=settings.imgs_folder,
+    logs_folder=settings.logs_folder,
     log_file=settings.log_file,
     log_console=settings.log_console,
     log_level=settings.log_level,
@@ -94,6 +94,7 @@ def config(
     osm_xml_node_tags=settings.osm_xml_node_tags,
     osm_xml_way_attrs=settings.osm_xml_way_attrs,
     osm_xml_way_tags=settings.osm_xml_way_tags,
+    all_oneway=settings.all_oneway,
     overpass_settings=settings.overpass_settings,
     timeout=settings.timeout,
     memory=settings.memory,
@@ -106,7 +107,6 @@ def config(
     nominatim_endpoint=settings.nominatim_endpoint,
     nominatim_key=settings.nominatim_key,
     overpass_endpoint=settings.overpass_endpoint,
-    all_oneway=settings.all_oneway,
     elevation_provider=settings.elevation_provider,
 ):
     """
@@ -117,27 +117,27 @@ def config(
 
     Parameters
     ----------
-    data_folder : string
-        path to folder in which to save/load data files by default
-    logs_folder : string
-        path to folder in which to save log files
-    imgs_folder : string
-        path to folder in which to save plotted figures by default
-    cache_folder : string
-        path to folder in which to save/load HTTP response cache
     use_cache : bool
         if True, cache HTTP responses locally instead of calling API
-        repetitively for the same request
+        repeatedly for the same request
+    cache_folder : string
+        path to folder in which to save/load HTTP response cache
+    data_folder : string
+        path to folder in which to save/load graph files by default
+    imgs_folder : string
+        path to folder in which to save plot images by default
+    logs_folder : string
+        path to folder in which to save log files
     log_file : bool
         if True, save log output to a file in logs_folder
     log_console : bool
         if True, print log output to the console (terminal window)
     log_level : int
-        one of the logger.level constants
+        one of Python's logger.level constants
     log_name : string
         name of the logger
     log_filename : string
-        name of the log file
+        name of the log file, without file extension
     useful_tags_node : list
         OSM "node" tags to add as graph node attributes, when present
     useful_tags_way : list
@@ -152,6 +152,10 @@ def config(
         edge attributes for saving .osm XML files with save_graph_xml function
     osm_xml_way_tags : list
         edge tags for for saving .osm XML files with save_graph_xml function
+    all_oneway : bool
+        if True, forces all ways to be loaded as oneway ways, preserving
+        the original order of nodes stored in the OSM way XML. Only use if
+        specifically saving to .osm XML file with save_graph_xml function.
     overpass_settings : string
         Settings string for overpass queries. For example, to query historical
         OSM data as of a certain date:
@@ -183,10 +187,6 @@ def config(
         your API key, if you are using an endpoint that requires one
     overpass_endpoint : string
         the API endpoint to use for overpass queries
-    all_oneway : bool
-        if True, forces all ways to be loaded as oneway ways, preserving
-        the original order of nodes stored in the OSM way XML. Only use if
-        specifically saving to .osm XML file with save_graph_xml function.
     elevation_provider : string
         the API provider to use for adding node elevations, can be either
         "google" or "airmap"
@@ -228,9 +228,7 @@ def config(
     settings.elevation_provider = elevation_provider
     settings.bidirectional_network_types = bidirectional_network_types
 
-    # if logging is turned on, log that we are configured
-    if settings.log_file or settings.log_console:
-        log("Configured osmnx")
+    log("Configured OSMnx")
 
 
 def log(message, level=None, name=None, filename=None):
@@ -245,11 +243,11 @@ def log(message, level=None, name=None, filename=None):
     message : string
         the message to log
     level : int
-        one of the logger.level constants
+        one of Python's logger.level constants
     name : string
         name of the logger
     filename : string
-        name of the log file
+        name of the log file, without file extension
 
     Returns
     -------
@@ -302,11 +300,11 @@ def _get_logger(level=None, name=None, filename=None):
     Parameters
     ----------
     level : int
-        one of the logger.level constants
+        one of Python's logger.level constants
     name : string
         name of the logger
     filename : string
-        name of the log file
+        name of the log file, without file extension
 
     Returns
     -------
