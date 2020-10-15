@@ -89,6 +89,7 @@ def config(
     log_filename=settings.log_filename,
     useful_tags_node=settings.useful_tags_node,
     useful_tags_way=settings.useful_tags_way,
+    bidirectional_network_types=settings.bidirectional_network_types,
     osm_xml_node_attrs=settings.osm_xml_node_attrs,
     osm_xml_node_tags=settings.osm_xml_node_tags,
     osm_xml_way_attrs=settings.osm_xml_way_attrs,
@@ -141,6 +142,8 @@ def config(
         OSM "node" tags to add as graph node attributes, when present
     useful_tags_way : list
         OSM "way" tags to add as graph edge attributes, when present
+    bidirectional_network_types : list
+        network types for which a fully bidirectional graph will be created
     osm_xml_node_attrs : list
         node attributes for saving .osm XML files with save_graph_xml function
     osm_xml_node_tags : list
@@ -223,6 +226,7 @@ def config(
     settings.overpass_endpoint = overpass_endpoint
     settings.all_oneway = all_oneway
     settings.elevation_provider = elevation_provider
+    settings.bidirectional_network_types = bidirectional_network_types
 
     # if logging is turned on, log that we are configured
     if settings.log_file or settings.log_console:
