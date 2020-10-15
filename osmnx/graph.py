@@ -49,7 +49,7 @@ def graph_from_bbox(
         what type of street network to get if custom_filter is None. One of
         'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
     simplify : bool
-        if True, simplify the graph topology with the simplify_graph function
+        if True, simplify graph topology with the `simplify_graph` function
     retain_all : bool
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
@@ -121,7 +121,7 @@ def graph_from_point(
         what type of street network to get if custom_filter is None. One of
         'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
     simplify : bool
-        if True, simplify the graph topology with the simplify_graph function
+        if True, simplify graph topology with the `simplify_graph` function
     retain_all : bool
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
@@ -209,7 +209,7 @@ def graph_from_address(
         what type of street network to get if custom_filter is None. One of
         'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
     simplify : bool
-        if True, simplify the graph topology with the simplify_graph function
+        if True, simplify graph topology with the `simplify_graph` function
     retain_all : bool
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
@@ -292,7 +292,7 @@ def graph_from_place(
         what type of street network to get if custom_filter is None. One of
         'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
     simplify : bool
-        if True, simplify the graph topology with the simplify_graph function
+        if True, simplify graph topology with the `simplify_graph` function
     retain_all : bool
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
@@ -375,7 +375,7 @@ def graph_from_polygon(
         what type of street network to get if custom_filter is None. One of
         'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
     simplify : bool
-        if True, simplify the graph topology with the simplify_graph function
+        if True, simplify graph topology with the `simplify_graph` function
     retain_all : bool
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
@@ -481,7 +481,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
     bidirectional : bool
         if True, create bi-directional edges for one-way streets
     simplify : bool
-        if True, simplify the graph topology with the simplify_graph function
+        if True, simplify graph topology with the `simplify_graph` function
     retain_all : bool
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
