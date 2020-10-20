@@ -123,17 +123,26 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     """
     if graph_attrs is None:
         graph_attrs = {"crs": gdf_edges.crs}
+
     G = nx.MultiDiGraph(**graph_attrs)
 
-    # add the nodes then each node's non-null attributes
-    G.add_nodes_from(gdf_nodes.index)
+    attr_col_headings = [c for c in gdf_edges.columns if c not in ["u", "v"]]
+    attribute_data = zip(*[gdf_edges[col] for col in attr_col_headings])
+
+    multigraph_edge_keys = gdf_edges["key"]
+    attribute_data = zip(attribute_data, multigraph_edge_keys)
+
+    # Generate graph edges
+    for s, t, attrs in zip(gdf_edges["u"], gdf_edges["v"], attribute_data):
+
+        attrs, multigraph_edge_key = attrs
+        key = G.add_edge(s, t, key=multigraph_edge_key)
+
+        G[s][t][key].update(zip(attr_col_headings, attrs))
+
+    # Add nodes attributes
     for col in gdf_nodes.columns:
         nx.set_node_attributes(G, name=col, values=gdf_nodes[col].dropna())
-
-    # add each edge and its non-null attributes
-    for (u, v, k), row in gdf_edges.set_index(["u", "v", "key"]).iterrows():
-        d = {label: val for label, val in row.items() if isinstance(val, list) or pd.notnull(val)}
-        G.add_edge(u, v, k, **d)
 
     utils.log("Created graph from node/edge GeoDataFrames")
     return G
