@@ -169,7 +169,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     utils.log(f'Saved graph as GraphML file at "{filepath}"')
 
 
-def load_graphml(filepath, node_type=int):
+def load_graphml(filepath, node_type=int, node_dtypes=None, edge_dtypes=None):
     """
     Load an OSMnx-saved GraphML file from disk.
 
@@ -181,7 +181,10 @@ def load_graphml(filepath, node_type=int):
         path to the GraphML file
     node_type : type
         convert node ids to this data type
-
+    node_dtypes : dict of attribute name -> data type
+        identifies additional is a numpy.dtype or Python type to cast one or more additional node attributes
+    edge_dtypes : dict of attribute name -> data type
+        identifies additional is a numpy.dtype or Python type to cast one or more additional edge attributes
     Returns
     -------
     G : networkx.MultiDiGraph
@@ -191,8 +194,8 @@ def load_graphml(filepath, node_type=int):
 
     # convert node/edge attribute data types
     utils.log("Converting node and edge attribute data types")
-    G = _convert_node_attr_types(G, node_type)
-    G = _convert_edge_attr_types(G, node_type)
+    G = _convert_node_attr_types(G, node_type, node_dtypes)
+    G = _convert_edge_attr_types(G, node_type, edge_dtypes)
 
     # convert graph crs attribute from saved string to correct dict data type
     # if it is a stringified dict rather than a proj4 string
@@ -212,7 +215,7 @@ def load_graphml(filepath, node_type=int):
     return G
 
 
-def _convert_node_attr_types(G, node_type):
+def _convert_node_attr_types(G, node_type,edge_dtypes=None):
     """
     Convert graph nodes' attributes' types from string to numeric.
 
@@ -222,6 +225,8 @@ def _convert_node_attr_types(G, node_type):
         input graph
     node_type : type
         convert node ID (osmid) to this type
+    node_dtypes : dict of attribute name -> data type
+        identifies additional is a numpy.dtype or Python type to cast one or more additional node attributes
 
     Returns
     -------
@@ -240,7 +245,7 @@ def _convert_node_attr_types(G, node_type):
     return G
 
 
-def _convert_edge_attr_types(G, node_type):
+def _convert_edge_attr_types(G, node_type, edge_dtypes=None):
     """
     Convert graph edges' attributes' types from string to numeric.
 
@@ -250,6 +255,8 @@ def _convert_edge_attr_types(G, node_type):
         input graph
     node_type : type
         convert osmid to this type
+    edge_dtypes : dict of attribute name -> data type
+        identifies additional is a numpy.dtype or Python type to cast one or more additional edge attributes
 
     Returns
     -------
@@ -353,15 +360,15 @@ def _stringify_nonnumeric_cols(gdf):
 
 
 def save_graph_xml(
-    data,
-    filepath=None,
-    node_tags=settings.osm_xml_node_tags,
-    node_attrs=settings.osm_xml_node_attrs,
-    edge_tags=settings.osm_xml_way_tags,
-    edge_attrs=settings.osm_xml_way_attrs,
-    oneway=False,
-    merge_edges=True,
-    edge_tag_aggs=None,
+        data,
+        filepath=None,
+        node_tags=settings.osm_xml_node_tags,
+        node_attrs=settings.osm_xml_node_attrs,
+        edge_tags=settings.osm_xml_way_tags,
+        edge_attrs=settings.osm_xml_way_attrs,
+        oneway=False,
+        merge_edges=True,
+        edge_tag_aggs=None,
 ):
     """
     Save graph to disk as an OSM-formatted XML .osm file.
@@ -472,7 +479,6 @@ def save_graph_xml(
 
     # misc. string replacements to meet OSM XML spec
     if "oneway" in gdf_edges.columns:
-
         # fill blank oneway tags with default (False)
         gdf_edges.loc[pd.isnull(gdf_edges["oneway"]), "oneway"] = oneway
         gdf_edges.loc[:, "oneway"] = gdf_edges["oneway"].astype(str)
@@ -577,7 +583,7 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
             else:
                 for tag in edge_tags:
                     if (tag in all_way_edges.columns) and (
-                        tag not in (t for t, agg in edge_tag_aggs)
+                            tag not in (t for t, agg in edge_tag_aggs)
                     ):
                         etree.SubElement(edge, "tag", attrib={"k": tag, "v": first[tag]})
 
