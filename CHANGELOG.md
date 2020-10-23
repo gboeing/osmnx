@@ -1,5 +1,10 @@
 # Change log
 
+## In Progress
+
+  - improve graph_from_gdfs speed and efficiency
+  - fix bidirectional_network_types exposure via config function
+
 ## 0.16.1 (2020-10-05)
 
   - fix handling graphs with no intersections in consolidate_intersections
