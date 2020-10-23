@@ -123,24 +123,20 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     """
     if graph_attrs is None:
         graph_attrs = {"crs": gdf_edges.crs}
-
     G = nx.MultiDiGraph(**graph_attrs)
 
-    attr_col_headings = [c for c in gdf_edges.columns if c not in ["u", "v"]]
-    attribute_data = zip(*[gdf_edges[col] for col in attr_col_headings])
+    # assemble edges' attribute names and values
+    attr_names = [c for c in gdf_edges.columns if c not in {"u", "v", "key"}]
+    attr_values = zip(*[gdf_edges[col] for col in attr_names])
 
-    multigraph_edge_keys = gdf_edges["key"]
-    attribute_data = zip(attribute_data, multigraph_edge_keys)
+    # add edges and their attributes to graph. filter out null attribute
+    # values so that edges only get attributes with non-null values.
+    for u, v, k, edge_vals in zip(gdf_edges["u"], gdf_edges["v"], gdf_edges["key"], attr_values):
+        edge_attrs = zip(attr_names, edge_vals)
+        data = {a: b for a, b in dict(edge_attrs).items() if isinstance(b, list) or pd.notnull(b)}
+        G.add_edge(u, v, key=k, **data)
 
-    # Generate graph edges
-    for s, t, attrs in zip(gdf_edges["u"], gdf_edges["v"], attribute_data):
-
-        attrs, multigraph_edge_key = attrs
-        key = G.add_edge(s, t, key=multigraph_edge_key)
-
-        G[s][t][key].update(zip(attr_col_headings, attrs))
-
-    # Add nodes attributes
+    # add nodes' attributes to graph
     for col in gdf_nodes.columns:
         nx.set_node_attributes(G, name=col, values=gdf_nodes[col].dropna())
 
