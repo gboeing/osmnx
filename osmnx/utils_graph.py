@@ -125,18 +125,15 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
         graph_attrs = {"crs": gdf_edges.crs}
     G = nx.MultiDiGraph(**graph_attrs)
 
-    # assemble edges' attribute data and keys
-    attr_names = [c for c in gdf_edges.columns if c not in {"u", "v"}]
+    # assemble edges' attribute names and values
+    attr_names = [c for c in gdf_edges.columns if c not in {"u", "v", "key"}]
     attr_values = zip(*[gdf_edges[col] for col in attr_names])
 
     # add edges and their attributes to graph
-    for u, v, values in zip(gdf_edges["u"], gdf_edges["v"], attr_values):
-        data = {
-            a: b
-            for a, b in dict(zip(attr_names, values)).items()
-            if isinstance(b, list) or pd.notnull(b)
-        }
-        G.add_edge(u, v, **data)
+    for u, v, k, values in zip(gdf_edges["u"], gdf_edges["v"], gdf_edges["key"], attr_values):
+        edge_attrs = zip(attr_names, values)
+        data = {a: b for a, b in dict(edge_attrs).items() if isinstance(b, list) or pd.notnull(b)}
+        G.add_edge(u, v, key=k, **data)
 
     # add nodes' attributes to graph
     for col in gdf_nodes.columns:
