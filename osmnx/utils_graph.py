@@ -129,11 +129,11 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     attr_names = [c for c in gdf_edges.columns if c not in {"u", "v", "key"}]
     attr_values = zip(*[gdf_edges[col] for col in attr_names])
 
-    # add edges and their attributes to graph. filter out null attribute
-    # values so that edges only get attributes with non-null values.
+    # add edges and their attributes to graph, but filter out null attribute
+    # values so that edges only get attributes with non-null values
     for u, v, k, edge_vals in zip(gdf_edges["u"], gdf_edges["v"], gdf_edges["key"], attr_values):
         edge_attrs = zip(attr_names, edge_vals)
-        data = {a: b for a, b in dict(edge_attrs).items() if isinstance(b, list) or pd.notnull(b)}
+        data = {an: ev for an, ev in edge_attrs if isinstance(ev, list) or pd.notnull(ev)}
         G.add_edge(u, v, key=k, **data)
 
     # add nodes' attributes to graph
