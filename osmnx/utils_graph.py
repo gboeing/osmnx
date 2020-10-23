@@ -130,9 +130,13 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     attr_values = zip(*[gdf_edges[col] for col in attr_names])
 
     # add edges and their attributes to graph
-    for u, v, k, values in zip(gdf_edges["u"], gdf_edges["v"], gdf_edges["key"], attr_values):
-        G.add_edge(u, v, key=k)
-        G[u][v][k].update(zip(attr_names, values))
+    for u, v, values in zip(gdf_edges["u"], gdf_edges["v"], attr_values):
+        data = {
+            a: b
+            for a, b in dict(zip(attr_names, values)).items()
+            if isinstance(b, list) or pd.notnull(b)
+        }
+        G.add_edge(u, v, **data)
 
     # add nodes' attributes to graph
     for col in gdf_nodes.columns:
