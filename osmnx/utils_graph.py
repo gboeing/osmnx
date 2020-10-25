@@ -325,7 +325,11 @@ def remove_isolated_nodes(G):
     G : networkx.MultiDiGraph
         graph with all isolated nodes removed
     """
-    isolated_nodes = [node for node, degree in G.degree() if degree < 1]
+    # make a copy to not mutate original graph object caller passed in
+    G = G.copy()
+
+    # get the set of all isolated nodes, then remove them
+    isolated_nodes = {node for node, degree in G.degree() if degree < 1}
     G.remove_nodes_from(isolated_nodes)
     utils.log(f"Removed {len(isolated_nodes)} isolated nodes")
     return G
