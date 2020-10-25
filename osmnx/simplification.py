@@ -241,7 +241,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
 
     utils.log("Begin topologically simplifying the graph...")
 
-    # make a copy to not edit the original graph object the caller passed in
+    # make a copy to not mutate original graph object caller passed in
     G = G.copy()
     initial_node_count = len(G)
     initial_edge_count = len(G.edges)
@@ -394,7 +394,7 @@ def consolidate_intersections(
 
         dead_end_nodes = [node for node, count in streets_per_node.items() if count <= 1]
 
-        # make a copy to not edit the original graph object the caller passed in
+        # make a copy to not mutate original graph object caller passed in
         G = G.copy()
         G.remove_nodes_from(dead_end_nodes)
 

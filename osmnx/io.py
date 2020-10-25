@@ -126,7 +126,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     if not folder == "" and not os.path.exists(folder):
         os.makedirs(folder)
 
-    # make a copy to not edit the original graph object the caller passed in
+    # make a copy to not mutate original graph object caller passed in
     G = G.copy()
 
     if gephi:

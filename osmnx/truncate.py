@@ -42,7 +42,7 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
     # then identify every node further than max_dist away
     distant_nodes = {k: v for k, v in distances.items() if v > max_dist}
 
-    # make a copy to not edit the original graph object the caller passed in
+    # make a copy to not mutate original graph object caller passed in
     G = G.copy()
     G.remove_nodes_from(distant_nodes)
 
@@ -177,7 +177,7 @@ def truncate_graph_polygon(
         nodes_to_remove = nodes_outside_poly
 
     # now remove from the graph all those nodes that lie outside the polygon
-    # make a copy to not edit the original graph object the caller passed in
+    # make a copy to not mutate original graph object caller passed in
     G = G.copy()
     G.remove_nodes_from(nodes_to_remove)
     utils.log(f"Removed {len(nodes_to_remove)} nodes outside polygon")
