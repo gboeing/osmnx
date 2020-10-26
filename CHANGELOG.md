@@ -2,8 +2,9 @@
 
 ## In Progress
 
+  - fix remove_isolated_nodes function mutating the passed-in graph
   - improve graph_from_gdfs speed and efficiency
-  - fix bidirectional_network_types exposure via config function
+  - expose bidirectional_network_types via config function
 
 ## 0.16.1 (2020-10-05)
 
