@@ -58,7 +58,12 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         if len(G.edges) < 1:
             raise ValueError("Graph has no edges, cannot convert to a GeoDataFrame.")
 
-        u, v, k, data = zip(*G.edges(keys=True, data=True))
+        try:
+            # if graph has keys
+            u, v, k, data = zip(*G.edges(keys=True, data=True))
+        except:
+            k = None
+            u, v, data = zip(*G.edges(data=True))
 
         if fill_edge_geometry:
 
@@ -87,7 +92,8 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         # add u, v, key attributes as columns
         gdf_edges["u"] = u
         gdf_edges["v"] = v
-        gdf_edges["key"] = k
+        if k is not None:
+            gdf_edges["key"] = k
 
         utils.log("Created edges GeoDataFrame from graph")
 
