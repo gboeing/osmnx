@@ -257,18 +257,18 @@ def _convert_edge_attr_types(G, node_type, edge_dtypes=None):
     node_type : type
         convert osmid to this type
     edge_dtypes : dict of attribute name -> data type
-        identifies additional is a numpy.dtype or Python type to cast one or more additional edge attributes
-
+        identifies additional is a numpy.dtype or Python type to cast one or more additional edge attributes. Defaults
+        to {"length": float, "grade": float, "grade_abs": float, "bearing": float, "speed_kph": float,
+                       "travel_time": float}
     Returns
     -------
     G : networkx.MultiDiGraph
     """
+    if edge_dtypes is None:
+        edge_dtypes = {"length": float, "grade": float, "grade_abs": float, "bearing": float, "speed_kph": float,
+                       "travel_time": float}
     # convert numeric, bool, and list edge attributes from string to correct data types
     for _, _, data in G.edges(data=True, keys=False):
-
-        # parse length to float: should always have only 1 value
-        data["length"] = float(data["length"])
-
         try:
             data["oneway"] = ast.literal_eval(data["oneway"])
             raise ValueError()
@@ -277,15 +277,16 @@ def _convert_edge_attr_types(G, node_type, edge_dtypes=None):
             # graph, or values it can't eval if settings.all_oneway=True
             pass
 
-        # convert to float any possible OSMnx-added edge attributes, which may
+        # convert to specfied dtype any possible OSMnx-added edge attributes, which may
         # have multiple values if graph was simplified after they were added
-        for attr in {"grade", "grade_abs", "bearing", "speed_kph", "travel_time"}:
+        for attr in edge_dtypes:
             if attr in data:
+                dtype = edge_dtypes[attr]
                 if data[attr].startswith("[") and data[attr].endswith("]"):
                     # if it's a list, eval it then convert each item to float
-                    data[attr] = [float(a) for a in ast.literal_eval(data[attr])]
+                    data[attr] = [dtype(a) for a in ast.literal_eval(data[attr])]
                 else:
-                    data[attr] = float(data[attr])
+                    data[attr] = dtype(data[attr])
 
         # these attributes might have a single value, or a list if edge's
         # topology was simplified
