@@ -215,7 +215,7 @@ def load_graphml(filepath, node_type=int, node_dtypes=None, edge_dtypes=None):
     return G
 
 
-def _convert_node_attr_types(G, node_type,edge_dtypes=None):
+def _convert_node_attr_types(G, node_type, node_dtypes=None):
     """
     Convert graph nodes' attributes' types from string to numeric.
 
@@ -227,21 +227,22 @@ def _convert_node_attr_types(G, node_type,edge_dtypes=None):
         convert node ID (osmid) to this type
     node_dtypes : dict of attribute name -> data type
         identifies additional is a numpy.dtype or Python type to cast one or more additional node attributes
-
+        defaults to {"elevation":float, "elevation_res":float, "lat":float, "lon":float, "x":float, "y":float}
     Returns
     -------
     G : networkx.MultiDiGraph
     """
+    if node_dtypes is None:
+        node_dtypes = {"elevation": float, "elevation_res": float, "lat": float, "lon": float,
+                       "x": float, "y": float}
     for _, data in G.nodes(data=True):
-
         # convert node ID to user-requested type
         data["osmid"] = node_type(data["osmid"])
-
         # convert numeric node attributes from string to float
-        for attr in {"elevation", "elevation_res", "lat", "lon", "x", "y"}:
+        for attr in node_dtypes:
             if attr in data:
-                data[attr] = float(data[attr])
-
+                dtype = node_dtypes[attr]
+                data[attr] = dtype(data[attr])
     return G
 
 
