@@ -182,11 +182,15 @@ def load_graphml(filepath, node_type=int, node_dtypes=None, edge_dtypes=None):
     node_type : type
         convert node ids to this data type
     node_dtypes : dict of attribute name -> data type
-        identifies additional is a numpy.dtype or Python type to cast one or more additional node attributes
-        defaults to {"elevation":float, "elevation_res":float, "lat":float, "lon":float, "x":float, "y":float} if None
+        identifies additional is a numpy.dtype or Python type to
+         cast one or more additional node attributes defaults to
+         {"elevation":float, "elevation_res":float, "lat":float,
+         "lon":float, "x":float, "y":float} if None
     edge_dtypes : dict of attribute name -> data type
-        identifies additional is a numpy.dtype or Python type to cast one or more additional edge attributes. Defaults
-        to {"length": float, "grade": float, "grade_abs": float, "bearing": float, "speed_kph": float,
+        identifies additional is a numpy.dtype or Python type to
+         cast one or more additional edge attributes. Defaults
+        to {"length": float, "grade": float, "grade_abs":
+        float, "bearing": float, "speed_kph": float,
         "travel_time": float} if None
     Returns
     -------
@@ -229,8 +233,10 @@ def _convert_node_attr_types(G, node_type, node_dtypes=None):
     node_type : type
         convert node ID (osmid) to this type
     node_dtypes : dict of attribute name -> data type
-        identifies additional is a numpy.dtype or Python type to cast one or more additional node attributes
-        defaults to {"elevation":float, "elevation_res":float, "lat":float, "lon":float, "x":float, "y":float} if None
+        identifies additional is a numpy.dtype or Python type
+        to cast one or more additional node attributes
+        defaults to {"elevation":float, "elevation_res":float,
+        "lat":float, "lon":float, "x":float, "y":float} if None
     Returns
     -------
     G : networkx.MultiDiGraph
@@ -260,9 +266,11 @@ def _convert_edge_attr_types(G, node_type, edge_dtypes=None):
     node_type : type
         convert osmid to this type
     edge_dtypes : dict of attribute name -> data type
-        identifies additional is a numpy.dtype or Python type to cast one or more additional edge attributes. Defaults
-        to {"length": float, "grade": float, "grade_abs": float, "bearing": float, "speed_kph": float,
-        "travel_time": float} if None
+        identifies additional is a numpy.dtype or Python
+        type to cast one or more additional edge attributes.
+        Defaults to {"length": float, "grade": float,
+         "grade_abs": float, "bearing": float,
+         "speed_kph": float,"travel_time": float} if None
     Returns
     -------
     G : networkx.MultiDiGraph
