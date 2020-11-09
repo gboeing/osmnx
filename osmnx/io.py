@@ -192,6 +192,7 @@ def load_graphml(filepath, node_type=int, node_dtypes=None, edge_dtypes=None):
         to {"length": float, "grade": float, "grade_abs":
         float, "bearing": float, "speed_kph": float,
         "travel_time": float} if None
+
     Returns
     -------
     G : networkx.MultiDiGraph
@@ -237,6 +238,7 @@ def _convert_node_attr_types(G, node_type, node_dtypes=None):
         to cast one or more additional node attributes
         defaults to {"elevation":float, "elevation_res":float,
         "lat":float, "lon":float, "x":float, "y":float} if None
+
     Returns
     -------
     G : networkx.MultiDiGraph
@@ -269,8 +271,9 @@ def _convert_edge_attr_types(G, node_type, edge_dtypes=None):
         identifies additional is a numpy.dtype or Python
         type to cast one or more additional edge attributes.
         Defaults to {"length": float, "grade": float,
-         "grade_abs": float, "bearing": float,
-         "speed_kph": float,"travel_time": float} if None
+        "grade_abs": float, "bearing": float,
+        "speed_kph": float,"travel_time": float} if None
+        
     Returns
     -------
     G : networkx.MultiDiGraph
