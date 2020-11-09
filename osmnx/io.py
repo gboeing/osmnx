@@ -276,9 +276,10 @@ def _convert_edge_attr_types(G, node_type, edge_dtypes=None):
     G : networkx.MultiDiGraph
     """
     if edge_dtypes is None:
-        edge_dtypes = {"length": float, "grade": float, "grade_abs": float, "bearing": float, "speed_kph": float,
-                       "travel_time": float}
-    # convert numeric, bool, and list edge attributes from string to correct data types
+        edge_dtypes = {"length": float, "grade": float, "grade_abs": float,
+                       "bearing": float, "speed_kph": float, "travel_time": float}
+    # convert numeric, bool, and list edge attributes from string
+    # to correct data types
     for _, _, data in G.edges(data=True, keys=False):
         try:
             data["oneway"] = ast.literal_eval(data["oneway"])
