@@ -273,7 +273,7 @@ def _convert_edge_attr_types(G, node_type, edge_dtypes=None):
         Defaults to {"length": float, "grade": float,
         "grade_abs": float, "bearing": float,
         "speed_kph": float,"travel_time": float} if None
-        
+
     Returns
     -------
     G : networkx.MultiDiGraph
