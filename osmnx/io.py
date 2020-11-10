@@ -377,15 +377,15 @@ def _stringify_nonnumeric_cols(gdf):
 
 
 def save_graph_xml(
-        data,
-        filepath=None,
-        node_tags=settings.osm_xml_node_tags,
-        node_attrs=settings.osm_xml_node_attrs,
-        edge_tags=settings.osm_xml_way_tags,
-        edge_attrs=settings.osm_xml_way_attrs,
-        oneway=False,
-        merge_edges=True,
-        edge_tag_aggs=None,
+    data,
+    filepath=None,
+    node_tags=settings.osm_xml_node_tags,
+    node_attrs=settings.osm_xml_node_attrs,
+    edge_tags=settings.osm_xml_way_tags,
+    edge_attrs=settings.osm_xml_way_attrs,
+    oneway=False,
+    merge_edges=True,
+    edge_tag_aggs=None,
 ):
     """
     Save graph to disk as an OSM-formatted XML .osm file.
