@@ -244,8 +244,14 @@ def _convert_node_attr_types(G, node_type, node_dtypes=None):
     G : networkx.MultiDiGraph
     """
     if node_dtypes is None:
-        node_dtypes = {"elevation": float, "elevation_res": float, "lat": float, "lon": float,
-                       "x": float, "y": float}
+        node_dtypes = {
+            "elevation": float,
+            "elevation_res": float,
+            "lat": float,
+            "lon": float,
+            "x": float,
+            "y": float,
+        }
     for _, data in G.nodes(data=True):
         # convert node ID to user-requested type
         data["osmid"] = node_type(data["osmid"])
@@ -279,8 +285,14 @@ def _convert_edge_attr_types(G, node_type, edge_dtypes=None):
     G : networkx.MultiDiGraph
     """
     if edge_dtypes is None:
-        edge_dtypes = {"length": float, "grade": float, "grade_abs": float,
-                       "bearing": float, "speed_kph": float, "travel_time": float}
+        edge_dtypes = {
+            "length": float,
+            "grade": float,
+            "grade_abs": float,
+            "bearing": float,
+            "speed_kph": float,
+            "travel_time": float,
+        }
     # convert numeric, bool, and list edge attributes from string
     # to correct data types
     for _, _, data in G.edges(data=True, keys=False):
@@ -600,7 +612,7 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
             else:
                 for tag in edge_tags:
                     if (tag in all_way_edges.columns) and (
-                            tag not in (t for t, agg in edge_tag_aggs)
+                        tag not in (t for t, agg in edge_tag_aggs)
                     ):
                         etree.SubElement(edge, "tag", attrib={"k": tag, "v": first[tag]})
 
