@@ -220,8 +220,14 @@ def load_graphml(filepath, node_type=None, node_dtypes=None, edge_dtypes=None):
     edge_dtypes = default_edge_dtypes
 
     if node_type is not None:
-        # TODO: add deprecation warning: use node_dtypes instead
         # for now add to node_dtypes, remove in next release
+        import warnings
+
+        msg = (
+            "The node_type argument has been deprecated and will be removed"
+            " in a future release. Use node_dtypes instead."
+        )
+        warnings.warn(msg)
         node_dtypes.update({"osmid": node_type})
 
     # read the graph from disk
@@ -295,7 +301,7 @@ def _convert_edge_attr_types(G, dtypes=None):
         for attr, value in data.items():
             if value.startswith("[") and value.endswith("]"):
                 try:
-                    data[attr] = ast.literal_eval(data[attr])
+                    data[attr] = ast.literal_eval(value)
                 except Exception:
                     pass
 
