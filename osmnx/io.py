@@ -169,7 +169,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     utils.log(f'Saved graph as GraphML file at "{filepath}"')
 
 
-def load_graphml(filepath, node_type=int):
+def load_graphml(filepath, node_type=int, node_dtypes=None, edge_dtypes=None):
     """
     Load an OSMnx-saved GraphML file from disk.
 
@@ -181,6 +181,17 @@ def load_graphml(filepath, node_type=int):
         path to the GraphML file
     node_type : type
         convert node ids to this data type
+    node_dtypes : dict of attribute name -> data type
+        identifies additional is a numpy.dtype or Python type to
+         cast one or more additional node attributes defaults to
+         {"elevation":float, "elevation_res":float, "lat":float,
+         "lon":float, "x":float, "y":float} if None
+    edge_dtypes : dict of attribute name -> data type
+        identifies additional is a numpy.dtype or Python type to
+         cast one or more additional edge attributes. Defaults
+        to {"length": float, "grade": float, "grade_abs":
+        float, "bearing": float, "speed_kph": float,
+        "travel_time": float} if None
 
     Returns
     -------
@@ -191,8 +202,8 @@ def load_graphml(filepath, node_type=int):
 
     # convert node/edge attribute data types
     utils.log("Converting node and edge attribute data types")
-    G = _convert_node_attr_types(G, node_type)
-    G = _convert_edge_attr_types(G, node_type)
+    G = _convert_node_attr_types(G, node_type, node_dtypes)
+    G = _convert_edge_attr_types(G, node_type, edge_dtypes)
 
     # convert graph crs attribute from saved string to correct dict data type
     # if it is a stringified dict rather than a proj4 string
@@ -212,7 +223,7 @@ def load_graphml(filepath, node_type=int):
     return G
 
 
-def _convert_node_attr_types(G, node_type):
+def _convert_node_attr_types(G, node_type, node_dtypes=None):
     """
     Convert graph nodes' attributes' types from string to numeric.
 
@@ -222,25 +233,31 @@ def _convert_node_attr_types(G, node_type):
         input graph
     node_type : type
         convert node ID (osmid) to this type
+    node_dtypes : dict of attribute name -> data type
+        identifies additional is a numpy.dtype or Python type
+        to cast one or more additional node attributes
+        defaults to {"elevation":float, "elevation_res":float,
+        "lat":float, "lon":float, "x":float, "y":float} if None
 
     Returns
     -------
     G : networkx.MultiDiGraph
     """
+    if node_dtypes is None:
+        node_dtypes = {"elevation": float, "elevation_res": float, "lat": float, "lon": float,
+                       "x": float, "y": float}
     for _, data in G.nodes(data=True):
-
         # convert node ID to user-requested type
         data["osmid"] = node_type(data["osmid"])
-
         # convert numeric node attributes from string to float
-        for attr in {"elevation", "elevation_res", "lat", "lon", "x", "y"}:
+        for attr in node_dtypes:
             if attr in data:
-                data[attr] = float(data[attr])
-
+                dtype = node_dtypes[attr]
+                data[attr] = dtype(data[attr])
     return G
 
 
-def _convert_edge_attr_types(G, node_type):
+def _convert_edge_attr_types(G, node_type, edge_dtypes=None):
     """
     Convert graph edges' attributes' types from string to numeric.
 
@@ -250,17 +267,23 @@ def _convert_edge_attr_types(G, node_type):
         input graph
     node_type : type
         convert osmid to this type
+    edge_dtypes : dict of attribute name -> data type
+        identifies additional is a numpy.dtype or Python
+        type to cast one or more additional edge attributes.
+        Defaults to {"length": float, "grade": float,
+        "grade_abs": float, "bearing": float,
+        "speed_kph": float,"travel_time": float} if None
 
     Returns
     -------
     G : networkx.MultiDiGraph
     """
-    # convert numeric, bool, and list edge attributes from string to correct data types
+    if edge_dtypes is None:
+        edge_dtypes = {"length": float, "grade": float, "grade_abs": float,
+                       "bearing": float, "speed_kph": float, "travel_time": float}
+    # convert numeric, bool, and list edge attributes from string
+    # to correct data types
     for _, _, data in G.edges(data=True, keys=False):
-
-        # parse length to float: should always have only 1 value
-        data["length"] = float(data["length"])
-
         try:
             data["oneway"] = ast.literal_eval(data["oneway"])
             raise ValueError()
@@ -269,15 +292,16 @@ def _convert_edge_attr_types(G, node_type):
             # graph, or values it can't eval if settings.all_oneway=True
             pass
 
-        # convert to float any possible OSMnx-added edge attributes, which may
+        # convert to specfied dtype any possible OSMnx-added edge attributes, which may
         # have multiple values if graph was simplified after they were added
-        for attr in {"grade", "grade_abs", "bearing", "speed_kph", "travel_time"}:
+        for attr in edge_dtypes:
             if attr in data:
+                dtype = edge_dtypes[attr]
                 if data[attr].startswith("[") and data[attr].endswith("]"):
                     # if it's a list, eval it then convert each item to float
-                    data[attr] = [float(a) for a in ast.literal_eval(data[attr])]
+                    data[attr] = [dtype(a) for a in ast.literal_eval(data[attr])]
                 else:
-                    data[attr] = float(data[attr])
+                    data[attr] = dtype(data[attr])
 
         # these attributes might have a single value, or a list if edge's
         # topology was simplified
@@ -472,7 +496,6 @@ def save_graph_xml(
 
     # misc. string replacements to meet OSM XML spec
     if "oneway" in gdf_edges.columns:
-
         # fill blank oneway tags with default (False)
         gdf_edges.loc[pd.isnull(gdf_edges["oneway"]), "oneway"] = oneway
         gdf_edges.loc[:, "oneway"] = gdf_edges["oneway"].astype(str)
@@ -577,7 +600,7 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
             else:
                 for tag in edge_tags:
                     if (tag in all_way_edges.columns) and (
-                        tag not in (t for t, agg in edge_tag_aggs)
+                            tag not in (t for t, agg in edge_tag_aggs)
                     ):
                         etree.SubElement(edge, "tag", attrib={"k": tag, "v": first[tag]})
 
