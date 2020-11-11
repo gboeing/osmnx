@@ -169,41 +169,68 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     utils.log(f'Saved graph as GraphML file at "{filepath}"')
 
 
-def load_graphml(filepath, node_type=int, node_dtypes=None, edge_dtypes=None):
+def load_graphml(filepath, node_type=None, node_dtypes=None, edge_dtypes=None):
     """
     Load an OSMnx-saved GraphML file from disk.
 
-    Converts the node/edge attributes to appropriate data types.
+    Converts the node/edge attributes to appropriate data types, which can be
+    customized if needed by passing in node_dtypes or edge_dtypes arguments.
 
     Parameters
     ----------
     filepath : string
         path to the GraphML file
-    node_type : type
-        convert node ids to this data type
-    node_dtypes : dict of attribute name -> data type
-        identifies additional is a numpy.dtype or Python type to
-         cast one or more additional node attributes defaults to
-         {"elevation":float, "elevation_res":float, "lat":float,
-         "lon":float, "x":float, "y":float} if None
-    edge_dtypes : dict of attribute name -> data type
-        identifies additional is a numpy.dtype or Python type to
-         cast one or more additional edge attributes. Defaults
-        to {"length": float, "grade": float, "grade_abs":
-        float, "bearing": float, "speed_kph": float,
-        "travel_time": float} if None
+    node_type : None
+        deprecated, do not use; use node_dtypes instead
+    node_dtypes : dict
+        dict of node attribute names:types to convert values' data types
+    edge_dtypes : dict
+        dict of edge attribute names:types to convert values' data types
 
     Returns
     -------
     G : networkx.MultiDiGraph
     """
+    # specify default node attr types and override with passed-in types if any
+    default_node_dtypes = {
+        "elevation": float,
+        "elevation_res": float,
+        "lat": float,
+        "lon": float,
+        "osmid": int,
+        "x": float,
+        "y": float,
+    }
+    if node_dtypes is not None:
+        default_node_dtypes.update(node_dtypes)
+    node_dtypes = default_node_dtypes
+
+    # specify default edge attr types and override with passed-in types if any
+    default_edge_dtypes = {
+        "bearing": float,
+        "grade": float,
+        "grade_abs": float,
+        "length": float,
+        "osmid": int,
+        "speed_kph": float,
+        "travel_time": float,
+    }
+    if edge_dtypes is not None:
+        default_edge_dtypes.update(edge_dtypes)
+    edge_dtypes = default_edge_dtypes
+
+    if node_type is not None:
+        # TODO: add deprecation warning: use node_dtypes instead
+        # for now add to node_dtypes, remove in next release
+        node_dtypes.update({"osmid": node_type})
+
     # read the graph from disk
-    G = nx.MultiDiGraph(nx.read_graphml(filepath, node_type=node_type))
+    G = nx.read_graphml(filepath, node_type=node_dtypes["osmid"], force_multigraph=True)
 
     # convert node/edge attribute data types
     utils.log("Converting node and edge attribute data types")
-    G = _convert_node_attr_types(G, node_type, node_dtypes)
-    G = _convert_edge_attr_types(G, node_type, edge_dtypes)
+    G = _convert_node_attr_types(G, node_dtypes)
+    G = _convert_edge_attr_types(G, edge_dtypes)
 
     # convert graph crs attribute from saved string to correct dict data type
     # if it is a stringified dict rather than a proj4 string
@@ -223,140 +250,78 @@ def load_graphml(filepath, node_type=int, node_dtypes=None, edge_dtypes=None):
     return G
 
 
-def _convert_node_attr_types(G, node_type, node_dtypes=None):
+def _convert_node_attr_types(G, dtypes=None):
     """
-    Convert graph nodes' attributes' types from string to numeric.
+    Convert graph nodes' attributes' from strings to specified types.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
-    node_type : type
-        convert node ID (osmid) to this type
-    node_dtypes : dict of attribute name -> data type
-        identifies additional is a numpy.dtype or Python type
-        to cast one or more additional node attributes
-        defaults to {"elevation":float, "elevation_res":float,
-        "lat":float, "lon":float, "x":float, "y":float} if None
+    dtypes : dict
+        dict of node attribute names:types
 
     Returns
     -------
     G : networkx.MultiDiGraph
     """
-    if node_dtypes is None:
-        node_dtypes = {
-            "elevation": float,
-            "elevation_res": float,
-            "lat": float,
-            "lon": float,
-            "x": float,
-            "y": float,
-        }
     for _, data in G.nodes(data=True):
-        # convert node ID to user-requested type
-        data["osmid"] = node_type(data["osmid"])
-        # convert numeric node attributes from string to float
-        for attr in node_dtypes:
+        for attr in dtypes:
             if attr in data:
-                dtype = node_dtypes[attr]
-                data[attr] = dtype(data[attr])
+                data[attr] = dtypes[attr](data[attr])
     return G
 
 
-def _convert_edge_attr_types(G, node_type, edge_dtypes=None):
+def _convert_edge_attr_types(G, dtypes=None):
     """
-    Convert graph edges' attributes' types from string to numeric.
+    Convert graph edges' attributes' from strings to specified types.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
-    node_type : type
-        convert osmid to this type
-    edge_dtypes : dict of attribute name -> data type
-        identifies additional is a numpy.dtype or Python
-        type to cast one or more additional edge attributes.
-        Defaults to {"length": float, "grade": float,
-        "grade_abs": float, "bearing": float,
-        "speed_kph": float,"travel_time": float} if None
+    dtypes : dict
+        dict of edge attribute names:types
 
     Returns
     -------
     G : networkx.MultiDiGraph
     """
-    if edge_dtypes is None:
-        edge_dtypes = {
-            "length": float,
-            "grade": float,
-            "grade_abs": float,
-            "bearing": float,
-            "speed_kph": float,
-            "travel_time": float,
-        }
-    # convert numeric, bool, and list edge attributes from string
-    # to correct data types
+    # for each edge in the graph, eval attribute value lists and convert types
     for _, _, data in G.edges(data=True, keys=False):
-        try:
-            data["oneway"] = ast.literal_eval(data["oneway"])
-            raise ValueError()
-        except (KeyError, ValueError):
-            # may lack oneway if settings.all_oneway=True when you created
-            # graph, or values it can't eval if settings.all_oneway=True
-            pass
 
-        # convert to specfied dtype any possible OSMnx-added edge attributes, which may
-        # have multiple values if graph was simplified after they were added
-        for attr in edge_dtypes:
-            if attr in data:
-                dtype = edge_dtypes[attr]
-                if data[attr].startswith("[") and data[attr].endswith("]"):
-                    # if it's a list, eval it then convert each item to float
-                    data[attr] = [dtype(a) for a in ast.literal_eval(data[attr])]
-                else:
-                    data[attr] = dtype(data[attr])
-
-        # these attributes might have a single value, or a list if edge's
-        # topology was simplified
-        for attr in {
-            "highway",
-            "name",
-            "bridge",
-            "tunnel",
-            "lanes",
-            "ref",
-            "maxspeed",
-            "service",
-            "access",
-            "area",
-            "landuse",
-            "width",
-            "est_width",
-        }:
-            # if this edge has this attribute, and it starts with '[' and ends
-            # with ']', then it's a list to be parsed
-            if attr in data and data[attr].startswith("[") and data[attr].endswith("]"):
-                # try to convert the string list to a list type, else leave as
-                # single-value string (and leave as string if error)
+        # edges attributes might have a single value, or a list if simplified
+        # first, eval stringified lists to convert them to actual list objects
+        for attr, value in data.items():
+            if value.startswith("[") and value.endswith("]"):
                 try:
                     data[attr] = ast.literal_eval(data[attr])
                 except Exception:
                     pass
 
-        # osmid might have a single value or a list
-        if "osmid" in data:
-            if data["osmid"].startswith("[") and data["osmid"].endswith("]"):
-                # if it's a list, eval list then convert each element to node_type
-                data["osmid"] = [node_type(i) for i in ast.literal_eval(data["osmid"])]
-            else:
-                # if it's not a list, convert it to the node_type
-                data["osmid"] = node_type(data["osmid"])
+        # next, convert attribute value types
+        for attr in dtypes:
+            if attr in data:
+                if isinstance(data[attr], list):
+                    # if it's a list, eval it then convert each item
+                    data[attr] = [dtypes[attr](item) for item in data[attr]]
+                else:
+                    # otherwise, just convert the single value
+                    data[attr] = dtypes[attr](data[attr])
 
-        # if geometry attribute exists, load the string as well-known text to
-        # shapely LineString
+        # next, eval "oneway" attr to True/False
+        try:
+            data["oneway"] = ast.literal_eval(data["oneway"])
+        except (KeyError, ValueError):
+            # may lack oneway if settings.all_oneway=True when you created
+            # graph, or have values it can't eval if settings.all_oneway=True
+            pass
+
+        # if "geometry" attr exists, convert its well-known text to LineString
         if "geometry" in data:
             data["geometry"] = wkt.loads(data["geometry"])
 
-        # delete the extraneous id attribute added by graphml saving
+        # delete extraneous id attribute added by graphml saving
         if "id" in data:
             del data["id"]
 
