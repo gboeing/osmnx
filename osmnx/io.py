@@ -145,12 +145,11 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
         G.graph = dict()
 
     else:
-        # if not gephi, keep graph attrs and stringify them
+        # if not gephi, keep graph attrs but stringify all of them for saving
         for dict_key in G.graph:
-            # convert all the graph attribute values to strings
             G.graph[dict_key] = str(G.graph[dict_key])
 
-    # stringify node and edge attributes
+    # stringify all the node attribute values
     for _, data in G.nodes(data=True):
         for dict_key in data:
             if gephi and dict_key in {"xcoord", "ycoord"}:
@@ -160,9 +159,9 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
                 # convert all the node attribute values to strings
                 data[dict_key] = str(data[dict_key])
 
+    # stringify all the edge attribute values
     for _, _, data in G.edges(keys=False, data=True):
         for dict_key in data:
-            # convert all the edge attribute values to strings
             data[dict_key] = str(data[dict_key])
 
     nx.write_graphml(G, path=filepath, encoding=encoding)
@@ -191,7 +190,7 @@ def load_graphml(filepath, node_type=None, node_dtypes=None, edge_dtypes=None):
     -------
     G : networkx.MultiDiGraph
     """
-    # specify default node attr types and override with passed-in types if any
+    # specify default node/edge attribute values' data types
     default_node_dtypes = {
         "elevation": float,
         "elevation_res": float,
@@ -201,11 +200,6 @@ def load_graphml(filepath, node_type=None, node_dtypes=None, edge_dtypes=None):
         "x": float,
         "y": float,
     }
-    if node_dtypes is not None:
-        default_node_dtypes.update(node_dtypes)
-    node_dtypes = default_node_dtypes
-
-    # specify default edge attr types and override with passed-in types if any
     default_edge_dtypes = {
         "bearing": float,
         "grade": float,
@@ -215,12 +209,15 @@ def load_graphml(filepath, node_type=None, node_dtypes=None, edge_dtypes=None):
         "speed_kph": float,
         "travel_time": float,
     }
+
+    # override default node/edge attr types with user-passed types, if any
+    if node_dtypes is not None:
+        default_node_dtypes.update(node_dtypes)
     if edge_dtypes is not None:
         default_edge_dtypes.update(edge_dtypes)
-    edge_dtypes = default_edge_dtypes
 
     if node_type is not None:
-        # for now add to node_dtypes, remove in next release
+        # for now, add deprecated node_type to node_dtypes, remove in next release
         import warnings
 
         msg = (
@@ -228,23 +225,23 @@ def load_graphml(filepath, node_type=None, node_dtypes=None, edge_dtypes=None):
             " in a future release. Use node_dtypes instead."
         )
         warnings.warn(msg)
-        node_dtypes.update({"osmid": node_type})
+        default_node_dtypes.update({"osmid": node_type})
 
-    # read the graph from disk
-    G = nx.read_graphml(filepath, node_type=node_dtypes["osmid"], force_multigraph=True)
+    # read the graphml file from disk
+    node_type = default_node_dtypes["osmid"]
+    G = nx.read_graphml(filepath, node_type=node_type, force_multigraph=True)
 
     # convert node/edge attribute data types
     utils.log("Converting node and edge attribute data types")
-    G = _convert_node_attr_types(G, node_dtypes)
-    G = _convert_edge_attr_types(G, edge_dtypes)
+    G = _convert_node_attr_types(G, default_node_dtypes)
+    G = _convert_edge_attr_types(G, default_edge_dtypes)
 
-    # convert graph crs attribute from saved string to correct dict data type
-    # if it is a stringified dict rather than a proj4 string
-    if "crs" in G.graph and G.graph["crs"].startswith("{") and G.graph["crs"].endswith("}"):
-        G.graph["crs"] = ast.literal_eval(G.graph["crs"])
-
-    if "streets_per_node" in G.graph:
-        G.graph["streets_per_node"] = ast.literal_eval(G.graph["streets_per_node"])
+    # eval non-string graph attributes to convert to correct types
+    for attr in {"simplified", "streets_per_node"}:
+        try:
+            G.graph[attr] = ast.literal_eval(G.graph[attr])
+        except Exception:
+            pass
 
     # remove node_default and edge_default metadata keys if they exist
     if "node_default" in G.graph:
@@ -258,7 +255,7 @@ def load_graphml(filepath, node_type=None, node_dtypes=None, edge_dtypes=None):
 
 def _convert_node_attr_types(G, dtypes=None):
     """
-    Convert graph nodes' attributes' from strings to specified types.
+    Convert graph nodes' attributes using a dict of data types.
 
     Parameters
     ----------
@@ -280,7 +277,7 @@ def _convert_node_attr_types(G, dtypes=None):
 
 def _convert_edge_attr_types(G, dtypes=None):
     """
-    Convert graph edges' attributes' from strings to specified types.
+    Convert graph edges' attributes using a dict of data types.
 
     Parameters
     ----------
@@ -297,7 +294,7 @@ def _convert_edge_attr_types(G, dtypes=None):
     for _, _, data in G.edges(data=True, keys=False):
 
         # edges attributes might have a single value, or a list if simplified
-        # first, eval stringified lists to convert them to actual list objects
+        # first, eval stringified lists to convert them to list objects
         for attr, value in data.items():
             if value.startswith("[") and value.endswith("]"):
                 try:
@@ -315,7 +312,7 @@ def _convert_edge_attr_types(G, dtypes=None):
                     # otherwise, just convert the single value
                     data[attr] = dtypes[attr](data[attr])
 
-        # next, eval "oneway" attr to True/False
+        # next, eval "oneway" attr to bool
         try:
             data["oneway"] = ast.literal_eval(data["oneway"])
         except (KeyError, ValueError):
@@ -327,7 +324,7 @@ def _convert_edge_attr_types(G, dtypes=None):
         if "geometry" in data:
             data["geometry"] = wkt.loads(data["geometry"])
 
-        # delete extraneous id attribute added by graphml saving
+        # delete extraneous "id" attribute added by graphml saving
         if "id" in data:
             del data["id"]
 
