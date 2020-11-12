@@ -105,11 +105,11 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     G : networkx.MultiDiGraph
         input graph
     filepath : string
-        path to the GraphML file including extension. if None, use
-        default data folder + graph.graphml
+        path to the GraphML file including extension. if None, use default
+        data folder + graph.graphml
     gephi : bool
-        if True, give each edge a unique key to work around Gephi's
-        restrictive interpretation of the GraphML specification
+        if True, give each edge a unique key to workaround Gephi's restrictive
+        interpretation of the GraphML specification
     encoding : string
         the character encoding for the saved file
 
@@ -131,38 +131,35 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
 
     if gephi:
 
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
+        # set each edge's "key" attr as a unique id for gephi compatibility
+        uvk_range = zip(G.edges(keys=True), range(len(G.edges)))
+        nx.set_edge_attributes(G, values=dict(uvk_range), name="key")
 
-        # turn each edge's key into a unique ID for Gephi compatibility
-        gdf_edges["key"] = range(len(gdf_edges))
-
-        # gephi doesn't handle node attrs named x and y well, so rename
-        gdf_nodes["xcoord"] = gdf_nodes["x"]
-        gdf_nodes["ycoord"] = gdf_nodes["y"]
-        G = utils_graph.graph_from_gdfs(gdf_nodes, gdf_edges)
+        # gephi doesn't handle node attrs named x and y well, so rename them
+        nx.set_node_attributes(G, values=nx.get_node_attributes(G, "x"), name="xcoord")
+        nx.set_node_attributes(G, values=nx.get_node_attributes(G, "y"), name="ycoord")
 
         # remove graph attributes as Gephi only accepts node and edge attrs
         G.graph = dict()
 
     else:
         # if not gephi, keep graph attrs but stringify all of them for saving
-        for dict_key in G.graph:
-            G.graph[dict_key] = str(G.graph[dict_key])
+        for attr, value in G.graph.items():
+            G.graph[attr] = str(value)
 
     # stringify all the node attribute values
     for _, data in G.nodes(data=True):
-        for dict_key in data:
-            if gephi and dict_key in {"xcoord", "ycoord"}:
-                # don't convert x y values to string if saving for gephi
+        for attr, value in data.items():
+            if gephi and attr in {"xcoord", "ycoord"}:
+                # don't stringify x and y coords if saving for gephi
                 continue
             else:
-                # convert all the node attribute values to strings
-                data[dict_key] = str(data[dict_key])
+                data[attr] = str(value)
 
     # stringify all the edge attribute values
     for _, _, data in G.edges(keys=False, data=True):
-        for dict_key in data:
-            data[dict_key] = str(data[dict_key])
+        for attr, value in data.items():
+            data[attr] = str(value)
 
     nx.write_graphml(G, path=filepath, encoding=encoding)
     utils.log(f'Saved graph as GraphML file at "{filepath}"')
