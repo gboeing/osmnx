@@ -307,7 +307,32 @@ def test_network_saving_loading():
     ox.save_graphml(G, gephi=True)
     ox.save_graphml(G, gephi=False)
     filepath = os.path.join(ox.settings.data_folder, "graph.graphml")
-    G = ox.load_graphml(filepath, node_type=str)
+    G2 = ox.load_graphml(filepath)
+
+    # verify everything in G is equivalent in G2
+    for (n1, d1), (n2, d2) in zip(G.nodes(data=True), G2.nodes(data=True)):
+        assert n1 == n2
+        assert d1 == d2
+    for (u1, v1, k1, d1), (u2, v2, k2, d2) in zip(
+        G.edges(keys=True, data=True), G2.edges(keys=True, data=True)
+    ):
+        assert u1 == u2
+        assert v1 == v2
+        assert k1 == k2
+        assert tuple(d1.keys()) == tuple(d2.keys())
+        assert tuple(d1.values()) == tuple(d2.values())
+    for (k1, v1), (k2, v2) in zip(G.graph.items(), G2.graph.items()):
+        assert k1 == k2
+        assert v1 == v2
+    assert tuple(G.graph["streets_per_node"].keys()) == tuple(G2.graph["streets_per_node"].keys())
+    assert tuple(G.graph["streets_per_node"].values()) == tuple(
+        G2.graph["streets_per_node"].values()
+    )
+
+    # test custom data types
+    nd = {"osmid": str}
+    ed = {"length": str, "osmid": float}
+    G2 = ox.load_graphml(filepath, node_dtypes=nd, edge_dtypes=ed)
 
     # test osm xml output
     default_all_oneway = ox.settings.all_oneway
