@@ -20,7 +20,6 @@ log_filename = "osmnx"
 
 # OSM node/way tags to add as graph node/edge attributes when these tags are
 # present in the data retrieved from OSM
-# NOTE: load_graphml function expects a consistent set of tags for parsing
 useful_tags_node = ["ref", "highway"]
 useful_tags_way = [
     "bridge",
