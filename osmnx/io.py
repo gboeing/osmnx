@@ -108,7 +108,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
         path to the GraphML file including extension. if None, use default
         data folder + graph.graphml
     gephi : bool
-        if True, give each edge a unique key to workaround Gephi's restrictive
+        if True, give each edge a unique key/id to work around Gephi's
         interpretation of the GraphML specification
     encoding : string
         the character encoding for the saved file
@@ -126,35 +126,24 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     if not folder == "" and not os.path.exists(folder):
         os.makedirs(folder)
 
-    # make a copy to not mutate original graph object caller passed in
-    G = G.copy()
-
     if gephi:
-
-        # set each edge's "key" attr as a unique id for gephi compatibility
-        uvk_range = zip(G.edges(keys=True), range(len(G.edges)))
-        nx.set_edge_attributes(G, values=dict(uvk_range), name="key")
-
-        # gephi doesn't handle node attrs named x and y well, so rename them
-        nx.set_node_attributes(G, values=nx.get_node_attributes(G, "x"), name="xcoord")
-        nx.set_node_attributes(G, values=nx.get_node_attributes(G, "y"), name="ycoord")
-
-        # remove graph attributes as Gephi only accepts node and edge attrs
-        G.graph = dict()
+        # for gephi compatibility, each edge's key must be unique as an id
+        uvdk = zip(G.edges(keys=False, data=True), range(len(G.edges)))
+        uvkd = ((u, v, k, d) for (u, v, d), k in uvdk)
+        G = nx.MultiDiGraph(uvkd)
 
     else:
-        # if not gephi, keep graph attrs but stringify all of them for saving
-        for attr, value in G.graph.items():
-            G.graph[attr] = str(value)
+        # make a copy to not mutate original graph object caller passed in
+        G = G.copy()
+
+    # stringify all the graph attribute values
+    for attr, value in G.graph.items():
+        G.graph[attr] = str(value)
 
     # stringify all the node attribute values
     for _, data in G.nodes(data=True):
         for attr, value in data.items():
-            if gephi and attr in {"xcoord", "ycoord"}:
-                # don't stringify x and y coords if saving for gephi
-                continue
-            else:
-                data[attr] = str(value)
+            data[attr] = str(value)
 
     # stringify all the edge attribute values
     for _, _, data in G.edges(keys=False, data=True):
