@@ -1,6 +1,6 @@
 # Change log
 
-## 0.16.2 (TBD)
+## 0.16.2 (2020-11-17)
 
   - improve graph_from_gdfs speed and efficiency
   - improve plot_route_folium speed and efficiency
