@@ -1,9 +1,13 @@
 # Change log
 
-## In Progress
+## 0.16.2 (2020-11-17)
 
-  - fix remove_isolated_nodes function mutating the passed-in graph
   - improve graph_from_gdfs speed and efficiency
+  - improve plot_route_folium speed and efficiency
+  - fix remove_isolated_nodes function mutating the passed-in graph
+  - fix gephi compatibility in save_graphml
+  - add customizable node/edge attribute data type arguments to load_graphml
+  - deprecate old node_type argument in load_graphml
   - expose bidirectional_network_types via config function
 
 ## 0.16.1 (2020-10-05)
