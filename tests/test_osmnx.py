@@ -181,7 +181,7 @@ def test_plots():
 
     # test getting colors
     co = ox.plot.get_colors(n=5, return_hex=True)
-    nc = ox.plot.get_node_colors_by_attr(G, "osmid")
+    nc = ox.plot.get_node_colors_by_attr(G, "x")
     ec = ox.plot.get_edge_colors_by_attr(G, "length", num_bins=5)
 
     # plot and save to disk
