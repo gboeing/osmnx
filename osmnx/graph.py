@@ -581,7 +581,7 @@ def _convert_node(element):
     -------
     node : dict
     """
-    node = {"y": element["lat"], "x": element["lon"], "osmid": element["id"]}
+    node = {"y": element["lat"], "x": element["lon"]}
     if "tags" in element:
         for useful_tag in settings.useful_tags_node:
             if useful_tag in element["tags"]:
