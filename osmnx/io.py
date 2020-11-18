@@ -154,7 +154,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     utils.log(f'Saved graph as GraphML file at "{filepath}"')
 
 
-def load_graphml(filepath, node_type=None, node_dtypes=None, edge_dtypes=None):
+def load_graphml(filepath, node_dtypes=None, edge_dtypes=None):
     """
     Load an OSMnx-saved GraphML file from disk.
 
@@ -165,8 +165,6 @@ def load_graphml(filepath, node_type=None, node_dtypes=None, edge_dtypes=None):
     ----------
     filepath : string
         path to the GraphML file
-    node_type : None
-        deprecated, do not use; use node_dtypes instead
     node_dtypes : dict
         dict of node attribute names:types to convert values' data types
     edge_dtypes : dict
@@ -202,20 +200,8 @@ def load_graphml(filepath, node_type=None, node_dtypes=None, edge_dtypes=None):
     if edge_dtypes is not None:
         default_edge_dtypes.update(edge_dtypes)
 
-    if node_type is not None:
-        # for now, add deprecated node_type to node_dtypes, remove in next release
-        import warnings
-
-        msg = (
-            "The node_type argument has been deprecated and will be removed"
-            " in a future release. Use node_dtypes instead."
-        )
-        warnings.warn(msg)
-        default_node_dtypes.update({"osmid": node_type})
-
     # read the graphml file from disk
-    node_type = default_node_dtypes["osmid"]
-    G = nx.read_graphml(filepath, node_type=node_type, force_multigraph=True)
+    G = nx.read_graphml(filepath, node_type=default_node_dtypes["osmid"], force_multigraph=True)
 
     # convert node/edge attribute data types
     utils.log("Converting node and edge attribute data types")
