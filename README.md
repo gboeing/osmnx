@@ -4,6 +4,7 @@
 [![Documentation Status](https://readthedocs.org/projects/osmnx/badge/?version=latest)](https://osmnx.readthedocs.io/)
 [![Build Status](https://travis-ci.org/gboeing/osmnx.svg?branch=master)](https://travis-ci.org/gboeing/osmnx)
 [![Coverage Status](https://coveralls.io/repos/github/gboeing/osmnx/badge.svg?branch=master)](https://coveralls.io/github/gboeing/osmnx?branch=master)
+[![Zephyr Badge](https://github.com/ZephyrTransport/zephyr-website/blob/gh-pages/img/badging/project_pages/osmnx/osmnx.png)](https://medium.com/zephyrfoundation/osmnx-software-badge-3e206db65825)
 
 
 # OSMnx
