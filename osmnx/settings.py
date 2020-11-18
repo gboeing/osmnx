@@ -9,7 +9,7 @@ imgs_folder = "images"
 cache_folder = "cache"
 
 # cache server responses
-use_cache = False
+use_cache = True
 
 # write log to file and/or to console
 log_file = False
