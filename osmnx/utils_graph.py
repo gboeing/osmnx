@@ -47,10 +47,11 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         if node_geometry:
             # convert node x/y attributes to Points for geometry column
             geom = (Point(d["x"], d["y"]) for d in data)
-            gdf_nodes = gpd.GeoDataFrame(data, index=nodes, crs=crs, geometry=list(geom))
+            gdf_nodes = gpd.GeoDataFrame(data, crs=crs, geometry=list(geom))
         else:
-            gdf_nodes = gpd.GeoDataFrame(data, index=nodes)
+            gdf_nodes = gpd.GeoDataFrame(data)
 
+        gdf_nodes.set_index("osmid", inplace=True)
         utils.log("Created nodes GeoDataFrame from graph")
 
     if edges:
