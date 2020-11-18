@@ -419,22 +419,6 @@ def test_stats():
     G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
 
 
-def test_footprints():
-
-    # download footprints and plot them
-    gdf = ox.footprints_from_place(place2)
-    gdf = ox.footprints_from_polygon(polygon)
-    gdf = ox.footprints_from_address(address, dist=300)
-    fig, ax = ox.plot_footprints(gdf)
-
-
-def test_pois():
-
-    tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
-    gdf = ox.pois_from_place([place1], tags=tags)
-    gdf = ox.pois_from_address(address, tags={"amenity": "school"})
-
-
 def test_geometries():
 
     # geometries_from_bbox - bounding box query to return empty GeoDataFrame
@@ -444,6 +428,7 @@ def test_geometries():
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
     tags = {"landuse": True, "building": True, "highway": True}
     gdf = ox.geometries_from_bbox(north, south, east, west, tags=tags)
+    fig, ax = ox.plot_footprints(gdf)
 
     # geometries_from_point - tests multipolygon creation
     gdf = ox.geometries_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)

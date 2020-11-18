@@ -11,10 +11,6 @@ from .elevation import add_edge_grades
 from .elevation import add_node_elevations
 from .folium import plot_graph_folium
 from .folium import plot_route_folium
-from .footprints import footprints_from_address
-from .footprints import footprints_from_place
-from .footprints import footprints_from_point
-from .footprints import footprints_from_polygon
 from .geocoder import geocode
 from .geocoder import geocode_to_gdf
 from .geometries import geometries_from_address
@@ -39,10 +35,6 @@ from .plot import plot_footprints
 from .plot import plot_graph
 from .plot import plot_graph_route
 from .plot import plot_graph_routes
-from .pois import pois_from_address
-from .pois import pois_from_place
-from .pois import pois_from_point
-from .pois import pois_from_polygon
 from .projection import project_gdf
 from .projection import project_graph
 from .simplification import consolidate_intersections
