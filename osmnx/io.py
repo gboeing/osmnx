@@ -426,7 +426,8 @@ def save_graph_xml(
         )
 
     # rename columns per osm specification
-    gdf_nodes.rename(columns={"osmid": "id", "x": "lon", "y": "lat"}, inplace=True)
+    gdf_nodes.rename(columns={"x": "lon", "y": "lat"}, inplace=True)
+    gdf_nodes = gdf_nodes.reset_index().rename(columns={"osmid": "id"})
     if "id" in gdf_edges.columns:
         gdf_edges = gdf_edges[[col for col in gdf_edges if col != "id"]]
     if "uniqueid" in gdf_edges.columns:
