@@ -144,34 +144,6 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     return G
 
 
-def induce_subgraph(G, node_subset):
-    """
-    Induce a subgraph of G: deprecated, do not use.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    node_subset : list-like
-        the subset of nodes to induce a subgraph of G
-
-    Returns
-    -------
-    networkx.MultiDiGraph
-        the subgraph of G induced by node_subset
-    """
-    import warnings
-
-    msg = (
-        "The induce_subgraph function has been deprecated and will be "
-        "removed in a future release. Use G.subgraph(nodes) instead."
-    )
-    warnings.warn(msg)
-
-    # induce a (frozen) subgraph then unfreeze it by making new MultiDiGraph
-    return nx.MultiDiGraph(G.subgraph(node_subset))
-
-
 def get_largest_component(G, strongly=False):
     """
     Get subgraph of MultiDiGraph's largest weakly/strongly connected component.
