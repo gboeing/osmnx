@@ -162,14 +162,11 @@ def add_edge_lengths(G, precision=3):
     G : networkx.MultiDiGraph
         graph with edge length attributes
     """
-    # first load all the edges' origin and destination coordinates as a
-    # dataframe indexed by u, v, key
+    # extract the edges' endpoint nodes' coordinates
     try:
-        coords = np.array(
-            [
-                (u, v, k, G.nodes[u]["y"], G.nodes[u]["x"], G.nodes[v]["y"], G.nodes[v]["x"])
-                for u, v, k in G.edges(keys=True)
-            ]
+        coords = (
+            (u, v, k, G.nodes[u]["y"], G.nodes[u]["x"], G.nodes[v]["y"], G.nodes[v]["x"])
+            for u, v, k in G.edges
         )
     except KeyError:  # pragma: no cover
         missing_nodes = {
@@ -182,18 +179,14 @@ def add_edge_lengths(G, precision=3):
         missing_str = ", ".join(missing_nodes)
         raise KeyError(f"Edge(s) missing nodes {missing_str} possibly due to clipping issue")
 
-    df_coords = pd.DataFrame(coords, columns=["u", "v", "k", "u_y", "u_x", "v_y", "v_x"])
-    df_coords[["u", "v", "k"]] = df_coords[["u", "v", "k"]].astype(np.int64)
-    df_coords = df_coords.set_index(["u", "v", "k"])
+    # turn the coordinates into a DataFrame indexed by u, v, k
+    cols = ["u", "v", "k", "u_y", "u_x", "v_y", "v_x"]
+    df = pd.DataFrame(coords, columns=cols).set_index(["u", "v", "k"])
 
-    # then calculate the great circle distance with the vectorized function
-    gc_distances = distance.great_circle_vec(
-        lat1=df_coords["u_y"], lng1=df_coords["u_x"], lat2=df_coords["v_y"], lng2=df_coords["v_x"]
-    )
-
-    # fill nulls with zeros and round
-    gc_distances = gc_distances.fillna(value=0).round(precision)
-    nx.set_edge_attributes(G, name="length", values=gc_distances.to_dict())
+    # calculate great circle distances, fill nulls with zeros, then round
+    dists = distance.great_circle_vec(df["u_y"], df["u_x"], df["v_y"], df["v_x"])
+    dists = dists.fillna(value=0).round(precision)
+    nx.set_edge_attributes(G, name="length", values=dists)
 
     utils.log("Added edge lengths to graph")
     return G
