@@ -85,10 +85,11 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             gdf_edges.set_geometry("geometry")
             gdf_edges.crs = crs
 
-        # add u, v, key attributes as columns
+        # add u, v, key attributes as index
         gdf_edges["u"] = u
         gdf_edges["v"] = v
         gdf_edges["key"] = k
+        gdf_edges.set_index(["u", "v", "key"], inplace=True)
 
         utils.log("Created edges GeoDataFrame from graph")
 
@@ -126,15 +127,12 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
         graph_attrs = {"crs": gdf_edges.crs}
     G = nx.MultiDiGraph(**graph_attrs)
 
-    # assemble edges' attribute names and values
-    attr_names = [c for c in gdf_edges.columns if c not in {"u", "v", "key"}]
-    attr_values = zip(*[gdf_edges[col] for col in attr_names])
-
     # add edges and their attributes to graph, but filter out null attribute
     # values so that edges only get attributes with non-null values
-    for u, v, k, edge_vals in zip(gdf_edges["u"], gdf_edges["v"], gdf_edges["key"], attr_values):
-        edge_attrs = zip(attr_names, edge_vals)
-        data = {name: val for name, val in edge_attrs if isinstance(val, list) or pd.notnull(val)}
+    attr_names = gdf_edges.columns.to_list()
+    for (u, v, k), attr_vals in zip(gdf_edges.index, gdf_edges.values):
+        data_all = zip(attr_names, attr_vals)
+        data = {name: val for name, val in data_all if isinstance(val, list) or pd.notnull(val)}
         G.add_edge(u, v, key=k, **data)
 
     # add nodes' attributes to graph
@@ -405,14 +403,12 @@ def _update_edge_keys(G):
     # of their origin, destination, and key. that is, edge uv will match edge vu
     # as a duplicate, but only if they have the same key
     edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
-    edges["uvk"] = edges.apply(
-        lambda row: "_".join(sorted([str(row["u"]), str(row["v"])]) + [str(row["key"])]), axis=1
-    )
+    edges["uvk"] = ("_".join(sorted([str(u), str(v)]) + [str(k)]) for u, v, k in edges.index)
     edges["dupe"] = edges["uvk"].duplicated(keep=False)
     dupes = edges[edges["dupe"]].dropna(subset=["geometry"])
 
     different_streets = []
-    groups = dupes[["geometry", "uvk", "u", "v", "key", "dupe"]].groupby("uvk")
+    groups = dupes[["geometry", "uvk", "dupe"]].groupby("uvk")
 
     # for each set of duplicate edges
     for _, group in groups:
@@ -432,9 +428,7 @@ def _update_edge_keys(G):
             if not _is_same_geometry(geom1, geom2):
                 # add edge uvk, but not edge vuk, otherwise we'll iterate both their keys
                 # and they'll still duplicate each other at the end of this process
-                different_streets.append(
-                    (group["u"].iloc[0], group["v"].iloc[0], group["key"].iloc[0])
-                )
+                different_streets.append(group.index[0])
 
     # for each unique different street, iterate its key + 1 so it's unique
     for u, v, k in set(different_streets):
