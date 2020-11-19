@@ -143,85 +143,53 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     return G
 
 
-def get_largest_component(G, strongly=False):
+def add_edge_lengths(G, precision=3):
     """
-    Get subgraph of MultiDiGraph's largest weakly/strongly connected component.
+    Add `length` (meters) attribute to each edge.
+
+    Calculated via great-circle distance between each edge's incident nodes,
+    so ensure graph is in unprojected coordinates.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
-    strongly : bool
-        if True, return the largest strongly instead of weakly connected
-        component
+    precision : int
+        decimal precision to round lengths
 
     Returns
     -------
     G : networkx.MultiDiGraph
-        the largest connected component subgraph of the original graph
+        graph with edge length attributes
     """
-    if strongly:
-        kind = "strongly"
-        is_connected = nx.is_strongly_connected
-        connected_components = nx.strongly_connected_components
-    else:
-        kind = "weakly"
-        is_connected = nx.is_weakly_connected
-        connected_components = nx.weakly_connected_components
+    # extract the edges' endpoint nodes' coordinates
+    try:
+        coords = (
+            (u, v, k, G.nodes[u]["y"], G.nodes[u]["x"], G.nodes[v]["y"], G.nodes[v]["x"])
+            for u, v, k in G.edges
+        )
+    except KeyError:  # pragma: no cover
+        missing_nodes = {
+            str(i)
+            for u, v, _ in G.edges(keys=True)
+            if not (G.nodes[u] or G.nodes[u])
+            for i in (u, v)
+            if not G.nodes[i]
+        }
+        missing_str = ", ".join(missing_nodes)
+        raise KeyError(f"Edge(s) missing nodes {missing_str} possibly due to clipping issue")
 
-    if not is_connected(G):
-        # get all the connected components in graph then identify the largest
-        largest_cc = max(connected_components(G), key=len)
-        n = len(G)
+    # turn the coordinates into a DataFrame indexed by u, v, k
+    cols = ["u", "v", "k", "u_y", "u_x", "v_y", "v_x"]
+    df = pd.DataFrame(coords, columns=cols).set_index(["u", "v", "k"])
 
-        # induce (frozen) subgraph then unfreeze it by making new MultiDiGraph
-        G = nx.MultiDiGraph(G.subgraph(largest_cc))
-        utils.log(f"Got largest {kind} connected component ({len(G)} of {n} total nodes)")
+    # calculate great circle distances, fill nulls with zeros, then round
+    dists = distance.great_circle_vec(df["u_y"], df["u_x"], df["v_y"], df["v_x"])
+    dists = dists.fillna(value=0).round(precision)
+    nx.set_edge_attributes(G, name="length", values=dists)
 
+    utils.log("Added edge lengths to graph")
     return G
-
-
-def get_route_edge_attributes(
-    G, route, attribute=None, minimize_key="length", retrieve_default=None
-):
-    """
-    Get a list of attribute values for each edge in a path.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    route : list
-        list of nodes IDs constituting the path
-    attribute : string
-        the name of the attribute to get the value of for each edge. If None,
-        the complete data dict is returned for each edge.
-    minimize_key : string
-        if there are parallel edges between two nodes, select the one with the
-        lowest value of minimize_key
-    retrieve_default : Callable[Tuple[Any, Any], Any]
-        function called with the edge nodes as parameters to retrieve a
-        default value, if the edge does not contain the given attribute
-        (otherwise a `KeyError` is raised)
-
-    Returns
-    -------
-    attribute_values : list
-        list of edge attribute values
-    """
-    attribute_values = []
-    for u, v in zip(route[:-1], route[1:]):
-        # if there are parallel edges between two nodes, select the one with the
-        # lowest value of minimize_key
-        data = min(G.get_edge_data(u, v).values(), key=lambda x: x[minimize_key])
-        if attribute is None:
-            attribute_value = data
-        elif retrieve_default is not None:
-            attribute_value = data.get(attribute, retrieve_default(u, v))
-        else:
-            attribute_value = data[attribute]
-        attribute_values.append(attribute_value)
-    return attribute_values
 
 
 def count_streets_per_node(G, nodes=None):
@@ -287,6 +255,49 @@ def count_streets_per_node(G, nodes=None):
     return streets_per_node
 
 
+def get_route_edge_attributes(
+    G, route, attribute=None, minimize_key="length", retrieve_default=None
+):
+    """
+    Get a list of attribute values for each edge in a path.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    route : list
+        list of nodes IDs constituting the path
+    attribute : string
+        the name of the attribute to get the value of for each edge. If None,
+        the complete data dict is returned for each edge.
+    minimize_key : string
+        if there are parallel edges between two nodes, select the one with the
+        lowest value of minimize_key
+    retrieve_default : Callable[Tuple[Any, Any], Any]
+        function called with the edge nodes as parameters to retrieve a
+        default value, if the edge does not contain the given attribute
+        (otherwise a `KeyError` is raised)
+
+    Returns
+    -------
+    attribute_values : list
+        list of edge attribute values
+    """
+    attribute_values = []
+    for u, v in zip(route[:-1], route[1:]):
+        # if there are parallel edges between two nodes, select the one with the
+        # lowest value of minimize_key
+        data = min(G.get_edge_data(u, v).values(), key=lambda x: x[minimize_key])
+        if attribute is None:
+            attribute_value = data
+        elif retrieve_default is not None:
+            attribute_value = data.get(attribute, retrieve_default(u, v))
+        else:
+            attribute_value = data[attribute]
+        attribute_values.append(attribute_value)
+    return attribute_values
+
+
 def remove_isolated_nodes(G):
     """
     Remove from a graph all nodes that have no incident edges.
@@ -311,131 +322,40 @@ def remove_isolated_nodes(G):
     return G
 
 
-def _is_duplicate_edge(data, data_other):
+def get_largest_component(G, strongly=False):
     """
-    Check if two edge data dicts are the same based on OSM ID and geometry.
-
-    Parameters
-    ----------
-    data : dict
-        the first edge's data
-    data_other : dict
-        the second edge's data
-
-    Returns
-    -------
-    is_dupe : bool
-    """
-    is_dupe = False
-
-    # if either edge's OSM ID contains multiple values (due to simplification), we want
-    # to compare as sets so they are order-invariant, otherwise uv does not match vu
-    osmid = set(data["osmid"]) if isinstance(data["osmid"], list) else data["osmid"]
-    osmid_other = (
-        set(data_other["osmid"]) if isinstance(data_other["osmid"], list) else data_other["osmid"]
-    )
-
-    if osmid == osmid_other:
-        # if they contain the same OSM ID or set of OSM IDs (due to simplification)
-        if ("geometry" in data) and ("geometry" in data_other):
-            # if both edges have a geometry attribute
-            if _is_same_geometry(data["geometry"], data_other["geometry"]):
-                # if their edge geometries have the same coordinates
-                is_dupe = True
-        elif ("geometry" in data) and ("geometry" in data_other):
-            # if neither edge has a geometry attribute
-            is_dupe = True
-        else:
-            # if one edge has geometry attribute but the other doesn't, keep it
-            pass
-
-    return is_dupe
-
-
-def _is_same_geometry(ls1, ls2):
-    """
-    Check if LineString geometries in two edges are the same.
-
-    Check both normal and reversed order of constituent points.
-
-    Parameters
-    ----------
-    ls1 : shapely.geometry.LineString
-        the first edge's geometry
-    ls2 : shapely.geometry.LineString
-        the second edge's geometry
-
-    Returns
-    -------
-    bool
-    """
-    # extract geometries from each edge data dict
-    geom1 = [list(coords) for coords in ls1.xy]
-    geom2 = [list(coords) for coords in ls2.xy]
-
-    # reverse the first edge's list of x's and y's to look for a match in
-    # either order
-    geom1_r = [list(reversed(list(coords))) for coords in ls1.xy]
-
-    # if the edge's geometry matches its reverse's geometry in either order,
-    # return True
-    return geom1 == geom2 or geom1_r == geom2
-
-
-def _update_edge_keys(G):
-    """
-    Update keys of edges that share u, v with other edge but differ in geometry.
-
-    For example, two one-way streets from u to v that bow away from each other
-    as separate streets, rather than opposite direction edges of a single
-    street.
+    Get subgraph of G's largest weakly/strongly connected component.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
+    strongly : bool
+        if True, return the largest strongly instead of weakly connected
+        component
 
     Returns
     -------
     G : networkx.MultiDiGraph
+        the largest connected component subgraph of the original graph
     """
-    # identify all the edges that are duplicates based on a sorted combination
-    # of their origin, destination, and key. that is, edge uv will match edge vu
-    # as a duplicate, but only if they have the same key
-    edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
-    edges["uvk"] = ("_".join(sorted([str(u), str(v)]) + [str(k)]) for u, v, k in edges.index)
-    edges["dupe"] = edges["uvk"].duplicated(keep=False)
-    dupes = edges[edges["dupe"]].dropna(subset=["geometry"])
+    if strongly:
+        kind = "strongly"
+        is_connected = nx.is_strongly_connected
+        connected_components = nx.strongly_connected_components
+    else:
+        kind = "weakly"
+        is_connected = nx.is_weakly_connected
+        connected_components = nx.weakly_connected_components
 
-    different_streets = []
-    groups = dupes[["geometry", "uvk", "dupe"]].groupby("uvk")
+    if not is_connected(G):
+        # get all the connected components in graph then identify the largest
+        largest_cc = max(connected_components(G), key=len)
+        n = len(G)
 
-    # for each set of duplicate edges
-    for _, group in groups:
-
-        # if there are more than 2 edges here, make sure to compare all
-        if len(group["geometry"]) > 2:
-            li = group["geometry"].tolist()
-            li.append(li[0])
-            geom_pairs = list(zip(li[:-1], li[1:]))
-        # otherwise, just compare the first edge to the second edge
-        else:
-            geom_pairs = [(group["geometry"].iloc[0], group["geometry"].iloc[1])]
-
-        # for each pair of edges to compare
-        for geom1, geom2 in geom_pairs:
-            # if they don't have the same geometry, flag them as different streets
-            if not _is_same_geometry(geom1, geom2):
-                # add edge uvk, but not edge vuk, otherwise we'll iterate both their keys
-                # and they'll still duplicate each other at the end of this process
-                different_streets.append(group.index[0])
-
-    # for each unique different street, iterate its key + 1 so it's unique
-    for u, v, k in set(different_streets):
-        # filter out key if it appears in data dict as we'll pass it explicitly
-        attributes = {k: v for k, v in G[u][v][k].items() if k != "key"}
-        G.add_edge(u, v, key=k + 1, **attributes)
-        G.remove_edge(u, v, key=k)
+        # induce (frozen) subgraph then unfreeze it by making new MultiDiGraph
+        G = nx.MultiDiGraph(G.subgraph(largest_cc))
+        utils.log(f"Got largest {kind} connected component ({len(G)} of {n} total nodes)")
 
     return G
 
@@ -476,7 +396,7 @@ def get_digraph(G, weight="length"):
 
 def get_undirected(G):
     """
-    Convert MultiDiGraph to MultiGraph.
+    Convert MultiDiGraph to undirected MultiGraph.
 
     Maintains parallel edges only if their geometries differ. Note: see also
     `get_digraph` to convert MultiDiGraph to DiGraph.
@@ -545,57 +465,128 @@ def get_undirected(G):
     return H
 
 
-def add_edge_lengths(G, precision=3):
+def _is_duplicate_edge(data, data_other):
     """
-    Add `length` (meters) attribute to each edge.
+    Check if two edge data dicts are the same based on OSM ID and geometry.
 
-    Calculated via great-circle distance between each edge's incident nodes,
-    so ensure graph is in unprojected coordinates.
+    Parameters
+    ----------
+    data : dict
+        the first edge's data
+    data_other : dict
+        the second edge's data
+
+    Returns
+    -------
+    is_dupe : bool
+    """
+    is_dupe = False
+
+    # if either edge's OSM ID contains multiple values (due to simplification), we want
+    # to compare as sets so they are order-invariant, otherwise uv does not match vu
+    osmid = set(data["osmid"]) if isinstance(data["osmid"], list) else data["osmid"]
+    osmid_other = (
+        set(data_other["osmid"]) if isinstance(data_other["osmid"], list) else data_other["osmid"]
+    )
+
+    if osmid == osmid_other:
+        # if they contain the same OSM ID or set of OSM IDs (due to simplification)
+        if ("geometry" in data) and ("geometry" in data_other):
+            # if both edges have a geometry attribute
+            if _is_same_geometry(data["geometry"], data_other["geometry"]):
+                # if their edge geometries have the same coordinates
+                is_dupe = True
+        elif ("geometry" in data) and ("geometry" in data_other):
+            # if neither edge has a geometry attribute
+            is_dupe = True
+        else:
+            # if one edge has geometry attribute but the other doesn't, keep it
+            pass
+
+    return is_dupe
+
+
+def _is_same_geometry(ls1, ls2):
+    """
+    Check if two LineString geometries are the same in either direction.
+
+    Check both the normal and reversed orders of constituent points.
+
+    Parameters
+    ----------
+    ls1 : shapely.geometry.LineString
+        the first LineString geometry
+    ls2 : shapely.geometry.LineString
+        the second LineString geometry
+
+    Returns
+    -------
+    bool
+    """
+    # extract coordinates from each LineString geometry
+    geom1 = [tuple(coords) for coords in ls1.xy]
+    geom2 = [tuple(coords) for coords in ls2.xy]
+
+    # reverse the first LineString's coordinates
+    geom1_r = [tuple(reversed(coords)) for coords in ls1.xy]
+
+    # if first geometry matches second in either direction, return True
+    return geom1 == geom2 or geom1_r == geom2
+
+
+def _update_edge_keys(G):
+    """
+    Update keys of edges that share u, v with other edge but differ in geometry.
+
+    For example, two one-way streets from u to v that bow away from each other
+    as separate streets, rather than opposite direction edges of a single
+    street.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
-    precision : int
-        decimal precision to round lengths
 
     Returns
     -------
     G : networkx.MultiDiGraph
-        graph with edge length attributes
     """
-    # first load all the edges' origin and destination coordinates as a
-    # dataframe indexed by u, v, key
-    try:
-        coords = np.array(
-            [
-                (u, v, k, G.nodes[u]["y"], G.nodes[u]["x"], G.nodes[v]["y"], G.nodes[v]["x"])
-                for u, v, k in G.edges(keys=True)
-            ]
-        )
-    except KeyError:  # pragma: no cover
-        missing_nodes = {
-            str(i)
-            for u, v, _ in G.edges(keys=True)
-            if not (G.nodes[u] or G.nodes[u])
-            for i in (u, v)
-            if not G.nodes[i]
-        }
-        missing_str = ", ".join(missing_nodes)
-        raise KeyError(f"Edge(s) missing nodes {missing_str} possibly due to clipping issue")
+    # identify all the edges that are duplicates based on a sorted combination
+    # of their origin, destination, and key. that is, edge uv will match edge vu
+    # as a duplicate, but only if they have the same key
+    edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
+    edges["uvk"] = ("_".join(sorted([str(u), str(v)]) + [str(k)]) for u, v, k in edges.index)
+    edges["dupe"] = edges["uvk"].duplicated(keep=False)
+    dupes = edges[edges["dupe"]].dropna(subset=["geometry"])
 
-    df_coords = pd.DataFrame(coords, columns=["u", "v", "k", "u_y", "u_x", "v_y", "v_x"])
-    df_coords[["u", "v", "k"]] = df_coords[["u", "v", "k"]].astype(np.int64)
-    df_coords = df_coords.set_index(["u", "v", "k"])
+    different_streets = []
+    groups = dupes[["geometry", "uvk", "dupe"]].groupby("uvk")
 
-    # then calculate the great circle distance with the vectorized function
-    gc_distances = distance.great_circle_vec(
-        lat1=df_coords["u_y"], lng1=df_coords["u_x"], lat2=df_coords["v_y"], lng2=df_coords["v_x"]
-    )
+    # for each set of duplicate edges
+    for _, group in groups:
 
-    # fill nulls with zeros and round
-    gc_distances = gc_distances.fillna(value=0).round(precision)
-    nx.set_edge_attributes(G, name="length", values=gc_distances.to_dict())
+        # if there are more than 2 edges here, make sure to compare all
+        if len(group["geometry"]) > 2:
+            li = group["geometry"].tolist()
+            li.append(li[0])
+            geom_pairs = list(zip(li[:-1], li[1:]))
+        # otherwise, just compare the first edge to the second edge
+        else:
+            geom_pairs = [(group["geometry"].iloc[0], group["geometry"].iloc[1])]
 
-    utils.log("Added edge lengths to graph")
+        # for each pair of edges to compare
+        for geom1, geom2 in geom_pairs:
+            # if they don't have the same geometry, flag them as different streets
+            if not _is_same_geometry(geom1, geom2):
+                # add edge uvk, but not edge vuk, otherwise we'll iterate both their keys
+                # and they'll still duplicate each other at the end of this process
+                different_streets.append(group.index[0])
+
+    # for each unique different street, iterate its key + 1 so it's unique
+    for u, v, k in set(different_streets):
+        # filter out key if it appears in data dict as we'll pass it explicitly
+        attributes = {k: v for k, v in G[u][v][k].items() if k != "key"}
+        G.add_edge(u, v, key=k + 1, **attributes)
+        G.remove_edge(u, v, key=k)
+
     return G
