@@ -11,25 +11,22 @@ except ImportError:
     folium = None
 
 
-def _make_folium_polyline(
-    edge, edge_color, edge_width, edge_opacity, popup_attribute=None, **kwargs
-):
+def _make_folium_polyline(geom, edge_color, edge_width, edge_opacity, popup_val=None, **kwargs):
     """
-    Turn row GeoDataFrame into a folium PolyLine with attributes.
+    Turn edge geometry into a folium PolyLine with attributes.
 
     Parameters
     ----------
-    edge : GeoSeries
-        a row from the gdf_edges GeoDataFrame
+    geom : shapely LineString
+        geometry of the edge
     edge_color : string
         color of the edge lines
     edge_width : numeric
         width of the edge lines
     edge_opacity : numeric
         opacity of the edge lines
-    popup_attribute : string
-        edge attribute to display in a pop-up when an edge is clicked, if
-        None, no popup
+    popup_val : string
+        value to display in pop-up when an edge is clicked, if None, no popup
     kwargs : dict
         keyword arguments to pass along to folium
 
@@ -43,15 +40,15 @@ def _make_folium_polyline(
 
     # locations is a list of points for the polyline folium takes coords in
     # lat,lon but geopandas provides them in lon,lat so we must reverse them
-    locations = [(lat, lng) for lng, lat in edge["geometry"].coords]
+    locations = [(lat, lng) for lng, lat in geom.coords]
 
-    # if popup_attribute is None, then create no pop-up
-    if popup_attribute is None:
+    # create popup if popup_val is not None
+    if popup_val is None:
         popup = None
     else:
         # folium doesn't interpret html in the html argument (weird), so can't
         # do newlines without an iframe
-        popup_text = json.dumps(edge[popup_attribute])
+        popup_text = json.dumps(popup_val)
         popup = folium.Popup(html=popup_text)
 
     # create a folium polyline with attributes
@@ -126,14 +123,20 @@ def plot_graph_folium(
     if graph_map is None:
         graph_map = folium.Map(location=graph_centroid, zoom_start=zoom, tiles=tiles)
 
+    # identify the geometry and popup columns
+    if popup_attribute is None:
+        attrs = ["geometry"]
+    else:
+        attrs = ["geometry", popup_attribute]
+
     # add each graph edge to the map
-    for _, row in gdf_edges.iterrows():
+    for vals in gdf_edges[attrs].values:
+        params = dict(zip(["geom", "popup_val"], vals))
         pl = _make_folium_polyline(
-            edge=row,
+            **params,
             edge_color=edge_color,
             edge_width=edge_width,
             edge_opacity=edge_opacity,
-            popup_attribute=popup_attribute,
             **kwargs,
         )
         pl.add_to(graph_map)
@@ -209,14 +212,20 @@ def plot_route_folium(
     if route_map is None:
         route_map = folium.Map(location=route_centroid, zoom_start=zoom, tiles=tiles)
 
+    # identify the geometry and popup columns
+    if popup_attribute is None:
+        attrs = ["geometry"]
+    else:
+        attrs = ["geometry", popup_attribute]
+
     # add each route edge to the map
-    for _, row in gdf_edges.iterrows():
+    for vals in gdf_edges[attrs].values:
+        params = dict(zip(["geom", "popup_val"], vals))
         pl = _make_folium_polyline(
-            edge=row,
+            **params,
             edge_color=route_color,
             edge_width=route_width,
             edge_opacity=route_opacity,
-            popup_attribute=popup_attribute,
             **kwargs,
         )
         pl.add_to(route_map)
