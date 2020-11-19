@@ -117,7 +117,7 @@ def plot_graph_folium(
         raise ImportError("The folium package must be installed to use this optional feature.")
 
     # create gdf of the graph edges
-    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)
 
     # get graph centroid
     x, y = gdf_edges.unary_union.centroid.xy
@@ -143,8 +143,7 @@ def plot_graph_folium(
     # list of lat-lng points as [southwest, northeast]
     if fit_bounds and isinstance(graph_map, folium.Map):
         tb = gdf_edges.total_bounds
-        bounds = [[tb[1], tb[0]], [tb[3], tb[2]]]
-        graph_map.fit_bounds(bounds)
+        graph_map.fit_bounds([(tb[1], tb[0]), (tb[3], tb[2])])
 
     return graph_map
 
@@ -198,16 +197,13 @@ def plot_route_folium(
     if not folium:
         raise ImportError("The folium package must be installed to use this optional feature.")
 
-    # create gdf of the route edges
-    gdf_edges = utils_graph.graph_to_gdfs(G.subgraph(route), nodes=False, fill_edge_geometry=True)
-    route_nodes = list(zip(route[:-1], route[1:]))
-    index = [
-        gdf_edges[(gdf_edges["u"] == u) & (gdf_edges["v"] == v)].index[0] for u, v in route_nodes
-    ]
-    gdf_route_edges = gdf_edges.loc[index]
+    # create gdf of the route edges in order
+    node_pairs = zip(route[:-1], route[1:])
+    uvk = [(u, v, min(G[u][v], key=lambda k: G[u][v][k]["length"])) for u, v in node_pairs]
+    gdf_edges = utils_graph.graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
 
     # get route centroid
-    x, y = gdf_route_edges.unary_union.centroid.xy
+    x, y = gdf_edges.unary_union.centroid.xy
     route_centroid = (y[0], x[0])
 
     # create the folium web map if one wasn't passed-in
@@ -215,7 +211,7 @@ def plot_route_folium(
         route_map = folium.Map(location=route_centroid, zoom_start=zoom, tiles=tiles)
 
     # add each route edge to the map
-    for _, row in gdf_route_edges.iterrows():
+    for _, row in gdf_edges.iterrows():
         pl = _make_folium_polyline(
             edge=row,
             edge_color=route_color,
@@ -229,8 +225,7 @@ def plot_route_folium(
     # if fit_bounds is True, fit the map to the bounds of the route by passing
     # list of lat-lng points as [southwest, northeast]
     if fit_bounds and isinstance(route_map, folium.Map):
-        tb = gdf_route_edges.total_bounds
-        bounds = [(tb[1], tb[0]), (tb[3], tb[2])]
-        route_map.fit_bounds(bounds)
+        tb = gdf_edges.total_bounds
+        route_map.fit_bounds([(tb[1], tb[0]), (tb[3], tb[2])])
 
     return route_map

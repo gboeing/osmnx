@@ -537,7 +537,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
 
     # STEP 6
     # create new edge from cluster to cluster for each edge in original graph
-    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False).set_index(["u", "v", "key"])
+    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)
     for u, v, k, data in G.edges(keys=True, data=True):
         u2 = gdf.loc[u, "cluster"]
         v2 = gdf.loc[v, "cluster"]
@@ -554,7 +554,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     # STEP 7
     # for every group of merged nodes with more than 1 node in it, extend the
     # edge geometries to reach the new node point
-    new_edges = utils_graph.graph_to_gdfs(H, nodes=False)
+    new_edges = utils_graph.graph_to_gdfs(H, nodes=False).reset_index()
     for cluster_label, nodes_subset in groups:
 
         # but only if there were multiple nodes merged together,
