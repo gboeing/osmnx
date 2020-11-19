@@ -570,7 +570,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
             # for each edge incident to this new merged node, update
             # its geometry to extend to/from the new node's point coords
             mask = (new_edges["u"] == cluster_label) | (new_edges["v"] == cluster_label)
-            for _, (u, v, k) in new_edges.loc[mask, ["u", "v", "key"]].iterrows():
+            for u, v, k in new_edges.loc[mask, ["u", "v", "key"]].values:
                 old_coords = list(H.edges[u, v, k]["geometry"].coords)
                 new_coords = xy + old_coords if cluster_label == u else old_coords + xy
                 new_geom = LineString(new_coords)
