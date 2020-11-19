@@ -554,7 +554,6 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     # STEP 7
     # for every group of merged nodes with more than 1 node in it, extend the
     # edge geometries to reach the new node point
-    new_edges = utils_graph.graph_to_gdfs(H, nodes=False).reset_index()
     for cluster_label, nodes_subset in groups:
 
         # but only if there were multiple nodes merged together,
@@ -567,10 +566,11 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
             y = H.nodes[cluster_label]["y"]
             xy = [(x, y)]
 
-            # for each edge incident to this new merged node, update
-            # its geometry to extend to/from the new node's point coords
-            mask = (new_edges["u"] == cluster_label) | (new_edges["v"] == cluster_label)
-            for u, v, k in new_edges.loc[mask, ["u", "v", "key"]].values:
+            # for each edge incident to this new merged node, update its
+            # geometry to extend to/from the new node's point coords
+            in_edges = set(H.in_edges(cluster_label, keys=True))
+            out_edges = set(H.out_edges(cluster_label, keys=True))
+            for u, v, k in in_edges | out_edges:
                 old_coords = list(H.edges[u, v, k]["geometry"].coords)
                 new_coords = xy + old_coords if cluster_label == u else old_coords + xy
                 new_geom = LineString(new_coords)
