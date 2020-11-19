@@ -433,7 +433,7 @@ def save_graph_xml(
     if "uniqueid" in gdf_edges.columns:
         gdf_edges = gdf_edges.rename(columns={"uniqueid": "id"})
     else:
-        gdf_edges = gdf_edges.reset_index().rename(columns={"index": "id"})
+        gdf_edges = gdf_edges.reset_index().reset_index().rename(columns={"index": "id"})
 
     # add default values for required attributes
     for table in (gdf_nodes, gdf_edges):
@@ -530,6 +530,7 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
     root : ElementTree.Element
         xml tree with edges appended
     """
+    gdf_edges.reset_index(inplace=True)
     if merge_edges:
 
         for e in gdf_edges["id"].unique():
@@ -606,6 +607,7 @@ def _get_unique_nodes_ordered_from_way(df_way_edges):
         it is not explicitly forbidden in the OSM XML design schema.
     """
     G = nx.MultiDiGraph()
+    df_way_edges.reset_index(inplace=True)
     all_nodes = list(df_way_edges["u"].values) + list(df_way_edges["v"].values)
 
     G.add_nodes_from(all_nodes)
