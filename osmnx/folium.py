@@ -1,4 +1,4 @@
-"""Create leaflet web maps via folium."""
+"""Create interactive leaflet web maps via folium."""
 
 import json
 
@@ -26,14 +26,14 @@ def plot_graph_folium(
     """
     Plot a graph on an interactive folium web map.
 
-    Note that anything larger than a small city can take a long time to plot
-    and create a large web map file that is very slow to load as JavaScript.
+    Note that anything larger than a small city can produce a large web map
+    file that is slow to render in your browser.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
-    graph_map : folium.folium.Map or folium.FeatureGroup
+    graph_map : folium.folium.Map
         if not None, plot the graph on this preexisting folium map object
     popup_attribute : string
         edge attribute to display in a pop-up when an edge is clicked
@@ -42,7 +42,7 @@ def plot_graph_folium(
     zoom : int
         initial zoom level for the map
     fit_bounds : bool
-        if True, fit the map to the boundaries of the route's edges
+        if True, fit the map to the boundaries of the graph's edges
     edge_color : string
         color of the edge lines
     edge_width : numeric
@@ -50,7 +50,7 @@ def plot_graph_folium(
     edge_opacity : numeric
         opacity of the edge lines
     kwargs : dict
-        keyword arguments to pass along to folium
+        keyword arguments to pass along to folium.PolyLine()
 
     Returns
     -------
@@ -110,9 +110,9 @@ def plot_route_folium(
     route_width : numeric
         width of the route's line
     route_opacity : numeric
-        opacity of the route lines
+        opacity of the route's line
     kwargs : dict
-        keyword arguments to pass along to folium
+        keyword arguments to pass along to folium.PolyLine()
 
     Returns
     -------
@@ -138,42 +138,42 @@ def plot_route_folium(
 
 
 def _plot_folium(
-    gdf_edges,
+    gdf,
     m,
     popup_attribute,
     tiles,
     zoom,
     fit_bounds,
-    edge_color,
-    edge_width,
-    edge_opacity,
+    color,
+    lw,
+    alpha,
     **kwargs,
 ):
     """
-    Plot a graph or route on an interactive folium web map.
+    Plot a GeoDataFrame of LineStrings on an interactive folium web map.
 
     Parameters
     ----------
-    gdf_edges : x
-        x
+    gdf : geopandas.GeoDataFrame
+        a GeoDataFrame of LineString geometries and attributes
     m : folium.folium.Map or folium.FeatureGroup
-        if not None, plot the graph on this preexisting folium map object
+        if not None, plot on this preexisting folium map object
     popup_attribute : string
-        edge attribute to display in a pop-up when an edge is clicked
+        attribute to display in pop-up on-click, if None, no popup
     tiles : string
         name of a folium tileset
     zoom : int
         initial zoom level for the map
     fit_bounds : bool
-        if True, fit the map to the boundaries of the route's edges
-    edge_color : string
-        color of the edge lines
-    edge_width : numeric
-        width of the edge lines
-    edge_opacity : numeric
-        opacity of the edge lines
+        if True, fit the map to gdf's boundaries
+    color : string
+        color of the lines
+    lw : numeric
+        width of the lines
+    alpha : numeric
+        opacity of the lines
     kwargs : dict
-        keyword arguments to pass along to folium
+        keyword arguments to pass along to folium.PolyLine()
 
     Returns
     -------
@@ -183,13 +183,13 @@ def _plot_folium(
     if not folium:
         raise ImportError("The folium package must be installed to use this optional feature.")
 
-    # get graph centroid
-    x, y = gdf_edges.unary_union.centroid.xy
-    graph_centroid = (y[0], x[0])
+    # get centroid
+    x, y = gdf.unary_union.centroid.xy
+    centroid = (y[0], x[0])
 
     # create the folium web map if one wasn't passed-in
     if m is None:
-        m = folium.Map(location=graph_centroid, zoom_start=zoom, tiles=tiles)
+        m = folium.Map(location=centroid, zoom_start=zoom, tiles=tiles)
 
     # identify the geometry and popup columns
     if popup_attribute is None:
@@ -197,14 +197,14 @@ def _plot_folium(
     else:
         attrs = ["geometry", popup_attribute]
 
-    # add each graph edge to the map
-    for vals in gdf_edges[attrs].values:
+    # add each edge to the map
+    for vals in gdf[attrs].values:
         params = dict(zip(["geom", "popup_val"], vals))
         pl = _make_folium_polyline(
             **params,
-            edge_color=edge_color,
-            edge_width=edge_width,
-            edge_opacity=edge_opacity,
+            color=color,
+            lw=lw,
+            alpha=alpha,
             **kwargs,
         )
         pl.add_to(m)
@@ -212,59 +212,53 @@ def _plot_folium(
     # if fit_bounds is True, fit the map to the bounds of the route by passing
     # list of lat-lng points as [southwest, northeast]
     if fit_bounds and isinstance(m, folium.Map):
-        tb = gdf_edges.total_bounds
+        tb = gdf.total_bounds
         m.fit_bounds([(tb[1], tb[0]), (tb[3], tb[2])])
 
     return m
 
 
-def _make_folium_polyline(geom, edge_color, edge_width, edge_opacity, popup_val=None, **kwargs):
+def _make_folium_polyline(geom, color, lw, alpha, popup_val=None, **kwargs):
     """
-    Turn edge geometry into a folium PolyLine with attributes.
+    Turn LineString geometry into a folium PolyLine with attributes.
 
     Parameters
     ----------
     geom : shapely LineString
-        geometry of the edge
-    edge_color : string
-        color of the edge lines
-    edge_width : numeric
-        width of the edge lines
-    edge_opacity : numeric
-        opacity of the edge lines
+        geometry of the line
+    color : string
+        color of the line
+    lw : numeric
+        width of the line
+    alpha : numeric
+        opacity of the line
     popup_val : string
-        value to display in pop-up when an edge is clicked, if None, no popup
+        text to display in pop-up when a line is clicked, if None, no popup
     kwargs : dict
-        keyword arguments to pass along to folium
+        keyword arguments to pass along to folium.PolyLine()
 
     Returns
     -------
     pl : folium.PolyLine
     """
-    # check if we were able to import folium successfully
-    if not folium:
-        raise ImportError("The folium package must be installed to use this optional feature.")
-
     # locations is a list of points for the polyline folium takes coords in
-    # lat,lon but geopandas provides them in lon,lat so we must reverse them
+    # lat,lng but geopandas provides them in lng,lat so we must reverse them
     locations = [(lat, lng) for lng, lat in geom.coords]
 
     # create popup if popup_val is not None
     if popup_val is None:
         popup = None
     else:
-        # folium doesn't interpret html in the html argument (weird), so can't
-        # do newlines without an iframe
-        popup_text = json.dumps(popup_val)
-        popup = folium.Popup(html=popup_text)
+        # folium doesn't interpret html, so can't do newlines without iframe
+        popup = folium.Popup(html=json.dumps(popup_val))
 
     # create a folium polyline with attributes
     pl = folium.PolyLine(
         locations=locations,
         popup=popup,
-        color=edge_color,
-        weight=edge_width,
-        opacity=edge_opacity,
+        color=color,
+        lw=lw,
+        alpha=alpha,
         **kwargs,
     )
     return pl
