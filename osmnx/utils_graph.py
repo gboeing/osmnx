@@ -531,11 +531,11 @@ def _is_same_geometry(ls1, ls2):
     bool
     """
     # extract coordinates from each LineString geometry
-    geom1 = [list(coords) for coords in ls1.xy]
-    geom2 = [list(coords) for coords in ls2.xy]
+    geom1 = [tuple(coords) for coords in ls1.xy]
+    geom2 = [tuple(coords) for coords in ls2.xy]
 
     # reverse the first LineString's coordinates
-    geom1_r = [list(reversed(list(coords))) for coords in ls1.xy]
+    geom1_r = [tuple(reversed(coords)) for coords in ls1.xy]
 
     # if first geometry matches second in either direction, return True
     return geom1 == geom2 or geom1_r == geom2
