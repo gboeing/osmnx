@@ -46,8 +46,8 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8"):
     gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
 
     # save the nodes and edges as GeoPackage layers
-    gdf_nodes.to_file(filepath, layer="nodes", driver="GPKG", encoding=encoding)
-    gdf_edges.to_file(filepath, layer="edges", driver="GPKG", encoding=encoding)
+    gdf_nodes.to_file(filepath, layer="nodes", driver="GPKG", index=True, encoding=encoding)
+    gdf_edges.to_file(filepath, layer="edges", driver="GPKG", index=True, encoding=encoding)
     utils.log(f'Saved graph as GeoPackage at "{filepath}"')
 
 
@@ -90,8 +90,8 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8"):
     gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
 
     # save the nodes and edges as separate ESRI shapefiles
-    gdf_nodes.to_file(filepath_nodes, encoding=encoding)
-    gdf_edges.to_file(filepath_edges, encoding=encoding)
+    gdf_nodes.to_file(filepath_nodes, driver="ESRI Shapefile", index=True, encoding=encoding)
+    gdf_edges.to_file(filepath_edges, driver="ESRI Shapefile", index=True, encoding=encoding)
     utils.log(f'Saved graph as shapefiles at "{filepath}"')
 
 
