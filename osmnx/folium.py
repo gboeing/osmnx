@@ -31,7 +31,7 @@ def _make_folium_polyline(
         edge attribute to display in a pop-up when an edge is clicked, if
         None, no popup
     kwargs : dict
-        Extra parameters passed through to folium
+        keyword arguments to pass along to folium
 
     Returns
     -------
@@ -41,10 +41,9 @@ def _make_folium_polyline(
     if not folium:
         raise ImportError("The folium package must be installed to use this optional feature.")
 
-    # locations is a list of points for the polyline
-    # folium takes coords in lat,lon but geopandas provides them in lon,lat
-    # so we have to flip them around
-    locations = list([(lat, lng) for lng, lat in edge["geometry"].coords])
+    # locations is a list of points for the polyline folium takes coords in
+    # lat,lon but geopandas provides them in lon,lat so we must reverse them
+    locations = [(lat, lng) for lng, lat in edge["geometry"].coords]
 
     # if popup_attribute is None, then create no pop-up
     if popup_attribute is None:
@@ -106,7 +105,7 @@ def plot_graph_folium(
     edge_opacity : numeric
         opacity of the edge lines
     kwargs : dict
-        Extra keyword arguments passed through to folium
+        keyword arguments to pass along to folium
 
     Returns
     -------
@@ -187,7 +186,7 @@ def plot_route_folium(
     route_opacity : numeric
         opacity of the route lines
     kwargs : dict
-        Extra parameters passed through to folium
+        keyword arguments to pass along to folium
 
     Returns
     -------
@@ -199,7 +198,7 @@ def plot_route_folium(
 
     # create gdf of the route edges in order
     node_pairs = zip(route[:-1], route[1:])
-    uvk = [(u, v, min(G[u][v], key=lambda k: G[u][v][k]["length"])) for u, v in node_pairs]
+    uvk = ((u, v, min(G[u][v], key=lambda k: G[u][v][k]["length"])) for u, v in node_pairs)
     gdf_edges = utils_graph.graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
 
     # get route centroid
