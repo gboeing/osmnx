@@ -169,6 +169,8 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
     """
     Find the nearest edge to a point by minimum Euclidean distance.
 
+    For best results, both G and point should be projected.
+
     Parameters
     ----------
     G : networkx.MultiDiGraph
@@ -190,18 +192,16 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
         Or a tuple of (u, v, key, dist) if return_dist is True.
         Or a tuple of (u, v, key, geom, dist) if return_geom and return_dist are True.
     """
-    # get u, v, key, geom from all the graph edges
-    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
-    edges = gdf_edges[["u", "v", "key", "geometry"]].values
-
     # convert lat,lng (y,x) point to x,y for shapely distance operation
     xy_point = Point(reversed(point))
 
     # calculate euclidean distance from each edge's geometry to this point
-    edge_distances = [(edge, xy_point.distance(edge[3])) for edge in edges]
+    gs_edges = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
+    uvk_geoms = zip(gs_edges.index, gs_edges.values)
+    distances = ((uvk, geom, xy_point.distance(geom)) for uvk, geom in uvk_geoms)
 
     # the nearest edge minimizes the distance to the point
-    (u, v, key, geom), dist = min(edge_distances, key=lambda x: x[1])
+    (u, v, key), geom, dist = min(distances, key=lambda x: x[2])
     utils.log(f"Found nearest edge ({u, v, key}) to point {point}")
 
     # return results requested by caller
@@ -365,7 +365,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
             raise ImportError("The scipy package must be installed to use this optional feature.")
 
         # transform graph into DataFrame
-        edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+        edges = utils_graph.graph_to_gdfs(G, nodes=False).reset_index()
 
         # transform edges into evenly spaced points
         edges["points"] = edges.apply(
@@ -409,7 +409,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
             )
 
         # transform graph into DataFrame
-        edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+        edges = utils_graph.graph_to_gdfs(G, nodes=False).reset_index()
 
         # transform edges into evenly spaced points
         edges["points"] = edges.apply(
