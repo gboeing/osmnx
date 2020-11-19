@@ -22,6 +22,7 @@ from shapely.ops import polygonize
 
 from . import downloader
 from . import geocoder
+from . import osm_xml
 from . import settings
 from . import utils
 from . import utils_geo
@@ -302,7 +303,7 @@ def geometries_from_xml(filepath, polygon=None, tags=None):
     gdf : geopandas.GeoDataFrame
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [downloader._overpass_json_from_file(filepath)]
+    response_jsons = [osm_xml._overpass_json_from_file(filepath)]
 
     # create GeoDataFrame using this response JSON
     gdf = _create_gdf(response_jsons, polygon=polygon, tags=tags)
