@@ -1,6 +1,6 @@
 """Graph creation functions."""
 
-from itertools import groupby
+import itertools
 
 import networkx as nx
 from shapely.geometry import MultiPolygon
@@ -9,6 +9,7 @@ from shapely.geometry import Polygon
 from . import distance
 from . import downloader
 from . import geocoder
+from . import osm_xml
 from . import projection
 from . import settings
 from . import simplification
@@ -491,7 +492,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
     G : networkx.MultiDiGraph
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [downloader._overpass_json_from_file(filepath)]
+    response_jsons = [osm_xml._overpass_json_from_file(filepath)]
 
     # create graph using this response JSON
     G = _create_graph(response_jsons, bidirectional=bidirectional, retain_all=retain_all)
@@ -605,8 +606,7 @@ def _convert_path(element):
     path = {"osmid": element["id"]}
 
     # remove any consecutive duplicate elements in the list of nodes
-    grouped_list = groupby(element["nodes"])
-    path["nodes"] = [group[0] for group in grouped_list]
+    path["nodes"] = [group[0] for group in itertools.groupby(element["nodes"])]
 
     if "tags" in element:
         for useful_tag in settings.useful_tags_way:
