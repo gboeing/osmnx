@@ -416,50 +416,46 @@ def get_undirected(G):
     G = G.copy()
 
     # set from/to nodes before making graph undirected
-    for u, v, k, data in G.edges(keys=True, data=True):
-        G.edges[u, v, k]["from"] = u
-        G.edges[u, v, k]["to"] = v
+    for u, v, d in G.edges(data=True):
+        d["from"] = u
+        d["to"] = v
 
-        # add geometry if it doesn't already exist, to retain parallel
-        # edges' distinct geometries
-        if "geometry" not in data:
-            point_u = Point((G.nodes[u]["x"], G.nodes[u]["y"]))
-            point_v = Point((G.nodes[v]["x"], G.nodes[v]["y"]))
-            data["geometry"] = LineString([point_u, point_v])
+        # add geometry if missing, to compare parallel edges' geometries
+        if "geometry" not in d:
+            point_u = (G.nodes[u]["x"], G.nodes[u]["y"])
+            point_v = (G.nodes[v]["x"], G.nodes[v]["y"])
+            d["geometry"] = LineString([point_u, point_v])
 
-    # update edge keys so we don't retain only one edge of sets of parallel edges
-    # when we convert from a multidigraph to a multigraph
+    # increment parallel edges' keys so we don't retain only one edge of sets
+    # of true parallel edges when we convert from MultiDiGraph to MultiGraph
     G = _update_edge_keys(G)
 
-    # now convert multidigraph to a multigraph, retaining all edges in both
-    # directions for now, as well as all graph attributes
-    H = nx.MultiGraph()
+    # convert MultiDiGraph to MultiGraph, retaining edges in both directions
+    # of parallel edges and self-loops for now
+    H = nx.MultiGraph(**G.graph)
     H.add_nodes_from(G.nodes(data=True))
     H.add_edges_from(G.edges(keys=True, data=True))
-    H.graph = G.graph
 
     # the previous operation added all directed edges from G as undirected
-    # edges in H. this means we have duplicate edges for every bi-directional
-    # street. so, look through the edges and remove any duplicates
-    duplicate_edges = []
-    for u, v, key, data in H.edges(keys=True, data=True):
+    # edges in H. we now have duplicate edges for every bidirectional parallel
+    # edge or self-loop. so, look through the edges and remove any duplicates.
+    duplicate_edges = set()
+    for u1, v1, key1, data1 in H.edges(keys=True, data=True):
 
         # if we haven't already flagged this edge as a duplicate
-        if not (u, v, key) in duplicate_edges:
+        if not (u1, v1, key1) in duplicate_edges:
 
             # look at every other edge between u and v, one at a time
-            for key_other in H[u][v]:
+            for key2 in H[u1][v1]:
 
                 # don't compare this edge to itself
-                if not key_other == key:
+                if key1 != key2:
 
-                    # compare the first edge's data to the second's to see if
-                    # they are duplicates
-                    data_other = H.edges[u, v, key_other]
-                    if _is_duplicate_edge(data, data_other):
-
-                        # if they match up, flag the duplicate for removal
-                        duplicate_edges.append((u, v, key_other))
+                    # compare the first edge's data to the second's
+                    # if they match up, flag the duplicate for removal
+                    data2 = H.edges[u1, v1, key2]
+                    if _is_duplicate_edge(data1, data2):
+                        duplicate_edges.add((u1, v1, key2))
 
     H.remove_edges_from(duplicate_edges)
     utils.log("Converted MultiDiGraph to undirected MultiGraph")
@@ -467,15 +463,15 @@ def get_undirected(G):
     return H
 
 
-def _is_duplicate_edge(data, data_other):
+def _is_duplicate_edge(data1, data2):
     """
-    Check if two edge data dicts are the same based on OSM ID and geometry.
+    Check if two graph edge data dicts have the same osmid and geometry.
 
     Parameters
     ----------
-    data : dict
+    data1: dict
         the first edge's data
-    data_other : dict
+    data2 : dict
         the second edge's data
 
     Returns
@@ -484,25 +480,25 @@ def _is_duplicate_edge(data, data_other):
     """
     is_dupe = False
 
-    # if either edge's OSM ID contains multiple values (due to simplification), we want
-    # to compare as sets so they are order-invariant, otherwise uv does not match vu
-    osmid = set(data["osmid"]) if isinstance(data["osmid"], list) else data["osmid"]
-    osmid_other = (
-        set(data_other["osmid"]) if isinstance(data_other["osmid"], list) else data_other["osmid"]
-    )
+    # if either edge's osmid contains multiple values (due to simplification)
+    # compare them as sets to see if they contain the same values
+    osmid1 = set(data1["osmid"]) if isinstance(data1["osmid"], list) else data1["osmid"]
+    osmid2 = set(data2["osmid"]) if isinstance(data2["osmid"], list) else data2["osmid"]
 
-    if osmid == osmid_other:
-        # if they contain the same OSM ID or set of OSM IDs (due to simplification)
-        if ("geometry" in data) and ("geometry" in data_other):
-            # if both edges have a geometry attribute
-            if _is_same_geometry(data["geometry"], data_other["geometry"]):
-                # if their edge geometries have the same coordinates
+    # if they contain the same osmid or set of osmids (due to simplification)
+    if osmid1 == osmid2:
+
+        # if both edges have geometry attributes and they match each other
+        if ("geometry" in data1) and ("geometry" in data2):
+            if _is_same_geometry(data1["geometry"], data2["geometry"]):
                 is_dupe = True
-        elif ("geometry" in data) and ("geometry" in data_other):
-            # if neither edge has a geometry attribute
+
+        # if neither edge has a geometry attribute
+        elif ("geometry" not in data1) and ("geometry" not in data2):
             is_dupe = True
+
+        # if one edge has geometry attribute but the other doesn't: not dupes
         else:
-            # if one edge has geometry attribute but the other doesn't, keep it
             pass
 
     return is_dupe
@@ -510,9 +506,9 @@ def _is_duplicate_edge(data, data_other):
 
 def _is_same_geometry(ls1, ls2):
     """
-    Check if two LineString geometries are the same in either direction.
+    Determine if two LineString geometries are the same (in either direction).
 
-    Check both the normal and reversed orders of constituent points.
+    Check both the normal and reversed orders of their constituent points.
 
     Parameters
     ----------
@@ -529,7 +525,7 @@ def _is_same_geometry(ls1, ls2):
     geom1 = [tuple(coords) for coords in ls1.xy]
     geom2 = [tuple(coords) for coords in ls2.xy]
 
-    # reverse the first LineString's coordinates
+    # reverse the first LineString's coordinates' direction
     geom1_r = [tuple(reversed(coords)) for coords in ls1.xy]
 
     # if first geometry matches second in either direction, return True
@@ -538,11 +534,12 @@ def _is_same_geometry(ls1, ls2):
 
 def _update_edge_keys(G):
     """
-    Update keys of edges that share u, v with other edge but differ in geometry.
+    Increment key of one edge of parallel edges that differ in geometry.
 
-    For example, two one-way streets from u to v that bow away from each other
-    as separate streets, rather than opposite direction edges of a single
-    street.
+    For example, two streets from u to v that bow away from each other as
+    separate streets, rather than opposite direction edges of a single street.
+    Increment one of these edge's keys so that they do not match across u, v,
+    k or v, u, k so we can add both to an undirected MultiGraph.
 
     Parameters
     ----------
@@ -557,38 +554,29 @@ def _update_edge_keys(G):
     # of their origin, destination, and key. that is, edge uv will match edge vu
     # as a duplicate, but only if they have the same key
     edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
-    edges["uvk"] = ("_".join(sorted([str(u), str(v)]) + [str(k)]) for u, v, k in edges.index)
-    edges["dupe"] = edges["uvk"].duplicated(keep=False)
-    dupes = edges[edges["dupe"]].dropna(subset=["geometry"])
+    edges["uvk"] = ["_".join(sorted([str(u), str(v)]) + [str(k)]) for u, v, k in edges.index]
+    mask = edges["uvk"].duplicated(keep=False)
+    dupes = edges[mask].dropna(subset=["geometry"])
 
     different_streets = []
-    groups = dupes[["geometry", "uvk", "dupe"]].groupby("uvk")
+    groups = dupes[["geometry", "uvk"]].groupby("uvk")
 
-    # for each set of duplicate edges
+    # for each group of duplicate edges
     for _, group in groups:
 
-        # if there are more than 2 edges here, make sure to compare all
-        if len(group["geometry"]) > 2:
-            li = group["geometry"].tolist()
-            li.append(li[0])
-            geom_pairs = list(zip(li[:-1], li[1:]))
-        # otherwise, just compare the first edge to the second edge
-        else:
-            geom_pairs = [(group["geometry"].iloc[0], group["geometry"].iloc[1])]
+        # for each pair of edges within this group
+        for geom1, geom2 in itertools.combinations(group["geometry"], 2):
 
-        # for each pair of edges to compare
-        for geom1, geom2 in geom_pairs:
-            # if they don't have the same geometry, flag them as different streets
+            # if they don't have the same geometry, flag them as different
+            # streets: flag edge uvk, but not edge vuk, otherwise we would
+            # increment both their keys and they'll still duplicate each other
             if not _is_same_geometry(geom1, geom2):
-                # add edge uvk, but not edge vuk, otherwise we'll iterate both their keys
-                # and they'll still duplicate each other at the end of this process
                 different_streets.append(group.index[0])
 
-    # for each unique different street, iterate its key + 1 so it's unique
+    # for each unique different street, increment its key to make it unique
     for u, v, k in set(different_streets):
-        # filter out key if it appears in data dict as we'll pass it explicitly
-        attributes = {k: v for k, v in G[u][v][k].items() if k != "key"}
-        G.add_edge(u, v, key=k + 1, **attributes)
+        new_key = max(list(G[u][v]) + list(G[v][u])) + 1
+        G.add_edge(u, v, key=new_key, **G.get_edge_data(u, v, k))
         G.remove_edge(u, v, key=k)
 
     return G
