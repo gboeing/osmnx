@@ -426,39 +426,38 @@ def get_undirected(G):
             point_v = (G.nodes[v]["x"], G.nodes[v]["y"])
             d["geometry"] = LineString([point_u, point_v])
 
-    # update edge keys so we don't retain only one edge of sets of parallel edges
-    # when we convert from a multidigraph to a multigraph
+    # increment parallel edges' keys so we don't retain only one edge of sets
+    # of parallel edges when we convert from a MultiDiGraph to a MultiGraph
     G = _update_edge_keys(G)
 
-    # now convert multidigraph to a multigraph, retaining all edges in both
-    # directions for now, as well as all graph attributes
-    H = nx.MultiGraph()
+    # convert MultiDiGraph to MultiGraph, retaining edges in both directions
+    # of parallel edges and self-loops for now
+    H = nx.MultiGraph(**G.graph)
     H.add_nodes_from(G.nodes(data=True))
     H.add_edges_from(G.edges(keys=True, data=True))
-    H.graph = G.graph
 
     # the previous operation added all directed edges from G as undirected
-    # edges in H. this means we have duplicate edges for every bi-directional
-    # street. so, look through the edges and remove any duplicates
-    duplicate_edges = []
-    for u, v, key, data in H.edges(keys=True, data=True):
+    # edges in H. we now have duplicate edges for every bidirectional parallel
+    # edge or self-loop. so, look through the edges and remove any duplicates.
+    duplicate_edges = set()
+    for u1, v1, key1, data1 in H.edges(keys=True, data=True):
 
         # if we haven't already flagged this edge as a duplicate
-        if not (u, v, key) in duplicate_edges:
+        if not (u1, v1, key1) in duplicate_edges:
 
             # look at every other edge between u and v, one at a time
-            for key2 in H[u][v]:
+            for key2 in H[u1][v1]:
 
                 # don't compare this edge to itself
-                if key != key2:
+                if key1 != key2:
 
                     # compare the first edge's data to the second's to see if
                     # they are duplicates
-                    data2 = H.edges[u, v, key2]
-                    if _is_duplicate_edge(data, data2):
+                    data2 = H.edges[u1, v1, key2]
+                    if _is_duplicate_edge(data1, data2):
 
                         # if they match up, flag the duplicate for removal
-                        duplicate_edges.append((u, v, key2))
+                        duplicate_edges.add((u1, v1, key2))
 
     H.remove_edges_from(duplicate_edges)
     utils.log(f"Removed {len(duplicate_edges)} duplicate edges: {duplicate_edges}")
