@@ -461,6 +461,7 @@ def get_undirected(G):
                         duplicate_edges.append((u, v, key2))
 
     H.remove_edges_from(duplicate_edges)
+    utils.log(f"Removed {len(duplicate_edges)} duplicate edges: {duplicate_edges}")
     utils.log("Converted MultiDiGraph to undirected MultiGraph")
 
     return H
@@ -495,8 +496,8 @@ def _is_duplicate_edge(data1, data2):
             if _is_same_geometry(data1["geometry"], data2["geometry"]):
                 # if their edge geometries have the same coordinates
                 is_dupe = True
-        elif ("geometry" in data1) and ("geometry" in data2):
-            # if neither edge has a geometry attribute: BUG... 'NOT' MISSING?
+        elif ("geometry" not in data1) and ("geometry" not in data2):
+            # if neither edge has a geometry attribute
             is_dupe = True
         else:
             # if one edge has geometry attribute but the other doesn't, keep it
@@ -526,7 +527,7 @@ def _is_same_geometry(ls1, ls2):
     geom1 = [tuple(coords) for coords in ls1.xy]
     geom2 = [tuple(coords) for coords in ls2.xy]
 
-    # reverse the first LineString's coordinates
+    # reverse the first LineString's coordinates' direction
     geom1_r = [tuple(reversed(coords)) for coords in ls1.xy]
 
     # if first geometry matches second in either direction, return True
@@ -555,37 +556,30 @@ def _update_edge_keys(G):
     # as a duplicate, but only if they have the same key
     edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
     edges["uvk"] = ["_".join(sorted([str(u), str(v)]) + [str(k)]) for u, v, k in edges.index]
-    edges["dupe"] = edges["uvk"].duplicated(keep=False)
-    dupes = edges[edges["dupe"]].dropna(subset=["geometry"])
+    mask = edges["uvk"].duplicated(keep=False)
+    dupes = edges[mask].dropna(subset=["geometry"])
 
     different_streets = []
-    groups = dupes[["geometry", "uvk", "dupe"]].groupby("uvk")
+    groups = dupes[["geometry", "uvk"]].groupby("uvk")
 
-    # for each set of duplicate edges
+    # for each group of duplicate edges
     for _, group in groups:
 
-        if len(group) > 2:
-            # if there are more than 2 edges here, make sure to compare all
-            li = group["geometry"].tolist()
-            li.append(li[0])
-            geom_pairs = list(zip(li[:-1], li[1:]))
-        else:
-            # otherwise, just compare the first edge to the second edge
-            geom_pairs = [(group["geometry"].iloc[0], group["geometry"].iloc[1])]
+        # for each pair of edges within this group
+        for geom1, geom2 in itertools.combinations(group["geometry"], 2):
 
-        # for each pair of edges to compare
-        for geom1, geom2 in geom_pairs:
             # if they don't have the same geometry, flag them as different streets
+            # add edge uvk, but not edge vuk, otherwise we'll iterate both their keys
+            # and they'll still duplicate each other at the end of this process
             if not _is_same_geometry(geom1, geom2):
-                # add edge uvk, but not edge vuk, otherwise we'll iterate both their keys
-                # and they'll still duplicate each other at the end of this process
                 different_streets.append(group.index[0])
 
-    # for each unique different street, iterate its key + 1 so it's unique
+    # for each unique different street, give it a unique key
+    set_different_streets = set(different_streets)
+    utils.log(f"Found {len(set_different_streets)} different streets")
     for u, v, k in set(different_streets):
-        # filter out key if it appears in data dict as we'll pass it explicitly
-        attributes = {k: v for k, v in G[u][v][k].items() if k != "key"}
-        G.add_edge(u, v, key=k + 1, **attributes)
+        new_key = max(list(G[u][v]) + list(G[v][u])) + 1
+        G.add_edge(u, v, key=new_key, **G.get_edge_data(u, v, k))
         G.remove_edge(u, v, key=k)
 
     return G
