@@ -416,16 +416,15 @@ def get_undirected(G):
     G = G.copy()
 
     # set from/to nodes before making graph undirected
-    for u, v, k, data in G.edges(keys=True, data=True):
-        G.edges[u, v, k]["from"] = u
-        G.edges[u, v, k]["to"] = v
+    for u, v, d in G.edges(data=True):
+        d["from"] = u
+        d["to"] = v
 
-        # add geometry if it doesn't already exist, to retain parallel
-        # edges' distinct geometries
-        if "geometry" not in data:
-            point_u = Point((G.nodes[u]["x"], G.nodes[u]["y"]))
-            point_v = Point((G.nodes[v]["x"], G.nodes[v]["y"]))
-            data["geometry"] = LineString([point_u, point_v])
+        # add geometry if missing, to compare parallel edges' geometries
+        if "geometry" not in d:
+            point_u = (G.nodes[u]["x"], G.nodes[u]["y"])
+            point_v = (G.nodes[v]["x"], G.nodes[v]["y"])
+            d["geometry"] = LineString([point_u, point_v])
 
     # update edge keys so we don't retain only one edge of sets of parallel edges
     # when we convert from a multidigraph to a multigraph
@@ -448,18 +447,18 @@ def get_undirected(G):
         if not (u, v, key) in duplicate_edges:
 
             # look at every other edge between u and v, one at a time
-            for key_other in H[u][v]:
+            for key2 in H[u][v]:
 
                 # don't compare this edge to itself
-                if not key_other == key:
+                if key != key2:
 
                     # compare the first edge's data to the second's to see if
                     # they are duplicates
-                    data_other = H.edges[u, v, key_other]
-                    if _is_duplicate_edge(data, data_other):
+                    data2 = H.edges[u, v, key2]
+                    if _is_duplicate_edge(data, data2):
 
                         # if they match up, flag the duplicate for removal
-                        duplicate_edges.append((u, v, key_other))
+                        duplicate_edges.append((u, v, key2))
 
     H.remove_edges_from(duplicate_edges)
     utils.log("Converted MultiDiGraph to undirected MultiGraph")
@@ -467,15 +466,15 @@ def get_undirected(G):
     return H
 
 
-def _is_duplicate_edge(data, data_other):
+def _is_duplicate_edge(data1, data2):
     """
     Check if two edge data dicts are the same based on OSM ID and geometry.
 
     Parameters
     ----------
-    data : dict
+    data1: dict
         the first edge's data
-    data_other : dict
+    data2 : dict
         the second edge's data
 
     Returns
@@ -486,20 +485,18 @@ def _is_duplicate_edge(data, data_other):
 
     # if either edge's OSM ID contains multiple values (due to simplification), we want
     # to compare as sets so they are order-invariant, otherwise uv does not match vu
-    osmid = set(data["osmid"]) if isinstance(data["osmid"], list) else data["osmid"]
-    osmid_other = (
-        set(data_other["osmid"]) if isinstance(data_other["osmid"], list) else data_other["osmid"]
-    )
+    osmid1 = set(data1["osmid"]) if isinstance(data1["osmid"], list) else data1["osmid"]
+    osmid2 = set(data2["osmid"]) if isinstance(data2["osmid"], list) else data2["osmid"]
 
-    if osmid == osmid_other:
+    if osmid1 == osmid2:
         # if they contain the same OSM ID or set of OSM IDs (due to simplification)
-        if ("geometry" in data) and ("geometry" in data_other):
+        if ("geometry" in data1) and ("geometry" in data2):
             # if both edges have a geometry attribute
-            if _is_same_geometry(data["geometry"], data_other["geometry"]):
+            if _is_same_geometry(data1["geometry"], data2["geometry"]):
                 # if their edge geometries have the same coordinates
                 is_dupe = True
-        elif ("geometry" in data) and ("geometry" in data_other):
-            # if neither edge has a geometry attribute
+        elif ("geometry" in data1) and ("geometry" in data2):
+            # if neither edge has a geometry attribute: BUG... 'NOT' MISSING?
             is_dupe = True
         else:
             # if one edge has geometry attribute but the other doesn't, keep it
@@ -557,7 +554,7 @@ def _update_edge_keys(G):
     # of their origin, destination, and key. that is, edge uv will match edge vu
     # as a duplicate, but only if they have the same key
     edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
-    edges["uvk"] = ("_".join(sorted([str(u), str(v)]) + [str(k)]) for u, v, k in edges.index)
+    edges["uvk"] = ["_".join(sorted([str(u), str(v)]) + [str(k)]) for u, v, k in edges.index]
     edges["dupe"] = edges["uvk"].duplicated(keep=False)
     dupes = edges[edges["dupe"]].dropna(subset=["geometry"])
 
@@ -567,13 +564,13 @@ def _update_edge_keys(G):
     # for each set of duplicate edges
     for _, group in groups:
 
-        # if there are more than 2 edges here, make sure to compare all
-        if len(group["geometry"]) > 2:
+        if len(group) > 2:
+            # if there are more than 2 edges here, make sure to compare all
             li = group["geometry"].tolist()
             li.append(li[0])
             geom_pairs = list(zip(li[:-1], li[1:]))
-        # otherwise, just compare the first edge to the second edge
         else:
+            # otherwise, just compare the first edge to the second edge
             geom_pairs = [(group["geometry"].iloc[0], group["geometry"].iloc[1])]
 
         # for each pair of edges to compare
