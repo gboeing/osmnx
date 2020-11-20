@@ -387,10 +387,12 @@ def get_digraph(G, weight="length"):
 
     # remove the parallel edge with greater "weight" attribute value
     for u, v in set(parallels):
-        k, d = max(G.get_edge_data(u, v).items(), key=lambda x: x[1][weight])
+        k, _ = max(G.get_edge_data(u, v).items(), key=lambda x: x[1][weight])
         to_remove.append((u, v, k))
 
     G.remove_edges_from(to_remove)
+    utils.log("Converted MultiDiGraph to DiGraph")
+
     return nx.DiGraph(G)
 
 
