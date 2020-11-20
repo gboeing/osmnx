@@ -489,18 +489,20 @@ def _is_duplicate_edge(data1, data2):
     osmid1 = set(data1["osmid"]) if isinstance(data1["osmid"], list) else data1["osmid"]
     osmid2 = set(data2["osmid"]) if isinstance(data2["osmid"], list) else data2["osmid"]
 
+    # if they contain the same OSM ID or set of OSM IDs (due to simplification)
     if osmid1 == osmid2:
-        # if they contain the same OSM ID or set of OSM IDs (due to simplification)
+
+        # if both edges have geometry attributes and they match each other
         if ("geometry" in data1) and ("geometry" in data2):
-            # if both edges have a geometry attribute
             if _is_same_geometry(data1["geometry"], data2["geometry"]):
-                # if their edge geometries have the same coordinates
                 is_dupe = True
+
+        # if neither edge has a geometry attribute
         elif ("geometry" not in data1) and ("geometry" not in data2):
-            # if neither edge has a geometry attribute
             is_dupe = True
+
+        # if one edge has geometry attribute but the other doesn't: not dupes
         else:
-            # if one edge has geometry attribute but the other doesn't, keep it
             pass
 
     return is_dupe
