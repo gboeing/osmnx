@@ -278,8 +278,8 @@ def _convert_edge_attr_types(G, dtypes=None):
     # for each edge in the graph, eval attribute value lists and convert types
     for _, _, data in G.edges(data=True, keys=False):
 
-        # edges attributes might have a single value, or a list if simplified
         # first, eval stringified lists to convert them to list objects
+        # edges attributes might have a single value, or a list if simplified
         for attr, value in data.items():
             if value.startswith("[") and value.endswith("]"):
                 try:
