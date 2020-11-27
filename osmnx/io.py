@@ -95,7 +95,7 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     filepath_nodes = os.path.join(filepath, "nodes.shp")
     filepath_edges = os.path.join(filepath, "edges.shp")
 
-     convert graph to gdfs and stringify non-numeric columns
+    # convert graph to gdfs and stringify non-numeric columns
     if directed:
         gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
     else:
