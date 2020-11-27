@@ -28,8 +28,8 @@ from .graph import graph_from_xml
 from .io import load_graphml
 from .io import save_graph_geopackage
 from .io import save_graph_shapefile
-from .io import save_graph_xml
 from .io import save_graphml
+from .osm_xml import save_graph_xml
 from .plot import plot_figure_ground
 from .plot import plot_footprints
 from .plot import plot_graph
@@ -47,6 +47,7 @@ from .utils import citation
 from .utils import config
 from .utils import log
 from .utils import ts
+from .utils_graph import get_digraph
 from .utils_graph import get_undirected
 from .utils_graph import graph_from_gdfs
 from .utils_graph import graph_to_gdfs
