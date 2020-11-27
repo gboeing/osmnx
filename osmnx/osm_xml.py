@@ -96,7 +96,7 @@ def _overpass_json_from_file(filepath):
         return handler.object
 
 
-def _save_graph_xml(
+def save_graph_xml(
     data,
     filepath=None,
     node_tags=settings.osm_xml_node_tags,
@@ -180,11 +180,12 @@ def _save_graph_xml(
         os.makedirs(folder)
 
     if not settings.all_oneway:
-        raise UserWarning(
-            "In order for save_graph_osm to behave properly "
-            "the graph must have been created with the "
-            "`all_oneway` setting set to True."
+        import warnings
+        msg = (
+            "In order for save_graph_xml to behave properly the graph must "
+            "have been created with the `all_oneway` setting set to True."
         )
+        warnings.warn(msg)
 
     try:
         gdf_nodes, gdf_edges = data
