@@ -107,7 +107,12 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     """
     Convert node and edge GeoDataFrames to a MultiDiGraph.
 
-    This function is the inverse of `graph_to_gdfs`.
+    This function is the inverse of `graph_to_gdfs` and is designed to work in
+    conjunction with it. However, you can convert arbitrary node and edge
+    GeoDataFrames as long as gdf_nodes is indexed by osmid and gdf_edges is
+    multi-indexed by u, v, key (following normal MultiDiGraph structure). This
+    allows you to load graph node/edge shapefiles or GeoPackage layers as
+    GeoDataFrames then convert to a MultiDiGraph for graph analytics.
 
     Parameters
     ----------
