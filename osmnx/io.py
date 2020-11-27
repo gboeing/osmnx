@@ -353,31 +353,7 @@ def save_graph_xml(
     edge_tag_aggs=None,
 ):
     """
-    Save graph to disk as an OSM-formatted XML .osm file.
-
-    This function exists only to allow serialization to the .osm file format
-    for applications that require it, and has constraints to conform to that.
-    To save/load full-featured OSMnx graphs to/from disk for later use, use
-    the save_graphml and load_graphml functions instead.
-
-    Note: for large networks this function can take a long time to run. Before
-    using this function, make sure you configured OSMnx as described in the
-    example below when you created the graph.
-
-    Example
-    -------
-    >>> import osmnx as ox
-    >>> utn = ox.settings.useful_tags_node
-    >>> oxna = ox.settings.osm_xml_node_attrs
-    >>> oxnt = ox.settings.osm_xml_node_tags
-    >>> utw = ox.settings.useful_tags_way
-    >>> oxwa = ox.settings.osm_xml_way_attrs
-    >>> oxwt = ox.settings.osm_xml_way_tags
-    >>> utn = list(set(utn + oxna + oxnt))
-    >>> utw = list(set(utw + oxwa + oxwt))
-    >>> ox.config(all_oneway=True, useful_tags_node=utn, useful_tags_way=utw)
-    >>> G = ox.graph_from_place('Piedmont, CA, USA', network_type='drive')
-    >>> ox.save_graph_xml(G, filepath='./data/graph1.osm')
+    Do not use: deprecated. Use osm_xml.save_graph_xml instead.
 
     Parameters
     ----------
@@ -415,7 +391,14 @@ def save_graph_xml(
     -------
     None
     """
-    osm_xml._save_graph_xml(
+    import warnings
+
+    msg = (
+        "The save_graph_xml function has been moved to the osm_xml module and "
+        "will be removed in a future release. Use the osm_xml module instead."
+    )
+    warnings.warn(msg)
+    osm_xml.save_graph_xml(
         data,
         filepath,
         node_tags,
