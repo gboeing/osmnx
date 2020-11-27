@@ -181,6 +181,7 @@ def save_graph_xml(
 
     if not settings.all_oneway:
         import warnings
+
         msg = (
             "In order for save_graph_xml to behave properly the graph must "
             "have been created with the `all_oneway` setting set to True."
