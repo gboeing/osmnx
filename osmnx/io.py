@@ -13,7 +13,7 @@ from . import utils
 from . import utils_graph
 
 
-def save_graph_geopackage(G, filepath=None, encoding="utf-8"):
+def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
     """
     Save graph nodes and edges to disk as layers in a GeoPackage file.
 
@@ -26,6 +26,10 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8"):
         data folder + graph.gpkg
     encoding : string
         the character encoding for the saved file
+    directed : bool
+        if False, save one edge for each undirected edge in the graph but
+        retain original oneway and to/from information as edge attributes; if
+        True, save one edge for each directed edge in the graph
 
     Returns
     -------
@@ -40,8 +44,11 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8"):
     if not folder == "" and not os.path.exists(folder):
         os.makedirs(folder)
 
-    # convert undirected graph to gdfs and stringify non-numeric columns
-    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
+    # convert graph to gdfs and stringify non-numeric columns
+    if directed:
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
+    else:
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
     gdf_nodes = _stringify_nonnumeric_cols(gdf_nodes)
     gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
 
@@ -51,13 +58,13 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8"):
     utils.log(f'Saved graph as GeoPackage at "{filepath}"')
 
 
-def save_graph_shapefile(G, filepath=None, encoding="utf-8"):
+def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     """
     Save graph nodes and edges to disk as ESRI shapefiles.
 
     The shapefile format is proprietary and outdated. Whenever possible, you
-    should use the superior GeoPackage file format instead, for instance, via
-    the save_graph_geopackage function.
+    should use the superior GeoPackage file format instead via the
+    save_graph_geopackage function.
 
     Parameters
     ----------
@@ -68,6 +75,10 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8"):
         default data folder + graph_shapefile
     encoding : string
         the character encoding for the saved files
+    directed : bool
+        if False, save one edge for each undirected edge in the graph but
+        retain original oneway and to/from information as edge attributes; if
+        True, save one edge for each directed edge in the graph
 
     Returns
     -------
@@ -84,8 +95,11 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8"):
     filepath_nodes = os.path.join(filepath, "nodes.shp")
     filepath_edges = os.path.join(filepath, "edges.shp")
 
-    # convert undirected graph to gdfs and stringify non-numeric columns
-    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
+     convert graph to gdfs and stringify non-numeric columns
+    if directed:
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
+    else:
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
     gdf_nodes = _stringify_nonnumeric_cols(gdf_nodes)
     gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
 
