@@ -13,7 +13,7 @@ from . import utils
 from . import utils_graph
 
 
-def save_graph_geopackage(G, filepath=None, encoding="utf-8"):
+def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
     """
     Save graph nodes and edges to disk as layers in a GeoPackage file.
 
@@ -26,6 +26,10 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8"):
         data folder + graph.gpkg
     encoding : string
         the character encoding for the saved file
+    directed : bool
+        if False, save one edge for each undirected edge in the graph but
+        retain original oneway and to/from information as edge attributes; if
+        True, save one edge for each directed edge in the graph
 
     Returns
     -------
@@ -40,8 +44,11 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8"):
     if not folder == "" and not os.path.exists(folder):
         os.makedirs(folder)
 
-    # convert undirected graph to gdfs and stringify non-numeric columns
-    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
+    # convert graph to gdfs and stringify non-numeric columns
+    if directed:
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
+    else:
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
     gdf_nodes = _stringify_nonnumeric_cols(gdf_nodes)
     gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
 
@@ -51,13 +58,13 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8"):
     utils.log(f'Saved graph as GeoPackage at "{filepath}"')
 
 
-def save_graph_shapefile(G, filepath=None, encoding="utf-8"):
+def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     """
     Save graph nodes and edges to disk as ESRI shapefiles.
 
     The shapefile format is proprietary and outdated. Whenever possible, you
-    should use the superior GeoPackage file format instead, for instance, via
-    the save_graph_geopackage function.
+    should use the superior GeoPackage file format instead via the
+    save_graph_geopackage function.
 
     Parameters
     ----------
@@ -68,6 +75,10 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8"):
         default data folder + graph_shapefile
     encoding : string
         the character encoding for the saved files
+    directed : bool
+        if False, save one edge for each undirected edge in the graph but
+        retain original oneway and to/from information as edge attributes; if
+        True, save one edge for each directed edge in the graph
 
     Returns
     -------
@@ -84,8 +95,11 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8"):
     filepath_nodes = os.path.join(filepath, "nodes.shp")
     filepath_edges = os.path.join(filepath, "edges.shp")
 
-    # convert undirected graph to gdfs and stringify non-numeric columns
-    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
+    # convert graph to gdfs and stringify non-numeric columns
+    if directed:
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
+    else:
+        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
     gdf_nodes = _stringify_nonnumeric_cols(gdf_nodes)
     gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
 
@@ -264,8 +278,8 @@ def _convert_edge_attr_types(G, dtypes=None):
     # for each edge in the graph, eval attribute value lists and convert types
     for _, _, data in G.edges(data=True, keys=False):
 
-        # edges attributes might have a single value, or a list if simplified
         # first, eval stringified lists to convert them to list objects
+        # edges attributes might have a single value, or a list if simplified
         for attr, value in data.items():
             if value.startswith("[") and value.endswith("]"):
                 try:
@@ -339,31 +353,7 @@ def save_graph_xml(
     edge_tag_aggs=None,
 ):
     """
-    Save graph to disk as an OSM-formatted XML .osm file.
-
-    This function exists only to allow serialization to the .osm file format
-    for applications that require it, and has constraints to conform to that.
-    To save/load full-featured OSMnx graphs to/from disk for later use, use
-    the save_graphml and load_graphml functions instead.
-
-    Note: for large networks this function can take a long time to run. Before
-    using this function, make sure you configured OSMnx as described in the
-    example below when you created the graph.
-
-    Example
-    -------
-    >>> import osmnx as ox
-    >>> utn = ox.settings.useful_tags_node
-    >>> oxna = ox.settings.osm_xml_node_attrs
-    >>> oxnt = ox.settings.osm_xml_node_tags
-    >>> utw = ox.settings.useful_tags_way
-    >>> oxwa = ox.settings.osm_xml_way_attrs
-    >>> oxwt = ox.settings.osm_xml_way_tags
-    >>> utn = list(set(utn + oxna + oxnt))
-    >>> utw = list(set(utw + oxwa + oxwt))
-    >>> ox.config(all_oneway=True, useful_tags_node=utn, useful_tags_way=utw)
-    >>> G = ox.graph_from_place('Piedmont, CA, USA', network_type='drive')
-    >>> ox.save_graph_xml(G, filepath='./data/graph1.osm')
+    Do not use: deprecated. Use osm_xml.save_graph_xml instead.
 
     Parameters
     ----------
@@ -401,7 +391,14 @@ def save_graph_xml(
     -------
     None
     """
-    osm_xml._save_graph_xml(
+    import warnings
+
+    msg = (
+        "The save_graph_xml function has been moved to the osm_xml module and "
+        "will be removed in a future release. Use the osm_xml module instead."
+    )
+    warnings.warn(msg)
+    osm_xml.save_graph_xml(
         data,
         filepath,
         node_tags,
