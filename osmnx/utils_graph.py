@@ -16,7 +16,7 @@ from . import utils
 
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
     """
-    Convert a graph to node and/or edge GeoDataFrames.
+    Convert a MultiDiGraph to node and/or edge GeoDataFrames.
 
     This function is the inverse of `graph_from_gdfs`.
 
