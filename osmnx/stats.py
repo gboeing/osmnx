@@ -365,7 +365,7 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
         # precompute shortest paths between all nodes for eccentricity-based
         # stats
         ssdpl = nx.single_source_dijkstra_path_length
-        sp = {source: dict(ssdpl(Gs, source, weight="length")) for s in Gs.nodes}
+        sp = {source: dict(ssdpl(Gs, source, weight="length")) for source in Gs.nodes}
 
         utils.log("Calculated shortest path lengths")
 
