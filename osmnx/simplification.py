@@ -387,12 +387,10 @@ def consolidate_intersections(
     """
     # if dead_ends is False, discard dead-end nodes to retain only intersections
     if not dead_ends:
-        if "streets_per_node" in G.graph:
-            streets_per_node = G.graph["streets_per_node"]
-        else:
-            streets_per_node = utils_graph.count_streets_per_node(G)
-
-        dead_end_nodes = [node for node, count in streets_per_node.items() if count <= 1]
+        spn = nx.get_node_attributes(G, "street_count")
+        if not set(spn.keys()) == set(G.nodes):
+            spn = utils_graph.count_streets_per_node(G)
+        dead_end_nodes = [node for node, count in spn.items() if count <= 1]
 
         # make a copy to not mutate original graph object caller passed in
         G = G.copy()

@@ -90,19 +90,12 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     # calculate the average degree of the graph
     k_avg = 2 * m / n
 
-    if "streets_per_node" in G.graph:
-        # get the degrees saved as a graph attribute (from an undirected
-        # representation of the graph). this is not the degree of the nodes in
-        # the directed graph, but rather represents the number of streets
-        # (unidirected edges) emanating from each node. see
-        # count_streets_per_node function.
-        spn = G.graph["streets_per_node"]
-    else:
-        # count how many street segments emanate from each node in this graph
+    # get number of streets (unidirected edges) emanating from each node
+    spn = nx.get_node_attributes(G, "street_count")
+    if not set(spn.keys()) == set(G.nodes):
         spn = utils_graph.count_streets_per_node(G)
 
-    # count number of intersections in graph, as nodes with >1 street emanating
-    # from them
+    # count number of intersections in graph, as nodes with >1 street
     node_ids = set(G.nodes)
     intersect_count = len([1 for node, count in spn.items() if (count > 1) and (node in node_ids)])
 
