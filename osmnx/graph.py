@@ -474,7 +474,7 @@ def graph_from_polygon(
 
 def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=False):
     """
-    Create a graph from data in an OSM-formatted XML file.
+    Create a graph from data in a .osm formatted XML file.
 
     Parameters
     ----------

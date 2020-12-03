@@ -43,14 +43,6 @@ osmnx.folium module
     :private-members:
     :noindex:
 
-osmnx.footprints module
------------------------
-
-.. automodule:: osmnx.footprints
-    :members:
-    :private-members:
-    :noindex:
-
 osmnx.geocoder module
 ---------------------
 
@@ -83,18 +75,18 @@ osmnx.io module
     :private-members:
     :noindex:
 
-osmnx.plot module
------------------
+osmnx.osm_xml module
+--------------------
 
-.. automodule:: osmnx.plot
+.. automodule:: osmnx.osm_xml
     :members:
     :private-members:
     :noindex:
 
-osmnx.pois module
+osmnx.plot module
 -----------------
 
-.. automodule:: osmnx.pois
+.. automodule:: osmnx.plot
     :members:
     :private-members:
     :noindex:

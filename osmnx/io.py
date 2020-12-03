@@ -223,7 +223,7 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None):
     G = _convert_edge_attr_types(G, default_edge_dtypes)
 
     # eval any non-string graph attributes to convert to correct types
-    for attr in {"simplified"}:
+    for attr in ["simplified"]:
         try:
             G.graph[attr] = ast.literal_eval(G.graph[attr])
         except Exception:
