@@ -35,12 +35,6 @@ osmnx.folium module
 .. automodule:: osmnx.folium
     :members:
 
-osmnx.footprints module
------------------------
-
-.. automodule:: osmnx.footprints
-    :members:
-
 osmnx.geocoder module
 ---------------------
 
@@ -65,16 +59,16 @@ osmnx.io module
 .. automodule:: osmnx.io
     :members:
 
+osmnx.osm_xml module
+--------------------
+
+.. automodule:: osmnx.osm_xml
+    :members:
+
 osmnx.plot module
 -----------------
 
 .. automodule:: osmnx.plot
-    :members:
-
-osmnx.pois module
------------------
-
-.. automodule:: osmnx.pois
     :members:
 
 osmnx.projection module

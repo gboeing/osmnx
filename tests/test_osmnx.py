@@ -181,7 +181,7 @@ def test_plots():
 
     # test getting colors
     co = ox.plot.get_colors(n=5, return_hex=True)
-    nc = ox.plot.get_node_colors_by_attr(G, "osmid")
+    nc = ox.plot.get_node_colors_by_attr(G, "x")
     ec = ox.plot.get_edge_colors_by_attr(G, "length", num_bins=5)
 
     # plot and save to disk
@@ -324,10 +324,6 @@ def test_network_saving_loading():
     for (k1, v1), (k2, v2) in zip(G.graph.items(), G2.graph.items()):
         assert k1 == k2
         assert v1 == v2
-    assert tuple(G.graph["streets_per_node"].keys()) == tuple(G2.graph["streets_per_node"].keys())
-    assert tuple(G.graph["streets_per_node"].values()) == tuple(
-        G2.graph["streets_per_node"].values()
-    )
 
     # test custom data types
     nd = {"osmid": str}
@@ -349,7 +345,7 @@ def test_network_saving_loading():
 
     # test ordered nodes from way
     df = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
-    ordered_nodes = ox.io._get_unique_nodes_ordered_from_way(df)
+    ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(df)
     assert ordered_nodes == [2, 3, 10, 5, 8]
 
     ox.settings.all_oneway = default_all_oneway
@@ -419,22 +415,6 @@ def test_stats():
     G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
 
 
-def test_footprints():
-
-    # download footprints and plot them
-    gdf = ox.footprints_from_place(place2)
-    gdf = ox.footprints_from_polygon(polygon)
-    gdf = ox.footprints_from_address(address, dist=300)
-    fig, ax = ox.plot_footprints(gdf)
-
-
-def test_pois():
-
-    tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
-    gdf = ox.pois_from_place([place1], tags=tags)
-    gdf = ox.pois_from_address(address, tags={"amenity": "school"})
-
-
 def test_geometries():
 
     # geometries_from_bbox - bounding box query to return empty GeoDataFrame
@@ -444,6 +424,7 @@ def test_geometries():
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
     tags = {"landuse": True, "building": True, "highway": True}
     gdf = ox.geometries_from_bbox(north, south, east, west, tags=tags)
+    fig, ax = ox.plot_footprints(gdf)
 
     # geometries_from_point - tests multipolygon creation
     gdf = ox.geometries_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)

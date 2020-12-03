@@ -1,6 +1,6 @@
 """Graph creation functions."""
 
-from itertools import groupby
+import itertools
 
 import networkx as nx
 from shapely.geometry import MultiPolygon
@@ -9,6 +9,7 @@ from shapely.geometry import Polygon
 from . import distance
 from . import downloader
 from . import geocoder
+from . import osm_xml
 from . import projection
 from . import settings
 from . import simplification
@@ -421,9 +422,9 @@ def graph_from_polygon(
 
         # download the network data from OSM within buffered polygon
         response_jsons = downloader._osm_net_download(poly_buff, network_type, custom_filter)
-        bidirectional = network_type in settings.bidirectional_network_types
 
         # create buffered graph from the downloaded data
+        bidirectional = network_type in settings.bidirectional_network_types
         G_buff = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
 
         # truncate buffered graph to the buffered polygon and retain_all for
@@ -443,18 +444,19 @@ def graph_from_polygon(
         # intersection just outside the polygon
         G = truncate.truncate_graph_polygon(G_buff, polygon, retain_all, truncate_by_edge)
 
-        # count how many street segments in buffered graph emanate from each
+        # count how many physical streets in buffered graph connect to each
         # intersection in un-buffered graph, to retain true counts for each
         # intersection, even if some of its neighbors are outside the polygon
-        G.graph["streets_per_node"] = utils_graph.count_streets_per_node(G_buff, nodes=G.nodes())
+        spn = utils_graph.count_streets_per_node(G_buff, nodes=G.nodes)
+        nx.set_node_attributes(G, values=spn, name="street_count")
 
     # if clean_periphery=False, just use the polygon as provided
     else:
         # download the network data from OSM
         response_jsons = downloader._osm_net_download(polygon, network_type, custom_filter)
-        bidirectional = network_type in settings.bidirectional_network_types
 
         # create graph from the downloaded data
+        bidirectional = network_type in settings.bidirectional_network_types
         G = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
 
         # truncate the graph to the extent of the polygon
@@ -472,7 +474,7 @@ def graph_from_polygon(
 
 def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=False):
     """
-    Create a graph from data in an OSM-formatted XML file.
+    Create a graph from data in a .osm formatted XML file.
 
     Parameters
     ----------
@@ -491,7 +493,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
     G : networkx.MultiDiGraph
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [downloader._overpass_json_from_file(filepath)]
+    response_jsons = [osm_xml._overpass_json_from_file(filepath)]
 
     # create graph using this response JSON
     G = _create_graph(response_jsons, bidirectional=bidirectional, retain_all=retain_all)
@@ -508,8 +510,9 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     """
     Create a networkx MultiDiGraph from Overpass API responses.
 
-    Add length in meters (great-circle distance between endpoints) to all
-    of the graph's (unsimplified, straight-line) edges via add_edge_lengths.
+    Adds length attributes in meters (great-circle distance between endpoints)
+    to all of the graph's (pre-simplified, straight-line) edges via the
+    `utils_graph.add_edge_lengths` function.
 
     Parameters
     ----------
@@ -561,7 +564,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
 
     utils.log(f"Created graph with {len(G)} nodes and {len(G.edges)} edges")
 
-    # add length (great circle distance between nodes) attribute to each edge
+    # add length (great-circle distance between nodes) attribute to each edge
     if len(G.edges) > 0:
         G = utils_graph.add_edge_lengths(G)
 
@@ -581,7 +584,7 @@ def _convert_node(element):
     -------
     node : dict
     """
-    node = {"y": element["lat"], "x": element["lon"], "osmid": element["id"]}
+    node = {"y": element["lat"], "x": element["lon"]}
     if "tags" in element:
         for useful_tag in settings.useful_tags_node:
             if useful_tag in element["tags"]:
@@ -605,8 +608,7 @@ def _convert_path(element):
     path = {"osmid": element["id"]}
 
     # remove any consecutive duplicate elements in the list of nodes
-    grouped_list = groupby(element["nodes"])
-    path["nodes"] = [group[0] for group in grouped_list]
+    path["nodes"] = [group[0] for group in itertools.groupby(element["nodes"])]
 
     if "tags" in element:
         for useful_tag in settings.useful_tags_way:

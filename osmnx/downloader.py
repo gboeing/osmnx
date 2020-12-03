@@ -1,6 +1,5 @@
 """Interact with the OSM APIs."""
 
-import bz2
 import datetime as dt
 import json
 import logging as lg
@@ -8,7 +7,6 @@ import math
 import os
 import re
 import time
-import xml.sax
 from collections import OrderedDict
 from hashlib import md5
 
@@ -686,85 +684,3 @@ def overpass_request(data, pause=None, error_pause=60):
 
         _save_to_cache(prepared_url, response_json, sc)
         return response_json
-
-
-def _overpass_json_from_file(filepath):
-    """
-    Read OSM XML from file and return Overpass-like JSON.
-
-    Parameters
-    ----------
-    filepath : string
-        path to file containing OSM XML data
-
-    Returns
-    -------
-    OSMContentHandler object
-    """
-
-    def _opener(filepath):
-        _, ext = os.path.splitext(filepath)
-        if ext == ".bz2":
-            return bz2.BZ2File(filepath)
-        else:
-            # assume an unrecognized file extension is just XML
-            return open(filepath, mode="rb")
-
-    with _opener(filepath) as file:
-        handler = _OSMContentHandler()
-        xml.sax.parse(file, handler)
-        return handler.object
-
-
-class _OSMContentHandler(xml.sax.handler.ContentHandler):
-    """
-    SAX content handler for OSM XML.
-
-    Used to build an Overpass-like response JSON object in self.object. For format
-    notes, see http://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes
-    and http://overpass-api.de/output_formats.html#json
-    """
-
-    def __init__(self):
-        self._element = None
-        self.object = {"elements": []}
-
-    def startElement(self, name, attrs):
-        if name == "osm":
-            self.object.update({k: attrs[k] for k in attrs.keys() if k in {"version", "generator"}})
-
-        elif name in {"node", "way"}:
-            self._element = dict(type=name, tags={}, nodes=[], **attrs)
-            self._element.update({k: float(attrs[k]) for k in attrs.keys() if k in {"lat", "lon"}})
-            self._element.update(
-                {
-                    k: int(attrs[k])
-                    for k in attrs.keys()
-                    if k in {"id", "uid", "version", "changeset"}
-                }
-            )
-
-        elif name == "relation":
-            self._element = dict(type=name, tags={}, members=[], **attrs)
-            self._element.update(
-                {
-                    k: int(attrs[k])
-                    for k in attrs.keys()
-                    if k in {"id", "uid", "version", "changeset"}
-                }
-            )
-
-        elif name == "tag":
-            self._element["tags"].update({attrs["k"]: attrs["v"]})
-
-        elif name == "nd":
-            self._element["nodes"].append(int(attrs["ref"]))
-
-        elif name == "member":
-            self._element["members"].append(
-                {k: (int(attrs[k]) if k == "ref" else attrs[k]) for k in attrs.keys()}
-            )
-
-    def endElement(self, name):
-        if name in {"node", "way", "relation"}:
-            self.object["elements"].append(self._element)

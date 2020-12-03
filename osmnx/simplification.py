@@ -177,14 +177,14 @@ def _get_paths_to_simplify(G, strict=True):
     path_to_simplify : list
     """
     # first identify all the nodes that are endpoints
-    endpoints = set([n for n in G.nodes() if _is_endpoint(G, n, strict=strict)])
+    endpoints = set([n for n in G.nodes if _is_endpoint(G, n, strict=strict)])
     utils.log(f"Identified {len(endpoints)} edge endpoints")
 
     # for each endpoint node, look at each of its successor nodes
     for endpoint in endpoints:
         for successor in G.successors(endpoint):
             if successor not in endpoints:
-                # if endpoint node's successor is not an endpoint, build a path
+                # if endpoint node's successor is not an endpoint, build path
                 # from the endpoint node, through the successor, and on to the
                 # next endpoint node
                 yield _build_path(G, endpoint, successor, endpoints)
@@ -387,12 +387,10 @@ def consolidate_intersections(
     """
     # if dead_ends is False, discard dead-end nodes to retain only intersections
     if not dead_ends:
-        if "streets_per_node" in G.graph:
-            streets_per_node = G.graph["streets_per_node"]
-        else:
-            streets_per_node = utils_graph.count_streets_per_node(G)
-
-        dead_end_nodes = [node for node, count in streets_per_node.items() if count <= 1]
+        spn = nx.get_node_attributes(G, "street_count")
+        if not set(spn.keys()) == set(G.nodes):
+            spn = utils_graph.count_streets_per_node(G)
+        dead_end_nodes = [node for node, count in spn.items() if count <= 1]
 
         # make a copy to not mutate original graph object caller passed in
         G = G.copy()
@@ -537,7 +535,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
 
     # STEP 6
     # create new edge from cluster to cluster for each edge in original graph
-    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False).set_index(["u", "v", "key"])
+    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)
     for u, v, k, data in G.edges(keys=True, data=True):
         u2 = gdf.loc[u, "cluster"]
         v2 = gdf.loc[v, "cluster"]
@@ -554,7 +552,6 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     # STEP 7
     # for every group of merged nodes with more than 1 node in it, extend the
     # edge geometries to reach the new node point
-    new_edges = utils_graph.graph_to_gdfs(H, nodes=False)
     for cluster_label, nodes_subset in groups:
 
         # but only if there were multiple nodes merged together,
@@ -567,10 +564,11 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
             y = H.nodes[cluster_label]["y"]
             xy = [(x, y)]
 
-            # for each edge incident to this new merged node, update
-            # its geometry to extend to/from the new node's point coords
-            mask = (new_edges["u"] == cluster_label) | (new_edges["v"] == cluster_label)
-            for _, (u, v, k) in new_edges.loc[mask, ["u", "v", "key"]].iterrows():
+            # for each edge incident to this new merged node, update its
+            # geometry to extend to/from the new node's point coords
+            in_edges = set(H.in_edges(cluster_label, keys=True))
+            out_edges = set(H.out_edges(cluster_label, keys=True))
+            for u, v, k in in_edges | out_edges:
                 old_coords = list(H.edges[u, v, k]["geometry"].coords)
                 new_coords = xy + old_coords if cluster_label == u else old_coords + xy
                 new_geom = LineString(new_coords)

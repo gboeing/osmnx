@@ -16,7 +16,7 @@ from . import utils
 
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
     """
-    Convert a graph to node and/or edge GeoDataFrames.
+    Convert a MultiDiGraph to node and/or edge GeoDataFrames.
 
     This function is the inverse of `graph_from_gdfs`.
 
@@ -51,6 +51,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         else:
             gdf_nodes = gpd.GeoDataFrame(data, index=nodes)
 
+        gdf_nodes.index.rename("osmid", inplace=True)
         utils.log("Created nodes GeoDataFrame from graph")
 
     if edges:
@@ -84,10 +85,11 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             gdf_edges.set_geometry("geometry")
             gdf_edges.crs = crs
 
-        # add u, v, key attributes as columns
+        # add u, v, key attributes as index
         gdf_edges["u"] = u
         gdf_edges["v"] = v
         gdf_edges["key"] = k
+        gdf_edges.set_index(["u", "v", "key"], inplace=True)
 
         utils.log("Created edges GeoDataFrame from graph")
 
@@ -105,7 +107,12 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     """
     Convert node and edge GeoDataFrames to a MultiDiGraph.
 
-    This function is the inverse of `graph_to_gdfs`.
+    This function is the inverse of `graph_to_gdfs` and is designed to work in
+    conjunction with it. However, you can convert arbitrary node and edge
+    GeoDataFrames as long as gdf_nodes is indexed by osmid and gdf_edges is
+    multi-indexed by u, v, key (following normal MultiDiGraph structure). This
+    allows you to load graph node/edge shapefiles or GeoPackage layers as
+    GeoDataFrames then convert to a MultiDiGraph for graph analytics.
 
     Parameters
     ----------
@@ -125,15 +132,12 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
         graph_attrs = {"crs": gdf_edges.crs}
     G = nx.MultiDiGraph(**graph_attrs)
 
-    # assemble edges' attribute names and values
-    attr_names = [c for c in gdf_edges.columns if c not in {"u", "v", "key"}]
-    attr_values = zip(*[gdf_edges[col] for col in attr_names])
-
     # add edges and their attributes to graph, but filter out null attribute
     # values so that edges only get attributes with non-null values
-    for u, v, k, edge_vals in zip(gdf_edges["u"], gdf_edges["v"], gdf_edges["key"], attr_values):
-        edge_attrs = zip(attr_names, edge_vals)
-        data = {name: val for name, val in edge_attrs if isinstance(val, list) or pd.notnull(val)}
+    attr_names = gdf_edges.columns.to_list()
+    for (u, v, k), attr_vals in zip(gdf_edges.index, gdf_edges.values):
+        data_all = zip(attr_names, attr_vals)
+        data = {name: val for name, val in data_all if isinstance(val, list) or pd.notnull(val)}
         G.add_edge(u, v, key=k, **data)
 
     # add nodes' attributes to graph
@@ -144,70 +148,98 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     return G
 
 
-def induce_subgraph(G, node_subset):
+def add_edge_lengths(G, precision=3):
     """
-    Induce a subgraph of G: deprecated, do not use.
+    Add `length` attribute (in meters) to each edge.
+
+    Calculated via great-circle distance between each edge's incident nodes,
+    so ensure graph is in unprojected coordinates. Graph should be
+    unsimplified to get accurate distances. Note: this function is run by all
+    the `graph.graph_from_x` functions automatically to add `length`
+    attributes to all edges.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
-    node_subset : list-like
-        the subset of nodes to induce a subgraph of G
-
-    Returns
-    -------
-    networkx.MultiDiGraph
-        the subgraph of G induced by node_subset
-    """
-    import warnings
-
-    msg = (
-        "The induce_subgraph function has been deprecated and will be "
-        "removed in a future release. Use G.subgraph(nodes) instead."
-    )
-    warnings.warn(msg)
-
-    # induce a (frozen) subgraph then unfreeze it by making new MultiDiGraph
-    return nx.MultiDiGraph(G.subgraph(node_subset))
-
-
-def get_largest_component(G, strongly=False):
-    """
-    Get subgraph of MultiDiGraph's largest weakly/strongly connected component.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    strongly : bool
-        if True, return the largest strongly instead of weakly connected
-        component
+    precision : int
+        decimal precision to round lengths
 
     Returns
     -------
     G : networkx.MultiDiGraph
-        the largest connected component subgraph of the original graph
+        graph with edge length attributes
     """
-    if strongly:
-        kind = "strongly"
-        is_connected = nx.is_strongly_connected
-        connected_components = nx.strongly_connected_components
-    else:
-        kind = "weakly"
-        is_connected = nx.is_weakly_connected
-        connected_components = nx.weakly_connected_components
+    # extract the edges' endpoint nodes' coordinates
+    try:
+        coords = (
+            (u, v, k, G.nodes[u]["y"], G.nodes[u]["x"], G.nodes[v]["y"], G.nodes[v]["x"])
+            for u, v, k in G.edges
+        )
+    except KeyError:  # pragma: no cover
+        raise KeyError("Some edges missing nodes, possibly due to input data clipping issue")
 
-    if not is_connected(G):
-        # get all the connected components in graph then identify the largest
-        largest_cc = max(connected_components(G), key=len)
-        n = len(G)
+    # turn the coordinates into a DataFrame indexed by u, v, k
+    cols = ["u", "v", "k", "u_y", "u_x", "v_y", "v_x"]
+    df = pd.DataFrame(coords, columns=cols).set_index(["u", "v", "k"])
 
-        # induce (frozen) subgraph then unfreeze it by making new MultiDiGraph
-        G = nx.MultiDiGraph(G.subgraph(largest_cc))
-        utils.log(f"Got largest {kind} connected component ({len(G)} of {n} total nodes)")
+    # calculate great circle distances, fill nulls with zeros, then round
+    dists = distance.great_circle_vec(df["u_y"], df["u_x"], df["v_y"], df["v_x"])
+    dists = dists.fillna(value=0).round(precision)
+    nx.set_edge_attributes(G, name="length", values=dists)
 
+    utils.log("Added edge lengths to graph")
     return G
+
+
+def count_streets_per_node(G, nodes=None):
+    """
+    Count how many physical street segments connect to each node in a graph.
+
+    This function uses an undirected representation of the graph to count
+    physical streets rather than directed edges. Note: this function is
+    automatically run by all the `graph.graph_from_x` functions prior to
+    truncating the graph to the requested boundaries, to add accurate
+    `street_count` attributes to each node even if some of its neighbors are
+    outside the requested graph boundaries.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    nodes : list
+        which node IDs to get counts for. if None, use all graph nodes,
+        otherwise calculate counts only for these node IDs
+
+    Returns
+    -------
+    streets_per_node : dict
+        counts of how many physical streets connect to each node, with keys =
+        node ids and values = counts
+    """
+    if nodes is None:
+        nodes = G.nodes
+
+    # get one copy of each self-loop edge, because bi-directional self-loops
+    # appear twice in the undirected graph (u,v,0 and u,v,1 where u=v), but
+    # one-way self-loops will appear only once
+    Gu = G.to_undirected(reciprocal=False, as_view=True)
+    self_loop_edges = set(nx.selfloop_edges(Gu))
+
+    # get all non-self-loop undirected edges, including parallel edges
+    non_self_loop_edges = [e for e in Gu.edges(keys=False) if e not in self_loop_edges]
+
+    # make list of all unique edges including each parallel edge unless the
+    # parallel edge is a self-loop, in which case we don't double-count it
+    # then flatten this list of (u, v) edge tuples
+    edges = non_self_loop_edges + list(self_loop_edges)
+    edges_flat = itertools.chain.from_iterable(edges)
+
+    # count how often each node appears in list of flattened edge endpoints
+    counts = Counter(list(edges_flat))
+    streets_per_node = {node: counts[node] for node in nodes}
+    utils.log("Counted undirected street segments incident to each node")
+    return streets_per_node
 
 
 def get_route_edge_attributes(
@@ -253,69 +285,6 @@ def get_route_edge_attributes(
     return attribute_values
 
 
-def count_streets_per_node(G, nodes=None):
-    """
-    Count how many street segments emanate from each node in this graph.
-
-    If nodes is passed, then only count the nodes in the graph with those IDs.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    nodes : iterable
-        the set of node IDs to get counts for
-
-    Returns
-    -------
-    streets_per_node : dict
-        counts of how many streets emanate from each node with
-        keys=node id and values=count
-    """
-    # to calculate the counts, get undirected representation of the graph. for
-    # each node, get the list of the set of unique u,v,key edges, including
-    # parallel edges but excluding self-loop parallel edges (this is necessary
-    # because bi-directional self-loops will appear twice in the undirected
-    # graph as you have u,v,key0 and u,v,key1 where u==v when you convert from
-    # MultiDiGraph to MultiGraph - BUT, one-way self-loops will appear only
-    # once. to get consistent accurate counts of physical streets, ignoring
-    # directionality, we need the list of the set of unique edges...). then,
-    # count how many times the node appears in the u,v tuples in the list. this
-    # is the count of how many street segments emanate from this node. finally,
-    # create a dict of node id:count
-    G_undir = G.to_undirected(reciprocal=False)
-    all_edges = G_undir.edges(keys=False)
-    if nodes is None:
-        nodes = G_undir.nodes()
-
-    # get all unique edges - this throws away any parallel edges (including
-    # those in self-loops)
-    all_unique_edges = set(all_edges)
-
-    # get all edges (including parallel edges) that are not self-loops
-    non_self_loop_edges = [e for e in all_edges if not e[0] == e[1]]
-
-    # get a single copy of each self-loop edge (ie, if it's bi-directional, we
-    # ignore the parallel edge going the reverse direction and keep only one
-    # copy)
-    set_non_self_loop_edges = set(non_self_loop_edges)
-    self_loop_edges = [e for e in all_unique_edges if e not in set_non_self_loop_edges]
-
-    # final list contains all unique edges, including each parallel edge, unless
-    # the parallel edge is a self-loop, in which case it doesn't double-count
-    # the self-loop
-    edges = non_self_loop_edges + self_loop_edges
-
-    # flatten the list of (u,v) tuples
-    edges_flat = list(itertools.chain.from_iterable(edges))
-
-    # count how often each node appears in the list of flattened edge endpoints
-    counts = Counter(edges_flat)
-    streets_per_node = {node: counts[node] for node in nodes}
-    utils.log("Counted undirected street segments incident to each node")
-    return streets_per_node
-
-
 def remove_isolated_nodes(G):
     """
     Remove from a graph all nodes that have no incident edges.
@@ -340,135 +309,40 @@ def remove_isolated_nodes(G):
     return G
 
 
-def _is_duplicate_edge(data, data_other):
+def get_largest_component(G, strongly=False):
     """
-    Check if two edge data dicts are the same based on OSM ID and geometry.
-
-    Parameters
-    ----------
-    data : dict
-        the first edge's data
-    data_other : dict
-        the second edge's data
-
-    Returns
-    -------
-    is_dupe : bool
-    """
-    is_dupe = False
-
-    # if either edge's OSM ID contains multiple values (due to simplification), we want
-    # to compare as sets so they are order-invariant, otherwise uv does not match vu
-    osmid = set(data["osmid"]) if isinstance(data["osmid"], list) else data["osmid"]
-    osmid_other = (
-        set(data_other["osmid"]) if isinstance(data_other["osmid"], list) else data_other["osmid"]
-    )
-
-    if osmid == osmid_other:
-        # if they contain the same OSM ID or set of OSM IDs (due to simplification)
-        if ("geometry" in data) and ("geometry" in data_other):
-            # if both edges have a geometry attribute
-            if _is_same_geometry(data["geometry"], data_other["geometry"]):
-                # if their edge geometries have the same coordinates
-                is_dupe = True
-        elif ("geometry" in data) and ("geometry" in data_other):
-            # if neither edge has a geometry attribute
-            is_dupe = True
-        else:
-            # if one edge has geometry attribute but the other doesn't, keep it
-            pass
-
-    return is_dupe
-
-
-def _is_same_geometry(ls1, ls2):
-    """
-    Check if LineString geometries in two edges are the same.
-
-    Check both normal and reversed order of constituent points.
-
-    Parameters
-    ----------
-    ls1 : shapely.geometry.LineString
-        the first edge's geometry
-    ls2 : shapely.geometry.LineString
-        the second edge's geometry
-
-    Returns
-    -------
-    bool
-    """
-    # extract geometries from each edge data dict
-    geom1 = [list(coords) for coords in ls1.xy]
-    geom2 = [list(coords) for coords in ls2.xy]
-
-    # reverse the first edge's list of x's and y's to look for a match in
-    # either order
-    geom1_r = [list(reversed(list(coords))) for coords in ls1.xy]
-
-    # if the edge's geometry matches its reverse's geometry in either order,
-    # return True
-    return geom1 == geom2 or geom1_r == geom2
-
-
-def _update_edge_keys(G):
-    """
-    Update keys of edges that share u, v with other edge but differ in geometry.
-
-    For example, two one-way streets from u to v that bow away from each other
-    as separate streets, rather than opposite direction edges of a single
-    street.
+    Get subgraph of G's largest weakly/strongly connected component.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
+    strongly : bool
+        if True, return the largest strongly instead of weakly connected
+        component
 
     Returns
     -------
     G : networkx.MultiDiGraph
+        the largest connected component subgraph of the original graph
     """
-    # identify all the edges that are duplicates based on a sorted combination
-    # of their origin, destination, and key. that is, edge uv will match edge vu
-    # as a duplicate, but only if they have the same key
-    edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
-    edges["uvk"] = edges.apply(
-        lambda row: "_".join(sorted([str(row["u"]), str(row["v"])]) + [str(row["key"])]), axis=1
-    )
-    edges["dupe"] = edges["uvk"].duplicated(keep=False)
-    dupes = edges[edges["dupe"]].dropna(subset=["geometry"])
+    if strongly:
+        kind = "strongly"
+        is_connected = nx.is_strongly_connected
+        connected_components = nx.strongly_connected_components
+    else:
+        kind = "weakly"
+        is_connected = nx.is_weakly_connected
+        connected_components = nx.weakly_connected_components
 
-    different_streets = []
-    groups = dupes[["geometry", "uvk", "u", "v", "key", "dupe"]].groupby("uvk")
+    if not is_connected(G):
+        # get all the connected components in graph then identify the largest
+        largest_cc = max(connected_components(G), key=len)
+        n = len(G)
 
-    # for each set of duplicate edges
-    for _, group in groups:
-
-        # if there are more than 2 edges here, make sure to compare all
-        if len(group["geometry"]) > 2:
-            li = group["geometry"].tolist()
-            li.append(li[0])
-            geom_pairs = list(zip(li[:-1], li[1:]))
-        # otherwise, just compare the first edge to the second edge
-        else:
-            geom_pairs = [(group["geometry"].iloc[0], group["geometry"].iloc[1])]
-
-        # for each pair of edges to compare
-        for geom1, geom2 in geom_pairs:
-            # if they don't have the same geometry, flag them as different streets
-            if not _is_same_geometry(geom1, geom2):
-                # add edge uvk, but not edge vuk, otherwise we'll iterate both their keys
-                # and they'll still duplicate each other at the end of this process
-                different_streets.append(
-                    (group["u"].iloc[0], group["v"].iloc[0], group["key"].iloc[0])
-                )
-
-    # for each unique different street, iterate its key + 1 so it's unique
-    for u, v, k in set(different_streets):
-        # filter out key if it appears in data dict as we'll pass it explicitly
-        attributes = {k: v for k, v in G[u][v][k].items() if k != "key"}
-        G.add_edge(u, v, key=k + 1, **attributes)
-        G.remove_edge(u, v, key=k)
+        # induce (frozen) subgraph then unfreeze it by making new MultiDiGraph
+        G = nx.MultiDiGraph(G.subgraph(largest_cc))
+        utils.log(f"Got largest {kind} connected component ({len(G)} of {n} total nodes)")
 
     return G
 
@@ -500,16 +374,18 @@ def get_digraph(G, weight="length"):
 
     # remove the parallel edge with greater "weight" attribute value
     for u, v in set(parallels):
-        k, d = max(G.get_edge_data(u, v).items(), key=lambda x: x[1][weight])
+        k, _ = max(G.get_edge_data(u, v).items(), key=lambda x: x[1][weight])
         to_remove.append((u, v, k))
 
     G.remove_edges_from(to_remove)
+    utils.log("Converted MultiDiGraph to DiGraph")
+
     return nx.DiGraph(G)
 
 
 def get_undirected(G):
     """
-    Convert MultiDiGraph to MultiGraph.
+    Convert MultiDiGraph to undirected MultiGraph.
 
     Maintains parallel edges only if their geometries differ. Note: see also
     `get_digraph` to convert MultiDiGraph to DiGraph.
@@ -527,50 +403,46 @@ def get_undirected(G):
     G = G.copy()
 
     # set from/to nodes before making graph undirected
-    for u, v, k, data in G.edges(keys=True, data=True):
-        G.edges[u, v, k]["from"] = u
-        G.edges[u, v, k]["to"] = v
+    for u, v, d in G.edges(data=True):
+        d["from"] = u
+        d["to"] = v
 
-        # add geometry if it doesn't already exist, to retain parallel
-        # edges' distinct geometries
-        if "geometry" not in data:
-            point_u = Point((G.nodes[u]["x"], G.nodes[u]["y"]))
-            point_v = Point((G.nodes[v]["x"], G.nodes[v]["y"]))
-            data["geometry"] = LineString([point_u, point_v])
+        # add geometry if missing, to compare parallel edges' geometries
+        if "geometry" not in d:
+            point_u = (G.nodes[u]["x"], G.nodes[u]["y"])
+            point_v = (G.nodes[v]["x"], G.nodes[v]["y"])
+            d["geometry"] = LineString([point_u, point_v])
 
-    # update edge keys so we don't retain only one edge of sets of parallel edges
-    # when we convert from a multidigraph to a multigraph
+    # increment parallel edges' keys so we don't retain only one edge of sets
+    # of true parallel edges when we convert from MultiDiGraph to MultiGraph
     G = _update_edge_keys(G)
 
-    # now convert multidigraph to a multigraph, retaining all edges in both
-    # directions for now, as well as all graph attributes
-    H = nx.MultiGraph()
+    # convert MultiDiGraph to MultiGraph, retaining edges in both directions
+    # of parallel edges and self-loops for now
+    H = nx.MultiGraph(**G.graph)
     H.add_nodes_from(G.nodes(data=True))
     H.add_edges_from(G.edges(keys=True, data=True))
-    H.graph = G.graph
 
     # the previous operation added all directed edges from G as undirected
-    # edges in H. this means we have duplicate edges for every bi-directional
-    # street. so, look through the edges and remove any duplicates
-    duplicate_edges = []
-    for u, v, key, data in H.edges(keys=True, data=True):
+    # edges in H. we now have duplicate edges for every bidirectional parallel
+    # edge or self-loop. so, look through the edges and remove any duplicates.
+    duplicate_edges = set()
+    for u1, v1, key1, data1 in H.edges(keys=True, data=True):
 
         # if we haven't already flagged this edge as a duplicate
-        if not (u, v, key) in duplicate_edges:
+        if not (u1, v1, key1) in duplicate_edges:
 
             # look at every other edge between u and v, one at a time
-            for key_other in H[u][v]:
+            for key2 in H[u1][v1]:
 
                 # don't compare this edge to itself
-                if not key_other == key:
+                if key1 != key2:
 
-                    # compare the first edge's data to the second's to see if
-                    # they are duplicates
-                    data_other = H.edges[u, v, key_other]
-                    if _is_duplicate_edge(data, data_other):
-
-                        # if they match up, flag the duplicate for removal
-                        duplicate_edges.append((u, v, key_other))
+                    # compare the first edge's data to the second's
+                    # if they match up, flag the duplicate for removal
+                    data2 = H.edges[u1, v1, key2]
+                    if _is_duplicate_edge(data1, data2):
+                        duplicate_edges.add((u1, v1, key2))
 
     H.remove_edges_from(duplicate_edges)
     utils.log("Converted MultiDiGraph to undirected MultiGraph")
@@ -578,57 +450,120 @@ def get_undirected(G):
     return H
 
 
-def add_edge_lengths(G, precision=3):
+def _is_duplicate_edge(data1, data2):
     """
-    Add `length` (meters) attribute to each edge.
+    Check if two graph edge data dicts have the same osmid and geometry.
 
-    Calculated via great-circle distance between each edge's incident nodes,
-    so ensure graph is in unprojected coordinates.
+    Parameters
+    ----------
+    data1: dict
+        the first edge's data
+    data2 : dict
+        the second edge's data
+
+    Returns
+    -------
+    is_dupe : bool
+    """
+    is_dupe = False
+
+    # if either edge's osmid contains multiple values (due to simplification)
+    # compare them as sets to see if they contain the same values
+    osmid1 = set(data1["osmid"]) if isinstance(data1["osmid"], list) else data1["osmid"]
+    osmid2 = set(data2["osmid"]) if isinstance(data2["osmid"], list) else data2["osmid"]
+
+    # if they contain the same osmid or set of osmids (due to simplification)
+    if osmid1 == osmid2:
+
+        # if both edges have geometry attributes and they match each other
+        if ("geometry" in data1) and ("geometry" in data2):
+            if _is_same_geometry(data1["geometry"], data2["geometry"]):
+                is_dupe = True
+
+        # if neither edge has a geometry attribute
+        elif ("geometry" not in data1) and ("geometry" not in data2):
+            is_dupe = True
+
+        # if one edge has geometry attribute but the other doesn't: not dupes
+        else:
+            pass
+
+    return is_dupe
+
+
+def _is_same_geometry(ls1, ls2):
+    """
+    Determine if two LineString geometries are the same (in either direction).
+
+    Check both the normal and reversed orders of their constituent points.
+
+    Parameters
+    ----------
+    ls1 : shapely.geometry.LineString
+        the first LineString geometry
+    ls2 : shapely.geometry.LineString
+        the second LineString geometry
+
+    Returns
+    -------
+    bool
+    """
+    # extract coordinates from each LineString geometry
+    geom1 = [tuple(coords) for coords in ls1.xy]
+    geom2 = [tuple(coords) for coords in ls2.xy]
+
+    # reverse the first LineString's coordinates' direction
+    geom1_r = [tuple(reversed(coords)) for coords in ls1.xy]
+
+    # if first geometry matches second in either direction, return True
+    return geom1 == geom2 or geom1_r == geom2
+
+
+def _update_edge_keys(G):
+    """
+    Increment key of one edge of parallel edges that differ in geometry.
+
+    For example, two streets from u to v that bow away from each other as
+    separate streets, rather than opposite direction edges of a single street.
+    Increment one of these edge's keys so that they do not match across u, v,
+    k or v, u, k so we can add both to an undirected MultiGraph.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
-    precision : int
-        decimal precision to round lengths
 
     Returns
     -------
     G : networkx.MultiDiGraph
-        graph with edge length attributes
     """
-    # first load all the edges' origin and destination coordinates as a
-    # dataframe indexed by u, v, key
-    try:
-        coords = np.array(
-            [
-                (u, v, k, G.nodes[u]["y"], G.nodes[u]["x"], G.nodes[v]["y"], G.nodes[v]["x"])
-                for u, v, k in G.edges(keys=True)
-            ]
-        )
-    except KeyError:  # pragma: no cover
-        missing_nodes = {
-            str(i)
-            for u, v, _ in G.edges(keys=True)
-            if not (G.nodes[u] or G.nodes[u])
-            for i in (u, v)
-            if not G.nodes[i]
-        }
-        missing_str = ", ".join(missing_nodes)
-        raise KeyError(f"Edge(s) missing nodes {missing_str} possibly due to clipping issue")
+    # identify all the edges that are duplicates based on a sorted combination
+    # of their origin, destination, and key. that is, edge uv will match edge vu
+    # as a duplicate, but only if they have the same key
+    edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
+    edges["uvk"] = ["_".join(sorted([str(u), str(v)]) + [str(k)]) for u, v, k in edges.index]
+    mask = edges["uvk"].duplicated(keep=False)
+    dupes = edges[mask].dropna(subset=["geometry"])
 
-    df_coords = pd.DataFrame(coords, columns=["u", "v", "k", "u_y", "u_x", "v_y", "v_x"])
-    df_coords[["u", "v", "k"]] = df_coords[["u", "v", "k"]].astype(np.int64)
-    df_coords = df_coords.set_index(["u", "v", "k"])
+    different_streets = []
+    groups = dupes[["geometry", "uvk"]].groupby("uvk")
 
-    # then calculate the great circle distance with the vectorized function
-    gc_distances = distance.great_circle_vec(
-        lat1=df_coords["u_y"], lng1=df_coords["u_x"], lat2=df_coords["v_y"], lng2=df_coords["v_x"]
-    )
+    # for each group of duplicate edges
+    for _, group in groups:
 
-    # fill nulls with zeros and round
-    gc_distances = gc_distances.fillna(value=0).round(precision)
-    nx.set_edge_attributes(G, name="length", values=gc_distances.to_dict())
+        # for each pair of edges within this group
+        for geom1, geom2 in itertools.combinations(group["geometry"], 2):
 
-    utils.log("Added edge lengths to graph")
+            # if they don't have the same geometry, flag them as different
+            # streets: flag edge uvk, but not edge vuk, otherwise we would
+            # increment both their keys and they'll still duplicate each other
+            if not _is_same_geometry(geom1, geom2):
+                different_streets.append(group.index[0])
+
+    # for each unique different street, increment its key to make it unique
+    for u, v, k in set(different_streets):
+        new_key = max(list(G[u][v]) + list(G[v][u])) + 1
+        G.add_edge(u, v, key=new_key, **G.get_edge_data(u, v, k))
+        G.remove_edge(u, v, key=k)
+
     return G
