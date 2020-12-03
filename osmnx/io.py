@@ -194,6 +194,7 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None):
         "lat": float,
         "lon": float,
         "osmid": int,
+        "street_count": int,
         "x": float,
         "y": float,
     }
@@ -221,8 +222,8 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None):
     G = _convert_node_attr_types(G, default_node_dtypes)
     G = _convert_edge_attr_types(G, default_edge_dtypes)
 
-    # eval non-string graph attributes to convert to correct types
-    for attr in {"simplified", "streets_per_node"}:
+    # eval any non-string graph attributes to convert to correct types
+    for attr in {"simplified"}:
         try:
             G.graph[attr] = ast.literal_eval(G.graph[attr])
         except Exception:

@@ -177,14 +177,14 @@ def _get_paths_to_simplify(G, strict=True):
     path_to_simplify : list
     """
     # first identify all the nodes that are endpoints
-    endpoints = set([n for n in G.nodes() if _is_endpoint(G, n, strict=strict)])
+    endpoints = set([n for n in G.nodes if _is_endpoint(G, n, strict=strict)])
     utils.log(f"Identified {len(endpoints)} edge endpoints")
 
     # for each endpoint node, look at each of its successor nodes
     for endpoint in endpoints:
         for successor in G.successors(endpoint):
             if successor not in endpoints:
-                # if endpoint node's successor is not an endpoint, build a path
+                # if endpoint node's successor is not an endpoint, build path
                 # from the endpoint node, through the successor, and on to the
                 # next endpoint node
                 yield _build_path(G, endpoint, successor, endpoints)
@@ -387,12 +387,10 @@ def consolidate_intersections(
     """
     # if dead_ends is False, discard dead-end nodes to retain only intersections
     if not dead_ends:
-        if "streets_per_node" in G.graph:
-            streets_per_node = G.graph["streets_per_node"]
-        else:
-            streets_per_node = utils_graph.count_streets_per_node(G)
-
-        dead_end_nodes = [node for node, count in streets_per_node.items() if count <= 1]
+        spn = nx.get_node_attributes(G, "street_count")
+        if not set(spn.keys()) == set(G.nodes):
+            spn = utils_graph.count_streets_per_node(G)
+        dead_end_nodes = [node for node, count in spn.items() if count <= 1]
 
         # make a copy to not mutate original graph object caller passed in
         G = G.copy()

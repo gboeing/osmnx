@@ -492,7 +492,7 @@ def plot_figure_ground(
     if smooth_joints:
         # for each node, get a nodesize according to the narrowest incident edge
         node_widths = dict()
-        for node in Gu.nodes():
+        for node in Gu.nodes:
             # first, identify all the highway types of this node's incident edges
             ie_data = [Gu.get_edge_data(node, nbr) for nbr in Gu.neighbors(node)]
             edge_types = [d[min(d)]["highway"] for d in ie_data]
@@ -522,7 +522,7 @@ def plot_figure_ground(
                 node_widths[node] = circle_area
 
         # assign the node size to each node in the graph
-        node_sizes = [node_widths[node] for node in Gu.nodes()]
+        node_sizes = [node_widths[node] for node in Gu.nodes]
     else:
         node_sizes = 0
 

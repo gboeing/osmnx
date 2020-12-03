@@ -324,10 +324,6 @@ def test_network_saving_loading():
     for (k1, v1), (k2, v2) in zip(G.graph.items(), G2.graph.items()):
         assert k1 == k2
         assert v1 == v2
-    assert tuple(G.graph["streets_per_node"].keys()) == tuple(G2.graph["streets_per_node"].keys())
-    assert tuple(G.graph["streets_per_node"].values()) == tuple(
-        G2.graph["streets_per_node"].values()
-    )
 
     # test custom data types
     nd = {"osmid": str}
