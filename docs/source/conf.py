@@ -15,14 +15,14 @@ serve to show the default.
 
 If extensions (or modules to document with autodoc) are in another directory,
 add these directories to sys.path here. If the directory is relative to the
-documentation root, use os.path.abspath to make it absolute, like shown here.
+documentation root, use Path.resolve() to make it absolute, like shown here.
 """
 
-import os
 import sys
+from pathlib import Path
 
 # go up two levels from /docs/source to the package root
-sys.path.insert(0, os.path.abspath("../.."))
+sys.path.insert(0, str(Path().resolve().parents[1]))
 
 # mock import these packages because readthedocs doesn't have them installed
 autodoc_mock_imports = [

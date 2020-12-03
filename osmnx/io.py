@@ -1,7 +1,7 @@
 """Serialize graphs to/from files on disk."""
 
 import ast
-import os
+from pathlib import Path
 
 import networkx as nx
 import pandas as pd
@@ -37,12 +37,11 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
     """
     # default filepath if none was provided
     if filepath is None:
-        filepath = os.path.join(settings.data_folder, "graph.gpkg")
+        filepath = Path(settings.data_folder) / "graph.gpkg"
+    filepath = filepath.resolve()
 
     # if save folder does not already exist, create it
-    folder, filename = os.path.split(filepath)
-    if not folder == "" and not os.path.exists(folder):
-        os.makedirs(folder)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
 
     # convert graph to gdfs and stringify non-numeric columns
     if directed:
@@ -86,14 +85,14 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     """
     # default filepath if none was provided
     if filepath is None:
-        filepath = os.path.join(settings.data_folder, "graph_shapefile")
+        filepath = Path(settings.data_folder) / "graph_shapefile"
+    filepath = filepath.resolve()
 
     # if save folder does not already exist, create it (shapefiles
     # get saved as set of files)
-    if not filepath == "" and not os.path.exists(filepath):
-        os.makedirs(filepath)
-    filepath_nodes = os.path.join(filepath, "nodes.shp")
-    filepath_edges = os.path.join(filepath, "edges.shp")
+    filepath.mkdir(parents=True, exist_ok=True)
+    filepath_nodes = filepath / "nodes.shp"
+    filepath_edges = filepath / "edges.shp"
 
     # convert graph to gdfs and stringify non-numeric columns
     if directed:
@@ -132,12 +131,11 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     """
     # default filepath if none was provided
     if filepath is None:
-        filepath = os.path.join(settings.data_folder, "graph.graphml")
+        filepath = Path(settings.data_folder) / "graph.graphml"
+    filepath = filepath.resolve()
 
     # if save folder does not already exist, create it
-    folder, filename = os.path.split(filepath)
-    if not folder == "" and not os.path.exists(folder):
-        os.makedirs(folder)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
 
     if gephi:
         # for gephi compatibility, each edge's key must be unique as an id

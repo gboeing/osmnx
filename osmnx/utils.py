@@ -2,9 +2,9 @@
 
 import datetime as dt
 import logging as lg
-import os
 import sys
 import unicodedata
+from pathlib import Path
 
 from . import settings
 
@@ -323,11 +323,10 @@ def _get_logger(level=None, name=None, filename=None):
     if not getattr(logger, "handler_set", None):
 
         # get today's date and construct a log filename
-        log_filename = os.path.join(settings.logs_folder, f'{filename}_{ts(style="date")}.log')
+        log_filename = Path(settings.logs_folder) / f'{filename}_{ts(style="date")}.log'
 
         # if the logs folder does not already exist, create it
-        if not os.path.exists(settings.logs_folder):
-            os.makedirs(settings.logs_folder)
+        log_filename.parent.mkdir(parents=True, exist_ok=True)
 
         # create file handler and log formatter and set them up
         handler = lg.FileHandler(log_filename, encoding="utf-8")

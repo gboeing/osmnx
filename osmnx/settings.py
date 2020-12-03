@@ -1,6 +1,7 @@
 """Global settings, can be configured by user with utils.config()."""
 
 import logging as lg
+from pathlib import Path
 
 # locations to save data, logs, images, and cache
 data_folder = "data"
