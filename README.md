@@ -38,7 +38,7 @@ OSMnx is built on top of geopandas, networkx, and matplotlib and interacts with 
   * Visualize travel distance and travel time with isoline and isochrone maps
   * Plot figure-ground diagrams of street networks and building footprints
 
-Examples and demonstrations of these features are in the [examples repo](https://github.com/gboeing/osmnx-examples). More feature development details are in the change log.
+Examples and demonstrations of these features are in the [examples repo](https://github.com/gboeing/osmnx-examples). More feature development details are in the change log. Read the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/) for further technical details.
 
 
 
@@ -59,12 +59,10 @@ Alternatively, you can run OSMnx + Jupyter directly from its official [docker co
 
 ## Documentation and Usage
 
-Documentation available on [readthedocs](https://osmnx.readthedocs.io/).
+Documentation is available on [readthedocs](https://osmnx.readthedocs.io/).
 
-"How do I use OSMnx?" Usage examples and tutorials available in the [examples repo](https://github.com/gboeing/osmnx-examples).
+"How do I use OSMnx?" Usage examples and tutorials are available in the [examples repo](https://github.com/gboeing/osmnx-examples).
 
 Examples of projects and blog posts [using OSMnx](https://geoffboeing.com/2018/03/osmnx-features-roundup/).
 
 If you use OSMnx in your work, please cite the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/).
-
-[![Zephyr Badge](https://github.com/ZephyrTransport/zephyr-website/blob/gh-pages/img/badging/project_pages/osmnx/osmnx.png)](https://medium.com/zephyrfoundation/osmnx-software-badge-3e206db65825)
