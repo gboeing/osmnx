@@ -444,7 +444,7 @@ def graph_from_polygon(
         # intersection just outside the polygon
         G = truncate.truncate_graph_polygon(G_buff, polygon, retain_all, truncate_by_edge)
 
-        # count how many street segments in buffered graph emanate from each
+        # count how many physical streets in buffered graph connect to each
         # intersection in un-buffered graph, to retain true counts for each
         # intersection, even if some of its neighbors are outside the polygon
         spn = utils_graph.count_streets_per_node(G_buff, nodes=G.nodes)
@@ -510,8 +510,9 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     """
     Create a networkx MultiDiGraph from Overpass API responses.
 
-    Add length in meters (great-circle distance between endpoints) to all
-    of the graph's (unsimplified, straight-line) edges via add_edge_lengths.
+    Adds length attributes in meters (great-circle distance between endpoints)
+    to all of the graph's (pre-simplified, straight-line) edges via the
+    `utils_graph.add_edge_lengths` function.
 
     Parameters
     ----------
@@ -563,7 +564,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
 
     utils.log(f"Created graph with {len(G)} nodes and {len(G.edges)} edges")
 
-    # add length (great circle distance between nodes) attribute to each edge
+    # add length (great-circle distance between nodes) attribute to each edge
     if len(G.edges) > 0:
         G = utils_graph.add_edge_lengths(G)
 
