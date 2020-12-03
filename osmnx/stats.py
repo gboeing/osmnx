@@ -193,7 +193,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
         circuity_avg = np.nan
 
     # percent of edges that are self-loops, ie both endpoints are same node
-    self_loops_count = len([1 for u, v in G.edges if u == v])
+    self_loops_count = len([1 for u, v, k in G.edges if u == v])
     self_loop_proportion = self_loops_count / m
 
     # assemble the results
