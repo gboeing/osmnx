@@ -12,6 +12,7 @@ import os
 import shutil
 import tempfile
 from collections import OrderedDict
+from pathlib import Path
 
 import folium
 import networkx as nx
@@ -31,10 +32,10 @@ import osmnx as ox
 
 # remove the .temp folder and .coverage file if they already
 # exist so we start fresh with these tests
-if os.path.exists(".temp"):
+if Path(".temp").exists():
     shutil.rmtree(".temp")
-if os.path.exists(".coverage"):
-    os.remove(".coverage")
+if Path(".coverage").exists():
+    Path(".coverage").unlink()
 
 ox.config(
     log_console=True,
@@ -185,7 +186,7 @@ def test_plots():
     ec = ox.plot.get_edge_colors_by_attr(G, "length", num_bins=5)
 
     # plot and save to disk
-    filepath = os.path.join(ox.settings.data_folder, "test.svg")
+    filepath = Path(ox.settings.data_folder) / "test.svg"
     fig, ax = ox.plot_graph(G, show=False, save=True, close=True, filepath=filepath)
     fig, ax = ox.plot_graph(
         G,
@@ -306,7 +307,7 @@ def test_network_saving_loading():
     # save/load graph as graphml file
     ox.save_graphml(G, gephi=True)
     ox.save_graphml(G, gephi=False)
-    filepath = os.path.join(ox.settings.data_folder, "graph.graphml")
+    filepath = Path(ox.settings.data_folder) / "graph.graphml"
     G2 = ox.load_graphml(filepath)
 
     # verify everything in G is equivalent in G2

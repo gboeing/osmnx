@@ -4,11 +4,11 @@ import datetime as dt
 import json
 import logging as lg
 import math
-import os
 import re
 import time
 from collections import OrderedDict
 from hashlib import md5
+from pathlib import Path
 
 import requests
 from dateutil import parser as date_parser
@@ -136,20 +136,16 @@ def _save_to_cache(url, response_json, sc):
 
         else:
             # create the folder on the disk if it doesn't already exist
-            if not os.path.exists(settings.cache_folder):
-                os.makedirs(settings.cache_folder)
+            Path(settings.cache_folder).mkdir(parents=True, exist_ok=True)
 
             # hash the url to make the filename succinct but unique
             # md5 digest is 128 bits = 16 bytes = 32 hexadecimal characters
-            filename = md5(url.encode("utf-8")).hexdigest()
-            cache_filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, "json"]))
+            filename = md5(url.encode("utf-8")).hexdigest() + ".json"
+            cache_filepath = Path(settings.cache_folder) / filename
 
             # dump to json, and save to file
-            json_str = str(json.dumps(response_json))
-            with open(cache_filepath, "w", encoding="utf-8") as cache_file:
-                cache_file.write(json_str)
-
-            utils.log(f'Saved response to cache file "{cache_filepath}"')
+            cache_filepath.write_text(json.dumps(response_json))
+            utils.log(f'Saved response to cache file {cache_filepath!r}')
 
 
 def _url_in_cache(url):
@@ -169,14 +165,11 @@ def _url_in_cache(url):
         path to cached response for url if it exists, otherwise None
     """
     # hash the url to generate the cache filename
-    filename = md5(url.encode("utf-8")).hexdigest()
-    filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, "json"]))
+    filename = md5(url.encode("utf-8")).hexdigest() + ".json"
+    filepath = Path(settings.cache_folder) / filename
 
     # if this file exists in the cache, return its full path
-    if os.path.isfile(filepath):
-        return filepath
-    else:
-        return None
+    return filepath if filepath.is_file() else None
 
 
 def _retrieve_from_cache(url, check_remark=False):
