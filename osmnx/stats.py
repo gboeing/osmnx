@@ -103,10 +103,8 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
 
     # count number of intersections in graph, as nodes with >1 street emanating
     # from them
-    node_ids = set(G.nodes())
-    intersection_count = len(
-        [True for node, count in spn.items() if (count > 1) and (node in node_ids)]
-    )
+    node_ids = set(G.nodes)
+    intersect_count = len([1 for node, count in spn.items() if (count > 1) and (node in node_ids)])
 
     # calculate streets-per-node average: the average number of streets
     # (unidirected edges) incident to each node
@@ -137,9 +135,9 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     # calculate clean intersection counts
     if clean_intersects:
         points = simplification.consolidate_intersections(G, tolerance, False, False)
-        clean_intersection_count = len(points)
+        clean_intersect_count = len(points)
     else:
-        clean_intersection_count = None
+        clean_intersect_count = None
 
     # we can calculate density metrics only if area is not null
     if area is not None:
@@ -150,7 +148,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
 
         # calculate intersection density as nodes with >1 street emanating from
         # them, per sq km
-        intersection_density_km = intersection_count / area_km
+        intersect_density_km = intersect_count / area_km
 
         # calculate edge density as linear meters per sq km
         edge_density_km = edge_length_total / area_km
@@ -159,16 +157,16 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
         street_density_km = street_length_total / area_km
 
         if clean_intersects:
-            clean_intersection_density_km = clean_intersection_count / area_km
+            clean_intersect_density_km = clean_intersect_count / area_km
         else:
-            clean_intersection_density_km = None
+            clean_intersect_density_km = None
     else:
         # if area is None, then we cannot calculate density
         node_density_km = None
-        intersection_density_km = None
+        intersect_density_km = None
         edge_density_km = None
         street_density_km = None
-        clean_intersection_density_km = None
+        clean_intersect_density_km = None
 
     # average circuity: sum of edge lengths divided by sum of straight-line
     # distance between edge endpoints. first load all the edges origin and
@@ -201,9 +199,8 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     except ZeroDivisionError:
         circuity_avg = np.nan
 
-    # percent of edges that are self-loops, ie both endpoints are the same node
-    self_loops = [True for u, v, k in G.edges(keys=True) if u == v]
-    self_loops_count = len(self_loops)
+    # percent of edges that are self-loops, ie both endpoints are same node
+    self_loops_count = len([1 for u, v in G.edges if u == v])
     self_loop_proportion = self_loops_count / m
 
     # assemble the results
@@ -211,7 +208,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
         "n": n,
         "m": m,
         "k_avg": k_avg,
-        "intersection_count": intersection_count,
+        "intersection_count": intersect_count,
         "streets_per_node_avg": spna,
         "streets_per_node_counts": spnc,
         "streets_per_node_proportion": spnp,
@@ -221,13 +218,13 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
         "street_length_avg": street_length_avg,
         "street_segments_count": street_segments_count,
         "node_density_km": node_density_km,
-        "intersection_density_km": intersection_density_km,
+        "intersection_density_km": intersect_density_km,
         "edge_density_km": edge_density_km,
         "street_density_km": street_density_km,
         "circuity_avg": circuity_avg,
         "self_loop_proportion": self_loop_proportion,
-        "clean_intersection_count": clean_intersection_count,
-        "clean_intersection_density_km": clean_intersection_density_km,
+        "clean_intersection_count": clean_intersect_count,
+        "clean_intersection_density_km": clean_intersect_density_km,
     }
 
     # return the results
@@ -374,10 +371,8 @@ def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=Fal
     if ecc:
         # precompute shortest paths between all nodes for eccentricity-based
         # stats
-        sp = {
-            source: dict(nx.single_source_dijkstra_path_length(Gs, source, weight="length"))
-            for source in Gs.nodes()
-        }
+        ssdpl = nx.single_source_dijkstra_path_length
+        sp = {source: dict(ssdpl(Gs, source, weight="length")) for s in Gs.nodes}
 
         utils.log("Calculated shortest path lengths")
 

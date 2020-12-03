@@ -447,7 +447,7 @@ def graph_from_polygon(
         # count how many street segments in buffered graph emanate from each
         # intersection in un-buffered graph, to retain true counts for each
         # intersection, even if some of its neighbors are outside the polygon
-        G.graph["streets_per_node"] = utils_graph.count_streets_per_node(G_buff, nodes=G.nodes())
+        G.graph["streets_per_node"] = utils_graph.count_streets_per_node(G_buff, nodes=G.nodes)
 
     # if clean_periphery=False, just use the polygon as provided
     else:
