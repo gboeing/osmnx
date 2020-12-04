@@ -2,6 +2,21 @@
 
 ## 1.0.0 (TBD)
 
+  - set use_cache=True by default
+  - replace streets_per_node graph attribute with equivalent street_count node attribute
+  - remove redundant osmid node attribute
+  - make graph_to_gdfs multi-index the edges GeoDataFrame by u, v, key
+  - refactor consolidate_intersections function for better speed and efficiency
+  - refactor count_streets_per_node function for better speed and efficiency
+  - refactor folium module for better speed and efficiency
+  - refactor get_undirected functionality for better speed and efficiency
+  - extract all private/internal .osm XML functionality into new osm_xml module
+  - deprecate io.save_graph_xml with warning (function moved to osm_xml module)
+  - remove deprecated pois module
+  - remove deprecated footprints module
+  - remove deprecated utils_graph.induce_subgraph function
+  - remove deprecated node_type parameter from io.load_graphml function
+
 ## 0.16.2 (2020-11-17)
 
   - improve graph_from_gdfs speed and efficiency
@@ -79,7 +94,7 @@
 ## 0.13.0 (2020-05-25)
 
   - major refactor of entire package
-  - clean up API and namespace (see [documentation](https://osmnx.readthedocs.io/) for reference and the updated [usage examples](https://github.com/gboeing/osmnx-examples))
+  - clean up API and namespace
   - new consolidate_intersections function with topological option
   - new speed module to calculate graph edge speeds and travel times
   - generalize POIs module to query with a flexible tags dict
