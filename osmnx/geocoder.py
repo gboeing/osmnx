@@ -59,7 +59,7 @@ def geocode_to_gdf(query, which_result=None, buffer_dist=None):
         query string(s) or structured dict(s) to geocode
     which_result : int
         which geocoding result to use. if None, auto-select the first
-        multi/polygon or raise an error if OSM doesn't return one.
+        (Multi)Polygon or raise an error if OSM doesn't return one.
     buffer_dist : float
         distance to buffer around the place geometry, in meters
 
@@ -122,7 +122,7 @@ def _geocode_query_to_gdf(query, which_result):
         query string or structured dict to geocode
     which_result : int
         which geocoding result to use. if None, auto-select the first
-        multi/polygon or raise an error if OSM doesn't return one.
+        (Multi)Polygon or raise an error if OSM doesn't return one.
 
     Returns
     -------
@@ -142,7 +142,7 @@ def _geocode_query_to_gdf(query, which_result):
         raise ValueError(f'OSM returned no results for query "{query}"')
 
     elif which_result is None:
-        # else, if which_result=None, auto-select the first multi/polygon
+        # else, if which_result=None, auto-select the first (Multi)Polygon
         result = _get_first_polygon(results, query)
 
     elif len(results) >= which_result:
@@ -172,7 +172,7 @@ def _geocode_query_to_gdf(query, which_result):
         }
     ]
 
-    # if we got a non multi/polygon geometry type (like a point), log warning
+    # if we got a non (Multi)Polygon geometry type (like a point), log warning
     if geometry["type"] not in {"Polygon", "MultiPolygon"}:
         msg = f'OSM returned a {geometry["type"]} as the geometry for query "{query}"'
         utils.log(msg, level=lg.WARNING)
@@ -183,7 +183,7 @@ def _geocode_query_to_gdf(query, which_result):
 
 def _get_first_polygon(results, query):
     """
-    Choose first result with geometry type multi/polygon from list of results.
+    Choose first result of geometry type (Multi)Polygon from list of results.
 
     Parameters
     ----------

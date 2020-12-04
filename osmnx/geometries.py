@@ -182,7 +182,7 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
         landuse=commercial, and highway=bus_stop.
     which_result : int
         which geocoding result to use. if None, auto-select the first
-        multi/polygon or raise an error if OSM doesn't return one.
+        (Multi)Polygon or raise an error if OSM doesn't return one.
     buffer_dist : float
         distance to buffer around the place geometry, in meters
 
