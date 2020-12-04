@@ -1,4 +1,4 @@
-"""Global settings, can be configured by user with utils.config()."""
+"""Global settings that can be configured by user with utils.config()."""
 
 import logging as lg
 

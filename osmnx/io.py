@@ -172,7 +172,8 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None):
     Load an OSMnx-saved GraphML file from disk.
 
     Converts the node/edge attributes to appropriate data types, which can be
-    customized if needed by passing in node_dtypes or edge_dtypes arguments.
+    customized if needed by passing in `node_dtypes` or `edge_dtypes`
+    arguments.
 
     Parameters
     ----------

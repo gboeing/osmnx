@@ -210,7 +210,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
     """
     Simplify a graph's topology by removing interstitial nodes.
 
-    Simplify graph topology by removing all nodes that are not intersections
+    Simplifies graph topology by removing all nodes that are not intersections
     or dead-ends. Create an edge directly between the end points that
     encapsulate them, but retain the geometry of the original edges, saved as
     a new `geometry` attribute on the new edge. Note that only simplified
