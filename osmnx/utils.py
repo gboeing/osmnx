@@ -77,37 +77,37 @@ def ts(style="datetime", template=None):
 
 
 def config(
-    use_cache=settings.use_cache,
+    all_oneway=settings.all_oneway,
+    bidirectional_network_types=settings.bidirectional_network_types,
     cache_folder=settings.cache_folder,
     data_folder=settings.data_folder,
+    default_accept_language=settings.default_accept_language,
+    default_access=settings.default_access,
+    default_crs=settings.default_crs,
+    default_referer=settings.default_referer,
+    default_user_agent=settings.default_user_agent,
+    elevation_provider=settings.elevation_provider,
     imgs_folder=settings.imgs_folder,
-    logs_folder=settings.logs_folder,
-    log_file=settings.log_file,
     log_console=settings.log_console,
+    log_file=settings.log_file,
+    log_filename=settings.log_filename,
     log_level=settings.log_level,
     log_name=settings.log_name,
-    log_filename=settings.log_filename,
-    useful_tags_node=settings.useful_tags_node,
-    useful_tags_way=settings.useful_tags_way,
-    bidirectional_network_types=settings.bidirectional_network_types,
+    logs_folder=settings.logs_folder,
+    max_query_area_size=settings.max_query_area_size,
+    memory=settings.memory,
+    nominatim_endpoint=settings.nominatim_endpoint,
+    nominatim_key=settings.nominatim_key,
     osm_xml_node_attrs=settings.osm_xml_node_attrs,
     osm_xml_node_tags=settings.osm_xml_node_tags,
     osm_xml_way_attrs=settings.osm_xml_way_attrs,
     osm_xml_way_tags=settings.osm_xml_way_tags,
-    all_oneway=settings.all_oneway,
+    overpass_endpoint=settings.overpass_endpoint,
     overpass_settings=settings.overpass_settings,
     timeout=settings.timeout,
-    memory=settings.memory,
-    max_query_area_size=settings.max_query_area_size,
-    default_access=settings.default_access,
-    default_crs=settings.default_crs,
-    default_user_agent=settings.default_user_agent,
-    default_referer=settings.default_referer,
-    default_accept_language=settings.default_accept_language,
-    nominatim_endpoint=settings.nominatim_endpoint,
-    nominatim_key=settings.nominatim_key,
-    overpass_endpoint=settings.overpass_endpoint,
-    elevation_provider=settings.elevation_provider,
+    use_cache=settings.use_cache,
+    useful_tags_node=settings.useful_tags_node,
+    useful_tags_way=settings.useful_tags_way,
 ):
     """
     Configure OSMnx by setting the default global settings' values.
@@ -117,33 +117,54 @@ def config(
 
     Parameters
     ----------
-    use_cache : bool
-        if True, cache HTTP responses locally instead of calling API
-        repeatedly for the same request
+    all_oneway : bool
+        Only use if specifically saving to .osm XML file with save_graph_xml
+        function. if True, forces all ways to be loaded as oneway ways,
+        preserving the original order of nodes stored in the OSM way XML.
+    bidirectional_network_types : list
+        network types for which a fully bidirectional graph will be created
     cache_folder : string
         path to folder in which to save/load HTTP response cache
     data_folder : string
         path to folder in which to save/load graph files by default
+    default_accept_language : string
+        HTTP header accept-language
+    default_access : string
+        default filter for OSM "access" key
+    default_crs : string
+        default coordinate reference system to set when creating graphs
+    default_referer : string
+        HTTP header referer
+    default_user_agent : string
+        HTTP header user-agent
+    elevation_provider : string
+        the API provider to use for adding node elevations, can be either
+        "google" or "airmap"
     imgs_folder : string
         path to folder in which to save plot images by default
-    logs_folder : string
-        path to folder in which to save log files
     log_file : bool
         if True, save log output to a file in logs_folder
+    log_filename : string
+        name of the log file, without file extension
     log_console : bool
         if True, print log output to the console (terminal window)
     log_level : int
         one of Python's logger.level constants
     log_name : string
         name of the logger
-    log_filename : string
-        name of the log file, without file extension
-    useful_tags_node : list
-        OSM "node" tags to add as graph node attributes, when present
-    useful_tags_way : list
-        OSM "way" tags to add as graph edge attributes, when present
-    bidirectional_network_types : list
-        network types for which a fully bidirectional graph will be created
+    logs_folder : string
+        path to folder in which to save log files
+    max_query_area_size : int
+        maximum area for any part of the geometry in meters: any polygon
+        bigger than this will get divided up for multiple queries to API
+        (default 50km x 50km)
+    memory : int
+        Overpass server memory allocation size for the query, in bytes. If
+        None, server will use its default allocation size. Use with caution.
+    nominatim_endpoint : string
+        the API endpoint to use for nominatim queries
+    nominatim_key : string
+        your API key, if you are using an endpoint that requires one
     osm_xml_node_attrs : list
         node attributes for saving .osm XML files with save_graph_xml function
     osm_xml_node_tags : list
@@ -152,10 +173,8 @@ def config(
         edge attributes for saving .osm XML files with save_graph_xml function
     osm_xml_way_tags : list
         edge tags for for saving .osm XML files with save_graph_xml function
-    all_oneway : bool
-        if True, forces all ways to be loaded as oneway ways, preserving
-        the original order of nodes stored in the OSM way XML. Only use if
-        specifically saving to .osm XML file with save_graph_xml function.
+    overpass_endpoint : string
+        the API endpoint to use for overpass queries
     overpass_settings : string
         Settings string for overpass queries. For example, to query historical
         OSM data as of a certain date:
@@ -164,69 +183,50 @@ def config(
     timeout : int
         the timeout interval for the HTTP request and for API to use while
         running the query
-    memory : int
-        Overpass server memory allocation size for the query, in bytes. If
-        None, server will use its default allocation size. Use with caution.
-    max_query_area_size : int
-        maximum area for any part of the geometry in meters: any polygon
-        bigger than this will get divided up for multiple queries to API
-        (default 50km x 50km)
-    default_access : string
-        default filter for OSM "access" key
-    default_crs : string
-        default coordinate reference system to set when creating graphs
-    default_user_agent : string
-        HTTP header user-agent
-    default_referer : string
-        HTTP header referer
-    default_accept_language : string
-        HTTP header accept-language
-    nominatim_endpoint : string
-        the API endpoint to use for nominatim queries
-    nominatim_key : string
-        your API key, if you are using an endpoint that requires one
-    overpass_endpoint : string
-        the API endpoint to use for overpass queries
-    elevation_provider : string
-        the API provider to use for adding node elevations, can be either
-        "google" or "airmap"
+    use_cache : bool
+        if True, cache HTTP responses locally instead of calling API
+        repeatedly for the same request
+    useful_tags_node : list
+        OSM "node" tags to add as graph node attributes, when present
+    useful_tags_way : list
+        OSM "way" tags to add as graph edge attributes, when present
 
     Returns
     -------
     None
     """
-    # set each global setting to the passed-in value
-    settings.use_cache = use_cache
+    # set each global setting to the argument value
+    settings.all_oneway = all_oneway
+    settings.bidirectional_network_types = bidirectional_network_types
     settings.cache_folder = cache_folder
     settings.data_folder = data_folder
+    settings.default_accept_language = default_accept_language
+    settings.default_access = default_access
+    settings.default_crs = default_crs
+    settings.default_referer = default_referer
+    settings.default_user_agent = default_user_agent
+    settings.elevation_provider = elevation_provider
     settings.imgs_folder = imgs_folder
-    settings.logs_folder = logs_folder
     settings.log_console = log_console
     settings.log_file = log_file
+    settings.log_filename = log_filename
     settings.log_level = log_level
     settings.log_name = log_name
-    settings.log_filename = log_filename
-    settings.useful_tags_node = useful_tags_node
-    settings.useful_tags_way = useful_tags_way
+    settings.logs_folder = logs_folder
+    settings.max_query_area_size = max_query_area_size
+    settings.memory = memory
+    settings.nominatim_endpoint = nominatim_endpoint
+    settings.nominatim_key = nominatim_key
     settings.osm_xml_node_attrs = osm_xml_node_attrs
     settings.osm_xml_node_tags = osm_xml_node_tags
     settings.osm_xml_way_attrs = osm_xml_way_attrs
     settings.osm_xml_way_tags = osm_xml_way_tags
+    settings.overpass_endpoint = overpass_endpoint
     settings.overpass_settings = overpass_settings
     settings.timeout = timeout
-    settings.memory = memory
-    settings.max_query_area_size = max_query_area_size
-    settings.default_access = default_access
-    settings.default_crs = default_crs
-    settings.default_user_agent = default_user_agent
-    settings.default_referer = default_referer
-    settings.default_accept_language = default_accept_language
-    settings.nominatim_endpoint = nominatim_endpoint
-    settings.nominatim_key = nominatim_key
-    settings.overpass_endpoint = overpass_endpoint
-    settings.all_oneway = all_oneway
-    settings.elevation_provider = elevation_provider
-    settings.bidirectional_network_types = bidirectional_network_types
+    settings.use_cache = use_cache
+    settings.useful_tags_node = useful_tags_node
+    settings.useful_tags_way = useful_tags_way
 
     log("Configured OSMnx")
 
