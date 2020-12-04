@@ -61,7 +61,7 @@ def graph_from_bbox(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets,
+        a custom network filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
@@ -133,7 +133,7 @@ def graph_from_point(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets,
+        a custom network filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
@@ -223,7 +223,7 @@ def graph_from_address(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets,
+        a custom network filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
@@ -309,7 +309,7 @@ def graph_from_place(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets,
+        a custom network filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
@@ -387,7 +387,7 @@ def graph_from_polygon(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets,
+        a custom network filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
