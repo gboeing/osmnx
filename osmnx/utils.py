@@ -6,6 +6,7 @@ import os
 import sys
 import unicodedata
 
+from . import _version
 from . import settings
 
 
@@ -228,7 +229,8 @@ def config(
     settings.useful_tags_node = useful_tags_node
     settings.useful_tags_way = useful_tags_way
 
-    log("Configured OSMnx")
+    log(f"Configured OSMnx {_version.__version__}")
+    log(f"HTTP response caching is {'on' if settings.use_cache else 'off'}")
 
 
 def log(message, level=None, name=None, filename=None):
