@@ -1,4 +1,4 @@
-"""Calculate graph-theoretic network measures."""
+"""Calculate geometric and topological network measures."""
 
 import networkx as nx
 import numpy as np
@@ -12,7 +12,7 @@ from . import utils_graph
 
 def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dist="gc"):
     """
-    Calculate basic descriptive metric and topological stats for a graph.
+    Calculate basic descriptive geometric and topological stats for a graph.
 
     For an unprojected lat-lng graph, tolerance and graph units should be in
     degrees, and circuity_dist should be 'gc'. For a projected graph,
@@ -223,7 +223,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
 
 def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=False):
     """
-    Calculate extended topological stats and metrics for a graph.
+    Calculate extended topological measures for a graph.
 
     Many of these algorithms have an inherently high time complexity. Global
     topological analysis of large complex networks is extremely time consuming

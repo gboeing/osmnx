@@ -112,8 +112,8 @@ def config(
     """
     Configure OSMnx by setting the default global settings' values.
 
-    Any parameters not passed by the caller are set to their original default
-    values.
+    Any parameters not passed by the caller are (re-)set to their original
+    default values.
 
     Parameters
     ----------
