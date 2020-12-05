@@ -11,7 +11,7 @@ cache_folder = "cache"
 # cache server responses
 use_cache = True
 
-# if True, download network data from Overpass then raise InterruptedError.
+# if True, download net data from Overpass then raise CacheOnlyModeInterrupt.
 # useful for sequentially caching lots of raw data then using that cache to
 # quickly build many graphs simultaneously with multiprocessing
 cache_only_mode = False
