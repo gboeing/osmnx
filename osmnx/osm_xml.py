@@ -3,6 +3,7 @@
 import bz2
 import os
 import xml.sax
+from pathlib import Path
 from xml.etree import ElementTree as etree
 
 import networkx as nx
@@ -75,7 +76,7 @@ def _overpass_json_from_file(filepath):
 
     Parameters
     ----------
-    filepath : string
+    filepath : string or Path
         path to file containing OSM XML data
 
     Returns
@@ -84,14 +85,13 @@ def _overpass_json_from_file(filepath):
     """
 
     def _opener(filepath):
-        _, ext = os.path.splitext(filepath)
-        if ext == ".bz2":
+        if filepath.suffix == ".bz2":
             return bz2.BZ2File(filepath)
         else:
             # assume an unrecognized file extension is just XML
-            return open(filepath, mode="rb")
+            return filepath.open(mode="rb")
 
-    with _opener(filepath) as file:
+    with _opener(Path(filepath)) as file:
         handler = _OSMContentHandler()
         xml.sax.parse(file, handler)
         return handler.object
@@ -139,7 +139,7 @@ def save_graph_xml(
     ----------
     data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
         geopandas GeoDataFrames
-    filepath : string
+    filepath : string or Path
         path to the .osm file including extension. if None, use default data
         folder + graph.osm
     node_tags : list
@@ -173,12 +173,14 @@ def save_graph_xml(
     """
     # default filepath if none was provided
     if filepath is None:
-        filepath = os.path.join(settings.data_folder, "graph.osm")
+        filepath = Path(settings.data_folder) / "graph.osm"
+    else:
+        filepath = Path(filepath)
 
     # if save folder does not already exist, create it
     folder, filename = os.path.split(filepath)
-    if not folder == "" and not os.path.exists(folder):
-        os.makedirs(folder)
+    if filepath.parent:
+        filepath.parent.mkdir(parents=True, exist_ok=True)
 
     if not settings.all_oneway:
         import warnings

@@ -124,9 +124,9 @@ def config(
         preserving the original order of nodes stored in the OSM way XML.
     bidirectional_network_types : list
         network types for which a fully bidirectional graph will be created
-    cache_folder : string
+    cache_folder : string or Path
         path to folder in which to save/load HTTP response cache
-    data_folder : string
+    data_folder : string or Path
         path to folder in which to save/load graph files by default
     default_accept_language : string
         HTTP header accept-language
@@ -141,7 +141,7 @@ def config(
     elevation_provider : string
         the API provider to use for adding node elevations, can be either
         "google" or "airmap"
-    imgs_folder : string
+    imgs_folder : string or Path
         path to folder in which to save plot images by default
     log_file : bool
         if True, save log output to a file in logs_folder
@@ -153,7 +153,7 @@ def config(
         one of Python's logger.level constants
     log_name : string
         name of the logger
-    logs_folder : string
+    logs_folder : string or Path
         path to folder in which to save log files
     max_query_area_size : int
         maximum area for any part of the geometry in meters: any polygon
