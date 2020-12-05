@@ -61,7 +61,7 @@ def graph_from_bbox(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets,
+        a custom network filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
@@ -133,7 +133,7 @@ def graph_from_point(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets,
+        a custom network filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
@@ -223,7 +223,7 @@ def graph_from_address(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets,
+        a custom network filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
@@ -283,7 +283,7 @@ def graph_from_place(
     result (ie, the default) might resolve to a point geometry, but the second
     geocode result for this query might resolve to a polygon, in which case you
     can use graph_from_place with which_result=2. which_result=None will
-    auto-select the first multi/polygon among the geocoding results.
+    auto-select the first (Multi)Polygon among the geocoding results.
 
     Parameters
     ----------
@@ -302,14 +302,14 @@ def graph_from_place(
         node's neighbors is within the polygon
     which_result : int
         which geocoding result to use. if None, auto-select the first
-        multi/polygon or raise an error if OSM doesn't return one.
+        (Multi)Polygon or raise an error if OSM doesn't return one.
     buffer_dist : float
         distance to buffer around the place geometry, in meters
     clean_periphery : bool
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets,
+        a custom network filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
@@ -387,7 +387,7 @@ def graph_from_polygon(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets,
+        a custom network filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.

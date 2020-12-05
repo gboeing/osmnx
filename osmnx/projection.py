@@ -1,4 +1,4 @@
-"""Project spatial geometries and street networks."""
+"""Project spatial geometries and spatial networks."""
 
 import math
 
@@ -6,7 +6,6 @@ import geopandas as gpd
 from pyproj import CRS
 
 from . import settings
-from . import simplification
 from . import utils
 from . import utils_graph
 
@@ -22,10 +21,10 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     ----------
     geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the geometry to project
-    crs : dict or string or pyproj.CRS
+    crs : string or pyproj.CRS
         the starting CRS of the passed-in geometry. if None, it will be set to
         settings.default_crs
-    to_crs : dict or string or pyproj.CRS
+    to_crs : string or pyproj.CRS
         if None, project to UTM zone in which geometry's centroid lies,
         otherwise project to this CRS
     to_latlong : bool
@@ -59,7 +58,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
     ----------
     gdf : geopandas.GeoDataFrame
         the GeoDataFrame to be projected
-    to_crs : dict or string or pyproj.CRS
+    to_crs : string or pyproj.CRS
         if None, project to UTM zone in which gdf's centroid lies, otherwise
         project to this CRS
     to_latlong : bool
@@ -114,7 +113,7 @@ def project_graph(G, to_crs=None):
     ----------
     G : networkx.MultiDiGraph
         the graph to be projected
-    to_crs : dict or string or pyproj.CRS
+    to_crs : string or pyproj.CRS
         if None, project graph to UTM zone in which graph centroid lies,
         otherwise project graph to this CRS
 
@@ -139,7 +138,7 @@ def project_graph(G, to_crs=None):
     gdf_nodes_proj = gdf_nodes_proj.drop(columns=["geometry"])
 
     # STEP 2: PROJECT THE EDGES
-    if simplification._is_simplified(G):
+    if "simplified" in G.graph and G.graph["simplified"]:
         # if graph has previously been simplified, project the edge geometries
         gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
         gdf_edges_proj = project_gdf(gdf_edges, to_crs=gdf_nodes_proj.crs)

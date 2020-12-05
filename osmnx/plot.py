@@ -19,7 +19,7 @@ from . import utils_graph
 
 def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=False):
     """
-    Get n evenly-spaced colors from a matplotlib colormap.
+    Get `n` evenly-spaced colors from a matplotlib colormap.
 
     Parameters
     ----------
@@ -115,7 +115,7 @@ def get_edge_colors_by_attr(
     Returns
     -------
     edge_colors : pandas.Series
-        series labels are edge IDs (u, v, k) and values are colors
+        series labels are edge IDs (u, v, key) and values are colors
     """
     vals = pd.Series(nx.get_edge_attributes(G, attr))
     return _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size)

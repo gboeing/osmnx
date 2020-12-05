@@ -7,7 +7,7 @@ import math
 import re
 import time
 from collections import OrderedDict
-from hashlib import md5
+from hashlib import sha1
 from pathlib import Path
 
 import requests
@@ -139,8 +139,8 @@ def _save_to_cache(url, response_json, sc):
             Path(settings.cache_folder).mkdir(parents=True, exist_ok=True)
 
             # hash the url to make the filename succinct but unique
-            # md5 digest is 128 bits = 16 bytes = 32 hexadecimal characters
-            filename = md5(url.encode("utf-8")).hexdigest() + ".json"
+            # sha1 digest is 160 bits = 20 bytes = 40 hexadecimal characters
+            filename = sha1(url.encode("utf-8")).hexdigest() + ".json"
             cache_filepath = Path(settings.cache_folder) / filename
 
             # dump to json, and save to file
@@ -165,7 +165,7 @@ def _url_in_cache(url):
         path to cached response for url if it exists, otherwise None
     """
     # hash the url to generate the cache filename
-    filename = md5(url.encode("utf-8")).hexdigest() + ".json"
+    filename = sha1(url.encode("utf-8")).hexdigest() + ".json"
     filepath = Path(settings.cache_folder) / filename
 
     # if this file exists in the cache, return its full path
