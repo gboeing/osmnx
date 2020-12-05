@@ -190,22 +190,6 @@ def _get_paths_to_simplify(G, strict=True):
                 yield _build_path(G, endpoint, successor, endpoints)
 
 
-def _is_simplified(G):
-    """
-    Determine if a graph has already had its topology simplified.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-
-    Returns
-    -------
-    bool
-    """
-    return "simplified" in G.graph and G.graph["simplified"]
-
-
 def simplify_graph(G, strict=True, remove_rings=True):
     """
     Simplify a graph's topology by removing interstitial nodes.
@@ -236,7 +220,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
         topologically simplified graph, with a new `geometry` attribute on
         each simplified edge
     """
-    if _is_simplified(G):
+    if "simplified" in G.graph and G.graph["simplified"]:
         raise Exception("This graph has already been simplified, cannot simplify it again.")
 
     utils.log("Begin topologically simplifying the graph...")

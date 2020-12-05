@@ -6,7 +6,6 @@ import geopandas as gpd
 from pyproj import CRS
 
 from . import settings
-from . import simplification
 from . import utils
 from . import utils_graph
 
@@ -139,7 +138,7 @@ def project_graph(G, to_crs=None):
     gdf_nodes_proj = gdf_nodes_proj.drop(columns=["geometry"])
 
     # STEP 2: PROJECT THE EDGES
-    if simplification._is_simplified(G):
+    if "simplified" in G.graph and G.graph["simplified"]:
         # if graph has previously been simplified, project the edge geometries
         gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
         gdf_edges_proj = project_gdf(gdf_edges, to_crs=gdf_nodes_proj.crs)
