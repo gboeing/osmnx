@@ -461,6 +461,9 @@ def _osm_net_download(polygon, network_type, custom_filter):
         f"Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)"
     )
 
+    if settings.cache_only_mode:
+        raise InterruptedError("settings.cache_only_mode=True")
+
     return response_jsons
 
 
