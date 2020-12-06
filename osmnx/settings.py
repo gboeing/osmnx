@@ -3,11 +3,11 @@
 import logging as lg
 from pathlib import Path
 
-# locations to save data, logs, images, and cache
-data_folder = Path("data")
-logs_folder = Path("logs")
-imgs_folder = Path("images")
-cache_folder = Path("cache")
+# default locations to save data, logs, images, and cache
+data_folder = Path("./data")
+logs_folder = Path("./logs")
+imgs_folder = Path("./images")
+cache_folder = Path("./cache")
 
 # cache server responses
 use_cache = True
