@@ -137,15 +137,16 @@ def _save_to_cache(url, response_json, sc):
 
         else:
             # create the folder on the disk if it doesn't already exist
-            Path(settings.cache_folder).mkdir(parents=True, exist_ok=True)
+            cache_folder = Path(settings.cache_folder)
+            cache_folder.mkdir(parents=True, exist_ok=True)
 
             # hash the url to make the filename succinct but unique
             # sha1 digest is 160 bits = 20 bytes = 40 hexadecimal characters
             filename = sha1(url.encode("utf-8")).hexdigest() + ".json"
-            cache_filepath = Path(settings.cache_folder) / filename
+            cache_filepath = cache_folder / filename
 
             # dump to json, and save to file
-            cache_filepath.write_text(json.dumps(response_json))
+            cache_filepath.write_text(json.dumps(response_json), encoding="utf-8")
             utils.log(f'Saved response to cache file "{cache_filepath}"')
 
 
@@ -162,7 +163,7 @@ def _url_in_cache(url):
 
     Returns
     -------
-    filepath : string
+    filepath : pathlib.Path
         path to cached response for url if it exists, otherwise None
     """
     # hash the url to generate the cache filename
@@ -196,14 +197,13 @@ def _retrieve_from_cache(url, check_remark=False):
         # return cached response for this url if exists, otherwise return None
         cache_filepath = _url_in_cache(url)
         if cache_filepath is not None:
-            with open(cache_filepath, encoding="utf-8") as cache_file:
-                response_json = json.load(cache_file)
+            response_json = json.loads(cache_filepath.read_text(encoding="utf-8"))
 
-                # return None if check_remark is True and there is a server
-                # remark in the cached response
-                if check_remark and "remark" in response_json:
-                    utils.log(f'Found remark, so ignoring cache file "{cache_filepath}"')
-                    return None
+            # return None if check_remark is True and there is a server
+            # remark in the cached response
+            if check_remark and "remark" in response_json:
+                utils.log(f'Found remark, so ignoring cache file "{cache_filepath}"')
+                return None
 
             utils.log(f'Retrieved response from cache file "{cache_filepath}"')
             return response_json
