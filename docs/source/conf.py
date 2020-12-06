@@ -22,7 +22,7 @@ import sys
 from pathlib import Path
 
 # go up two levels from /docs/source to the package root
-sys.path.insert(0, str(Path().resolve().parents[1]))
+sys.path.insert(0, str(Path().resolve().parent.parent))
 
 # mock import these packages because readthedocs doesn't have them installed
 autodoc_mock_imports = [
