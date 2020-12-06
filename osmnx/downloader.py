@@ -146,7 +146,7 @@ def _save_to_cache(url, response_json, sc):
 
             # dump to json, and save to file
             cache_filepath.write_text(json.dumps(response_json))
-            utils.log(f'Saved response to cache file {cache_filepath!r}')
+            utils.log(f'Saved response to cache file "{cache_filepath}"')
 
 
 def _url_in_cache(url):
