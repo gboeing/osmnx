@@ -2,9 +2,9 @@
 
 import datetime as dt
 import logging as lg
-import os
 import sys
 import unicodedata
+from pathlib import Path
 
 from . import _version
 from . import settings
@@ -125,8 +125,10 @@ def config(
         preserving the original order of nodes stored in the OSM way XML.
     bidirectional_network_types : list
         network types for which a fully bidirectional graph will be created
-    cache_folder : string
+    cache_folder : string or Path
         path to folder in which to save/load HTTP response cache
+    data_folder : string or Path
+        path to folder in which to save/load graph files by default
     cache_only_mode : bool
         If True, download network data from Overpass then raise a
         CacheOnlyModeInterrupt error for the user to catch. This prevents any
@@ -135,8 +137,6 @@ def config(
         lots of raw data (as you can only query Overpass one request at a
         time) then using the cache to quickly build many graphs simultaneously
         with multiprocessing.
-    data_folder : string
-        path to folder in which to save/load graph files by default
     default_accept_language : string
         HTTP header accept-language
     default_access : string
@@ -150,7 +150,7 @@ def config(
     elevation_provider : string
         the API provider to use for adding node elevations, can be either
         "google" or "airmap"
-    imgs_folder : string
+    imgs_folder : string or Path
         path to folder in which to save plot images by default
     log_file : bool
         if True, save log output to a file in logs_folder
@@ -162,7 +162,7 @@ def config(
         one of Python's logger.level constants
     log_name : string
         name of the logger
-    logs_folder : string
+    logs_folder : string or Path
         path to folder in which to save log files
     max_query_area_size : int
         maximum area for any part of the geometry in meters: any polygon
@@ -335,11 +335,10 @@ def _get_logger(level=None, name=None, filename=None):
     if not getattr(logger, "handler_set", None):
 
         # get today's date and construct a log filename
-        log_filename = os.path.join(settings.logs_folder, f'{filename}_{ts(style="date")}.log')
+        log_filename = Path(settings.logs_folder) / f'{filename}_{ts(style="date")}.log'
 
         # if the logs folder does not already exist, create it
-        if not os.path.exists(settings.logs_folder):
-            os.makedirs(settings.logs_folder)
+        log_filename.parent.mkdir(parents=True, exist_ok=True)
 
         # create file handler and log formatter and set them up
         handler = lg.FileHandler(log_filename, encoding="utf-8")

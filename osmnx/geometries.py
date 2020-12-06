@@ -8,6 +8,7 @@ GeoDataFrame of them.
 
 import logging as lg
 import warnings
+from pathlib import Path
 
 import geopandas as gpd
 import numpy as np
@@ -281,7 +282,7 @@ def geometries_from_xml(filepath, polygon=None, tags=None):
 
     Parameters
     ----------
-    filepath : string
+    filepath : string or Path
         path to file containing OSM XML data
     polygon : shapely.geometry.Polygon
         optional geographic boundary to filter objects
@@ -303,7 +304,7 @@ def geometries_from_xml(filepath, polygon=None, tags=None):
     gdf : geopandas.GeoDataFrame
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [osm_xml._overpass_json_from_file(filepath)]
+    response_jsons = [osm_xml._overpass_json_from_file(Path(filepath))]
 
     # create GeoDataFrame using this response JSON
     gdf = _create_gdf(response_jsons, polygon=polygon, tags=tags)

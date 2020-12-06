@@ -1,6 +1,7 @@
 """Graph creation functions."""
 
 import itertools
+from pathlib import Path
 
 import networkx as nx
 from shapely.geometry import MultiPolygon
@@ -478,7 +479,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
 
     Parameters
     ----------
-    filepath : string
+    filepath : string or Path
         path to file containing OSM XML data
     bidirectional : bool
         if True, create bi-directional edges for one-way streets
@@ -493,7 +494,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
     G : networkx.MultiDiGraph
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [osm_xml._overpass_json_from_file(filepath)]
+    response_jsons = [osm_xml._overpass_json_from_file(Path(filepath))]
 
     # create graph using this response JSON
     G = _create_graph(response_jsons, bidirectional=bidirectional, retain_all=retain_all)
