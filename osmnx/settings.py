@@ -21,7 +21,7 @@ cache_only_mode = False
 log_file = False
 log_console = False
 log_level = lg.INFO
-log_name = "osmnx"
+log_name = "OSMnx"
 log_filename = "osmnx"
 
 # OSM node/way tags to add as graph node/edge attributes when these tags are
