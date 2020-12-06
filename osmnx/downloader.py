@@ -17,6 +17,7 @@ from . import projection
 from . import settings
 from . import utils
 from . import utils_geo
+from ._errors import CacheOnlyModeInterrupt
 
 
 def _get_osm_filter(network_type):
@@ -460,6 +461,9 @@ def _osm_net_download(polygon, network_type, custom_filter):
     utils.log(
         f"Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)"
     )
+
+    if settings.cache_only_mode:
+        raise CacheOnlyModeInterrupt("settings.cache_only_mode=True")
 
     return response_jsons
 

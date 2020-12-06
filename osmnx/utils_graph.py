@@ -196,12 +196,13 @@ def count_streets_per_node(G, nodes=None):
     """
     Count how many physical street segments connect to each node in a graph.
 
-    This function uses an undirected representation of the graph to count
-    physical streets rather than directed edges. Note: this function is
-    automatically run by all the `graph.graph_from_x` functions prior to
-    truncating the graph to the requested boundaries, to add accurate
-    `street_count` attributes to each node even if some of its neighbors are
-    outside the requested graph boundaries.
+    This function uses an undirected representation of the graph and special
+    handling of self-loops to accurately count physical streets rather than
+    directed edges. Note: this function is automatically run by all the
+    `graph.graph_from_x` functions prior to truncating the graph to the
+    requested boundaries, to add accurate `street_count` attributes to each
+    node even if some of its neighbors are outside the requested graph
+    boundaries.
 
     Parameters
     ----------

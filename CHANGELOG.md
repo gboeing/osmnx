@@ -3,6 +3,8 @@
 ## 1.0.0 (TBD)
 
   - set use_cache=True by default
+  - add optional setting for download/cache-only mode
+  - replace md5 with sha1 for cache filename hashing
   - replace streets_per_node graph attribute with equivalent street_count node attribute
   - remove redundant osmid node attribute
   - make graph_to_gdfs multi-index the edges GeoDataFrame by u, v, key
@@ -12,6 +14,7 @@
   - refactor get_undirected functionality for better speed and efficiency
   - extract all private/internal .osm XML functionality into new osm_xml module
   - deprecate io.save_graph_xml with warning (function moved to osm_xml module)
+  - remove internal _is_simplified function
   - remove deprecated pois module
   - remove deprecated footprints module
   - remove deprecated utils_graph.induce_subgraph function
