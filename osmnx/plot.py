@@ -706,6 +706,8 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
         # default filepath, if none provided
         if filepath is None:
             filepath = Path(settings.imgs_folder) / "image.png"
+        else:
+            filepath = Path(filepath)
 
         # if save folder does not already exist, create it
         filepath.parent.mkdir(parents=True, exist_ok=True)
