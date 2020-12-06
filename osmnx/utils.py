@@ -131,12 +131,11 @@ def config(
         path to folder in which to save/load graph files by default
     cache_only_mode : bool
         If True, download network data from Overpass then raise a
-        CacheOnlyModeInterrupt error for the user to catch. This prevents any
-        graph building from taking place and instead just saves the OSM
-        response data to the cache. This is useful for sequentially caching
-        lots of raw data (as you can only query Overpass one request at a
-        time) then using the cache to quickly build many graphs simultaneously
-        with multiprocessing.
+        CacheOnlyModeInterrupt error for user to catch. This prevents graph
+        building from taking place and instead just saves OSM response data to
+        cache. Useful for sequentially caching lots of raw data (as you can
+        only query Overpass one request at a time) then using the cache to
+        quickly build many graphs simultaneously with multiprocessing.
     default_accept_language : string
         HTTP header accept-language
     default_access : string
