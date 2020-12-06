@@ -1,7 +1,6 @@
 """Read/write .osm formatted XML files."""
 
 import bz2
-import os
 import xml.sax
 from pathlib import Path
 from xml.etree import ElementTree as etree
@@ -178,7 +177,6 @@ def save_graph_xml(
         filepath = Path(filepath)
 
     # if save folder does not already exist, create it
-    folder, filename = os.path.split(filepath)
     if filepath.parent:
         filepath.parent.mkdir(parents=True, exist_ok=True)
 
