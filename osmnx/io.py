@@ -40,10 +40,9 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
         filepath = Path(settings.data_folder) / "graph.gpkg"
     else:
         filepath = Path(filepath)
-    filepath = filepath.resolve()
 
     # if save folder does not already exist, create it
-    filepath.parent.mkdir(parents=True, exist_ok=True)
+    filepath.resolve().parent.mkdir(parents=True, exist_ok=True)
 
     # convert graph to gdfs and stringify non-numeric columns
     if directed:
@@ -90,11 +89,10 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
         filepath = Path(settings.data_folder) / "graph_shapefile"
     else:
         filepath = Path(filepath)
-    filepath = filepath.resolve()
 
     # if save folder does not already exist, create it (shapefiles
     # get saved as set of files)
-    filepath.mkdir(parents=True, exist_ok=True)
+    filepath.resolve().mkdir(parents=True, exist_ok=True)
     filepath_nodes = filepath / "nodes.shp"
     filepath_edges = filepath / "edges.shp"
 
@@ -138,10 +136,9 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
         filepath = Path(settings.data_folder) / "graph.graphml"
     else:
         filepath = Path(filepath)
-    filepath = filepath.resolve()
 
     # if save folder does not already exist, create it
-    filepath.parent.mkdir(parents=True, exist_ok=True)
+    filepath.resolve().parent.mkdir(parents=True, exist_ok=True)
 
     if gephi:
         # for gephi compatibility, each edge's key must be unique as an id
@@ -408,7 +405,7 @@ def save_graph_xml(
     warnings.warn(msg)
     osm_xml.save_graph_xml(
         data,
-        Path(filepath),
+        filepath,
         node_tags,
         node_attrs,
         edge_tags,
