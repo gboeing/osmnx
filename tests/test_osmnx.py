@@ -41,10 +41,10 @@ ox.config(
     log_console=True,
     log_file=True,
     use_cache=True,
-    data_folder=Path(".temp/data"),
-    logs_folder=Path(".temp/logs"),
-    imgs_folder=Path(".temp/imgs"),
-    cache_folder=Path(".temp/cache"),
+    data_folder=".temp/data",
+    logs_folder=".temp/logs",
+    imgs_folder=".temp/imgs",
+    cache_folder=".temp/cache",
 )
 
 
