@@ -42,7 +42,7 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
         filepath = Path(filepath)
 
     # if save folder does not already exist, create it
-    filepath.resolve().parent.mkdir(parents=True, exist_ok=True)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
 
     # convert graph to gdfs and stringify non-numeric columns
     if directed:
@@ -92,7 +92,7 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
 
     # if save folder does not already exist, create it (shapefiles
     # get saved as set of files)
-    filepath.resolve().mkdir(parents=True, exist_ok=True)
+    filepath.mkdir(parents=True, exist_ok=True)
     filepath_nodes = filepath / "nodes.shp"
     filepath_edges = filepath / "edges.shp"
 
@@ -138,7 +138,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
         filepath = Path(filepath)
 
     # if save folder does not already exist, create it
-    filepath.resolve().parent.mkdir(parents=True, exist_ok=True)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
 
     if gephi:
         # for gephi compatibility, each edge's key must be unique as an id
