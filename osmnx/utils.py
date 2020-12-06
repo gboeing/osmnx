@@ -81,6 +81,7 @@ def config(
     all_oneway=settings.all_oneway,
     bidirectional_network_types=settings.bidirectional_network_types,
     cache_folder=settings.cache_folder,
+    cache_only_mode=settings.cache_only_mode,
     data_folder=settings.data_folder,
     default_accept_language=settings.default_accept_language,
     default_access=settings.default_access,
@@ -128,6 +129,14 @@ def config(
         path to folder in which to save/load HTTP response cache
     data_folder : string or Path
         path to folder in which to save/load graph files by default
+    cache_only_mode : bool
+        If True, download network data from Overpass then raise a
+        CacheOnlyModeInterrupt error for the user to catch. This prevents any
+        graph building from taking place and instead just saves the OSM
+        response data to the cache. This is useful for sequentially caching
+        lots of raw data (as you can only query Overpass one request at a
+        time) then using the cache to quickly build many graphs simultaneously
+        with multiprocessing.
     default_accept_language : string
         HTTP header accept-language
     default_access : string
@@ -200,6 +209,7 @@ def config(
     settings.all_oneway = all_oneway
     settings.bidirectional_network_types = bidirectional_network_types
     settings.cache_folder = cache_folder
+    settings.cache_only_mode = cache_only_mode
     settings.data_folder = data_folder
     settings.default_accept_language = default_accept_language
     settings.default_access = default_access
