@@ -21,7 +21,7 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
     ----------
     G : networkx.MultiDiGraph
         input graph
-    filepath : string or Path
+    filepath : string or pathlib.Path
         path to the GeoPackage file including extension. if None, use default
         data folder + graph.gpkg
     encoding : string
@@ -71,7 +71,7 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     ----------
     G : networkx.MultiDiGraph
         input graph
-    filepath : string or Path
+    filepath : string or pathlib.Path
         path to the shapefiles folder (no file extension). if None, use
         default data folder + graph_shapefile
     encoding : string
@@ -120,7 +120,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     ----------
     G : networkx.MultiDiGraph
         input graph
-    filepath : string or Path
+    filepath : string or pathlib.Path
         path to the GraphML file including extension. if None, use default
         data folder + graph.graphml
     gephi : bool
@@ -181,7 +181,7 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None):
 
     Parameters
     ----------
-    filepath : string or Path
+    filepath : string or pathlib.Path
         path to the GraphML file
     node_dtypes : dict
         dict of node attribute names:types to convert values' data types
@@ -367,7 +367,7 @@ def save_graph_xml(
     ----------
     data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
         geopandas GeoDataFrames
-    filepath : string or Path
+    filepath : string or pathlib.Path
         path to the .osm file including extension. if None, use default data
         folder + graph.osm
     node_tags : list

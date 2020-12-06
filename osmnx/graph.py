@@ -479,7 +479,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
 
     Parameters
     ----------
-    filepath : string or Path
+    filepath : string or pathlib.Path
         path to file containing OSM XML data
     bidirectional : bool
         if True, create bi-directional edges for one-way streets

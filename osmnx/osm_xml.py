@@ -76,7 +76,7 @@ def _overpass_json_from_file(filepath):
 
     Parameters
     ----------
-    filepath : string or Path
+    filepath : string or pathlib.Path
         path to file containing OSM XML data
 
     Returns
@@ -139,7 +139,7 @@ def save_graph_xml(
     ----------
     data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
         geopandas GeoDataFrames
-    filepath : string or Path
+    filepath : string or pathlib.Path
         path to the .osm file including extension. if None, use default data
         folder + graph.osm
     node_tags : list
