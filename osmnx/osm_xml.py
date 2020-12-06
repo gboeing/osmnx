@@ -90,9 +90,9 @@ def _overpass_json_from_file(filepath):
             # assume an unrecognized file extension is just XML
             return filepath.open(mode="rb")
 
-    with _opener(Path(filepath)) as file:
+    with _opener(Path(filepath)) as f:
         handler = _OSMContentHandler()
-        xml.sax.parse(file, handler)
+        xml.sax.parse(f, handler)
         return handler.object
 
 
@@ -177,8 +177,7 @@ def save_graph_xml(
         filepath = Path(filepath)
 
     # if save folder does not already exist, create it
-    if filepath.parent:
-        filepath.parent.mkdir(parents=True, exist_ok=True)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
 
     if not settings.all_oneway:
         import warnings
