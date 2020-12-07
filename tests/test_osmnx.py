@@ -30,8 +30,9 @@ from shapely.geometry import Polygon
 import osmnx as ox
 
 
-# remove the .temp folder and .coverage file if they already
-# exist so we start fresh with these tests
+# remove temp files/folders if they already exist so we start fresh
+if Path(".pytest_cache").exists():
+    shutil.rmtree(".pytest_cache")
 if Path(".temp").exists():
     shutil.rmtree(".temp")
 if Path(".coverage").exists():
@@ -46,7 +47,6 @@ ox.config(
     imgs_folder=".temp/imgs",
     cache_folder=".temp/cache",
 )
-
 
 # define queries to use throughout tests
 location_point = (37.791427, -122.410018)
