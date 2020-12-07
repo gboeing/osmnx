@@ -2,11 +2,11 @@
 
 import logging as lg
 
-# locations to save data, logs, images, and cache
-data_folder = "data"
-logs_folder = "logs"
-imgs_folder = "images"
-cache_folder = "cache"
+# default locations to save data, logs, images, and cache
+data_folder = "./data"
+logs_folder = "./logs"
+imgs_folder = "./images"
+cache_folder = "./cache"
 
 # cache server responses
 use_cache = True
@@ -20,7 +20,7 @@ cache_only_mode = False
 log_file = False
 log_console = False
 log_level = lg.INFO
-log_name = "osmnx"
+log_name = "OSMnx"
 log_filename = "osmnx"
 
 # OSM node/way tags to add as graph node/edge attributes when these tags are

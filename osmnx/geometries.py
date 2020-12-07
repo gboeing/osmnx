@@ -281,7 +281,7 @@ def geometries_from_xml(filepath, polygon=None, tags=None):
 
     Parameters
     ----------
-    filepath : string
+    filepath : string or pathlib.Path
         path to file containing OSM XML data
     polygon : shapely.geometry.Polygon
         optional geographic boundary to filter objects

@@ -1,6 +1,6 @@
 """Plot spatial geometries, street networks, and routes."""
 
-import os
+from pathlib import Path
 
 import matplotlib.cm as cm
 import matplotlib.colors as colors
@@ -705,16 +705,15 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
 
         # default filepath, if none provided
         if filepath is None:
-            filepath = os.path.join(settings.imgs_folder, "image.png")
+            filepath = Path(settings.imgs_folder) / "image.png"
+        else:
+            filepath = Path(filepath)
 
         # if save folder does not already exist, create it
-        folder, _ = os.path.split(filepath)
-        if not folder == "" and not os.path.exists(folder):
-            os.makedirs(folder)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
 
         # get the file extension and figure facecolor
-        _, ext = os.path.splitext(filepath)
-        ext = ext.strip(".")
+        ext = filepath.suffix.strip(".")
         fc = fig.get_facecolor()
 
         if ext == "svg":

@@ -4,11 +4,11 @@ import datetime as dt
 import json
 import logging as lg
 import math
-import os
 import re
 import time
 from collections import OrderedDict
 from hashlib import sha1
+from pathlib import Path
 
 import requests
 from dateutil import parser as date_parser
@@ -137,19 +137,16 @@ def _save_to_cache(url, response_json, sc):
 
         else:
             # create the folder on the disk if it doesn't already exist
-            if not os.path.exists(settings.cache_folder):
-                os.makedirs(settings.cache_folder)
+            cache_folder = Path(settings.cache_folder)
+            cache_folder.mkdir(parents=True, exist_ok=True)
 
             # hash the url to make the filename succinct but unique
             # sha1 digest is 160 bits = 20 bytes = 40 hexadecimal characters
-            filename = sha1(url.encode("utf-8")).hexdigest()
-            cache_filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, "json"]))
+            filename = sha1(url.encode("utf-8")).hexdigest() + ".json"
+            cache_filepath = cache_folder / filename
 
             # dump to json, and save to file
-            json_str = str(json.dumps(response_json))
-            with open(cache_filepath, "w", encoding="utf-8") as cache_file:
-                cache_file.write(json_str)
-
+            cache_filepath.write_text(json.dumps(response_json), encoding="utf-8")
             utils.log(f'Saved response to cache file "{cache_filepath}"')
 
 
@@ -166,18 +163,15 @@ def _url_in_cache(url):
 
     Returns
     -------
-    filepath : string
+    filepath : pathlib.Path
         path to cached response for url if it exists, otherwise None
     """
     # hash the url to generate the cache filename
-    filename = sha1(url.encode("utf-8")).hexdigest()
-    filepath = os.path.join(settings.cache_folder, os.extsep.join([filename, "json"]))
+    filename = sha1(url.encode("utf-8")).hexdigest() + ".json"
+    filepath = Path(settings.cache_folder) / filename
 
     # if this file exists in the cache, return its full path
-    if os.path.isfile(filepath):
-        return filepath
-    else:
-        return None
+    return filepath if filepath.is_file() else None
 
 
 def _retrieve_from_cache(url, check_remark=False):
@@ -203,14 +197,13 @@ def _retrieve_from_cache(url, check_remark=False):
         # return cached response for this url if exists, otherwise return None
         cache_filepath = _url_in_cache(url)
         if cache_filepath is not None:
-            with open(cache_filepath, encoding="utf-8") as cache_file:
-                response_json = json.load(cache_file)
+            response_json = json.loads(cache_filepath.read_text(encoding="utf-8"))
 
-                # return None if check_remark is True and there is a server
-                # remark in the cached response
-                if check_remark and "remark" in response_json:
-                    utils.log(f'Found remark, so ignoring cache file "{cache_filepath}"')
-                    return None
+            # return None if check_remark is True and there is a server
+            # remark in the cached response
+            if check_remark and "remark" in response_json:
+                utils.log(f'Found remark, so ignoring cache file "{cache_filepath}"')
+                return None
 
             utils.log(f'Retrieved response from cache file "{cache_filepath}"')
             return response_json

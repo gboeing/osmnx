@@ -1,7 +1,7 @@
 """Serialize graphs to/from files on disk."""
 
 import ast
-import os
+from pathlib import Path
 
 import networkx as nx
 import pandas as pd
@@ -21,7 +21,7 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
     ----------
     G : networkx.MultiDiGraph
         input graph
-    filepath : string
+    filepath : string or pathlib.Path
         path to the GeoPackage file including extension. if None, use default
         data folder + graph.gpkg
     encoding : string
@@ -37,12 +37,12 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
     """
     # default filepath if none was provided
     if filepath is None:
-        filepath = os.path.join(settings.data_folder, "graph.gpkg")
+        filepath = Path(settings.data_folder) / "graph.gpkg"
+    else:
+        filepath = Path(filepath)
 
     # if save folder does not already exist, create it
-    folder, filename = os.path.split(filepath)
-    if not folder == "" and not os.path.exists(folder):
-        os.makedirs(folder)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
 
     # convert graph to gdfs and stringify non-numeric columns
     if directed:
@@ -70,7 +70,7 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     ----------
     G : networkx.MultiDiGraph
         input graph
-    filepath : string
+    filepath : string or pathlib.Path
         path to the shapefiles folder (no file extension). if None, use
         default data folder + graph_shapefile
     encoding : string
@@ -86,14 +86,15 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     """
     # default filepath if none was provided
     if filepath is None:
-        filepath = os.path.join(settings.data_folder, "graph_shapefile")
+        filepath = Path(settings.data_folder) / "graph_shapefile"
+    else:
+        filepath = Path(filepath)
 
     # if save folder does not already exist, create it (shapefiles
     # get saved as set of files)
-    if not filepath == "" and not os.path.exists(filepath):
-        os.makedirs(filepath)
-    filepath_nodes = os.path.join(filepath, "nodes.shp")
-    filepath_edges = os.path.join(filepath, "edges.shp")
+    filepath.mkdir(parents=True, exist_ok=True)
+    filepath_nodes = filepath / "nodes.shp"
+    filepath_edges = filepath / "edges.shp"
 
     # convert graph to gdfs and stringify non-numeric columns
     if directed:
@@ -117,7 +118,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     ----------
     G : networkx.MultiDiGraph
         input graph
-    filepath : string
+    filepath : string or pathlib.Path
         path to the GraphML file including extension. if None, use default
         data folder + graph.graphml
     gephi : bool
@@ -132,12 +133,12 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     """
     # default filepath if none was provided
     if filepath is None:
-        filepath = os.path.join(settings.data_folder, "graph.graphml")
+        filepath = Path(settings.data_folder) / "graph.graphml"
+    else:
+        filepath = Path(filepath)
 
     # if save folder does not already exist, create it
-    folder, filename = os.path.split(filepath)
-    if not folder == "" and not os.path.exists(folder):
-        os.makedirs(folder)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
 
     if gephi:
         # for gephi compatibility, each edge's key must be unique as an id
@@ -177,7 +178,7 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None):
 
     Parameters
     ----------
-    filepath : string
+    filepath : string or pathlib.Path
         path to the GraphML file
     node_dtypes : dict
         dict of node attribute names:types to convert values' data types
@@ -188,6 +189,8 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None):
     -------
     G : networkx.MultiDiGraph
     """
+    filepath = Path(filepath)
+
     # specify default node/edge attribute values' data types
     default_node_dtypes = {
         "elevation": float,
@@ -361,7 +364,7 @@ def save_graph_xml(
     ----------
     data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
         geopandas GeoDataFrames
-    filepath : string
+    filepath : string or pathlib.Path
         path to the .osm file including extension. if None, use default data
         folder + graph.osm
     node_tags : list
