@@ -339,7 +339,7 @@ def plot_graph_routes(G, routes, route_colors="r", **pgr_kwargs):
         matplotlib figure, axis
     """
     # check for valid arguments
-    if not all([isinstance(r, list) for r in routes]):
+    if not all(isinstance(r, list) for r in routes):
         raise ValueError("routes must be a list of route lists")
     if len(routes) < 2:
         raise ValueError("You must pass more than 1 route")
@@ -496,7 +496,7 @@ def plot_figure_ground(
             # first, identify all the highway types of this node's incident edges
             ie_data = [Gu.get_edge_data(node, nbr) for nbr in Gu.neighbors(node)]
             edge_types = [d[min(d)]["highway"] for d in ie_data]
-            if len(edge_types) < 1:
+            if not edge_types:
                 # if node has no incident edges, make size zero
                 node_widths[node] = 0
             else:

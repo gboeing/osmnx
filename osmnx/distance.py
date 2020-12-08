@@ -129,7 +129,7 @@ def get_nearest_node(G, point, method="haversine", return_dist=False):
         is the distance (in meters if haversine, or graph node coordinate
         units if euclidean) between the point and nearest node
     """
-    if len(G) < 1:
+    if not G:
         raise ValueError("G must contain at least one node")
 
     # dump graph node coordinates into a pandas dataframe indexed by node id
