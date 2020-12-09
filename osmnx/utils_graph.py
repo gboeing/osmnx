@@ -232,13 +232,13 @@ def count_streets_per_node(G, nodes=None):
 
     # make list of all unique edges including each parallel edge unless the
     # parallel edge is a self-loop, in which case we don't double-count it
-    # then flatten this list of (u, v) edge tuples
-    edges = non_self_loop_edges + list(self_loop_edges)
-    edges_flat = itertools.chain.from_iterable(edges)
+    all_unique_edges = non_self_loop_edges + list(self_loop_edges)
 
-    # count how often each node appears in list of flattened edge endpoints
+    # flatten list of (u, v) edge tuples to count how often each node appears
+    edges_flat = itertools.chain.from_iterable(all_unique_edges)
     counts = Counter(edges_flat)
     streets_per_node = {node: counts[node] for node in nodes}
+
     utils.log("Counted undirected street segments incident to each node")
     return streets_per_node
 

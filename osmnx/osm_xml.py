@@ -36,21 +36,13 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
             self._element.update({k: float(v) for k, v in attrs.items() if k in {"lat", "lon"}})
             self._element.update(
-                {
-                    k: int(v)
-                    for k, v in attrs.items()
-                    if k in {"id", "uid", "version", "changeset"}
-                }
+                {k: int(v) for k, v in attrs.items() if k in {"id", "uid", "version", "changeset"}}
             )
 
         elif name == "relation":
             self._element = dict(type=name, tags={}, members=[], **attrs)
             self._element.update(
-                {
-                    k: int(v)
-                    for k, v in attrs.items()
-                    if k in {"id", "uid", "version", "changeset"}
-                }
+                {k: int(v) for k, v in attrs.items() if k in {"id", "uid", "version", "changeset"}}
             )
 
         elif name == "tag":

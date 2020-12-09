@@ -341,8 +341,9 @@ def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3
     """
     Identify geometries that intersect a (multi)polygon.
 
-    Use an r-tree spatial index and cut the polygon up into smaller
-    sub-polygons for r-tree acceleration.
+    Uses an r-tree spatial index and cuts polygon up into smaller sub-polygons
+    for r-tree acceleration. Ensure that geometries and polygon are in the
+    same coordinate reference system.
 
     Parameters
     ----------
@@ -351,9 +352,8 @@ def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the polygon to intersect with the geometries
     quadrat_width : numeric
-        the linear length (in units the polygon is in) of the quadrats with
-        which to cut up the polygon (default = 0.05 degrees, approx 4km at
-        NYC's latitude)
+        linear length (in polygon's units) of quadrat lines with which to cut
+        up the polygon (default = 0.05 degrees, approx 4km at NYC's latitude)
     min_num : int
         the minimum number of linear quadrat lines (e.g., min_num=3 would
         produce a quadrat grid of 4 squares)

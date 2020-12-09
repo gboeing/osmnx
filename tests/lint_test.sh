@@ -1,7 +1,28 @@
 #!/bin/bash
+
+# exit on error
 set -e
-flake8
-pydocstyle
-coverage run --source osmnx --module pytest --verbose
+
+# delete temp files and folders
+rm -r -f .coverage .pytest_cache .temp
+
+# check if imports are organized properly
+isort . --check-only
+
+# check if code is formatted properly
+black . --line-length 100 --check --diff
+
+# lint the code
+flake8 .
+
+# lint the docstrings
+pydocstyle .
+
+# run the tests
+coverage run --source ./osmnx --module pytest --verbose
+
+# report the test coverage
 coverage report -m
+
+# delete temp files and folders
 rm -r -f .coverage .pytest_cache .temp
