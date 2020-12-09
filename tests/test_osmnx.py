@@ -9,7 +9,6 @@ mpl.use("Agg")
 import bz2
 import logging as lg
 import os
-import shutil
 import tempfile
 from collections import OrderedDict
 from pathlib import Path
@@ -29,14 +28,6 @@ from shapely.geometry import Polygon
 
 import osmnx as ox
 
-
-# remove temp files/folders if they already exist so we start fresh
-if Path(".pytest_cache").exists():
-    shutil.rmtree(".pytest_cache")
-if Path(".temp").exists():
-    shutil.rmtree(".temp")
-if Path(".coverage").exists():
-    Path(".coverage").unlink()
 
 ox.config(
     log_console=True,
