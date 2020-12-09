@@ -40,7 +40,7 @@ Examples and demonstrations of these features are in the [examples repo](https:/
 
 ## Installation
 
-If you have any trouble with the installation, read the [docs](https://osmnx.readthedocs.io/) for more info. Install OSMnx in a clean [conda](https://anaconda.org/conda-forge/osmnx) environment:
+If you have any trouble with the installation, read the [docs](https://osmnx.readthedocs.io/) for more info. Install OSMnx in a clean conda environment:
 
 ```
 conda config --prepend channels conda-forge
