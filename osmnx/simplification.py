@@ -408,8 +408,10 @@ def _merge_nodes_geometric(G, tolerance, chunk=True):
     nodes GeoSeries into n-sized chunks, where n = the square root of the
     number of nodes. Then it runs unary_union on each chunk, and then runs
     unary_union on the resulting unary unions. This is much faster on large
-    graphs because of how unary_union's runtime scales with input size. But,
-    chunk=False is usually faster on small and medium sized graphs.
+    graphs (n>100000) because of how unary_union's runtime scales with vertex
+    count. But chunk=False is usually faster on small and medium sized graphs.
+    This hacky method will hopefully be made obsolete when shapely becomes
+    vectorized by incorporating the pygeos codebase.
 
     Parameters
     ----------
