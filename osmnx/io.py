@@ -142,8 +142,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
 
     if gephi:
         # for gephi compatibility, each edge's key must be unique as an id
-        uvdk = zip(G.edges(keys=False, data=True), range(len(G.edges)))
-        uvkd = ((u, v, k, d) for (u, v, d), k in uvdk)
+        uvkd = ((u, v, k, d) for k, (u, v, d) in enumerate(G.edges(keys=False, data=True)))
         G = nx.MultiDiGraph(uvkd)
 
     else:

@@ -92,12 +92,12 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
 
     # get number of physical streets (undirected edges) connected to each node
     spn = nx.get_node_attributes(G, "street_count")
-    if not set(spn.keys()) == set(G.nodes):
+    if set(spn) != set(G.nodes):
         spn = utils_graph.count_streets_per_node(G)
 
     # count number of intersections in graph, as nodes with >1 street
     node_ids = set(G.nodes)
-    intersect_count = len([1 for node, count in spn.items() if (count > 1) and (node in node_ids)])
+    intersect_count = sum(count > 1 and node in node_ids for node, count in spn.items())
 
     # calculate streets-per-node average: the average number of streets
     # (unidirected edges) incident to each node
@@ -114,14 +114,14 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     spnp = {num: count / n for num, count in spnc.items()}
 
     # calculate the total and average edge lengths
-    edge_length_total = sum([d["length"] for u, v, d in G.edges(data=True)])
+    edge_length_total = sum(d["length"] for u, v, d in G.edges(data=True))
     edge_length_avg = edge_length_total / m
 
     # calculate total and average street segment lengths (so, edges without
     # double-counting two-way streets)
     if Gu is None:
         Gu = utils_graph.get_undirected(G)
-    street_length_total = sum([d["length"] for u, v, d in Gu.edges(data=True)])
+    street_length_total = sum(d["length"] for u, v, d in Gu.edges(data=True))
     street_segments_count = len(Gu.edges(keys=True))
     street_length_avg = street_length_total / street_segments_count
 
@@ -190,8 +190,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
         circuity_avg = np.nan
 
     # percent of edges that are self-loops, ie both endpoints are same node
-    self_loops_count = len([1 for u, v, k in G.edges if u == v])
-    self_loop_proportion = self_loops_count / m
+    self_loop_proportion = sum(u == v for u, v, k in G.edges) / m
 
     # assemble the results
     stats = {
