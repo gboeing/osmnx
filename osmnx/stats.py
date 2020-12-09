@@ -1,5 +1,7 @@
 """Calculate geometric and topological network measures."""
 
+import logging as lg
+
 import networkx as nx
 import numpy as np
 import pandas as pd
