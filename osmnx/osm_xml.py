@@ -30,15 +30,15 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
 
     def startElement(self, name, attrs):
         if name == "osm":
-            self.object.update({k: attrs[k] for k in attrs.keys() if k in {"version", "generator"}})
+            self.object.update({k: v for k, v in attrs.items() if k in {"version", "generator"}})
 
         elif name in {"node", "way"}:
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
-            self._element.update({k: float(attrs[k]) for k in attrs.keys() if k in {"lat", "lon"}})
+            self._element.update({k: float(v) for k, v in attrs.items() if k in {"lat", "lon"}})
             self._element.update(
                 {
-                    k: int(attrs[k])
-                    for k in attrs.keys()
+                    k: int(v)
+                    for k, v in attrs.items()
                     if k in {"id", "uid", "version", "changeset"}
                 }
             )
@@ -47,8 +47,8 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
             self._element = dict(type=name, tags={}, members=[], **attrs)
             self._element.update(
                 {
-                    k: int(attrs[k])
-                    for k in attrs.keys()
+                    k: int(v)
+                    for k, v in attrs.items()
                     if k in {"id", "uid", "version", "changeset"}
                 }
             )
@@ -61,7 +61,7 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
 
         elif name == "member":
             self._element["members"].append(
-                {k: (int(attrs[k]) if k == "ref" else attrs[k]) for k in attrs.keys()}
+                {k: (int(v) if k == "ref" else v) for k, v in attrs.items()}
             )
 
     def endElement(self, name):

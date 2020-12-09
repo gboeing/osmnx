@@ -530,7 +530,7 @@ def _osm_polygon_download(query, limit=1, polygon_geojson=1):
     elif isinstance(query, dict):
         # add the query keys in alphabetical order so the URL is the same string
         # each time, for caching purposes
-        for key in sorted(list(query.keys())):
+        for key in sorted(query):
             params[key] = query[key]
     else:
         raise TypeError("query must be a dict or a string")

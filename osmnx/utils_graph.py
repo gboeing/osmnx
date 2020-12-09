@@ -56,7 +56,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
     if edges:
 
-        if len(G.edges) < 1:
+        if not G.edges:
             raise ValueError("Graph has no edges, cannot convert to a GeoDataFrame.")
 
         u, v, k, data = zip(*G.edges(keys=True, data=True))
@@ -237,7 +237,7 @@ def count_streets_per_node(G, nodes=None):
     edges_flat = itertools.chain.from_iterable(edges)
 
     # count how often each node appears in list of flattened edge endpoints
-    counts = Counter(list(edges_flat))
+    counts = Counter(edges_flat)
     streets_per_node = {node: counts[node] for node in nodes}
     utils.log("Counted undirected street segments incident to each node")
     return streets_per_node
@@ -431,7 +431,7 @@ def get_undirected(G):
     for u1, v1, key1, data1 in H.edges(keys=True, data=True):
 
         # if we haven't already flagged this edge as a duplicate
-        if not (u1, v1, key1) in duplicate_edges:
+        if (u1, v1, key1) not in duplicate_edges:
 
             # look at every other edge between u and v, one at a time
             for key2 in H[u1][v1]:

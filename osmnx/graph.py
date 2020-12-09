@@ -531,8 +531,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     utils.log("Creating graph from downloaded OSM data...")
 
     # make sure we got data back from the server request(s)
-    element_counts = [len(rj["elements"]) for rj in response_jsons]
-    if sum(element_counts) < 1:
+    if not any(rj["elements"] for rj in response_jsons):
         raise EmptyOverpassResponse("There are no data elements in the response JSON")
 
     # create the graph as a MultiDiGraph and set its meta-attributes

@@ -245,7 +245,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
             # there should rarely be multiple edges between interstitial nodes
             # usually happens if OSM has duplicate ways digitized for just one
             # street... we will keep only one of the edges (see below)
-            if not G.number_of_edges(u, v) == 1:
+            if G.number_of_edges(u, v) != 1:
                 utils.log(f"Found multiple edges between {u} and {v} when simplifying")
 
             # get edge between these nodes: if multiple edges exist between
@@ -263,11 +263,11 @@ def simplify_graph(G, strict=True, remove_rings=True):
 
         for key in edge_attributes:
             # don't touch the length attribute, we'll sum it at the end
-            if len(set(edge_attributes[key])) == 1 and not key == "length":
+            if len(set(edge_attributes[key])) == 1 and key != "length":
                 # if there's only 1 unique value in this attribute list,
                 # consolidate it to the single value (the zero-th)
                 edge_attributes[key] = edge_attributes[key][0]
-            elif not key == "length":
+            elif key != "length":
                 # otherwise, if there are multiple values, keep one of each value
                 edge_attributes[key] = list(set(edge_attributes[key]))
 
@@ -297,7 +297,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
         wccs = nx.weakly_connected_components(G)
         nodes_in_rings = set()
         for wcc in wccs:
-            if all([not _is_endpoint(G, n) for n in wcc]):
+            if not any(_is_endpoint(G, n) for n in wcc):
                 nodes_in_rings.update(wcc)
         G.remove_nodes_from(nodes_in_rings)
 
@@ -374,7 +374,7 @@ def consolidate_intersections(
     # if dead_ends is False, discard dead-ends to retain only intersections
     if not dead_ends:
         spn = nx.get_node_attributes(G, "street_count")
-        if not set(spn.keys()) == set(G.nodes):
+        if set(spn) != set(G.nodes):
             spn = utils_graph.count_streets_per_node(G)
         dead_end_nodes = [node for node, count in spn.items() if count <= 1]
 
@@ -383,14 +383,14 @@ def consolidate_intersections(
         G.remove_nodes_from(dead_end_nodes)
 
     if rebuild_graph:
-        if len(G) == 0 or len(G.edges) == 0:
+        if not G or not G.edges:
             # cannot rebuild a graph with no nodes or no edges, just return it
             return G
         else:
             return _consolidate_intersections_rebuild_graph(G, tolerance, reconnect_edges)
 
     else:
-        if len(G) == 0:
+        if not G:
             # if graph has no nodes, just return empty GeoSeries
             return gpd.GeoSeries(crs=G.graph["crs"])
         else:
@@ -558,7 +558,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
                 y=nodes_subset["y"].iloc[0],
             )
 
-    if len(G.edges) == 0 or not reconnect_edges:
+    if not G.edges or not reconnect_edges:
         # if reconnect_edges is False or there are no edges in original graph
         # (after dead-end removed), then skip edges and return new graph as-is
         return H

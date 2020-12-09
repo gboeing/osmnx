@@ -34,7 +34,7 @@ def geocode(query):
     response_json = downloader.nominatim_request(params=params)
 
     # if results were returned, parse lat and lng out of the result
-    if len(response_json) > 0 and "lat" in response_json[0] and "lon" in response_json[0]:
+    if response_json and "lat" in response_json[0] and "lon" in response_json[0]:
         lat = float(response_json[0]["lat"])
         lng = float(response_json[0]["lon"])
         point = (lat, lng)
@@ -137,7 +137,7 @@ def _geocode_query_to_gdf(query, which_result):
     results = downloader._osm_polygon_download(query, limit=limit)
 
     # choose the right result from the JSON response
-    if len(results) == 0:
+    if not results:
         # if no results were returned, raise error
         raise ValueError(f'OSM returned no results for query "{query}"')
 
