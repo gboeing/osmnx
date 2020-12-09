@@ -395,8 +395,7 @@ def consolidate_intersections(
             return gpd.GeoSeries(crs=G.graph["crs"])
         else:
             # return the centroids of the merged intersection polygons
-            merged_nodes = _merge_nodes_geometric(G, tolerance)
-            return gpd.GeoSeries(merged_nodes, crs=G.graph["crs"]).centroid
+            return _merge_nodes_geometric(G, tolerance).centroid
 
 
 def _merge_nodes_geometric(G, tolerance, chunk=True):
@@ -427,10 +426,10 @@ def _merge_nodes_geometric(G, tolerance, chunk=True):
 
     Returns
     -------
-    merged_nodes : list
-        a list of the merged overlapping buffered node polygons
+    merged_nodes : GeoSeries
+        the merged overlapping polygons of the buffered nodes
     """
-    # yield n-sized chunks of lst one at a time
+    # yield n-sized chunks of list one at a time
     def get_chunks(lst, n):
         for i in range(0, len(lst), n):
             yield lst[i : i + n]
@@ -438,7 +437,7 @@ def _merge_nodes_geometric(G, tolerance, chunk=True):
     gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)["geometry"]
 
     if not chunk:
-        # buffer nodes then get unary union to merge overlaps
+        # buffer nodes GeoSeries then get unary union to merge overlaps
         merged_nodes = gs_nodes.buffer(tolerance).unary_union
 
     else:
@@ -452,11 +451,11 @@ def _merge_nodes_geometric(G, tolerance, chunk=True):
         # unary_union each chunk then unary_union those unary unions
         merged_nodes = unary_union([unary_union(chunk) for chunk in chunks])
 
-    # if only a single node results, make it iterable to convert to list
+    # if only a single node results, make it iterable to convert to GeoSeries
     if isinstance(merged_nodes, Polygon):
         merged_nodes = [merged_nodes]
 
-    return list(merged_nodes)
+    return gpd.GeoSeries(list(merged_nodes), crs=G.graph["crs"])
 
 
 def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=True):
@@ -496,20 +495,17 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     """
     # STEP 1
     # buffer nodes to passed-in distance and merge overlaps
-    merged_nodes = _merge_nodes_geometric(G, tolerance)
-
-    # STEP 2
-    # attach each node to its cluster of merged nodes
-    # first get the original graph's node points
-    node_points = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
-
     # turn merged nodes into gdf and get centroids of each cluster as x, y
-    node_clusters = gpd.GeoDataFrame(geometry=merged_nodes, crs=node_points.crs)
+    node_clusters = gpd.GeoDataFrame(_merge_nodes_geometric(G, tolerance))
     centroids = node_clusters.centroid
     node_clusters["x"] = centroids.x
     node_clusters["y"] = centroids.y
 
+    # STEP 2
+    # attach each node to its cluster of merged nodes
+    # first get the original graph's node points
     # then spatial join to give each node the label of cluster it's within
+    node_points = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
     gdf = gpd.sjoin(node_points, node_clusters, how="left", op="within")
     gdf = gdf.drop(columns="geometry").rename(columns={"index_right": "cluster"})
 
