@@ -496,7 +496,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     # STEP 1
     # buffer nodes to passed-in distance and merge overlaps. turn merged nodes
     # into gdf and get centroids of each cluster as x, y
-    node_clusters = gpd.GeoDataFrame(_merge_nodes_geometric(G, tolerance))
+    node_clusters = gpd.GeoDataFrame(geometry=_merge_nodes_geometric(G, tolerance))
     centroids = node_clusters.centroid
     node_clusters["x"] = centroids.x
     node_clusters["y"] = centroids.y
