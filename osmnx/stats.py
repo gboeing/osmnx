@@ -82,6 +82,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
     """
     sq_m_in_sq_km = 1e6  # there are 1 million sq meters in 1 sq km
     Gu = None
+    node_ids = set(G.nodes)
 
     # calculate number of nodes, n, and number of edges, m, in the graph
     n = len(G)
@@ -92,11 +93,10 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
 
     # get number of physical streets (undirected edges) connected to each node
     spn = nx.get_node_attributes(G, "street_count")
-    if set(spn) != set(G.nodes):
-        spn = utils_graph.count_streets_per_node(G)
+    if set(spn) != node_ids:
+        utils.log("Graph nodes changed since `street_count`s were calculated", level=lg.WARN)
 
     # count number of intersections in graph, as nodes with >1 street
-    node_ids = set(G.nodes)
     intersect_count = sum(count > 1 and node in node_ids for node, count in spn.items())
 
     # calculate streets-per-node average: the average number of streets
