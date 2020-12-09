@@ -494,17 +494,17 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
         edge geometries
     """
     # STEP 1
-    # buffer nodes to passed-in distance and merge overlaps
-    # turn merged nodes into gdf and get centroids of each cluster as x, y
+    # buffer nodes to passed-in distance and merge overlaps. turn merged nodes
+    # into gdf and get centroids of each cluster as x, y
     node_clusters = gpd.GeoDataFrame(_merge_nodes_geometric(G, tolerance))
     centroids = node_clusters.centroid
     node_clusters["x"] = centroids.x
     node_clusters["y"] = centroids.y
 
     # STEP 2
-    # attach each node to its cluster of merged nodes
-    # first get the original graph's node points
-    # then spatial join to give each node the label of cluster it's within
+    # attach each node to its cluster of merged nodes. first get the original
+    # graph's node points then spatial join to give each node the label of
+    # cluster it's within
     node_points = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
     gdf = gpd.sjoin(node_points, node_clusters, how="left", op="within")
     gdf = gdf.drop(columns="geometry").rename(columns={"index_right": "cluster"})
