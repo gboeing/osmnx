@@ -334,12 +334,8 @@ def _create_gdf(response_jsons, polygon, tags):
     gdf : geopandas.GeoDataFrame
         GeoDataFrame of geometries and their associated tags
     """
-    # make sure we got data back from the server request(s)
-    element_count = sum([len(rj["elements"]) for rj in response_jsons])
-    utils.log(f"{element_count} elements in the JSON responses (includes every node).")
-
     # if there are no elements in the responses
-    if element_count < 1:
+    if not any(len(rj["elements"]) for rj in response_jsons):
 
         # create an empty GeoDataFrame
         gdf = gpd.GeoDataFrame()
@@ -353,8 +349,8 @@ def _create_gdf(response_jsons, polygon, tags):
 
     # else if there were elements in the response
     else:
-        # log creation
-        utils.log("Converting elements to geometries")
+        count = sum(len(rj["elements"]) for rj in response_jsons)
+        utils.log(f"Converting {count} elements in JSON responses to geometries")
 
         # Dictionaries to hold nodes and complete geometries
         coords = dict()
@@ -378,7 +374,7 @@ def _create_gdf(response_jsons, polygon, tags):
                 # with empty tags to the untagged_element_ids set (untagged
                 # nodes are not added to the geometries dict at all)
                 if (element["type"] != "node") and (
-                    ("tags" not in element) or (len(element["tags"]) == 0)
+                    ("tags" not in element) or (not element["tags"])
                 ):
                     untagged_element_ids.add(unique_id)
 
@@ -632,43 +628,40 @@ def _is_closed_way_a_polygon(element, polygon_features=_polygon_features):
             # identify common keys in element's tags and polygon_features dict
             intersecting_keys = element_tags.keys() & polygon_features.keys()
 
-            # if common keys are found
-            if len(intersecting_keys) > 0:
+            # for each key in the intersecting keys (if any found)
+            for key in intersecting_keys:
 
-                # for each key in the intersecting keys
-                for key in intersecting_keys:
+                # Get the key's value from the element's tags
+                key_value = element_tags.get(key)
 
-                    # Get the key's value from the element's tags
-                    key_value = element_tags.get(key)
+                # Determine if the key is for a blocklist or passlist in
+                # polygon_features dict
+                blocklist_or_passlist = polygon_features.get(key).get("polygon")
 
-                    # Determine if the key is for a blocklist or passlist in
-                    # polygon_features dict
-                    blocklist_or_passlist = polygon_features.get(key).get("polygon")
+                # Get values for the key from the polygon_features dict
+                polygon_features_values = polygon_features.get(key).get("values")
 
-                    # Get values for the key from the polygon_features dict
-                    polygon_features_values = polygon_features.get(key).get("values")
+                # if all features with that key should be polygons -> Polygon
+                if blocklist_or_passlist == "all":
+                    is_polygon = True
 
-                    # if all features with that key should be polygons -> Polygon
-                    if blocklist_or_passlist == "all":
+                # if the key is for a blocklist i.e. tags that should not
+                # become Polygons
+                elif blocklist_or_passlist == "blocklist":
+
+                    # if the value for that key in the element is not in
+                    # the blocklist -> Polygon
+                    if key_value not in polygon_features_values:
                         is_polygon = True
 
-                    # if the key is for a blocklist i.e. tags that should not
-                    # become Polygons
-                    elif blocklist_or_passlist == "blocklist":
+                # if the key is for a passlist i.e. specific tags should
+                # become Polygons
+                elif blocklist_or_passlist == "passlist":
 
-                        # if the value for that key in the element is not in
-                        # the blocklist -> Polygon
-                        if key_value not in polygon_features_values:
-                            is_polygon = True
-
-                    # if the key is for a passlist i.e. specific tags should
-                    # become Polygons
-                    elif blocklist_or_passlist == "passlist":
-
-                        # if the value for that key in the element is in the
-                        # passlist -> Polygon
-                        if key_value in polygon_features_values:
-                            is_polygon = True
+                    # if the value for that key in the element is in the
+                    # passlist -> Polygon
+                    if key_value in polygon_features_values:
+                        is_polygon = True
 
     return is_polygon
 
@@ -805,7 +798,7 @@ def _assemble_multipolygon_component_polygons(element, geometries):
         for merged_inner_linestring in list(merged_inner_linestrings):
             inner_polygons += polygonize(merged_inner_linestring)
 
-    if len(outer_polygons) == 0:
+    if not outer_polygons:
         utils.log(
             "No outer polygons were created for"
             f" https://www.openstreetmap.org/{element['type']}/{element['id']}"
@@ -900,7 +893,7 @@ def _buffer_invalid_geometries(gdf):
         invalid_geometry_filter = ~gdf["geometry"].is_valid
 
         # if there are invalid geometries
-        if sum(invalid_geometry_filter) > 0:
+        if invalid_geometry_filter.any():
 
             # get their unique_ids from the index
             invalid_geometry_ids = gdf.loc[invalid_geometry_filter].index.to_list()
