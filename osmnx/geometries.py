@@ -350,7 +350,7 @@ def _create_gdf(response_jsons, polygon, tags):
     # else if there were elements in the response
     else:
         count = sum(len(rj["elements"]) for rj in response_jsons)
-        utils.log("Converting {count} elements in JSON responses to geometries")
+        utils.log(f"Converting {count} elements in JSON responses to geometries")
 
         # Dictionaries to hold nodes and complete geometries
         coords = dict()
