@@ -11,7 +11,7 @@ You can read more about the project's standards and code/docstring style in the 
 
 ## Code format
 
-Format the code according to the project's style by changing directories to the repository's root and running:
+Format the code and sort imports according to the project's style by changing directories to the repository's root and running:
 
 ```
 bash ./tests/black.sh
@@ -30,6 +30,7 @@ bash ./tests/lint_test.sh
 All PRs trigger continuous integration tests on Travis CI. See the [configuration](../.travis.yml). The following tests are automatically run:
 
   - build the docs
+  - check code formatting
   - docstrings linter
   - code linter
   - unit tests and coverage
