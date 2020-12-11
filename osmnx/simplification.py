@@ -376,7 +376,7 @@ def consolidate_intersections(
         spn = nx.get_node_attributes(G, "street_count")
         if set(spn) != set(G.nodes):
             utils.log("Graph nodes changed since `street_count`s were calculated", level=lg.WARN)
-        dead_end_nodes = [node for node, count in spn.items() if count == 0]
+        dead_end_nodes = [node for node, count in spn.items() if count <= 1]
 
         # make a copy to not mutate original graph object caller passed in
         G = G.copy()
