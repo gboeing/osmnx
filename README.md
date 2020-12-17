@@ -15,6 +15,8 @@
 
 ## Features
 
+To get started with sample code and usage examples/demos, see the [examples](https://github.com/gboeing/osmnx-examples) GitHub repo.
+
 OSMnx is built on top of GeoPandas, NetworkX, and matplotlib and interacts with OpenStreetMap's APIs to:
 
   * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
@@ -40,14 +42,14 @@ Examples and demonstrations of these features are in the [examples repo](https:/
 
 ## Installation
 
-If you have any trouble with the installation, read the [docs](https://osmnx.readthedocs.io/) for more info. Install OSMnx in a clean conda environment:
+Install OSMnx in a clean conda environment:
 
 ```
 conda config --prepend channels conda-forge
 conda create -n ox --strict-channel-priority osmnx
 ```
 
-Alternatively, you can run OSMnx + Jupyter directly from its official [docker container](https://hub.docker.com/r/gboeing/osmnx).
+If you have any trouble with the installation, read the [docs](https://osmnx.readthedocs.io/) for more info. Alternatively, you can run OSMnx + Jupyter directly from its official [docker container](https://hub.docker.com/r/gboeing/osmnx).
 
 
 

@@ -1,9 +1,9 @@
-osmnx package
-=============
+OSMnx users' reference
+======================
 
 Users' reference for the OSMnx API.
 
-This guide covers all public modules and functions. Every function can be accessed via `ox.module_name.function_name()` and the vast majority of them can also be accessed directly via `ox.function_name()` as a shortcut. Only a few less-common functions are accessible only via `ox.module_name.function_name()`.
+This guide covers usage of all public modules and functions. Every function can be accessed via `ox.module_name.function_name()` and the vast majority of them can also be accessed directly via `ox.function_name()` as a shortcut. Only a few less-common functions are accessible only via `ox.module_name.function_name()`.
 
 osmnx.bearing module
 --------------------

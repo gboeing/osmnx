@@ -1,14 +1,7 @@
-
 OSMnx documentation
 ===================
 
 OSMnx is a Python package that lets you download spatial geometries from OpenStreetMap and model, project, visualize, and analyze real-world street networks. You can download and model walkable, drivable, or bikeable urban networks with a single line of Python code then easily analyze and visualize them. You can just as easily download and work with other infrastructure types, amenities/points of interest, building footprints, elevation data, street bearings/orientations, and speed/travel time.
-
-The OSMnx project is hosted on `GitHub`_.
-
-
-Citation info
--------------
 
 If you use OSMnx in your work, please cite the journal article:
 
@@ -25,15 +18,15 @@ You can install OSMnx with conda:
     conda config --prepend channels conda-forge
     conda create -n ox --strict-channel-priority osmnx
 
-Alternatively, you can run OSMnx + Jupyter directly from the official `docker container`_, or you can install OSMnx via `pip`_ if you already have all of its dependencies installed and tested on your system. Note: pip installation is nontrivial. If you don't know *exactly* what you're doing, just use conda as described above.
+If you want other packages, such as :code:`jupyter`, installed in this environment as well, just add their names after :code:`osmnx` above. See the conda documentation for further details. To upgrade OSMnx to a newer release, just remove the conda environment you created and then create a new one again, as above. Don't just run "conda update" or you could get package conflicts.
 
-To upgrade OSMnx to a newer release, just remove the conda environment you created and then create a new one again following the steps above. Don't just run "conda update" or you could get package conflicts.
+You can also run OSMnx + Jupyter directly from the official `Docker container`_, or you can install OSMnx via `pip`_ *if* you already have all of its dependencies installed and fully tested on your system. Note: pip installation is nontrivial. If you don't know *exactly* what you're doing, just use conda as described above.
 
 
 Usage
 -----
 
-For sample code and usage examples/demos, see the `examples`_ GitHub repo.
+To get started with sample code and usage examples/demos, see the `examples`_ GitHub repo.
 
 OSMnx is built on top of GeoPandas, NetworkX, and matplotlib and interacts with OpenStreetMap's APIs to:
 
@@ -54,18 +47,15 @@ OSMnx is built on top of GeoPandas, NetworkX, and matplotlib and interacts with 
   * Visualize travel distance and travel time with isoline and isochrone maps
   * Plot figure-ground diagrams of street networks and building footprints
 
-OSMnx geocodes place names and addresses using the OpenStreetMap Nominatim API. It downloads spatial networks (such as streets, paths, or canals) from the Overpass API and models them as NetworkX MultiDiGraphs. OSMnx automatically processes the network topology from the original raw OpenStreetMap data such that nodes represent intersections/dead-ends and edges represent the street segments that link them.
+OSMnx geocodes place names and addresses with the OpenStreetMap Nominatim API. Using OSMnx's :code:`geometries` module, you can retrieve any spatial data (such as building footprints, public parks, transit stops, etc) from the OpenStreetMap Overpass API as a GeoPandas GeoDataFrame. Using OSMnx's :code:`graph` module, you can retrieve any spatial network data (such as streets, paths, canals, etc) from the Overpass API and model them as NetworkX MultiDiGraphs.
 
-MultiDiGraphs are nonplanar directed graphs with possible self-loops and parallel edges. Thus, a one-way street will be represented with a single directed edge from node u to node v, but a bidirectional street will be represented with two reciprocal directed edges (with identical geometries): one from node u to node v and another from v to u, to represent both possible directions of flow. OSMnx can convert a MultiDiGraph to a MultiGraph if you prefer an undirected representation of the network. It can also convert a MultiDiGraph to/from GeoPandas node and edge GeoDataFrames.
-
-Using OSMnx's :code:`geometries` module, you can retrieve any other spatial data (such as building footprints, public parks, transit stops, etc) from OpenStreetMap as a GeoPandas GeoDataFrame.
+OSMnx automatically processes network topology from the original raw OpenStreetMap data such that nodes represent intersections/dead-ends and edges represent the street segments that link them. MultiDiGraphs are nonplanar directed graphs with possible self-loops and parallel edges. Thus, a one-way street will be represented with a single directed edge from node u to node v, but a bidirectional street will be represented with two reciprocal directed edges (with identical geometries): one from node u to node v and another from v to u, to represent both possible directions of flow. OSMnx can convert a MultiDiGraph to a MultiGraph if you prefer an undirected representation of the network. It can also convert a MultiDiGraph to/from GeoPandas node and edge GeoDataFrames.
 
 Usage examples and demonstrations of these features are in the `examples`_ GitHub repo. More feature development details are in the `change log`_. Read the `journal article`_ for further technical details. Package usage is detailed in the reference guide below.
 
 
 .. toctree::
    :maxdepth: 2
-   :caption: Reference guide
 
    osmnx
 
@@ -73,7 +63,7 @@ Usage examples and demonstrations of these features are in the `examples`_ GitHu
 Support
 -------
 
-If you've discovered a bug in OSMnx, please open an `issue`_ at the `OSMnx GitHub repo`_  documenting what is broken in the package. Alternatively, if you have a usage question, please ask it on `StackOverflow`_.
+If you have a usage question, please ask it on `StackOverflow`_. If you've discovered a bug in OSMnx, please open an `issue`_ at the OSMnx `GitHub`_ repo.
 
 
 License
@@ -82,23 +72,21 @@ License
 The project is licensed under the MIT license.
 
 
-Indices and tables
-==================
+Indices
+-------
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
 * `Internals Reference`_
 
 .. _change log: https://github.com/gboeing/osmnx/blob/master/CHANGELOG.md
-.. _docker container: https://hub.docker.com/r/gboeing/osmnx
+.. _Docker container: https://hub.docker.com/r/gboeing/osmnx
 .. _conda environment: https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html
 .. _examples: https://github.com/gboeing/osmnx-examples
 .. _issue: https://github.com/gboeing/osmnx/issues
 .. _GitHub: https://github.com/gboeing/osmnx
-.. _OSMnx GitHub repo: https://github.com/gboeing/osmnx
-.. _pip: https://pypi.python.org/pypi/OSMnx
+.. _pip: https://pypi.python.org/pypi/osmnx
 .. _StackOverflow: https://stackoverflow.com/search?q=osmnx
 .. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: https://geoffboeing.com/publications/osmnx-complex-street-networks/
 .. _journal article: https://geoffboeing.com/publications/osmnx-complex-street-networks/
-.. _Internals Reference: osmnx-complete.html
+.. _Internals Reference: internals.html
