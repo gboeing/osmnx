@@ -15,9 +15,7 @@
 
 ## Features
 
-To get started with sample code and usage examples/demos, see the [examples](https://github.com/gboeing/osmnx-examples) GitHub repo.
-
-OSMnx is built on top of GeoPandas, NetworkX, and matplotlib and interacts with OpenStreetMap's APIs to:
+To get started with sample code and usage examples/demos, see the [examples](https://github.com/gboeing/osmnx-examples) GitHub repo. OSMnx is built on top of GeoPandas, NetworkX, and matplotlib and interacts with OpenStreetMap's APIs to:
 
   * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
   * Download any other spatial geometries, place boundaries, building footprints, or points of interest as a GeoDataFrame
