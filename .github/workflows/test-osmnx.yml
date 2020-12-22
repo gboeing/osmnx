@@ -1,0 +1,65 @@
+name: OSMnx tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+
+  build:
+
+    name: Python ${{ matrix.python-version }} ${{ matrix.os }} test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.6', '3.7', '3.8', '3.9']
+
+    steps:
+
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Setup conda
+        uses: s-weigand/setup-conda@v1
+        with:
+          activate-conda: false
+          update-conda: false
+
+      - name: Install test environment
+        shell: bash
+        run: |
+          conda config --set always_yes yes --set show_channel_urls true
+          conda config --prepend channels conda-forge
+          conda create -n TEST --strict-channel-priority python=${{ matrix.python-version }} --file requirements.txt --file requirements-dev.txt
+          source activate TEST
+          python setup.py install
+          conda list
+          conda info --all
+
+      - name: Lint code
+        shell: bash
+        run: |
+          source activate TEST
+          isort . --check-only
+          black . --line-length 100 --check --diff
+          flake8 .
+          pydocstyle .
+
+      - name: Test docs
+        shell: bash
+        run: |
+          source activate TEST
+          make -C ./docs html
+
+      - name: Test code
+        shell: bash
+        run: |
+          source activate TEST
+          coverage run --source ./osmnx -m pytest --verbose
+          coverage report -m
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v1
