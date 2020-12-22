@@ -27,7 +27,7 @@ def _get_osm_filter(network_type):
     Parameters
     ----------
     network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
-        what type of street or other network to get
+        what type of street network to get
 
     Returns
     -------
@@ -421,9 +421,9 @@ def _osm_network_download(polygon, network_type, custom_filter):
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         boundary to fetch the network ways/nodes within
     network_type : string
-        what type of network to get if custom_filter is not None
+        what type of street network to get if custom_filter is None
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets
+        a custom ways filter to be used instead of the network_type presets
 
     Returns
     -------
@@ -557,7 +557,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
     params : OrderedDict
         key-value pairs of parameters
     request_type : string {"search", "reverse", "lookup"}
-        Nominatim API endpoint
+        which Nominatim API endpoint to query
     pause : int
         how long to pause before request, in seconds. per the nominatim usage
         policy: "an absolute maximum of 1 request per second" is allowed
