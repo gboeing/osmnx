@@ -29,7 +29,7 @@ def geocode(query):
     params = OrderedDict()
     params["format"] = "json"
     params["limit"] = 1
-    params["dedupe"] = 0  # prevent OSM deduping results so we get precisely 'limit' # of results
+    params["dedupe"] = 0  # prevent deduping to get precise number of results
     params["q"] = query
     response_json = downloader.nominatim_request(params=params)
 
@@ -49,14 +49,17 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
     Geocode a query or queries to a GeoDataFrame with the Nominatim API.
 
     The resulting GeoDataFrame's geometry column contains place boundaries if
-    they exist in OpenStreetMap. The query can be a place name string or
-    structured dict, or a list of such strings/dicts to send to the geocoder.
+    they exist in OpenStreetMap. The query argument can be a place name string
+    or structured dict, or a list of such strings/dicts to send to geocoder.
     If query is a list, then which_result should be either a single value or a
     list with the same length as query.
 
-    You can query by OSM ID with `by_osmid=True`. The OSM ID query value(s)
-    must be prepended with their types: node (N), way (W), or relation (R).
-    For example, `query='["R2192363", "N240109189", "W427818536"]'`.
+    You can instead query by OSM ID by setting `by_osmid=True`. In this case,
+    geocode_to_gdf treats the query argument as an OSM ID (or list of OSM IDs)
+    for Nominatim lookup rather than text search. OSM IDs must be prepended
+    with their types: node (N), way (W), or relation (R), in accordance with
+    the Nominatim format. For example, `query='["R2192363", "N240109189",
+    "W427818536"]'`.
 
     Parameters
     ----------
@@ -64,7 +67,8 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
         query string(s) or structured dict(s) to geocode
     which_result : int
         which geocoding result to use. if None, auto-select the first
-        (Multi)Polygon or raise an error if OSM doesn't return one.
+        (Multi)Polygon or raise an error if OSM doesn't return one. to keep
+        the best match regardless of geometry type, set which_result=1
     by_osmid : bool
         if True, handle query as an OSM ID for lookup rather than text search
     buffer_dist : float
