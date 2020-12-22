@@ -137,7 +137,7 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
                         # we have come to the end of a self-looping edge, so
                         # add first node to end of path to close it and return
                         return path + [endpoint]
-                    else:
+                    else:  # pragma: no cover
                         # this can happen due to OSM digitization error where
                         # a one-way street turns into a two-way here, but
                         # duplicate incoming one-way edges are present
@@ -145,7 +145,7 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
                             f"Unexpected simplify pattern handled near {successor}", level=lg.WARN
                         )
                         return path
-                else:
+                else:  # pragma: no cover
                     # if successor has >1 successors, then successor must have
                     # been an endpoint because you can go in 2 new directions.
                     # this should never occur in practice

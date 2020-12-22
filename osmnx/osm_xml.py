@@ -171,7 +171,7 @@ def save_graph_xml(
     # if save folder does not already exist, create it
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
-    if not settings.all_oneway:
+    if not settings.all_oneway:  # pragma: no cover
         import warnings
 
         msg = (

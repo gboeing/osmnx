@@ -304,7 +304,7 @@ def _convert_edge_attr_types(G, dtypes=None):
         # next, eval "oneway" attr to bool
         try:
             data["oneway"] = ast.literal_eval(data["oneway"])
-        except (KeyError, ValueError):
+        except (KeyError, ValueError):  # pragma: no cover
             # may lack oneway if settings.all_oneway=True when you created
             # graph, or have values it can't eval if settings.all_oneway=True
             pass

@@ -162,7 +162,7 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
         # else, if we got at least which_result results, choose that one
         result = results[which_result - 1]
 
-    else:
+    else:  # pragma: no cover
         # else, we got fewer results than which_result, raise error
         msg = f'OSM returned fewer than `which_result={which_result}` results for query "{query}"'
         raise ValueError(msg)

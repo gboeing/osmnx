@@ -265,7 +265,7 @@ def _get_pause(recursive_delay=5, default_duration=60):
         status = response.text.split("\n")[3]
         status_first_token = status.split(" ")[0]
 
-    except Exception:
+    except Exception:  # pragma: no cover
         # if we cannot reach the status endpoint or parse its output, log an
         # error and return default duration
         sc = response.status_code
