@@ -59,8 +59,8 @@ jobs:
         run: |
           source activate TEST
           coverage run --source ./osmnx --module pytest --verbose
+          coverage xml -i
           coverage report -m
 
       - name: Upload coverage report
-        run: source activate TEST
         uses: codecov/codecov-action@v1
