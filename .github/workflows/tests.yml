@@ -62,4 +62,5 @@ jobs:
           coverage report -m
 
       - name: Upload coverage report
+        run: source activate TEST
         uses: codecov/codecov-action@v1
