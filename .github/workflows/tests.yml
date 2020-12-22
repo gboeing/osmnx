@@ -1,4 +1,4 @@
-name: OSMnx tests
+name: Tests
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
 
   build:
 
-    name: Python ${{ matrix.python-version }} ${{ matrix.os }} test
+    name: Python ${{ matrix.python-version }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
