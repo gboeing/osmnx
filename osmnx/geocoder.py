@@ -143,7 +143,7 @@ def _geocode_query_to_gdf(query, which_result, osmid):
     else:
         limit = which_result
 
-    results = downloader._osm_polygon_download(query, osmid=osmid, limit=limit)
+    results = downloader._osm_place_download(query, osmid=osmid, limit=limit)
 
     # choose the right result from the JSON response
     if not results:
@@ -201,7 +201,7 @@ def _get_first_polygon(results, query):
     Parameters
     ----------
     results : list
-        list of results from downloader._osm_polygon_download
+        list of results from downloader._osm_place_download
     query : str
         the query string or structured dict that was geocoded
 

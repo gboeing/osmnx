@@ -351,7 +351,7 @@ def _create_overpass_query(polygon_coord_str, tags):
     polygon_coord_str : list
         list of lat lng coordinates
     tags : dict
-        dict of tags used for finding geometry in the selected area
+        dict of tags used for finding elements in the selected area
 
     Returns
     -------
@@ -413,22 +413,23 @@ def _create_overpass_query(polygon_coord_str, tags):
     return query
 
 
-def _osm_net_download(polygon, network_type, custom_filter):
+def _osm_network_download(polygon, network_type, custom_filter):
     """
-    Download OSM ways and nodes within some polygon from the Overpass API.
+    Retrieve networked ways and nodes within boundary from the Overpass API.
 
     Parameters
     ----------
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        geographic boundaries to fetch the street network within
+        boundary to fetch the network ways/nodes within
     network_type : string
-        what type of street network to get if custom_filter is not None
+        what type of network to get if custom_filter is not None
     custom_filter : string
         a custom network filter to be used instead of the network_type presets
 
     Returns
     -------
     response_jsons : list
+        list of JSON responses from the Overpass server
     """
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type, if provided, otherwise use custom_filter
@@ -461,19 +462,16 @@ def _osm_net_download(polygon, network_type, custom_filter):
     return response_jsons
 
 
-def _osm_geometry_download(polygon, tags):
+def _osm_geometries_download(polygon, tags):
     """
-    Download all OSM geometry within some polygon from the Overpass API.
-
-    Note that if a polygon is passed-in, the query will be limited to the
-    exterior ring only.
+    Retrieve non-networked elements within boundary from the Overpass API.
 
     Parameters
     ----------
     polygon : shapely.geometry.Polygon
-        geographic boundaries to fetch geometry within
+        boundaries to fetch elements within
     tags : dict
-        dict of tags used for finding geometry in the selected area
+        dict of tags used for finding elements in the selected area
 
     Returns
     -------
@@ -492,30 +490,31 @@ def _osm_geometry_download(polygon, tags):
         response_jsons.append(response_json)
 
     utils.log(
-        f"Got all geometry data within polygon from API in {len(polygon_coord_strs)} request(s)"
+        f"Got all geometries data within polygon from API in {len(polygon_coord_strs)} request(s)"
     )
 
     return response_jsons
 
 
-def _osm_polygon_download(query, osmid=False, limit=1, polygon_geojson=1):
+def _osm_place_download(query, osmid=False, limit=1, polygon_geojson=1):
     """
-    Download a place's boundary from the Nominatim API.
+    Retrieve a place from the Nominatim API.
 
     Parameters
     ----------
     query : string or dict
-        query string or structured query dict to search for
+        query string or structured query dict
     osmid : bool
         if True, treat query like an OSM ID for lookup rather than text search
     limit : int
         max number of results to return
     polygon_geojson : int
-        request the boundary geometry from the API, 0=no, 1=yes
+        retrieve the place's geometry from the API, 0=no, 1=yes
 
     Returns
     -------
     response_json : dict
+        JSON response from the Nominatim server
     """
     # define the parameters
     params = OrderedDict()
