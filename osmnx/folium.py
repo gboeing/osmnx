@@ -180,8 +180,8 @@ def _plot_folium(
     m : folium.folium.Map
     """
     # check if we were able to import folium successfully
-    if not folium:
-        raise ImportError("The folium package must be installed to use this optional feature.")
+    if folium is None:
+        raise ImportError("folium must be installed to use this optional feature")
 
     # get centroid
     x, y = gdf.unary_union.centroid.xy

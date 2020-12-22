@@ -258,8 +258,8 @@ def get_nearest_nodes(G, X, Y, method=None):
     elif method == "kdtree":
 
         # check if we were able to import scipy.spatial.cKDTree
-        if not cKDTree:
-            raise ImportError("The scipy package must be installed to use this optional feature.")
+        if cKDTree is None:
+            raise ImportError("scipy must be installed to use this optional feature")
 
         # build a k-d tree for euclidean nearest node search
         nodes = pd.DataFrame(
@@ -275,10 +275,8 @@ def get_nearest_nodes(G, X, Y, method=None):
     elif method == "balltree":
 
         # check if we were able to import sklearn.neighbors.BallTree
-        if not BallTree:
-            raise ImportError(
-                "The scikit-learn package must be installed to use this optional feature."
-            )
+        if BallTree is None:
+            raise ImportError("scikit-learn must be installed to use this optional feature")
 
         # haversine requires data in form of [lat, lng] and inputs/outputs in
         # units of radians
@@ -361,8 +359,8 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     elif method == "kdtree":
 
         # check if we were able to import scipy.spatial.cKDTree successfully
-        if not cKDTree:
-            raise ImportError("The scipy package must be installed to use this optional feature.")
+        if cKDTree is None:
+            raise ImportError("scipy must be installed to use this optional feature")
 
         # transform graph into DataFrame
         edges = utils_graph.graph_to_gdfs(G, nodes=False).reset_index()
@@ -403,10 +401,8 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     elif method == "balltree":
 
         # check if we were able to import sklearn.neighbors.BallTree successfully
-        if not BallTree:
-            raise ImportError(
-                "The scikit-learn package must be installed to use this optional feature."
-            )
+        if BallTree is None:
+            raise ImportError("scikit-learn must be installed to use this optional feature")
 
         # transform graph into DataFrame
         edges = utils_graph.graph_to_gdfs(G, nodes=False).reset_index()
