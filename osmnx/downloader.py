@@ -26,8 +26,7 @@ def _get_osm_filter(network_type):
 
     Parameters
     ----------
-    network_type : string
-        {'walk', 'bike', 'drive', 'drive_service', 'all', 'all_private'}
+    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         what type of street or other network to get
 
     Returns
@@ -557,8 +556,8 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
     ----------
     params : OrderedDict
         key-value pairs of parameters
-    request_type : string
-        Type of Nominatim query. One of: search, reverse, or lookup
+    request_type : string {"search", "reverse", "lookup"}
+        Nominatim API endpoint
     pause : int
         how long to pause before request, in seconds. per the nominatim usage
         policy: "an absolute maximum of 1 request per second" is allowed

@@ -46,9 +46,8 @@ def graph_from_bbox(
         eastern longitude of bounding box
     west : float
         western longitude of bounding box
-    network_type : string
-        what type of street network to get if custom_filter is None. One of
-        'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
+    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        what type of street network to get if custom_filter is None
     simplify : bool
         if True, simplify graph topology with the `simplify_graph` function
     retain_all : bool
@@ -61,7 +60,7 @@ def graph_from_bbox(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets
+        a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
@@ -114,13 +113,12 @@ def graph_from_point(
     dist : int
         retain only those nodes within this many meters of the center of the
         graph, with distance determined according to dist_type argument
-    dist_type : string
-        {'network', 'bbox'} if 'bbox', retain only those nodes within a bounding
-        box of the distance parameter. if 'network', retain only those nodes
-        within some network distance from the center-most node.
-    network_type : string
-        what type of street network to get if custom_filter is None. One of
-        'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
+    dist_type : string {"network", "bbox"}
+        if "bbox", retain only those nodes within a bounding box of the distance
+        parameter. if "network", retain only those nodes within some network
+        distance from the center-most node.
+    network_type : string, {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        what type of street network to get if custom_filter is None
     simplify : bool
         if True, simplify graph topology with the `simplify_graph` function
     retain_all : bool
@@ -133,7 +131,7 @@ def graph_from_point(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets
+        a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
@@ -201,14 +199,12 @@ def graph_from_address(
     dist : int
         retain only those nodes within this many meters of the center of the
         graph
-    dist_type : string
-        {'network', 'bbox'} if 'bbox', retain only those nodes within a bounding
-        box of the distance parameter.
-        if 'network', retain only those nodes within some network distance from
-        the center-most node.
-    network_type : string
-        what type of street network to get if custom_filter is None. One of
-        'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
+    dist_type : string {"network", "bbox"}
+        if "bbox", retain only those nodes within a bounding box of the distance
+        parameter. if "network", retain only those nodes within some network
+        distance from the center-most node.
+    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        what type of street network to get if custom_filter is None
     simplify : bool
         if True, simplify graph topology with the `simplify_graph` function
     retain_all : bool
@@ -223,7 +219,7 @@ def graph_from_address(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets
+        a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
@@ -289,9 +285,8 @@ def graph_from_place(
     ----------
     query : string or dict or list
         the query or queries to geocode to get place boundary polygon(s)
-    network_type : string
-        what type of street network to get if custom_filter is None. One of
-        'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
+    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        what type of street network to get if custom_filter is None
     simplify : bool
         if True, simplify graph topology with the `simplify_graph` function
     retain_all : bool
@@ -309,7 +304,7 @@ def graph_from_place(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets
+        a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
@@ -372,9 +367,8 @@ def graph_from_polygon(
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the shape to get network data within. coordinates should be in units of
         latitude-longitude degrees.
-    network_type : string
-        what type of street network to get if custom_filter is None. One of
-        'walk', 'bike', 'drive', 'drive_service', 'all', or 'all_private'.
+    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        what type of street network to get if custom_filter is None
     simplify : bool
         if True, simplify graph topology with the `simplify_graph` function
     retain_all : bool
@@ -387,7 +381,7 @@ def graph_from_polygon(
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
     custom_filter : string
-        a custom network filter to be used instead of the network_type presets
+        a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
