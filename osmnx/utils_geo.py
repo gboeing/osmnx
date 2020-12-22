@@ -171,15 +171,14 @@ def _round_multilinestring_coords(mls, precision):
     return MultiLineString([_round_linestring_coords(ls, precision) for ls in mls])
 
 
-def round_geometry_coords(shape, precision):
+def round_geometry_coords(geom, precision):
     """
     Round the coordinates of a shapely geometry to some decimal precision.
 
     Parameters
     ----------
-    shape : shapely.geometry.geometry
-        the geometry to round the coordinates of; must be one of {Point,
-        MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon}
+    geom : shapely.geometry.geometry {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon}
+        the geometry to round the coordinates of
     precision : int
         decimal precision to round coordinates to
 
@@ -187,26 +186,26 @@ def round_geometry_coords(shape, precision):
     -------
     shapely.geometry.geometry
     """
-    if isinstance(shape, Point):
-        return _round_point_coords(shape, precision)
+    if isinstance(geom, Point):
+        return _round_point_coords(geom, precision)
 
-    elif isinstance(shape, MultiPoint):
-        return _round_multipoint_coords(shape, precision)
+    elif isinstance(geom, MultiPoint):
+        return _round_multipoint_coords(geom, precision)
 
-    elif isinstance(shape, LineString):
-        return _round_linestring_coords(shape, precision)
+    elif isinstance(geom, LineString):
+        return _round_linestring_coords(geom, precision)
 
-    elif isinstance(shape, MultiLineString):
-        return _round_multilinestring_coords(shape, precision)
+    elif isinstance(geom, MultiLineString):
+        return _round_multilinestring_coords(geom, precision)
 
-    elif isinstance(shape, Polygon):
-        return _round_polygon_coords(shape, precision)
+    elif isinstance(geom, Polygon):
+        return _round_polygon_coords(geom, precision)
 
-    elif isinstance(shape, MultiPolygon):
-        return _round_multipolygon_coords(shape, precision)
+    elif isinstance(geom, MultiPolygon):
+        return _round_multipolygon_coords(geom, precision)
 
     else:
-        raise TypeError(f"cannot round coordinates of unhandled geometry type: {type(shape)}")
+        raise TypeError(f"cannot round coordinates of unhandled geometry type: {type(geom)}")
 
 
 def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
