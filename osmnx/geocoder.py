@@ -46,20 +46,22 @@ def geocode(query):
 
 def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
     """
-    Geocode a query or queries to a GeoDataFrame with the Nominatim API.
+    Retrieve place(s) by name or ID from the Nominatim API as a GeoDataFrame.
 
-    The resulting GeoDataFrame's geometry column contains place boundaries if
-    they exist in OpenStreetMap. The query argument can be a place name string
-    or structured dict, or a list of such strings/dicts to send to geocoder.
-    If query is a list, then which_result should be either a single value or a
-    list with the same length as query.
+    You can query by place name or OSM ID. If querying by place name, the
+    query argument can be a string or structured dict, or a list of such
+    strings/dicts to send to geocoder. You can instead query by OSM ID by
+    setting `by_osmid=True`. In this case, geocode_to_gdf treats the query
+    argument as an OSM ID (or list of OSM IDs) for Nominatim lookup rather
+    than text search. OSM IDs must be prepended with their types: node (N),
+    way (W), or relation (R), in accordance with the Nominatim format. For
+    example, `query='["R2192363", "N240109189", "W427818536"]'`.
 
-    You can instead query by OSM ID by setting `by_osmid=True`. In this case,
-    geocode_to_gdf treats the query argument as an OSM ID (or list of OSM IDs)
-    for Nominatim lookup rather than text search. OSM IDs must be prepended
-    with their types: node (N), way (W), or relation (R), in accordance with
-    the Nominatim format. For example, `query='["R2192363", "N240109189",
-    "W427818536"]'`.
+    If query argument is a list, then which_result should be either a single
+    value or a list with the same length as query. The queries you provide
+    must be resolvable to places in the Nominatim database. The resulting
+    GeoDataFrame's geometry column contains place boundaries if they exist in
+    OpenStreetMap.
 
     Parameters
     ----------
@@ -67,8 +69,8 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
         query string(s) or structured dict(s) to geocode
     which_result : int
         which geocoding result to use. if None, auto-select the first
-        (Multi)Polygon or raise an error if OSM doesn't return one. to keep
-        the best match regardless of geometry type, set which_result=1
+        (Multi)Polygon or raise an error if OSM doesn't return one. to get
+        the top match regardless of geometry type, set which_result=1
     by_osmid : bool
         if True, handle query as an OSM ID for lookup rather than text search
     buffer_dist : float
@@ -133,8 +135,8 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
         query string or structured dict to geocode
     which_result : int
         which geocoding result to use. if None, auto-select the first
-        (Multi)Polygon or raise an error if OSM doesn't return one. to keep
-        the best match regardless of geometry type, set which_result=1
+        (Multi)Polygon or raise an error if OSM doesn't return one. to get
+        the top match regardless of geometry type, set which_result=1
     by_osmid : bool
         if True, handle query as an OSM ID for lookup rather than text search
 
@@ -172,31 +174,35 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
         msg = f'OSM returned fewer than `which_result={which_result}` results for query "{query}"'
         raise ValueError(msg)
 
-    # build the geojson feature from the chosen result
-    south, north, west, east = [float(x) for x in result["boundingbox"]]
-    place = result["display_name"]
-    geometry = result["geojson"]
-    features = [
-        {
-            "type": "Feature",
-            "geometry": geometry,
-            "properties": {
-                "place_name": place,
-                "bbox_north": north,
-                "bbox_south": south,
-                "bbox_east": east,
-                "bbox_west": west,
-            },
-        }
-    ]
-
     # if we got a non (Multi)Polygon geometry type (like a point), log warning
-    if geometry["type"] not in {"Polygon", "MultiPolygon"}:
-        msg = f'OSM returned a {geometry["type"]} as the geometry for query "{query}"'
+    geom_type = result["geojson"]["type"]
+    if geom_type not in {"Polygon", "MultiPolygon"}:
+        msg = f'OSM returned a {geom_type} as the geometry for query "{query}"'
         utils.log(msg, level=lg.WARNING)
 
+    # build the GeoJSON feature from the chosen result
+    south, north, west, east = result["boundingbox"]
+    feature = {
+        "type": "Feature",
+        "geometry": result["geojson"],
+        "properties": {
+            "bbox_north": north,
+            "bbox_south": south,
+            "bbox_east": east,
+            "bbox_west": west,
+        },
+    }
+
+    # add the other attributes we retrieved
+    for attr in result:
+        if attr not in {"address", "boundingbox", "geojson", "icon", "licence"}:
+            feature["properties"][attr] = result[attr]
+
     # create and return the GeoDataFrame
-    return gpd.GeoDataFrame.from_features(features)
+    gdf = gpd.GeoDataFrame.from_features([feature])
+    cols = ["lat", "lon", "bbox_north", "bbox_south", "bbox_east", "bbox_west"]
+    gdf[cols] = gdf[cols].astype(float)
+    return gdf
 
 
 def _get_first_polygon(results, query):
