@@ -410,7 +410,7 @@ def plot_figure_ground(
     dist : numeric
         how many meters to extend north, south, east, west from center point
     network_type : string
-        what type of network to get
+        what type of street network to get
     street_widths : dict
         dict keys are street types and values are widths to plot in pixels
     default_width : numeric
