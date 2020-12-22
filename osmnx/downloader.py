@@ -496,7 +496,7 @@ def _osm_geometries_download(polygon, tags):
     return response_jsons
 
 
-def _osm_place_download(query, osmid=False, limit=1, polygon_geojson=1):
+def _osm_place_download(query, by_osmid=False, limit=1, polygon_geojson=1):
     """
     Retrieve a place from the Nominatim API.
 
@@ -504,8 +504,8 @@ def _osm_place_download(query, osmid=False, limit=1, polygon_geojson=1):
     ----------
     query : string or dict
         query string or structured query dict
-    osmid : bool
-        if True, treat query like an OSM ID for lookup rather than text search
+    by_osmid : bool
+        if True, handle query as an OSM ID for lookup rather than text search
     limit : int
         max number of results to return
     polygon_geojson : int
@@ -521,7 +521,7 @@ def _osm_place_download(query, osmid=False, limit=1, polygon_geojson=1):
     params["format"] = "json"
     params["polygon_geojson"] = polygon_geojson
 
-    if osmid:
+    if by_osmid:
         # if querying by OSM ID, use the lookup endpoint
         request_type = "lookup"
         params["osm_ids"] = query
