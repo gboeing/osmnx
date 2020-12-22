@@ -133,7 +133,8 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
         query string or structured dict to geocode
     which_result : int
         which geocoding result to use. if None, auto-select the first
-        (Multi)Polygon or raise an error if OSM doesn't return one.
+        (Multi)Polygon or raise an error if OSM doesn't return one. to keep
+        the best match regardless of geometry type, set which_result=1
     by_osmid : bool
         if True, handle query as an OSM ID for lookup rather than text search
 
