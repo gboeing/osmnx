@@ -44,14 +44,19 @@ def geocode(query):
         raise Exception(f'Nominatim geocoder returned no results for query "{query}"')
 
 
-def geocode_to_gdf(query, which_result=None, buffer_dist=None):
+def geocode_to_gdf(query, which_result=None, osmid=False, buffer_dist=None):
     """
-    Geocode a query or queries to a GeoDataFrame with the Nominatim geocoder.
+    Geocode a query or queries to a GeoDataFrame with the Nominatim API.
 
-    Geometry column contains place boundaries if they exist in OpenStreetMap.
-    Query can be a string or dict, or a list of strings/dicts to send to the
-    geocoder. If query is a list, then which_result should be either a single
-    value or a list of the same length as query.
+    The resulting GeoDataFrame's geometry column contains place boundaries if
+    they exist in OpenStreetMap. The query can be a place name string or
+    structured dict, or a list of such strings/dicts to send to the geocoder.
+    If query is a list, then which_result should be either a single value or a
+    list with the same length as query.
+
+    You can query by OSM ID by setting `osmid=True`. The OSM ID query value(s)
+    must be prepended with their types: node (N), way (W), or relation (R).
+    For example, `query='["R2192363", "N240109189", "W427818536"]'`.
 
     Parameters
     ----------
@@ -60,6 +65,8 @@ def geocode_to_gdf(query, which_result=None, buffer_dist=None):
     which_result : int
         which geocoding result to use. if None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one.
+    osmid : bool
+        if True, treat query like an OSM ID for lookup rather than text search
     buffer_dist : float
         distance to buffer around the place geometry, in meters
 
@@ -94,7 +101,7 @@ def geocode_to_gdf(query, which_result=None, buffer_dist=None):
     # geocode each query and add to GeoDataFrame as a new row
     gdf = gpd.GeoDataFrame()
     for q, wr in zip(query, which_result):
-        gdf = gdf.append(_geocode_query_to_gdf(q, wr))
+        gdf = gdf.append(_geocode_query_to_gdf(q, wr, osmid))
 
     # reset GeoDataFrame index and set its CRS
     gdf = gdf.reset_index(drop=True)
@@ -112,7 +119,7 @@ def geocode_to_gdf(query, which_result=None, buffer_dist=None):
     return gdf
 
 
-def _geocode_query_to_gdf(query, which_result):
+def _geocode_query_to_gdf(query, which_result, osmid):
     """
     Geocode a single place query to a GeoDataFrame.
 
@@ -123,6 +130,8 @@ def _geocode_query_to_gdf(query, which_result):
     which_result : int
         which geocoding result to use. if None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one.
+    osmid : bool
+        if True, treat query like an OSM ID for lookup rather than text search
 
     Returns
     -------
@@ -134,12 +143,16 @@ def _geocode_query_to_gdf(query, which_result):
     else:
         limit = which_result
 
-    results = downloader._osm_polygon_download(query, limit=limit)
+    results = downloader._osm_polygon_download(query, osmid=osmid, limit=limit)
 
     # choose the right result from the JSON response
     if not results:
         # if no results were returned, raise error
         raise ValueError(f'OSM returned no results for query "{query}"')
+
+    elif osmid:
+        # if searching by OSM ID, always take the first (ie, only) result
+        result = results[0]
 
     elif which_result is None:
         # else, if which_result=None, auto-select the first (Multi)Polygon

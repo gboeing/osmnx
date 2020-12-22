@@ -498,18 +498,20 @@ def _osm_geometry_download(polygon, tags):
     return response_jsons
 
 
-def _osm_polygon_download(query, limit=1, polygon_geojson=1):
+def _osm_polygon_download(query, osmid=False, limit=1, polygon_geojson=1):
     """
-    Geocode a place and download its boundary geometry from Nominatim API.
+    Download a place's boundary from the Nominatim API.
 
     Parameters
     ----------
     query : string or dict
-        query string or structured query dict to geocode/download
+        query string or structured query dict to search for
+    osmid : bool
+        if True, treat query like an OSM ID for lookup rather than text search
     limit : int
         max number of results to return
     polygon_geojson : int
-        request the boundary geometry polygon from the API, 0=no, 1=yes
+        request the boundary geometry from the API, 0=no, 1=yes
 
     Returns
     -------
@@ -518,25 +520,33 @@ def _osm_polygon_download(query, limit=1, polygon_geojson=1):
     # define the parameters
     params = OrderedDict()
     params["format"] = "json"
-    params["limit"] = limit
-    # prevent OSM from deduping results so we get precisely 'limit' # of results
-    params["dedupe"] = 0
     params["polygon_geojson"] = polygon_geojson
 
-    # add the structured query dict (if provided) to params, otherwise query
-    # with place name string
-    if isinstance(query, str):
-        params["q"] = query
-    elif isinstance(query, dict):
-        # add the query keys in alphabetical order so the URL is the same string
-        # each time, for caching purposes
-        for key in sorted(query):
-            params[key] = query[key]
+    if osmid:
+        # if querying by OSM ID, use the lookup endpoint
+        request_type = "lookup"
+        params["osm_ids"] = query
+
     else:
-        raise TypeError("query must be a dict or a string")
+        # if not querying by OSM ID, use the search endpoint
+        request_type = "search"
+
+        # prevent OSM from deduping so we get precise number of results
+        params["dedupe"] = 0
+        params["limit"] = limit
+
+        if isinstance(query, str):
+            params["q"] = query
+        elif isinstance(query, dict):
+            # add query keys in alphabetical order so URL is the same string
+            # each time, for caching purposes
+            for key in sorted(query):
+                params[key] = query[key]
+        else:
+            raise TypeError("query must be a dict or a string")
 
     # request the URL, return the JSON
-    response_json = nominatim_request(params=params)
+    response_json = nominatim_request(params=params, request_type=request_type)
     return response_json
 
 
