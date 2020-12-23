@@ -34,25 +34,23 @@ jobs:
           path: ~/conda_pkgs_dir
           key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{hashFiles('environment-dev.yml') }}
 
-      - name: Setup conda environment
+      - name: Setup conda
         uses: conda-incubator/setup-miniconda@v2
         with:
-          mamba-version: "*"
-          channels: conda-forge,defaults
-          channel-priority: strict
-          environment-file: environment-dev.yml
-          activate-environment: osmnx-dev
+          installer-url: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
           show-channel-urls: true
           use-only-tar-bz2: true
+          channel-priority: strict
+          activate-environment: osmnx-dev
 
-
-      - name: Install OSMnx
+      - name: Install dependencies
         run: |
-          conda config --show-sources
-          conda config --show
-          python setup.py install
+          mamba env update -f environment-dev.yml
           conda list
           conda info --all
+
+      - name: Install OSMnx
+        run: python setup.py install
 
       - name: Lint code
         run: |
