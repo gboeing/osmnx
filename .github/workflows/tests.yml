@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: ["3.6", "3.7", "3.8", "3.9"]
     defaults:
       run:
         shell: bash -l {0}
@@ -29,15 +29,17 @@ jobs:
         uses: conda-incubator/setup-miniconda@v2
         with:
           activate-environment: osmnx-dev
-          channels: conda-forge
+          mamba-version: "*"
+          channels: conda-forge,defaults
           channel-priority: strict
           show-channel-urls: true
-          always_yes: yes
           environment-file: environment-dev.yml
 
       - name: Install OSMnx
         shell: bash
         run: |
+          conda list
+          conda info --all
           python setup.py install
           conda list
           conda info --all
