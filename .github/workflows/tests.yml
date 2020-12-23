@@ -37,10 +37,9 @@ jobs:
       - name: Setup conda environment
         uses: conda-incubator/setup-miniconda@v2
         with:
-          use-only-tar-bz2: true
+          use-only-tar-bz2: true  # required for caching
           show-channel-urls: true
           channel-priority: strict
-          channels: conda-forge
           activate-environment: osmnx-dev
           environment-file: environment-dev.yml
 
