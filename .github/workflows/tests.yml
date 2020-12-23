@@ -38,7 +38,7 @@ jobs:
       - name: Install OSMnx
         shell: bash
         run: |
-          conda activate osmnx-dev
+          source activate osmnx-dev
           conda config --show-sources
           conda config --show
           python setup.py install
@@ -48,6 +48,7 @@ jobs:
       - name: Lint code
         shell: bash
         run: |
+          source activate osmnx-dev
           isort . --check-only
           black . --line-length 100 --check --diff
           flake8 .
@@ -55,11 +56,14 @@ jobs:
 
       - name: Test docs
         shell: bash
-        run: make -C ./docs html
+        run: |
+          source activate osmnx-dev
+          make -C ./docs html
 
       - name: Test code
         shell: bash
-        run:
+        run: |
+          source activate osmnx-dev
           coverage run --source ./osmnx --module pytest --verbose
           coverage xml -i
           coverage report -m
