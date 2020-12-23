@@ -10,6 +10,7 @@ dill
 flake8
 flake8-bugbear
 folium
+ipython == 7.10.*
 isort
 jupyterlab
 mapclassify
@@ -24,7 +25,7 @@ pydocstyle
 pyproj
 pysal
 pytest
-python == 3.9.*
+python == 3.8.*
 rasterio
 seaborn
 scikit-learn
