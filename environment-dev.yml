@@ -1,6 +1,9 @@
 name: osmnx-dev
+
 channels:
     - conda-forge
+    - defaults
+
 dependencies:
     # required
     - descartes
