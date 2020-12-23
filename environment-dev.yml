@@ -1,0 +1,33 @@
+name: osmnx-dev
+
+channels:
+    - conda-forge
+
+dependencies:
+    # required
+    - descartes
+    - geopandas
+    - matplotlib
+    - networkx
+    - numpy
+    - pandas
+    - pyproj
+    - requests
+    - Rtree
+    - Shapely
+
+    # extras
+    - folium
+    - scikit-learn
+    - scipy
+
+    # linting/testing
+    - black
+    - coverage
+    - coveralls
+    - flake8
+    - flake8-bugbear
+    - isort
+    - pydocstyle
+    - pytest
+    - sphinx

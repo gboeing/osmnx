@@ -1,0 +1,69 @@
+name: Tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+
+  build:
+
+    name: Python ${{ matrix.python-version }} ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.6", "3.7", "3.8", "3.9"]
+
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Cache conda
+        uses: actions/cache@v2
+        env:
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{hashFiles('environment-dev.yml') }}
+
+      - name: Setup conda environment
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          use-only-tar-bz2: true  # required for caching
+          show-channel-urls: true
+          channel-priority: strict
+          activate-environment: osmnx-dev
+          environment-file: environment-dev.yml
+
+      - name: Install OSMnx
+        run: |
+          python setup.py install
+          conda list
+          conda info --all
+
+      - name: Lint code
+        run: |
+          isort . --check-only
+          black . --line-length 100 --check --diff
+          flake8 .
+          pydocstyle .
+
+      - name: Test docs
+        run: make -C ./docs html
+
+      - name: Test code
+        run: |
+          coverage run --source ./osmnx --module pytest --verbose
+          coverage xml -i
+          coverage report -m
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v1
