@@ -38,8 +38,9 @@ jobs:
       - name: Install OSMnx
         shell: bash
         run: |
-          conda list
-          conda info --all
+          conda activate osmnx-dev
+          conda config --show-sources
+          conda config --show
           python setup.py install
           conda list
           conda info --all
