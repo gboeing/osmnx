@@ -51,12 +51,11 @@ def ts(style="datetime", template=None):
 
     Parameters
     ----------
-    style : string
-        format the timestamp with this built-in template. must be one
-        of {'datetime', 'date', 'time'}
+    style : string {"datetime", "date", "time"}
+        format the timestamp with this built-in template
     template : string
-        if not None, format the timestamp with this template instead of
-        one of the built-in styles
+        if not None, format the timestamp with this template instead of one of
+        the built-in styles
 
     Returns
     -------
@@ -146,9 +145,8 @@ def config(
         HTTP header referer
     default_user_agent : string
         HTTP header user-agent
-    elevation_provider : string
-        the API provider to use for adding node elevations, can be either
-        "google" or "airmap"
+    elevation_provider : string {"google", "airmap"}
+        the API provider to use for adding node elevations
     imgs_folder : string or pathlib.Path
         path to folder in which to save plot images by default
     log_file : bool

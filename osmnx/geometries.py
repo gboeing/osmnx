@@ -533,7 +533,7 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_polyg
     if element["nodes"][0] != element["nodes"][-1]:
         try:
             geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
-        except KeyError as e:
+        except KeyError as e:  # pragma: no cover
             # XMLs may include geometries that are incomplete, in which case
             # return an empty geometry
             utils.log(
@@ -703,7 +703,7 @@ def _parse_relation_to_multipolygon(element, geometries):
     # may include the relation but not the ways outside the bounding box.
     try:
         member_ways = [geometries[f"way/{member_way_ref}"] for member_way_ref in member_way_refs]
-    except KeyError as e:
+    except KeyError as e:  # pragma: no cover
         utils.log(
             f"{e} was not found in `geometries`.\nThe geometry for "
             f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
@@ -838,7 +838,7 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
             if inner_polygon.within(outer_polygon):
                 try:
                     outer_polygon = outer_polygon.difference(inner_polygon)
-                except TopologicalError:
+                except TopologicalError:  # pragma: no cover
                     utils.log(
                         f"relation https://www.openstreetmap.org/relation/{element['id']} caused"
                         " a TopologicalError, trying with zero buffer."
