@@ -25,7 +25,7 @@ def get_bearing(origin_point, destination_point):
         destination point
     """
     if not (isinstance(origin_point, tuple) and isinstance(destination_point, tuple)):
-        raise TypeError('origin_point and destination_point must be (lat, lng) tuples')
+        raise TypeError("origin_point and destination_point must be (lat, lng) tuples")
 
     # get latitudes and the difference in longitude, as radians
     lat1 = math.radians(origin_point[0])
@@ -39,7 +39,7 @@ def get_bearing(origin_point, destination_point):
 
     # normalize initial bearing to 0-360 degrees to get compass bearing
     initial_bearing = math.degrees(initial_bearing)
-    bearing = (initial_bearing+360) % 360
+    bearing = (initial_bearing + 360) % 360
 
     return bearing
 
