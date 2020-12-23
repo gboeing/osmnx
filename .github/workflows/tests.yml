@@ -26,15 +26,25 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
+      - name: Cache conda
+        uses: actions/cache@v2
+        env:
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{hashFiles("environment-dev.yml") }}
+
       - name: Setup conda environment
         uses: conda-incubator/setup-miniconda@v2
         with:
-          activate-environment: osmnx-dev
           mamba-version: "*"
           channels: conda-forge,defaults
           channel-priority: strict
-          show-channel-urls: true
           environment-file: environment-dev.yml
+          activate-environment: osmnx-dev
+          show-channel-urls: true
+          use-only-tar-bz2: true
+
 
       - name: Install OSMnx
         run: |
