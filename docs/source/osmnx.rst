@@ -17,10 +17,10 @@ osmnx.distance module
 .. automodule:: osmnx.distance
     :members:
 
-osmnx.downloadex module
+osmnx.downloader module
 -----------------------
 
-.. automodule:: osmnx.downloadex
+.. automodule:: osmnx.downloader
     :members:
 
 osmnx.elevation module
