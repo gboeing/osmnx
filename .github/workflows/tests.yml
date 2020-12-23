@@ -16,6 +16,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.6", "3.7", "3.8", "3.9"]
+
     defaults:
       run:
         shell: bash -l {0}
@@ -36,9 +37,7 @@ jobs:
           environment-file: environment-dev.yml
 
       - name: Install OSMnx
-        shell: bash
         run: |
-          source activate osmnx-dev
           conda config --show-sources
           conda config --show
           python setup.py install
@@ -46,24 +45,17 @@ jobs:
           conda info --all
 
       - name: Lint code
-        shell: bash
         run: |
-          source activate osmnx-dev
           isort . --check-only
           black . --line-length 100 --check --diff
           flake8 .
           pydocstyle .
 
       - name: Test docs
-        shell: bash
-        run: |
-          source activate osmnx-dev
-          make -C ./docs html
+        run: make -C ./docs html
 
       - name: Test code
-        shell: bash
         run: |
-          source activate osmnx-dev
           coverage run --source ./osmnx --module pytest --verbose
           coverage xml -i
           coverage report -m
