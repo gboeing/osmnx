@@ -2,7 +2,7 @@
 [![PyPI Downloads](https://img.shields.io/pypi/dm/osmnx.svg)](https://badge.fury.io/py/osmnx)
 [![Anaconda Downloads](https://anaconda.org/conda-forge/osmnx/badges/downloads.svg)](https://anaconda.org/conda-forge/osmnx)
 [![Documentation Status](https://readthedocs.org/projects/osmnx/badge/?version=latest)](https://osmnx.readthedocs.io/)
-[![Build Status](https://github.com/gboeing/osmnx/workflows/Tests/badge.svg?branch=master)](https://github.com/gboeing/osmnx/actions?query=workflow%3A%22Tests%22)
+[![Build Status](https://github.com/gboeing/osmnx/workflows/tests/badge.svg?branch=master)](https://github.com/gboeing/osmnx/actions?query=workflow%3A%22tests%22)
 [![Coverage Status](https://codecov.io/gh/gboeing/osmnx/branch/master/graph/badge.svg)](https://codecov.io/gh/gboeing/osmnx)
 
 # OSMnx
