@@ -55,7 +55,7 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
     argument as an OSM ID (or list of OSM IDs) for Nominatim lookup rather
     than text search. OSM IDs must be prepended with their types: node (N),
     way (W), or relation (R), in accordance with the Nominatim format. For
-    example, `query='["R2192363", "N240109189", "W427818536"]'`.
+    example, `query=["R2192363", "N240109189", "W427818536"]`.
 
     If query argument is a list, then which_result should be either a single
     value or a list with the same length as query. The queries you provide
