@@ -1,6 +1,6 @@
 # OSMnx tests
 
-First, ensure that you have installed the necessary [dependencies](../.github/workflows/environment-dev.yml). Then use the scripts in this folder to:
+First, ensure that you have installed the necessary [dependencies](environment-dev.yml). Then use the scripts in this folder to:
 
   - format the code according to the project's style
   - lint the code
