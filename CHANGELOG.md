@@ -3,6 +3,7 @@
 ## 1.0.0 (TBD)
 
   - set use_cache=True by default
+  - add ability to query a place by OSM ID in geocoder.geocode_to_gdf function
   - add optional setting for download/cache-only mode
   - replace md5 with sha1 for cache filename hashing
   - replace streets_per_node graph attribute with equivalent street_count node attribute

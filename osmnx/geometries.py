@@ -260,7 +260,7 @@ def geometries_from_polygon(polygon, tags):
         )
 
     # download the geometry data from OSM
-    response_jsons = downloader._osm_geometry_download(polygon, tags)
+    response_jsons = downloader._osm_geometries_download(polygon, tags)
 
     # create GeoDataFrame from the downloaded data
     gdf = _create_gdf(response_jsons, polygon, tags)
