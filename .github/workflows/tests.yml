@@ -16,25 +16,28 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: ['3.6', '3.7', '3.8', '3.9']
+    defaults:
+      run:
+        shell: bash -l {0}
 
     steps:
 
       - name: Checkout repo
         uses: actions/checkout@v2
 
-      - name: Setup conda
-        uses: s-weigand/setup-conda@v1
+      - name: Setup conda environment
+        uses: conda-incubator/setup-miniconda@v2
         with:
-          activate-conda: false
-          update-conda: false
+          activate-environment: osmnx-dev
+          channels: conda-forge
+          channel-priority: strict
+          show-channel-urls: true
+          always_yes: yes
+          environment-file: environment-dev.yml
 
-      - name: Install test environment
+      - name: Install OSMnx
         shell: bash
         run: |
-          conda config --set always_yes yes --set show_channel_urls true
-          conda config --prepend channels conda-forge
-          conda create -n TEST --strict-channel-priority python=${{ matrix.python-version }} --file requirements.txt --file requirements-dev.txt
-          source activate TEST
           python setup.py install
           conda list
           conda info --all
@@ -42,7 +45,6 @@ jobs:
       - name: Lint code
         shell: bash
         run: |
-          source activate TEST
           isort . --check-only
           black . --line-length 100 --check --diff
           flake8 .
@@ -50,14 +52,11 @@ jobs:
 
       - name: Test docs
         shell: bash
-        run: |
-          source activate TEST
-          make -C ./docs html
+        run: make -C ./docs html
 
       - name: Test code
         shell: bash
-        run: |
-          source activate TEST
+        run:
           coverage run --source ./osmnx --module pytest --verbose
           coverage xml -i
           coverage report -m
