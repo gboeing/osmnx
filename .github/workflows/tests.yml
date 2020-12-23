@@ -29,28 +29,24 @@ jobs:
       - name: Cache conda
         uses: actions/cache@v2
         env:
-          CACHE_NUMBER: 1
+          CACHE_NUMBER: 2
         with:
           path: ~/conda_pkgs_dir
           key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{hashFiles('environment-dev.yml') }}
 
-      - name: Setup conda
+      - name: Setup conda environment
         uses: conda-incubator/setup-miniconda@v2
         with:
-          installer-url: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-x86_64.sh
           show-channel-urls: true
-          use-only-tar-bz2: true
           channel-priority: strict
           activate-environment: osmnx-dev
-
-      - name: Install dependencies
-        run: |
-          mamba env update -f environment-dev.yml
-          conda list
-          conda info --all
+          environment-file: environment-dev.yml
 
       - name: Install OSMnx
-        run: python setup.py install
+        run: |
+          python setup.py install
+          conda list
+          conda info --all
 
       - name: Lint code
         run: |
