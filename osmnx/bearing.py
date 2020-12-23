@@ -17,6 +17,8 @@ def get_bearing(origin_point, destination_point):
     ----------
     origin_point : tuple
         (lat, lng)
+    destination_point : tuple
+        (lat, lng)
 
     Returns
     -------
