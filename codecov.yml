@@ -1,0 +1,6 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto  # compare against coverage from the base commit
+        threshold: 0.1%  # allow coverage to drop by X% and still pass

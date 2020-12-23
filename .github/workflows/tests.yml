@@ -1,4 +1,4 @@
-name: Tests
+name: tests
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.6", "3.7", "3.8", "3.9"]
+        python-version: ['3.6', '3.7', '3.8', '3.9']
 
     defaults:
       run:
@@ -32,7 +32,7 @@ jobs:
           CACHE_NUMBER: 0
         with:
           path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{hashFiles('environment-dev.yml') }}
+          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('tests/environment-dev.yml') }}
 
       - name: Setup conda environment
         uses: conda-incubator/setup-miniconda@v2
@@ -41,7 +41,7 @@ jobs:
           show-channel-urls: true
           channel-priority: strict
           activate-environment: osmnx-dev
-          environment-file: environment-dev.yml
+          environment-file: tests/environment-dev.yml
 
       - name: Install OSMnx
         run: |

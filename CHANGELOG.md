@@ -1,6 +1,6 @@
 # Change log
 
-## 1.0.0 (TBD)
+## 1.0.0 (2021-01-01)
 
   - set use_cache=True by default
   - add ability to query a place by OSM ID in geocoder.geocode_to_gdf function

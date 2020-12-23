@@ -1,6 +1,6 @@
 # OSMnx tests
 
-First, ensure that you have installed the dependencies in `requirements-dev.txt`. Then use the scripts in this folder to:
+First, ensure that you have installed the necessary [dependencies](environment-dev.yml). Then use the scripts in this folder to:
 
   - format the code according to the project's style
   - lint the code
@@ -17,9 +17,9 @@ Format the code and sort imports according to the project's style by changing di
 bash ./tests/black.sh
 ```
 
-## Run tests
+## Lint and test
 
-Run the tests and linters by changing directories to the repository's root and running:
+Lint and test the code and docstrings by changing directories to the repository's root and running:
 
 ```
 bash ./tests/lint_test.sh
@@ -27,7 +27,7 @@ bash ./tests/lint_test.sh
 
 ## Continuous integration
 
-All PRs trigger continuous integration tests on Travis CI. See the [configuration](../.travis.yml). The following tests are automatically run:
+All PRs trigger continuous integration tests via GitHub Actions. See the [configuration](../.github/workflows/tests.yml). The following tests are automatically run:
 
   - build the docs
   - check code formatting
