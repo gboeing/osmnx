@@ -9,4 +9,3 @@ pytest
 scikit-learn
 scipy
 sphinx
-twine
