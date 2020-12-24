@@ -4,7 +4,7 @@
 set -e
 
 # delete temp files and folders
-rm -r -f .coverage .pytest_cache .temp
+rm -r -f .coverage .pytest_cache .temp ./docs/build osmnx/__pycache__ tests/__pycache__
 
 # check if imports are organized properly
 isort . --check-only
@@ -18,6 +18,9 @@ flake8 .
 # lint the docstrings
 pydocstyle .
 
+# build the docs
+make -C ./docs html
+
 # run the tests
 coverage run --source ./osmnx --module pytest --verbose
 
@@ -25,4 +28,4 @@ coverage run --source ./osmnx --module pytest --verbose
 coverage report -m
 
 # delete temp files and folders
-rm -r -f .coverage .pytest_cache .temp
+rm -r -f .coverage .pytest_cache .temp ./docs/build osmnx/__pycache__ tests/__pycache__
