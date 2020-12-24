@@ -550,6 +550,7 @@ def plot_footprints(
     ax=None,
     figsize=(8, 8),
     color="orange",
+    alpha=None,
     bgcolor="#111111",
     bbox=None,
     save=False,
@@ -571,6 +572,8 @@ def plot_footprints(
         if ax is None, create new figure with size (width, height)
     color : string
         color of the footprints
+    alpha : float
+        opacity of the footprints
     bgcolor : string
         background color of the plot
     bbox : tuple
@@ -601,7 +604,7 @@ def plot_footprints(
 
     # retain only Polygons and MultiPolygons, then plot
     gdf = gdf[gdf["geometry"].type.isin({"Polygon", "MultiPolygon"})]
-    ax = gdf.plot(ax=ax, facecolor=color, edgecolor="none", linewidth=0, alpha=1)
+    ax = gdf.plot(ax=ax, facecolor=color, edgecolor="none", linewidth=0, alpha=alpha)
 
     # determine figure extents
     if bbox is None:
