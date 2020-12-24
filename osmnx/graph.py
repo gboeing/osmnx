@@ -272,14 +272,15 @@ def graph_from_place(
 
     The query must be geocodable and OSM must have polygon boundaries for the
     geocode result. If OSM does not have a polygon for this place, you can
-    instead get its street network using the graph_from_address function, which
-    geocodes the place name to a point and gets the network within some distance
-    of that point. Alternatively, you might try to vary the which_result
-    parameter to use a different geocode result. For example, the first geocode
-    result (ie, the default) might resolve to a point geometry, but the second
-    geocode result for this query might resolve to a polygon, in which case you
-    can use graph_from_place with which_result=2. which_result=None will
-    auto-select the first (Multi)Polygon among the geocoding results.
+    instead get its street network using the graph_from_address function,
+    which geocodes the place name to a point and gets the network within some
+    distance of that point.
+
+    If OSM does have polygon boundaries for this place but you're not finding
+    it, try to vary the query string, pass in a structured query dict, or vary
+    the which_result argument to use a different geocode result. If you know
+    the OSM ID of the place, you can retrieve its boundary polygon using the
+    geocode_to_gdf function, then pass it to the graph_from_polygon function.
 
     Parameters
     ----------
@@ -320,8 +321,8 @@ def graph_from_place(
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, (str, dict)):
-        # if it is a string (place name) or dict (structured place query), then
-        # it is a single place
+        # if it is a string (place name) or dict (structured place query),
+        # then it is a single place
         gdf_place = geocoder.geocode_to_gdf(
             query, which_result=which_result, buffer_dist=buffer_dist
         )
@@ -365,8 +366,8 @@ def graph_from_polygon(
     Parameters
     ----------
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the shape to get network data within. coordinates should be in units of
-        latitude-longitude degrees.
+        the shape to get network data within. coordinates should be in
+        unprojected latitude-longitude degrees (EPSG:4326).
     network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         what type of street network to get if custom_filter is None
     simplify : bool

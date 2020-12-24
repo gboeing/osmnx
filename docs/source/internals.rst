@@ -1,5 +1,5 @@
-OSMnx internals reference
-=========================
+Internals reference
+===================
 
 This is the complete OSMnx internals reference, including private internal functions. If you are looking for the users' reference guide to OSMnx's public-facing API, you can find `it here`_.
 
