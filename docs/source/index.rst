@@ -21,9 +21,9 @@ You can install OSMnx with conda:
     conda config --prepend channels conda-forge
     conda create -n ox --strict-channel-priority osmnx
 
-If you want other packages, such as :code:`jupyterlab`, installed in this environment as well, just add their names after :code:`osmnx` above. See the `conda`_ documentation for further details. To upgrade OSMnx to a newer release, remove the conda environment you created and then create a new one again, as above. Don't just run "conda update" or you could get package conflicts.
+If you want other packages, such as :code:`jupyterlab`, installed in this environment as well, just add their names after :code:`osmnx` above. See the `conda`_ documentation for further details. To upgrade OSMnx to a newer release, just remove the conda environment you created and then create a new one again, as above. Don't just run "conda update" or you could get package conflicts.
 
-You can also run OSMnx + Jupyter directly from its official `Docker container`_, or you can install OSMnx via `pip`_ if you already have all of its dependencies installed and fully tested on your system. Note: pip installation is nontrivial. If you don't know *exactly* what you're doing, just use conda as described above.
+You can also run OSMnx + Jupyter directly from its official `Docker container`_, or you can install OSMnx via `pip`_ if you already have all of its dependencies installed and fully tested on your system. Note: installing the dependencies with pip is nontrivial. If you don't know *exactly* what you're doing, just use conda as described above.
 
 .. _conda: https://conda.io/
 .. _Docker container: https://hub.docker.com/r/gboeing/osmnx
