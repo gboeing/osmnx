@@ -76,6 +76,11 @@ Reference
 
    osmnx
 
+.. toctree::
+   :maxdepth: 1
+
+   internals
+
 
 
 Support
@@ -101,8 +106,3 @@ Indices
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-.. toctree::
-   :maxdepth: 1
-
-   internals
