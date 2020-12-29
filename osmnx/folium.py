@@ -1,4 +1,4 @@
-"""Create interactive leaflet web maps via folium."""
+"""Create interactive Leaflet web maps of graphs and routes via folium."""
 
 import json
 
@@ -24,7 +24,7 @@ def plot_graph_folium(
     **kwargs,
 ):
     """
-    Plot a graph on an interactive folium web map.
+    Plot a graph as an interactive Leaflet web map.
 
     Note that anything larger than a small city can produce a large web map
     file that is slow to render in your browser.
@@ -87,7 +87,7 @@ def plot_route_folium(
     **kwargs,
 ):
     """
-    Plot a route on an interactive folium web map.
+    Plot a route as an interactive Leaflet web map.
 
     Parameters
     ----------
@@ -150,7 +150,7 @@ def _plot_folium(
     **kwargs,
 ):
     """
-    Plot a GeoDataFrame of LineStrings on an interactive folium web map.
+    Plot a GeoDataFrame of LineStrings on a folium map object.
 
     Parameters
     ----------
