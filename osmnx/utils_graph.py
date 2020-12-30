@@ -109,20 +109,21 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
 
     This function is the inverse of `graph_to_gdfs` and is designed to work in
     conjunction with it. However, you can convert arbitrary node and edge
-    GeoDataFrames as long as gdf_nodes is indexed by osmid and gdf_edges is
-    multi-indexed by u, v, key (following normal MultiDiGraph structure). This
-    allows you to load graph node/edge shapefiles or GeoPackage layers as
-    GeoDataFrames then convert to a MultiDiGraph for graph analytics.
+    GeoDataFrames as long as gdf_nodes is uniquely indexed by `osmid` and
+    gdf_edges is uniquely multi-indexed by `u`, `v`, `key` (following normal
+    MultiDiGraph structure). This allows you to load any node/edge shapefiles
+    or GeoPackage layers as GeoDataFrames then convert them to a MultiDiGraph
+    for graph analysis.
 
     Parameters
     ----------
     gdf_nodes : geopandas.GeoDataFrame
-        GeoDataFrame of graph nodes
+        GeoDataFrame of graph nodes uniquely indexed by osmid
     gdf_edges : geopandas.GeoDataFrame
-        GeoDataFrame of graph edges, must have crs attribute set
+        GeoDataFrame of graph edges uniquely multi-indexed by u, v, key
     graph_attrs : dict
-        the new G.graph attribute dict; if None, add crs as the only
-        graph-level attribute
+        the new G.graph attribute dict. if None, use crs from gdf_edges as the
+        only graph-level attribute (gdf_edges must have crs attribute set)
 
     Returns
     -------
