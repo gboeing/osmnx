@@ -25,6 +25,8 @@ jobs:
 
       - name: Checkout repo
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
 
       - name: Cache conda
         uses: actions/cache@v2
