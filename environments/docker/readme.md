@@ -15,5 +15,5 @@ Run `docker-build.sh` in this directory. This script stops/deletes all container
 ```
 docker login
 docker tag gboeing/osmnx gboeing/osmnx:v0.0.0
-docker push gboeing/osmnx
+docker push -a gboeing/osmnx
 ```
