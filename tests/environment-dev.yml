@@ -24,7 +24,6 @@ dependencies:
     # linting/testing
     - black
     - coverage
-    - coveralls
     - flake8
     - flake8-bugbear
     - isort

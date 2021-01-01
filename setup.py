@@ -78,6 +78,6 @@ setup(
     extras_require={
         "folium": ["folium>=0.11"],
         "kdtree": ["scipy>=1.5"],
-        "balltree": ["scikit-learn>=0.23"],
+        "balltree": ["scikit-learn>=0.24"],
     },
 )
