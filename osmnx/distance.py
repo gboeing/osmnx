@@ -22,7 +22,7 @@ except ImportError:
     BallTree = None
 
 
-def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6371009):
+def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6_371_009):
     """
     Calculate great-circle distances between points.
 

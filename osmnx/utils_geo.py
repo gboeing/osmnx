@@ -408,7 +408,7 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     tuple
         (north, south, east, west) or (north, south, east, west, crs_proj)
     """
-    earth_radius = 6371009  # meters
+    earth_radius = 6_371_009  # meters
     lat, lng = point
 
     delta_lat = (dist / earth_radius) * (180 / math.pi)
