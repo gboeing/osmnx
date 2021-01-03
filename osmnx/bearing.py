@@ -41,7 +41,7 @@ def get_bearing(origin_point, destination_point):
 
     # normalize initial bearing to 0-360 degrees to get compass bearing
     initial_bearing = math.degrees(initial_bearing)
-    bearing = (initial_bearing + 360) % 360
+    bearing = initial_bearing % 360
 
     return bearing
 
