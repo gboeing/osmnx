@@ -40,7 +40,7 @@ def redistribute_vertices(geom, dist):
         MultiLineString if geom is a MultiLineString
     """
     if geom.geom_type == "LineString":
-        num_vert = int(round(geom.length / dist))
+        num_vert = round(geom.length / dist)
         if num_vert == 0:
             num_vert = 1
         return [geom.interpolate(float(n) / num_vert, normalized=True) for n in range(num_vert + 1)]
