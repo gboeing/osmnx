@@ -157,7 +157,7 @@ def add_edge_grades(G, add_absolute=True, precision=3):
 
         try:
             # divide by edge length then round
-            edge_grade = float(elevation_change) / float(data["length"])
+            edge_grade = elevation_change / data["length"]
             data["grade"] = round(edge_grade, precision)
         except ZeroDivisionError:
             data["grade"] = np.nan

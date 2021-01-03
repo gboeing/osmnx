@@ -43,7 +43,7 @@ def redistribute_vertices(geom, dist):
         num_vert = round(geom.length / dist)
         if num_vert == 0:
             num_vert = 1
-        return [geom.interpolate(float(n) / num_vert, normalized=True) for n in range(num_vert + 1)]
+        return [geom.interpolate(n / num_vert, normalized=True) for n in range(num_vert + 1)]
     elif geom.geom_type == "MultiLineString":
         parts = [redistribute_vertices(part, dist) for part in geom]
         return type(geom)([p for p in parts if not p])
