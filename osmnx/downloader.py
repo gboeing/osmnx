@@ -47,7 +47,7 @@ def _get_osm_filter(network_type):
         f"escalator|footway|path|pedestrian|planned|platform|proposed|raceway|service|"
         f'steps|track"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]{settings.default_access}'
-        f'["service"!~"driveway|emergency_access|parking|parking_aisle|private"]'
+        f'["service"!~"alley|driveway|emergency_access|parking|parking_aisle|private"]'
     )
 
     # drive+service: allow ways tagged 'service' but filter out certain types
