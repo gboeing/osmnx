@@ -33,7 +33,7 @@ def _get_osm_filter(network_type):
     -------
     string
     """
-    # define preset queries to send to the API. specifying way["highway"]
+    # define built-in queries to send to the API. specifying way["highway"]
     # means that all ways returned must have a highway tag. the filters then
     # remove ways by tag/value.
     filters = dict()
@@ -66,8 +66,8 @@ def _get_osm_filter(network_type):
     # filter ignores such cycleways.
     filters["walk"] = (
         f'["highway"]["area"!~"yes"]'
-        f'["highway"!~"abandoned|construction|cycleway|motor|proposed|planned|'
-        f'platform|raceway"]'
+        f'["highway"!~"abandoned|construction|cycleway|motor|planned|platform|'
+        f'proposed|raceway"]'
         f'["foot"!~"no"]["service"!~"private"]{settings.default_access}'
     )
 
