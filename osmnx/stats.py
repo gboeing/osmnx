@@ -82,7 +82,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
           - clean_intersection_density_km = clean_intersection_count divided
                 by area in square kilometers
     """
-    sq_m_in_sq_km = 1e6  # there are 1 million sq meters in 1 sq km
+    sq_m_in_sq_km = 1_000_000  # there are 1 million sq meters in 1 sq km
     Gu = None
     node_ids = set(G.nodes)
 

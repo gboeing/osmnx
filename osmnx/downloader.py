@@ -600,9 +600,9 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
         sc = response.status_code
 
         # log the response size and domain
-        size_kb = len(response.content) / 1000.0
+        size_kb = len(response.content) / 1000
         domain = re.findall(r"(?s)//(.*?)/", url)[0]
-        utils.log(f"Downloaded {size_kb:,.1f}KB from {domain}")
+        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain}")
 
         try:
             response_json = response.json()
@@ -668,9 +668,9 @@ def overpass_request(data, pause=None, error_pause=60):
         sc = response.status_code
 
         # log the response size and domain
-        size_kb = len(response.content) / 1000.0
+        size_kb = len(response.content) / 1000
         domain = re.findall(r"(?s)//(.*?)/", url)[0]
-        utils.log(f"Downloaded {size_kb:,.1f}KB from {domain}")
+        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain}")
 
         try:
             response_json = response.json()

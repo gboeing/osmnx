@@ -40,10 +40,10 @@ def redistribute_vertices(geom, dist):
         MultiLineString if geom is a MultiLineString
     """
     if geom.geom_type == "LineString":
-        num_vert = int(round(geom.length / dist))
+        num_vert = round(geom.length / dist)
         if num_vert == 0:
             num_vert = 1
-        return [geom.interpolate(float(n) / num_vert, normalized=True) for n in range(num_vert + 1)]
+        return [geom.interpolate(n / num_vert, normalized=True) for n in range(num_vert + 1)]
     elif geom.geom_type == "MultiLineString":
         parts = [redistribute_vertices(part, dist) for part in geom]
         return type(geom)([p for p in parts if not p])
@@ -408,7 +408,7 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     tuple
         (north, south, east, west) or (north, south, east, west, crs_proj)
     """
-    earth_radius = 6371009  # meters
+    earth_radius = 6_371_009  # meters
     lat, lng = point
 
     delta_lat = (dist / earth_radius) * (180 / math.pi)

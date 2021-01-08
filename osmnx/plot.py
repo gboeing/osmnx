@@ -785,8 +785,8 @@ def _config_ax(ax, crs, bbox, padding):
     # set aspect ratio
     if crs == settings.default_crs:
         # if data are not projected, conform aspect ratio to not stretch plot
-        coslat = np.cos((south + north) / 2.0 / 180.0 * np.pi)
-        ax.set_aspect(1.0 / coslat)
+        coslat = np.cos((south + north) / 2 / 180 * np.pi)
+        ax.set_aspect(1 / coslat)
     else:
         # if projected, make everything square
         ax.set_aspect("equal")
