@@ -33,5 +33,3 @@ sphinx
 statsmodels
 twine
 urbanaccess
-xlrd
-xlwt
