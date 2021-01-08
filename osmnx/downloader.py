@@ -42,20 +42,20 @@ def _get_osm_filter(network_type):
     # anything specifying motor=no. also filter out any non-service roads that
     # are tagged as providing certain services
     filters["drive"] = (
-        f'["highway"]["area"!~"yes"]'
+        f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|bridleway|construction|corridor|cycleway|elevator|'
         f"escalator|footway|path|pedestrian|planned|platform|proposed|raceway|service|"
         f'steps|track"]'
-        f'["motor_vehicle"!~"no"]["motorcar"!~"no"]{settings.default_access}'
+        f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
         f'["service"!~"alley|driveway|emergency_access|parking|parking_aisle|private"]'
     )
 
     # drive+service: allow ways tagged 'service' but filter out certain types
     filters["drive_service"] = (
-        f'["highway"]["area"!~"yes"]'
+        f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|bridleway|construction|corridor|cycleway|elevator|'
         f'escalator|footway|path|pedestrian|planned|platform|proposed|raceway|steps|track"]'
-        f'["motor_vehicle"!~"no"]["motorcar"!~"no"]{settings.default_access}'
+        f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
         f'["service"!~"emergency_access|parking|parking_aisle|private"]'
     )
 
@@ -65,27 +65,27 @@ def _get_osm_filter(network_type):
     # exactly pleasant walks. some cycleways may allow pedestrians, but this
     # filter ignores such cycleways.
     filters["walk"] = (
-        f'["highway"]["area"!~"yes"]'
+        f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|construction|cycleway|motor|planned|platform|'
         f'proposed|raceway"]'
-        f'["foot"!~"no"]["service"!~"private"]{settings.default_access}'
+        f'["foot"!~"no"]["service"!~"private"]'
     )
 
     # biking: filter out foot ways, motor ways, private ways, and anything
     # specifying biking=no
     filters["bike"] = (
-        f'["highway"]["area"!~"yes"]'
+        f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|construction|corridor|elevator|escalator|footway|'
         f'motor|planned|platform|proposed|raceway|steps"]'
-        f'["bicycle"!~"no"]["service"!~"private"]{settings.default_access}'
+        f'["bicycle"!~"no"]["service"!~"private"]'
     )
 
     # to download all ways, just filter out everything not currently in use or
     # that is private-access only
     filters["all"] = (
-        f'["highway"]["area"!~"yes"]'
+        f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|construction|planned|platform|proposed|raceway"]'
-        f'["service"!~"private"]{settings.default_access}'
+        f'["service"!~"private"]'
     )
 
     # to download all ways, including private-access ones, just filter out
