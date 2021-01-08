@@ -330,8 +330,9 @@ def consolidate_intersections(
     it uses a topological (and slower but more accurate) algorithm to identify
     "topologically close" nodes, merge them, then rebuild/return the graph.
     Returned graph's node IDs represent clusters rather than osmids. Refer to
-    nodes' osmid attributes for original osmids. If multiple nodes were merged
-    together, the osmid attribute is a list of merged nodes' osmids.
+    nodes' osmid_original attributes for original osmids. If multiple nodes
+    were merged together, the osmid_original attribute is a list of merged
+    nodes' osmids.
 
     Divided roads are often represented by separate centerline edges. The
     intersection of two divided roads thus creates 4 nodes, representing where
@@ -470,8 +471,9 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     a projected graph to work in meaningful and consistent units like meters.
 
     Returned graph's node IDs represent clusters rather than osmids. Refer to
-    nodes' osmid attributes for original osmids. If multiple nodes were merged
-    together, the osmid attribute is a list of merged nodes' osmids.
+    nodes' osmid_original attributes for original osmids. If multiple nodes
+    were merged together, the osmid_original attribute is a list of merged
+    nodes' osmids.
 
     Parameters
     ----------
@@ -545,13 +547,14 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
         osmids = nodes_subset.index.to_list()
         if len(osmids) == 1:
             # if cluster is a single node, add that node to new graph
-            H.add_node(cluster_label, **G.nodes[osmids[0]])
+            osmid = osmids[0]
+            H.add_node(cluster_label, osmid_original=osmid, **G.nodes[osmid])
         else:
             # if cluster is multiple merged nodes, create one new node to
             # represent them
             H.add_node(
                 cluster_label,
-                osmid=str(osmids),
+                osmid_original=str(osmids),
                 x=nodes_subset["x"].iloc[0],
                 y=nodes_subset["y"].iloc[0],
             )
