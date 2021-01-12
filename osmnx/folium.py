@@ -50,8 +50,8 @@ def plot_graph_folium(
     edge_opacity : numeric
         opacity of the edge lines
     kwargs : dict
-        keyword arguments to pass to folium.PolyLine(), see folium
-        documentation for options
+        keyword arguments to pass to folium.PolyLine(), see folium docs for
+        options (e.g. `color="#333333", weight=5, opacity=0.7`)
 
     Returns
     -------
@@ -113,8 +113,8 @@ def plot_route_folium(
     route_opacity : numeric
         opacity of the route's line
     kwargs : dict
-        keyword arguments to pass to folium.PolyLine(), see folium
-        documentation for options
+        keyword arguments to pass to folium.PolyLine(), see folium docs for
+        options (e.g. `color="#cc0000", weight=5, opacity=0.7`)
 
     Returns
     -------
@@ -175,8 +175,7 @@ def _plot_folium(
     opacity : numeric
         opacity of the lines
     kwargs : dict
-        keyword arguments to pass to folium.PolyLine(), see folium
-        documentation for options
+        keyword arguments to pass to folium.PolyLine()
 
     Returns
     -------
@@ -238,8 +237,7 @@ def _make_folium_polyline(geom, color, weight, opacity, popup_val=None, **kwargs
     popup_val : string
         text to display in pop-up when a line is clicked, if None, no popup
     kwargs : dict
-        keyword arguments to pass to folium.PolyLine(), see folium
-        documentation for options
+        keyword arguments to pass to folium.PolyLine()
 
     Returns
     -------
