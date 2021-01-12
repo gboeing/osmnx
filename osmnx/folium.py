@@ -50,7 +50,8 @@ def plot_graph_folium(
     edge_opacity : numeric
         opacity of the edge lines
     kwargs : dict
-        keyword arguments to pass along to folium.PolyLine()
+        keyword arguments to pass to folium.PolyLine(), see folium
+        documentation for options
 
     Returns
     -------
@@ -112,7 +113,8 @@ def plot_route_folium(
     route_opacity : numeric
         opacity of the route's line
     kwargs : dict
-        keyword arguments to pass along to folium.PolyLine()
+        keyword arguments to pass to folium.PolyLine(), see folium
+        documentation for options
 
     Returns
     -------
@@ -145,8 +147,8 @@ def _plot_folium(
     zoom,
     fit_bounds,
     color,
-    lw,
-    alpha,
+    weight,
+    opacity,
     **kwargs,
 ):
     """
@@ -168,12 +170,13 @@ def _plot_folium(
         if True, fit the map to gdf's boundaries
     color : string
         color of the lines
-    lw : numeric
+    weight : numeric
         width of the lines
-    alpha : numeric
+    opacity : numeric
         opacity of the lines
     kwargs : dict
-        keyword arguments to pass along to folium.PolyLine()
+        keyword arguments to pass to folium.PolyLine(), see folium
+        documentation for options
 
     Returns
     -------
@@ -203,8 +206,8 @@ def _plot_folium(
         pl = _make_folium_polyline(
             **params,
             color=color,
-            lw=lw,
-            alpha=alpha,
+            weight=weight,
+            opacity=opacity,
             **kwargs,
         )
         pl.add_to(m)
@@ -218,7 +221,7 @@ def _plot_folium(
     return m
 
 
-def _make_folium_polyline(geom, color, lw, alpha, popup_val=None, **kwargs):
+def _make_folium_polyline(geom, color, weight, opacity, popup_val=None, **kwargs):
     """
     Turn LineString geometry into a folium PolyLine with attributes.
 
@@ -228,14 +231,15 @@ def _make_folium_polyline(geom, color, lw, alpha, popup_val=None, **kwargs):
         geometry of the line
     color : string
         color of the line
-    lw : numeric
+    weight : numeric
         width of the line
-    alpha : numeric
+    opacity : numeric
         opacity of the line
     popup_val : string
         text to display in pop-up when a line is clicked, if None, no popup
     kwargs : dict
-        keyword arguments to pass along to folium.PolyLine()
+        keyword arguments to pass to folium.PolyLine(), see folium
+        documentation for options
 
     Returns
     -------
@@ -257,8 +261,8 @@ def _make_folium_polyline(geom, color, lw, alpha, popup_val=None, **kwargs):
         locations=locations,
         popup=popup,
         color=color,
-        lw=lw,
-        alpha=alpha,
+        weight=weight,
+        opacity=opacity,
         **kwargs,
     )
     return pl
