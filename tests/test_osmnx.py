@@ -155,16 +155,16 @@ def test_routing():
     routes = ox.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
     fig, ax = ox.plot_graph_routes(G, list(routes))
 
-    # test folium
-    gm = ox.plot_graph_folium(G, popup_attribute="name")
-    rm = ox.plot_route_folium(G, route)
+    # test folium with keyword arguments to pass to folium.PolyLine
+    gm = ox.plot_graph_folium(G, popup_attribute="name", color="#333333", weight=5, opacity=0.7)
+    rm = ox.plot_route_folium(G, route, color="#cc0000", weight=5, opacity=0.7)
 
     # test calling folium plotters with FeatureGroup instead of Map, and extra kwargs
     fg = folium.FeatureGroup(name="legend name", show=True)
     gm = ox.plot_graph_folium(G, graph_map=fg)
     assert isinstance(gm, folium.FeatureGroup)
 
-    rm = ox.plot_route_folium(G, route, route_color="g", route_map=fg, tooltip="x")
+    rm = ox.plot_route_folium(G, route, route_map=fg, tooltip="x")
     assert isinstance(rm, folium.FeatureGroup)
 
 
