@@ -1,6 +1,7 @@
 """Create interactive Leaflet web maps of graphs and routes via folium."""
 
 import json
+from warnings import warn
 
 from . import utils_graph
 
@@ -18,9 +19,9 @@ def plot_graph_folium(
     tiles="cartodbpositron",
     zoom=1,
     fit_bounds=True,
-    edge_color="#333333",
-    edge_width=5,
-    edge_opacity=1,
+    edge_color=None,
+    edge_width=None,
+    edge_opacity=None,
     **kwargs,
 ):
     """
@@ -44,33 +45,33 @@ def plot_graph_folium(
     fit_bounds : bool
         if True, fit the map to the boundaries of the graph's edges
     edge_color : string
-        color of the edge lines
+        deprecated, do not use, use kwargs instead
     edge_width : numeric
-        width of the edge lines
+        deprecated, do not use, use kwargs instead
     edge_opacity : numeric
-        opacity of the edge lines
-    kwargs : dict
-        keyword arguments to pass along to folium.PolyLine()
+        deprecated, do not use, use kwargs instead
+    kwargs
+        keyword arguments to pass to folium.PolyLine(), see folium docs for
+        options (for example `color="#333333", weight=5, opacity=0.7`)
 
     Returns
     -------
-    graph_map : folium.folium.Map
+    folium.folium.Map
     """
+    # deprecation warning
+    if edge_color is not None:
+        kwargs["color"] = edge_color
+        warn("`edge_color` has been deprecated and will be removed: use kwargs instead")
+    if edge_width is not None:
+        kwargs["weight"] = edge_width
+        warn("`edge_width` has been deprecated and will be removed: use kwargs instead")
+    if edge_opacity is not None:
+        kwargs["opacity"] = edge_opacity
+        warn("`edge_opacity` has been deprecated and will be removed: use kwargs instead")
+
     # create gdf of all graph edges
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)
-
-    return _plot_folium(
-        gdf_edges,
-        graph_map,
-        popup_attribute,
-        tiles,
-        zoom,
-        fit_bounds,
-        edge_color,
-        edge_width,
-        edge_opacity,
-        **kwargs,
-    )
+    return _plot_folium(gdf_edges, graph_map, popup_attribute, tiles, zoom, fit_bounds, **kwargs)
 
 
 def plot_route_folium(
@@ -81,9 +82,9 @@ def plot_route_folium(
     tiles="cartodbpositron",
     zoom=1,
     fit_bounds=True,
-    route_color="#cc0000",
-    route_width=5,
-    route_opacity=1,
+    route_color=None,
+    route_width=None,
+    route_opacity=None,
     **kwargs,
 ):
     """
@@ -106,49 +107,38 @@ def plot_route_folium(
     fit_bounds : bool
         if True, fit the map to the boundaries of the route's edges
     route_color : string
-        color of the route's line
+        deprecated, do not use, use kwargs instead
     route_width : numeric
-        width of the route's line
+        deprecated, do not use, use kwargs instead
     route_opacity : numeric
-        opacity of the route's line
-    kwargs : dict
-        keyword arguments to pass along to folium.PolyLine()
+        deprecated, do not use, use kwargs instead
+    kwargs
+        keyword arguments to pass to folium.PolyLine(), see folium docs for
+        options (for example `color="#cc0000", weight=5, opacity=0.7`)
 
     Returns
     -------
-    route_map : folium.folium.Map
+    folium.folium.Map
     """
+    # deprecation warning
+    if route_color is not None:
+        kwargs["color"] = route_color
+        warn("`route_color` has been deprecated and will be removed: use kwargs instead")
+    if route_width is not None:
+        kwargs["weight"] = route_width
+        warn("`route_width` has been deprecated and will be removed: use kwargs instead")
+    if route_opacity is not None:
+        kwargs["opacity"] = route_opacity
+        warn("`route_opacity` has been deprecated and will be removed: use kwargs instead")
+
     # create gdf of the route edges in order
     node_pairs = zip(route[:-1], route[1:])
     uvk = ((u, v, min(G[u][v], key=lambda k: G[u][v][k]["length"])) for u, v in node_pairs)
     gdf_edges = utils_graph.graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
-
-    return _plot_folium(
-        gdf_edges,
-        route_map,
-        popup_attribute,
-        tiles,
-        zoom,
-        fit_bounds,
-        route_color,
-        route_width,
-        route_opacity,
-        **kwargs,
-    )
+    return _plot_folium(gdf_edges, route_map, popup_attribute, tiles, zoom, fit_bounds, **kwargs)
 
 
-def _plot_folium(
-    gdf,
-    m,
-    popup_attribute,
-    tiles,
-    zoom,
-    fit_bounds,
-    color,
-    lw,
-    alpha,
-    **kwargs,
-):
+def _plot_folium(gdf, m, popup_attribute, tiles, zoom, fit_bounds, **kwargs):
     """
     Plot a GeoDataFrame of LineStrings on a folium map object.
 
@@ -166,14 +156,8 @@ def _plot_folium(
         initial zoom level for the map
     fit_bounds : bool
         if True, fit the map to gdf's boundaries
-    color : string
-        color of the lines
-    lw : numeric
-        width of the lines
-    alpha : numeric
-        opacity of the lines
-    kwargs : dict
-        keyword arguments to pass along to folium.PolyLine()
+    kwargs
+        keyword arguments to pass to folium.PolyLine()
 
     Returns
     -------
@@ -200,13 +184,7 @@ def _plot_folium(
     # add each edge to the map
     for vals in gdf[attrs].values:
         params = dict(zip(["geom", "popup_val"], vals))
-        pl = _make_folium_polyline(
-            **params,
-            color=color,
-            lw=lw,
-            alpha=alpha,
-            **kwargs,
-        )
+        pl = _make_folium_polyline(**params, **kwargs)
         pl.add_to(m)
 
     # if fit_bounds is True, fit the map to the bounds of the route by passing
@@ -218,7 +196,7 @@ def _plot_folium(
     return m
 
 
-def _make_folium_polyline(geom, color, lw, alpha, popup_val=None, **kwargs):
+def _make_folium_polyline(geom, popup_val=None, **kwargs):
     """
     Turn LineString geometry into a folium PolyLine with attributes.
 
@@ -226,16 +204,10 @@ def _make_folium_polyline(geom, color, lw, alpha, popup_val=None, **kwargs):
     ----------
     geom : shapely LineString
         geometry of the line
-    color : string
-        color of the line
-    lw : numeric
-        width of the line
-    alpha : numeric
-        opacity of the line
     popup_val : string
         text to display in pop-up when a line is clicked, if None, no popup
-    kwargs : dict
-        keyword arguments to pass along to folium.PolyLine()
+    kwargs
+        keyword arguments to pass to folium.PolyLine()
 
     Returns
     -------
@@ -253,12 +225,5 @@ def _make_folium_polyline(geom, color, lw, alpha, popup_val=None, **kwargs):
         popup = folium.Popup(html=json.dumps(popup_val))
 
     # create a folium polyline with attributes
-    pl = folium.PolyLine(
-        locations=locations,
-        popup=popup,
-        color=color,
-        lw=lw,
-        alpha=alpha,
-        **kwargs,
-    )
+    pl = folium.PolyLine(locations=locations, popup=popup, **kwargs)
     return pl
