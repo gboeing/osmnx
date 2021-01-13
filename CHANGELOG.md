@@ -1,6 +1,6 @@
 # Change log
 
-## 1.0.1 (TBD)
+## 1.0.1 (2021-01-13)
 
   - fix network_type filters allowing ways tagged "planned"
   - fix "drive" network_type allowing some alleys
