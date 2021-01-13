@@ -5,6 +5,7 @@
   - fix network_type filters allowing ways tagged "planned"
   - fix "drive" network_type allowing some alleys
   - fix intersection consolidation for compatibility with v1.0 node ids/indexing
+  - deprecate folium polyline styling arguments
 
 ## 1.0.0 (2021-01-01)
 
