@@ -34,11 +34,12 @@ jobs:
           CACHE_NUMBER: 0
         with:
           path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles('tests/environment-dev.yml') }}
+          key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ env.CACHE_NUMBER }}-${{ hashFiles('tests/environment-dev.yml') }}
 
       - name: Setup conda environment
         uses: conda-incubator/setup-miniconda@v2
         with:
+          python-version: ${{ matrix.python-version }}
           use-only-tar-bz2: true  # required for caching
           show-channel-urls: true
           channel-priority: strict
