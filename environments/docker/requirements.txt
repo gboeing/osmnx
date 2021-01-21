@@ -25,11 +25,11 @@ pyproj
 pysal
 pytest
 python == 3.9.*
+python-igraph
 rasterio
 seaborn
 scikit-learn
 scipy
 sphinx
 statsmodels
-twine
 urbanaccess

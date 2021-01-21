@@ -16,7 +16,7 @@ RUN conda config --set show_channel_urls true && \
     conda config --set channel_priority strict && \
     conda config --prepend channels conda-forge && \
     conda update --yes -n base conda && \
-    conda install --update-all --force-reinstall --yes --file /tmp/requirements.txt python-igraph && \
+    conda install --update-all --force-reinstall --yes --file /tmp/requirements.txt && \
     rm -f -r -v /opt/conda/share/jupyter/kernels/python3 && \
     python -m ipykernel install --sys-prefix --name ox --display-name "Python (ox)" && \
     conda clean --all --yes && \
