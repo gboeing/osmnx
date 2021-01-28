@@ -1,5 +1,9 @@
 # Change log
 
+## TBD
+
+  - improve save_graph_xml speed
+
 ## 1.0.1 (2021-01-13)
 
   - fix network_type filters allowing ways tagged "planned"
