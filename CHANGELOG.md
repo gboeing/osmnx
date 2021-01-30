@@ -3,6 +3,7 @@
 ## TBD
 
   - improve save_graph_xml speed
+  - optionally return distances in nearest nodes search
 
 ## 1.0.1 (2021-01-13)
 

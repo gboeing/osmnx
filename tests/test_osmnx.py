@@ -224,9 +224,13 @@ def test_find_nearest():
     # get nearest nodes: haversine, kdtree, balltree
     X = gdf_nodes["x"].head()
     Y = gdf_nodes["y"].head()
-    nn1 = ox.get_nearest_nodes(G, X, Y)
-    nn2 = ox.get_nearest_nodes(G, X, Y, method="kdtree")
-    nn3 = ox.get_nearest_nodes(G, X, Y, method="balltree")
+
+    nn1, dist1 = ox.get_nearest_nodes(G, X, Y, return_dist=True)
+    nn2, dist2 = ox.get_nearest_nodes(G, X, Y, method="kdtree", return_dist=True)
+    nn3, dist3 = ox.get_nearest_nodes(G, X, Y, method="balltree", return_dist=True)
+    nn4 = ox.get_nearest_nodes(G, X, Y)
+    nn5 = ox.get_nearest_nodes(G, X, Y, method="kdtree")
+    nn6 = ox.get_nearest_nodes(G, X, Y, method="balltree")
 
     # get nearest edge
     u, v, k, g, d = ox.get_nearest_edge(G, location_point, return_geom=True, return_dist=True)
