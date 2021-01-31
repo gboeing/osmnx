@@ -41,7 +41,7 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
 
     # nodes unreachable from source_node are missing from dict distances, add them
     for unreachable_node in G.nodes - distances:
-        distances[unreachable_node] = float('inf')
+        distances[unreachable_node] = float("inf")
 
     # then identify every node further than max_dist away
     distant_nodes = {k: v for k, v in distances.items() if v > max_dist}
