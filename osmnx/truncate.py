@@ -39,16 +39,14 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
     # get the shortest distance between the node and every other node
     distances = nx.shortest_path_length(G, source=source_node, weight=weight)
 
-    # nodes unreachable from source_node are missing from dict distances, add them
-    for unreachable_node in G.nodes - distances:
-        distances[unreachable_node] = float("inf")
-
     # then identify every node further than max_dist away
     distant_nodes = {k: v for k, v in distances.items() if v > max_dist}
 
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
     G.remove_nodes_from(distant_nodes)
+    # nodes unreachable from source_node are missing from distances and should be removed too
+    G.remove_nodes_from(G - distances)
 
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
