@@ -46,7 +46,7 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
     G = G.copy()
     G.remove_nodes_from(distant_nodes)
     # nodes unreachable from source_node are missing from distances and should be removed too
-    G.remove_nodes_from(G - distances)
+    G.remove_nodes_from(G.nodes - distances)
 
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
