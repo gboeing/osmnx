@@ -215,7 +215,7 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
         return u, v, key
 
 
-def get_nearest_nodes(G, X, Y, method=None):
+def get_nearest_nodes(G, X, Y, method=None, return_dist=False):
     """
     Find the nearest node to each point in a list of points.
 
@@ -243,18 +243,29 @@ def get_nearest_nodes(G, X, Y, method=None):
         scipy.spatial.cKDTree for very fast euclidean search. If
         'balltree', we use sklearn.neighbors.BallTree for fast
         haversine search.
+    return_dist : bool
+        Optionally also return the distance (in meters if haversine, or graph
+        node coordinate units if euclidean) between the point and the nearest
+        node
 
     Returns
     -------
-    nn : np.array
+    nn or (dist, nn): np.array or tuple of (np.array<float>, np.array<int>)
         array of node IDs representing the node nearest to each point in the
-        passed-in list of points
+        passed-in list of points, or optionally tuple of arrays (dist,nn) where dist
+        is an array of the distances (in meters if haversine, or graph node coordinate
+        units if euclidean) between the point and nearest node
     """
     if method is None:
-
-        # calculate nearest node one at a time for each point
-        nn = [get_nearest_node(G, (y, x), method="haversine") for x, y in zip(X, Y)]
-
+        # calculate nearest node (and optionally dist) one at a time for each point
+        result = [
+            get_nearest_node(G, (y, x), method="haversine", return_dist=return_dist)
+            for x, y in zip(X, Y)
+        ]
+        if return_dist:
+            nn, dist = map(list, zip(*result))
+        else:
+            nn = result
     elif method == "kdtree":
 
         # check if we were able to import scipy.spatial.cKDTree
@@ -291,14 +302,22 @@ def get_nearest_nodes(G, X, Y, method=None):
         tree = BallTree(nodes_rad, metric="haversine")
 
         # query the tree for nearest node to each point
-        idx = tree.query(points_rad, k=1, return_distance=False)
-        nn = nodes.iloc[idx[:, 0]].index
+        if return_dist:
+            dist, idx = tree.query(points_rad, k=1, return_distance=True)
+            nn = nodes.iloc[idx[:, 0]].index
+        else:
+            idx = tree.query(points_rad, k=1, return_distance=False)
+            nn = nodes.iloc[idx[:, 0]].index
 
     else:
         raise ValueError("You must pass a valid method name, or None.")
 
     utils.log(f"Found nearest nodes to {len(X)} points")
-    return np.array(nn)
+
+    if return_dist:
+        return np.array(nn), np.array(dist)
+    else:
+        return np.array(nn)
 
 
 def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
