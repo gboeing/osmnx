@@ -359,6 +359,9 @@ def _create_gdf(response_jsons, polygon, tags):
         # Set to hold the unique IDs of elements that do not have tags
         untagged_element_ids = set()
 
+        # identify which relation types to parse to (multi)polygons
+        relation_types = {"boundary", "multipolygon"}
+
         # extract geometries from the downloaded osm data
         for response_json in response_jsons:
             # Parses the JSON of OSM nodes, ways and (multipolygon) relations
@@ -398,9 +401,9 @@ def _create_gdf(response_jsons, polygon, tags):
 
                 elif (
                     element["type"] == "relation"
-                    and element.get("tags").get("type") == "multipolygon"
+                    and element.get("tags").get("type") in relation_types
                 ):
-                    # Parse all multipolygon relations to multipolygons
+                    # parse relations to (multi)polygons
                     multipolygon = _parse_relation_to_multipolygon(
                         element=element, geometries=geometries
                     )
