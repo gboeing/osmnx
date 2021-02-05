@@ -3,7 +3,8 @@
 ## TBD
 
   - improve save_graph_xml speed
-  - optionally return distances in nearest nodes search
+  - fix truncate_graph_dist retaining unreachable nodes
+  - add option to return distances in get_nearest_nodes
 
 ## 1.0.1 (2021-01-13)
 
