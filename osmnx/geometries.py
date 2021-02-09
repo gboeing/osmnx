@@ -987,9 +987,5 @@ def _filter_gdf_by_polygon_and_tags(gdf, polygon, tags):
         # remove columns of all nulls (created by discarded component geometries)
         gdf.dropna(axis="columns", how="all", inplace=True)
 
-        # reset the index keeping the unique ids
-        gdf.reset_index(inplace=True)
-        # rename the new 'index' column to 'unique_id'
-        gdf.rename(columns={"index": "unique_id"}, inplace=True)
-
-    return gdf
+    # multi-index gdf by element_type and osmid then return
+    return gdf.set_index(["element_type", "osmid"])
