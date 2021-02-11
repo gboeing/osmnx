@@ -3,7 +3,9 @@ Download geospatial entities' geometries and attributes from OpenStreetMap.
 
 Retrieve points of interest, building footprints, or any other objects from
 OSM, including their geometries and attribute data, and construct a
-GeoDataFrame of them.
+GeoDataFrame of them. You can use this module to query for nodes, ways, and
+relations (the latter of type "multipolygon" or "boundary" only) by passing a
+dictionary of desired tags/values.
 """
 
 import logging as lg
@@ -359,6 +361,9 @@ def _create_gdf(response_jsons, polygon, tags):
         # Set to hold the unique IDs of elements that do not have tags
         untagged_element_ids = set()
 
+        # identify which relation types to parse to (multi)polygons
+        relation_types = {"boundary", "multipolygon"}
+
         # extract geometries from the downloaded osm data
         for response_json in response_jsons:
             # Parses the JSON of OSM nodes, ways and (multipolygon) relations
@@ -398,9 +403,9 @@ def _create_gdf(response_jsons, polygon, tags):
 
                 elif (
                     element["type"] == "relation"
-                    and element.get("tags").get("type") == "multipolygon"
+                    and element.get("tags").get("type") in relation_types
                 ):
-                    # Parse all multipolygon relations to multipolygons
+                    # parse relations to (multi)polygons
                     multipolygon = _parse_relation_to_multipolygon(
                         element=element, geometries=geometries
                     )
@@ -982,9 +987,5 @@ def _filter_gdf_by_polygon_and_tags(gdf, polygon, tags):
         # remove columns of all nulls (created by discarded component geometries)
         gdf.dropna(axis="columns", how="all", inplace=True)
 
-        # reset the index keeping the unique ids
-        gdf.reset_index(inplace=True)
-        # rename the new 'index' column to 'unique_id'
-        gdf.rename(columns={"index": "unique_id"}, inplace=True)
-
-    return gdf
+    # multi-index gdf by element_type and osmid then return
+    return gdf.set_index(["element_type", "osmid"])
