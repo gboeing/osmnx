@@ -2,6 +2,8 @@
 
 ## TBD
 
+  - handle relations of type "boundary" in geometries module
+  - multi-index GeoDataFrames returned from geometries module by element type and osmid
   - improve save_graph_xml speed
   - fix truncate_graph_dist retaining unreachable nodes
   - add option to return distances in get_nearest_nodes
