@@ -533,6 +533,9 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
                     gdf.loc[wcc, "cluster"] = f"{cluster_label}-{suffix}"
                     suffix += 1
 
+    # reassign integer cluster labels since wccs with suffixes have string labels
+    gdf["cluster"] = gdf["cluster"].factorize()[0]
+
     # STEP 4
     # create new empty graph and copy over misc graph data
     H = nx.MultiDiGraph()
