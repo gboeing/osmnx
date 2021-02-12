@@ -533,7 +533,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
                     gdf.loc[wcc, "cluster"] = f"{cluster_label}-{suffix}"
                     suffix += 1
 
-    # reassign integer cluster labels since wccs with suffixes have string labels
+    # give nodes unique integer IDs (subclusters with suffixes are strings)
     gdf["cluster"] = gdf["cluster"].factorize()[0]
 
     # STEP 4
