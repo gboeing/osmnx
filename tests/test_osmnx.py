@@ -14,6 +14,7 @@ from collections import OrderedDict
 from pathlib import Path
 
 import folium
+import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -63,7 +64,7 @@ def test_logging():
     ox.ts(style="time")
 
 
-def test_geometry_coords_rounding():
+def test_coords_rounding():
     # test the rounding of geometry coordinates
     precision = 3
 
@@ -102,7 +103,7 @@ def test_geocode_to_gdf():
     city_projected = ox.project_gdf(city, to_crs="epsg:3395")
 
 
-def test_graph_from_xml():
+def test_osm_xml():
     # test loading a graph from a local .osm xml file
     node_id = 53098262
     neighbor_ids = 53092170, 53060438, 53027353, 667744075
@@ -123,6 +124,26 @@ def test_graph_from_xml():
             assert G.edges[edge_key]["name"] in ("8th Street", "Willow Street")
 
     os.remove(temp_filename)
+
+    # test .osm xml saving
+    default_all_oneway = ox.settings.all_oneway
+    ox.settings.all_oneway = True
+    G = ox.graph_from_point(location_point, dist=500, network_type="drive")
+    ox.save_graph_xml(G, merge_edges=False)
+
+    # test osm xml output merge edges
+    ox.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")])
+
+    # test osm xml output from gdfs
+    nodes, edges = ox.graph_to_gdfs(G)
+    ox.save_graph_xml([nodes, edges])
+
+    # test ordered nodes from way
+    df = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
+    ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(df)
+    assert ordered_nodes == [2, 3, 10, 5, 8]
+
+    ox.settings.all_oneway = default_all_oneway
 
 
 def test_routing():
@@ -208,20 +229,11 @@ def test_find_nearest():
     # get graph
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
 
-    # convert graph to node/edge GeoDataFrames and back again
-    gdf_nodes, gdf_edges = ox.graph_to_gdfs(
-        G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True
-    )
-    assert len(gdf_nodes) == len(G)
-    assert len(gdf_edges) == len(G.edges(keys=True))
-    G = ox.graph_from_gdfs(gdf_nodes, gdf_edges)
-    assert len(gdf_nodes) == len(G)
-    assert len(gdf_edges) == len(G.edges(keys=True))
-
     # get nearest node
     nn, d = ox.get_nearest_node(G, location_point, method="euclidean", return_dist=True)
 
     # get nearest nodes: haversine, kdtree, balltree
+    gdf_nodes = ox.graph_to_gdfs(G, edges=False)
     X = gdf_nodes["x"].head()
     Y = gdf_nodes["y"].head()
 
@@ -292,12 +304,22 @@ def test_api_endpoints():
     ox.settings.overpass_endpoint = default_overpass_endpoint
 
 
-def test_network_saving_loading():
+def test_graph_save_load():
 
     # save graph as shapefile and geopackage
     G = ox.graph_from_place(place1, network_type="drive")
     ox.save_graph_shapefile(G)
-    ox.save_graph_geopackage(G)
+    ox.save_graph_geopackage(G, directed=False)
+
+    # save/load geopackage and convert graph to/from node/edge GeoDataFrames
+    fp = ".temp/data/graph-dir.gpkg"
+    ox.save_graph_geopackage(G, filepath=fp, directed=True)
+    gdf_nodes1 = gpd.read_file(fp, layer="nodes").set_index("osmid")
+    gdf_edges1 = gpd.read_file(fp, layer="edges").set_index(["u", "v", "key"])
+    G2 = ox.graph_from_gdfs(gdf_nodes1, gdf_edges1, graph_attrs=G.graph)
+    gdf_nodes2, gdf_edges2 = ox.graph_to_gdfs(G2)
+    assert set(gdf_nodes1.index) == set(gdf_nodes2.index) == set(G.nodes) == set(G2.nodes)
+    assert set(gdf_edges1.index) == set(gdf_edges2.index) == set(G.edges) == set(G2.edges)
 
     # save/load graph as graphml file
     ox.save_graphml(G, gephi=True)
@@ -326,28 +348,8 @@ def test_network_saving_loading():
     ed = {"length": str, "osmid": float}
     G2 = ox.load_graphml(filepath, node_dtypes=nd, edge_dtypes=ed)
 
-    # test osm xml output
-    default_all_oneway = ox.settings.all_oneway
-    ox.settings.all_oneway = True
-    G = ox.graph_from_point(location_point, dist=500, network_type="drive")
-    ox.save_graph_xml(G, merge_edges=False)
 
-    # test osm xml output merge edges
-    ox.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")])
-
-    # test osm xml output from gdfs
-    nodes, edges = ox.graph_to_gdfs(G)
-    ox.save_graph_xml([nodes, edges])
-
-    # test ordered nodes from way
-    df = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
-    ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(df)
-    assert ordered_nodes == [2, 3, 10, 5, 8]
-
-    ox.settings.all_oneway = default_all_oneway
-
-
-def test_get_network_methods():
+def test_graph_from_functions():
 
     # graph from bounding box
     _ = ox.utils_geo.bbox_from_point(location_point, project_utm=True, return_crs=True)
