@@ -43,9 +43,9 @@ def _get_osm_filter(network_type):
     # are tagged as providing certain services
     filters["drive"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bridleway|construction|corridor|cycleway|elevator|'
+        f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
         f"escalator|footway|path|pedestrian|planned|platform|proposed|raceway|service|"
-        f'steps|track|bus_guideway"]'
+        f'steps|track"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
         f'["service"!~"alley|driveway|emergency_access|parking|parking_aisle|private"]'
     )
@@ -53,8 +53,8 @@ def _get_osm_filter(network_type):
     # drive+service: allow ways tagged 'service' but filter out certain types
     filters["drive_service"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bridleway|construction|corridor|cycleway|elevator|escalator|'
-        f'footway|path|pedestrian|planned|platform|proposed|raceway|steps|track|bus_guideway"]'
+        f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
+        f'escalator|footway|path|pedestrian|planned|platform|proposed|raceway|steps|track"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
         f'["service"!~"emergency_access|parking|parking_aisle|private"]'
     )
@@ -66,8 +66,8 @@ def _get_osm_filter(network_type):
     # filter ignores such cycleways.
     filters["walk"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|construction|cycleway|motor|planned|platform|'
-        f'proposed|raceway|bus_guideway"]'
+        f'["highway"!~"abandoned|bus_guideway|construction|cycleway|motor|planned|platform|'
+        f'proposed|raceway"]'
         f'["foot"!~"no"]["service"!~"private"]'
     )
 
@@ -75,8 +75,8 @@ def _get_osm_filter(network_type):
     # specifying biking=no
     filters["bike"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|construction|corridor|elevator|escalator|footway|'
-        f'motor|planned|platform|proposed|raceway|steps|bus_guideway"]'
+        f'["highway"!~"abandoned|bus_guideway|construction|corridor|elevator|escalator|footway|'
+        f'motor|planned|platform|proposed|raceway|steps"]'
         f'["bicycle"!~"no"]["service"!~"private"]'
     )
 
