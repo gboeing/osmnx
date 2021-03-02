@@ -41,7 +41,7 @@ def geocode(query):
         utils.log(f'Geocoded "{query}" to {point}')
         return point
     else:
-        raise Exception(f'Nominatim geocoder returned no results for query "{query}"')
+        raise Exception(f'Nominatim could not geocode query "{query}"')
 
 
 def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
@@ -155,7 +155,7 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
     # choose the right result from the JSON response
     if not results:
         # if no results were returned, raise error
-        raise ValueError(f'OSM returned no results for query "{query}"')
+        raise ValueError(f'Nominatim could not geocode query "{query}"')
 
     elif by_osmid:
         # if searching by OSM ID, always take the first (ie, only) result
@@ -171,13 +171,13 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
 
     else:  # pragma: no cover
         # else, we got fewer results than which_result, raise error
-        msg = f'OSM returned fewer than `which_result={which_result}` results for query "{query}"'
+        msg = f'Nominatim returned fewer than `which_result={which_result}` results for query "{query}"'
         raise ValueError(msg)
 
     # if we got a non (Multi)Polygon geometry type (like a point), log warning
     geom_type = result["geojson"]["type"]
     if geom_type not in {"Polygon", "MultiPolygon"}:
-        msg = f'OSM returned a {geom_type} as the geometry for query "{query}"'
+        msg = f'Nominatim returned a {geom_type} as the geometry for query "{query}"'
         utils.log(msg, level=lg.WARNING)
 
     # build the GeoJSON feature from the chosen result
@@ -227,4 +227,4 @@ def _get_first_polygon(results, query):
             return result
 
     # if we never found a polygon, throw an error
-    raise ValueError(f'OSM did not return any polygonal geometries for query "{query}"')
+    raise ValueError(f'Nominatim could not geocode query "{query}" to polygonal boundaries')
