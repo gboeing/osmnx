@@ -164,7 +164,20 @@ def geometries_from_address(address, tags, dist=1000):
 
 def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     """
-    Create a GeoDataFrame of OSM entities within the boundaries of a place.
+    Create GeoDataFrame of OSM entities within boundaries of geocodable place(s).
+
+    The query must be geocodable and OSM must have polygon boundaries for the
+    geocode result. If OSM does not have a polygon for this place, you can
+    instead get geometries within it using the geometries_from_address
+    function, which geocodes the place name to a point and gets the geometries
+    within some distance of that point.
+
+    If OSM does have polygon boundaries for this place but you're not finding
+    it, try to vary the query string, pass in a structured query dict, or vary
+    the which_result argument to use a different geocode result. If you know
+    the OSM ID of the place, you can retrieve its boundary polygon using the
+    geocode_to_gdf function, then pass it to the geometries_from_polygon
+    function.
 
     Parameters
     ----------
