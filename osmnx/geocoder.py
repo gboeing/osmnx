@@ -41,7 +41,7 @@ def geocode(query):
         utils.log(f'Geocoded "{query}" to {point}')
         return point
     else:
-        raise Exception(f'Nominatim could not geocode query "{query}"')
+        raise ValueError(f'Nominatim could not geocode query "{query}"')
 
 
 def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
