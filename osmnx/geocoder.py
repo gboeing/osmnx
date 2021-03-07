@@ -155,7 +155,7 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
     # choose the right result from the JSON response
     if not results:
         # if no results were returned, raise error
-        raise ValueError(f'Nominatim could not geocode query "{query}"')
+        raise ValueError(f'Nominatim geocoder returned 0 results for query "{query}"')
 
     elif by_osmid:
         # if searching by OSM ID, always take the first (ie, only) result
@@ -171,13 +171,13 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
 
     else:  # pragma: no cover
         # else, we got fewer results than which_result, raise error
-        msg = f'Nominatim returned fewer than `which_result={which_result}` results for query "{query}"'
+        msg = f'Nominatim geocoder only returned {len(results)} result(s) for query "{query}"'
         raise ValueError(msg)
 
     # if we got a non (Multi)Polygon geometry type (like a point), log warning
     geom_type = result["geojson"]["type"]
     if geom_type not in {"Polygon", "MultiPolygon"}:
-        msg = f'Nominatim returned a {geom_type} as the geometry for query "{query}"'
+        msg = f'Nominatim geocoder returned a {geom_type} as the geometry for query "{query}"'
         utils.log(msg, level=lg.WARNING)
 
     # build the GeoJSON feature from the chosen result
