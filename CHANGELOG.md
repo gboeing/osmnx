@@ -10,6 +10,7 @@
   - fix network_type filters allowing ways tagged "bus_guideway"
   - fix truncate_graph_dist retaining unreachable nodes
   - add option to return distances in get_nearest_nodes
+  - remove descartes dependency in line with geopandas
 
 ## 1.0.1 (2021-01-13)
 
