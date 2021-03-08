@@ -337,14 +337,15 @@ def _convert_edge_attr_types(G, dtypes=None):
 
 def _convert_bool_string(value):
     """
-    Convert a "True" or "False" string to corresponding boolean type.
+    Convert a "True" or "False" string to the corresponding boolean type.
 
     This is necessary because Python will otherwise parse the string "False"
-    to the boolean value True, that is, `bool("False") == True`
+    to the boolean value True, that is, `bool("False") == True`. This function
+    raises a ValueError if a value other than "True" or "False" is passed.
 
     Parameters
     ----------
-    value : string
+    value : string {"True", "False"}
         the value to convert
 
     Returns
