@@ -321,27 +321,41 @@ def test_graph_save_load():
     assert set(gdf_nodes1.index) == set(gdf_nodes2.index) == set(G.nodes) == set(G2.nodes)
     assert set(gdf_edges1.index) == set(gdf_edges2.index) == set(G.edges) == set(G2.edges)
 
+    # create random boolean graph/node/edge attributes
+    attr_name = "test_bool"
+    G.graph[attr_name] = False
+    bools = np.random.randint(0, 2, len(G.nodes))
+    node_attrs = {n: bool(b) for n, b in zip(G.nodes, bools)}
+    nx.set_node_attributes(G, node_attrs, attr_name)
+    bools = np.random.randint(0, 2, len(G.edges))
+    edge_attrs = {n: bool(b) for n, b in zip(G.edges, bools)}
+    nx.set_edge_attributes(G, edge_attrs, attr_name)
+
     # save/load graph as graphml file
     ox.save_graphml(G, gephi=True)
     ox.save_graphml(G, gephi=False)
     filepath = Path(ox.settings.data_folder) / "graph.graphml"
-    G2 = ox.load_graphml(filepath)
+    G2 = ox.load_graphml(
+        filepath,
+        graph_dtypes={attr_name: bool},
+        node_dtypes={attr_name: bool},
+        edge_dtypes={attr_name: bool},
+    )
 
     # verify everything in G is equivalent in G2
-    for (n1, d1), (n2, d2) in zip(G.nodes(data=True), G2.nodes(data=True)):
+    assert tuple(G.graph.keys()) == tuple(G2.graph.keys())
+    assert tuple(G.graph.values()) == tuple(G2.graph.values())
+    z = zip(G.nodes(data=True), G2.nodes(data=True))
+    for (n1, d1), (n2, d2) in z:
         assert n1 == n2
         assert d1 == d2
-    for (u1, v1, k1, d1), (u2, v2, k2, d2) in zip(
-        G.edges(keys=True, data=True), G2.edges(keys=True, data=True)
-    ):
+    z = zip(G.edges(keys=True, data=True), G2.edges(keys=True, data=True))
+    for (u1, v1, k1, d1), (u2, v2, k2, d2) in z:
         assert u1 == u2
         assert v1 == v2
         assert k1 == k2
         assert tuple(d1.keys()) == tuple(d2.keys())
         assert tuple(d1.values()) == tuple(d2.values())
-    for (k1, v1), (k2, v2) in zip(G.graph.items(), G2.graph.items()):
-        assert k1 == k2
-        assert v1 == v2
 
     # test custom data types
     nd = {"osmid": str}
