@@ -288,7 +288,7 @@ def _convert_edge_attr_types(G, dtypes=None):
             if value.startswith("[") and value.endswith("]"):
                 try:
                     data[attr] = ast.literal_eval(value)
-                except Exception:
+                except (SyntaxError, ValueError):
                     pass
 
         # next, convert attribute value types
@@ -304,7 +304,7 @@ def _convert_edge_attr_types(G, dtypes=None):
         # next, eval "oneway" attr to bool
         try:
             data["oneway"] = ast.literal_eval(data["oneway"])
-        except (KeyError, ValueError):  # pragma: no cover
+        except (KeyError, SyntaxError, ValueError):  # pragma: no cover
             # may lack oneway if settings.all_oneway=True when you created
             # graph, or have values it can't eval if settings.all_oneway=True
             pass
