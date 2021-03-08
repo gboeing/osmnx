@@ -223,12 +223,12 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None, graph_dtypes=None
     if edge_dtypes is not None:
         default_edge_dtypes.update(edge_dtypes)
 
-    # if bool types appear in any of the dicts, replace with the converter
-    # function to handle the boolean type conversion properly
-    for d in (default_graph_dtypes, default_node_dtypes, default_edge_dtypes):
-        for k, v in d.items():
+    # if bool types appear in any of the dicts, replace it with the local
+    # converter function to handle boolean type conversion properly
+    for dtypes in (default_graph_dtypes, default_node_dtypes, default_edge_dtypes):
+        for k, v in dtypes.items():
             if v == bool:
-                d[k] = _convert_bool_string
+                dtypes[k] = _convert_bool_string
 
     # read the graphml file from disk
     G = nx.read_graphml(filepath, node_type=default_node_dtypes["osmid"], force_multigraph=True)
@@ -340,7 +340,7 @@ def _convert_bool_string(value):
     Convert a "True" or "False" string to corresponding boolean type.
 
     This is necessary because Python will otherwise parse the string "False"
-    to the boolean value True.
+    to the boolean value True, that is, `bool("False") == True`
 
     Parameters
     ----------
