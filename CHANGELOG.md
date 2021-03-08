@@ -8,6 +8,7 @@
   - improve save_graph_xml speed
   - improve geocoder module error messages
   - fix network_type filters allowing ways tagged "bus_guideway"
+  - fix handling of boolean type conversion in load_graphml
   - fix truncate_graph_dist retaining unreachable nodes
   - add option to return distances in get_nearest_nodes
   - remove descartes dependency in line with geopandas
