@@ -79,7 +79,9 @@ default_access = '["access"!~"private"]'
 bidirectional_network_types = ["walk"]
 
 # all one-way mode to maintain original OSM node order when creating graphs
-# specifically to save to .osm xml file with save_graph_xml function
+# specifically to save to .osm xml file with save_graph_xml function.
+# this also retains original OSM string values for oneway attribute rather
+# than converting it to a True/False bool
 all_oneway = False
 
 # default CRS to set when creating graphs
