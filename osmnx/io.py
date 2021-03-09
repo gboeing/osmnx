@@ -167,22 +167,30 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     utils.log(f'Saved graph as GraphML file at "{filepath}"')
 
 
-def load_graphml(filepath, node_dtypes=None, edge_dtypes=None):
+def load_graphml(filepath, node_dtypes=None, edge_dtypes=None, graph_dtypes=None):
     """
     Load an OSMnx-saved GraphML file from disk.
 
-    Converts the node/edge attributes to appropriate data types, which can be
-    customized if needed by passing in `node_dtypes` or `edge_dtypes`
-    arguments.
+    Converts node, edge, and graph-level attributes to appropriate data types,
+    which can be customized if needed by passing in dtypes arguments. Note
+    that any `bool` types will be converted with the `io._convert_bool_string`
+    function instead to properly handle "True"/"False" string literals as
+    booleans. Pass a custom converter function if you have a complex use case.
 
     Parameters
     ----------
     filepath : string or pathlib.Path
         path to the GraphML file
     node_dtypes : dict
-        dict of node attribute names:types to convert values' data types
+        dict of node attribute names:types to convert values' data types. the
+        type can be a python type or a custom string converter function.
     edge_dtypes : dict
-        dict of edge attribute names:types to convert values' data types
+        dict of edge attribute names:types to convert values' data types. the
+        type can be a python type or a custom string converter function.
+    graph_dtypes : dict
+        dict of graph-level attribute names:types to convert values' data
+        types. the type can be a python type or a custom string converter
+        function.
 
     Returns
     -------
@@ -190,7 +198,8 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None):
     """
     filepath = Path(filepath)
 
-    # specify default node/edge attribute values' data types
+    # specify default graph/node/edge attribute values' data types
+    default_graph_dtypes = {"simplified": bool}
     default_node_dtypes = {
         "elevation": float,
         "elevation_res": float,
@@ -206,39 +215,62 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None):
         "grade": float,
         "grade_abs": float,
         "length": float,
+        "oneway": bool,
         "osmid": int,
         "speed_kph": float,
         "travel_time": float,
     }
 
-    # override default node/edge attr types with user-passed types, if any
+    # override default graph/node/edge attr types with user-passed types, if any
+    if graph_dtypes is not None:
+        default_graph_dtypes.update(graph_dtypes)
     if node_dtypes is not None:
         default_node_dtypes.update(node_dtypes)
     if edge_dtypes is not None:
         default_edge_dtypes.update(edge_dtypes)
 
+    # if bool types appear in any of the dicts, replace it with the local
+    # converter function to handle boolean type conversion properly
+    for dtypes in (default_graph_dtypes, default_node_dtypes, default_edge_dtypes):
+        for k, v in dtypes.items():
+            if v == bool:
+                dtypes[k] = _convert_bool_string
+
     # read the graphml file from disk
     G = nx.read_graphml(filepath, node_type=default_node_dtypes["osmid"], force_multigraph=True)
 
-    # convert node/edge attribute data types
-    utils.log("Converting node and edge attribute data types")
+    # convert graph/node/edge attribute data types
+    utils.log("Converting node, edge, and graph-level attribute data types")
+    G = _convert_graph_attr_types(G, default_graph_dtypes)
     G = _convert_node_attr_types(G, default_node_dtypes)
     G = _convert_edge_attr_types(G, default_edge_dtypes)
 
-    # eval any non-string graph attributes to convert to correct types
-    for attr in ["simplified"]:
-        try:
-            G.graph[attr] = ast.literal_eval(G.graph[attr])
-        except Exception:
-            pass
-
-    # remove node_default and edge_default metadata keys if they exist
-    if "node_default" in G.graph:
-        del G.graph["node_default"]
-    if "edge_default" in G.graph:
-        del G.graph["edge_default"]
-
     utils.log(f'Loaded graph with {len(G)} nodes and {len(G.edges)} edges from "{filepath}"')
+    return G
+
+
+def _convert_graph_attr_types(G, dtypes=None):
+    """
+    Convert graph-level attributes using a dict of data types.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    dtypes : dict
+        dict of graph-level attribute names:types
+
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+    """
+    # remove node_default and edge_default metadata keys if they exist
+    G.graph.pop("node_default", None)
+    G.graph.pop("edge_default", None)
+
+    for attr in G.graph.keys() & dtypes.keys():
+        G.graph[attr] = dtypes[attr](G.graph[attr])
+
     return G
 
 
@@ -258,9 +290,8 @@ def _convert_node_attr_types(G, dtypes=None):
     G : networkx.MultiDiGraph
     """
     for _, data in G.nodes(data=True):
-        for attr in dtypes:
-            if attr in data:
-                data[attr] = dtypes[attr](data[attr])
+        for attr in data.keys() & dtypes.keys():
+            data[attr] = dtypes[attr](data[attr])
     return G
 
 
@@ -282,42 +313,55 @@ def _convert_edge_attr_types(G, dtypes=None):
     # for each edge in the graph, eval attribute value lists and convert types
     for _, _, data in G.edges(data=True, keys=False):
 
+        # remove extraneous "id" attribute added by graphml saving
+        data.pop("id", None)
+
         # first, eval stringified lists to convert them to list objects
-        # edges attributes might have a single value, or a list if simplified
+        # edge attributes might have a single value, or a list if simplified
         for attr, value in data.items():
             if value.startswith("[") and value.endswith("]"):
                 try:
                     data[attr] = ast.literal_eval(value)
-                except Exception:
+                except (SyntaxError, ValueError):
                     pass
 
-        # next, convert attribute value types
-        for attr in dtypes:
-            if attr in data:
-                if isinstance(data[attr], list):
-                    # if it's a list, eval it then convert each item
-                    data[attr] = [dtypes[attr](item) for item in data[attr]]
-                else:
-                    # otherwise, just convert the single value
-                    data[attr] = dtypes[attr](data[attr])
-
-        # next, eval "oneway" attr to bool
-        try:
-            data["oneway"] = ast.literal_eval(data["oneway"])
-        except (KeyError, ValueError):  # pragma: no cover
-            # may lack oneway if settings.all_oneway=True when you created
-            # graph, or have values it can't eval if settings.all_oneway=True
-            pass
+        # next, convert attribute value types if attribute appears in dtypes
+        for attr in data.keys() & dtypes.keys():
+            if isinstance(data[attr], list):
+                # if it's a list, eval it then convert each item
+                data[attr] = [dtypes[attr](item) for item in data[attr]]
+            else:
+                # otherwise, just convert the single value
+                data[attr] = dtypes[attr](data[attr])
 
         # if "geometry" attr exists, convert its well-known text to LineString
         if "geometry" in data:
             data["geometry"] = wkt.loads(data["geometry"])
 
-        # delete extraneous "id" attribute added by graphml saving
-        if "id" in data:
-            del data["id"]
-
     return G
+
+
+def _convert_bool_string(value):
+    """
+    Convert a "True" or "False" string literal to corresponding boolean type.
+
+    This is necessary because Python will otherwise parse the string "False"
+    to the boolean value True, that is, `bool("False") == True`. This function
+    raises a ValueError if a value other than "True" or "False" is passed.
+
+    Parameters
+    ----------
+    value : string {"True", "False"}
+        the value to convert
+
+    Returns
+    -------
+    bool
+    """
+    if value in {"True", "False"}:
+        return value == "True"
+    else:
+        raise ValueError(f'invalid literal for boolean: "{value}"')
 
 
 def _stringify_nonnumeric_cols(gdf):

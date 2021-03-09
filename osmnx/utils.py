@@ -122,6 +122,8 @@ def config(
         Only use if specifically saving to .osm XML file with save_graph_xml
         function. if True, forces all ways to be loaded as oneway ways,
         preserving the original order of nodes stored in the OSM way XML.
+        This also retains original OSM string values for oneway attribute
+        values, rather than converting them to a True/False bool.
     bidirectional_network_types : list
         network types for which a fully bidirectional graph will be created
     cache_folder : string or pathlib.Path
