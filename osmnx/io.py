@@ -172,9 +172,10 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None, graph_dtypes=None
     Load an OSMnx-saved GraphML file from disk.
 
     Converts node, edge, and graph-level attributes to appropriate data types,
-    which can be customized if needed by passing in `node_dtypes` or
-    `edge_dtypes` arguments. Note that any `bool` types will be converted with
-    the `io._convert_bool_string` function instead.
+    which can be customized if needed by passing in dtypes arguments. Note
+    that any `bool` types will be converted with the `io._convert_bool_string`
+    function instead to properly handle "True"/"False" string literals as
+    booleans. Pass a custom converter function if you have a complex use case.
 
     Parameters
     ----------
@@ -342,7 +343,7 @@ def _convert_edge_attr_types(G, dtypes=None):
 
 def _convert_bool_string(value):
     """
-    Convert a "True" or "False" string to the corresponding boolean type.
+    Convert a "True" or "False" string literal to corresponding boolean type.
 
     This is necessary because Python will otherwise parse the string "False"
     to the boolean value True, that is, `bool("False") == True`. This function
