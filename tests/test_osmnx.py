@@ -348,7 +348,8 @@ def test_graph_save_load():
     z = zip(G.nodes(data=True), G2.nodes(data=True))
     for (n1, d1), (n2, d2) in z:
         assert n1 == n2
-        assert d1 == d2
+        assert tuple(d1.keys()) == tuple(d2.keys())
+        assert tuple(d1.values()) == tuple(d2.values())
     z = zip(G.edges(keys=True, data=True), G2.edges(keys=True, data=True))
     for (u1, v1, k1, d1), (u2, v2, k2, d2) in z:
         assert u1 == u2

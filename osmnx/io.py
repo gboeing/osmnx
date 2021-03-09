@@ -171,20 +171,25 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None, graph_dtypes=None
     """
     Load an OSMnx-saved GraphML file from disk.
 
-    Converts the node/edge attributes to appropriate data types, which can be
-    customized if needed by passing in `node_dtypes` or `edge_dtypes`
-    arguments.
+    Converts node, edge, and graph-level attributes to appropriate data types,
+    which can be customized if needed by passing in `node_dtypes` or
+    `edge_dtypes` arguments. Note that any `bool` types will be converted with
+    the `io._convert_bool_string` function instead.
 
     Parameters
     ----------
     filepath : string or pathlib.Path
         path to the GraphML file
     node_dtypes : dict
-        dict of node attribute names:types to convert values' types
+        dict of node attribute names:types to convert values' data types. the
+        type can be a python type or a custom string converter function.
     edge_dtypes : dict
-        dict of edge attribute names:types to convert values' types
+        dict of edge attribute names:types to convert values' data types. the
+        type can be a python type or a custom string converter function.
     graph_dtypes : dict
-        dict of graph-level attribute names:types to convert values' types
+        dict of graph-level attribute names:types to convert values' data
+        types. the type can be a python type or a custom string converter
+        function.
 
     Returns
     -------
