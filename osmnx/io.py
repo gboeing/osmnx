@@ -177,7 +177,10 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None, graph_dtypes=None
     functions. For example, if you want to convert some attribute's values to
     `bool`, consider using the built-in `ox.io._convert_bool_string` function
     to properly handle "True"/"False" string literals as True/False booleans:
-    `ox.load_graphml(fp, node_dtypes={"my_attr": ox.io._convert_bool_string})`
+    `ox.load_graphml(fp, node_dtypes={my_attr: ox.io._convert_bool_string})`
+
+    If you manually configured the `all_oneway=True` setting, you may need to
+    manually specify here that edge `oneway` attributes should be type `str`.
 
     Parameters
     ----------
