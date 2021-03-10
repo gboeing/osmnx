@@ -14,16 +14,16 @@ Boeing, G. 2017. `OSMnx: New Methods for Acquiring, Constructing, Analyzing, and
 Installation
 ------------
 
-You can install OSMnx with conda:
+You can install OSMnx with `conda`_:
 
 .. code-block:: shell
 
     conda config --prepend channels conda-forge
     conda create -n ox --strict-channel-priority osmnx
 
-If you want other packages, such as :code:`jupyterlab`, installed in this environment as well, just add their names after :code:`osmnx` above. See the `conda`_ documentation for further details. To upgrade OSMnx to a newer release, just remove the conda environment you created and then create a new one again, as above. Don't just run "conda update" or you could get package conflicts.
+If you want other packages, such as :code:`jupyterlab`, installed in this environment as well, just add their names after :code:`osmnx` above. See the conda documentation for further details. To upgrade OSMnx to a newer release, remove the conda environment you created and then create a new one again, as above. Don't just run "conda update" or you could get package conflicts.
 
-You can also run OSMnx + Jupyter directly from its official `Docker container`_, or you can install OSMnx via `pip`_ if you already have all of its dependencies installed and fully tested on your system. Note: installing the dependencies with pip is nontrivial. If you don't know *exactly* what you're doing, just use conda as described above.
+You can also run OSMnx + Jupyter directly from its official `Docker container`_, or you can install OSMnx via `pip`_ if you already have all of its dependencies installed and fully tested on your system. Note: installing the dependencies with pip is nontrivial. If you don't know exactly what you're doing, just use conda as described above.
 
 .. _conda: https://conda.io/
 .. _Docker container: https://hub.docker.com/r/gboeing/osmnx
@@ -34,7 +34,7 @@ You can also run OSMnx + Jupyter directly from its official `Docker container`_,
 Usage
 -----
 
-To get started with sample code and usage examples/demos, see the `examples`_ GitHub repo and read the `user reference`_.
+To **get started** with OSMnx, read its `user reference`_ and work through its `examples`_ repo for introductory usage demonstrations and sample code. Make sure you have read the `GeoPandas`_ and `NetworkX`_ user guides if you're not already familiar with these packages, as OSMnx uses their data structures and functionality.
 
 OSMnx is built on top of GeoPandas, NetworkX, and matplotlib and interacts with OpenStreetMap's APIs to:
 
@@ -61,8 +61,10 @@ OSMnx automatically processes network topology from the original raw OpenStreetM
 
 Usage examples and demonstrations of these features are in the `examples`_ GitHub repo. More feature development details are in the `change log`_. Read the `journal article`_ for further technical details. Package usage is detailed in the `user reference`_.
 
-.. _examples: https://github.com/gboeing/osmnx-examples
 .. _user reference: osmnx.html
+.. _examples: https://github.com/gboeing/osmnx-examples
+.. _GeoPandas: https://geopandas.org/
+.. _NetworkX: https://networkx.org/
 .. _journal article: https://geoffboeing.com/publications/osmnx-complex-street-networks/
 .. _change log: https://github.com/gboeing/osmnx/blob/master/CHANGELOG.md
 
