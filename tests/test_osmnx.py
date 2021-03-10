@@ -337,9 +337,9 @@ def test_graph_save_load():
     filepath = Path(ox.settings.data_folder) / "graph.graphml"
     G2 = ox.load_graphml(
         filepath,
-        graph_dtypes={attr_name: bool},
-        node_dtypes={attr_name: bool},
-        edge_dtypes={attr_name: bool},
+        graph_dtypes={attr_name: ox.io._convert_bool_string},
+        node_dtypes={attr_name: ox.io._convert_bool_string},
+        edge_dtypes={attr_name: ox.io._convert_bool_string},
     )
 
     # verify everything in G is equivalent in G2

@@ -171,11 +171,13 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None, graph_dtypes=None
     """
     Load an OSMnx-saved GraphML file from disk.
 
-    Converts node, edge, and graph-level attributes to appropriate data types,
-    which can be customized if needed by passing in dtypes arguments. Note
-    that any `bool` types will be converted with the `io._convert_bool_string`
-    function instead to properly handle "True"/"False" string literals as
-    booleans. Pass a custom converter function if you have a complex use case.
+    This converts node, edge, and graph-level attributes (serialized as
+    strings) to their appropriate data types. These can be customized as
+    needed by passing in dtypes arguments providing types or custom converter
+    functions. For example, if you want to convert some attribute's values to
+    `bool`, consider using the built-in `ox.io._convert_bool_string` function
+    to properly handle "True"/"False" string literals as True/False booleans:
+    `ox.load_graphml(fp, node_dtypes={"my_attr": ox.io._convert_bool_string})`
 
     Parameters
     ----------
@@ -199,7 +201,7 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None, graph_dtypes=None
     filepath = Path(filepath)
 
     # specify default graph/node/edge attribute values' data types
-    default_graph_dtypes = {"simplified": bool}
+    default_graph_dtypes = {"simplified": _convert_bool_string}
     default_node_dtypes = {
         "elevation": float,
         "elevation_res": float,
@@ -215,7 +217,7 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None, graph_dtypes=None
         "grade": float,
         "grade_abs": float,
         "length": float,
-        "oneway": bool,
+        "oneway": _convert_bool_string,
         "osmid": int,
         "speed_kph": float,
         "travel_time": float,
@@ -228,13 +230,6 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None, graph_dtypes=None
         default_node_dtypes.update(node_dtypes)
     if edge_dtypes is not None:
         default_edge_dtypes.update(edge_dtypes)
-
-    # if bool types appear in any of the dicts, replace it with the local
-    # converter function to handle boolean type conversion properly
-    for dtypes in (default_graph_dtypes, default_node_dtypes, default_edge_dtypes):
-        for k, v in dtypes.items():
-            if v == bool:
-                dtypes[k] = _convert_bool_string
 
     # read the graphml file from disk
     G = nx.read_graphml(filepath, node_type=default_node_dtypes["osmid"], force_multigraph=True)
