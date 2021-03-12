@@ -103,6 +103,26 @@ def test_geocode_to_gdf():
     city_projected = ox.project_gdf(city, to_crs="epsg:3395")
 
 
+def test_stats():
+    # create graph, add bearings, project it
+    G = ox.graph_from_point(location_point, dist=500, network_type="drive")
+    G = ox.add_edge_bearings(G)
+    G_proj = ox.project_graph(G)
+
+    # calculate stats
+    stats = ox.basic_stats(G)
+    stats = ox.basic_stats(G, area=1000)
+    stats = ox.basic_stats(
+        G_proj, area=1000, clean_intersects=True, tolerance=15, circuity_dist="euclidean"
+    )
+
+    # calculate extended stats
+    stats = ox.extended_stats(G, connectivity=True, anc=False, ecc=True, bc=True, cc=True)
+
+    # test cleaning and rebuilding graph
+    G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
+
+
 def test_osm_xml():
     # test loading a graph from a local .osm xml file
     node_id = 53098262
@@ -406,26 +426,6 @@ def test_graph_from_functions():
         dist_type="network",
         network_type="all_private",
     )
-
-
-def test_stats():
-    # create graph, add bearings, project it
-    G = ox.graph_from_point(location_point, dist=500, network_type="drive")
-    G = ox.add_edge_bearings(G)
-    G_proj = ox.project_graph(G)
-
-    # calculate stats
-    stats = ox.basic_stats(G)
-    stats = ox.basic_stats(G, area=1000)
-    stats = ox.basic_stats(
-        G_proj, area=1000, clean_intersects=True, tolerance=15, circuity_dist="euclidean"
-    )
-
-    # calculate extended stats
-    stats = ox.extended_stats(G, connectivity=True, anc=False, ecc=True, bc=True, cc=True)
-
-    # test cleaning and rebuilding graph
-    G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
 
 
 def test_geometries():
