@@ -5,6 +5,7 @@ TO-DO: Describe correct intersection counts from buffering and counting.
 """
 
 import logging as lg
+import warnings
 
 import networkx as nx
 import numpy as np
@@ -385,188 +386,87 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=10, circuity_dis
 
 def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=False):
     """
-    Calculate extended topological measures for a graph.
-
-    Many of these algorithms have an inherently high time complexity. Global
-    topological analysis of large complex networks is extremely time consuming
-    and may exhaust computer memory. Consider using function arguments to not
-    run metrics that require computation of a full matrix of paths if they
-    will not be needed.
+    Do not use: deprecated and will be removed in a future release.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph
+        deprecated
     connectivity : bool
-        if True, calculate node and edge connectivity
+        deprecated
     anc : bool
-        if True, calculate average node connectivity
+        deprecated
     ecc : bool
-        if True, calculate shortest paths, eccentricity, and topological
-        metrics that use eccentricity
+        deprecated
     bc : bool
-        if True, calculate node betweenness centrality
+        deprecated
     cc : bool
-        if True, calculate node closeness centrality
+        deprecated
 
     Returns
     -------
-    stats : dict
-        dictionary of network measures containing the following elements (some
-        only calculated/returned optionally, based on passed parameters):
-
-          - avg_neighbor_degree
-          - avg_neighbor_degree_avg
-          - avg_weighted_neighbor_degree
-          - avg_weighted_neighbor_degree_avg
-          - degree_centrality
-          - degree_centrality_avg
-          - clustering_coefficient
-          - clustering_coefficient_avg
-          - clustering_coefficient_weighted
-          - clustering_coefficient_weighted_avg
-          - pagerank
-          - pagerank_max_node
-          - pagerank_max
-          - pagerank_min_node
-          - pagerank_min
-          - node_connectivity
-          - node_connectivity_avg
-          - edge_connectivity
-          - eccentricity
-          - diameter
-          - radius
-          - center
-          - periphery
-          - closeness_centrality
-          - closeness_centrality_avg
-          - betweenness_centrality
-          - betweenness_centrality_avg
-
+    dict
     """
+    msg = (
+        "The extended_stats function has been deprecated and will be removed "
+        "in a future release. Use NetworkX directly to calculate measures."
+    )
+    warnings.warn(msg)
     stats = dict()
-
-    # create DiGraph from the MultiDiGraph, for those metrics that need it
     D = utils_graph.get_digraph(G, weight="length")
-
-    # create undirected Graph from the DiGraph, for those metrics that need it
     Gu = nx.Graph(D)
-
-    # get largest strongly connected component, for those metrics that require
-    # strongly connected graphs
     Gs = utils_graph.get_largest_component(G, strongly=True)
-
-    # average degree of the neighborhood of each node, and average for graph
     avg_neighbor_degree = nx.average_neighbor_degree(G)
     stats["avg_neighbor_degree"] = avg_neighbor_degree
     stats["avg_neighbor_degree_avg"] = sum(avg_neighbor_degree.values()) / len(avg_neighbor_degree)
-
-    # avg weighted degree of neighborhood of each node, and average for graph
     avg_wtd_nbr_deg = nx.average_neighbor_degree(G, weight="length")
     stats["avg_weighted_neighbor_degree"] = avg_wtd_nbr_deg
     stats["avg_weighted_neighbor_degree_avg"] = sum(avg_wtd_nbr_deg.values()) / len(avg_wtd_nbr_deg)
-
-    # degree centrality for a node is the fraction of nodes it is connected to
     degree_centrality = nx.degree_centrality(G)
     stats["degree_centrality"] = degree_centrality
     stats["degree_centrality_avg"] = sum(degree_centrality.values()) / len(degree_centrality)
-
-    # calculate clustering coefficient for the nodes
     stats["clustering_coefficient"] = nx.clustering(Gu)
-
-    # average clustering coefficient for the graph
     stats["clustering_coefficient_avg"] = nx.average_clustering(Gu)
-
-    # calculate weighted clustering coefficient for the nodes
     stats["clustering_coefficient_weighted"] = nx.clustering(Gu, weight="length")
-
-    # average clustering coefficient (weighted) for the graph
     stats["clustering_coefficient_weighted_avg"] = nx.average_clustering(Gu, weight="length")
-
-    # pagerank: a ranking of the nodes in the graph based on the structure of
-    # the incoming links
     pagerank = nx.pagerank(D, weight="length")
     stats["pagerank"] = pagerank
-
-    # node with the highest page rank, and its value
     pagerank_max_node = max(pagerank, key=lambda x: pagerank[x])
     stats["pagerank_max_node"] = pagerank_max_node
     stats["pagerank_max"] = pagerank[pagerank_max_node]
-
-    # node with the lowest page rank, and its value
     pagerank_min_node = min(pagerank, key=lambda x: pagerank[x])
     stats["pagerank_min_node"] = pagerank_min_node
     stats["pagerank_min"] = pagerank[pagerank_min_node]
-
-    # if True, calculate node and edge connectivity
     if connectivity:
-
-        # node connectivity is minimum number of nodes that must be removed
-        # to disconnect G or render it trivial
         stats["node_connectivity"] = nx.node_connectivity(Gs)
-
-        # edge connectivity is equal to minimum number of edges that must be
-        # removed to disconnect G or render it trivial
         stats["edge_connectivity"] = nx.edge_connectivity(Gs)
         utils.log("Calculated node and edge connectivity")
-
-    # if True, calculate average node connectivity
     if anc:
-        # mean number of internally node-disjoint paths between each pair of
-        # nodes in G, i.e., expected number of nodes that must be removed to
-        # disconnect a randomly selected pair of non-adjacent nodes
         stats["node_connectivity_avg"] = nx.average_node_connectivity(G)
         utils.log("Calculated average node connectivity")
-
-    # if True, calculate shortest paths, eccentricity, and topological metrics
-    # that use eccentricity
     if ecc:
-        # precompute shortest paths between all nodes for eccentricity-based
-        # stats
         length_func = nx.single_source_dijkstra_path_length
         sp = {source: dict(length_func(Gs, source, weight="length")) for source in Gs.nodes}
-
         utils.log("Calculated shortest path lengths")
-
-        # eccentricity of a node v is the maximum distance from v to all other
-        # nodes in G
         eccentricity = nx.eccentricity(Gs, sp=sp)
         stats["eccentricity"] = eccentricity
-
-        # diameter is the maximum eccentricity
         diameter = nx.diameter(Gs, e=eccentricity)
         stats["diameter"] = diameter
-
-        # radius is the minimum eccentricity
         radius = nx.radius(Gs, e=eccentricity)
         stats["radius"] = radius
-
-        # center is the set of nodes with eccentricity equal to radius
         center = nx.center(Gs, e=eccentricity)
         stats["center"] = center
-
-        # periphery is the set of nodes with eccentricity equal to diameter
         periphery = nx.periphery(Gs, e=eccentricity)
         stats["periphery"] = periphery
-
-    # if True, calculate node closeness centrality
     if cc:
-        # closeness centrality of a node is the reciprocal of the sum of the
-        # shortest path distances from u to all other nodes
         close_cent = nx.closeness_centrality(G, distance="length")
         stats["closeness_centrality"] = close_cent
         stats["closeness_centrality_avg"] = sum(close_cent.values()) / len(close_cent)
         utils.log("Calculated closeness centrality")
-
-    # if True, calculate node betweenness centrality
     if bc:
-        # betweenness centrality of a node is the sum of the fraction of
-        # all-pairs shortest paths that pass through node. nx2.4+
-        # implementation cannot run on Multi(Di)Graphs, so use DiGraph
         btwn_cent = nx.betweenness_centrality(D, weight="length")
         stats["betweenness_centrality"] = btwn_cent
         stats["betweenness_centrality_avg"] = sum(btwn_cent.values()) / len(btwn_cent)
         utils.log("Calculated betweenness centrality")
-
     utils.log("Calculated extended stats")
     return stats
