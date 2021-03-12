@@ -12,7 +12,264 @@ from . import utils
 from . import utils_graph
 
 
-def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dist="gc"):
+def streets_per_node(G):
+    """
+    Count streets (undirected edges) incident to each node.
+
+    Prevents double-counting bidirectional edges of a two-way street, but may
+    double-count a divided road's separate centerlines with different end
+    point nodes.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+
+    Returns
+    -------
+    spn : dict
+        dictionary with node ID keys and street count values
+    """
+    spn = dict(nx.get_node_attributes(G, "street_count"))
+    if set(spn) != set(G.nodes):
+        utils.log("Graph nodes changed since `street_count`s were calculated", level=lg.WARN)
+    return spn
+
+
+def streets_per_node_average(G):
+    """
+    Calculate graph's average count of streets per node.
+
+    Prevents double-counting bidirectional edges of a two-way street, but may
+    double-count a divided road's separate centerlines with different end
+    point nodes.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+
+    Returns
+    -------
+    spna : float
+        average count of streets per node
+    """
+    spn_vals = streets_per_node(G).values()
+    return sum(spn_vals) / len(G.nodes)
+
+
+def streets_per_node_counts(G):
+    """
+    Calculate streets-per-node counts.
+
+    Prevents double-counting bidirectional edges of a two-way street, but may
+    double-count a divided road's separate centerlines with different end
+    point nodes.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+
+    Returns
+    -------
+    spnc : dict
+        dictionary keyed by count of streets incident to each node, and with
+        values of how many nodes in the graph have this count
+    """
+    spn_vals = list(streets_per_node(G).values())
+    return {i: spn_vals.count(i) for i in range(max(spn_vals) + 1)}
+
+
+def streets_per_node_proportions(G):
+    """
+    Calculate streets-per-node proportions.
+
+    Prevents double-counting bidirectional edges of a two-way street, but may
+    double-count a divided road's separate centerlines with different end
+    point nodes.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+
+    Returns
+    -------
+    spnp : dict
+        dictionary keyed by count of streets incident to each node, and with
+        values of what proportion of nodes in the graph have this count
+    """
+    n = len(G.nodes)
+    spnc = streets_per_node_counts(G)
+    return {i: count / n for i, count in spnc.items()}
+
+
+def intersection_count(G=None, min_streets=2):
+    """
+    Count the intersections in a graph.
+
+    Intersections are defined as nodes with at least `min_streets` number of
+    streets incident to them. Prevents double-counting bidirectional edges of
+    a two-way street, but may double-count a divided road's separate
+    centerlines with different end point nodes.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    min_streets : int
+        a node must have at least `min_streets` incident to them to count as
+        an intersection
+
+    Returns
+    -------
+    count : int
+        count of intersections in graph
+    """
+    spn = streets_per_node(G)
+    node_ids = set(G.nodes)
+    return sum(count >= min_streets and node in node_ids for node, count in spn.items())
+
+
+def street_segment_count(Gu):
+    """
+    Count the street segments in a graph.
+
+    Prevents double-counting bidirectional edges of a two-way street, but may
+    double-count a divided road's separate centerlines with different end
+    point nodes.
+
+    Parameters
+    ----------
+    Gu : networkx.MultiGraph
+        undirected input graph
+
+    Returns
+    -------
+    count : int
+        count of street segments in graph
+    """
+    if nx.is_directed(Gu):
+        raise ValueError("`Gu` must be undirected")
+    return len(Gu.edges)
+
+
+def street_length_total(Gu):
+    """
+    Calculate graph's total street segment length.
+
+    Prevents double-counting bidirectional edges of a two-way street, but may
+    double-count a divided road's separate centerlines with different end
+    point nodes.
+
+    Parameters
+    ----------
+    Gu : networkx.MultiGraph
+        undirected input graph
+
+    Returns
+    -------
+    length : float
+        total length (meters) of streets in graph
+    """
+    if nx.is_directed(Gu):
+        raise ValueError("`Gu` must be undirected")
+    return sum(d["length"] for u, v, d in Gu.edges(data=True))
+
+
+def edge_length_total(G):
+    """
+    Calculate graph's total edge length.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+
+    Returns
+    -------
+    length : float
+        total length (meters) of edges in graph
+    """
+    return sum(d["length"] for u, v, d in G.edges(data=True))
+
+
+def self_loop_proportion(G):
+    """
+    Calculate percent of edges that are self-loops in a graph.
+
+    A self-loop is defined as an edge from node `u` to node `v` where `u==v`.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+
+    Returns
+    -------
+    proportion : float
+        proportion of graph edges that are self-loops
+    """
+    return sum(u == v for u, v, k in G.edges) / len(G.edges)
+
+
+def circuity_average(Gu, circuity_dist):
+    """
+    Calculate graph's average (undirected) edge circuity.
+
+    Circuity is the sum of edge lengths divided by the sum of straight-line
+    distances between edge endpoints. Using undirected graph edges prevents
+    double-counting bidirectional edges of a two-way street, but may
+    double-count a divided road's separate centerlines with different end
+    point nodes.
+
+    Parameters
+    ----------
+    Gu : networkx.MultiGraph
+        undirected input graph
+    circuity_dist : string
+        'gc' or 'euclidean', how to calculate straight-line distances for
+        circuity measurement; use former for unprojected graphs and latter for
+        projected graphs
+
+    Returns
+    -------
+    circuity_avg : float
+        the graph's average undirected edge circuity
+    """
+    if nx.is_directed(Gu):
+        raise ValueError("`Gu` must be undirected")
+
+    coords = (
+        (Gu.nodes[u]["y"], Gu.nodes[u]["x"], Gu.nodes[v]["y"], Gu.nodes[v]["x"])
+        for u, v, k in Gu.edges
+    )
+    df_coords = pd.DataFrame(coords, columns=["u_y", "u_x", "v_y", "v_x"])
+    if circuity_dist == "gc":
+        gc_distances = distance.great_circle_vec(
+            lat1=df_coords["u_y"],
+            lng1=df_coords["u_x"],
+            lat2=df_coords["v_y"],
+            lng2=df_coords["v_x"],
+        )
+    elif circuity_dist == "euclidean":
+        gc_distances = distance.euclidean_dist_vec(
+            y1=df_coords["u_y"], x1=df_coords["u_x"], y2=df_coords["v_y"], x2=df_coords["v_x"]
+        )
+    else:
+        raise ValueError('circuity_dist argument must be "gc" or "euclidean"')
+
+    gc_distances = gc_distances.fillna(value=0)
+    try:
+        circuity_avg = edge_length_total(Gu) / gc_distances.sum()
+    except ZeroDivisionError:
+        circuity_avg = np.nan
+
+    return circuity_avg
+
+
+def basic_stats(G, area=None, clean_intersects=False, tolerance=10, circuity_dist="gc"):
     """
     Calculate basic descriptive geometric and topological stats for a graph.
 
@@ -82,141 +339,45 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=15, circuity_dis
           - clean_intersection_density_km = clean_intersection_count divided
                 by area in square kilometers
     """
-    sq_m_in_sq_km = 1_000_000  # there are 1 million sq meters in 1 sq km
-    Gu = None
-    node_ids = set(G.nodes)
+    Gu = utils_graph.get_undirected(G)
+    stats = dict()
 
-    # calculate number of nodes, n, and number of edges, m, in the graph
-    n = len(G)
-    m = len(G.edges)
-
-    # calculate the average degree of the graph
-    k_avg = 2 * m / n
-
-    # get number of physical streets (undirected edges) connected to each node
-    spn = nx.get_node_attributes(G, "street_count")
-    if set(spn) != node_ids:
-        utils.log("Graph nodes changed since `street_count`s were calculated", level=lg.WARN)
-
-    # count number of intersections in graph, as nodes with >1 street
-    intersect_count = sum(count > 1 and node in node_ids for node, count in spn.items())
-
-    # calculate streets-per-node average: the average number of streets
-    # (unidirected edges) incident to each node
-    spna = sum(spn.values()) / n
-
-    # calculate streets-per-node counts
-    # create a dict where key = number of streets (unidirected edges) incident
-    # to each node, and value = how many nodes are of this number in the graph
-    spnc = {num: list(spn.values()).count(num) for num in range(max(spn.values()) + 1)}
-
-    # calculate streets-per-node proportion
-    # degree proportions: dict where key = each degree and value = what
-    # proportion of nodes are of this degree in the graph
-    spnp = {num: count / n for num, count in spnc.items()}
-
-    # calculate the total and average edge lengths
-    edge_length_total = sum(d["length"] for u, v, d in G.edges(data=True))
-    edge_length_avg = edge_length_total / m
-
-    # calculate total and average street segment lengths (so, edges without
-    # double-counting two-way streets)
-    if Gu is None:
-        Gu = utils_graph.get_undirected(G)
-    street_length_total = sum(d["length"] for u, v, d in Gu.edges(data=True))
-    street_segments_count = len(Gu.edges(keys=True))
-    street_length_avg = street_length_total / street_segments_count
+    stats["n"] = len(G.nodes)
+    stats["m"] = len(G.edges)
+    stats["k_avg"] = 2 * stats["m"] / stats["n"]
+    stats["streets_per_node_avg"] = streets_per_node_average(G)
+    stats["streets_per_node_counts"] = streets_per_node_counts(G)
+    stats["streets_per_node_proportion"] = streets_per_node_proportions(G)
+    stats["intersection_count"] = intersection_count(G)
+    stats["edge_length_total"] = edge_length_total(G)
+    stats["edge_length_avg"] = stats["edge_length_total"] / stats["m"]
+    stats["circuity_avg"] = circuity_average(Gu, circuity_dist)
+    stats["self_loop_proportion"] = self_loop_proportion(G)
+    stats["street_length_total"] = street_length_total(Gu)
+    stats["street_segment_count"] = street_segment_count(Gu)
+    stats["street_length_avg"] = stats["street_length_total"] / stats["street_segment_count"]
+    stats["clean_intersect_count"] = None
+    stats["node_density_km"] = None
+    stats["intersect_density_km"] = None
+    stats["edge_density_km"] = None
+    stats["street_density_km"] = None
+    stats["clean_intersect_density_km"] = None
 
     # calculate clean intersection counts
     if clean_intersects:
-        points = simplification.consolidate_intersections(G, tolerance, False, False)
-        clean_intersect_count = len(points)
-    else:
-        clean_intersect_count = None
+        stats["clean_intersect_count"] = len(
+            simplification.consolidate_intersections(G, tolerance, False, False)
+        )
 
     # we can calculate density metrics only if area is not null
     if area is not None:
-        area_km = area / sq_m_in_sq_km
-
-        # calculate node density as nodes per sq km
-        node_density_km = n / area_km
-
-        # calculate intersection density as nodes with >1 physical street
-        # connected to them, per sq km
-        intersect_density_km = intersect_count / area_km
-
-        # calculate edge density as linear meters per sq km
-        edge_density_km = edge_length_total / area_km
-
-        # calculate street density as linear meters per sq km
-        street_density_km = street_length_total / area_km
-
+        area_km = area / 1_000_000
+        stats["node_density_km"] = stats["n"] / area_km
+        stats["intersect_density_km"] = stats["intersection_count"] / area_km
+        stats["edge_density_km"] = stats["edge_length_total"] / area_km
+        stats["street_density_km"] = stats["street_length_total"] / area_km
         if clean_intersects:
-            clean_intersect_density_km = clean_intersect_count / area_km
-        else:
-            clean_intersect_density_km = None
-    else:
-        # if area is None, then we cannot calculate density
-        node_density_km = None
-        intersect_density_km = None
-        edge_density_km = None
-        street_density_km = None
-        clean_intersect_density_km = None
-
-    # average circuity: sum of edge lengths divided by sum of straight-line
-    # distance between edge endpoints. first load all the edges origin and
-    # destination coordinates as a dataframe, then calculate the straight-line
-    # distance
-    coords = (
-        (G.nodes[u]["y"], G.nodes[u]["x"], G.nodes[v]["y"], G.nodes[v]["x"]) for u, v, k in G.edges
-    )
-    df_coords = pd.DataFrame(coords, columns=["u_y", "u_x", "v_y", "v_x"])
-    if circuity_dist == "gc":
-        gc_distances = distance.great_circle_vec(
-            lat1=df_coords["u_y"],
-            lng1=df_coords["u_x"],
-            lat2=df_coords["v_y"],
-            lng2=df_coords["v_x"],
-        )
-    elif circuity_dist == "euclidean":
-        gc_distances = distance.euclidean_dist_vec(
-            y1=df_coords["u_y"], x1=df_coords["u_x"], y2=df_coords["v_y"], x2=df_coords["v_x"]
-        )
-    else:
-        raise ValueError('circuity_dist argument must be "gc" or "euclidean"')
-
-    gc_distances = gc_distances.fillna(value=0)
-    try:
-        circuity_avg = edge_length_total / gc_distances.sum()
-    except ZeroDivisionError:
-        circuity_avg = np.nan
-
-    # percent of edges that are self-loops, ie both endpoints are same node
-    self_loop_proportion = sum(u == v for u, v, k in G.edges) / m
-
-    # assemble the results
-    stats = {
-        "n": n,
-        "m": m,
-        "k_avg": k_avg,
-        "intersection_count": intersect_count,
-        "streets_per_node_avg": spna,
-        "streets_per_node_counts": spnc,
-        "streets_per_node_proportion": spnp,
-        "edge_length_total": edge_length_total,
-        "edge_length_avg": edge_length_avg,
-        "street_length_total": street_length_total,
-        "street_length_avg": street_length_avg,
-        "street_segments_count": street_segments_count,
-        "node_density_km": node_density_km,
-        "intersection_density_km": intersect_density_km,
-        "edge_density_km": edge_density_km,
-        "street_density_km": street_density_km,
-        "circuity_avg": circuity_avg,
-        "self_loop_proportion": self_loop_proportion,
-        "clean_intersection_count": clean_intersect_count,
-        "clean_intersection_density_km": clean_intersect_density_km,
-    }
+            stats["clean_intersect_density_km"] = stats["clean_intersect_count"] / area_km
 
     # return the results
     return stats
