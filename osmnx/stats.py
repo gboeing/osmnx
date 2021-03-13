@@ -252,17 +252,16 @@ def circuity_avg(Gu):
 def basic_stats(
     G,
     area=None,
+    clean_int_tol=None,
     clean_intersects=None,
     tolerance=None,
     circuity_dist=None,
-    clean_intersects_tol=None,
 ):
     """
     Calculate basic descriptive geometric and topological measures of a graph.
 
     Density measures are only calculated if `area` is provided and clean
-    intersection measures are only calculated if `clean_intersects_tol` is
-    provided.
+    intersection measures are only calculated if `clean_int_tol` is provided.
 
     Parameters
     ----------
@@ -271,7 +270,7 @@ def basic_stats(
     area : float
         if not None, calculate density measures and use this area value (in
         square meters) as the denominator
-    clean_intersects_tol : float
+    clean_int_tol : float
         if not None, calculate consolidated intersections count (and density,
         if `area` is also provided) and use this tolerance value; refer to the
         `simplification.consolidate_intersections` function documentation for
@@ -321,7 +320,7 @@ def basic_stats(
         msg = (
             "The `clean_intersects` and `tolerance` arguments have been "
             "deprecated and will be removed in a future release. Use the "
-            "`clean_intersects_tol` argument instead."
+            "`clean_int_tol` argument instead."
         )
         warnings.warn(msg)
 
@@ -331,7 +330,7 @@ def basic_stats(
         msg = (
             "The `clean_intersects` and `tolerance` arguments have been "
             "deprecated and will be removed in a future release. Use the "
-            "`clean_intersects_tol` argument instead."
+            "`clean_int_tol` argument instead."
         )
         warnings.warn(msg)
 
@@ -354,10 +353,10 @@ def basic_stats(
     stats["self_loop_proportion"] = self_loop_proportion(Gu)
 
     # calculate clean intersection counts if requested
-    if clean_intersects_tol:
+    if clean_int_tol:
         stats["clean_intersection_count"] = len(
             simplification.consolidate_intersections(
-                G, tolerance=clean_intersects_tol, rebuild_graph=False, dead_ends=False
+                G, tolerance=clean_int_tol, rebuild_graph=False, dead_ends=False
             )
         )
 
@@ -368,7 +367,7 @@ def basic_stats(
         stats["intersection_density_km"] = stats["intersection_count"] / area_km
         stats["edge_density_km"] = stats["edge_length_total"] / area_km
         stats["street_density_km"] = stats["street_length_total"] / area_km
-        if clean_intersects_tol:
+        if clean_int_tol:
             stats["clean_intersection_density_km"] = stats["clean_intersection_count"] / area_km
 
     return stats
