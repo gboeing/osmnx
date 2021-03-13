@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from . import graph
+from . import projection
 from . import settings
 from . import simplification
 from . import utils
@@ -783,12 +784,12 @@ def _config_ax(ax, crs, bbox, padding):
     ax.get_yaxis().set_visible(False)
 
     # set aspect ratio
-    if crs == settings.default_crs:
-        # if data are not projected, conform aspect ratio to not stretch plot
-        coslat = np.cos((south + north) / 2 / 180 * np.pi)
-        ax.set_aspect(1 / coslat)
-    else:
-        # if projected, make everything square
+    if projection.is_projected(crs):
+        # if projected, make equal aspect ratio
         ax.set_aspect("equal")
+    else:
+        # if not projected, conform aspect ratio to not stretch plot
+        cos_lat = np.cos((south + north) / 2 / 180 * np.pi)
+        ax.set_aspect(1 / cos_lat)
 
     return ax
