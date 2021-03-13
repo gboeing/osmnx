@@ -8,10 +8,10 @@ import logging as lg
 import warnings
 
 import networkx as nx
-import numpy as np
 import pandas as pd
 
 from . import distance
+from . import projection
 from . import simplification
 from . import utils
 from . import utils_graph
@@ -223,23 +223,21 @@ def self_loop_proportion(Gu):
     return sum(u == v for u, v, k in Gu.edges) / len(Gu.edges)
 
 
-def circuity_avg(Gu, circuity_dist):
+def circuity_avg(Gu):
     """
     Calculate graph's average (undirected) edge circuity.
 
     Circuity is the sum of edge lengths divided by the sum of straight-line
-    distances between edge endpoints. Using undirected graph edges prevents
-    double-counting bidirectional edges of a two-way street, but may
-    double-count a divided road's separate centerlines with different end
-    point nodes.
+    distances between edge endpoints. Calculates straight-line distance as
+    euclidean distance if projected or great-circle distance if unprojected.
+    Using undirected graph edges prevents double-counting bidirectional edges
+    of a two-way street, but may double-count a divided road's separate
+    centerlines with different end point nodes.
 
     Parameters
     ----------
     Gu : networkx.MultiGraph
         undirected input graph
-    circuity_dist : string {"gc", "euclidean"}
-        calculate straight-line distances as either great-circle or euclidean.
-        use former for unprojected graphs and latter for projected graphs.
 
     Returns
     -------
@@ -249,102 +247,121 @@ def circuity_avg(Gu, circuity_dist):
     if nx.is_directed(Gu):
         raise ValueError("`Gu` must be undirected")
 
+    # extract the edges' endpoint nodes' coordinates
     coords = (
         (Gu.nodes[u]["y"], Gu.nodes[u]["x"], Gu.nodes[v]["y"], Gu.nodes[v]["x"])
         for u, v, k in Gu.edges
     )
     df_coords = pd.DataFrame(coords, columns=["u_y", "u_x", "v_y", "v_x"])
-    if circuity_dist == "gc":
-        gc_distances = distance.great_circle_vec(
-            lat1=df_coords["u_y"],
-            lng1=df_coords["u_x"],
-            lat2=df_coords["v_y"],
-            lng2=df_coords["v_x"],
-        )
-    elif circuity_dist == "euclidean":
-        gc_distances = distance.euclidean_dist_vec(
-            y1=df_coords["u_y"], x1=df_coords["u_x"], y2=df_coords["v_y"], x2=df_coords["v_x"]
-        )
+
+    # calculate straight-line distances as either euclidean distances if
+    # projected, or great-circle distances if unprojected
+    if projection.is_projected(Gu.graph["crs"]):
+        y1 = df_coords["u_y"]
+        x1 = df_coords["u_x"]
+        y2 = df_coords["v_y"]
+        x2 = df_coords["v_x"]
+        straight_line_dists = distance.euclidean_dist_vec(y1=y1, x1=x1, y2=y2, x2=x2)
     else:
-        raise ValueError('circuity_dist argument must be "gc" or "euclidean"')
+        lat1 = df_coords["u_y"]
+        lng1 = df_coords["u_x"]
+        lat2 = df_coords["v_y"]
+        lng2 = df_coords["v_x"]
+        straight_line_dists = distance.great_circle_vec(lat1=lat1, lng1=lng1, lat2=lat2, lng2=lng2)
 
-    gc_distances = gc_distances.fillna(value=0)
+    # return the ratio, handling possible divide by zero
     try:
-        circuity_avg = edge_length_total(Gu) / gc_distances.sum()
+        return edge_length_total(Gu) / straight_line_dists.fillna(value=0).sum()
     except ZeroDivisionError:
-        circuity_avg = np.nan
-
-    return circuity_avg
+        return None
 
 
-def basic_stats(G, area=None, clean_intersects=False, tolerance=10, circuity_dist="gc"):
+def basic_stats(
+    G,
+    area=None,
+    clean_intersects=None,
+    tolerance=None,
+    circuity_dist=None,
+    clean_intersects_tol=None,
+):
     """
     Calculate basic descriptive geometric and topological measures of a graph.
 
-    For an unprojected graph, tolerance and graph units should be in decimal
-    degrees, and for a projected graph, tolerance and graph units should be in
-    meters.
+    Density measures are only calculated if `area` is provided and clean
+    intersection measures are only calculated if `clean_intersects_tol` is
+    provided.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
-    area : numeric
-        the land area of this study site, in square meters. must be greater
-        than 0. if None, will skip all density-based metrics.
+    area : float
+        if not None, calculate density measures and use this area value (in
+        square meters) as the denominator
+    clean_intersects_tol : float
+        if not None, calculate consolidated intersections count (and density,
+        if `area` is also provided) and use this tolerance value; refer to the
+        `simplification.consolidate_intersections` function documentation for
+        details
     clean_intersects : bool
-        if True, calculate consolidated intersections count (and density, if
-        area is provided) via consolidate_intersections function
-    tolerance : numeric
-        tolerance value passed along if clean_intersects=True, see
-        consolidate_intersections function documentation for details and usage
-    circuity_dist : string {"gc", "euclidean"}
-        calculate straight-line distances as either great-circle or euclidean.
-        use former for unprojected graphs and latter for projected graphs.
+        deprecated, do not use
+    tolerance : float
+        deprecated, do not use
+    circuity_dist : string
+        deprecated, do not use
 
     Returns
     -------
     stats : dict
-        network measures containing the following elements (some keys may not
-        be present, based on the arguments passed into the function):
-
-          - n = number of nodes in the graph
-          - m = number of edges in the graph
-          - k_avg = average node degree of the graph
-          - intersection_count = number of intersections in graph, that is,
-                nodes with >1 physical street connected to them
-          - streets_per_node_avg = how many physical streets (edges in the
-                undirected representation of the graph) connect to each node
-                (ie, intersection or dead-end) on average (mean)
-          - streets_per_node_counts = dict with keys of number of physical
-                streets connecting to a node, and values of number of nodes
-                with this count
-          - streets_per_node_proportion = dict, same as previous, but as a
-                proportion of the total, rather than counts
-          - edge_length_total = sum of all edge lengths in graph, in meters
-          - edge_length_avg = mean edge length in the graph, in meters
-          - street_length_total = sum of all edges in the undirected
-                representation of the graph
-          - street_length_avg = mean edge length in the undirected
-                representation of the graph, in meters
-          - street_segments_count = number of edges in the undirected
-                representation of the graph
-          - node_density_km = n divided by area in square kilometers
-          - intersection_density_km = intersection_count divided by area in
-                square kilometers
-          - edge_density_km = edge_length_total divided by area in square
-                kilometers
-          - street_density_km = street_length_total divided by area in square
-                kilometers
-          - circuity_avg = edge_length_total divided by the sum of the great
-                circle distances between the nodes of each edge
-          - self_loop_proportion = proportion of edges that have a single node
-                as its endpoints (ie, the edge links nodes u and v, and u==v)
-          - clean_intersection_count = number of intersections in street
-                network, merging complex ones into single points
-          - clean_intersection_density_km = clean_intersection_count divided
-                by area in square kilometers
+        dictionary with the following attributes: `n` (count of nodes in
+        graph), `m` (count of edges in graph), `k_avg` (graph's average node
+        degree), `edge_length_total` (see `edge_length_total` function
+        documentation), `edge_length_avg` (`edge_length_total / m`),
+        `streets_per_node_avg` (see `streets_per_node_avg` function
+        documentation), `streets_per_node_counts` (see
+        `streets_per_node_counts` function documentation),
+        `streets_per_node_proportions` (see `streets_per_node_proportions`
+        function documentation), `intersection_count` (see
+        `intersection_count` function documentation), `street_length_total`
+        (see `street_length_total` function documentation),
+        `street_segment_count` (see `street_segment_count` function
+        documentation), `street_length_avg` (`street_length_total /
+        street_segment_count`), `circuity_avg` (see `circuity_avg` function
+        documentation), `self_loop_proportion`, (see `self_loop_proportion`
+        function documentation), `clean_intersection_count` (see
+        `clean_intersection_count` function documentation), `node_density_km`
+        (`n` per sq km), `intersection_density_km` (`intersection_count`
+        per sq km), `edge_density_km` (`edge_length_total` per sq km),
+        `street_density_km` (`street_length_total` per sq km),
+        `clean_intersection_density_km` (`clean_intersection_count` per sq km)
     """
+    if circuity_dist is not None:
+        msg = (
+            "The `circuity_dist` argument has been deprecated and will be "
+            "removed in a future release."
+        )
+        warnings.warn(msg)
+
+    if clean_intersects is None:
+        clean_intersects = False
+    else:
+        msg = (
+            "The `clean_intersects` and `tolerance` arguments have been "
+            "deprecated and will be removed in a future release. Use the "
+            "`clean_intersects_tol` argument instead."
+        )
+        warnings.warn(msg)
+
+    if tolerance is None:
+        tolerance = 15
+    else:
+        msg = (
+            "The `clean_intersects` and `tolerance` arguments have been "
+            "deprecated and will be removed in a future release. Use the "
+            "`clean_intersects_tol` argument instead."
+        )
+        warnings.warn(msg)
+
     Gu = utils_graph.get_undirected(G)
     stats = dict()
 
@@ -360,14 +377,14 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=10, circuity_dis
     stats["street_length_total"] = street_length_total(Gu)
     stats["street_segment_count"] = street_segment_count(Gu)
     stats["street_length_avg"] = stats["street_length_total"] / stats["street_segment_count"]
-    stats["circuity_avg"] = circuity_avg(Gu, circuity_dist)
+    stats["circuity_avg"] = circuity_avg(Gu)
     stats["self_loop_proportion"] = self_loop_proportion(Gu)
 
     # calculate clean intersection counts if requested
-    if clean_intersects:
+    if clean_intersects_tol:
         stats["clean_intersection_count"] = len(
             simplification.consolidate_intersections(
-                G, tolerance=tolerance, rebuild_graph=False, dead_ends=False
+                G, tolerance=clean_intersects_tol, rebuild_graph=False, dead_ends=False
             )
         )
 
@@ -378,7 +395,7 @@ def basic_stats(G, area=None, clean_intersects=False, tolerance=10, circuity_dis
         stats["intersection_density_km"] = stats["intersection_count"] / area_km
         stats["edge_density_km"] = stats["edge_length_total"] / area_km
         stats["street_density_km"] = stats["street_length_total"] / area_km
-        if clean_intersects:
+        if clean_intersects_tol:
             stats["clean_intersection_density_km"] = stats["clean_intersection_count"] / area_km
 
     return stats
