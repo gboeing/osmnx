@@ -1,7 +1,15 @@
 """
 Calculate geometric and topological network measures.
 
-TO-DO: Describe correct intersection counts from buffering and counting.
+This module defines streets as the edges in an undirected representation of
+the graph. Using undirected graph edges prevents double-counting bidirectional
+edges of a two-way street, but may double-count a divided road's separate
+centerlines with different end point nodes. If `clean_periphery=True` when the
+graph was created (which is the default parameterization), then you will get
+accurate node degrees (and in turn streets-per-node counts) even at the
+periphery of the graph.
+
+You can use NetworkX directly for additional topological network measures.
 """
 
 import logging as lg
@@ -20,10 +28,6 @@ from . import utils_graph
 def streets_per_node(G):
     """
     Count streets (undirected edges) incident on each node.
-
-    Prevents double-counting bidirectional edges of a two-way street, but may
-    double-count a divided road's separate centerlines with different end
-    point nodes.
 
     Parameters
     ----------
@@ -45,10 +49,6 @@ def streets_per_node_avg(G):
     """
     Calculate graph's average count of streets per node.
 
-    Prevents double-counting bidirectional edges of a two-way street, but may
-    double-count a divided road's separate centerlines with different end
-    point nodes.
-
     Parameters
     ----------
     G : networkx.MultiDiGraph
@@ -66,10 +66,6 @@ def streets_per_node_avg(G):
 def streets_per_node_counts(G):
     """
     Calculate streets-per-node counts.
-
-    Prevents double-counting bidirectional edges of a two-way street, but may
-    double-count a divided road's separate centerlines with different end
-    point nodes.
 
     Parameters
     ----------
@@ -89,10 +85,6 @@ def streets_per_node_counts(G):
 def streets_per_node_proportions(G):
     """
     Calculate streets-per-node proportions.
-
-    Prevents double-counting bidirectional edges of a two-way street, but may
-    double-count a divided road's separate centerlines with different end
-    point nodes.
 
     Parameters
     ----------
@@ -115,9 +107,7 @@ def intersection_count(G=None, min_streets=2):
     Count the intersections in a graph.
 
     Intersections are defined as nodes with at least `min_streets` number of
-    streets incident on them. Prevents double-counting bidirectional edges of
-    a two-way street, but may double-count a divided road's separate
-    centerlines with different end point nodes.
+    streets incident on them.
 
     Parameters
     ----------
@@ -141,10 +131,6 @@ def street_segment_count(Gu):
     """
     Count the street segments in a graph.
 
-    Prevents double-counting bidirectional edges of a two-way street, but may
-    double-count a divided road's separate centerlines with different end
-    point nodes.
-
     Parameters
     ----------
     Gu : networkx.MultiGraph
@@ -163,10 +149,6 @@ def street_segment_count(Gu):
 def street_length_total(Gu):
     """
     Calculate graph's total street segment length.
-
-    Prevents double-counting bidirectional edges of a two-way street, but may
-    double-count a divided road's separate centerlines with different end
-    point nodes.
 
     Parameters
     ----------
@@ -205,8 +187,6 @@ def self_loop_proportion(Gu):
     Calculate percent of edges that are self-loops in a graph.
 
     A self-loop is defined as an edge from node `u` to node `v` where `u==v`.
-    Using an undirected graph prevents double-counting bidirectional edges of
-    two-way streets.
 
     Parameters
     ----------
@@ -230,9 +210,6 @@ def circuity_avg(Gu):
     Circuity is the sum of edge lengths divided by the sum of straight-line
     distances between edge endpoints. Calculates straight-line distance as
     euclidean distance if projected or great-circle distance if unprojected.
-    Using undirected graph edges prevents double-counting bidirectional edges
-    of a two-way street, but may double-count a divided road's separate
-    centerlines with different end point nodes.
 
     Parameters
     ----------
@@ -313,27 +290,27 @@ def basic_stats(
     Returns
     -------
     stats : dict
-        dictionary with the following attributes: `n` (count of nodes in
-        graph), `m` (count of edges in graph), `k_avg` (graph's average node
-        degree), `edge_length_total` (see `edge_length_total` function
-        documentation), `edge_length_avg` (`edge_length_total / m`),
-        `streets_per_node_avg` (see `streets_per_node_avg` function
-        documentation), `streets_per_node_counts` (see
-        `streets_per_node_counts` function documentation),
-        `streets_per_node_proportions` (see `streets_per_node_proportions`
-        function documentation), `intersection_count` (see
-        `intersection_count` function documentation), `street_length_total`
-        (see `street_length_total` function documentation),
-        `street_segment_count` (see `street_segment_count` function
-        documentation), `street_length_avg` (`street_length_total /
-        street_segment_count`), `circuity_avg` (see `circuity_avg` function
-        documentation), `self_loop_proportion`, (see `self_loop_proportion`
-        function documentation), `clean_intersection_count` (see
-        `clean_intersection_count` function documentation), `node_density_km`
-        (`n` per sq km), `intersection_density_km` (`intersection_count`
-        per sq km), `edge_density_km` (`edge_length_total` per sq km),
-        `street_density_km` (`street_length_total` per sq km),
-        `clean_intersection_density_km` (`clean_intersection_count` per sq km)
+        dictionary containing the following attributes
+          - `circuity_avg` - see `circuity_avg` function documentation
+          - `clean_intersection_count` - see `clean_intersection_count` function documentation
+          - `clean_intersection_density_km` - `clean_intersection_count` per sq km
+          - `edge_density_km` - `edge_length_total` per sq km
+          - `edge_length_avg` - `edge_length_total / m`
+          - `edge_length_total` - see `edge_length_total` function documentation
+          - `intersection_count` - see `intersection_count` function documentation
+          - `intersection_density_km` - `intersection_count` per sq km
+          - `k_avg` - graph's average node degree (in-degree and out-degree)
+          - `m` - count of edges in graph
+          - `n` - count of nodes in graph
+          - `node_density_km` - `n` per sq km
+          - `self_loop_proportion` - see `self_loop_proportion` function documentation
+          - `street_density_km` - `street_length_total` per sq km
+          - `street_length_avg` - `street_length_total / street_segment_count`
+          - `street_length_total` - see `street_length_total` function documentation
+          - `street_segment_count` - see `street_segment_count` function documentation
+          - `streets_per_node_avg` - see `streets_per_node_avg` function documentation
+          - `streets_per_node_counts` - see `streets_per_node_counts` function documentation
+          - `streets_per_node_proportions` - see `streets_per_node_proportions` function documentation
     """
     if circuity_dist is not None:
         msg = (
