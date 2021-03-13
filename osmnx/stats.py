@@ -205,7 +205,7 @@ def self_loop_proportion(Gu):
 
 def circuity_avg(Gu):
     """
-    Calculate graph's average (undirected) edge circuity.
+    Calculate average street circuity using edges of undirected graph.
 
     Circuity is the sum of edge lengths divided by the sum of straight-line
     distances between edge endpoints. Calculates straight-line distance as
@@ -230,25 +230,21 @@ def circuity_avg(Gu):
         for u, v, k in Gu.edges
     )
     df_coords = pd.DataFrame(coords, columns=["u_y", "u_x", "v_y", "v_x"])
+    y1 = df_coords["u_y"]
+    x1 = df_coords["u_x"]
+    y2 = df_coords["v_y"]
+    x2 = df_coords["v_x"]
 
-    # calculate straight-line distances as either euclidean distances if
-    # projected, or great-circle distances if unprojected
+    # calculate straight-line distances as euclidean distances if projected or
+    # great-circle distances if unprojected
     if projection.is_projected(Gu.graph["crs"]):
-        y1 = df_coords["u_y"]
-        x1 = df_coords["u_x"]
-        y2 = df_coords["v_y"]
-        x2 = df_coords["v_x"]
-        straight_line_dists = distance.euclidean_dist_vec(y1=y1, x1=x1, y2=y2, x2=x2)
+        sl_dists = distance.euclidean_dist_vec(y1=y1, x1=x1, y2=y2, x2=x2)
     else:
-        lat1 = df_coords["u_y"]
-        lng1 = df_coords["u_x"]
-        lat2 = df_coords["v_y"]
-        lng2 = df_coords["v_x"]
-        straight_line_dists = distance.great_circle_vec(lat1=lat1, lng1=lng1, lat2=lat2, lng2=lng2)
+        sl_dists = distance.great_circle_vec(lat1=y1, lng1=x1, lat2=y2, lng2=x2)
 
-    # return the ratio, handling possible divide by zero
+    # return the ratio, handling possible division by zero
     try:
-        return edge_length_total(Gu) / straight_line_dists.fillna(value=0).sum()
+        return edge_length_total(Gu) / sl_dists.fillna(value=0).sum()
     except ZeroDivisionError:
         return None
 
