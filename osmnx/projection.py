@@ -10,6 +10,25 @@ from . import utils
 from . import utils_graph
 
 
+def is_projected(crs):
+    """
+    Determine if a coordinate reference system is projected or not.
+
+    This is a convenience wrapper around the pyproj.CRS.is_projected function.
+
+    Parameters
+    ----------
+    crs : string or pyproj.CRS
+        the coordinate reference system
+
+    Returns
+    -------
+    projected : bool
+        True if crs is projected, otherwise False
+    """
+    return CRS.from_user_input(crs).is_projected
+
+
 def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     """
     Project a shapely geometry from its current CRS to another.
@@ -84,7 +103,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
 
     # otherwise, automatically project the gdf to UTM
     else:
-        if CRS.from_user_input(gdf.crs).is_projected:
+        if is_projected(gdf.crs):
             raise ValueError("Geometry must be unprojected to calculate UTM zone")
 
         # calculate longitude of centroid of union of all geometries in gdf
