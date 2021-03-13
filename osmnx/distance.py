@@ -5,6 +5,7 @@ import itertools
 import networkx as nx
 import numpy as np
 import pandas as pd
+from scipy.spatial import cKDTree
 from shapely.geometry import Point
 
 from . import projection
@@ -12,11 +13,7 @@ from . import utils
 from . import utils_geo
 from . import utils_graph
 
-# scipy and sklearn are optional dependencies for faster nearest node search
-try:
-    from scipy.spatial import cKDTree
-except ImportError:
-    cKDTree = None
+# scikit-learn is optional dependency for unprojected nearest-neighbor search
 try:
     from sklearn.neighbors import BallTree
 except ImportError:
@@ -126,9 +123,9 @@ def nearest_node(G, X, Y, return_dist=False):
         contains distances between the points and their nearest nodes
     """
     # extract the nodes' IDs and coordinates
-    nodes = np.array([(n, d['x'], d['y']) for n, d in G.nodes(data=True)])
+    nodes = np.array([(n, d["x"], d["y"]) for n, d in G.nodes(data=True)])
 
-    if projection.is_projected(G.graph['crs']):
+    if projection.is_projected(G.graph["crs"]):
         # if projected, use k-d tree for euclidean nearest-neighbor search
         dist, idx = cKDTree(nodes[:, 1:]).query(np.array([X, Y]).T, k=1)
         nn = nodes[idx, 0].astype(int)
@@ -321,10 +318,6 @@ def get_nearest_nodes(G, X, Y, method=None, return_dist=False):
             nn = result
     elif method == "kdtree":
 
-        # check if we were able to import scipy.spatial.cKDTree
-        if cKDTree is None:
-            raise ImportError("scipy must be installed to use this optional feature")
-
         # build a k-d tree for euclidean nearest node search
         nodes = pd.DataFrame(
             {"x": nx.get_node_attributes(G, "x"), "y": nx.get_node_attributes(G, "y")}
@@ -429,10 +422,6 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         ne = [get_nearest_edge(G, (y, x)) for x, y in zip(X, Y)]
 
     elif method == "kdtree":
-
-        # check if we were able to import scipy.spatial.cKDTree successfully
-        if cKDTree is None:
-            raise ImportError("scipy must be installed to use this optional feature")
 
         # transform graph into DataFrame
         edges = utils_graph.graph_to_gdfs(G, nodes=False).reset_index()

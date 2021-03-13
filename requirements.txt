@@ -6,4 +6,5 @@ pandas>=1.1
 pyproj>=2.6
 requests>=2.25
 Rtree>=0.9
+scipy>=1.5
 Shapely>=1.7
