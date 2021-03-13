@@ -19,7 +19,7 @@ from . import utils_graph
 
 def streets_per_node(G):
     """
-    Count streets (undirected edges) incident to each node.
+    Count streets (undirected edges) incident on each node.
 
     Prevents double-counting bidirectional edges of a two-way street, but may
     double-count a divided road's separate centerlines with different end
@@ -79,7 +79,7 @@ def streets_per_node_counts(G):
     Returns
     -------
     spnc : dict
-        dictionary keyed by count of streets incident to each node, and with
+        dictionary keyed by count of streets incident on each node, and with
         values of how many nodes in the graph have this count
     """
     spn_vals = list(streets_per_node(G).values())
@@ -102,7 +102,7 @@ def streets_per_node_proportions(G):
     Returns
     -------
     spnp : dict
-        dictionary keyed by count of streets incident to each node, and with
+        dictionary keyed by count of streets incident on each node, and with
         values of what proportion of nodes in the graph have this count
     """
     n = len(G.nodes)
@@ -115,7 +115,7 @@ def intersection_count(G=None, min_streets=2):
     Count the intersections in a graph.
 
     Intersections are defined as nodes with at least `min_streets` number of
-    streets incident to them. Prevents double-counting bidirectional edges of
+    streets incident on them. Prevents double-counting bidirectional edges of
     a two-way street, but may double-count a divided road's separate
     centerlines with different end point nodes.
 
@@ -124,7 +124,7 @@ def intersection_count(G=None, min_streets=2):
     G : networkx.MultiDiGraph
         input graph
     min_streets : int
-        a node must have at least `min_streets` incident to them to count as
+        a node must have at least `min_streets` incident on them to count as
         an intersection
 
     Returns
