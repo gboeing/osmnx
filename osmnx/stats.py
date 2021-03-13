@@ -17,7 +17,6 @@ import warnings
 
 import networkx as nx
 import numpy as np
-import pandas as pd
 
 from . import bearing
 from . import distance
@@ -68,8 +67,9 @@ def _get_bearings(Gu, min_length=0, weight=None):
                 bearings.append(data["bearing"])
 
     # drop any nulls, calculate reverse bearings, concatenate and return
-    bearings = pd.Series(bearings).dropna()
-    bearings_r = (bearings + 180) % 360
+    bearings = np.array(bearings)
+    bearings = bearings[~np.isnan(bearings)]
+    bearings_r = (bearings - 180) % 360
     return np.concatenate([bearings, bearings_r])
 
 
@@ -331,15 +331,16 @@ def circuity_avg(Gu):
         raise ValueError("`Gu` must be undirected")
 
     # extract the edges' endpoint nodes' coordinates
-    coords = (
-        (Gu.nodes[u]["y"], Gu.nodes[u]["x"], Gu.nodes[v]["y"], Gu.nodes[v]["x"])
-        for u, v, k in Gu.edges
+    coords = np.array(
+        [
+            (Gu.nodes[u]["y"], Gu.nodes[u]["x"], Gu.nodes[v]["y"], Gu.nodes[v]["x"])
+            for u, v, _ in Gu.edges
+        ]
     )
-    df_coords = pd.DataFrame(coords, columns=["u_y", "u_x", "v_y", "v_x"])
-    y1 = df_coords["u_y"]
-    x1 = df_coords["u_x"]
-    y2 = df_coords["v_y"]
-    x2 = df_coords["v_x"]
+    y1 = coords[:, 0]
+    x1 = coords[:, 1]
+    y2 = coords[:, 2]
+    x2 = coords[:, 3]
 
     # calculate straight-line distances as euclidean distances if projected or
     # great-circle distances if unprojected
@@ -349,8 +350,9 @@ def circuity_avg(Gu):
         sl_dists = distance.great_circle_vec(lat1=y1, lng1=x1, lat2=y2, lng2=x2)
 
     # return the ratio, handling possible division by zero
+    sl_dists_total = sl_dists[~np.isnan(sl_dists)].sum()
     try:
-        return edge_length_total(Gu) / sl_dists.fillna(value=0).sum()
+        return edge_length_total(Gu) / sl_dists_total
     except ZeroDivisionError:
         return None
 
