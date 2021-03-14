@@ -22,7 +22,7 @@ except ImportError:
 
 def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6_371_009):
     """
-    Calculate great-circle distances between points.
+    Calculate great-circle distances between pairs of points.
 
     Vectorized function to calculate the great-circle distance between two
     points' coordinates or between arrays of points' coordinates using the
@@ -30,13 +30,13 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6_371_009):
 
     Parameters
     ----------
-    lat1 : float or np.array of float
+    lat1 : float or numpy.array of float
         first point's latitude coordinate
-    lng1 : float or np.array of float
+    lng1 : float or numpy.array of float
         first point's longitude coordinate
-    lat2 : float or np.array of float
+    lat2 : float or numpy.array of float
         second point's latitude coordinate
-    lng2 : float or np.array of float
+    lng2 : float or numpy.array of float
         second point's longitude coordinate
     earth_radius : int or float
         radius of earth in units in which distance will be returned
@@ -44,9 +44,9 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6_371_009):
 
     Returns
     -------
-    dist : float or np.array
-        distance or array of distances from (lat1, lng1) to (lat2, lng2) in
-        units of earth_radius
+    dist : float or numpy.array of float
+        distance from each (lat1, lng1) to each (lat2, lng2) in units of
+        earth_radius
     """
     phi1 = np.deg2rad(lat1)
     phi2 = np.deg2rad(lat2)
@@ -67,28 +67,27 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6_371_009):
 
 def euclidean_dist_vec(y1, x1, y2, x2):
     """
-    Calculate Euclidean distances between points.
+    Calculate Euclidean distances between pairs of points.
 
     Vectorized function to calculate the Euclidean distance between two
-    points' coordinates or between arrays of points' coordinates. For most
-    accurate results, use projected coordinates rather than decimal degrees.
+    points' coordinates or between arrays of points' coordinates. For accurate
+    results, use projected coordinates rather than decimal degrees.
 
     Parameters
     ----------
-    y1 : float or np.array of float
+    y1 : float or numpy.array of float
         first point's y coordinate
-    x1 : float or np.array of float
+    x1 : float or numpy.array of float
         first point's x coordinate
-    y2 : float or np.array of float
+    y2 : float or numpy.array of float
         second point's y coordinate
-    x2 : float or np.array of float
+    x2 : float or numpy.array of float
         second point's x coordinate
 
     Returns
     -------
-    dist : float or np.array of float
-        distance or array of distances from (x1, y1) to (x2, y2) in
-        coordinates' units
+    dist : float or numpy.array of float
+        distance from each (x1, y1) to each (x2, y2) in coordinates' units
     """
     # pythagorean theorem
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
@@ -98,19 +97,21 @@ def nearest_nodes(G, X, Y, return_dist=False):
     """
     Find the nearest node(s) to some point(s).
 
-    If the graph is projected, this will use a k-d tree for fast euclidean
+    If the graph is projected, this will use a k-d tree for euclidean
     nearest-neighbor search. If it is unprojected, this will use a ball tree
-    for fast haversine nearest-neighbor search, which requires that
-    scikit-learn is installed as an optional dependency.
+    for haversine nearest-neighbor search, which requires that scikit-learn is
+    installed as an optional dependency.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         graph in which to find nearest nodes
     X : list
-        points' x or longitude coordinates, in same CRS and units as graph
+        points' x or longitude coordinates, in same CRS/units as graph and
+        containing no nulls
     Y : list
-        points' y or latitude coordinates, in same CRS and units as graph
+        points' y or latitude coordinates, in same CRS/units as graph and
+        containing no nulls
     return_dist : bool
         optionally also return distance between points and nearest nodes
 
@@ -147,29 +148,32 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
     """
     Find the nearest edge(s) to some point(s).
 
-    If spacing is None, search for the nearest edge to each point, one at a
+    If `spacing` is None, search for the nearest edge to each point, one at a
     time, using an r-tree and minimizing the euclidean distances from the
-    point to the possible matches. Can be slow if searching many points. For
-    best results, use a projected graph and points.
+    point to the possible matches. For best results, use a projected graph and
+    points. This method is fastest if searching for few points relative to the
+    graph's size.
 
-    Otherwise, if spacing is not None: interpolate points along edges to use a
-    k-d tree or ball tree for search. if the graph is projected, this will
-    use a k-d tree for fast euclidean nearest-neighbor search. If graph is
-    unprojected, this will use a ball tree for fast haversine nearest-neighbor
-    search, which requires that scikit-learn is installed as an optional
-    dependency.
+    For a faster method if searching for many points relative to the graph's
+    size, using the `spacing` argument to interpolate points along edges to
+    search. If the graph is projected, this will use a k-d tree for euclidean
+    nearest-neighbor search. If graph is unprojected, this will use a ball
+    tree for haversine nearest-neighbor search, which requires that
+    scikit-learn is installed as an optional dependency.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         graph in which to find nearest edges
     X : list
-        points' x or longitude coordinates, in same CRS and units as graph
+        points' x or longitude coordinates, in same CRS/units as graph and
+        containing no nulls
     Y : list
-        points' y or latitude coordinates, in same CRS and units as graph
+        points' y or latitude coordinates, in same CRS/units as graph and
+        containing no nulls
     spacing : float
         spacing between interpolated points, in same units as graph. smaller
-        values generate more points.
+        values generate more points and slower but more precise results.
     return_dist : bool
         optionally also return distance between points and nearest edges
 
