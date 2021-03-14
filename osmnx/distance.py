@@ -143,6 +143,83 @@ def nearest_nodes(G, X, Y, return_dist=False):
         return nn
 
 
+def nearest_edges(G, X, Y, spacing=None, return_dist=False):
+    """
+    Find the nearest edge(s) to some point(s).
+
+    If spacing is None, search for the nearest edge to each point, one at a
+    time, using an r-tree and minimizing the euclidean distances from the
+    point to the possible matches. Can be slow if searching many points. For
+    best results, use a projected graph and points.
+
+    Otherwise, if spacing is not None: interpolate points along edges to use a
+    k-d tree or ball tree for search. if the graph is projected, this will
+    use a k-d tree for fast euclidean nearest-neighbor search. If graph is
+    unprojected, this will use a ball tree for fast haversine nearest-neighbor
+    search, which requires that scikit-learn is installed as an optional
+    dependency.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        graph in which to find nearest edges
+    X : list
+        points' x or longitude coordinates, in same CRS and units as graph
+    Y : list
+        points' y or latitude coordinates, in same CRS and units as graph
+    spacing : float
+        spacing between interpolated points, in same units as graph. smaller
+        values generate more points.
+    return_dist : bool
+        optionally also return distance between points and nearest edges
+
+    Returns
+    -------
+    ne or (ne, dist): list or tuple of list
+        nearest edges as (u, v, key) or optionally tuple of lists where `dist`
+        contains distances between the points and their nearest edges
+    """
+    geoms = ox.utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
+
+    # if no interpolation spacing is provided, use an r-tree to find possible
+    # matches, then minimize euclidean distance from point to possible matches
+    if not spacing:
+        ne = list()
+        dist = list()
+        for xy in zip(X, Y):
+            distances = geoms.iloc[list(sindex.nearest(xy))].distance(Point(xy))
+            ne.append(distances.idxmin())
+            dist.append(distances.min())
+
+    # otherwise, interpolate points along edges for k-d tree or ball tree
+    else:
+        uvk_xy = list()
+        for uvk, geom in zip(geoms.index, geoms.values):
+            uvk_xy.extend((uvk, xy) for xy in ox.utils_geo.interpolate_points(geom, spacing))
+        labels, xy = zip(*uvk_xy)
+        vertices = pd.DataFrame(xy, index=labels, columns=["x", "y"])
+
+        if ox.projection.is_projected(G.graph["crs"]):
+            # if projected, use k-d tree for euclidean nearest-neighbor search
+            dist, pos = cKDTree(vertices).query(np.array([X, Y]).T, k=1)
+            ne = vertices.index[pos].tolist()
+
+        else:
+            # if unprojected, use ball tree for haversine nearest-neighbor search
+            if BallTree is None:
+                raise ImportError("scikit-learn must be installed to search an unprojected graph")
+            # haversine requires lat, lng coords in radians
+            vertices_rad = np.deg2rad(vertices[["y", "x"]])
+            points_rad = np.deg2rad(np.array([Y, X]).T)
+            dist, pos = BallTree(vertices_rad, metric="haversine").query(points_rad, k=1)
+            ne = vertices.index[pos[:, 0]].tolist()
+
+    if return_dist:
+        return ne, dist
+    else:
+        return ne
+
+
 def get_nearest_node(G, point, method="haversine", return_dist=False):
     """
     Find the nearest node to a point.
