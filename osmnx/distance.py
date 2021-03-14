@@ -188,6 +188,9 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
     """
     if pd.Series(X).isna().any() or pd.Series(Y).isna().any():
         raise ValueError('`X` and `Y` cannot contain nulls')
+
+    # we need rtree.index.Index not pygeos.STRtree for now to use `nearest`
+    gpd.options.use_pygeos = False
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
 
     # if no interpolation spacing was provided, use an r-tree to find possible
