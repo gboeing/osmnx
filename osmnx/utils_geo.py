@@ -38,7 +38,6 @@ def interpolate_points(geom, spacing):
     """
     if isinstance(geom, LineString):
         num_vert = max(round(geom.length / spacing), 1)
-        points = list()
         for n in range(num_vert + 1):
             point = geom.interpolate(n / num_vert, normalized=True)
             yield point.x, point.y

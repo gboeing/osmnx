@@ -179,27 +179,26 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
         nearest edges as (u, v, key) or optionally tuple of lists where `dist`
         contains distances between the points and their nearest edges
     """
-    geoms = ox.utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
+    geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
 
     # if no interpolation spacing is provided, use an r-tree to find possible
     # matches, then minimize euclidean distance from point to possible matches
     if not spacing:
-        ne = list()
-        dist = list()
+        ne_dist = list()
         for xy in zip(X, Y):
-            distances = geoms.iloc[list(sindex.nearest(xy))].distance(Point(xy))
-            ne.append(distances.idxmin())
-            dist.append(distances.min())
+            dists = geoms.iloc[list(geoms.sindex.nearest(xy))].distance(Point(xy))
+            ne_dist.append(dists.idxmin(), dists.min())
+        ne, dist = zip(*ne_dist)
 
     # otherwise, interpolate points along edges for k-d tree or ball tree
     else:
         uvk_xy = list()
         for uvk, geom in zip(geoms.index, geoms.values):
-            uvk_xy.extend((uvk, xy) for xy in ox.utils_geo.interpolate_points(geom, spacing))
+            uvk_xy.extend((uvk, xy) for xy in utils_geo.interpolate_points(geom, spacing))
         labels, xy = zip(*uvk_xy)
         vertices = pd.DataFrame(xy, index=labels, columns=["x", "y"])
 
-        if ox.projection.is_projected(G.graph["crs"]):
+        if projection.is_projected(G.graph["crs"]):
             # if projected, use k-d tree for euclidean nearest-neighbor search
             dist, pos = cKDTree(vertices).query(np.array([X, Y]).T, k=1)
             ne = vertices.index[pos].tolist()
