@@ -97,10 +97,10 @@ def nearest_nodes(G, X, Y, return_dist=False):
     """
     Find the nearest node(s) to some point(s).
 
-    If the graph is projected, this will use a k-d tree for euclidean
-    nearest-neighbor search. If it is unprojected, this will use a ball tree
-    for haversine nearest-neighbor search, which requires that scikit-learn is
-    installed as an optional dependency.
+    If the graph is projected, this uses a k-d tree for euclidean nearest
+    neighbor search (the fastest method). If it is unprojected, this uses a
+    ball tree for haversine nearest neighbor search, which requires that
+    scikit-learn is installed as an optional dependency.
 
     Parameters
     ----------
@@ -148,18 +148,18 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
     """
     Find the nearest edge(s) to some point(s).
 
-    If `spacing` is None, search for the nearest edge to each point, one at a
-    time, using an r-tree and minimizing the euclidean distances from the
-    point to the possible matches. For best results, use a projected graph and
-    points. This method is fastest if searching for few points relative to the
-    graph's size.
+    If `spacing` is None, this searches for the nearest edge to each point,
+    one at a time, using an r-tree and minimizing the euclidean distances
+    from the point to the possible matches. For best accuracy, use a projected
+    graph and points. This method is precise and also fastest if searching for
+    few points relative to the graph's size.
 
     For a faster method if searching for many points relative to the graph's
-    size, using the `spacing` argument to interpolate points along edges to
-    search. If the graph is projected, this will use a k-d tree for euclidean
-    nearest-neighbor search. If graph is unprojected, this will use a ball
-    tree for haversine nearest-neighbor search, which requires that
-    scikit-learn is installed as an optional dependency.
+    size, use the `spacing` argument to interpolate points along the edges and
+    index them. If the graph is projected, this uses a k-d tree for euclidean
+    nearest neighbor search. If graph is unprojected, this uses a ball tree
+    for haversine nearest neighbor search, which requires that scikit-learn is
+    installed as an optional dependency.
 
     Parameters
     ----------
@@ -185,7 +185,7 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
     """
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
 
-    # if no interpolation spacing is provided, use an r-tree to find possible
+    # if no interpolation spacing was provided, use an r-tree to find possible
     # matches, then minimize euclidean distance from point to possible matches
     if not spacing:
         ne_dist = list()
@@ -194,8 +194,9 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
             ne_dist.append((dists.idxmin(), dists.min()))
         ne, dist = zip(*ne_dist)
 
-    # otherwise, interpolate points along edges for k-d tree or ball tree
+    # otherwise, if interpolation spacing was provided
     else:
+        # interpolate points along edges to index with a k-d tree or ball tree
         uvk_xy = list()
         for uvk, geom in zip(geoms.index, geoms.values):
             uvk_xy.extend((uvk, xy) for xy in utils_geo.interpolate_points(geom, spacing))
@@ -617,7 +618,7 @@ def shortest_path(G, orig, dest, weight="length"):
 
 def k_shortest_paths(G, orig, dest, k, weight="length"):
     """
-    Get k shortest paths from origin node to destination node.
+    Get `k` shortest paths from origin node to destination node.
 
     See also `shortest_path` to get just the one shortest path.
 
@@ -637,9 +638,9 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
 
     Returns
     -------
-    generator
-        a generator of k shortest paths ordered by total weight. each path is
-        a list of node IDs.
+    paths : generator
+        a generator of `k` shortest paths ordered by total weight. each path
+        is a list of node IDs.
     """
     paths_gen = nx.shortest_simple_paths(utils_graph.get_digraph(G, weight), orig, dest, weight)
     for path in itertools.islice(paths_gen, 0, k):
