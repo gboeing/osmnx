@@ -123,7 +123,7 @@ def nearest_nodes(G, X, Y, return_dist=False):
         distances between the points and their nearest nodes
     """
     if pd.Series(X).isna().any() or pd.Series(Y).isna().any():
-        raise ValueError('`X` and `Y` cannot contain nulls')
+        raise ValueError("`X` and `Y` cannot contain nulls")
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
 
     if projection.is_projected(G.graph["crs"]):
@@ -187,7 +187,7 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
         contains distances between the points and their nearest edges
     """
     if pd.Series(X).isna().any() or pd.Series(Y).isna().any():
-        raise ValueError('`X` and `Y` cannot contain nulls')
+        raise ValueError("`X` and `Y` cannot contain nulls")
 
     # we need rtree.index.Index not pygeos.STRtree for now to use `nearest`
     gpd.options.use_pygeos = False
