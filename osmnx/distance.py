@@ -187,7 +187,7 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
         ne_dist = list()
         for xy in zip(X, Y):
             dists = geoms.iloc[list(geoms.sindex.nearest(xy))].distance(Point(xy))
-            ne_dist.append(dists.idxmin(), dists.min())
+            ne_dist.append((dists.idxmin(), dists.min()))
         ne, dist = zip(*ne_dist)
 
     # otherwise, interpolate points along edges for k-d tree or ball tree
