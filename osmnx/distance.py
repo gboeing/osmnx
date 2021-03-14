@@ -94,7 +94,7 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 
-def nearest_node(G, X, Y, return_dist=False):
+def nearest_nodes(G, X, Y, return_dist=False):
     """
     Find the nearest node(s) to some point(s).
 
@@ -108,37 +108,34 @@ def nearest_node(G, X, Y, return_dist=False):
     G : networkx.MultiDiGraph
         graph in which to find nearest nodes
     X : list
-        points' x or longitude coordinates
+        points' x or longitude coordinates, in same CRS and units as graph
     Y : list
-        points' y or latitude coordinates
+        points' y or latitude coordinates, in same CRS and units as graph
     return_dist : bool
         optionally also return distance between points and nearest nodes
 
     Returns
     -------
-    nn or (nn, dist): numpy.array or tuple of numpy.array
-        array of nearest node IDs or optionally tuple of arrays where `dist`
-        contains distances between the points and their nearest nodes
+    nn or (nn, dist): list or tuple of list
+        nearest node IDs or optionally tuple of lists where `dist` contains
+        distances between the points and their nearest nodes
     """
-    # extract the nodes' IDs and coordinates
-    nodes = np.array([(n, d["x"], d["y"]) for n, d in G.nodes(data=True)])
+    nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
 
     if projection.is_projected(G.graph["crs"]):
         # if projected, use k-d tree for euclidean nearest-neighbor search
-        dist, idx = cKDTree(nodes[:, 1:]).query(np.array([X, Y]).T, k=1)
-        nn = nodes[idx, 0].astype(int)
+        dist, pos = cKDTree(nodes).query(np.array([X, Y]).T, k=1)
+        nn = nodes.index[pos].tolist()
 
     else:
-
         # if unprojected, use ball tree for haversine nearest-neighbor search
         if BallTree is None:
             raise ImportError("scikit-learn must be installed to search an unprojected graph")
-
         # haversine requires lat, lng coords in radians
-        nodes_rad = np.deg2rad(nodes[:, [2, 1]])
+        nodes_rad = np.deg2rad(nodes[["y", "x"]])
         points_rad = np.deg2rad(np.array([Y, X]).T)
-        dist, idx = BallTree(nodes_rad, metric="haversine").query(points_rad, k=1)
-        nn = nodes[idx[:, 0], 0].astype(int)
+        dist, pos = BallTree(nodes_rad, metric="haversine").query(points_rad, k=1)
+        nn = nodes.index[pos[:, 0]].tolist()
 
     if return_dist:
         return nn, dist
