@@ -2,6 +2,7 @@
 
 import itertools
 
+import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -121,6 +122,8 @@ def nearest_nodes(G, X, Y, return_dist=False):
         nearest node IDs or optionally tuple of lists where `dist` contains
         distances between the points and their nearest nodes
     """
+    if pd.Series(X).isna().any() or pd.Series(Y).isna().any():
+        raise ValueError('`X` and `Y` cannot contain nulls')
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
 
     if projection.is_projected(G.graph["crs"]):
@@ -183,6 +186,8 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
         nearest edges as (u, v, key) or optionally tuple of lists where `dist`
         contains distances between the points and their nearest edges
     """
+    if pd.Series(X).isna().any() or pd.Series(Y).isna().any():
+        raise ValueError('`X` and `Y` cannot contain nulls')
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
 
     # if no interpolation spacing was provided, use an r-tree to find possible
