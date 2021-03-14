@@ -62,8 +62,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6_371_009):
     arc = 2 * np.arcsin(np.sqrt(h))
 
     # return distance in units of earth_radius
-    dist = arc * earth_radius
-    return dist
+    return arc * earth_radius
 
 
 def euclidean_dist_vec(y1, x1, y2, x2):
@@ -91,9 +90,8 @@ def euclidean_dist_vec(y1, x1, y2, x2):
         distance or array of distances from (x1, y1) to (x2, y2) in
         coordinates' units
     """
-    # Pythagorean theorem
-    dist = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
-    return dist
+    # pythagorean theorem
+    return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 
 def nearest_node(G, X, Y, return_dist=False):
