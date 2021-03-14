@@ -16,6 +16,36 @@ from . import settings
 from . import utils
 
 
+def interpolate_points(geom, spacing):
+    """
+    Interpolate evenly spaced points along a LineString.
+
+    The spacing is approximate because the LineString's length may not be
+    evenly divisible by it.
+
+    Parameters
+    ----------
+    geom : shapely.geometry.LineString
+        a LineString geometry
+    spacing : float
+        spacing between interpolated points, in same units as `geom`. smaller
+        values generate more points.
+
+    Yields
+    ------
+    points : generator
+        a generator of (x, y) tuples of the interpolated points' coordinates
+    """
+    if isinstance(geom, LineString):
+        num_vert = max(round(geom.length / spacing), 1)
+        points = list()
+        for n in range(num_vert + 1):
+            point = geom.interpolate(n / num_vert, normalized=True)
+            yield point.x, point.y
+    else:
+        raise TypeError(f"unhandled geometry type {geom.geom_type}")
+
+
 def redistribute_vertices(geom, dist):
     """
     Redistribute the vertices on a projected LineString or MultiLineString.
