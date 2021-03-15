@@ -147,22 +147,22 @@ def nearest_nodes(G, X, Y, return_dist=False):
         return nn
 
 
-def nearest_edges(G, X, Y, spacing=None, return_dist=False):
+def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     """
     Find the nearest edge(s) to some point(s).
 
-    If `spacing` is None, this searches for the nearest edge to each point,
-    one at a time, using an r-tree and minimizing the euclidean distances
-    from the point to the possible matches. For best accuracy, use a projected
-    graph and points. This method is precise and also fastest if searching for
-    few points relative to the graph's size.
+    If `interpolate` is None, search for the nearest edge to each point, one
+    at a time, using an r-tree and minimizing the euclidean distances from the
+    point to the possible matches. For best accuracy, use a projected graph
+    and points. This method is precise and also fastest if searching for few
+    points relative to the graph's size.
 
     For a faster method if searching for many points relative to the graph's
-    size, use the `spacing` argument to interpolate points along the edges and
-    index them. If the graph is projected, this uses a k-d tree for euclidean
-    nearest neighbor search. If graph is unprojected, this uses a ball tree
-    for haversine nearest neighbor search, which requires that scikit-learn is
-    installed as an optional dependency.
+    size, use the `interpolate` argument to interpolate points along the edges
+    and index them. If the graph is projected, this uses a k-d tree for
+    euclidean nearest neighbor search. If graph is unprojected, this uses a
+    ball tree for haversine nearest neighbor search, which requires that
+    scikit-learn is installed as an optional dependency.
 
     Parameters
     ----------
@@ -174,9 +174,9 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
     Y : list
         points' y or latitude coordinates, in same CRS/units as graph and
         containing no nulls
-    spacing : float
-        spacing between interpolated points, in same units as graph. smaller
-        values generate more points and slower but more precise results.
+    interpolate : float
+        spacing distance between interpolated points, in same units as `geom`.
+        smaller values generate more points.
     return_dist : bool
         optionally also return distance between points and nearest edges
 
@@ -195,9 +195,9 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
     gpd.options.use_pygeos = use_pygeos
 
-    # if no interpolation spacing was provided, use an r-tree to find possible
+    # if no interpolation distance was provided use an r-tree to find possible
     # matches, then minimize euclidean distance from point to possible matches
-    if spacing is None:
+    if interpolate is None:
         rtree = geoms.sindex  # requires rtree.index.Index not pygeos.STRtree
         ne_dist = list()
         for xy in zip(X, Y):
@@ -205,12 +205,12 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
             ne_dist.append((dists.idxmin(), dists.min()))
         ne, dist = zip(*ne_dist)
 
-    # otherwise, if interpolation spacing was provided
+    # otherwise, if interpolation distance was provided
     else:
         # interpolate points along edges to index with a k-d tree or ball tree
         uvk_xy = list()
         for uvk, geom in zip(geoms.index, geoms.values):
-            uvk_xy.extend((uvk, xy) for xy in utils_geo.interpolate_points(geom, spacing))
+            uvk_xy.extend((uvk, xy) for xy in utils_geo.interpolate_points(geom, interpolate))
         labels, xy = zip(*uvk_xy)
         vertices = pd.DataFrame(xy, index=labels, columns=["x", "y"])
 

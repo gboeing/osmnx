@@ -16,7 +16,7 @@ from . import settings
 from . import utils
 
 
-def interpolate_points(geom, spacing):
+def interpolate_points(geom, dist):
     """
     Interpolate evenly spaced points along a LineString.
 
@@ -27,9 +27,9 @@ def interpolate_points(geom, spacing):
     ----------
     geom : shapely.geometry.LineString
         a LineString geometry
-    spacing : float
-        spacing between interpolated points, in same units as `geom`. smaller
-        values generate more points.
+    dist : float
+        spacing distance between interpolated points, in same units as `geom`.
+        smaller values generate more points.
 
     Yields
     ------
@@ -37,7 +37,7 @@ def interpolate_points(geom, spacing):
         a generator of (x, y) tuples of the interpolated points' coordinates
     """
     if isinstance(geom, LineString):
-        num_vert = max(round(geom.length / spacing), 1)
+        num_vert = max(round(geom.length / dist), 1)
         for n in range(num_vert + 1):
             point = geom.interpolate(n / num_vert, normalized=True)
             yield point.x, point.y
