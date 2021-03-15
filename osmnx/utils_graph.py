@@ -30,7 +30,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     edges : bool
         if True, convert graph edges to a GeoDataFrame and return it
     node_geometry : bool
-        if True, create a geometry column from node x and y data
+        if True, create a geometry column from node x and y attributes
     fill_edge_geometry : bool
         if True, fill in missing edge geometry fields using nodes u and v
 
@@ -140,13 +140,20 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
         raise ValueError("gdf_nodes must contain x and y columns")
 
     # if gdf_nodes has a geometry attribute set, drop that column (as we use x
-    # and y for geometry information) and warn the user if the geometry coords
-    # differ from those in the x and y columns
+    # and y for geometry information) and warn the user if the geometry values
+    # differ from the coordinates in the x and y columns
     if hasattr(gdf_nodes, "geometry"):
-        if (gdf_nodes.geometry.x != gdf_nodes["x"]).all() or (
-            gdf_nodes.geometry.y != gdf_nodes["y"]
-        ).all():
-            warnings.warn("gdf_nodes geometry does not match the x and y columns")
+        try:
+            all_x_match = (gdf_nodes.geometry.x == gdf_nodes["x"]).all()
+            all_y_match = (gdf_nodes.geometry.y == gdf_nodes["y"]).all()
+            assert all_x_match and all_y_match
+        except (AssertionError, ValueError):
+            # AssertionError if x/y coords don't match geometry column
+            # ValueError if geometry column contains non-point geometry types
+            warnings.warn(
+                "discarding the gdf_nodes geometry column, though its "
+                "values differ from the coordinates in the x and y columns"
+            )
         gdf_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
 
     # create graph and add graph-level attribute dict
