@@ -197,7 +197,7 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
 
     # if no interpolation spacing was provided, use an r-tree to find possible
     # matches, then minimize euclidean distance from point to possible matches
-    if not spacing:
+    if spacing is None:
         rtree = geoms.sindex  # requires rtree.index.Index not pygeos.STRtree
         ne_dist = list()
         for xy in zip(X, Y):
