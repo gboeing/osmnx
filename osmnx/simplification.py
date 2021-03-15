@@ -8,7 +8,6 @@ import pandas as pd
 from shapely.geometry import LineString
 from shapely.geometry import Point
 from shapely.geometry import Polygon
-from shapely.ops import unary_union
 
 from . import utils
 from . import utils_graph
@@ -430,10 +429,10 @@ def _merge_nodes_geometric(G, tolerance, chunk=True):
     merged_nodes : GeoSeries
         the merged overlapping polygons of the buffered nodes
     """
-    # yield n-sized chunks of list one at a time
-    def get_chunks(lst, n):
-        for i in range(0, len(lst), n):
-            yield lst[i : i + n]
+    # yield n-sized chunks of GeoSeries one at a time
+    def get_chunks(gs, n):
+        for i in range(0, len(gs), n):
+            yield gs[i : i + n]
 
     gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)["geometry"]
 
@@ -447,10 +446,10 @@ def _merge_nodes_geometric(G, tolerance, chunk=True):
 
         # buffer nodes by tolerance then generate n-sized chunks of nodes
         n = int(len(G) ** 0.5)
-        chunks = get_chunks(gs_nodes.loc[idx].buffer(tolerance).values, n)
+        chunks = get_chunks(gs_nodes.loc[idx].buffer(tolerance), n)
 
         # unary_union each chunk then unary_union those unary unions
-        merged_nodes = unary_union([unary_union(chunk) for chunk in chunks])
+        merged_nodes = gpd.GeoSeries(chunk.unary_union for chunk in chunks).unary_union
 
     # if only a single node results, make it iterable to convert to GeoSeries
     if isinstance(merged_nodes, Polygon):
