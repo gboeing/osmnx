@@ -1,11 +1,12 @@
 """Calculate distances and shortest paths and find nearest node/edge(s) to point(s)."""
 
 import itertools
+import warnings
 
-import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
+from rtree.index import Index as RTreeIndex
 from scipy.spatial import cKDTree
 from shapely.geometry import Point
 
@@ -153,8 +154,8 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
     If `interpolate` is None, search for the nearest edge to each point, one
     at a time, using an r-tree and minimizing the euclidean distances from the
-    point to the possible matches. For best accuracy, use a projected graph
-    and points. This method is precise and also fastest if searching for few
+    point to the possible matches. For accuracy, use a projected graph and
+    points. This method is precise and also fastest if searching for few
     points relative to the graph's size.
 
     For a faster method if searching for many points relative to the graph's
@@ -189,24 +190,29 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     if (pd.isnull(X) | pd.isnull(Y)).any():
         raise ValueError("`X` and `Y` cannot contain nulls")
 
-    # we need rtree.index.Index not pygeos.STRtree for now to use `nearest`
-    use_pygeos = gpd.options.use_pygeos
-    gpd.options.use_pygeos = False
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
-    gpd.options.use_pygeos = use_pygeos
 
-    # if no interpolation distance was provided use an r-tree to find possible
-    # matches, then minimize euclidean distance from point to possible matches
+    # if no interpolation distance was provided
     if interpolate is None:
-        rtree = geoms.sindex  # requires rtree.index.Index not pygeos.STRtree
+
+        # build the r-tree spatial index by position, for subsequent iloc
+        rtree = RTreeIndex()
+        for pos, bounds in enumerate(geoms.bounds.values):
+            rtree.insert(pos, bounds)
+
+        # one point at a time, use r-tree to find possible nearest neighbors,
+        # then minimize euclidean distance from point to the possible matches
         ne_dist = list()
         for xy in zip(X, Y):
-            dists = geoms.iloc[list(rtree.nearest(xy))].distance(Point(xy))
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                dists = geoms.iloc[list(rtree.nearest(xy))].distance(Point(xy))
             ne_dist.append((dists.idxmin(), dists.min()))
         ne, dist = zip(*ne_dist)
 
     # otherwise, if interpolation distance was provided
     else:
+
         # interpolate points along edges to index with a k-d tree or ball tree
         uvk_xy = list()
         for uvk, geom in zip(geoms.index, geoms.values):
