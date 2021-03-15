@@ -190,8 +190,10 @@ def nearest_edges(G, X, Y, spacing=None, return_dist=False):
         raise ValueError("`X` and `Y` cannot contain nulls")
 
     # we need rtree.index.Index not pygeos.STRtree for now to use `nearest`
+    use_pygeos = gpd.options.use_pygeos
     gpd.options.use_pygeos = False
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
+    gpd.options.use_pygeos = use_pygeos
 
     # if no interpolation spacing was provided, use an r-tree to find possible
     # matches, then minimize euclidean distance from point to possible matches
