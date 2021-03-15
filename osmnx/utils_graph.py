@@ -1,6 +1,7 @@
 """Graph utility functions."""
 
 import itertools
+import warnings
 from collections import Counter
 
 import geopandas as gpd
@@ -29,14 +30,16 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     edges : bool
         if True, convert graph edges to a GeoDataFrame and return it
     node_geometry : bool
-        if True, create a geometry column from node x and y data
+        if True, create a geometry column from node x and y attributes
     fill_edge_geometry : bool
         if True, fill in missing edge geometry fields using nodes u and v
 
     Returns
     -------
     geopandas.GeoDataFrame or tuple
-        gdf_nodes or gdf_edges or tuple of (gdf_nodes, gdf_edges)
+        gdf_nodes or gdf_edges or tuple of (gdf_nodes, gdf_edges). gdf_nodes
+        is indexed by osmid and gdf_edges is multi-indexed by u, v, key
+        following normal MultiDiGraph structure.
     """
     crs = G.graph["crs"]
 
@@ -108,12 +111,16 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     Convert node and edge GeoDataFrames to a MultiDiGraph.
 
     This function is the inverse of `graph_to_gdfs` and is designed to work in
-    conjunction with it. However, you can convert arbitrary node and edge
-    GeoDataFrames as long as gdf_nodes is uniquely indexed by `osmid` and
-    gdf_edges is uniquely multi-indexed by `u`, `v`, `key` (following normal
-    MultiDiGraph structure). This allows you to load any node/edge shapefiles
-    or GeoPackage layers as GeoDataFrames then convert them to a MultiDiGraph
-    for graph analysis.
+    conjunction with it.
+
+    However, you can convert arbitrary node and edge GeoDataFrames as long as
+    1) `gdf_nodes` is uniquely indexed by `osmid`, 2) `gdf_nodes` contains `x`
+    and `y` coordinate columns representing node geometries, 3) `gdf_edges` is
+    uniquely multi-indexed by `u`, `v`, `key` (following normal MultiDiGraph
+    structure). This allows you to load any node/edge shapefiles or GeoPackage
+    layers as GeoDataFrames then convert them to a MultiDiGraph for graph
+    analysis. Note that any `geometry` attribute on `gdf_nodes` is discarded
+    since `x` and `y` provide the necessary node geometry information instead.
 
     Parameters
     ----------
@@ -129,6 +136,27 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     -------
     G : networkx.MultiDiGraph
     """
+    if not ("x" in gdf_nodes.columns and "y" in gdf_nodes.columns):
+        raise ValueError("gdf_nodes must contain x and y columns")
+
+    # if gdf_nodes has a geometry attribute set, drop that column (as we use x
+    # and y for geometry information) and warn the user if the geometry values
+    # differ from the coordinates in the x and y columns
+    if hasattr(gdf_nodes, "geometry"):
+        try:
+            all_x_match = (gdf_nodes.geometry.x == gdf_nodes["x"]).all()
+            all_y_match = (gdf_nodes.geometry.y == gdf_nodes["y"]).all()
+            assert all_x_match and all_y_match
+        except (AssertionError, ValueError):
+            # AssertionError if x/y coords don't match geometry column
+            # ValueError if geometry column contains non-point geometry types
+            warnings.warn(
+                "discarding the gdf_nodes geometry column, though its "
+                "values differ from the coordinates in the x and y columns"
+            )
+        gdf_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
+
+    # create graph and add graph-level attribute dict
     if graph_attrs is None:
         graph_attrs = {"crs": gdf_edges.crs}
     G = nx.MultiDiGraph(**graph_attrs)
