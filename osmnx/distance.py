@@ -186,7 +186,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         nearest edges as (u, v, key) or optionally tuple of lists where `dist`
         contains distances between the points and their nearest edges
     """
-    if pd.Series(X).isna().any() or pd.Series(Y).isna().any():
+    if (pd.isnull(X) | pd.isnull(Y)).any():
         raise ValueError("`X` and `Y` cannot contain nulls")
 
     # we need rtree.index.Index not pygeos.STRtree for now to use `nearest`
