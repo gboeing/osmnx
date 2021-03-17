@@ -243,37 +243,30 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         return np.array(ne)
 
 
-def get_nearest_node(G, point, method="haversine", return_dist=False):
+def get_nearest_node(G, point, method=None, return_dist=False):
     """
-    Find the nearest node to a point.
-
-    Return the graph node nearest to some (lat, lng) or (y, x) point and
-    optionally the distance between the node and the point. This function can
-    use either the haversine formula or Euclidean distance.
+    Do not use, deprecated.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph
+        deprecated, do not use
     point : tuple
-        The (lat, lng) or (y, x) point for which we will find the nearest node
-        in the graph
-    method : string {'haversine', 'euclidean'}
-        Which method to use for calculating distances to find nearest node.
-        If 'haversine', graph nodes' coordinates must be in units of decimal
-        degrees. If 'euclidean', graph nodes' coordinates must be projected.
+        deprecated, do not use
+    method : string
+        deprecated, do not use
     return_dist : bool
-        Optionally also return the distance (in meters if haversine, or graph
-        node coordinate units if euclidean) between the point and the nearest
-        node
+        deprecated, do not use
 
     Returns
     -------
-    int or tuple of (int, float)
-        Nearest node ID or optionally a tuple of (node ID, dist), where dist
-        is the distance (in meters if haversine, or graph node coordinate
-        units if euclidean) between the point and nearest node
+    int or tuple
     """
+    msg = (
+        "The `get_nearest_node` function has been deprecated and will be removed in a "
+        "future release. Use the more efficient `distance.nearest_nodes` instead."
+    )
+    warnings.warn(msg)
     nn, dist = nearest_nodes(G, X=[point[1]], Y=[point[0]], return_dist=True)
     if return_dist:
         return nn[0], dist[0]
@@ -283,31 +276,28 @@ def get_nearest_node(G, point, method="haversine", return_dist=False):
 
 def get_nearest_edge(G, point, return_geom=False, return_dist=False):
     """
-    Find the nearest edge to a point by minimum Euclidean distance.
-
-    For best results, both G and point should be projected.
+    Do not use, deprecated.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph
+        deprecated, do not use
     point : tuple
-        the (lat, lng) or (y, x) point for which we will find the nearest edge
-        in the graph
+        deprecated, do not use
     return_geom : bool
-        Optionally return the geometry of the nearest edge
+        deprecated, do not use
     return_dist : bool
-        Optionally return the distance in graph's coordinates' units between
-        the point and the nearest edge
+        deprecated, do not use
 
     Returns
     -------
     tuple
-        Graph edge unique identifier as a tuple of (u, v, key).
-        Or a tuple of (u, v, key, geom) if return_geom is True.
-        Or a tuple of (u, v, key, dist) if return_dist is True.
-        Or a tuple of (u, v, key, geom, dist) if return_geom and return_dist are True.
     """
+    msg = (
+        "The `get_nearest_edge` function has been deprecated and will be removed in a "
+        "future release. Use the more efficient `distance.nearest_edges` instead."
+    )
+    warnings.warn(msg)
     ne, dist = nearest_edges(G, X=[point[1]], Y=[point[0]], return_dist=True)
     u, v, key = ne[0]
     geom = utils_graph.graph_to_gdfs(G, nodes=False).loc[(u, v, key), "geometry"]
@@ -323,99 +313,59 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
 
 def get_nearest_nodes(G, X, Y, method=None, return_dist=False):
     """
-    Find the nearest node to each point in a list of points.
-
-    Pass in points as separate lists of X and Y coordinates. The 'kdtree'
-    method is by far the fastest with large data sets, but only finds
-    approximate nearest nodes if working in unprojected coordinates like
-    lat-lng (it precisely finds the nearest node if working in projected
-    coordinates). The 'balltree' method is second fastest with large data
-    sets but it is precise if working in unprojected coordinates like lat-lng.
+    Do not use, deprecated.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph
-    X : list-like
-        the longitudes or x coordinates for which we will find the nearest
-        node in the graph
-    Y : list-like
-        the latitudes or y coordinates for which we will find the nearest node
-        in the graph
-    method : string {None, 'kdtree', 'balltree'}
-        Which method to use for finding the nearest node to each point. If
-        None, we manually find each node one at a time using
-        utils.get_nearest_node and haversine. If 'kdtree' we use
-        scipy.spatial.cKDTree for very fast euclidean search. If
-        'balltree', we use sklearn.neighbors.BallTree for fast
-        haversine search.
+        deprecated, do not use
+    X : list
+        deprecated, do not use
+    Y : list
+        deprecated, do not use
+    method : string
+        deprecated, do not use
     return_dist : bool
-        Optionally also return the distance (in meters if haversine, or graph
-        node coordinate units if euclidean) between the point and the nearest
-        node
+        deprecated, do not use
 
     Returns
     -------
-    nn or (dist, nn): np.array or tuple of (np.array<float>, np.array<int>)
-        array of node IDs representing the node nearest to each point in the
-        passed-in list of points, or optionally tuple of arrays (dist,nn) where dist
-        is an array of the distances (in meters if haversine, or graph node coordinate
-        units if euclidean) between the point and nearest node
+    numpy.array or tuple of numpy.array
     """
+    msg = (
+        "The `get_nearest_nodes` function has been deprecated and will be removed in a "
+        "future release. Use the more efficient `distance.nearest_nodes` instead."
+    )
+    warnings.warn(msg)
     return nearest_nodes(G, X=X, Y=Y, return_dist=return_dist)
 
 
 def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
     """
-    Find the nearest edge to each point in a list of points.
-
-    Pass in points as separate lists of X and Y coordinates. The 'kdtree'
-    method is by far the fastest with large data sets, but only finds
-    approximate nearest edges if working in unprojected coordinates like
-    lat-lng (it precisely finds the nearest edge if working in projected
-    coordinates). The 'balltree' method is second fastest with large data
-    sets, but it is precise if working in unprojected coordinates like
-    lat-lng. As a rule of thumb, if you have a small graph just use
-    method=None. If you have a large graph with lat-lng coordinates, use
-    method='balltree'. If you have a large graph with projected coordinates,
-    use method='kdtree'. Note that if you are working in units of lat-lng,
-    the X vector corresponds to longitude and the Y vector corresponds
-    to latitude. The method creates equally distanced points along the edges
-    of the network. Then, these points are used in a kdTree or BallTree search
-    to identify which is nearest. Note that this method will not give exact
-    perpendicular point along the edge, but the smaller the *dist* parameter,
-    the closer (but slower) the solution will be.
+    Do not use, deprecated.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph
+        deprecated, do not use
     X : list-like
-        the longitudes or x coordinates for which we will find the nearest
-        edge in the graph. For projected graphs use the projected coordinates,
-        usually in meters.
+        deprecated, do not use
     Y : list-like
-        the latitudes or y coordinates for which we will find the nearest edge
-        in the graph. For projected graphs use the projected coordinates,
-        usually in meters.
-    method : string {None, 'kdtree', 'balltree'}
-        Which method to use for finding nearest edge to each point. If None,
-        we manually find each edge one at a time using get_nearest_edge. If
-        'kdtree' we use scipy.spatial.cKDTree for very fast euclidean search.
-        Recommended for projected graphs. If 'balltree', we use
-        sklearn.neighbors.BallTree for fast haversine search. Recommended for
-        unprojected graphs.
+        deprecated, do not use
+    method : string
+        deprecated, do not use
     dist : float
-        spacing length along edges. Units are the same as the graph's
-        geometries. The smaller the value, the more points are created.
+        deprecated, do not use
 
     Returns
     -------
-    ne : np.array
-        array of edge IDs representing the edge nearest to each point in the
-        passed-in list of points. Edge IDs are represented by u, v, key where
-        u and v the node IDs of the nodes the edge links.
+    numpy.array
     """
+    msg = (
+        "The `get_nearest_edges` function has been deprecated and will be removed in a "
+        "future release. Use the more efficient `distance.nearest_edges` instead."
+    )
+    warnings.warn(msg)
     return nearest_edges(G, X, Y)
 
 
