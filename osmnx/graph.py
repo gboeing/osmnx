@@ -169,7 +169,7 @@ def graph_from_point(
     # if network dist_type is network, find the node in the graph nearest to
     # the center point, and truncate the graph by network distance from node
     if dist_type == "network":
-        centermost_node = distance.get_nearest_node(G, center_point)
+        centermost_node = distance.nearest_nodes(G, X=[center_point[1]], Y=[center_point[0]])[0]
         G = truncate.truncate_graph_dist(G, centermost_node, max_dist=dist)
 
     utils.log(f"graph_from_point returned graph with {len(G)} nodes and {len(G.edges)} edges")
