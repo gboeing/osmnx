@@ -21,8 +21,10 @@ try:
 except ImportError:
     BallTree = None
 
+EARTH_RADIUS_M = 6_371_009
 
-def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=6_371_009):
+
+def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     """
     Calculate great-circle distances between pairs of points.
 
@@ -119,8 +121,8 @@ def nearest_nodes(G, X, Y, return_dist=False):
 
     Returns
     -------
-    nn or (nn, dist): list or tuple of list
-        nearest node IDs or optionally tuple of lists where `dist` contains
+    nn or (nn, dist): numpy.array or tuple of numpy.array
+        nearest node IDs or optionally a tuple of arrays where `dist` contains
         distances between the points and their nearest nodes
     """
     if pd.Series(X).isna().any() or pd.Series(Y).isna().any():
@@ -130,7 +132,7 @@ def nearest_nodes(G, X, Y, return_dist=False):
     if projection.is_projected(G.graph["crs"]):
         # if projected, use k-d tree for euclidean nearest-neighbor search
         dist, pos = cKDTree(nodes).query(np.array([X, Y]).T, k=1)
-        nn = nodes.index[pos].tolist()
+        nn = nodes.index[pos].values
 
     else:
         # if unprojected, use ball tree for haversine nearest-neighbor search
@@ -140,7 +142,8 @@ def nearest_nodes(G, X, Y, return_dist=False):
         nodes_rad = np.deg2rad(nodes[["y", "x"]])
         points_rad = np.deg2rad(np.array([Y, X]).T)
         dist, pos = BallTree(nodes_rad, metric="haversine").query(points_rad, k=1)
-        nn = nodes.index[pos[:, 0]].tolist()
+        dist = dist[:, 0] * EARTH_RADIUS_M  # convert radians -> meters
+        nn = nodes.index[pos[:, 0]].values
 
     if return_dist:
         return nn, dist
@@ -183,9 +186,9 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
     Returns
     -------
-    ne or (ne, dist): list or tuple of list
-        nearest edges as (u, v, key) or optionally tuple of lists where `dist`
-        contains distances between the points and their nearest edges
+    ne or (ne, dist): numpy.array or tuple of numpy.array
+        nearest edges as [u, v, key] or optionally a tuple of arrays where
+        `dist` contains distances between the points and their nearest edges
     """
     if (pd.isnull(X) | pd.isnull(Y)).any():
         raise ValueError("`X` and `Y` cannot contain nulls")
@@ -195,12 +198,12 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     # if no interpolation distance was provided
     if interpolate is None:
 
-        # build the r-tree spatial index by position, for subsequent iloc
+        # build the r-tree spatial index by position for subsequent iloc
         rtree = RTreeIndex()
         for pos, bounds in enumerate(geoms.bounds.values):
             rtree.insert(pos, bounds)
 
-        # one point at a time, use r-tree to find possible nearest neighbors,
+        # use r-tree to find possible nearest neighbors, one point at a time,
         # then minimize euclidean distance from point to the possible matches
         ne_dist = list()
         for xy in zip(X, Y):
@@ -223,7 +226,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         if projection.is_projected(G.graph["crs"]):
             # if projected, use k-d tree for euclidean nearest-neighbor search
             dist, pos = cKDTree(vertices).query(np.array([X, Y]).T, k=1)
-            ne = vertices.index[pos].tolist()
+            ne = vertices.index[pos]
 
         else:
             # if unprojected, use ball tree for haversine nearest-neighbor search
@@ -233,12 +236,13 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
             vertices_rad = np.deg2rad(vertices[["y", "x"]])
             points_rad = np.deg2rad(np.array([Y, X]).T)
             dist, pos = BallTree(vertices_rad, metric="haversine").query(points_rad, k=1)
-            ne = vertices.index[pos[:, 0]].tolist()
+            dist = dist[:, 0] * EARTH_RADIUS_M  # convert radians -> meters
+            ne = vertices.index[pos[:, 0]]
 
     if return_dist:
-        return ne, dist
+        return np.array(ne), np.array(dist)
     else:
-        return ne
+        return np.array(ne)
 
 
 def get_nearest_node(G, point, method="haversine", return_dist=False):
