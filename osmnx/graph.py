@@ -114,9 +114,10 @@ def graph_from_point(
         retain only those nodes within this many meters of the center of the
         graph, with distance determined according to dist_type argument
     dist_type : string {"network", "bbox"}
-        if "bbox", retain only those nodes within a bounding box of the distance
-        parameter. if "network", retain only those nodes within some network
-        distance from the center-most node.
+        if "bbox", retain only those nodes within a bounding box of the
+        distance parameter. if "network", retain only those nodes within some
+        network distance from the center-most node (requires that scikit-learn
+        is installed as an optional dependency).
     network_type : string, {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         what type of street network to get if custom_filter is None
     simplify : bool
@@ -148,8 +149,7 @@ def graph_from_point(
     if dist_type not in {"bbox", "network"}:
         raise ValueError('dist_type must be "bbox" or "network"')
 
-    # create a bounding box from the center point and the distance in each
-    # direction
+    # create bounding box from center point and distance in each direction
     north, south, east, west = utils_geo.bbox_from_point(center_point, dist)
 
     # create a graph from the bounding box
@@ -166,11 +166,11 @@ def graph_from_point(
         custom_filter=custom_filter,
     )
 
-    # if network dist_type is network, find the node in the graph nearest to
-    # the center point, and truncate the graph by network distance from node
     if dist_type == "network":
-        centermost_node = distance.nearest_nodes(G, X=[center_point[1]], Y=[center_point[0]])[0]
-        G = truncate.truncate_graph_dist(G, centermost_node, max_dist=dist)
+        # if dist_type is network, find node in graph nearest to center point
+        # then truncate graph by network dist from it
+        node = distance.nearest_nodes(G, X=[center_point[1]], Y=[center_point[0]])[0]
+        G = truncate.truncate_graph_dist(G, node, max_dist=dist)
 
     utils.log(f"graph_from_point returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G

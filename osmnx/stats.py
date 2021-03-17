@@ -17,7 +17,6 @@ import warnings
 
 import networkx as nx
 import numpy as np
-import scipy
 
 from . import bearing
 from . import distance
@@ -25,6 +24,12 @@ from . import projection
 from . import simplification
 from . import utils
 from . import utils_graph
+
+# scipy is an optional dependency for entropy stats
+try:
+    import scipy
+except ImportError:
+    scipy = None
 
 
 def _get_bearings(Gu, min_length=0, weight=None):
@@ -118,6 +123,8 @@ def orientation_entropy(Gu, num_bins=36, min_length=0, weight=None):
     entropy : float
         the graph's orientation entropy
     """
+    if scipy is None:
+        raise ImportError("scipy must be installed to calculate entropy")
     bearings = _get_bearings(Gu, min_length=min_length, weight=weight)
     bin_counts = _count_and_merge_bins(bearings, num_bins)
     return scipy.stats.entropy(bin_counts)

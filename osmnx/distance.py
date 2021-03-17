@@ -7,12 +7,17 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from rtree.index import Index as RTreeIndex
-from scipy.spatial import cKDTree
 from shapely.geometry import Point
 
 from . import projection
 from . import utils_geo
 from . import utils_graph
+
+# scipy is optional dependency for projected nearest-neighbor search
+try:
+    from scipy.spatial import cKDTree
+except ImportError:
+    cKDTree = None
 
 # scikit-learn is optional dependency for unprojected nearest-neighbor search
 try:
@@ -97,12 +102,13 @@ def euclidean_dist_vec(y1, x1, y2, x2):
 
 def nearest_nodes(G, X, Y, return_dist=False):
     """
-    Find the nearest node(s) to some point(s).
+    Find the nearest nodes to some points.
 
     If the graph is projected, this uses a k-d tree for euclidean nearest
-    neighbor search (the fastest method). If it is unprojected, this uses a
-    ball tree for haversine nearest neighbor search, which requires that
-    scikit-learn is installed as an optional dependency.
+    neighbor search, which requires that scipy is installed as an optional
+    dependency. If it is unprojected, this uses a ball tree for haversine
+    nearest neighbor search, which requires that scikit-learn is installed as
+    an optional dependency.
 
     Parameters
     ----------
@@ -129,6 +135,8 @@ def nearest_nodes(G, X, Y, return_dist=False):
 
     if projection.is_projected(G.graph["crs"]):
         # if projected, use k-d tree for euclidean nearest-neighbor search
+        if cKDTree is None:
+            raise ImportError("scipy must be installed to search a projected graph")
         dist, pos = cKDTree(nodes).query(np.array([X, Y]).T, k=1)
         nn = nodes.index[pos].values
 
@@ -162,9 +170,10 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     For a faster method if searching for many points relative to the graph's
     size, use the `interpolate` argument to interpolate points along the edges
     and index them. If the graph is projected, this uses a k-d tree for
-    euclidean nearest neighbor search. If graph is unprojected, this uses a
-    ball tree for haversine nearest neighbor search, which requires that
-    scikit-learn is installed as an optional dependency.
+    euclidean nearest neighbor search, which requires that scipy is installed
+    as an optional dependency. If graph is unprojected, this uses a ball tree
+    for haversine nearest neighbor search, which requires that scikit-learn is
+    installed as an optional dependency.
 
     Parameters
     ----------
@@ -221,6 +230,8 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
         if projection.is_projected(G.graph["crs"]):
             # if projected, use k-d tree for euclidean nearest-neighbor search
+            if cKDTree is None:
+                raise ImportError("scipy must be installed to search a projected graph")
             dist, pos = cKDTree(vertices).query(np.array([X, Y]).T, k=1)
             ne = vertices.index[pos]
 
