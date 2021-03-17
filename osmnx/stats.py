@@ -27,9 +27,9 @@ from . import utils_graph
 
 # scipy is an optional dependency for entropy stats
 try:
-    import scipy
+    from scipy.stats import entropy
 except ImportError:
-    scipy = None
+    entropy = None
 
 
 def _get_bearings(Gu, min_length=0, weight=None):
@@ -123,11 +123,11 @@ def orientation_entropy(Gu, num_bins=36, min_length=0, weight=None):
     entropy : float
         the graph's orientation entropy
     """
-    if scipy is None:
+    if entropy is None:
         raise ImportError("scipy must be installed to calculate entropy")
     bearings = _get_bearings(Gu, min_length=min_length, weight=weight)
     bin_counts = _count_and_merge_bins(bearings, num_bins)
-    return scipy.stats.entropy(bin_counts)
+    return entropy(bin_counts)
 
 
 def streets_per_node(G):
