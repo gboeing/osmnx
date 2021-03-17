@@ -52,17 +52,16 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
         distance from each (lat1, lng1) to each (lat2, lng2) in units of
         earth_radius
     """
-    phi1 = np.deg2rad(lat1)
-    phi2 = np.deg2rad(lat2)
-    d_phi = phi2 - phi1
+    y1 = np.deg2rad(lat1)
+    y2 = np.deg2rad(lat2)
+    dy = y2 - y1
 
-    theta1 = np.deg2rad(lng1)
-    theta2 = np.deg2rad(lng2)
-    d_theta = theta2 - theta1
+    x1 = np.deg2rad(lng1)
+    x2 = np.deg2rad(lng2)
+    dx = x2 - x1
 
-    h = np.sin(d_phi / 2) ** 2 + np.cos(phi1) * np.cos(phi2) * np.sin(d_theta / 2) ** 2
-    h = np.minimum(1.0, h)  # protect against floating point errors
-
+    h = np.sin(dy / 2) ** 2 + np.cos(y1) * np.cos(y2) * np.sin(dx / 2) ** 2
+    h = np.minimum(1, h)  # protect against floating point errors
     arc = 2 * np.arcsin(np.sqrt(h))
 
     # return distance in units of earth_radius
