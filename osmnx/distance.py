@@ -11,7 +11,6 @@ from scipy.spatial import cKDTree
 from shapely.geometry import Point
 
 from . import projection
-from . import utils
 from . import utils_geo
 from . import utils_graph
 
@@ -275,40 +274,11 @@ def get_nearest_node(G, point, method="haversine", return_dist=False):
         is the distance (in meters if haversine, or graph node coordinate
         units if euclidean) between the point and nearest node
     """
-    if not G:
-        raise ValueError("G must contain at least one node")
-
-    # dump graph node coordinates into a pandas dataframe indexed by node id
-    # with x and y columns
-    coords = ((n, d["x"], d["y"]) for n, d in G.nodes(data=True))
-    df = pd.DataFrame(coords, columns=["node", "x", "y"]).set_index("node")
-
-    # add columns to df for the (constant) coordinates of reference point
-    df["ref_y"] = point[0]
-    df["ref_x"] = point[1]
-
-    # calculate the distance between each node and the reference point
-    if method == "haversine":
-        # calculate distances using haversine for spherical lat-lng geometries
-        dists = great_circle_vec(lat1=df["ref_y"], lng1=df["ref_x"], lat2=df["y"], lng2=df["x"])
-
-    elif method == "euclidean":
-        # calculate distances using euclid's formula for projected geometries
-        dists = euclidean_dist_vec(y1=df["ref_y"], x1=df["ref_x"], y2=df["y"], x2=df["x"])
-
-    else:
-        raise ValueError('method argument must be either "haversine" or "euclidean"')
-
-    # nearest node's ID is the index label of the minimum distance
-    nearest_node = dists.idxmin()
-    utils.log(f"Found nearest node ({nearest_node}) to point {point}")
-
-    # if caller requested return_dist, return distance between the point and the
-    # nearest node as well
+    nn, dist = nearest_nodes(G, X=[point[1]], Y=[point[0]], return_dist=True)
     if return_dist:
-        return nearest_node, dists.loc[nearest_node]
+        return nn[0], dist[0]
     else:
-        return nearest_node
+        return nn[0]
 
 
 def get_nearest_edge(G, point, return_geom=False, return_dist=False):
@@ -338,23 +308,13 @@ def get_nearest_edge(G, point, return_geom=False, return_dist=False):
         Or a tuple of (u, v, key, dist) if return_dist is True.
         Or a tuple of (u, v, key, geom, dist) if return_geom and return_dist are True.
     """
-    # convert lat,lng (y,x) point to x,y for shapely distance operation
-    xy_point = Point(reversed(point))
-
-    # calculate euclidean distance from each edge's geometry to this point
-    gs_edges = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
-    uvk_geoms = zip(gs_edges.index, gs_edges.values)
-    distances = ((uvk, geom, xy_point.distance(geom)) for uvk, geom in uvk_geoms)
-
-    # the nearest edge minimizes the distance to the point
-    (u, v, key), geom, dist = min(distances, key=lambda x: x[2])
-    utils.log(f"Found nearest edge ({u, v, key}) to point {point}")
-
-    # return results requested by caller
+    ne, dist = nearest_edges(G, X=[point[1]], Y=[point[0]], return_dist=True)
+    u, v, key = ne[0]
+    geom = utils_graph.graph_to_gdfs(G, nodes=False).loc[(u, v, key), "geometry"]
     if return_dist and return_geom:
-        return u, v, key, geom, dist
+        return u, v, key, geom, dist[0]
     elif return_dist:
-        return u, v, key, dist
+        return u, v, key, dist[0]
     elif return_geom:
         return u, v, key, geom
     else:
@@ -402,64 +362,7 @@ def get_nearest_nodes(G, X, Y, method=None, return_dist=False):
         is an array of the distances (in meters if haversine, or graph node coordinate
         units if euclidean) between the point and nearest node
     """
-    if method is None:
-        # calculate nearest node (and optionally dist) one at a time for each point
-        result = [
-            get_nearest_node(G, (y, x), method="haversine", return_dist=return_dist)
-            for x, y in zip(X, Y)
-        ]
-        if return_dist:
-            nn, dist = map(list, zip(*result))
-        else:
-            nn = result
-    elif method == "kdtree":
-
-        # build a k-d tree for euclidean nearest node search
-        nodes = pd.DataFrame(
-            {"x": nx.get_node_attributes(G, "x"), "y": nx.get_node_attributes(G, "y")}
-        )
-        tree = cKDTree(data=nodes[["x", "y"]], compact_nodes=True, balanced_tree=True)
-
-        # query the tree for nearest node to each point
-        points = np.array([X, Y]).T
-        dist, idx = tree.query(points, k=1)
-        nn = nodes.iloc[idx].index
-
-    elif method == "balltree":
-
-        # check if we were able to import sklearn.neighbors.BallTree
-        if BallTree is None:
-            raise ImportError("scikit-learn must be installed to use this optional feature")
-
-        # haversine requires data in form of [lat, lng] and inputs/outputs in
-        # units of radians
-        nodes = pd.DataFrame(
-            {"x": nx.get_node_attributes(G, "x"), "y": nx.get_node_attributes(G, "y")}
-        )
-        nodes_rad = np.deg2rad(nodes[["y", "x"]].astype(np.float))
-        points = np.array([Y.astype(np.float), X.astype(np.float)]).T
-        points_rad = np.deg2rad(points)
-
-        # build a ball tree for haversine nearest node search
-        tree = BallTree(nodes_rad, metric="haversine")
-
-        # query the tree for nearest node to each point
-        if return_dist:
-            dist, idx = tree.query(points_rad, k=1, return_distance=True)
-            nn = nodes.iloc[idx[:, 0]].index
-        else:
-            idx = tree.query(points_rad, k=1, return_distance=False)
-            nn = nodes.iloc[idx[:, 0]].index
-
-    else:
-        raise ValueError("You must pass a valid method name, or None.")
-
-    utils.log(f"Found nearest nodes to {len(X)} points")
-
-    if return_dist:
-        return np.array(nn), np.array(dist)
-    else:
-        return np.array(nn)
+    return nearest_nodes(G, X=X, Y=Y, return_dist=return_dist)
 
 
 def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
@@ -513,97 +416,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         passed-in list of points. Edge IDs are represented by u, v, key where
         u and v the node IDs of the nodes the edge links.
     """
-    if method is None:
-        # calculate nearest edge one at a time for each (y, x) point
-        ne = [get_nearest_edge(G, (y, x)) for x, y in zip(X, Y)]
-
-    elif method == "kdtree":
-
-        # transform graph into DataFrame
-        edges = utils_graph.graph_to_gdfs(G, nodes=False).reset_index()
-
-        # transform edges into evenly spaced points
-        edges["points"] = edges.apply(
-            lambda x: utils_geo.redistribute_vertices(x.geometry, dist), axis=1
-        )
-
-        # develop edges data for each created points
-        extended = (
-            edges["points"]
-            .apply([pd.Series])
-            .stack()
-            .reset_index(level=1, drop=True)
-            .join(edges)
-            .reset_index()
-        )
-
-        # Prepare btree arrays
-        nbdata = np.array(
-            list(
-                zip(
-                    extended["Series"].apply(lambda x: x.x), extended["Series"].apply(lambda x: x.y)
-                )
-            )
-        )
-
-        # build a k-d tree for euclidean nearest node search
-        btree = cKDTree(data=nbdata, compact_nodes=True, balanced_tree=True)
-
-        # query the tree for nearest node to each point
-        points = np.array([X, Y]).T
-        dist, idx = btree.query(points, k=1)  # Returns ids of closest point
-        eidx = extended.loc[idx, "index"]
-        ne = edges.loc[eidx, ["u", "v", "key"]]
-
-    elif method == "balltree":
-
-        # check if we were able to import sklearn.neighbors.BallTree successfully
-        if BallTree is None:
-            raise ImportError("scikit-learn must be installed to use this optional feature")
-
-        # transform graph into DataFrame
-        edges = utils_graph.graph_to_gdfs(G, nodes=False).reset_index()
-
-        # transform edges into evenly spaced points
-        edges["points"] = edges.apply(
-            lambda x: utils_geo.redistribute_vertices(x.geometry, dist), axis=1
-        )
-
-        # develop edges data for each created points
-        extended = (
-            edges["points"]
-            .apply([pd.Series])
-            .stack()
-            .reset_index(level=1, drop=True)
-            .join(edges)
-            .reset_index()
-        )
-
-        # haversine requires data in form of [lat, lng] and inputs/outputs in units of radians
-        nodes = pd.DataFrame(
-            {
-                "x": extended["Series"].apply(lambda x: x.x),
-                "y": extended["Series"].apply(lambda x: x.y),
-            }
-        )
-        nodes_rad = np.deg2rad(nodes[["y", "x"]].values.astype(np.float))
-        points = np.array([Y, X]).T
-        points_rad = np.deg2rad(points)
-
-        # build a ball tree for haversine nearest node search
-        tree = BallTree(nodes_rad, metric="haversine")
-
-        # query the tree for nearest node to each point
-        idx = tree.query(points_rad, k=1, return_distance=False)
-        eidx = extended.loc[idx[:, 0], "index"]
-        ne = edges.loc[eidx, ["u", "v", "key"]]
-
-    else:
-        raise ValueError("You must pass a valid method name, or None.")
-
-    utils.log(f"Found nearest edges to {len(X)} points")
-
-    return np.array(ne)
+    return nearest_edges(G, X, Y)
 
 
 def shortest_path(G, orig, dest, weight="length"):
