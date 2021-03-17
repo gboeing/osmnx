@@ -178,7 +178,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         points' y or latitude coordinates, in same CRS/units as graph and
         containing no nulls
     interpolate : float
-        spacing distance between interpolated points, in same units as `geom`.
+        spacing distance between interpolated points, in same units as graph.
         smaller values generate more points.
     return_dist : bool
         optionally also return distance between points and nearest edges
