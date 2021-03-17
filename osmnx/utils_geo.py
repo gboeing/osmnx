@@ -1,6 +1,7 @@
 """Geospatial utility functions."""
 
 import math
+import warnings
 
 import numpy as np
 from shapely.geometry import LineString
@@ -47,27 +48,24 @@ def interpolate_points(geom, dist):
 
 def redistribute_vertices(geom, dist):
     """
-    Redistribute the vertices on a projected LineString or MultiLineString.
-
-    The distance argument is only approximate since the total distance of the
-    linestring may not be a multiple of the preferred distance. This function
-    works on only (Multi)LineString geometry types.
+    Do not use, deprecated.
 
     Parameters
     ----------
     geom : shapely.geometry.LineString or shapely.geometry.MultiLineString
-        a Shapely geometry (should be projected)
+        deprecated, do not use
     dist : float
-        spacing length along edges. Units are same as the geom: degrees for
-        unprojected geometries and meters for projected geometries. The
-        smaller the dist value, the more points are created.
+        deprecated, do not use
 
     Returns
     -------
     list or shapely.geometry.MultiLineString
-        the redistributed vertices as a list if geom is a LineString or
-        MultiLineString if geom is a MultiLineString
     """
+    msg = (
+        "The `redistribute_vertices` function has been deprecated and will be removed in a "
+        "future release. Use the more efficient `utils_geo.interpolate_points` instead."
+    )
+    warnings.warn(msg)
     if geom.geom_type == "LineString":
         num_vert = round(geom.length / dist)
         if num_vert == 0:
