@@ -2,6 +2,7 @@
 
 import math
 
+import networkx as nx
 import numpy as np
 
 
@@ -81,3 +82,77 @@ def add_edge_bearings(G, precision=1):
             data["bearing"] = round(bearing, precision)
 
     return G
+
+
+def _extract_edge_bearings(Gu, min_length=0, weight=None):
+    """
+    Extract undirected graph's bidirectional edge bearings.
+
+    For example, if an edge has a bearing of 90° then we will record bearings
+    of both 90° and 270° for this edge.
+
+    Parameters
+    ----------
+    Gu : networkx.MultiGraph
+        undirected input graph
+    min_length : float
+        ignore edges with `length` attributes less than `min_length`; useful
+        to ignore the noise of many very short edges
+    weight : string
+        if not None, weight edges' bearings by this (non-null) edge attribute.
+        for example, if "length" is provided, this will return 1 bearing
+        observation per meter per street, which could result in a very large
+        `bearings` array.
+
+    Returns
+    -------
+    bearings : numpy.array
+        the graph's bidirectional edge bearings
+    """
+    if nx.is_directed(Gu):
+        raise ValueError("`Gu` must be undirected")
+    bearings = list()
+    for _, _, data in add_edge_bearings(Gu).edges(data=True):
+        if data["length"] >= min_length:
+            if weight:
+                # weight edges' bearings by some edge attribute value
+                bearings.extend([data["bearing"]] * int(data[weight]))
+            else:
+                # don't weight bearings, just take one value per edge
+                bearings.append(data["bearing"])
+
+    # drop any nulls, calculate reverse bearings, concatenate and return
+    bearings = np.array(bearings)
+    bearings = bearings[~np.isnan(bearings)]
+    bearings_r = (bearings - 180) % 360
+    return np.concatenate([bearings, bearings_r])
+
+
+def _bearings_distribution(bearings, num_bins):
+    """
+    Compute distribution of bearings across evenly spaced bins.
+
+    Prevents bin-edge effects around common values like 0° and 90° by
+    initially creating twice as many bins as desired, then merging them in
+    pairs. For example, if `num_bins=36` is provided, then each bin will
+    represent 10° around the compass, with the first bin representing 355°-5°.
+
+    Parameters
+    ----------
+    bearings : numpy.array
+        the graph's bidirectional edge bearings
+    num_bins : int
+        number of bins for the bearings histogram
+
+    Returns
+    -------
+    bin_counts : numpy.array
+        counts of bearings per bin
+    """
+    n = num_bins * 2
+    bin_edges = np.arange(n + 1) * 360 / n
+    count, _ = np.histogram(bearings, bins=bin_edges)
+
+    # move last bin to front, so eg 0.01° and 359.99° will be binned together
+    count = np.roll(count, 1)
+    return count[::2] + count[1::2]
