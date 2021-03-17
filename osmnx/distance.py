@@ -41,7 +41,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
         second point's latitude coordinate
     lng2 : float or numpy.array of float
         second point's longitude coordinate
-    earth_radius : int or float
+    earth_radius : float
         radius of earth in units in which distance will be returned
         (default is meters)
 
@@ -205,9 +205,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         # then minimize euclidean distance from point to the possible matches
         ne_dist = list()
         for xy in zip(X, Y):
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                dists = geoms.iloc[list(rtree.nearest(xy))].distance(Point(xy))
+            dists = geoms.iloc[list(rtree.nearest(xy))].distance(Point(xy))
             ne_dist.append((dists.idxmin(), dists.min()))
         ne, dist = zip(*ne_dist)
 
@@ -340,7 +338,7 @@ def get_nearest_nodes(G, X, Y, method=None, return_dist=False):
     return nearest_nodes(G, X=X, Y=Y, return_dist=return_dist)
 
 
-def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
+def get_nearest_edges(G, X, Y, method=None, dist=None):
     """
     Do not use, deprecated.
 
@@ -366,7 +364,7 @@ def get_nearest_edges(G, X, Y, method=None, dist=0.0001):
         "future release. Use the more efficient `distance.nearest_edges` instead."
     )
     warnings.warn(msg)
-    return nearest_edges(G, X, Y)
+    return nearest_edges(G, X, Y, dist)
 
 
 def shortest_path(G, orig, dest, weight="length"):
