@@ -18,54 +18,11 @@ import warnings
 import networkx as nx
 import numpy as np
 
-from . import bearing
 from . import distance
 from . import projection
 from . import simplification
 from . import utils
 from . import utils_graph
-
-# scipy is an optional dependency for entropy stats
-try:
-    import scipy
-except ImportError:
-    scipy = None
-
-
-def orientation_entropy(Gu, num_bins=36, min_length=0, weight=None):
-    """
-    Calculate undirected graph's orientation entropy.
-
-    Orientation entropy is the entropy of its edges' bidirectional bearings
-    across evenly spaced bins.
-
-    Parameters
-    ----------
-    Gu : networkx.MultiGraph
-        undirected input graph
-    num_bins : int
-        number of bins; for example, if `num_bins=36` is provided, then each
-        bin will represent 10° around the compass
-    min_length : float
-        ignore edges with `length` attributes less than `min_length`; useful
-        to ignore the noise of many very short edges
-    weight : string
-        if not None, weight edges' bearings by this (non-null) edge attribute.
-        for example, if "length" is provided, this will return 1 bearing
-        observation per meter per street, which could result in a very large
-        `bearings` array.
-
-    Returns
-    -------
-    entropy : float
-        the graph's orientation entropy
-    """
-    # check if we were able to import scipy
-    if scipy is None:
-        raise ImportError("scipy must be installed to calculate entropy")
-    bearings = bearing._extract_edge_bearings(Gu, min_length, weight)
-    bin_counts = bearing._bearings_distribution(bearings, num_bins)
-    return scipy.stats.entropy(bin_counts)
 
 
 def streets_per_node(G):
