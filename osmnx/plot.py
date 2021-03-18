@@ -9,6 +9,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+from . import bearing
 from . import graph
 from . import projection
 from . import settings
@@ -120,6 +121,104 @@ def get_edge_colors_by_attr(
     """
     vals = pd.Series(nx.get_edge_attributes(G, attr))
     return _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size)
+
+
+def plot_orientation(Gu, ax=None):
+    """
+    Plot a polar histogram of a spatial network's bearings.
+
+    Parameters
+    ----------
+    Gu : networkx.MultiGraph
+        undirected input graph
+    ax : matplotlib.axes.PolarAxesSubplot
+        a matplotlib axis with projection=polar
+
+    Returns
+    -------
+    fig, ax : tuple
+        matplotlib figure, axis
+    """
+    # bin kwargs
+    num_bins = 36
+    min_length = 0
+    weight = None
+    area = True
+
+    # fig kwargs
+    figsize = (5, 5)
+    title = "title".upper()
+
+    # bar kwargs
+    color = "#003366"
+    edgecolor = "k"
+    linewidth = 0.5
+    alpha = 0.7
+
+    # font kwargs
+    title_font = {"family": "DejaVu Sans", "size": 24, "weight": "bold"}
+    xtick_font = {"family": "DejaVu Sans", "size": 10, "weight": "bold", "alpha": 1.0, "zorder": 3}
+    ytick_font = {"family": "DejaVu Sans", "size": 9, "weight": "bold", "alpha": 0.2, "zorder": 3}
+
+    # get the bearings' distribution's bin counts and edges
+    bin_counts, bin_edges = bearing._bearings_distribution(Gu, num_bins, min_length, weight)
+
+    # position: where to center each bar. ignore the last bin edge, because
+    # it's the same as the first (i.e., 0 = 360)
+    position = bin_edges[:-1] * np.pi / 180
+
+    # width: make bars fill the circumference without gaps or overlaps
+    width = 2 * np.pi / num_bins
+
+    # radius: how long to make each bar
+    radius_area = np.sqrt(bin_counts / num_bins / np.pi)
+    radius_height = bin_counts / bin_counts.sum()
+    if area:
+        # radius as area proportional to frequency
+        radius = radius_area
+    else:
+        # radius as height proportional to frequency
+        radius = radius_height
+
+    # create the ax, set N at top and go clockwise
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "polar"})
+    else:
+        fig = ax.figure
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction("clockwise")
+    ax.set_ylim(top=radius.max())
+
+    # set the title
+    ax.set_title(title, y=1.05, fontdict=title_font)
+
+    # configure the y-ticks and their labels
+    labels = np.linspace(0, radius_height.max(), 5)
+    yticklabels = [""] + [f"{y:.2f}" for y in labels[1:]]
+    ax.set_yticks(np.linspace(0, radius.max(), 5))
+    ax.set_yticklabels(labels=yticklabels, fontdict=ytick_font)
+
+    # configure the x-ticks and their labels
+    xticklabels = ["N", "", "E", "", "S", "", "W", ""]
+    ax.set_xticks(ax.get_xticks())
+    ax.set_xticklabels(labels=xticklabels, fontdict=xtick_font)
+    ax.tick_params(axis="x", which="major", pad=-2)
+
+    # plot the bars
+    ax.bar(
+        position,
+        height=radius,
+        width=width,
+        align="center",
+        bottom=0,
+        zorder=2,
+        color=color,
+        edgecolor=edgecolor,
+        linewidth=linewidth,
+        alpha=alpha,
+    )
+
+    return fig, ax
 
 
 def plot_graph(

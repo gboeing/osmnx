@@ -5,6 +5,12 @@ import math
 import networkx as nx
 import numpy as np
 
+# scipy is an optional dependency for entropy calculation
+try:
+    import scipy
+except ImportError:
+    scipy = None
+
 
 def get_bearing(origin_point, destination_point):
     """
@@ -84,6 +90,41 @@ def add_edge_bearings(G, precision=1):
     return G
 
 
+def orientation_entropy(Gu, num_bins=36, min_length=0, weight=None):
+    """
+    Calculate undirected graph's orientation entropy.
+
+    Orientation entropy is the entropy of its edges' bidirectional bearings
+    across evenly spaced bins.
+
+    Parameters
+    ----------
+    Gu : networkx.MultiGraph
+        undirected input graph
+    num_bins : int
+        number of bins; for example, if `num_bins=36` is provided, then each
+        bin will represent 10° around the compass
+    min_length : float
+        ignore edges with `length` attributes less than `min_length`; useful
+        to ignore the noise of many very short edges
+    weight : string
+        if not None, weight edges' bearings by this (non-null) edge attribute.
+        for example, if "length" is provided, this will return 1 bearing
+        observation per meter per street, which could result in a very large
+        `bearings` array.
+
+    Returns
+    -------
+    entropy : float
+        the graph's orientation entropy
+    """
+    # check if we were able to import scipy
+    if scipy is None:
+        raise ImportError("scipy must be installed to calculate entropy")
+    bin_counts, _ = _bearings_distribution(Gu, num_bins, min_length, weight)
+    return scipy.stats.entropy(bin_counts)
+
+
 def _extract_edge_bearings(Gu, min_length=0, weight=None):
     """
     Extract undirected graph's bidirectional edge bearings.
@@ -128,7 +169,7 @@ def _extract_edge_bearings(Gu, min_length=0, weight=None):
     return np.concatenate([bearings, bearings_r])
 
 
-def _bearings_distribution(bearings, num_bins):
+def _bearings_distribution(Gu, num_bins, min_length=0, weight=None):
     """
     Compute distribution of bearings across evenly spaced bins.
 
@@ -139,20 +180,34 @@ def _bearings_distribution(bearings, num_bins):
 
     Parameters
     ----------
-    bearings : numpy.array
-        the graph's bidirectional edge bearings
+    Gu : networkx.MultiGraph
+        undirected input graph
     num_bins : int
         number of bins for the bearings histogram
+    min_length : float
+        ignore edges with `length` attributes less than `min_length`; useful
+        to ignore the noise of many very short edges
+    weight : string
+        if not None, weight edges' bearings by this (non-null) edge attribute.
+        for example, if "length" is provided, this will return 1 bearing
+        observation per meter per street, which could result in a very large
+        `bearings` array.
 
     Returns
     -------
-    bin_counts : numpy.array
-        counts of bearings per bin
+    bin_counts, bin_edges : tuple of numpy.array
+        counts of bearings per bin and the bins edges
     """
     n = num_bins * 2
-    bin_edges = np.arange(n + 1) * 360 / n
-    count, _ = np.histogram(bearings, bins=bin_edges)
+    bins = np.arange(n + 1) * 360 / n
+
+    bearings = _extract_edge_bearings(Gu, min_length, weight)
+    count, bin_edges = np.histogram(bearings, bins=bins)
 
     # move last bin to front, so eg 0.01° and 359.99° will be binned together
     count = np.roll(count, 1)
-    return count[::2] + count[1::2]
+    bin_counts = count[::2] + count[1::2]
+
+    # because we merged the bins, their edges are now only every other one
+    bin_edges = bin_edges[range(0, len(bin_edges), 2)]
+    return bin_counts, bin_edges
