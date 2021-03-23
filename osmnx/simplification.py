@@ -429,11 +429,6 @@ def _merge_nodes_geometric(G, tolerance, chunk=True):
     merged_nodes : GeoSeries
         the merged overlapping polygons of the buffered nodes
     """
-    # yield n-sized chunks of GeoSeries one at a time
-    def get_chunks(gs, n):
-        for i in range(0, len(gs), n):
-            yield gs[i : i + n]
-
     gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)["geometry"]
 
     if not chunk:
@@ -441,14 +436,13 @@ def _merge_nodes_geometric(G, tolerance, chunk=True):
         merged_nodes = gs_nodes.buffer(tolerance).unary_union
 
     else:
-        # sort nodes GeoSeries by geometry x/y vals to make unary_union faster
+        # sort nodes by geometry x/y values to make the unary_unions faster
+        # then buffer nodes by tolerance and generate n-size chunks of buffers
+        # finally, unary_union each chunk then unary_union those unary unions
+        n = int(len(gs_nodes) ** 0.5)
         idx = pd.DataFrame((gs_nodes.x, gs_nodes.y)).T.sort_values([0, 1]).index
-
-        # buffer nodes by tolerance then generate n-sized chunks of nodes
-        n = int(len(G) ** 0.5)
-        chunks = get_chunks(gs_nodes.loc[idx].buffer(tolerance), n)
-
-        # unary_union each chunk then unary_union those unary unions
+        buffers = gs_nodes.loc[idx].buffer(tolerance)
+        chunks = (buffers.iloc[i : i + n] for i in range(0, len(buffers), n))
         merged_nodes = gpd.GeoSeries(chunk.unary_union for chunk in chunks).unary_union
 
     # if only a single node results, make it iterable to convert to GeoSeries
