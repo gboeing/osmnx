@@ -187,7 +187,7 @@ def config(
     overpass_settings : string
         Settings string for overpass queries. For example, to query historical
         OSM data as of a certain date:
-        ``[out:json][timeout:90][date:"2019-10-28T19:20:00Z"]``.
+        ``'[out:json][timeout:90][date:"2019-10-28T19:20:00Z"]'``.
         Use with caution.
     timeout : int
         the timeout interval for the HTTP request and for API to use while
