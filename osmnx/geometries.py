@@ -1001,4 +1001,7 @@ def _filter_gdf_by_polygon_and_tags(gdf, polygon, tags):
         gdf.dropna(axis="columns", how="all", inplace=True)
 
     # multi-index gdf by element_type and osmid then return
-    return gdf.set_index(["element_type", "osmid"])
+    idx_cols = ["element_type", "osmid"]
+    if all(c in gdf.columns for c in idx_cols):
+        gdf = gdf.set_index(idx_cols)
+    return gdf
