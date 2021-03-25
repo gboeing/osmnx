@@ -4,7 +4,6 @@ import logging as lg
 
 import geopandas as gpd
 import networkx as nx
-import pandas as pd
 from shapely.geometry import LineString
 from shapely.geometry import Point
 from shapely.geometry import Polygon
