@@ -16,11 +16,15 @@ If you use OSMnx in your work, please cite the journal article.
 
 ## Getting Started
 
-  - "How do I install OSMnx?" Read the [installation](https://osmnx.readthedocs.io/) instructions.
-  - "How do I use OSMnx?" Usage examples and tutorials are in the [OSMnx examples](https://github.com/gboeing/osmnx-examples) repo.
-  - "How does this function work?" Read the [documentation](https://osmnx.readthedocs.io/).
-  - "What can I do with OSMnx?" Check out recent projects and blog posts that [used OSMnx](https://geoffboeing.com/2018/03/osmnx-features-roundup/).
-  - "I have a 'how-to' question." Please ask it on [StackOverflow](https://stackoverflow.com/search?q=osmnx).
+"How do I install OSMnx?" Read the [installation](https://osmnx.readthedocs.io/) instructions.
+
+"How do I use OSMnx?" See the usage examples and tutorials in the [examples](https://github.com/gboeing/osmnx-examples) repo.
+
+"How does this function work?" Read the [documentation](https://osmnx.readthedocs.io/).
+
+"What can I do with OSMnx?" Check out recent projects and blog posts that [used OSMnx](https://geoffboeing.com/2018/03/osmnx-features-roundup/).
+
+"I have a 'how-to' question." Please ask it on [StackOverflow](https://stackoverflow.com/search?q=osmnx).
 
 
 ## Features
@@ -44,4 +48,4 @@ OSMnx is built on top of GeoPandas, NetworkX, and matplotlib and interacts with 
   * Visualize travel distance and travel time with isoline and isochrone maps
   * Plot figure-ground diagrams of street networks and building footprints
 
-To get started with sample code and demos, see the [examples](https://github.com/gboeing/osmnx-examples) repo and read the [documentation](https://osmnx.readthedocs.io/) for package usage details. Feature development details are in the change log. Read the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/) for further technical details.
+All of these features are demonstrated in the [examples](https://github.com/gboeing/osmnx-examples) repo and documented in the [documentation](https://osmnx.readthedocs.io/). Feature development details are in the change log. Read the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/) for further technical details.
