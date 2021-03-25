@@ -9,13 +9,21 @@
 
 **OSMnx** is a Python package that lets you download spatial data from OpenStreetMap and model, project, visualize, and analyze real-world street networks. You can download and model walkable, drivable, or bikeable urban networks with a single line of Python code then easily analyze and visualize them. You can just as easily download and work with other infrastructure types, amenities/points of interest, building footprints, elevation data, street bearings/orientations, and speed/travel time.
 
+If you use OSMnx in your work, please cite the journal article.
+
 **Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](https://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems* 65, 126-139. doi:10.1016/j.compenvurbsys.2017.05.004
 
 
+## Getting Started
+
+  - "How do I install OSMnx?" Read the [installation](https://osmnx.readthedocs.io/) instructions.
+  - "How do I use OSMnx?" Usage examples and tutorials are in the [OSMnx examples](https://github.com/gboeing/osmnx-examples) repo.
+  - "How does this function work?" Read the [documentation](https://osmnx.readthedocs.io/).
+  - "What can I do with OSMnx?" Check out recent projects and blog posts that [used OSMnx](https://geoffboeing.com/2018/03/osmnx-features-roundup/).
+  - "I have a 'how-to' question." Please ask it on [StackOverflow](https://stackoverflow.com/search?q=osmnx).
+
 
 ## Features
-
-To get started with sample code and usage examples/demos, see the [examples](https://github.com/gboeing/osmnx-examples) GitHub repo and read the [documentation](https://osmnx.readthedocs.io/).
 
 OSMnx is built on top of GeoPandas, NetworkX, and matplotlib and interacts with OpenStreetMap's APIs to:
 
@@ -36,29 +44,4 @@ OSMnx is built on top of GeoPandas, NetworkX, and matplotlib and interacts with 
   * Visualize travel distance and travel time with isoline and isochrone maps
   * Plot figure-ground diagrams of street networks and building footprints
 
-Examples and demonstrations of these features are in the [examples repo](https://github.com/gboeing/osmnx-examples). More feature development details are in the change log. Read the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/) for further technical details. Package usage is detailed in the [documentation](https://osmnx.readthedocs.io/).
-
-
-
-## Installation
-
-Install OSMnx in a clean conda environment:
-
-```
-conda config --prepend channels conda-forge
-conda create -n ox --strict-channel-priority osmnx
-```
-
-If you have any trouble with the installation, read the [docs](https://osmnx.readthedocs.io/) for more info. Alternatively, you can run OSMnx + Jupyter directly from its official [Docker container](https://hub.docker.com/r/gboeing/osmnx).
-
-
-
-## Documentation and Usage
-
-Documentation is available on [readthedocs](https://osmnx.readthedocs.io/).
-
-"How do I use OSMnx?" Usage examples and tutorials are available in the [examples repo](https://github.com/gboeing/osmnx-examples).
-
-Examples of projects and blog posts [using OSMnx](https://geoffboeing.com/2018/03/osmnx-features-roundup/).
-
-If you use OSMnx in your work, please cite the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/).
+To get started with sample code and demos, see the [examples](https://github.com/gboeing/osmnx-examples) repo and read the [documentation](https://osmnx.readthedocs.io/) for package usage details. Feature development details are in the change log. Read the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/) for further technical details.
