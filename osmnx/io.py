@@ -347,6 +347,9 @@ def _convert_bool_string(value):
     to the boolean value True, that is, `bool("False") == True`. This function
     raises a ValueError if a value other than "True" or "False" is passed.
 
+    If the value is already a boolean, this function just returns it, to
+    accommodate usage when the value was originally inside a stringified list.
+
     Parameters
     ----------
     value : string {"True", "False"}
@@ -358,6 +361,8 @@ def _convert_bool_string(value):
     """
     if value in {"True", "False"}:
         return value == "True"
+    elif isinstance(value, bool):
+        return value
     else:
         raise ValueError(f'invalid literal for boolean: "{value}"')
 
