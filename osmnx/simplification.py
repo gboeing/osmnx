@@ -4,7 +4,6 @@ import logging as lg
 
 import geopandas as gpd
 import networkx as nx
-import pandas as pd
 from shapely.geometry import LineString
 from shapely.geometry import Point
 from shapely.geometry import Polygon
@@ -398,64 +397,31 @@ def consolidate_intersections(
             return _merge_nodes_geometric(G, tolerance).centroid
 
 
-def _merge_nodes_geometric(G, tolerance, chunk=True):
+def _merge_nodes_geometric(G, tolerance):
     """
     Geometrically merge nodes within some distance of each other.
-
-    If chunk=True, it sorts the nodes GeoSeries by geometry x and y values (to
-    make unary_union faster), then buffers by tolerance. Next it divides the
-    nodes GeoSeries into n-sized chunks, where n = the square root of the
-    number of nodes. Then it runs unary_union on each chunk, and then runs
-    unary_union on the resulting unary unions. This is much faster on large
-    graphs (n>100000) because of how unary_union's runtime scales with vertex
-    count. But chunk=False is usually faster on small and medium sized graphs.
-    This hacky method will hopefully be made obsolete when shapely becomes
-    vectorized by incorporating the pygeos codebase.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         a projected graph
     tolerance : float
-        nodes are buffered to this distance (in graph's geometry's units) and
-        subsequent overlaps are dissolved into a single polygon
-    chunk : bool
-        if True, divide nodes into geometrically sorted chunks to improve the
-        speed of unary_union operation by running it on each chunk and then
-        running it on the results of those runs
+        buffer nodes to this distance (in graph's geometry's units) then merge
+        overlapping polygons into a single polygon via a unary union operation
 
     Returns
     -------
-    merged_nodes : GeoSeries
+    merged : GeoSeries
         the merged overlapping polygons of the buffered nodes
     """
-    # yield n-sized chunks of GeoSeries one at a time
-    def get_chunks(gs, n):
-        for i in range(0, len(gs), n):
-            yield gs[i : i + n]
-
-    gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)["geometry"]
-
-    if not chunk:
-        # buffer nodes GeoSeries then get unary union to merge overlaps
-        merged_nodes = gs_nodes.buffer(tolerance).unary_union
-
-    else:
-        # sort nodes GeoSeries by geometry x/y vals to make unary_union faster
-        idx = pd.DataFrame((gs_nodes.x, gs_nodes.y)).T.sort_values([0, 1]).index
-
-        # buffer nodes by tolerance then generate n-sized chunks of nodes
-        n = int(len(G) ** 0.5)
-        chunks = get_chunks(gs_nodes.loc[idx].buffer(tolerance), n)
-
-        # unary_union each chunk then unary_union those unary unions
-        merged_nodes = gpd.GeoSeries(chunk.unary_union for chunk in chunks).unary_union
+    # buffer nodes GeoSeries then get unary union to merge overlaps
+    merged = utils_graph.graph_to_gdfs(G, edges=False)["geometry"].buffer(tolerance).unary_union
 
     # if only a single node results, make it iterable to convert to GeoSeries
-    if isinstance(merged_nodes, Polygon):
-        merged_nodes = [merged_nodes]
+    if isinstance(merged, Polygon):
+        merged = [merged]
 
-    return gpd.GeoSeries(list(merged_nodes), crs=G.graph["crs"])
+    return gpd.GeoSeries(list(merged), crs=G.graph["crs"])
 
 
 def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=True):
