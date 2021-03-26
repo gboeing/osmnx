@@ -139,7 +139,6 @@ def plot_orientation(
     title_y=1.05,
     title_font=None,
     xtick_font=None,
-    ytick_font=None,
 ):
     """
     Plot a polar histogram of a spatial network's bidirectional edge bearings.
@@ -175,11 +174,9 @@ def plot_orientation(
     title_y : float
         y position to place title
     title_font : dict
-        the title's matplotlib fontdict
+        the title's fontdict to pass to matplotlib
     xtick_font : dict
-        the xtick labels' matplotlib fontdict
-    ytick_font : dict
-        the ytick labels' matplotlib fontdict
+        the xtick labels' fontdict to pass to matplotlib
 
     Returns
     -------
@@ -196,14 +193,6 @@ def plot_orientation(
             "alpha": 1.0,
             "zorder": 3,
         }
-    if ytick_font is None:
-        ytick_font = {
-            "family": "DejaVu Sans",
-            "size": 9,
-            "weight": "bold",
-            "alpha": 0.2,
-            "zorder": 3,
-        }
 
     # get the bearings' distribution's bin counts and edges
     bin_counts, bin_edges = bearing._bearings_distribution(Gu, num_bins, min_length, weight)
@@ -216,14 +205,13 @@ def plot_orientation(
     width = 2 * np.pi / num_bins
 
     # radius: how long to make each bar
-    radius_height = bin_counts / bin_counts.sum()
+    bin_frequency = bin_counts / bin_counts.sum()
     if area:
         # set bar length so area is proportional to frequency
-        radius_area = np.sqrt(radius_height)
-        radius = radius_area
+        radius = np.sqrt(bin_frequency)
     else:
         # set bar length so height is proportional to frequency
-        radius = radius_height
+        radius = bin_frequency
 
     # create ax (if necessary) then set N at top and go clockwise
     if ax is None:
@@ -238,12 +226,9 @@ def plot_orientation(
         # set the title
         ax.set_title(title, y=title_y, fontdict=title_font)
 
-    # configure the y-ticks and their labels; always use radius_height so
-    # labels mean relative frequency of edges in each bin
-    labels = np.linspace(0, radius_height.max(), 5)
-    yticklabels = [""] + [f"{y:.2f}" for y in labels[1:]]
+    # configure the y-ticks and remove their labels
     ax.set_yticks(np.linspace(0, radius.max(), 5))
-    ax.set_yticklabels(labels=yticklabels, fontdict=ytick_font)
+    ax.set_yticklabels(labels="")
 
     # configure the x-ticks and their labels
     xticklabels = ["N", "", "E", "", "S", "", "W", ""]
