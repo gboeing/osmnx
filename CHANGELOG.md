@@ -1,16 +1,25 @@
 # Change log
 
-## TBD
+## 1.1.0 (TBD)
 
+  - add graph-constrained spatial sampling function
+  - add faster streamlined nearest_nodes and nearest_edges functions to distance module
+  - deprecate old get_nearest_node, get_nearest_nodes, get_nearest_edge, and get_nearest_edges
+  - add utils_geo.interpolate_points function and deprecate redistribute_vertices in favor of it
+  - expose individual street network stats functions in stats module
+  - deprecate the extended_stats function in stats module
+  - add network orientation and entropy stats functions to bearing module
+  - add plot_orientation function to plot module to polar histograms of graph edge bearings
   - handle relations of type "boundary" in geometries module
   - multi-index GeoDataFrames returned from geometries module by element type and osmid
   - ensure all nodes have integer IDs after graph intersection consolidation
   - improve save_graph_xml speed
   - improve geocoder module error messages
+  - improve handling of node geometry when converting graph to/from GeoDataFrames
   - fix network_type filters allowing ways tagged "bus_guideway"
   - fix handling of boolean type conversion in load_graphml
   - fix truncate_graph_dist retaining unreachable nodes
-  - add option to return distances in get_nearest_nodes
+  - fix bug in consolidate_intersections when pygeos is installed
   - remove descartes dependency in line with geopandas
 
 ## 1.0.1 (2021-01-13)
