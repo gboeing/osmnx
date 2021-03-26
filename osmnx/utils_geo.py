@@ -39,8 +39,8 @@ def sample_points(G, n):
     Returns
     -------
     points : geopandas.GeoSeries
-        the sampled points, indexed by (u, v, key) of the edge from which each
-        point was drawn
+        the sampled points, multi-indexed by (u, v, key) of the edge from
+        which each point was drawn
     """
     if nx.is_directed(G):
         warnings.warn("graph should be undirected to not oversample bidirectional edges")
