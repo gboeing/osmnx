@@ -300,8 +300,8 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
     if not isinstance(geometry, (Polygon, MultiPolygon)):  # pragma: no cover
         raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
 
-    # if geometry is a MultiPolygon OR a single Polygon whose area exceeds the
-    # max size, get the convex hull around the geometry
+    # if geometry is either 1) a Polygon whose area exceeds the max size, or
+    # 2) a MultiPolygon, then get the convex hull around the geometry
     if isinstance(geometry, MultiPolygon) or (
         isinstance(geometry, Polygon) and geometry.area > max_query_area_size
     ):
@@ -332,17 +332,16 @@ def _get_polygons_coordinates(geometry):
     -------
     polygon_coord_strs : list
     """
-    # extract the exterior coordinates of the geometry to pass to the API later
-    polygons_coords = []
-    if isinstance(geometry, Polygon):
-        x, y = geometry.exterior.xy
-        polygons_coords.append(list(zip(x, y)))
-    elif isinstance(geometry, MultiPolygon):
-        for polygon in geometry:
-            x, y = polygon.exterior.xy
-            polygons_coords.append(list(zip(x, y)))
-    else:  # pragma: no cover
+    if not isinstance(geometry, (Polygon, MultiPolygon)):  # pragma: no cover
         raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
+    if isinstance(geometry, Polygon):
+        geometry = MultiPolygon([geometry])
+
+    # extract the exterior coordinates of the geometry
+    polygons_coords = []
+    for polygon in geometry:
+        x, y = polygon.exterior.xy
+        polygons_coords.append(list(zip(x, y)))
 
     # convert the exterior coordinates of the polygon(s) to the string format
     # the API expects
