@@ -120,7 +120,9 @@ def test_stats():
     stats = ox.extended_stats(G, connectivity=True, anc=False, ecc=True, bc=True, cc=True)
 
     # calculate entropy
-    entropy = ox.bearing.orientation_entropy(ox.get_undirected(G))
+    Gu = ox.get_undirected(G)
+    entropy = ox.bearing.orientation_entropy(Gu)
+    fig, ax = ox.plot.plot_orientation(Gu, area=True, title="Title")
 
     # test cleaning and rebuilding graph
     G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
