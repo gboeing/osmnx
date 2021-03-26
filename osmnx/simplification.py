@@ -563,7 +563,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
             y = H.nodes[cluster_label]["y"]
             xy = [(x, y)]
 
-            # for each edge incident to this new merged node, update its
+            # for each edge incident on this new merged node, update its
             # geometry to extend to/from the new node's point coords
             in_edges = set(H.in_edges(cluster_label, keys=True))
             out_edges = set(H.out_edges(cluster_label, keys=True))

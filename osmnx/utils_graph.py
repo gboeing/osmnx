@@ -268,7 +268,7 @@ def count_streets_per_node(G, nodes=None):
     counts = Counter(edges_flat)
     streets_per_node = {node: counts[node] for node in nodes}
 
-    utils.log("Counted undirected street segments incident to each node")
+    utils.log("Counted undirected street segments incident on each node")
     return streets_per_node
 
 
