@@ -172,7 +172,10 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
         data = {name: val for name, val in data_all if isinstance(val, list) or pd.notnull(val)}
         G.add_edge(u, v, key=k, **data)
 
-    # add nodes' attributes to graph
+    # add any nodes with no incident edges, since they wouldn't be added above
+    G.add_nodes_from(set(gdf_nodes.index) - set(G.nodes))
+
+    # now all nodes are added, so set nodes' attributes
     for col in gdf_nodes.columns:
         nx.set_node_attributes(G, name=col, values=gdf_nodes[col].dropna())
 
