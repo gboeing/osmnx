@@ -299,9 +299,9 @@ def plot_orientation(
     # get the bearings' distribution's bin counts and edges
     bin_counts, bin_edges = _bearings_distribution(Gu, num_bins, min_length, weight)
 
-    # position: where to center each bar. ignore the last bin edge, because
+    # positions: where to center each bar. ignore the last bin edge, because
     # it's the same as the first (i.e., 0° = 360°)
-    position = bin_edges[:-1] * np.pi / 180
+    positions = np.radians(bin_edges[:-1])
 
     # width: make bars fill the circumference without gaps or overlaps
     width = 2 * np.pi / num_bins
@@ -324,9 +324,6 @@ def plot_orientation(
     ax.set_theta_direction("clockwise")
     ax.set_ylim(top=radius.max())
 
-    if title:
-        ax.set_title(title, y=title_y, fontdict=title_font)
-
     # configure the y-ticks and remove their labels
     ax.set_yticks(np.linspace(0, radius.max(), 5))
     ax.set_yticklabels(labels="")
@@ -339,7 +336,7 @@ def plot_orientation(
 
     # draw the bars
     ax.bar(
-        position,
+        positions,
         height=radius,
         width=width,
         align="center",
@@ -351,5 +348,7 @@ def plot_orientation(
         alpha=alpha,
     )
 
+    if title:
+        ax.set_title(title, y=title_y, fontdict=title_font)
     fig.tight_layout()
     return fig, ax
