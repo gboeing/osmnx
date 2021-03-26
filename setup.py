@@ -77,7 +77,7 @@ setup(
     install_requires=INSTALL_REQUIRES,
     extras_require={
         "folium": ["folium>=0.11"],
-        "kdtree": ["scipy>=1.5"],
+        "scipy": ["scipy>=1.5"],
         "balltree": ["scikit-learn>=0.24"],
     },
 )

@@ -114,9 +114,10 @@ def graph_from_point(
         retain only those nodes within this many meters of the center of the
         graph, with distance determined according to dist_type argument
     dist_type : string {"network", "bbox"}
-        if "bbox", retain only those nodes within a bounding box of the distance
-        parameter. if "network", retain only those nodes within some network
-        distance from the center-most node.
+        if "bbox", retain only those nodes within a bounding box of the
+        distance parameter. if "network", retain only those nodes within some
+        network distance from the center-most node (requires that scikit-learn
+        is installed as an optional dependency).
     network_type : string, {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         what type of street network to get if custom_filter is None
     simplify : bool
@@ -145,11 +146,10 @@ def graph_from_point(
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
-    if dist_type not in {"bbox", "network"}:
+    if dist_type not in {"bbox", "network"}:  # pragma: no cover
         raise ValueError('dist_type must be "bbox" or "network"')
 
-    # create a bounding box from the center point and the distance in each
-    # direction
+    # create bounding box from center point and distance in each direction
     north, south, east, west = utils_geo.bbox_from_point(center_point, dist)
 
     # create a graph from the bounding box
@@ -166,11 +166,11 @@ def graph_from_point(
         custom_filter=custom_filter,
     )
 
-    # if network dist_type is network, find the node in the graph nearest to
-    # the center point, and truncate the graph by network distance from node
     if dist_type == "network":
-        centermost_node = distance.get_nearest_node(G, center_point)
-        G = truncate.truncate_graph_dist(G, centermost_node, max_dist=dist)
+        # if dist_type is network, find node in graph nearest to center point
+        # then truncate graph by network dist from it
+        node = distance.nearest_nodes(G, X=[center_point[1]], Y=[center_point[0]])[0]
+        G = truncate.truncate_graph_dist(G, node, max_dist=dist)
 
     utils.log(f"graph_from_point returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G
@@ -329,7 +329,7 @@ def graph_from_place(
     elif isinstance(query, list):
         # if it is a list, it contains multiple places to get
         gdf_place = geocoder.geocode_to_gdf(query, buffer_dist=buffer_dist)
-    else:
+    else:  # pragma: no cover
         raise TypeError("query must be dict, string, or list of strings")
 
     # extract the geometry from the GeoDataFrame to use in API query
@@ -398,9 +398,9 @@ def graph_from_polygon(
     """
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
-    if not polygon.is_valid:
+    if not polygon.is_valid:  # pragma: no cover
         raise ValueError("The geometry to query within is invalid")
-    if not isinstance(polygon, (Polygon, MultiPolygon)):
+    if not isinstance(polygon, (Polygon, MultiPolygon)):  # pragma: no cover
         raise TypeError(
             "Geometry must be a shapely Polygon or MultiPolygon. If you requested "
             "graph from place name, make sure your query resolves to a Polygon or "
@@ -526,7 +526,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     utils.log("Creating graph from downloaded OSM data...")
 
     # make sure we got data back from the server request(s)
-    if not any(rj["elements"] for rj in response_jsons):
+    if not any(rj["elements"] for rj in response_jsons):  # pragma: no cover
         raise EmptyOverpassResponse("There are no data elements in the response JSON")
 
     # create the graph as a MultiDiGraph and set its meta-attributes

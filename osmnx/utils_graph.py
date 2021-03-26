@@ -45,6 +45,9 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
     if nodes:
 
+        if not G.nodes:  # pragma: no cover
+            raise ValueError("graph contains no nodes")
+
         nodes, data = zip(*G.nodes(data=True))
 
         if node_geometry:
@@ -59,8 +62,8 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
     if edges:
 
-        if not G.edges:
-            raise ValueError("Graph has no edges, cannot convert to a GeoDataFrame.")
+        if not G.edges:  # pragma: no cover
+            raise ValueError("graph contains no edges")
 
         u, v, k, data = zip(*G.edges(keys=True, data=True))
 
@@ -102,8 +105,8 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         return gdf_nodes
     elif edges:
         return gdf_edges
-    else:
-        raise ValueError("You must request nodes or edges or both.")
+    else:  # pragma: no cover
+        raise ValueError("you must request nodes or edges or both")
 
 
 def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
@@ -206,7 +209,7 @@ def add_edge_lengths(G, precision=3):
             for u, v, k in G.edges
         )
     except KeyError:  # pragma: no cover
-        raise KeyError("Some edges missing nodes, possibly due to input data clipping issue")
+        raise KeyError("some edges missing nodes, possibly due to input data clipping issue")
 
     # turn the coordinates into a DataFrame indexed by u, v, k
     cols = ["u", "v", "k", "u_y", "u_x", "v_y", "v_x"]

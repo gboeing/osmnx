@@ -1,6 +1,7 @@
 """Geospatial utility functions."""
 
 import math
+import warnings
 
 import numpy as np
 from shapely.geometry import LineString
@@ -16,29 +17,55 @@ from . import settings
 from . import utils
 
 
+def interpolate_points(geom, dist):
+    """
+    Interpolate evenly spaced points along a LineString.
+
+    The spacing is approximate because the LineString's length may not be
+    evenly divisible by it.
+
+    Parameters
+    ----------
+    geom : shapely.geometry.LineString
+        a LineString geometry
+    dist : float
+        spacing distance between interpolated points, in same units as `geom`.
+        smaller values generate more points.
+
+    Yields
+    ------
+    points : generator
+        a generator of (x, y) tuples of the interpolated points' coordinates
+    """
+    if isinstance(geom, LineString):
+        num_vert = max(round(geom.length / dist), 1)
+        for n in range(num_vert + 1):
+            point = geom.interpolate(n / num_vert, normalized=True)
+            yield point.x, point.y
+    else:  # pragma: no cover
+        raise TypeError(f"unhandled geometry type {geom.geom_type}")
+
+
 def redistribute_vertices(geom, dist):
     """
-    Redistribute the vertices on a projected LineString or MultiLineString.
-
-    The distance argument is only approximate since the total distance of the
-    linestring may not be a multiple of the preferred distance. This function
-    works on only (Multi)LineString geometry types.
+    Do not use, deprecated.
 
     Parameters
     ----------
     geom : shapely.geometry.LineString or shapely.geometry.MultiLineString
-        a Shapely geometry (should be projected)
+        deprecated, do not use
     dist : float
-        spacing length along edges. Units are same as the geom: degrees for
-        unprojected geometries and meters for projected geometries. The
-        smaller the dist value, the more points are created.
+        deprecated, do not use
 
     Returns
     -------
     list or shapely.geometry.MultiLineString
-        the redistributed vertices as a list if geom is a LineString or
-        MultiLineString if geom is a MultiLineString
     """
+    msg = (
+        "The `redistribute_vertices` function has been deprecated and will be removed in a "
+        "future release. Use the more efficient `utils_geo.interpolate_points` instead."
+    )
+    warnings.warn(msg)
     if geom.geom_type == "LineString":
         num_vert = round(geom.length / dist)
         if num_vert == 0:
@@ -47,7 +74,7 @@ def redistribute_vertices(geom, dist):
     elif geom.geom_type == "MultiLineString":
         parts = [redistribute_vertices(part, dist) for part in geom]
         return type(geom)([p for p in parts if not p])
-    else:
+    else:  # pragma: no cover
         raise ValueError(f"unhandled geometry {geom.geom_type}")
 
 
@@ -204,7 +231,7 @@ def round_geometry_coords(geom, precision):
     elif isinstance(geom, MultiPolygon):
         return _round_multipolygon_coords(geom, precision)
 
-    else:
+    else:  # pragma: no cover
         raise TypeError(f"cannot round coordinates of unhandled geometry type: {type(geom)}")
 
 
@@ -236,7 +263,7 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
     # geometry) be the square root of max area size
     quadrat_width = math.sqrt(max_query_area_size)
 
-    if not isinstance(geometry, (Polygon, MultiPolygon)):
+    if not isinstance(geometry, (Polygon, MultiPolygon)):  # pragma: no cover
         raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
 
     # if geometry is a MultiPolygon OR a single Polygon whose area exceeds the
@@ -280,7 +307,7 @@ def _get_polygons_coordinates(geometry):
         for polygon in geometry:
             x, y = polygon.exterior.xy
             polygons_coords.append(list(zip(x, y)))
-    else:
+    else:  # pragma: no cover
         raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
 
     # convert the exterior coordinates of the polygon(s) to the string format
