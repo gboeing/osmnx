@@ -3,6 +3,7 @@
 import math
 import warnings
 
+import networkx as nx
 import numpy as np
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
@@ -41,6 +42,8 @@ def sample_points(G, n):
         the sampled points, indexed by (u, v, key) of the edge from which each
         point was drawn
     """
+    if nx.is_directed(G):
+        warnings.warn("graph should be undirected to not oversample bidirectional edges")
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
     weights = gdf_edges["length"] / gdf_edges["length"].sum()
     idx = np.random.choice(gdf_edges.index, size=n, p=weights)
