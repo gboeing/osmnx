@@ -42,7 +42,7 @@ def sample_points(G, n):
         the sampled points, multi-indexed by (u, v, key) of the edge from
         which each point was drawn
     """
-    if nx.is_directed(G):
+    if nx.is_directed(G):  # pragma: no cover
         warnings.warn("graph should be undirected to not oversample bidirectional edges")
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
     weights = gdf_edges["length"] / gdf_edges["length"].sum()

@@ -139,7 +139,7 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     -------
     G : networkx.MultiDiGraph
     """
-    if not ("x" in gdf_nodes.columns and "y" in gdf_nodes.columns):
+    if not ("x" in gdf_nodes.columns and "y" in gdf_nodes.columns):  # pragma: no cover
         raise ValueError("gdf_nodes must contain x and y columns")
 
     # if gdf_nodes has a geometry attribute set, drop that column (as we use x
@@ -150,7 +150,7 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
             all_x_match = (gdf_nodes.geometry.x == gdf_nodes["x"]).all()
             all_y_match = (gdf_nodes.geometry.y == gdf_nodes["y"]).all()
             assert all_x_match and all_y_match
-        except (AssertionError, ValueError):
+        except (AssertionError, ValueError):  # pragma: no cover
             # AssertionError if x/y coords don't match geometry column
             # ValueError if geometry column contains non-point geometry types
             warnings.warn(

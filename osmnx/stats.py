@@ -316,9 +316,9 @@ def basic_stats(
         )
         warnings.warn(msg)
 
-    if clean_intersects is None:
-        clean_int_tol = 15
-    else:
+    if clean_intersects is not None:
+        if clean_int_tol is None:
+            clean_int_tol = 15
         msg = (
             "The `clean_intersects` and `tolerance` arguments have been "
             "deprecated and will be removed in a future release. Use the "
@@ -326,9 +326,9 @@ def basic_stats(
         )
         warnings.warn(msg)
 
-    if tolerance is None:
-        clean_int_tol = 15
-    else:
+    if tolerance is not None:
+        if clean_int_tol is None:
+            clean_int_tol = tolerance
         msg = (
             "The `clean_intersects` and `tolerance` arguments have been "
             "deprecated and will be removed in a future release. Use the "

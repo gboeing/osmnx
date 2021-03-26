@@ -54,6 +54,7 @@ polygon = wkt.loads(p)
 
 def test_logging():
     # test OSMnx's logger
+    ox.log("test a fake default message")
     ox.log("test a fake debug", level=lg.DEBUG)
     ox.log("test a fake info", level=lg.INFO)
     ox.log("test a fake warning", level=lg.WARNING)
@@ -108,12 +109,14 @@ def test_geocode_to_gdf():
 
 
 def test_stats():
-    # create graph, add bearings, project it
+    # create graph, add a new node, add bearings, project it
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
+    G.add_node(0, x=location_point[1], y=location_point[0])
     G = ox.add_edge_bearings(G)
     G_proj = ox.project_graph(G)
 
     # calculate stats
+    cspn = ox.utils_graph.count_streets_per_node(G)
     stats = ox.basic_stats(G)
     stats = ox.basic_stats(G, area=1000)
     stats = ox.basic_stats(
@@ -206,6 +209,7 @@ def test_routing():
     dest_pt = (G.nodes[dest_node]["y"], G.nodes[dest_node]["x"])
     route = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
 
+    attributes = ox.utils_graph.get_route_edge_attributes(G, route)
     attributes = ox.utils_graph.get_route_edge_attributes(G, route, "travel_time")
 
     fig, ax = ox.plot_graph_route(G, route, save=True)
@@ -364,6 +368,7 @@ def test_graph_save_load():
     ox.save_graph_geopackage(G, filepath=fp, directed=True)
     gdf_nodes1 = gpd.read_file(fp, layer="nodes").set_index("osmid")
     gdf_edges1 = gpd.read_file(fp, layer="edges").set_index(["u", "v", "key"])
+    G2 = ox.graph_from_gdfs(gdf_nodes1, gdf_edges1)
     G2 = ox.graph_from_gdfs(gdf_nodes1, gdf_edges1, graph_attrs=G.graph)
     gdf_nodes2, gdf_edges2 = ox.graph_to_gdfs(G2)
     assert set(gdf_nodes1.index) == set(gdf_nodes2.index) == set(G.nodes) == set(G2.nodes)
