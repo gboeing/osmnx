@@ -152,13 +152,9 @@ def plot_orientation(
         number of bins; for example, if `num_bins=36` is provided, then each
         bin will represent 10° around the compass
     min_length : float
-        ignore edges with `length` attributes less than `min_length`; useful
-        to ignore the noise of many very short edges
+        ignore edges with `length` attributes less than `min_length`
     weight : string
-        if not None, weight edges' bearings by this (non-null) edge attribute.
-        for example, if "length" is provided, this will return 1 bearing
-        observation per meter per street, which could result in a very large
-        `bearings` array.
+        if not None, weight edges' bearings by this (non-null) edge attribute
     ax : matplotlib.axes.PolarAxesSubplot
         if not None, plot on this preexisting axis; must have projection=polar
     figsize : tuple
@@ -223,7 +219,7 @@ def plot_orientation(
     radius_height = bin_counts / bin_counts.sum()
     if area:
         # set bar length so area is proportional to frequency
-        radius_area = np.sqrt(bin_counts / num_bins / np.pi)
+        radius_area = np.sqrt(radius_height)
         radius = radius_area
     else:
         # set bar length so height is proportional to frequency
@@ -242,7 +238,8 @@ def plot_orientation(
         # set the title
         ax.set_title(title, y=title_y, fontdict=title_font)
 
-    # configure the y-ticks and their labels
+    # configure the y-ticks and their labels; always use radius_height so
+    # labels mean relative frequency of edges in each bin
     labels = np.linspace(0, radius_height.max(), 5)
     yticklabels = [""] + [f"{y:.2f}" for y in labels[1:]]
     ax.set_yticks(np.linspace(0, radius.max(), 5))
