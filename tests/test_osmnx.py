@@ -83,6 +83,9 @@ def test_coords_rounding():
             [(11.123456, 12.123456), (13.123456, 14.123456)],
         ]
     )
+
+    _ = ox.utils_geo.redistribute_vertices(shape1, 0.01)
+
     shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
 
     shape1 = Polygon([(1.123456, 2.123456), (3.123456, 4.123456), (6.123456, 5.123456)])
@@ -249,30 +252,35 @@ def test_plots():
 
 def test_find_nearest():
 
-    # get graph
+    # get graph and x/y coords to search
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
-
-    # get nearest node
-    nn, d = ox.get_nearest_node(G, location_point, method="euclidean", return_dist=True)
-
-    # get nearest nodes: haversine, kdtree, balltree
+    Gp = ox.project_graph(G)
     gdf_nodes = ox.graph_to_gdfs(G, edges=False)
     X = gdf_nodes["x"].head()
     Y = gdf_nodes["y"].head()
 
+    # get nearest node
+    nn, d = ox.get_nearest_node(Gp, location_point, method="euclidean", return_dist=True)
+    nn = ox.get_nearest_node(Gp, location_point, method="euclidean", return_dist=False)
+
+    # get nearest nodes
     nn1, dist1 = ox.get_nearest_nodes(G, X, Y, return_dist=True)
-    nn2, dist2 = ox.get_nearest_nodes(G, X, Y, method="kdtree", return_dist=True)
+    nn2, dist2 = ox.get_nearest_nodes(Gp, X, Y, method="kdtree", return_dist=True)
     nn3, dist3 = ox.get_nearest_nodes(G, X, Y, method="balltree", return_dist=True)
     nn4 = ox.get_nearest_nodes(G, X, Y)
-    nn5 = ox.get_nearest_nodes(G, X, Y, method="kdtree")
+    nn5 = ox.get_nearest_nodes(Gp, X, Y, method="kdtree")
     nn6 = ox.get_nearest_nodes(G, X, Y, method="balltree")
 
     # get nearest edge
     u, v, k, g, d = ox.get_nearest_edge(G, location_point, return_geom=True, return_dist=True)
+    u, v, k, g = ox.get_nearest_edge(G, location_point, return_geom=True)
+    u, v, k, d = ox.get_nearest_edge(G, location_point, return_dist=True)
+    u, v, k = ox.get_nearest_edge(G, location_point)
 
-    # get nearest edges: haversine, kdtree, balltree
+    # get nearest edges
+    ne0 = ox.distance.nearest_edges(Gp, X, Y, interpolate=50)
     ne1 = ox.get_nearest_edges(G, X, Y)
-    ne2 = ox.get_nearest_edges(G, X, Y, method="kdtree")
+    ne2 = ox.get_nearest_edges(Gp, X, Y, method="kdtree")
     ne3 = ox.get_nearest_edges(G, X, Y, method="balltree", dist=0.0001)
 
 

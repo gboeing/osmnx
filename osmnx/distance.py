@@ -16,13 +16,13 @@ from . import utils_graph
 # scipy is optional dependency for projected nearest-neighbor search
 try:
     from scipy.spatial import cKDTree
-except ImportError:
+except ImportError:  # pragma: no cover
     cKDTree = None
 
 # scikit-learn is optional dependency for unprojected nearest-neighbor search
 try:
     from sklearn.neighbors import BallTree
-except ImportError:
+except ImportError:  # pragma: no cover
     BallTree = None
 
 EARTH_RADIUS_M = 6_371_009
@@ -129,20 +129,20 @@ def nearest_nodes(G, X, Y, return_dist=False):
         nearest node IDs or optionally a tuple of arrays where `dist` contains
         distances between the points and their nearest nodes
     """
-    if pd.Series(X).isna().any() or pd.Series(Y).isna().any():
+    if pd.Series(X).isna().any() or pd.Series(Y).isna().any():  # pragma: no cover
         raise ValueError("`X` and `Y` cannot contain nulls")
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
 
     if projection.is_projected(G.graph["crs"]):
         # if projected, use k-d tree for euclidean nearest-neighbor search
-        if cKDTree is None:
+        if cKDTree is None:  # pragma: no cover
             raise ImportError("scipy must be installed to search a projected graph")
         dist, pos = cKDTree(nodes).query(np.array([X, Y]).T, k=1)
         nn = nodes.index[pos].values
 
     else:
         # if unprojected, use ball tree for haversine nearest-neighbor search
-        if BallTree is None:
+        if BallTree is None:  # pragma: no cover
             raise ImportError("scikit-learn must be installed to search an unprojected graph")
         # haversine requires lat, lng coords in radians
         nodes_rad = np.deg2rad(nodes[["y", "x"]])
@@ -197,7 +197,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         nearest edges as [u, v, key] or optionally a tuple of arrays where
         `dist` contains distances between the points and their nearest edges
     """
-    if (pd.isnull(X) | pd.isnull(Y)).any():
+    if (pd.isnull(X) | pd.isnull(Y)).any():  # pragma: no cover
         raise ValueError("`X` and `Y` cannot contain nulls")
 
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
@@ -230,14 +230,14 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
         if projection.is_projected(G.graph["crs"]):
             # if projected, use k-d tree for euclidean nearest-neighbor search
-            if cKDTree is None:
+            if cKDTree is None:  # pragma: no cover
                 raise ImportError("scipy must be installed to search a projected graph")
             dist, pos = cKDTree(vertices).query(np.array([X, Y]).T, k=1)
             ne = vertices.index[pos]
 
         else:
             # if unprojected, use ball tree for haversine nearest-neighbor search
-            if BallTree is None:
+            if BallTree is None:  # pragma: no cover
                 raise ImportError("scikit-learn must be installed to search an unprojected graph")
             # haversine requires lat, lng coords in radians
             vertices_rad = np.deg2rad(vertices[["y", "x"]])

@@ -42,7 +42,7 @@ def interpolate_points(geom, dist):
         for n in range(num_vert + 1):
             point = geom.interpolate(n / num_vert, normalized=True)
             yield point.x, point.y
-    else:
+    else:  # pragma: no cover
         raise TypeError(f"unhandled geometry type {geom.geom_type}")
 
 
@@ -74,7 +74,7 @@ def redistribute_vertices(geom, dist):
     elif geom.geom_type == "MultiLineString":
         parts = [redistribute_vertices(part, dist) for part in geom]
         return type(geom)([p for p in parts if not p])
-    else:
+    else:  # pragma: no cover
         raise ValueError(f"unhandled geometry {geom.geom_type}")
 
 
@@ -231,7 +231,7 @@ def round_geometry_coords(geom, precision):
     elif isinstance(geom, MultiPolygon):
         return _round_multipolygon_coords(geom, precision)
 
-    else:
+    else:  # pragma: no cover
         raise TypeError(f"cannot round coordinates of unhandled geometry type: {type(geom)}")
 
 
@@ -263,7 +263,7 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
     # geometry) be the square root of max area size
     quadrat_width = math.sqrt(max_query_area_size)
 
-    if not isinstance(geometry, (Polygon, MultiPolygon)):
+    if not isinstance(geometry, (Polygon, MultiPolygon)):  # pragma: no cover
         raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
 
     # if geometry is a MultiPolygon OR a single Polygon whose area exceeds the
@@ -307,7 +307,7 @@ def _get_polygons_coordinates(geometry):
         for polygon in geometry:
             x, y = polygon.exterior.xy
             polygons_coords.append(list(zip(x, y)))
-    else:
+    else:  # pragma: no cover
         raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
 
     # convert the exterior coordinates of the polygon(s) to the string format

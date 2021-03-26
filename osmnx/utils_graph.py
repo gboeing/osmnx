@@ -42,7 +42,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
     if nodes:
 
-        if not G.nodes:
+        if not G.nodes:  # pragma: no cover
             raise ValueError("graph contains no nodes")
 
         nodes, data = zip(*G.nodes(data=True))
@@ -59,7 +59,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
     if edges:
 
-        if not G.edges:
+        if not G.edges:  # pragma: no cover
             raise ValueError("graph contains no edges")
 
         u, v, k, data = zip(*G.edges(keys=True, data=True))
@@ -102,7 +102,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         return gdf_nodes
     elif edges:
         return gdf_edges
-    else:
+    else:  # pragma: no cover
         raise ValueError("you must request nodes or edges or both")
 
 

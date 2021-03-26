@@ -146,7 +146,7 @@ def graph_from_point(
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
     """
-    if dist_type not in {"bbox", "network"}:
+    if dist_type not in {"bbox", "network"}:  # pragma: no cover
         raise ValueError('dist_type must be "bbox" or "network"')
 
     # create bounding box from center point and distance in each direction
@@ -329,7 +329,7 @@ def graph_from_place(
     elif isinstance(query, list):
         # if it is a list, it contains multiple places to get
         gdf_place = geocoder.geocode_to_gdf(query, buffer_dist=buffer_dist)
-    else:
+    else:  # pragma: no cover
         raise TypeError("query must be dict, string, or list of strings")
 
     # extract the geometry from the GeoDataFrame to use in API query
@@ -398,9 +398,9 @@ def graph_from_polygon(
     """
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
-    if not polygon.is_valid:
+    if not polygon.is_valid:  # pragma: no cover
         raise ValueError("The geometry to query within is invalid")
-    if not isinstance(polygon, (Polygon, MultiPolygon)):
+    if not isinstance(polygon, (Polygon, MultiPolygon)):  # pragma: no cover
         raise TypeError(
             "Geometry must be a shapely Polygon or MultiPolygon. If you requested "
             "graph from place name, make sure your query resolves to a Polygon or "
@@ -526,7 +526,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     utils.log("Creating graph from downloaded OSM data...")
 
     # make sure we got data back from the server request(s)
-    if not any(rj["elements"] for rj in response_jsons):
+    if not any(rj["elements"] for rj in response_jsons):  # pragma: no cover
         raise EmptyOverpassResponse("There are no data elements in the response JSON")
 
     # create the graph as a MultiDiGraph and set its meta-attributes
