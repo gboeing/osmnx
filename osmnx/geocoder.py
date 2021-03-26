@@ -81,7 +81,7 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
     gdf : geopandas.GeoDataFrame
         a GeoDataFrame with one row for each query
     """
-    if not isinstance(query, (str, dict, list)):
+    if not isinstance(query, (str, dict, list)):  # pragma: no cover
         raise ValueError("query must be a string or dict or list")
 
     # if caller passed a list of queries but a scalar which_result value, then
@@ -96,12 +96,12 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
         which_result = [which_result]
 
     # ensure same length
-    if len(query) != len(which_result):
+    if len(query) != len(which_result):  # pragma: no cover
         raise ValueError("which_result length must equal query length")
 
     # ensure query type of each item
     for q in query:
-        if not isinstance(q, (str, dict)):
+        if not isinstance(q, (str, dict)):  # pragma: no cover
             raise ValueError("each query must be a dict or a string")
 
     # geocode each query and add to GeoDataFrame as a new row

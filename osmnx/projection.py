@@ -88,7 +88,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
     gdf_proj : geopandas.GeoDataFrame
         the projected GeoDataFrame
     """
-    if gdf.crs is None or len(gdf) < 1:
+    if gdf.crs is None or len(gdf) < 1:  # pragma: no cover
         raise ValueError("GeoDataFrame must have a valid CRS and cannot be empty")
 
     # if to_latlong is True, project the gdf to latlong
@@ -103,7 +103,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
 
     # otherwise, automatically project the gdf to UTM
     else:
-        if is_projected(gdf.crs):
+        if is_projected(gdf.crs):  # pragma: no cover
             raise ValueError("Geometry must be unprojected to calculate UTM zone")
 
         # calculate longitude of centroid of union of all geometries in gdf

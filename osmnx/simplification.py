@@ -8,6 +8,7 @@ from shapely.geometry import LineString
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 
+from . import stats
 from . import utils
 from . import utils_graph
 
@@ -220,7 +221,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
         topologically simplified graph, with a new `geometry` attribute on
         each simplified edge
     """
-    if "simplified" in G.graph and G.graph["simplified"]:
+    if "simplified" in G.graph and G.graph["simplified"]:  # pragma: no cover
         raise Exception("This graph has already been simplified, cannot simplify it again.")
 
     utils.log("Begin topologically simplifying the graph...")
@@ -372,9 +373,7 @@ def consolidate_intersections(
     """
     # if dead_ends is False, discard dead-ends to retain only intersections
     if not dead_ends:
-        spn = nx.get_node_attributes(G, "street_count")
-        if set(spn) != set(G.nodes):
-            utils.log("Graph nodes changed since `street_count`s were calculated", level=lg.WARN)
+        spn = stats.streets_per_node(G)
         dead_end_nodes = [node for node, count in spn.items() if count <= 1]
 
         # make a copy to not mutate original graph object caller passed in

@@ -102,6 +102,7 @@ def test_coords_rounding():
 
 def test_geocode_to_gdf():
     # test loading spatial boundaries and plotting
+    city = ox.geocode_to_gdf("R2999176", by_osmid=True)
     city = ox.geocode_to_gdf(place1, which_result=1, buffer_dist=100)
     city_projected = ox.project_gdf(city, to_crs="epsg:3395")
 
@@ -126,9 +127,19 @@ def test_stats():
     Gu = ox.get_undirected(G)
     entropy = ox.bearing.orientation_entropy(Gu, weight="length")
     fig, ax = ox.plot.plot_orientation(Gu, area=True, title="Title")
+    fig, ax = ox.plot.plot_orientation(Gu, ax=ax, area=False, title="Title")
 
     # test cleaning and rebuilding graph
     G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
+    G_clean = ox.consolidate_intersections(
+        G_proj, tolerance=10, rebuild_graph=True, reconnect_edges=False
+    )
+    G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=False)
+
+    # try consolidating an empty graph
+    G = nx.MultiDiGraph(crs="epsg:4326")
+    G_clean = ox.consolidate_intersections(G, rebuild_graph=True)
+    G_clean = ox.consolidate_intersections(G, rebuild_graph=False)
 
 
 def test_osm_xml():
@@ -157,14 +168,14 @@ def test_osm_xml():
     default_all_oneway = ox.settings.all_oneway
     ox.settings.all_oneway = True
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
-    ox.save_graph_xml(G, merge_edges=False)
+    ox.io.save_graph_xml(G, merge_edges=False)
 
     # test osm xml output merge edges
-    ox.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")])
+    ox.io.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")])
 
     # test osm xml output from gdfs
     nodes, edges = ox.graph_to_gdfs(G)
-    ox.save_graph_xml([nodes, edges])
+    ox.io.save_graph_xml([nodes, edges])
 
     # test ordered nodes from way
     df = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
@@ -186,6 +197,7 @@ def test_routing():
 
     # give each edge speed and travel time attributes
     G = ox.add_edge_speeds(G)
+    G = ox.add_edge_speeds(G, hwy_speeds={"motorway": 100})
     G = ox.add_edge_travel_times(G)
 
     orig_node = list(G.nodes())[5]
@@ -219,6 +231,7 @@ def test_routing():
 
 def test_plots():
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
+    Gp = ox.project_graph(G)
 
     # test getting colors
     co = ox.plot.get_colors(n=5, return_hex=True)
@@ -228,6 +241,8 @@ def test_plots():
     # plot and save to disk
     filepath = Path(ox.settings.data_folder) / "test.svg"
     fig, ax = ox.plot_graph(G, show=False, save=True, close=True, filepath=filepath)
+    fig, ax = ox.plot_graph(Gp, edge_linewidth=0)
+
     fig, ax = ox.plot_graph(
         G,
         figsize=(5, 5),
@@ -257,7 +272,7 @@ def test_find_nearest():
     # get graph and x/y coords to search
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     Gp = ox.project_graph(G)
-    points = ox.utils_geo.sample_points(Gp, 5)
+    points = ox.utils_geo.sample_points(ox.get_undirected(Gp), 5)
     X = points.x
     Y = points.y
 
@@ -274,14 +289,14 @@ def test_find_nearest():
     nn6 = ox.get_nearest_nodes(G, X, Y, method="balltree")
 
     # get nearest edge
-    u, v, k, g, d = ox.get_nearest_edge(G, location_point, return_geom=True, return_dist=True)
-    u, v, k, g = ox.get_nearest_edge(G, location_point, return_geom=True)
-    u, v, k, d = ox.get_nearest_edge(G, location_point, return_dist=True)
-    u, v, k = ox.get_nearest_edge(G, location_point)
+    u, v, k, g, d = ox.get_nearest_edge(Gp, location_point, return_geom=True, return_dist=True)
+    u, v, k, g = ox.get_nearest_edge(Gp, location_point, return_geom=True)
+    u, v, k, d = ox.get_nearest_edge(Gp, location_point, return_dist=True)
+    u, v, k = ox.get_nearest_edge(Gp, location_point)
 
     # get nearest edges
     ne0 = ox.distance.nearest_edges(Gp, X, Y, interpolate=50)
-    ne1 = ox.get_nearest_edges(G, X, Y)
+    ne1 = ox.get_nearest_edges(Gp, X, Y)
     ne2 = ox.get_nearest_edges(Gp, X, Y, method="kdtree")
     ne3 = ox.get_nearest_edges(G, X, Y, method="balltree", dist=0.0001)
 
@@ -457,6 +472,7 @@ def test_geometries():
 
     # geometries_from_place - includes test of list of places
     tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
+    gdf = ox.geometries_from_place(place1, tags=tags)
     gdf = ox.geometries_from_place([place1], tags=tags)
 
     # geometries_from_address - includes testing overpass settings and snapshot from 2019

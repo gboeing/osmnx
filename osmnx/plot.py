@@ -327,7 +327,7 @@ def plot_graph(
     """
     max_node_size = max(node_size) if hasattr(node_size, "__iter__") else node_size
     max_edge_lw = max(edge_linewidth) if hasattr(edge_linewidth, "__iter__") else edge_linewidth
-    if max_node_size <= 0 and max_edge_lw <= 0:
+    if max_node_size <= 0 and max_edge_lw <= 0:  # pragma: no cover
         raise ValueError("Either node_size or edge_linewidth must be > 0 to plot something.")
 
     # create fig, ax as needed
@@ -471,13 +471,13 @@ def plot_graph_routes(G, routes, route_colors="r", **pgr_kwargs):
         matplotlib figure, axis
     """
     # check for valid arguments
-    if not all(isinstance(r, list) for r in routes):
+    if not all(isinstance(r, list) for r in routes):  # pragma: no cover
         raise ValueError("routes must be a list of route lists")
-    if len(routes) < 2:
+    if len(routes) < 2:  # pragma: no cover
         raise ValueError("You must pass more than 1 route")
     if isinstance(route_colors, str):
         route_colors = [route_colors] * len(routes)
-    if len(routes) != len(route_colors):
+    if len(routes) != len(route_colors):  # pragma: no cover
         raise ValueError("route_colors list must have same length as routes")
 
     # plot the graph and the first route
@@ -606,7 +606,7 @@ def plot_figure_ground(
             truncate_by_edge=True,
         )
         G = simplification.simplify_graph(G, strict=False)
-    else:
+    else:  # pragma: no cover
         raise ValueError("You must pass an address or lat-lng point or graph.")
 
     # we need an undirected graph to find every edge incident on a node

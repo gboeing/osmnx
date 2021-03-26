@@ -220,7 +220,7 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     elif isinstance(query, list):
         # if it is a list, it contains multiple places to get
         gdf_place = geocoder.geocode_to_gdf(query, buffer_dist=buffer_dist)
-    else:
+    else:  # pragma: no cover
         raise TypeError("query must be dict, string, or list of strings")
 
     # extract the geometry from the GeoDataFrame to use in API query
