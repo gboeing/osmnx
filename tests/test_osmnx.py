@@ -257,9 +257,9 @@ def test_find_nearest():
     # get graph and x/y coords to search
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     Gp = ox.project_graph(G)
-    gdf_nodes = ox.graph_to_gdfs(G, edges=False)
-    X = gdf_nodes["x"].head()
-    Y = gdf_nodes["y"].head()
+    points = ox.utils_geo.sample_points(Gp, 5)
+    X = points.x
+    Y = points.y
 
     # get nearest node
     nn, d = ox.get_nearest_node(Gp, location_point, method="euclidean", return_dist=True)
