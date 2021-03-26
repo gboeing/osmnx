@@ -8,7 +8,7 @@ import numpy as np
 # scipy is an optional dependency for entropy calculation
 try:
     import scipy
-except ImportError:
+except ImportError:  # pragma: no cover
     scipy = None
 
 
@@ -33,7 +33,9 @@ def get_bearing(origin_point, destination_point):
         the compass bearing in decimal degrees from the origin point to the
         destination point
     """
-    if not (isinstance(origin_point, tuple) and isinstance(destination_point, tuple)):
+    if not (
+        isinstance(origin_point, tuple) and isinstance(destination_point, tuple)
+    ):  # pragma: no cover
         raise TypeError("origin_point and destination_point must be (lat, lng) tuples")
 
     # get latitudes and the difference in longitude, as radians
@@ -119,7 +121,7 @@ def orientation_entropy(Gu, num_bins=36, min_length=0, weight=None):
         the graph's orientation entropy
     """
     # check if we were able to import scipy
-    if scipy is None:
+    if scipy is None:  # pragma: no cover
         raise ImportError("scipy must be installed to calculate entropy")
     bin_counts, _ = _bearings_distribution(Gu, num_bins, min_length, weight)
     return scipy.stats.entropy(bin_counts)
@@ -150,7 +152,7 @@ def _extract_edge_bearings(Gu, min_length=0, weight=None):
     bearings : numpy.array
         the graph's bidirectional edge bearings
     """
-    if nx.is_directed(Gu):
+    if nx.is_directed(Gu):  # pragma: no cover
         raise ValueError("`Gu` must be undirected")
     bearings = list()
     for _, _, data in add_edge_bearings(Gu).edges(data=True):

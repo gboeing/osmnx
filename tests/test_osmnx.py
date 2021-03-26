@@ -121,7 +121,7 @@ def test_stats():
 
     # calculate entropy
     Gu = ox.get_undirected(G)
-    entropy = ox.bearing.orientation_entropy(Gu)
+    entropy = ox.bearing.orientation_entropy(Gu, weight="length")
     fig, ax = ox.plot.plot_orientation(Gu, area=True, title="Title")
 
     # test cleaning and rebuilding graph
