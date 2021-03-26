@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
+from . import projection
+
 # scipy is an optional dependency for entropy calculation
 try:
     import scipy
@@ -68,7 +70,7 @@ def add_edge_bearings(G, precision=1):
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph
+        unprojected input graph
     precision : int
         decimal precision to round bearing
 
@@ -77,6 +79,8 @@ def add_edge_bearings(G, precision=1):
     G : networkx.MultiDiGraph
         graph with edge bearing attributes
     """
+    if projection.is_projected(G.graph["crs"]):  # pragma: no cover
+        raise ValueError("graph must be unprojected to add edge bearings")
     for u, v, data in G.edges(keys=False, data=True):
 
         if u == v:
@@ -103,7 +107,7 @@ def orientation_entropy(Gu, num_bins=36, min_length=0, weight=None):
     Parameters
     ----------
     Gu : networkx.MultiGraph
-        undirected input graph
+        undirected, unprojected input graph
     num_bins : int
         number of bins; for example, if `num_bins=36` is provided, then each
         bin will represent 10° around the compass
@@ -138,7 +142,8 @@ def _extract_edge_bearings(Gu, min_length=0, weight=None):
     Parameters
     ----------
     Gu : networkx.MultiGraph
-        undirected input graph
+        undirected, unprojected input graph with `bearing` attributes on each
+        edge
     min_length : float
         ignore edges with `length` attributes less than `min_length`; useful
         to ignore the noise of many very short edges
@@ -153,10 +158,10 @@ def _extract_edge_bearings(Gu, min_length=0, weight=None):
     bearings : numpy.array
         the graph's bidirectional edge bearings
     """
-    if nx.is_directed(Gu):  # pragma: no cover
-        raise ValueError("`Gu` must be undirected")
+    if nx.is_directed(Gu) or projection.is_projected(Gu.graph["crs"]):  # pragma: no cover
+        raise ValueError("graph must be undirected and unprojected to analyze edge bearings")
     bearings = list()
-    for _, _, data in add_edge_bearings(Gu).edges(data=True):
+    for _, _, data in Gu.edges(data=True):
         if data["length"] >= min_length:
             if weight:
                 # weight edges' bearings by some edge attribute value
@@ -236,10 +241,14 @@ def plot_orientation(
     """
     Plot a polar histogram of a spatial network's bidirectional edge bearings.
 
+    For more info see: Boeing, G. 2019. "Urban Spatial Order: Street Network
+    Orientation, Configuration, and Entropy." Applied Network Science, 4 (1),
+    67. https://doi.org/10.1007/s41109-019-0189-1
+
     Parameters
     ----------
     Gu : networkx.MultiGraph
-        undirected input graph
+        undirected, unprojected input graph
     num_bins : int
         number of bins; for example, if `num_bins=36` is provided, then each
         bin will represent 10° around the compass
@@ -316,7 +325,6 @@ def plot_orientation(
     ax.set_ylim(top=radius.max())
 
     if title:
-        # set the title
         ax.set_title(title, y=title_y, fontdict=title_font)
 
     # configure the y-ticks and remove their labels
@@ -343,4 +351,5 @@ def plot_orientation(
         alpha=alpha,
     )
 
+    fig.tight_layout()
     return fig, ax
