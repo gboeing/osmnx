@@ -123,64 +123,113 @@ def get_edge_colors_by_attr(
     return _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size)
 
 
-def plot_orientation(Gu, ax=None):
+def plot_orientation(
+    Gu,
+    num_bins=36,
+    min_length=0,
+    weight=None,
+    ax=None,
+    figsize=(5, 5),
+    area=True,
+    color="#003366",
+    edgecolor="k",
+    linewidth=0.5,
+    alpha=0.7,
+    title=None,
+    title_y=1.05,
+    title_font=None,
+    xtick_font=None,
+    ytick_font=None,
+):
     """
-    Plot a polar histogram of a spatial network's bearings.
+    Plot a polar histogram of a spatial network's bidirectional edge bearings.
 
     Parameters
     ----------
     Gu : networkx.MultiGraph
         undirected input graph
+    num_bins : int
+        number of bins; for example, if `num_bins=36` is provided, then each
+        bin will represent 10° around the compass
+    min_length : float
+        ignore edges with `length` attributes less than `min_length`; useful
+        to ignore the noise of many very short edges
+    weight : string
+        if not None, weight edges' bearings by this (non-null) edge attribute.
+        for example, if "length" is provided, this will return 1 bearing
+        observation per meter per street, which could result in a very large
+        `bearings` array.
     ax : matplotlib.axes.PolarAxesSubplot
-        a matplotlib axis with projection=polar
+        if not None, plot on this preexisting axis; must have projection=polar
+    figsize : tuple
+        if ax is None, create new figure with size (width, height)
+    area : bool
+        if True, set bar length so area is proportional to frequency,
+        otherwise set bar length so height is proportional to frequency
+    color : string
+        color of histogram bars
+    edgecolor : string
+        color of histogram bar edges
+    linewidth : float
+        width of histogram bar edges
+    alpha : float
+        opacity of histogram bars
+    title : string
+        title for plot
+    title_y : float
+        y position to place title
+    title_font : dict
+        the title's matplotlib fontdict
+    xtick_font : dict
+        the xtick labels' matplotlib fontdict
+    ytick_font : dict
+        the ytick labels' matplotlib fontdict
 
     Returns
     -------
     fig, ax : tuple
         matplotlib figure, axis
     """
-    # bin kwargs
-    num_bins = 36
-    min_length = 0
-    weight = None
-    area = True
-
-    # fig kwargs
-    figsize = (5, 5)
-    title = "title".upper()
-
-    # bar kwargs
-    color = "#003366"
-    edgecolor = "k"
-    linewidth = 0.5
-    alpha = 0.7
-
-    # font kwargs
-    title_font = {"family": "DejaVu Sans", "size": 24, "weight": "bold"}
-    xtick_font = {"family": "DejaVu Sans", "size": 10, "weight": "bold", "alpha": 1.0, "zorder": 3}
-    ytick_font = {"family": "DejaVu Sans", "size": 9, "weight": "bold", "alpha": 0.2, "zorder": 3}
+    if title_font is None:
+        title_font = {"family": "DejaVu Sans", "size": 24, "weight": "bold"}
+    if xtick_font is None:
+        xtick_font = {
+            "family": "DejaVu Sans",
+            "size": 10,
+            "weight": "bold",
+            "alpha": 1.0,
+            "zorder": 3,
+        }
+    if ytick_font is None:
+        ytick_font = {
+            "family": "DejaVu Sans",
+            "size": 9,
+            "weight": "bold",
+            "alpha": 0.2,
+            "zorder": 3,
+        }
 
     # get the bearings' distribution's bin counts and edges
     bin_counts, bin_edges = bearing._bearings_distribution(Gu, num_bins, min_length, weight)
 
     # position: where to center each bar. ignore the last bin edge, because
-    # it's the same as the first (i.e., 0 = 360)
+    # it's the same as the first (i.e., 0° = 360°)
     position = bin_edges[:-1] * np.pi / 180
 
     # width: make bars fill the circumference without gaps or overlaps
     width = 2 * np.pi / num_bins
 
     # radius: how long to make each bar
-    radius_area = np.sqrt(bin_counts / num_bins / np.pi)
     radius_height = bin_counts / bin_counts.sum()
     if area:
-        # radius as area proportional to frequency
+        # set bar length so area is proportional to frequency
+        radius_area = np.sqrt(bin_counts / num_bins / np.pi)
         radius = radius_area
     else:
-        # radius as height proportional to frequency
+        # set bar length so height is proportional to frequency
         radius = radius_height
 
-    # create the ax, set N at top and go clockwise
+    # create ax (if necessary) then set N at top and go clockwise
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "polar"})
     else:
@@ -189,8 +238,9 @@ def plot_orientation(Gu, ax=None):
     ax.set_theta_direction("clockwise")
     ax.set_ylim(top=radius.max())
 
-    # set the title
-    ax.set_title(title, y=1.05, fontdict=title_font)
+    if title:
+        # set the title
+        ax.set_title(title, y=title_y, fontdict=title_font)
 
     # configure the y-ticks and their labels
     labels = np.linspace(0, radius_height.max(), 5)
@@ -204,7 +254,7 @@ def plot_orientation(Gu, ax=None):
     ax.set_xticklabels(labels=xticklabels, fontdict=xtick_font)
     ax.tick_params(axis="x", which="major", pad=-2)
 
-    # plot the bars
+    # draw the bars
     ax.bar(
         position,
         height=radius,
