@@ -9,7 +9,7 @@
   - expose individual street network stats functions in stats module
   - deprecate the extended_stats function in stats module
   - add network orientation and entropy stats functions to bearing module
-  - add plot_orientation function to plot module to polar histograms of graph edge bearings
+  - add plot_orientation function to bearing module to polar histograms of graph edge bearings
   - handle relations of type "boundary" in geometries module
   - multi-index GeoDataFrames returned from geometries module by element type and osmid
   - ensure all nodes have integer IDs after graph intersection consolidation

@@ -2,6 +2,7 @@
 
 import math
 
+import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 
@@ -213,3 +214,133 @@ def _bearings_distribution(Gu, num_bins, min_length=0, weight=None):
     # because we merged the bins, their edges are now only every other one
     bin_edges = bin_edges[range(0, len(bin_edges), 2)]
     return bin_counts, bin_edges
+
+
+def plot_orientation(
+    Gu,
+    num_bins=36,
+    min_length=0,
+    weight=None,
+    ax=None,
+    figsize=(5, 5),
+    area=True,
+    color="#003366",
+    edgecolor="k",
+    linewidth=0.5,
+    alpha=0.7,
+    title=None,
+    title_y=1.05,
+    title_font=None,
+    xtick_font=None,
+):
+    """
+    Plot a polar histogram of a spatial network's bidirectional edge bearings.
+
+    Parameters
+    ----------
+    Gu : networkx.MultiGraph
+        undirected input graph
+    num_bins : int
+        number of bins; for example, if `num_bins=36` is provided, then each
+        bin will represent 10° around the compass
+    min_length : float
+        ignore edges with `length` attributes less than `min_length`
+    weight : string
+        if not None, weight edges' bearings by this (non-null) edge attribute
+    ax : matplotlib.axes.PolarAxesSubplot
+        if not None, plot on this preexisting axis; must have projection=polar
+    figsize : tuple
+        if ax is None, create new figure with size (width, height)
+    area : bool
+        if True, set bar length so area is proportional to frequency,
+        otherwise set bar length so height is proportional to frequency
+    color : string
+        color of histogram bars
+    edgecolor : string
+        color of histogram bar edges
+    linewidth : float
+        width of histogram bar edges
+    alpha : float
+        opacity of histogram bars
+    title : string
+        title for plot
+    title_y : float
+        y position to place title
+    title_font : dict
+        the title's fontdict to pass to matplotlib
+    xtick_font : dict
+        the xtick labels' fontdict to pass to matplotlib
+
+    Returns
+    -------
+    fig, ax : tuple
+        matplotlib figure, axis
+    """
+    if title_font is None:
+        title_font = {"family": "DejaVu Sans", "size": 24, "weight": "bold"}
+    if xtick_font is None:
+        xtick_font = {
+            "family": "DejaVu Sans",
+            "size": 10,
+            "weight": "bold",
+            "alpha": 1.0,
+            "zorder": 3,
+        }
+
+    # get the bearings' distribution's bin counts and edges
+    bin_counts, bin_edges = _bearings_distribution(Gu, num_bins, min_length, weight)
+
+    # position: where to center each bar. ignore the last bin edge, because
+    # it's the same as the first (i.e., 0° = 360°)
+    position = bin_edges[:-1] * np.pi / 180
+
+    # width: make bars fill the circumference without gaps or overlaps
+    width = 2 * np.pi / num_bins
+
+    # radius: how long to make each bar
+    bin_frequency = bin_counts / bin_counts.sum()
+    if area:
+        # set bar length so area is proportional to frequency
+        radius = np.sqrt(bin_frequency)
+    else:
+        # set bar length so height is proportional to frequency
+        radius = bin_frequency
+
+    # create ax (if necessary) then set N at top and go clockwise
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "polar"})
+    else:
+        fig = ax.figure
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction("clockwise")
+    ax.set_ylim(top=radius.max())
+
+    if title:
+        # set the title
+        ax.set_title(title, y=title_y, fontdict=title_font)
+
+    # configure the y-ticks and remove their labels
+    ax.set_yticks(np.linspace(0, radius.max(), 5))
+    ax.set_yticklabels(labels="")
+
+    # configure the x-ticks and their labels
+    xticklabels = ["N", "", "E", "", "S", "", "W", ""]
+    ax.set_xticks(ax.get_xticks())
+    ax.set_xticklabels(labels=xticklabels, fontdict=xtick_font)
+    ax.tick_params(axis="x", which="major", pad=-2)
+
+    # draw the bars
+    ax.bar(
+        position,
+        height=radius,
+        width=width,
+        align="center",
+        bottom=0,
+        zorder=2,
+        color=color,
+        edgecolor=edgecolor,
+        linewidth=linewidth,
+        alpha=alpha,
+    )
+
+    return fig, ax
