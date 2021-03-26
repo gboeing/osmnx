@@ -15,6 +15,37 @@ from shapely.ops import split
 from . import projection
 from . import settings
 from . import utils
+from . import utils_graph
+
+
+def sample_points(G, n):
+    """
+    Randomly sample points constrained to a spatial graph.
+
+    This generates a graph-constrained uniform random sample of points. Unlike
+    typical spatially uniform random sampling, this method accounts for the
+    graph's geometry. And unlike equal-length edge segmenting, this method
+    guarantees uniform randomness.
+
+    Parameters
+    ----------
+    G : networkx.MultiGraph
+        graph to sample points from; should be undirected (to not oversample
+        bidirectional edges) and projected (for accurate point interpolation)
+    n : int
+        how many points to sample
+
+    Returns
+    -------
+    points : geopandas.GeoSeries
+        the sampled points, indexed by (u, v, key) of the edge from which each
+        point was drawn
+    """
+    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
+    weights = gdf_edges["length"] / gdf_edges["length"].sum()
+    idx = np.random.choice(gdf_edges.index, size=n, p=weights)
+    lines = gdf_edges.loc[idx, "geometry"]
+    return lines.interpolate(np.random.rand(n), normalized=True)
 
 
 def interpolate_points(geom, dist):
