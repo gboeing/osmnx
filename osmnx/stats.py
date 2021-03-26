@@ -79,7 +79,7 @@ def streets_per_node_counts(G):
         values of how many nodes in the graph have this count
     """
     spn_vals = list(streets_per_node(G).values())
-    return {i: spn_vals.count(i) for i in range(max(spn_vals) + 1)}
+    return {i: spn_vals.count(i) for i in range(int(max(spn_vals)) + 1)}
 
 
 def streets_per_node_proportions(G):
