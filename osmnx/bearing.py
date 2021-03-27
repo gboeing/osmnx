@@ -1,7 +1,5 @@
 """Calculate graph edge bearings."""
 
-import math
-
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -13,6 +11,45 @@ try:
     import scipy
 except ImportError:  # pragma: no cover
     scipy = None
+
+
+def calculate_bearing(lat1, lng1, lat2, lng2):
+    """
+    Calculate the compass bearing(s) between pairs of lat-lng points.
+
+    Vectorized function to calculate (initial) bearings between two points'
+    coordinates or between arrays of points' coordinates. Expects coordinates
+    in decimal degrees. Bearing represents angle in degrees (clockwise)
+    between north and the geodesic line from point 1 to point 2.
+
+    Parameters
+    ----------
+    lat1 : float or numpy.array of float
+        first point's latitude coordinate
+    lng1 : float or numpy.array of float
+        first point's longitude coordinate
+    lat2 : float or numpy.array of float
+        second point's latitude coordinate
+    lng2 : float or numpy.array of float
+        second point's longitude coordinate
+
+    Returns
+    -------
+    bearing : float or numpy.array of float
+        the bearing(s) in decimal degrees
+    """
+    # get the latitudes and the difference in longitudes, in radians
+    lat1 = np.radians(lat1)
+    lat2 = np.radians(lat2)
+    d_lng = np.radians(lng2 - lng1)
+
+    # calculate initial bearing from -180 degrees to +180 degrees
+    y = np.sin(d_lng) * np.cos(lat2)
+    x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(d_lng)
+    initial_bearing = np.arctan2(y, x)
+
+    # normalize initial bearing to 0-360 degrees to get compass bearing
+    return np.degrees(initial_bearing) % 360
 
 
 def get_bearing(origin_point, destination_point):
@@ -36,6 +73,8 @@ def get_bearing(origin_point, destination_point):
         the compass bearing in decimal degrees from the origin point to the
         destination point
     """
+    import math
+
     if not (
         isinstance(origin_point, tuple) and isinstance(destination_point, tuple)
     ):  # pragma: no cover
@@ -60,17 +99,18 @@ def get_bearing(origin_point, destination_point):
 
 def add_edge_bearings(G, precision=1):
     """
-    Add `bearing` attributes to all graph edges.
+    Add compass `bearing` attributes to all graph edges.
 
-    Calculate the compass bearing from origin node to destination node for
-    each edge in the directed graph then add each bearing as a new edge
-    attribute. Bearing represents angle in degrees (clockwise) between north
-    and the direction from the origin node to the destination node.
+    Vectorized function to calculate (initial) bearing from origin node to
+    destination node for each edge in a directed, unprojected graph then add
+    these bearings as new edge attributes. Bearing represents angle in degrees
+    (clockwise) between north and the geodesic line from from the origin node
+    to the destination node.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        unprojected input graph
+        unprojected graph
     precision : int
         decimal precision to round bearing
 
@@ -81,18 +121,17 @@ def add_edge_bearings(G, precision=1):
     """
     if projection.is_projected(G.graph["crs"]):  # pragma: no cover
         raise ValueError("graph must be unprojected to add edge bearings")
-    for u, v, data in G.edges(keys=False, data=True):
 
-        if u == v:
-            # a self-loop has an undefined compass bearing
-            data["bearing"] = np.nan
+    # extract edge IDs and corresponding coordinates from their nodes
+    uvk = tuple(G.edges)
+    x = G.nodes(data="x")
+    y = G.nodes(data="y")
+    coords = np.array([(y[u], x[u], y[v], x[v]) for u, v, k in uvk])
 
-        else:
-            # calculate bearing from edge's origin to its destination
-            origin_point = (G.nodes[u]["y"], G.nodes[u]["x"])
-            destination_point = (G.nodes[v]["y"], G.nodes[v]["x"])
-            bearing = get_bearing(origin_point, destination_point)
-            data["bearing"] = round(bearing, precision)
+    # calculate bearings then set as edge attributes
+    bearings = calculate_bearing(coords[:, 0], coords[:, 1], coords[:, 2], coords[:, 3])
+    values = zip(uvk, bearings.round(precision))
+    nx.set_edge_attributes(G, dict(values), name="bearing")
 
     return G
 
@@ -107,7 +146,7 @@ def orientation_entropy(Gu, num_bins=36, min_length=0, weight=None):
     Parameters
     ----------
     Gu : networkx.MultiGraph
-        undirected, unprojected input graph
+        undirected, unprojected graph with `bearing` attributes on each edge
     num_bins : int
         number of bins; for example, if `num_bins=36` is provided, then each
         bin will represent 10° around the compass
@@ -142,8 +181,7 @@ def _extract_edge_bearings(Gu, min_length=0, weight=None):
     Parameters
     ----------
     Gu : networkx.MultiGraph
-        undirected, unprojected input graph with `bearing` attributes on each
-        edge
+        undirected, unprojected graph with `bearing` attributes on each edge
     min_length : float
         ignore edges with `length` attributes less than `min_length`; useful
         to ignore the noise of many very short edges
@@ -189,7 +227,7 @@ def _bearings_distribution(Gu, num_bins, min_length=0, weight=None):
     Parameters
     ----------
     Gu : networkx.MultiGraph
-        undirected input graph
+        undirected, unprojected graph with `bearing` attributes on each edge
     num_bins : int
         number of bins for the bearings histogram
     min_length : float
@@ -248,7 +286,7 @@ def plot_orientation(
     Parameters
     ----------
     Gu : networkx.MultiGraph
-        undirected, unprojected input graph
+        undirected, unprojected graph with `bearing` attributes on each edge
     num_bins : int
         number of bins; for example, if `num_bins=36` is provided, then each
         bin will represent 10° around the compass
