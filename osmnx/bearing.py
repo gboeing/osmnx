@@ -1,5 +1,7 @@
 """Calculate graph edge bearings."""
 
+import warnings
+
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -54,47 +56,28 @@ def calculate_bearing(lat1, lng1, lat2, lng2):
 
 def get_bearing(origin_point, destination_point):
     """
-    Calculate the bearing between two lat-lng points.
-
-    Each argument tuple should represent (lat, lng) as decimal degrees.
-    Bearing represents angle in degrees (clockwise) between north and the
-    direction from the origin point to the destination point.
+    Do not use, deprecated.
 
     Parameters
     ----------
     origin_point : tuple
-        (lat, lng)
+        deprecated, do not use
     destination_point : tuple
-        (lat, lng)
+        deprecated, do not use
 
     Returns
     -------
     bearing : float
-        the compass bearing in decimal degrees from the origin point to the
-        destination point
+        deprecated, do not use
     """
-    import math
-
-    if not (
-        isinstance(origin_point, tuple) and isinstance(destination_point, tuple)
-    ):  # pragma: no cover
-        raise TypeError("origin_point and destination_point must be (lat, lng) tuples")
-
-    # get latitudes and the difference in longitude, as radians
-    lat1 = math.radians(origin_point[0])
-    lat2 = math.radians(destination_point[0])
-    diff_lng = math.radians(destination_point[1] - origin_point[1])
-
-    # calculate initial bearing from -180 degrees to +180 degrees
-    x = math.sin(diff_lng) * math.cos(lat2)
-    y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1) * math.cos(lat2) * math.cos(diff_lng))
-    initial_bearing = math.atan2(x, y)
-
-    # normalize initial bearing to 0-360 degrees to get compass bearing
-    initial_bearing = math.degrees(initial_bearing)
-    bearing = initial_bearing % 360
-
-    return bearing
+    msg = (
+        "The `get_bearing` function has been deprecated and will be removed in a "
+        "future release. Use the vectorized `bearing.calculate_bearing` instead."
+    )
+    warnings.warn(msg)
+    return calculate_bearing(
+        origin_point[0], origin_point[1], destination_point[0], destination_point[1]
+    )
 
 
 def add_edge_bearings(G, precision=1):
