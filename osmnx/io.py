@@ -363,7 +363,7 @@ def _convert_bool_string(value):
         return value == "True"
     elif isinstance(value, bool):
         return value
-    else:
+    else:  # pragma: no cover
         raise ValueError(f'invalid literal for boolean: "{value}"')
 
 

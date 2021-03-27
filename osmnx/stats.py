@@ -79,7 +79,7 @@ def streets_per_node_counts(G):
         values of how many nodes in the graph have this count
     """
     spn_vals = list(streets_per_node(G).values())
-    return {i: spn_vals.count(i) for i in range(max(spn_vals) + 1)}
+    return {i: spn_vals.count(i) for i in range(int(max(spn_vals)) + 1)}
 
 
 def streets_per_node_proportions(G):
@@ -141,7 +141,7 @@ def street_segment_count(Gu):
     count : int
         count of street segments in graph
     """
-    if nx.is_directed(Gu):
+    if nx.is_directed(Gu):  # pragma: no cover
         raise ValueError("`Gu` must be undirected")
     return len(Gu.edges)
 
@@ -160,7 +160,7 @@ def street_length_total(Gu):
     length : float
         total length (meters) of streets in graph
     """
-    if nx.is_directed(Gu):
+    if nx.is_directed(Gu):  # pragma: no cover
         raise ValueError("`Gu` must be undirected")
     return sum(d["length"] for u, v, d in Gu.edges(data=True))
 
@@ -198,7 +198,7 @@ def self_loop_proportion(Gu):
     proportion : float
         proportion of graph edges that are self-loops
     """
-    if nx.is_directed(Gu):
+    if nx.is_directed(Gu):  # pragma: no cover
         raise ValueError("`Gu` must be undirected")
     return sum(u == v for u, v, k in Gu.edges) / len(Gu.edges)
 
@@ -221,7 +221,7 @@ def circuity_avg(Gu):
     circuity_avg : float
         the graph's average undirected edge circuity
     """
-    if nx.is_directed(Gu):
+    if nx.is_directed(Gu):  # pragma: no cover
         raise ValueError("`Gu` must be undirected")
 
     # extract the edges' endpoint nodes' coordinates
@@ -316,9 +316,9 @@ def basic_stats(
         )
         warnings.warn(msg)
 
-    if clean_intersects is None:
-        clean_intersects = False
-    else:
+    if clean_intersects is not None:
+        if clean_int_tol is None:
+            clean_int_tol = 15
         msg = (
             "The `clean_intersects` and `tolerance` arguments have been "
             "deprecated and will be removed in a future release. Use the "
@@ -326,9 +326,9 @@ def basic_stats(
         )
         warnings.warn(msg)
 
-    if tolerance is None:
-        tolerance = 15
-    else:
+    if tolerance is not None:
+        if clean_int_tol is None:
+            clean_int_tol = tolerance
         msg = (
             "The `clean_intersects` and `tolerance` arguments have been "
             "deprecated and will be removed in a future release. Use the "

@@ -8,7 +8,7 @@ from . import utils_graph
 # folium is an optional dependency for the folium plotting functions
 try:
     import folium
-except ImportError:
+except ImportError:  # pragma: no cover
     folium = None
 
 
@@ -59,13 +59,13 @@ def plot_graph_folium(
     folium.folium.Map
     """
     # deprecation warning
-    if edge_color is not None:
+    if edge_color is not None:  # pragma: no cover
         kwargs["color"] = edge_color
         warn("`edge_color` has been deprecated and will be removed: use kwargs instead")
-    if edge_width is not None:
+    if edge_width is not None:  # pragma: no cover
         kwargs["weight"] = edge_width
         warn("`edge_width` has been deprecated and will be removed: use kwargs instead")
-    if edge_opacity is not None:
+    if edge_opacity is not None:  # pragma: no cover
         kwargs["opacity"] = edge_opacity
         warn("`edge_opacity` has been deprecated and will be removed: use kwargs instead")
 
@@ -121,13 +121,13 @@ def plot_route_folium(
     folium.folium.Map
     """
     # deprecation warning
-    if route_color is not None:
+    if route_color is not None:  # pragma: no cover
         kwargs["color"] = route_color
         warn("`route_color` has been deprecated and will be removed: use kwargs instead")
-    if route_width is not None:
+    if route_width is not None:  # pragma: no cover
         kwargs["weight"] = route_width
         warn("`route_width` has been deprecated and will be removed: use kwargs instead")
-    if route_opacity is not None:
+    if route_opacity is not None:  # pragma: no cover
         kwargs["opacity"] = route_opacity
         warn("`route_opacity` has been deprecated and will be removed: use kwargs instead")
 
@@ -164,7 +164,7 @@ def _plot_folium(gdf, m, popup_attribute, tiles, zoom, fit_bounds, **kwargs):
     m : folium.folium.Map
     """
     # check if we were able to import folium successfully
-    if folium is None:
+    if folium is None:  # pragma: no cover
         raise ImportError("folium must be installed to use this optional feature")
 
     # get centroid

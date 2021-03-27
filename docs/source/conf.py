@@ -37,6 +37,7 @@ autodoc_mock_imports = [
     "pandas",
     "pyproj",
     "requests",
+    "rtree",
     "scipy",
     "scipy.spatial",
     "shapely",

@@ -69,7 +69,7 @@ def ts(style="datetime", template=None):
             template = "{:%Y-%m-%d}"
         elif style == "time":
             template = "{:%H:%M:%S}"
-        else:
+        else:  # pragma: no cover
             raise ValueError(f'unrecognized timestamp style "{style}"')
 
     ts = template.format(dt.datetime.now())
@@ -304,7 +304,7 @@ def log(message, level=None, name=None, filename=None):
         sys.stdout = standard_out
 
 
-def _get_logger(level=None, name=None, filename=None):
+def _get_logger(level, name, filename):
     """
     Create a logger or return the current one if already instantiated.
 
@@ -321,13 +321,6 @@ def _get_logger(level=None, name=None, filename=None):
     -------
     logger : logging.logger
     """
-    if level is None:
-        level = settings.log_level
-    if name is None:
-        name = settings.log_name
-    if filename is None:
-        filename = settings.log_filename
-
     logger = lg.getLogger(name)
 
     # if a logger with this name is not already set up

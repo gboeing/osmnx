@@ -3,13 +3,13 @@
 import datetime as dt
 import json
 import logging as lg
-import math
 import re
 import time
 from collections import OrderedDict
 from hashlib import sha1
 from pathlib import Path
 
+import numpy as np
 import requests
 from dateutil import parser as date_parser
 
@@ -96,7 +96,7 @@ def _get_osm_filter(network_type):
 
     if network_type in filters:
         osm_filter = filters[network_type]
-    else:
+    else:  # pragma: no cover
         raise ValueError(f'Unrecognized network_type "{network_type}"')
 
     return osm_filter
@@ -288,7 +288,7 @@ def _get_pause(recursive_delay=5, default_duration=60):
         if status_first_token == "Slot":
             utc_time_str = status.split(" ")[3]
             utc_time = date_parser.parse(utc_time_str).replace(tzinfo=None)
-            pause = math.ceil((utc_time - dt.datetime.utcnow()).total_seconds())
+            pause = int(np.ceil((utc_time - dt.datetime.utcnow()).total_seconds()))
             pause = max(pause, 1)
 
         # if first token is 'Currently', it is currently running a query so
@@ -366,7 +366,7 @@ def _create_overpass_query(polygon_coord_str, tags):
 
     # make sure every value in dict is bool, str, or list of str
     error_msg = "tags must be a dict with values of bool, str, or list of str"
-    if not isinstance(tags, dict):
+    if not isinstance(tags, dict):  # pragma: no cover
         raise TypeError(error_msg)
 
     tags_dict = dict()
@@ -379,11 +379,11 @@ def _create_overpass_query(polygon_coord_str, tags):
             tags_dict[key] = [value]
 
         elif isinstance(value, list):
-            if not all(isinstance(s, str) for s in value):
+            if not all(isinstance(s, str) for s in value):  # pragma: no cover
                 raise TypeError(error_msg)
             tags_dict[key] = value
 
-        else:
+        else:  # pragma: no cover
             raise TypeError(error_msg)
 
     # convert the tags dict into a list of {tag:value} dicts
@@ -460,7 +460,7 @@ def _osm_network_download(polygon, network_type, custom_filter):
         f"Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)"
     )
 
-    if settings.cache_only_mode:
+    if settings.cache_only_mode:  # pragma: no cover
         raise CacheOnlyModeInterrupt("settings.cache_only_mode=True")
 
     return response_jsons
@@ -545,7 +545,7 @@ def _osm_place_download(query, by_osmid=False, limit=1, polygon_geojson=1):
             # each time, for caching purposes
             for key in sorted(query):
                 params[key] = query[key]
-        else:
+        else:  # pragma: no cover
             raise TypeError("query must be a dict or a string")
 
     # request the URL, return the JSON
@@ -573,7 +573,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
     -------
     response_json : dict
     """
-    if request_type not in {"search", "reverse", "lookup"}:
+    if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
         raise ValueError('Nominatim request_type must be "search", "reverse", or "lookup"')
 
     # prepare Nominatim API URL and see if request already exists in cache

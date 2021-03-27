@@ -139,10 +139,12 @@ def add_edge_travel_times(G, precision=1):
     edges = utils_graph.graph_to_gdfs(G, nodes=False)
 
     # verify edge length and speed_kph attributes exist and contain no nulls
-    if not ("length" in edges.columns and "speed_kph" in edges.columns):
+    if not ("length" in edges.columns and "speed_kph" in edges.columns):  # pragma: no cover
         raise KeyError("all edges must have `length` and `speed_kph` attributes.")
     else:
-        if pd.isnull(edges["length"]).any() or pd.isnull(edges["speed_kph"]).any():
+        if (
+            pd.isnull(edges["length"]).any() or pd.isnull(edges["speed_kph"]).any()
+        ):  # pragma: no cover
             raise ValueError("edge `length` and `speed_kph` values must be non-null.")
 
     # convert distance km to meters, and speed km per hour to km per second
