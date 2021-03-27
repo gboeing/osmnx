@@ -6,6 +6,7 @@
   - add faster streamlined nearest_nodes and nearest_edges functions to distance module
   - deprecate old get_nearest_node, get_nearest_nodes, get_nearest_edge, and get_nearest_edges
   - add utils_geo.interpolate_points function and deprecate redistribute_vertices in favor of it
+  - add vectorized calculate_bearing function and deprecate get_bearing in favor of it
   - expose individual street network stats functions in stats module
   - deprecate the extended_stats function in stats module
   - add network orientation and entropy stats functions to bearing module
