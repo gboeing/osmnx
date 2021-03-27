@@ -1,6 +1,5 @@
 """Get node elevations and calculate edge grades."""
 
-import math
 import time
 
 import networkx as nx
@@ -58,7 +57,7 @@ def add_node_elevations(
     node_points = pd.Series(
         {node: f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)}
     )
-    n_calls = math.ceil(len(node_points) / max_locations_per_batch)
+    n_calls = int(np.ceil(len(node_points) / max_locations_per_batch))
     utils.log(f"Requesting node elevations from the API in {n_calls} calls")
 
     # break the series of coordinates into chunks of size max_locations_per_batch

@@ -3,13 +3,13 @@
 import datetime as dt
 import json
 import logging as lg
-import math
 import re
 import time
 from collections import OrderedDict
 from hashlib import sha1
 from pathlib import Path
 
+import numpy as np
 import requests
 from dateutil import parser as date_parser
 
@@ -288,7 +288,7 @@ def _get_pause(recursive_delay=5, default_duration=60):
         if status_first_token == "Slot":
             utc_time_str = status.split(" ")[3]
             utc_time = date_parser.parse(utc_time_str).replace(tzinfo=None)
-            pause = math.ceil((utc_time - dt.datetime.utcnow()).total_seconds())
+            pause = int(np.ceil((utc_time - dt.datetime.utcnow()).total_seconds()))
             pause = max(pause, 1)
 
         # if first token is 'Currently', it is currently running a query so
