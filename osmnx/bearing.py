@@ -105,7 +105,8 @@ def add_edge_bearings(G, precision=1):
     destination node for each edge in a directed, unprojected graph then add
     these bearings as new edge attributes. Bearing represents angle in degrees
     (clockwise) between north and the geodesic line from from the origin node
-    to the destination node.
+    to the destination node. Ignores self-loop edges as their bearings are
+    undefined.
 
     Parameters
     ----------
@@ -123,7 +124,7 @@ def add_edge_bearings(G, precision=1):
         raise ValueError("graph must be unprojected to add edge bearings")
 
     # extract edge IDs and corresponding coordinates from their nodes
-    uvk = tuple(G.edges)
+    uvk = tuple((u, v, k) for u, v, k in G.edges if u != v)
     x = G.nodes(data="x")
     y = G.nodes(data="y")
     coords = np.array([(y[u], x[u], y[v], x[v]) for u, v, k in uvk])
@@ -141,7 +142,8 @@ def orientation_entropy(Gu, num_bins=36, min_length=0, weight=None):
     Calculate undirected graph's orientation entropy.
 
     Orientation entropy is the entropy of its edges' bidirectional bearings
-    across evenly spaced bins.
+    across evenly spaced bins. Ignores self-loop edges as their bearings are
+    undefined.
 
     Parameters
     ----------
@@ -199,8 +201,9 @@ def _extract_edge_bearings(Gu, min_length=0, weight=None):
     if nx.is_directed(Gu) or projection.is_projected(Gu.graph["crs"]):  # pragma: no cover
         raise ValueError("graph must be undirected and unprojected to analyze edge bearings")
     bearings = list()
-    for _, _, data in Gu.edges(data=True):
-        if data["length"] >= min_length:
+    for u, v, data in Gu.edges(data=True):
+        # ignore self-loops and any edges below min_length
+        if u != v and data["length"] >= min_length:
             if weight:
                 # weight edges' bearings by some edge attribute value
                 bearings.extend([data["bearing"]] * int(data[weight]))
@@ -278,6 +281,8 @@ def plot_orientation(
 ):
     """
     Plot a polar histogram of a spatial network's bidirectional edge bearings.
+
+    Ignores self-loop edges as their bearings are undefined.
 
     For more info see: Boeing, G. 2019. "Urban Spatial Order: Street Network
     Orientation, Configuration, and Entropy." Applied Network Science, 4 (1),
