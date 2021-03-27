@@ -48,10 +48,10 @@ def calculate_bearing(lat1, lng1, lat2, lng2):
     # calculate initial bearing from -180 degrees to +180 degrees
     y = np.sin(d_lng) * np.cos(lat2)
     x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(d_lng)
-    initial_bearing = np.arctan2(y, x)
+    initial_bearing = np.degrees(np.arctan2(y, x))
 
-    # normalize initial bearing to 0-360 degrees to get compass bearing
-    return np.degrees(initial_bearing) % 360
+    # normalize to 0-360 degrees to get compass bearing
+    return initial_bearing % 360
 
 
 def get_bearing(origin_point, destination_point):
@@ -107,7 +107,7 @@ def add_edge_bearings(G, precision=1):
         raise ValueError("graph must be unprojected to add edge bearings")
 
     # extract edge IDs and corresponding coordinates from their nodes
-    uvk = tuple((u, v, k) for u, v, k in G.edges if u != v)
+    uvk = [(u, v, k) for u, v, k in G.edges if u != v]
     x = G.nodes(data="x")
     y = G.nodes(data="y")
     coords = np.array([(y[u], x[u], y[v], x[v]) for u, v, k in uvk])
