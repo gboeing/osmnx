@@ -1,6 +1,5 @@
 """Geospatial utility functions."""
 
-import math
 import warnings
 
 import networkx as nx
@@ -125,21 +124,17 @@ def _round_polygon_coords(p, precision):
 
     Returns
     -------
-    new_poly : shapely.geometry.Polygon
-        the polygon with rounded coordinates
+    shapely.geometry.Polygon
     """
-    # round the coordinates of the Polygon exterior
-    new_exterior = [[round(x, precision) for x in c] for c in p.exterior.coords]
+    # round coords of Polygon exterior
+    shell = [[round(x, precision) for x in c] for c in p.exterior.coords]
 
-    # round the coordinates of the (possibly multiple, possibly none) Polygon interior(s)
-    new_interiors = []
-    for interior in p.interiors:
-        new_interiors.append([[round(x, precision) for x in c] for c in interior.coords])
+    # round coords of (possibly multiple, possibly none) Polygon interior(s)
+    holes = [[[round(x, precision) for x in c] for c in i.coords] for i in p.interiors]
 
-    # construct a new Polygon with the rounded coordinates
-    # buffer by zero to clean self-touching or self-crossing polygons
-    new_poly = Polygon(shell=new_exterior, holes=new_interiors).buffer(0)
-    return new_poly
+    # construct new Polygon with rounded coordinates and buffer by zero to
+    # clean self-touching or self-crossing polygons
+    return Polygon(shell=shell, holes=holes).buffer(0)
 
 
 def _round_multipolygon_coords(mp, precision):
@@ -288,14 +283,14 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
 
     Returns
     -------
-    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
+    geometry : shapely.geometry.MultiPolygon
     """
     if max_query_area_size is None:
         max_query_area_size = settings.max_query_area_size
 
     # let the linear length of the quadrats (with which to subdivide the
     # geometry) be the square root of max area size
-    quadrat_width = math.sqrt(max_query_area_size)
+    quadrat_width = np.sqrt(max_query_area_size)
 
     if not isinstance(geometry, (Polygon, MultiPolygon)):  # pragma: no cover
         raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
@@ -332,25 +327,22 @@ def _get_polygons_coordinates(geometry):
     -------
     polygon_coord_strs : list
     """
-    if not isinstance(geometry, (Polygon, MultiPolygon)):  # pragma: no cover
-        raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
-    if isinstance(geometry, Polygon):
-        geometry = MultiPolygon([geometry])
+    if not isinstance(geometry, MultiPolygon):  # pragma: no cover
+        raise TypeError("Geometry must be a shapely MultiPolygon")
 
-    # extract the exterior coordinates of the geometry
+    # extract geometry's exterior coords
     polygons_coords = []
     for polygon in geometry:
         x, y = polygon.exterior.xy
         polygons_coords.append(list(zip(x, y)))
 
-    # convert the exterior coordinates of the polygon(s) to the string format
-    # the API expects
+    # convert exterior coords to the string format the API expects
     polygon_coord_strs = []
     for coords in polygons_coords:
         s = ""
         separator = " "
         for coord in list(coords):
-            # round floating point lats and longs to 6 decimal places (ie, ~100 mm),
+            # round floating point lats and longs to 6 decimals (ie, ~100 mm)
             # so we can hash and cache strings consistently
             s = f"{s}{separator}{coord[1]:.6f}{separator}{coord[0]:.6f}"
         polygon_coord_strs.append(s.strip(separator))
@@ -379,8 +371,8 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3):
     """
     # create n evenly spaced points between the min and max x and y bounds
     west, south, east, north = geometry.bounds
-    x_num = math.ceil((east - west) / quadrat_width) + 1
-    y_num = math.ceil((north - south) / quadrat_width) + 1
+    x_num = int(np.ceil((east - west) / quadrat_width) + 1)
+    y_num = int(np.ceil((north - south) / quadrat_width) + 1)
     x_points = np.linspace(west, east, num=max(x_num, min_num))
     y_points = np.linspace(south, north, num=max(y_num, min_num))
 
@@ -471,8 +463,8 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     earth_radius = 6_371_009  # meters
     lat, lng = point
 
-    delta_lat = (dist / earth_radius) * (180 / math.pi)
-    delta_lng = (dist / earth_radius) * (180 / math.pi) / math.cos(lat * math.pi / 180)
+    delta_lat = (dist / earth_radius) * (180 / np.pi)
+    delta_lng = (dist / earth_radius) * (180 / np.pi) / np.cos(lat * np.pi / 180)
     north = lat + delta_lat
     south = lat - delta_lat
     east = lng + delta_lng
