@@ -1,22 +1,88 @@
 """Get node elevations and calculate edge grades."""
 
+import multiprocessing as mp
 import time
 
 import networkx as nx
 import numpy as np
 import pandas as pd
+import rasterio
 import requests
+from osgeo import gdal
+
+import osmnx as ox
 
 from . import downloader
 from . import settings
 from . import utils
+
+VRT_PATH = "./.osmnxdem.vrt"
+
+
+def _query_dem(nodes, dem_path, band):
+    # need to open dem file here, because cannot pickle it to pass around
+    # in multiprocessing
+    with rasterio.open(dem_path) as dem:
+        elevs = np.array(tuple(dem.sample(nodes.values, band)), dtype=float).squeeze()
+        elevs[elevs == dem.nodata] = np.nan
+        return dict(zip(nodes.index, elevs))
+
+
+def _get_mp_params(nodes, dem_path, band, cpus):
+    chunk_size = int(np.ceil(len(nodes) / cpus))
+    for i in range(0, len(nodes), chunk_size):
+        yield tuple([nodes.iloc[i : i + chunk_size], dem_path, band])
+
+
+def add_node_elevations_dem(G, dem_paths, band=1, cpus=None):
+    """
+    Add `elevation` attribute to each node from DEM raster file(s).
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    dem_paths : list
+        a list of paths to the DEM raster files to query
+    band : int
+        the raster band to query
+    cpus : int
+        how many CPU cores to use; if None, use all available
+
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+        graph with node elevation attributes
+    """
+    if cpus is None:
+        cpus = mp.cpu_count()
+
+    if len(dem_paths) == 1:
+        dem_path = dem_paths[0]
+    else:
+        gdal.BuildVRT(VRT_PATH, [str(p) for p in dem_paths])
+        dem_path = VRT_PATH
+
+    nodes = ox.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
+    if cpus == 1:
+        elevs = _query_dem(nodes, dem_path, band)
+    else:
+        pool = mp.Pool(cpus)
+        sma = pool.starmap_async(_query_dem, _get_mp_params(nodes, dem_path, band, cpus))
+        results = sma.get()
+        pool.close()
+        pool.join()
+        elevs = {k: v for d in results for k, v in d.items()}
+
+    assert len(G) == len(elevs)
+    nx.set_node_attributes(G, elevs, name="elev")
 
 
 def add_node_elevations(
     G, api_key, max_locations_per_batch=350, pause_duration=0.02, precision=3
 ):  # pragma: no cover
     """
-    Add `elevation` (meters) attribute to each node.
+    Add `elevation` (meters) attribute to each node using a web service.
 
     Uses the Google Maps Elevation API by default, but you can configure
     this to a different provider via ox.config()
