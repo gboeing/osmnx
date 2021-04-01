@@ -10,11 +10,10 @@ import rasterio
 import requests
 from osgeo import gdal
 
-import osmnx as ox
-
 from . import downloader
 from . import settings
 from . import utils
+from . import utils_graph
 
 VRT_PATH = "./.osmnxdem.vrt"
 
@@ -63,7 +62,7 @@ def add_node_elevations_dem(G, dem_paths, band=1, cpus=None):
         gdal.BuildVRT(VRT_PATH, [str(p) for p in dem_paths])
         dem_path = VRT_PATH
 
-    nodes = ox.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
+    nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
     if cpus == 1:
         elevs = _query_dem(nodes, dem_path, band)
     else:
