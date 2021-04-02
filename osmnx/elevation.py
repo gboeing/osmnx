@@ -3,6 +3,8 @@
 import multiprocessing as mp
 import time
 
+from pathlib import Path
+
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -26,7 +28,7 @@ def _query_raster(nodes, filepath, band):
     ----------
     nodes : pandas.DataFrame
         DataFrame indexed by node ID and with columns of x and y
-    filepath : string
+    filepath : string or pathlib.Path
         path to the raster file or VRT to query
     band : int
         which raster band to query
@@ -53,7 +55,7 @@ def _get_mp_params(nodes, filepath, band, n):
     ----------
     nodes : pandas.DataFrame
         DataFrame indexed by node ID and with columns of x and y
-    filepath : string
+    filepath : string or pathlib.Path
         path to the raster file or VRT to query
     band : int
         which raster band to query
@@ -81,7 +83,7 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
     ----------
     G : networkx.MultiDiGraph
         input graph in same CRS as raster
-    filepath : string or list of string
+    filepath : string or pathlib.Path or list of strings/pathlib.Paths
         path (or list of paths) to the raster file(s) to query
     band : int
         which raster band to query
@@ -96,7 +98,7 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
     if cpus is None:
         cpus = mp.cpu_count()
 
-    if not isinstance(filepath, str):
+    if not isinstance(filepath, (str, Path)):
         gdal.BuildVRT(VRT_PATH, [str(p) for p in filepath])
         filepath = VRT_PATH
 
