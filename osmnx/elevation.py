@@ -44,33 +44,6 @@ def _query_raster(nodes, filepath, band):
         return zip(nodes.index, values)
 
 
-def _get_mp_params(nodes, filepath, band, n):
-    """
-    Generate arguments to pass to _query_raster for multiprocessing.
-
-    Divide the nodes into n equal-sized chunks to yield one at a time.
-
-    Parameters
-    ----------
-    nodes : pandas.DataFrame
-        DataFrame indexed by node ID and with columns of x and y
-    filepath : string or pathlib.Path
-        path to the raster file or VRT to query
-    band : int
-        which raster band to query
-    n : int
-        how many chunks to create
-
-    Yields
-    ------
-    params : tuple
-        arguments to pass to _query_raster as (nodes, filepath, band)
-    """
-    chunk_size = int(np.ceil(len(nodes) / n))
-    for i in range(0, len(nodes), chunk_size):
-        yield (nodes.iloc[i : i + chunk_size], filepath, band)
-
-
 def add_node_elevations_raster(G, filepath, band=1, cpus=None):
     """
     Add `elevation` attribute to each node from raster file(s).
@@ -103,10 +76,13 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
 
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
     if cpus == 1:
-        elevs = _query_raster(nodes, filepath, band)
+        elevs = dict(_query_raster(nodes, filepath, band))
     else:
+        # divide nodes into equal-sized chunks for multiprocessing
+        size = int(np.ceil(len(nodes) / cpus))
+        args = ((nodes.iloc[i : i + size], filepath, band) for i in range(0, len(nodes), size))
         pool = mp.Pool(cpus)
-        sma = pool.starmap_async(_query_raster, _get_mp_params(nodes, filepath, band, cpus))
+        sma = pool.starmap_async(_query_raster, args)
         results = sma.get()
         pool.close()
         pool.join()
