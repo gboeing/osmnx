@@ -15,36 +15,76 @@ from . import settings
 from . import utils
 from . import utils_graph
 
-VRT_PATH = "./.osmnxdem.vrt"
+VRT_PATH = "./.osmnx.vrt"
 
 
-def _query_dem(nodes, dem_path, band):
-    # need to open dem file here, because cannot pickle it to pass around
-    # in multiprocessing
-    with rasterio.open(dem_path) as dem:
-        elevs = np.array(tuple(dem.sample(nodes.values, band)), dtype=float).squeeze()
-        elevs[elevs == dem.nodata] = np.nan
-        return dict(zip(nodes.index, elevs))
-
-
-def _get_mp_params(nodes, dem_path, band, cpus):
-    chunk_size = int(np.ceil(len(nodes) / cpus))
-    for i in range(0, len(nodes), chunk_size):
-        yield tuple([nodes.iloc[i : i + chunk_size], dem_path, band])
-
-
-def add_node_elevations_dem(G, dem_paths, band=1, cpus=None):
+def _query_raster(nodes, filepath, band):
     """
-    Add `elevation` attribute to each node from DEM raster file(s).
+    Query a raster for values at xy coordinates.
+
+    Parameters
+    ----------
+    nodes : pandas.DataFrame
+        DataFrame indexed by node ID and with columns of x and y
+    filepath : string
+        path to the raster file or VRT to query
+    band : int
+        which raster band to query
+
+    Returns
+    -------
+    zip
+        zipped node IDs and corresponding raster values
+    """
+    # must open raster file here: cannot pickle it to pass in multiprocessing
+    with rasterio.open(filepath) as raster:
+        values = np.array(tuple(raster.sample(nodes.values, band)), dtype=float).squeeze()
+        values[values == raster.nodata] = np.nan
+        return zip(nodes.index, values)
+
+
+def _get_mp_params(nodes, filepath, band, n):
+    """
+    Generate arguments to pass to _query_raster for multiprocessing.
+
+    Divide the nodes into n equal-sized chunks to yield one at a time.
+
+    Parameters
+    ----------
+    nodes : pandas.DataFrame
+        DataFrame indexed by node ID and with columns of x and y
+    filepath : string
+        path to the raster file or VRT to query
+    band : int
+        which raster band to query
+    n : int
+        how many chunks to create
+
+    Yields
+    ------
+    params : tuple
+        arguments to pass to _query_raster as (nodes, filepath, band)
+    """
+    chunk_size = int(np.ceil(len(nodes) / n))
+    for i in range(0, len(nodes), chunk_size):
+        yield (nodes.iloc[i : i + chunk_size], filepath, band)
+
+
+def add_node_elevations_raster(G, filepath, band=1, cpus=None):
+    """
+    Add `elevation` attribute to each node from raster file(s).
+
+    If `filepath` is a list of paths, this will generate a virtual raster
+    composed of the files at those paths.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph
-    dem_paths : list
-        a list of paths to the DEM raster files to query
+        input graph in same CRS as raster
+    filepath : string or list of string
+        path (or list of paths) to the raster file(s) to query
     band : int
-        the raster band to query
+        which raster band to query
     cpus : int
         how many CPU cores to use; if None, use all available
 
@@ -56,25 +96,25 @@ def add_node_elevations_dem(G, dem_paths, band=1, cpus=None):
     if cpus is None:
         cpus = mp.cpu_count()
 
-    if len(dem_paths) == 1:
-        dem_path = dem_paths[0]
-    else:
-        gdal.BuildVRT(VRT_PATH, [str(p) for p in dem_paths])
-        dem_path = VRT_PATH
+    if not isinstance(filepath, str):
+        gdal.BuildVRT(VRT_PATH, [str(p) for p in filepath])
+        filepath = VRT_PATH
 
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
     if cpus == 1:
-        elevs = _query_dem(nodes, dem_path, band)
+        elevs = _query_raster(nodes, filepath, band)
     else:
         pool = mp.Pool(cpus)
-        sma = pool.starmap_async(_query_dem, _get_mp_params(nodes, dem_path, band, cpus))
+        sma = pool.starmap_async(_query_raster, _get_mp_params(nodes, filepath, band, cpus))
         results = sma.get()
         pool.close()
         pool.join()
-        elevs = {k: v for d in results for k, v in d.items()}
+        elevs = {k: v for kv in results for k, v in kv}
 
     assert len(G) == len(elevs)
-    nx.set_node_attributes(G, elevs, name="elev")
+    nx.set_node_attributes(G, elevs, name="elevation")
+    utils.log("Added elevation data to all nodes.")
+    return G
 
 
 def add_node_elevations(
