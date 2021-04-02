@@ -2,7 +2,6 @@
 
 import multiprocessing as mp
 import time
-
 from pathlib import Path
 
 import networkx as nx
