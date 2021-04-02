@@ -21,12 +21,12 @@ VRT_PATH = "./.osmnx.vrt"
 
 def _query_raster(nodes, filepath, band):
     """
-    Query a raster for values at xy coordinates.
+    Query a raster for values at coordinates in a DataFrame's x/y columns.
 
     Parameters
     ----------
     nodes : pandas.DataFrame
-        DataFrame indexed by node ID and with columns of x and y
+        DataFrame indexed by node ID and with two columns: x and y
     filepath : string or pathlib.Path
         path to the raster file or VRT to query
     band : int
@@ -49,13 +49,13 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
     Add `elevation` attribute to each node from raster file(s).
 
     If `filepath` is a list of paths, this will generate a virtual raster
-    composed of the files at those paths.
+    composed of the files at those paths as an intermediate step.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph in same CRS as raster
-    filepath : string or pathlib.Path or list of strings/pathlib.Paths
+        input graph, in same CRS as raster
+    filepath : string or pathlib.Path or list of strings/Paths
         path (or list of paths) to the raster file(s) to query
     band : int
         which raster band to query
@@ -70,6 +70,7 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
     if cpus is None:
         cpus = mp.cpu_count()
 
+    # if a list of filepaths is passed, compose them all as a virtual raster
     if not isinstance(filepath, (str, Path)):
         gdal.BuildVRT(VRT_PATH, [str(p) for p in filepath])
         filepath = VRT_PATH
@@ -90,7 +91,7 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
 
     assert len(G) == len(elevs)
     nx.set_node_attributes(G, elevs, name="elevation")
-    utils.log("Added elevation data to all nodes.")
+    utils.log("Added elevation data from raster to all nodes.")
     return G
 
 
@@ -202,7 +203,7 @@ def add_node_elevations(
         df["elevation"] = results
     df["elevation"] = df["elevation"].round(precision)
     nx.set_node_attributes(G, name="elevation", values=df["elevation"].to_dict())
-    utils.log("Added elevation data to all nodes.")
+    utils.log("Added elevation data from web service to all nodes.")
 
     return G
 
