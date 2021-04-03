@@ -189,15 +189,25 @@ def test_osm_xml():
     ox.settings.all_oneway = default_all_oneway
 
 
+def test_elevation():
+
+    G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
+    rasters = list(Path("tests/input_data").glob("elevation*.tif"))
+
+    # add node elevations from a single raster file (some nodes will be null)
+    G = ox.elevation.add_node_elevations_raster(G, rasters[0], cpus=1)
+
+    # add node elevations from multiple raster files
+    G = ox.elevation.add_node_elevations_raster(G, rasters)
+    assert pd.notnull(pd.Series(dict(G.nodes(data="elevation")))).all()
+
+    # add edge grades and their absolute values
+    G = ox.add_edge_grades(G, add_absolute=True)
+
+
 def test_routing():
 
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
-
-    # give each node a random elevation then calculate edge grades
-    randm = np.random.random(size=len(G))
-    elevs = {n: e for n, e in zip(G.nodes(), randm)}
-    nx.set_node_attributes(G, name="elevation", values=elevs)
-    G = ox.add_edge_grades(G, add_absolute=True)
 
     # give each edge speed and travel time attributes
     G = ox.add_edge_speeds(G)
