@@ -2,6 +2,7 @@
 
 import multiprocessing as mp
 import time
+from hashlib import sha1
 from pathlib import Path
 
 import networkx as nx
@@ -15,8 +16,6 @@ from . import downloader
 from . import settings
 from . import utils
 from . import utils_graph
-
-VRT_PATH = "./.osmnx.vrt"
 
 
 def _query_raster(nodes, filepath, band):
@@ -34,7 +33,7 @@ def _query_raster(nodes, filepath, band):
 
     Returns
     -------
-    zip
+    nodes_values : zip
         zipped node IDs and corresponding raster values
     """
     # must open raster file here: cannot pickle it to pass in multiprocessing
@@ -71,9 +70,12 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
         cpus = mp.cpu_count()
 
     # if a list of filepaths is passed, compose them all as a virtual raster
+    # use the sha1 hash of the filepaths list as the vrt filename
     if not isinstance(filepath, (str, Path)):
-        gdal.BuildVRT(VRT_PATH, [str(p) for p in filepath])
-        filepath = VRT_PATH
+        filepaths = [str(p) for p in filepath]
+        sha = sha1(str(filepaths).encode("utf-8")).hexdigest()
+        filepath = f"./.osmnx_{sha}.vrt"
+        gdal.BuildVRT(filepath, filepaths)
 
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
     if cpus == 1:
@@ -241,7 +243,7 @@ def add_edge_grades(G, add_absolute=True, precision=3):
             # divide by edge length then round
             edge_grade = elevation_change / data["length"]
             data["grade"] = round(edge_grade, precision)
-        except ZeroDivisionError:
+        except ZeroDivisionError:  # pragma: no cover
             data["grade"] = np.nan
 
         # optionally add grade absolute value to the edge attributes
