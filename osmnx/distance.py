@@ -124,25 +124,22 @@ def add_edge_lengths(G, precision=3):
     G : networkx.MultiDiGraph
         graph with edge length attributes
     """
-    # extract the edges' endpoint nodes' coordinates
+    # extract edge IDs and corresponding coordinates from their nodes
+    uvk = tuple(G.edges)
+    x = G.nodes(data="x")
+    y = G.nodes(data="y")
     try:
-        coords = (
-            (u, v, k, G.nodes[u]["y"], G.nodes[u]["x"], G.nodes[v]["y"], G.nodes[v]["x"])
-            for u, v, k in G.edges
-        )
+        coords = np.array([(y[u], x[u], y[v], x[v]) for u, v, k in uvk])
     except KeyError:  # pragma: no cover
         raise KeyError("some edges missing nodes, possibly due to input data clipping issue")
 
-    # turn the coordinates into a DataFrame indexed by u, v, k
-    cols = ["u", "v", "k", "u_y", "u_x", "v_y", "v_x"]
-    df = pd.DataFrame(coords, columns=cols).set_index(["u", "v", "k"])
-
     # calculate great circle distances, fill nulls with zeros, then round
-    dists = distance.great_circle_vec(df["u_y"], df["u_x"], df["v_y"], df["v_x"])
-    dists = dists.fillna(value=0).round(precision)
-    nx.set_edge_attributes(G, name="length", values=dists)
+    dists = great_circle_vec(coords[:, 0], coords[:, 1], coords[:, 2], coords[:, 3])
+    dists[np.isnan(dists)] = 0
+    values = zip(uvk, dists.round(precision))
+    nx.set_edge_attributes(G, values=dict(values), name="length")
 
-    utils.log("Added edge lengths to graph")
+    utils.log("Added length attributes to graph edges")
     return G
 
 
