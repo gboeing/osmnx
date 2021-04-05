@@ -106,8 +106,8 @@ def add_edge_lengths(G, precision=3):
     """
     Add `length` attribute (in meters) to each edge.
 
-    Calculated via great-circle distance between each edge's incident nodes,
-    so ensure graph is in unprojected coordinates. Graph should be
+    Vectorized function to calculate great-circle distance between each edge's
+    incident nodes. Ensure graph is in unprojected coordinates, and
     unsimplified to get accurate distances. Note: this function is run by all
     the `graph.graph_from_x` functions automatically to add `length`
     attributes to all edges.
@@ -115,7 +115,7 @@ def add_edge_lengths(G, precision=3):
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph
+        unprojected, unsimplified input graph
     precision : int
         decimal precision to round lengths
 
