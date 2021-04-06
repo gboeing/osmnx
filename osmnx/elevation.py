@@ -155,7 +155,7 @@ def add_edge_grades(G, add_absolute=True, precision=3):
 
     # calculate edges' elevation changes from u to v then divide by lengths
     elevs = np.array([(elev_lookup[u], elev_lookup[v]) for u, v, k in uvk])
-    grades = ((elevs[:, 0] - elevs[:, 1]) / np.array(lengths)).round(precision)
+    grades = ((elevs[:, 1] - elevs[:, 0]) / np.array(lengths)).round(precision)
     nx.set_edge_attributes(G, dict(zip(uvk, grades)), name="grade")
 
     # optionally add grade absolute value to the edge attributes
