@@ -128,15 +128,14 @@ def add_edge_lengths(G, precision=3):
     x = G.nodes(data="x")
     y = G.nodes(data="y")
     try:
-        coords = np.array([(y[u], x[u], y[v], x[v]) for u, v, k in uvk])
+        coord = np.array([(y[u], x[u], y[v], x[v]) for u, v, k in uvk])
     except KeyError:  # pragma: no cover
         raise KeyError("some edges missing nodes, possibly due to input data clipping issue")
 
-    # calculate great circle distances, fill nulls with zeros, then round
-    dists = great_circle_vec(coords[:, 0], coords[:, 1], coords[:, 2], coords[:, 3])
+    # calculate great circle distances, round, and fill nulls with zeros
+    dists = great_circle_vec(coord[:, 0], coord[:, 1], coord[:, 2], coord[:, 3]).round(precision)
     dists[np.isnan(dists)] = 0
-    values = zip(uvk, dists.round(precision))
-    nx.set_edge_attributes(G, values=dict(values), name="length")
+    nx.set_edge_attributes(G, values=dict(zip(uvk, dists)), name="length")
 
     utils.log("Added length attributes to graph edges")
     return G
