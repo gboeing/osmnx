@@ -9,7 +9,6 @@ import pandas as pd
 from rtree.index import Index as RTreeIndex
 from shapely.geometry import Point
 
-from . import distance
 from . import projection
 from . import utils
 from . import utils_geo
