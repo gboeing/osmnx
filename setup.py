@@ -76,8 +76,9 @@ setup(
     python_requires=">=3.6",
     install_requires=INSTALL_REQUIRES,
     extras_require={
+        "dem": ["gdal", "rasterio"],
+        "entropy": ["scipy"],
         "folium": ["folium>=0.11"],
-        "scipy": ["scipy>=1.5"],
-        "balltree": ["scikit-learn>=0.24"],
+        "nearest_neighbor": ["scikit-learn", "scipy"],
     },
 )

@@ -1,6 +1,7 @@
 .temp
 .pytest_cache
 tests/run_tests.bat
+*.vrt
 
 # Compiled source #
 ###################

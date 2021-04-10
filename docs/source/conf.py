@@ -36,6 +36,7 @@ autodoc_mock_imports = [
     "numpy",
     "pandas",
     "pyproj",
+    "rasterio",
     "requests",
     "rtree",
     "scipy",
