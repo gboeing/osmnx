@@ -284,6 +284,5 @@ def add_edge_grades(G, add_absolute=True, precision=3):
     if add_absolute:
         nx.set_edge_attributes(G, dict(zip(uvk, np.abs(grades))), name="grade_abs")
 
-
     utils.log("Added grade attributes to all edges.")
     return G
