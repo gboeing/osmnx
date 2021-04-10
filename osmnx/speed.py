@@ -147,7 +147,7 @@ def add_edge_travel_times(G, precision=1):
         ):  # pragma: no cover
             raise ValueError("edge `length` and `speed_kph` values must be non-null.")
 
-    # convert distance km to meters, and speed km per hour to km per second
+    # convert distance meters to km, and speed km per hour to km per second
     distance_km = edges["length"] / 1000
     speed_km_sec = edges["speed_kph"] / (60 * 60)
 
