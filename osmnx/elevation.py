@@ -1,26 +1,111 @@
 """Get node elevations and calculate edge grades."""
 
+import multiprocessing as mp
 import time
+import warnings
+from hashlib import sha1
+from pathlib import Path
 
 import networkx as nx
 import numpy as np
 import pandas as pd
+import rasterio
 import requests
+from osgeo import gdal
 
 from . import downloader
 from . import settings
 from . import utils
+from . import utils_graph
 
 
-def add_node_elevations(
-    G, api_key, max_locations_per_batch=350, pause_duration=0.02, precision=3
+def _query_raster(nodes, filepath, band):
+    """
+    Query a raster for values at coordinates in a DataFrame's x/y columns.
+
+    Parameters
+    ----------
+    nodes : pandas.DataFrame
+        DataFrame indexed by node ID and with two columns: x and y
+    filepath : string or pathlib.Path
+        path to the raster file or VRT to query
+    band : int
+        which raster band to query
+
+    Returns
+    -------
+    nodes_values : zip
+        zipped node IDs and corresponding raster values
+    """
+    # must open raster file here: cannot pickle it to pass in multiprocessing
+    with rasterio.open(filepath) as raster:
+        values = np.array(tuple(raster.sample(nodes.values, band)), dtype=float).squeeze()
+        values[values == raster.nodata] = np.nan
+        return zip(nodes.index, values)
+
+
+def add_node_elevations_raster(G, filepath, band=1, cpus=None):
+    """
+    Add `elevation` attribute to each node from local raster file(s).
+
+    If `filepath` is a list of paths, this will generate a virtual raster
+    composed of the files at those paths as an intermediate step.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph, in same CRS as raster
+    filepath : string or pathlib.Path or list of strings/Paths
+        path (or list of paths) to the raster file(s) to query
+    band : int
+        which raster band to query
+    cpus : int
+        how many CPU cores to use; if None, use all available
+
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+        graph with node elevation attributes
+    """
+    if cpus is None:
+        cpus = mp.cpu_count()
+
+    # if a list of filepaths is passed, compose them all as a virtual raster
+    # use the sha1 hash of the filepaths list as the vrt filename
+    if not isinstance(filepath, (str, Path)):
+        filepaths = [str(p) for p in filepath]
+        sha = sha1(str(filepaths).encode("utf-8")).hexdigest()
+        filepath = f"./.osmnx_{sha}.vrt"
+        gdal.BuildVRT(filepath, filepaths)
+
+    nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
+    if cpus == 1:
+        elevs = dict(_query_raster(nodes, filepath, band))
+    else:
+        # divide nodes into equal-sized chunks for multiprocessing
+        size = int(np.ceil(len(nodes) / cpus))
+        args = ((nodes.iloc[i : i + size], filepath, band) for i in range(0, len(nodes), size))
+        pool = mp.Pool(cpus)
+        sma = pool.starmap_async(_query_raster, args)
+        results = sma.get()
+        pool.close()
+        pool.join()
+        elevs = {k: v for kv in results for k, v in kv}
+
+    assert len(G) == len(elevs)
+    nx.set_node_attributes(G, elevs, name="elevation")
+    utils.log("Added elevation data from raster to all nodes.")
+    return G
+
+
+def add_node_elevations_google(
+    G, api_key, max_locations_per_batch=350, pause_duration=0, precision=3
 ):  # pragma: no cover
     """
-    Add `elevation` (meters) attribute to each node.
+    Add `elevation` (meters) attribute to each node using a web service.
 
-    Uses the Google Maps Elevation API by default, but you can configure
-    this to a different provider via ox.config()
-
+    This uses the Google Maps Elevation API and requires an API key. For a
+    free, local alternative, see the `add_node_elevations_raster` function.
     See also the `add_edge_grades` function.
 
     Parameters
@@ -28,16 +113,16 @@ def add_node_elevations(
     G : networkx.MultiDiGraph
         input graph
     api_key : string
-        your google maps elevation API key, or equivalent if using a different
-        provider
+        a Google Maps Elevation API key
     max_locations_per_batch : int
         max number of coordinate pairs to submit in each API call (if this is
         too high, the server will reject the request because its character
-        limit exceeds the max)
+        limit exceeds the max allowed)
     pause_duration : float
-        time to pause between API calls
+        time to pause between API calls, which can be increased if you get
+        rate limited
     precision : int
-        decimal precision to round elevation
+        decimal precision to round elevation values
 
     Returns
     -------
@@ -120,9 +205,46 @@ def add_node_elevations(
         df["elevation"] = results
     df["elevation"] = df["elevation"].round(precision)
     nx.set_node_attributes(G, name="elevation", values=df["elevation"].to_dict())
-    utils.log("Added elevation data to all nodes.")
+    utils.log("Added elevation data from web service to all nodes.")
 
     return G
+
+
+def add_node_elevations(
+    G, api_key, max_locations_per_batch=350, pause_duration=0, precision=3
+):  # pragma: no cover
+    """
+    Do not use, deprecated, will be removed in a future release.
+
+    This function and the `elevation_provider` setting are deprecated.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        deprecated, do not use
+    api_key : string
+        deprecated, do not use
+    max_locations_per_batch : int
+        deprecated, do not use
+    pause_duration : float
+        deprecated, do not use
+    precision : int
+        deprecated, do not use
+
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+    """
+    msg = (
+        "The add_node_elevations function and the 'airmap' elevation_provider are "
+        "deprecated and will be removed in a future release. Use the "
+        "add_node_elevations_google function or the add_node_elevations_raster "
+        "function instead."
+    )
+    warnings.warn(msg)
+    return add_node_elevations_google(
+        G, api_key, max_locations_per_batch, pause_duration, precision
+    )
 
 
 def add_edge_grades(G, add_absolute=True, precision=3):
@@ -161,6 +283,7 @@ def add_edge_grades(G, add_absolute=True, precision=3):
     # optionally add grade absolute value to the edge attributes
     if add_absolute:
         nx.set_edge_attributes(G, dict(zip(uvk, np.abs(grades))), name="grade_abs")
+
 
     utils.log("Added grade attributes to all edges.")
     return G

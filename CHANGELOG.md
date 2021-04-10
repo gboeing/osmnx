@@ -3,6 +3,8 @@
 ## 1.1.0 (TBD)
 
   - add graph-constrained spatial sampling function
+  - add add_node_elevations_raster function to add node elevations from local raster file(s)
+  - add add_node_elevations_google function and deprecate old add_node_elevations function
   - add faster streamlined nearest_nodes and nearest_edges functions to distance module
   - deprecate old get_nearest_node, get_nearest_nodes, get_nearest_edge, and get_nearest_edges
   - add utils_geo.interpolate_points function and deprecate redistribute_vertices in favor of it
@@ -14,6 +16,8 @@
   - handle relations of type "boundary" in geometries module
   - multi-index GeoDataFrames returned from geometries module by element type and osmid
   - ensure all nodes have integer IDs after graph intersection consolidation
+  - vectorize add_edge_lengths, add_edge_grades, and add_edge_bearings functions
+  - add vectorized calculate_bearing function and deprecate old get_bearing function
   - improve save_graph_xml speed
   - improve geocoder module error messages
   - improve handling of node geometry when converting graph to/from GeoDataFrames
@@ -21,6 +25,7 @@
   - fix handling of boolean type conversion in load_graphml
   - fix truncate_graph_dist retaining unreachable nodes
   - fix bug in consolidate_intersections when pygeos is installed
+  - move add_edge_lengths function from utils_graph to distance module
   - remove descartes dependency in line with geopandas
 
 ## 1.0.1 (2021-01-13)

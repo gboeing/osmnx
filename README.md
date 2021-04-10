@@ -16,15 +16,15 @@ If you use OSMnx in your work, please cite the journal article.
 
 ## Getting Started
 
-"How do I install OSMnx?" See the [installation](https://osmnx.readthedocs.io/) instructions.
+*How do I install OSMnx?* See the [installation](https://osmnx.readthedocs.io/) instructions.
 
-"How do I use OSMnx?" See the usage examples and tutorials in the [examples](https://github.com/gboeing/osmnx-examples) repo.
+*How do I use OSMnx?* See the usage examples and tutorials in the [examples](https://github.com/gboeing/osmnx-examples) repo.
 
-"How does this function work?" Check out the [documentation](https://osmnx.readthedocs.io/).
+*How does this function work?* Check out the [documentation](https://osmnx.readthedocs.io/).
 
-"What can I do with OSMnx?" Check out recent projects and blog posts that [used OSMnx](https://geoffboeing.com/2018/03/osmnx-features-roundup/).
+*What can I do with OSMnx?* Check out recent [projects](https://geoffboeing.com/2018/03/osmnx-features-roundup/) and blog posts that used OSMnx.
 
-"I have a 'how-to' question." Please ask it on [StackOverflow](https://stackoverflow.com/search?q=osmnx).
+*I have a usage question.* Please ask it on [StackOverflow](https://stackoverflow.com/search?q=osmnx).
 
 
 ## Features

@@ -18,6 +18,8 @@ dependencies:
 
     # extras
     - folium
+    - gdal
+    - rasterio
     - scikit-learn
     - scipy
 
