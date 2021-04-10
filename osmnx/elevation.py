@@ -2,6 +2,7 @@
 
 import multiprocessing as mp
 import time
+import warnings
 from hashlib import sha1
 from pathlib import Path
 
@@ -45,7 +46,7 @@ def _query_raster(nodes, filepath, band):
 
 def add_node_elevations_raster(G, filepath, band=1, cpus=None):
     """
-    Add `elevation` attribute to each node from raster file(s).
+    Add `elevation` attribute to each node from local raster file(s).
 
     If `filepath` is a list of paths, this will generate a virtual raster
     composed of the files at those paths as an intermediate step.
@@ -97,15 +98,14 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
     return G
 
 
-def add_node_elevations(
-    G, api_key, max_locations_per_batch=350, pause_duration=0.02, precision=3
+def add_node_elevations_google(
+    G, api_key, max_locations_per_batch=350, pause_duration=0, precision=3
 ):  # pragma: no cover
     """
     Add `elevation` (meters) attribute to each node using a web service.
 
-    Uses the Google Maps Elevation API by default, but you can configure
-    this to a different provider via ox.config()
-
+    This uses the Google Maps Elevation API and requires an API key. For a
+    free, local alternative, see the `add_node_elevations_raster` function.
     See also the `add_edge_grades` function.
 
     Parameters
@@ -113,16 +113,16 @@ def add_node_elevations(
     G : networkx.MultiDiGraph
         input graph
     api_key : string
-        your google maps elevation API key, or equivalent if using a different
-        provider
+        a Google Maps Elevation API key
     max_locations_per_batch : int
         max number of coordinate pairs to submit in each API call (if this is
         too high, the server will reject the request because its character
-        limit exceeds the max)
+        limit exceeds the max allowed)
     pause_duration : float
-        time to pause between API calls
+        time to pause between API calls, which can be increased if you get
+        rate limited
     precision : int
-        decimal precision to round elevation
+        decimal precision to round elevation values
 
     Returns
     -------
@@ -208,6 +208,43 @@ def add_node_elevations(
     utils.log("Added elevation data from web service to all nodes.")
 
     return G
+
+
+def add_node_elevations(
+    G, api_key, max_locations_per_batch=350, pause_duration=0, precision=3
+):  # pragma: no cover
+    """
+    Do not use, deprecated, will be removed in a future release.
+
+    This function and the `elevation_provider` setting are deprecated.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        deprecated, do not use
+    api_key : string
+        deprecated, do not use
+    max_locations_per_batch : int
+        deprecated, do not use
+    pause_duration : float
+        deprecated, do not use
+    precision : int
+        deprecated, do not use
+
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+    """
+    msg = (
+        "The add_node_elevations function and the 'airmap' elevation_provider are "
+        "deprecated and will be removed in a future release. Use the "
+        "add_node_elevations_google function or the add_node_elevations_raster "
+        "function instead."
+    )
+    warnings.warn(msg)
+    return add_node_elevations_google(
+        G, api_key, max_locations_per_batch, pause_duration, precision
+    )
 
 
 def add_edge_grades(G, add_absolute=True, precision=3):

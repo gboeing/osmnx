@@ -102,4 +102,5 @@ overpass_endpoint = "http://overpass-api.de/api"
 
 # which API provider to use for adding node elevations. default is "google"
 # for Google Maps Elevation API but also accepts "airmap"
+# this setting is deprecated and will be removed in a future release
 elevation_provider = "google"
