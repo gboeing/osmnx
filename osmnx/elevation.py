@@ -251,16 +251,16 @@ def add_edge_grades(G, add_absolute=True, precision=3):
     """
     Add `grade` attribute to each graph edge.
 
-    Get the directed grade (ie, rise over run) for each edge in the graph and
-    add it to the edge as an attribute. Nodes must have `elevation` attributes
-    to use this function.
+    Vectorized function to calculate the directed grade (ie, rise over run)
+    for each edge in the graph and add it to the edge as an attribute. Nodes
+    must already have `elevation` attributes to use this function.
 
     See also the `add_node_elevations` function.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph
+        input graph with `elevation` node attribute
     add_absolute : bool
         if True, also add absolute value of grade as `grade_abs` attribute
     precision : int
@@ -271,21 +271,18 @@ def add_edge_grades(G, add_absolute=True, precision=3):
     G : networkx.MultiDiGraph
         graph with edge `grade` (and optionally `grade_abs`) attributes
     """
-    for u, v, data in G.edges(keys=False, data=True):
+    elev_lookup = G.nodes(data="elevation")
+    u, v, k, lengths = zip(*G.edges(keys=True, data="length"))
+    uvk = zip(u, v, k)
 
-        # for each edge, calculate elevation change from origin to destination
-        elevation_change = G.nodes[v]["elevation"] - G.nodes[u]["elevation"]
+    # calculate edges' elevation changes from u to v then divide by lengths
+    elevs = np.array([(elev_lookup[u], elev_lookup[v]) for u, v, k in uvk])
+    grades = ((elevs[:, 1] - elevs[:, 0]) / np.array(lengths)).round(precision)
+    nx.set_edge_attributes(G, dict(zip(uvk, grades)), name="grade")
 
-        try:
-            # divide by edge length then round
-            edge_grade = elevation_change / data["length"]
-            data["grade"] = round(edge_grade, precision)
-        except ZeroDivisionError:  # pragma: no cover
-            data["grade"] = np.nan
-
-        # optionally add grade absolute value to the edge attributes
-        if add_absolute:
-            data["grade_abs"] = abs(data["grade"])
+    # optionally add grade absolute value to the edge attributes
+    if add_absolute:
+        nx.set_edge_attributes(G, dict(zip(uvk, np.abs(grades))), name="grade_abs")
 
     utils.log("Added grade attributes to all edges.")
     return G

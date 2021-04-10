@@ -11,7 +11,6 @@ import pandas as pd
 from shapely.geometry import LineString
 from shapely.geometry import Point
 
-from . import distance
 from . import utils
 
 
@@ -180,50 +179,6 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
         nx.set_node_attributes(G, name=col, values=gdf_nodes[col].dropna())
 
     utils.log("Created graph from node/edge GeoDataFrames")
-    return G
-
-
-def add_edge_lengths(G, precision=3):
-    """
-    Add `length` attribute (in meters) to each edge.
-
-    Calculated via great-circle distance between each edge's incident nodes,
-    so ensure graph is in unprojected coordinates. Graph should be
-    unsimplified to get accurate distances. Note: this function is run by all
-    the `graph.graph_from_x` functions automatically to add `length`
-    attributes to all edges.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    precision : int
-        decimal precision to round lengths
-
-    Returns
-    -------
-    G : networkx.MultiDiGraph
-        graph with edge length attributes
-    """
-    # extract the edges' endpoint nodes' coordinates
-    try:
-        coords = (
-            (u, v, k, G.nodes[u]["y"], G.nodes[u]["x"], G.nodes[v]["y"], G.nodes[v]["x"])
-            for u, v, k in G.edges
-        )
-    except KeyError:  # pragma: no cover
-        raise KeyError("some edges missing nodes, possibly due to input data clipping issue")
-
-    # turn the coordinates into a DataFrame indexed by u, v, k
-    cols = ["u", "v", "k", "u_y", "u_x", "v_y", "v_x"]
-    df = pd.DataFrame(coords, columns=cols).set_index(["u", "v", "k"])
-
-    # calculate great circle distances, fill nulls with zeros, then round
-    dists = distance.great_circle_vec(df["u_y"], df["u_x"], df["v_y"], df["v_x"])
-    dists = dists.fillna(value=0).round(precision)
-    nx.set_edge_attributes(G, name="length", values=dists)
-
-    utils.log("Added edge lengths to graph")
     return G
 
 

@@ -200,9 +200,10 @@ def graph_from_address(
         retain only those nodes within this many meters of the center of the
         graph
     dist_type : string {"network", "bbox"}
-        if "bbox", retain only those nodes within a bounding box of the distance
-        parameter. if "network", retain only those nodes within some network
-        distance from the center-most node.
+        if "bbox", retain only those nodes within a bounding box of the
+        distance parameter. if "network", retain only those nodes within some
+        network distance from the center-most node (requires that scikit-learn
+        is installed as an optional dependency).
     network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         what type of street network to get if custom_filter is None
     simplify : bool
@@ -507,7 +508,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
 
     Adds length attributes in meters (great-circle distance between endpoints)
     to all of the graph's (pre-simplified, straight-line) edges via the
-    `utils_graph.add_edge_lengths` function.
+    `distance.add_edge_lengths` function.
 
     Parameters
     ----------
@@ -560,7 +561,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
 
     # add length (great-circle distance between nodes) attribute to each edge
     if len(G.edges) > 0:
-        G = utils_graph.add_edge_lengths(G)
+        G = distance.add_edge_lengths(G)
 
     return G
 

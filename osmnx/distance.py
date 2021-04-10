@@ -10,6 +10,7 @@ from rtree.index import Index as RTreeIndex
 from shapely.geometry import Point
 
 from . import projection
+from . import utils
 from . import utils_geo
 from . import utils_graph
 
@@ -98,6 +99,46 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     """
     # pythagorean theorem
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+
+
+def add_edge_lengths(G, precision=3):
+    """
+    Add `length` attribute (in meters) to each edge.
+
+    Vectorized function to calculate great-circle distance between each edge's
+    incident nodes. Ensure graph is in unprojected coordinates, and
+    unsimplified to get accurate distances. Note: this function is run by all
+    the `graph.graph_from_x` functions automatically to add `length`
+    attributes to all edges.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        unprojected, unsimplified input graph
+    precision : int
+        decimal precision to round lengths
+
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+        graph with edge length attributes
+    """
+    # extract edge IDs and corresponding coordinates from their nodes
+    uvk = tuple(G.edges)
+    x = G.nodes(data="x")
+    y = G.nodes(data="y")
+    try:
+        coord = np.array([(y[u], x[u], y[v], x[v]) for u, v, k in uvk])
+    except KeyError:  # pragma: no cover
+        raise KeyError("some edges missing nodes, possibly due to input data clipping issue")
+
+    # calculate great circle distances, round, and fill nulls with zeros
+    dists = great_circle_vec(coord[:, 0], coord[:, 1], coord[:, 2], coord[:, 3]).round(precision)
+    dists[np.isnan(dists)] = 0
+    nx.set_edge_attributes(G, values=dict(zip(uvk, dists)), name="length")
+
+    utils.log("Added length attributes to graph edges")
+    return G
 
 
 def nearest_nodes(G, X, Y, return_dist=False):
