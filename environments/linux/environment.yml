@@ -163,7 +163,7 @@ dependencies:
   - nbformat=5.0.8=py_0
   - ncurses=6.2=h58526e2_4
   - nest-asyncio=1.4.3=pyhd8ed1ab_0
-  - networkx=2.5=py_0
+  - networkx=2.5.1=py_0
   - nodejs=15.2.1=h914e61d_0
   - notebook=6.1.6=py39hf3d152e_0
   - nspr=4.29=he1b5a44_1
