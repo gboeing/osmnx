@@ -155,10 +155,10 @@ def nearest_nodes(G, X, Y, return_dist=False):
     ----------
     G : networkx.MultiDiGraph
         graph in which to find nearest nodes
-    X : list
+    X : numpy.array
         points' x or longitude coordinates, in same CRS/units as graph and
         containing no nulls
-    Y : list
+    Y : numpy.array
         points' y or latitude coordinates, in same CRS/units as graph and
         containing no nulls
     return_dist : bool
@@ -170,7 +170,7 @@ def nearest_nodes(G, X, Y, return_dist=False):
         nearest node IDs or optionally a tuple of arrays where `dist` contains
         distances between the points and their nearest nodes
     """
-    if pd.Series(X).isna().any() or pd.Series(Y).isna().any():  # pragma: no cover
+    if np.isnan(X).any() or np.isnan(Y).any():  # pragma: no cover
         raise ValueError("`X` and `Y` cannot contain nulls")
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
 
@@ -220,10 +220,10 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     ----------
     G : networkx.MultiDiGraph
         graph in which to find nearest edges
-    X : list
+    X : numpy.array
         points' x or longitude coordinates, in same CRS/units as graph and
         containing no nulls
-    Y : list
+    Y : numpy.array
         points' y or latitude coordinates, in same CRS/units as graph and
         containing no nulls
     interpolate : float
@@ -238,9 +238,8 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         nearest edges as [u, v, key] or optionally a tuple of arrays where
         `dist` contains distances between the points and their nearest edges
     """
-    if (pd.isnull(X) | pd.isnull(Y)).any():  # pragma: no cover
+    if np.isnan(X).any() or np.isnan(Y).any():  # pragma: no cover
         raise ValueError("`X` and `Y` cannot contain nulls")
-
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
 
     # if no interpolation distance was provided
