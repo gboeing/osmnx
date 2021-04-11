@@ -9,14 +9,19 @@ from pathlib import Path
 import networkx as nx
 import numpy as np
 import pandas as pd
-import rasterio
 import requests
-from osgeo import gdal
 
 from . import downloader
 from . import settings
 from . import utils
 from . import utils_graph
+
+# rasterio and gdal are optional dependencies for raster querying
+try:
+    import rasterio
+    from osgeo import gdal
+except ImportError:  # pragma: no cover
+    rasterio = gdal = None
 
 
 def _query_raster(nodes, filepath, band):
@@ -67,6 +72,9 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
     G : networkx.MultiDiGraph
         graph with node elevation attributes
     """
+    if rasterio is None or gdal is None:  # pragma: no cover
+        raise ImportError("gdal and rasterio must be installed to query raster files")
+
     if cpus is None:
         cpus = mp.cpu_count()
 
