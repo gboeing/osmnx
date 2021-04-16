@@ -214,12 +214,14 @@ def test_routing():
     G = ox.add_edge_speeds(G, hwy_speeds={"motorway": 100})
     G = ox.add_edge_travel_times(G)
 
-    orig_node = list(G.nodes())[5]
-    dest_node = list(G.nodes())[-5]
-    orig_pt = (G.nodes[orig_node]["y"], G.nodes[orig_node]["x"])
-    dest_pt = (G.nodes[dest_node]["y"], G.nodes[dest_node]["x"])
-    route = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
+    orig_x = np.array([-122.404771])
+    dest_x = np.array([-122.401429])
+    orig_y = np.array([37.794302])
+    dest_y = np.array([37.794987])
+    orig_node = ox.distance.nearest_nodes(G, orig_x, orig_y)[0]
+    dest_node = ox.distance.nearest_nodes(G, dest_x, dest_y)[0]
 
+    route = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
     attributes = ox.utils_graph.get_route_edge_attributes(G, route)
     attributes = ox.utils_graph.get_route_edge_attributes(G, route, "travel_time")
 
