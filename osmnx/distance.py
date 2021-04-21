@@ -144,7 +144,7 @@ def add_edge_lengths(G, precision=3):
 
 def nearest_nodes(G, X, Y, return_dist=False):
     """
-    Find the nearest nodes to some points.
+    Find the nearest node(s) to some point(s).
 
     If the graph is projected, this uses a k-d tree for euclidean nearest
     neighbor search, which requires that scipy is installed as an optional
@@ -156,10 +156,10 @@ def nearest_nodes(G, X, Y, return_dist=False):
     ----------
     G : networkx.MultiDiGraph
         graph in which to find nearest nodes
-    X : numpy.array
+    X : float or numpy.array
         points' x or longitude coordinates, in same CRS/units as graph and
         containing no nulls
-    Y : numpy.array
+    Y : float or numpy.array
         points' y or latitude coordinates, in same CRS/units as graph and
         containing no nulls
     return_dist : bool
@@ -167,10 +167,17 @@ def nearest_nodes(G, X, Y, return_dist=False):
 
     Returns
     -------
-    nn or (nn, dist): numpy.array or tuple of numpy.array
-        nearest node IDs or optionally a tuple of arrays where `dist` contains
-        distances between the points and their nearest nodes
+    nn or (nn, dist)
+        nearest node IDs or optionally a tuple where `dist` contains distances
+        between the points and their nearest nodes
     """
+    is_scalar = False
+    if not (hasattr(X, "__iter__") and hasattr(Y, "__iter__")):
+        # make coordinates arrays if user passed non-iterable values
+        is_scalar = True
+        X = np.array([X])
+        Y = np.array([Y])
+
     if np.isnan(X).any() or np.isnan(Y).any():  # pragma: no cover
         raise ValueError("`X` and `Y` cannot contain nulls")
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
@@ -180,7 +187,7 @@ def nearest_nodes(G, X, Y, return_dist=False):
         if cKDTree is None:  # pragma: no cover
             raise ImportError("scipy must be installed to search a projected graph")
         dist, pos = cKDTree(nodes).query(np.array([X, Y]).T, k=1)
-        nn = nodes.index[pos].values
+        nn = nodes.index[pos]
 
     else:
         # if unprojected, use ball tree for haversine nearest-neighbor search
@@ -191,7 +198,14 @@ def nearest_nodes(G, X, Y, return_dist=False):
         points_rad = np.deg2rad(np.array([Y, X]).T)
         dist, pos = BallTree(nodes_rad, metric="haversine").query(points_rad, k=1)
         dist = dist[:, 0] * EARTH_RADIUS_M  # convert radians -> meters
-        nn = nodes.index[pos[:, 0]].values
+        nn = nodes.index[pos[:, 0]]
+
+    # convert results to correct types for return
+    nn = nn.tolist()
+    dist = dist.tolist()
+    if is_scalar:
+        nn = nn[0]
+        dist = dist[0]
 
     if return_dist:
         return nn, dist
@@ -221,10 +235,10 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     ----------
     G : networkx.MultiDiGraph
         graph in which to find nearest edges
-    X : numpy.array
+    X : float or numpy.array
         points' x or longitude coordinates, in same CRS/units as graph and
         containing no nulls
-    Y : numpy.array
+    Y : float or numpy.array
         points' y or latitude coordinates, in same CRS/units as graph and
         containing no nulls
     interpolate : float
@@ -235,10 +249,17 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
     Returns
     -------
-    ne or (ne, dist): numpy.array or tuple of numpy.array
-        nearest edges as [u, v, key] or optionally a tuple of arrays where
-        `dist` contains distances between the points and their nearest edges
+    ne or (ne, dist)
+        nearest edges as (u, v, key) or optionally a tuple where `dist`
+        contains distances between the points and their nearest edges
     """
+    is_scalar = False
+    if not (hasattr(X, "__iter__") and hasattr(Y, "__iter__")):
+        # make coordinates arrays if user passed non-iterable values
+        is_scalar = True
+        X = np.array([X])
+        Y = np.array([Y])
+
     if np.isnan(X).any() or np.isnan(Y).any():  # pragma: no cover
         raise ValueError("`X` and `Y` cannot contain nulls")
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
@@ -287,10 +308,17 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
             dist = dist[:, 0] * EARTH_RADIUS_M  # convert radians -> meters
             ne = vertices.index[pos[:, 0]]
 
+    # convert results to correct types for return
+    ne = list(ne)
+    dist = list(dist)
+    if is_scalar:
+        ne = ne[0]
+        dist = dist[0]
+
     if return_dist:
-        return np.array(ne), np.array(dist)
+        return ne, dist
     else:
-        return np.array(ne)
+        return ne
 
 
 def get_nearest_node(G, point, method=None, return_dist=False):
