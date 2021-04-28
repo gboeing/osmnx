@@ -249,7 +249,7 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
 
 def _resolve_ip(url):
     """
-    Returns the URL with its domain resolved to an IP address.
+    Return the passed-in URL with its domain resolved to an IP address.
 
     Parameters
     ----------
