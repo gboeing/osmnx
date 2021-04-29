@@ -362,7 +362,7 @@ def plot_graph_routes(G, routes, route_colors="r", route_linewidth=4, **pgr_kwar
         G,
         route=routes[0],
         route_color=route_colors[0],
-        route_linewidth=route_linewidth[0]
+        route_linewidth=route_linewidth[0],
         show=False,
         save=False,
         close=False,
