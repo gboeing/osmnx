@@ -67,7 +67,7 @@ setup(
     description=DESC,
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
-    url="https://github.com/sciamlab/osmnx",
+    url="https://github.com/gboeing/osmnx",
     author="Geoff Boeing",
     author_email="boeing@usc.edu",
     license="MIT",
