@@ -63,11 +63,11 @@ else:
 # now call setup
 setup(
     name="osmnx",
-    version="1.1.0dev",
+    version="1.1.0dev-sciam",
     description=DESC,
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
-    url="https://github.com/gboeing/osmnx",
+    url="https://github.com/sciamlab/osmnx",
     author="Geoff Boeing",
     author_email="boeing@usc.edu",
     license="MIT",
