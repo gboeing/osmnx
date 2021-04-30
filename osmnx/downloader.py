@@ -267,7 +267,7 @@ def _config_dns(url):
 
     def _getaddrinfo(*args):
         if args[0] == host:
-            print(f"Resolved {host} to {ip}")
+            utils.log(f"Resolved {host} to {ip}")
             return _original_getaddrinfo(ip, *args[1:])
         else:
             return _original_getaddrinfo(*args)
