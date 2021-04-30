@@ -21,6 +21,8 @@ from . import utils
 from . import utils_geo
 from ._errors import CacheOnlyModeInterrupt
 
+_original_getaddrinfo = socket.getaddrinfo
+
 
 def _get_osm_filter(network_type):
     """
@@ -247,23 +249,30 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     return headers
 
 
-def _resolve_ip(url):
+def _config_dns(url):
     """
-    Return the passed-in URL with its domain resolved to an IP address.
+    Force socket.getaddrinfo to use IP address instead of host.
 
     Parameters
     ----------
     url : string
-        URL to resolve the domain of
+        URL to resolve the IP of
 
     Returns
     -------
-    url : string
-        the URL with its domain replaced by its IP address
+    None
     """
-    domain = urlparse(url).netloc
-    ip = socket.gethostbyname(domain)
-    return url.replace(domain, ip)
+    host = urlparse(url).netloc.split(":")[0]
+    ip = socket.gethostbyname(host)
+
+    def _getaddrinfo(*args):
+        if args[0] == host:
+            print(f"Resolved {host} to {ip}")
+            return _original_getaddrinfo(ip, *args[1:])
+        else:
+            return _original_getaddrinfo(*args)
+
+    socket.getaddrinfo = _getaddrinfo
 
 
 def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
@@ -670,7 +679,8 @@ def overpass_request(data, pause=None, error_pause=60):
     # resolve the URL's domain to an IP address so that we use the same server
     # for both pause duration and the query itself even if there is any round-
     # robin redirecting
-    base_endpoint = _resolve_ip(settings.overpass_endpoint)
+    base_endpoint = settings.overpass_endpoint
+    _config_dns(base_endpoint)
 
     # define the Overpass API URL, then construct a GET-style URL as a string to
     # hash to look up/save to cache
