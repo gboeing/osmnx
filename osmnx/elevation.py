@@ -281,7 +281,7 @@ def add_edge_grades(G, add_absolute=True, precision=3):
     """
     elev_lookup = G.nodes(data="elevation")
     u, v, k, lengths = zip(*G.edges(keys=True, data="length"))
-    uvk = zip(u, v, k)
+    uvk = tuple(zip(u, v, k))
 
     # calculate edges' elevation changes from u to v then divide by lengths
     elevs = np.array([(elev_lookup[u], elev_lookup[v]) for u, v, k in uvk])

@@ -63,7 +63,7 @@ else:
 # now call setup
 setup(
     name="osmnx",
-    version="1.1.0dev",
+    version="1.1.0",
     description=DESC,
     long_description=LONG_DESCRIPTION,
     classifiers=CLASSIFIERS,
