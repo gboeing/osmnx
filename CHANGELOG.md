@@ -18,7 +18,6 @@
   - multi-index GeoDataFrames returned from geometries module by element type and osmid
   - ensure all nodes have integer IDs after graph intersection consolidation
   - vectorize add_edge_lengths, add_edge_grades, and add_edge_bearings functions
-  - add vectorized calculate_bearing function and deprecate old get_bearing function
   - improve save_graph_xml speed
   - improve geocoder module error messages
   - improve handling of node geometry when converting graph to/from GeoDataFrames
