@@ -372,8 +372,8 @@ def plot_graph_routes(G, routes, route_colors="r", route_linewidths=4, **pgr_kwa
     # plot the subsequent routes on top of existing ax
     override.update({"ax"})
     kwargs = {k: v for k, v in pgr_kwargs.items() if k not in override}
-    r_rc_rl = zip(routes[1:], route_colors[1:], route_linewidths[1:])
-    for route, route_color, route_linewidth in r_rc_rl:
+    r_rc_rlw = zip(routes[1:], route_colors[1:], route_linewidths[1:])
+    for route, route_color, route_linewidth in r_rc_rlw:
         fig, ax = plot_graph_route(
             G,
             route=route,
