@@ -1,6 +1,6 @@
 # Change log
 
-## 1.1.0 (TBD)
+## 1.1.0 (2021-05-01)
 
   - add graph-constrained spatial sampling function
   - add add_node_elevations_raster function to add node elevations from local raster file(s)
@@ -13,6 +13,7 @@
   - deprecate the extended_stats function in stats module
   - add network orientation and entropy stats functions to bearing module
   - add plot_orientation function to bearing module to polar histograms of graph edge bearings
+  - add route_linewidths parameter to plot_graph_routes function
   - handle relations of type "boundary" in geometries module
   - multi-index GeoDataFrames returned from geometries module by element type and osmid
   - ensure all nodes have integer IDs after graph intersection consolidation
