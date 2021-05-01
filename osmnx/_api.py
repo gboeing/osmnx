@@ -1,14 +1,20 @@
 """Expose most common parts of public API directly in `osmnx.` namespace."""
 
 from .bearing import add_edge_bearings
+from .bearing import orientation_entropy
+from .bearing import plot_orientation
 from .distance import get_nearest_edge
 from .distance import get_nearest_edges
 from .distance import get_nearest_node
 from .distance import get_nearest_nodes
 from .distance import k_shortest_paths
+from .distance import nearest_edges
+from .distance import nearest_nodes
 from .distance import shortest_path
 from .elevation import add_edge_grades
 from .elevation import add_node_elevations
+from .elevation import add_node_elevations_google
+from .elevation import add_node_elevations_raster
 from .folium import plot_graph_folium
 from .folium import plot_route_folium
 from .geocoder import geocode
