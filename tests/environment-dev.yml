@@ -5,7 +5,6 @@ channels:
 
 dependencies:
     # required
-    - descartes
     - geopandas
     - matplotlib
     - networkx
@@ -29,7 +28,6 @@ dependencies:
     - flake8
     - flake8-bugbear
     - isort
-    - nbqa
     - pydocstyle
     - pytest
     - sphinx
