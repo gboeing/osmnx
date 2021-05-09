@@ -312,6 +312,7 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
     pause : int
     """
     if not settings.rate_limiting:
+        # if rate_limiting is False, then there is zero pause
         return 0
 
     try:
