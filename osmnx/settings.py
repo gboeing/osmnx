@@ -100,6 +100,9 @@ nominatim_key = None
 # which API endpoint to use for overpass queries
 overpass_endpoint = "https://overpass-api.de/api"
 
+# whether to check overpass status endpoint and pause between requests
+rate_limiting = True
+
 # which API provider to use for adding node elevations. default is "google"
 # for Google Maps Elevation API but also accepts "airmap"
 # this setting is deprecated and will be removed in a future release
