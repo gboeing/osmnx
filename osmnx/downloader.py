@@ -21,6 +21,7 @@ from . import utils
 from . import utils_geo
 from ._errors import CacheOnlyModeInterrupt
 
+# capture getaddrinfo function to use original later after mutating it
 _original_getaddrinfo = socket.getaddrinfo
 
 
@@ -253,10 +254,23 @@ def _config_dns(url):
     """
     Force socket.getaddrinfo to use IP address instead of host.
 
+    Resolves the URL's domain to an IP address so that we use the same server
+    for both 1) checking the necessary pause duration and 2) sending the query
+    itself even if there is round-robin redirecting among multiple server
+    machines on the server-side. Mutates the getaddrinfo function so it uses
+    the same IP address everytime it finds the host name in the URL.
+
+    For example, the domain overpass-api.de just redirects to one of its
+    subdomains (currently z.overpass-api.de and lz4.overpass-api.de). So if we
+    check the status endpoint of overpass-api.de, we may see results for
+    subdomain z, but when we submit the query itself it gets redirected to
+    subdomain lz4. This could result in violating server lz4's slot management
+    timing.
+
     Parameters
     ----------
     url : string
-        URL to resolve the IP of
+        the URL to consistently resolve the IP address of
 
     Returns
     -------
@@ -676,10 +690,9 @@ def overpass_request(data, pause=None, error_pause=60):
     -------
     response_json : dict
     """
-    # resolve the URL's domain to an IP address so that we use the same server
-    # for both pause duration and the query itself even if there is any round-
-    # robin redirecting
     base_endpoint = settings.overpass_endpoint
+
+    # resolve url to same IP even if there is server round-robin redirecting
     _config_dns(base_endpoint)
 
     # define the Overpass API URL, then construct a GET-style URL as a string to
