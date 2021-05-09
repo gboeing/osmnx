@@ -5,7 +5,6 @@ channels:
 
 dependencies:
     # required
-    - descartes
     - geopandas
     - matplotlib
     - networkx

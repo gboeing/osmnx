@@ -10,9 +10,12 @@ dill
 flake8
 flake8-bugbear
 folium
+gdal
 isort
 jupyterlab
 mapclassify
+nbdime
+nbqa
 nodejs
 numexpr
 osmnx
