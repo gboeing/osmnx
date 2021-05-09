@@ -294,7 +294,8 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
     Get a pause duration from the Overpass API status endpoint.
 
     Check the Overpass API status endpoint to determine how long to wait until
-    next slot is available.
+    next slot is available. You can turn this off via the `ox.config` function
+    `rate_limiting` argument.
 
     Parameters
     ----------
@@ -310,6 +311,9 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
     -------
     pause : int
     """
+    if not settings.rate_limiting:
+        return 0
+
     try:
         url = base_endpoint.rstrip("/") + "/status"
         response = requests.get(url, headers=_get_http_headers())
