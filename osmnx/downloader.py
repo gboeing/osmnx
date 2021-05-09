@@ -311,7 +311,7 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
     -------
     pause : int
     """
-    if not settings.rate_limiting:
+    if not settings.rate_limiting:  # pragma: no cover
         # if rate_limiting is False, then there is zero pause
         return 0
 
