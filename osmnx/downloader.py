@@ -4,10 +4,12 @@ import datetime as dt
 import json
 import logging as lg
 import re
+import socket
 import time
 from collections import OrderedDict
 from hashlib import sha1
 from pathlib import Path
+from urllib.parse import urlparse
 
 import numpy as np
 import requests
@@ -18,6 +20,9 @@ from . import settings
 from . import utils
 from . import utils_geo
 from ._errors import CacheOnlyModeInterrupt
+
+# capture getaddrinfo function to use original later after mutating it
+_original_getaddrinfo = socket.getaddrinfo
 
 
 def _get_osm_filter(network_type):
@@ -245,7 +250,46 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     return headers
 
 
-def _get_pause(recursive_delay=5, default_duration=60):
+def _config_dns(url):
+    """
+    Force socket.getaddrinfo to use IP address instead of host.
+
+    Resolves the URL's domain to an IP address so that we use the same server
+    for both 1) checking the necessary pause duration and 2) sending the query
+    itself even if there is round-robin redirecting among multiple server
+    machines on the server-side. Mutates the getaddrinfo function so it uses
+    the same IP address everytime it finds the host name in the URL.
+
+    For example, the domain overpass-api.de just redirects to one of its
+    subdomains (currently z.overpass-api.de and lz4.overpass-api.de). So if we
+    check the status endpoint of overpass-api.de, we may see results for
+    subdomain z, but when we submit the query itself it gets redirected to
+    subdomain lz4. This could result in violating server lz4's slot management
+    timing.
+
+    Parameters
+    ----------
+    url : string
+        the URL to consistently resolve the IP address of
+
+    Returns
+    -------
+    None
+    """
+    host = urlparse(url).netloc.split(":")[0]
+    ip = socket.gethostbyname(host)
+
+    def _getaddrinfo(*args):
+        if args[0] == host:
+            utils.log(f"Resolved {host} to {ip}")
+            return _original_getaddrinfo(ip, *args[1:])
+        else:
+            return _original_getaddrinfo(*args)
+
+    socket.getaddrinfo = _getaddrinfo
+
+
+def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
     """
     Get a pause duration from the Overpass API status endpoint.
 
@@ -254,6 +298,8 @@ def _get_pause(recursive_delay=5, default_duration=60):
 
     Parameters
     ----------
+    base_endpoint : string
+        base Overpass API endpoint (without "/status" at the end)
     recursive_delay : int
         how long to wait between recursive calls if the server is currently
         running a query
@@ -265,7 +311,7 @@ def _get_pause(recursive_delay=5, default_duration=60):
     pause : int
     """
     try:
-        url = settings.overpass_endpoint.rstrip("/") + "/status"
+        url = base_endpoint.rstrip("/") + "/status"
         response = requests.get(url, headers=_get_http_headers())
         status = response.text.split("\n")[3]
         status_first_token = status.split(" ")[0]
@@ -295,7 +341,7 @@ def _get_pause(recursive_delay=5, default_duration=60):
         # check back in recursive_delay seconds
         elif status_first_token == "Currently":
             time.sleep(recursive_delay)
-            pause = _get_pause()
+            pause = _get_pause(base_endpoint)
 
         # any other status is unrecognized: log error, return default duration
         else:
@@ -644,9 +690,14 @@ def overpass_request(data, pause=None, error_pause=60):
     -------
     response_json : dict
     """
+    base_endpoint = settings.overpass_endpoint
+
+    # resolve url to same IP even if there is server round-robin redirecting
+    _config_dns(base_endpoint)
+
     # define the Overpass API URL, then construct a GET-style URL as a string to
     # hash to look up/save to cache
-    url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
+    url = base_endpoint.rstrip("/") + "/interpreter"
     prepared_url = requests.Request("GET", url, params=data).prepare().url
     cached_response_json = _retrieve_from_cache(prepared_url, check_remark=True)
 
@@ -657,7 +708,7 @@ def overpass_request(data, pause=None, error_pause=60):
     else:
         # if this URL is not already in the cache, pause, then request it
         if pause is None:
-            this_pause = _get_pause()
+            this_pause = _get_pause(base_endpoint)
         utils.log(f"Pausing {this_pause} seconds before making HTTP POST request")
         time.sleep(this_pause)
 
@@ -682,7 +733,7 @@ def overpass_request(data, pause=None, error_pause=60):
                 # 429 is 'too many requests' and 504 is 'gateway timeout' from
                 # server overload: handle these by pausing then recursively
                 # re-trying until we get a valid response from the server
-                this_pause = error_pause + _get_pause()
+                this_pause = error_pause + _get_pause(base_endpoint)
                 utils.log(f"{domain} returned {sc}: retry in {this_pause} secs", level=lg.WARNING)
                 time.sleep(this_pause)
                 response_json = overpass_request(data, pause, error_pause)
