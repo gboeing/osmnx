@@ -100,7 +100,9 @@ nominatim_key = None
 # base API endpoint to use for overpass queries
 overpass_endpoint = "https://overpass-api.de/api"
 
-# whether to check overpass status endpoint and pause between requests
+# whether to check the overpass server status endpoint for how long to pause
+# between requests: necessary if server uses slot management, but can be set
+# to False if you are running your own overpass instance without rate limiting
 overpass_rate_limit = True
 
 # which API provider to use for adding node elevations. default is "google"
