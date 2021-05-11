@@ -92,12 +92,12 @@ default_user_agent = "OSMnx Python package (https://github.com/gboeing/osmnx)"
 default_referer = "OSMnx Python package (https://github.com/gboeing/osmnx)"
 default_accept_language = "en"
 
-# which API endpoint to use for nominatim queries
-# and your API key, if you are using a commercial endpoint that requires it
+# base API endpoint to use for nominatim queries
+# and your nominatim API key, if you are using a host that requires one
 nominatim_endpoint = "https://nominatim.openstreetmap.org/"
 nominatim_key = None
 
-# which API endpoint to use for overpass queries
+# base API endpoint to use for overpass queries
 overpass_endpoint = "https://overpass-api.de/api"
 
 # whether to check overpass status endpoint and pause between requests

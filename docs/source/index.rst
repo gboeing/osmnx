@@ -34,7 +34,7 @@ You can also run OSMnx + Jupyter directly from its official `Docker container`_,
 Usage
 -----
 
-To **get started** with OSMnx, read its `user reference`_ and work through its `examples`_ repo for introductory usage demonstrations and sample code. Make sure you have read the `GeoPandas`_ and `NetworkX`_ user guides if you're not already familiar with these packages, as OSMnx uses their data structures and functionality.
+To get started with OSMnx, read its `user reference`_ and work through its `examples`_ repo for introductory usage demonstrations and sample code. Make sure you have read the `GeoPandas`_ and `NetworkX`_ user guides if you're not already familiar with these packages, as OSMnx uses their data structures and functionality.
 
 OSMnx is built on top of GeoPandas, NetworkX, and matplotlib and interacts with OpenStreetMap's APIs to:
 

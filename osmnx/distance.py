@@ -1,6 +1,7 @@
 """Calculate distances and shortest paths and find nearest node/edge(s) to point(s)."""
 
 import itertools
+import multiprocessing as mp
 import warnings
 
 import networkx as nx
@@ -48,8 +49,8 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     lng2 : float or numpy.array of float
         second point's longitude coordinate
     earth_radius : float
-        radius of earth in units in which distance will be returned
-        (default is meters)
+        earth's radius in units in which distance will be returned (default is
+        meters)
 
     Returns
     -------
@@ -144,7 +145,11 @@ def add_edge_lengths(G, precision=3):
 
 def nearest_nodes(G, X, Y, return_dist=False):
     """
-    Find the nearest node(s) to some point(s).
+    Find the nearest node to a point or to each of several points.
+
+    If `X` and `Y` are single coordinate values, this will return the nearest
+    node to that point. If `X` and `Y` are lists of coordinate values, this
+    will return the nearest node to each point.
 
     If the graph is projected, this uses a k-d tree for euclidean nearest
     neighbor search, which requires that scipy is installed as an optional
@@ -156,18 +161,18 @@ def nearest_nodes(G, X, Y, return_dist=False):
     ----------
     G : networkx.MultiDiGraph
         graph in which to find nearest nodes
-    X : float or numpy.array
-        points' x or longitude coordinates, in same CRS/units as graph and
+    X : float or list
+        points' x (longitude) coordinates, in same CRS/units as graph and
         containing no nulls
-    Y : float or numpy.array
-        points' y or latitude coordinates, in same CRS/units as graph and
+    Y : float or list
+        points' y (latitude) coordinates, in same CRS/units as graph and
         containing no nulls
     return_dist : bool
         optionally also return distance between points and nearest nodes
 
     Returns
     -------
-    nn or (nn, dist)
+    nn or (nn, dist) : int/list or tuple
         nearest node IDs or optionally a tuple where `dist` contains distances
         between the points and their nearest nodes
     """
@@ -215,7 +220,11 @@ def nearest_nodes(G, X, Y, return_dist=False):
 
 def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     """
-    Find the nearest edge(s) to some point(s).
+    Find the nearest edge to a point or to each of several points.
+
+    If `X` and `Y` are single coordinate values, this will return the nearest
+    edge to that point. If `X` and `Y` are lists of coordinate values, this
+    will return the nearest edge to each point.
 
     If `interpolate` is None, search for the nearest edge to each point, one
     at a time, using an r-tree and minimizing the euclidean distances from the
@@ -235,11 +244,11 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     ----------
     G : networkx.MultiDiGraph
         graph in which to find nearest edges
-    X : float or numpy.array
-        points' x or longitude coordinates, in same CRS/units as graph and
+    X : float or list
+        points' x (longitude) coordinates, in same CRS/units as graph and
         containing no nulls
-    Y : float or numpy.array
-        points' y or latitude coordinates, in same CRS/units as graph and
+    Y : float or list
+        points' y (latitude) coordinates, in same CRS/units as graph and
         containing no nulls
     interpolate : float
         spacing distance between interpolated points, in same units as graph.
@@ -249,7 +258,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
     Returns
     -------
-    ne or (ne, dist)
+    ne or (ne, dist) : tuple or list
         nearest edges as (u, v, key) or optionally a tuple where `dist`
         contains distances between the points and their nearest edges
     """
@@ -447,14 +456,12 @@ def get_nearest_edges(G, X, Y, method=None, dist=None):
     return nearest_edges(G, X, Y, dist)
 
 
-def shortest_path(G, orig, dest, weight="length"):
+def _single_shortest_path(G, orig, dest, weight):
     """
-    Get shortest path from origin node to destination node.
+    Solve the shortest path from an origin node to a destination node.
 
-    See also `k_shortest_paths` to get multiple shortest paths.
-
-    This function is a convenience wrapper around networkx.shortest_path. For
-    more functionality or different algorithms, use networkx directly.
+    This function is a convenience wrapper around networkx.shortest_path, with
+    exception handling for unsolvable paths.
 
     Parameters
     ----------
@@ -465,21 +472,86 @@ def shortest_path(G, orig, dest, weight="length"):
     dest : int
         destination node ID
     weight : string
-        edge attribute to minimize when solving shortest path. default is edge
-        length in meters.
+        edge attribute to minimize when solving shortest path
 
     Returns
     -------
     path : list
-        list of node IDs consituting the shortest path
+        list of node IDs constituting the shortest path
     """
-    path = nx.shortest_path(G, orig, dest, weight=weight)
-    return path
+    try:
+        return nx.shortest_path(G, orig, dest, weight=weight)
+    except nx.exception.NetworkXNoPath:  # pragma: no cover
+        utils.log(f"Cannot solve path from {orig} to {dest}")
+        return None
+
+
+def shortest_path(G, orig, dest, weight="length", cpus=1):
+    """
+    Solve shortest path from origin node(s) to destination node(s).
+
+    If `orig` and `dest` are single node IDs, this will return a list of the
+    nodes constituting the shortest path between them.  If `orig` and `dest`
+    are lists of node IDs, this will return a list of lists of the nodes
+    constituting the shortest path between each origin-destination pair. If a
+    path cannot be solved, this will return None for that path. You can
+    parallelize solving multiple paths with the `cpus` parameter, but be
+    careful to not exceed your available RAM.
+
+    See also `k_shortest_paths` to solve multiple shortest paths between a
+    single origin and destination. For additional functionality or different
+    solver algorithms, use NetworkX directly.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    orig : int or list
+        origin node ID, or a list of origin node IDs
+    dest : int or list
+        destination node ID, or a list of destination node IDs
+    weight : string
+        edge attribute to minimize when solving shortest path
+    cpus : int
+        how many CPU cores to use; if None, use all available
+
+    Returns
+    -------
+    path : list
+        list of node IDs constituting the shortest path, or, if orig and dest
+        are lists, then a list of path lists
+    """
+    if not (hasattr(orig, "__iter__") or hasattr(dest, "__iter__")):
+        # if neither orig nor dest is iterable, just return the shortest path
+        return _single_shortest_path(G, orig, dest, weight)
+
+    else:
+        # if orig/dest are iterable, ensure they have same lengths
+        if len(orig) != len(dest):  # pragma: no cover
+            raise ValueError("orig and dest must contain same number of elements")
+
+        if cpus is None:
+            cpus = mp.cpu_count()
+        utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")
+
+        if cpus == 1:
+            # if single-threading, calculate each shortest path one at a time
+            paths = [_single_shortest_path(G, o, d, weight) for o, d in zip(orig, dest)]
+        else:
+            # if multi-threading, calculate shortest paths in parallel
+            args = ((G, o, d, weight) for o, d in zip(orig, dest))
+            pool = mp.Pool(cpus)
+            sma = pool.starmap_async(_single_shortest_path, args)
+            paths = sma.get()
+            pool.close()
+            pool.join()
+
+        return paths
 
 
 def k_shortest_paths(G, orig, dest, k, weight="length"):
     """
-    Get `k` shortest paths from origin node to destination node.
+    Solve `k` shortest paths from an origin node to a destination node.
 
     See also `shortest_path` to get just the one shortest path.
 
