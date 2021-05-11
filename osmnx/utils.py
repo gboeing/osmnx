@@ -16,7 +16,7 @@ def citation():
 
     Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing,
     and Visualizing Complex Street Networks. Computers, Environment and Urban
-    Systems, 65(126-139). https://doi.org/10.1016/j.compenvurbsys.2017.05.004
+    Systems, 65, 126-139. https://doi.org/10.1016/j.compenvurbsys.2017.05.004
 
     Returns
     -------
@@ -26,7 +26,7 @@ def citation():
         "Citation:\n\n"
         "Boeing, G. 2017. OSMnx: New Methods for Acquiring, "
         "Constructing, Analyzing, and Visualizing Complex Street "
-        "Networks. Computers, Environment and Urban Systems, 65(126-139). "
+        "Networks. Computers, Environment and Urban Systems, 65, 126-139. "
         "https://doi.org/10.1016/j.compenvurbsys.2017.05.004\n\n"
         "BibTeX entry for LaTeX users:\n\n"
         "@article{boeing_osmnx_2017,\n"
@@ -171,7 +171,7 @@ def config(
         Overpass server memory allocation size for the query, in bytes. If
         None, server will use its default allocation size. Use with caution.
     nominatim_endpoint : string
-        the API endpoint to use for nominatim queries
+        base API endpoint to use for nominatim queries
     nominatim_key : string
         your API key, if you are using an endpoint that requires one
     osm_xml_node_attrs : list
@@ -183,7 +183,7 @@ def config(
     osm_xml_way_tags : list
         edge tags for for saving .osm XML files with save_graph_xml function
     overpass_endpoint : string
-        the API endpoint to use for overpass queries
+        base API endpoint to use for overpass queries
     overpass_settings : string
         Settings string for overpass queries. For example, to query historical
         OSM data as of a certain date:
