@@ -49,8 +49,8 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     lng2 : float or numpy.array of float
         second point's longitude coordinate
     earth_radius : float
-        radius of earth in units in which distance will be returned
-        (default is meters)
+        earth's radius in units in which distance will be returned (default is
+        meters)
 
     Returns
     -------
@@ -148,7 +148,7 @@ def nearest_nodes(G, X, Y, return_dist=False):
     Find the nearest node to a point or to each of several points.
 
     If `X` and `Y` are single coordinate values, this will return the nearest
-    node to that point. If `X` and `Y` are arrays of coordinate values, this
+    node to that point. If `X` and `Y` are lists of coordinate values, this
     will return the nearest node to each point.
 
     If the graph is projected, this uses a k-d tree for euclidean nearest
@@ -161,18 +161,18 @@ def nearest_nodes(G, X, Y, return_dist=False):
     ----------
     G : networkx.MultiDiGraph
         graph in which to find nearest nodes
-    X : float or numpy.array
-        points' x or longitude coordinates, in same CRS/units as graph and
+    X : float or list
+        points' x (longitude) coordinates, in same CRS/units as graph and
         containing no nulls
-    Y : float or numpy.array
-        points' y or latitude coordinates, in same CRS/units as graph and
+    Y : float or list
+        points' y (latitude) coordinates, in same CRS/units as graph and
         containing no nulls
     return_dist : bool
         optionally also return distance between points and nearest nodes
 
     Returns
     -------
-    nn or (nn, dist)
+    nn or (nn, dist) : int/list or tuple
         nearest node IDs or optionally a tuple where `dist` contains distances
         between the points and their nearest nodes
     """
@@ -223,7 +223,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     Find the nearest edge to a point or to each of several points.
 
     If `X` and `Y` are single coordinate values, this will return the nearest
-    edge to that point. If `X` and `Y` are arrays of coordinate values, this
+    edge to that point. If `X` and `Y` are lists of coordinate values, this
     will return the nearest edge to each point.
 
     If `interpolate` is None, search for the nearest edge to each point, one
@@ -244,11 +244,11 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     ----------
     G : networkx.MultiDiGraph
         graph in which to find nearest edges
-    X : float or numpy.array
-        points' x or longitude coordinates, in same CRS/units as graph and
+    X : float or list
+        points' x (longitude) coordinates, in same CRS/units as graph and
         containing no nulls
-    Y : float or numpy.array
-        points' y or latitude coordinates, in same CRS/units as graph and
+    Y : float or list
+        points' y (latitude) coordinates, in same CRS/units as graph and
         containing no nulls
     interpolate : float
         spacing distance between interpolated points, in same units as graph.
@@ -258,7 +258,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
     Returns
     -------
-    ne or (ne, dist)
+    ne or (ne, dist) : tuple or list
         nearest edges as (u, v, key) or optionally a tuple where `dist`
         contains distances between the points and their nearest edges
     """
