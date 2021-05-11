@@ -227,9 +227,17 @@ def test_routing():
 
     fig, ax = ox.plot_graph_route(G, route, save=True)
 
-    fig, ax = ox.plot_graph_route(G, route, save=True)
+    # test multiple origins-destinations
+    n = 5
+    nodes = np.array(G.nodes)
+    origs = np.random.choice(nodes, size=n, replace=True)
+    dests = np.random.choice(nodes, size=n, replace=True)
+    paths1 = ox.shortest_path(G, origs, dests, weight="length", cpus=1)
+    paths2 = ox.shortest_path(G, origs, dests, weight="length", cpus=2)
+    paths3 = ox.shortest_path(G, origs, dests, weight="length", cpus=None)
+    assert paths1 == paths2 == paths3
 
-    # test multiple routes
+    # test k shortest paths
     routes = ox.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
     fig, ax = ox.plot_graph_routes(G, list(routes))
 

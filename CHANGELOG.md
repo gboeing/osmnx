@@ -1,5 +1,11 @@
 # Change log
 
+## 1.1.1 (TBD)
+
+  - fix overpass status endpoint checks with explicit IP address resolution
+  - fix slot management on local overpass instances by optionally disabling rate limiting
+  - parallelize shortest_path calculation for multiple origins/destinations
+
 ## 1.1.0 (2021-05-01)
 
   - add graph-constrained spatial sampling function
