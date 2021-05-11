@@ -144,7 +144,11 @@ def add_edge_lengths(G, precision=3):
 
 def nearest_nodes(G, X, Y, return_dist=False):
     """
-    Find the nearest node(s) to some point(s).
+    Find the nearest node to a point or to each of several points.
+
+    If `X` and `Y` are single coordinate values, this will return the nearest
+    node to that point. If `X` and `Y` are arrays of coordinate values, this
+    will return the nearest node to each point.
 
     If the graph is projected, this uses a k-d tree for euclidean nearest
     neighbor search, which requires that scipy is installed as an optional
@@ -215,7 +219,11 @@ def nearest_nodes(G, X, Y, return_dist=False):
 
 def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     """
-    Find the nearest edge(s) to some point(s).
+    Find the nearest edge to a point or to each of several points.
+
+    If `X` and `Y` are single coordinate values, this will return the nearest
+    edge to that point. If `X` and `Y` are arrays of coordinate values, this
+    will return the nearest edge to each point.
 
     If `interpolate` is None, search for the nearest edge to each point, one
     at a time, using an r-tree and minimizing the euclidean distances from the
