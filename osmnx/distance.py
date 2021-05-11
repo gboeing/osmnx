@@ -450,9 +450,10 @@ def get_nearest_edges(G, X, Y, method=None, dist=None):
 
 def _single_shortest_path(G, orig, dest, weight):
     """
-    Calculate the shortest path from origin node to destination node.
+    Solve the shortest path from an origin node to a destination node.
 
-    This function is a convenience wrapper around networkx.shortest_path.
+    This function is a convenience wrapper around networkx.shortest_path, with
+    exception handling for unsolvable paths.
 
     Parameters
     ----------
@@ -479,16 +480,19 @@ def _single_shortest_path(G, orig, dest, weight):
 
 def shortest_path(G, orig, dest, weight="length", cpus=1):
     """
-    Calculate shortest path(s) from origin node(s) to destination node(s).
+    Solve shortest path from origin node(s) to destination node(s).
 
     If `orig` and `dest` are single node IDs, this will return a list of the
     nodes constituting the shortest path between them.  If `orig` and `dest`
     are lists of node IDs, this will return a list of lists of the nodes
     constituting the shortest path between each origin-destination pair. If a
-    path cannot be solved, this will return None for that path.
+    path cannot be solved, this will return None for that path. You can
+    parallelize solving multiple paths with the `cpus` parameter, but be
+    careful to not exceed your available RAM.
 
-    See also `k_shortest_paths` to get multiple shortest paths. For additional
-    functionality or different algorithms, use NetworkX directly.
+    See also `k_shortest_paths` to solve multiple shortest paths between a
+    single origin and destination. For additional functionality or different
+    solver algorithms, use NetworkX directly.
 
     Parameters
     ----------
@@ -499,14 +503,13 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
     dest : int or list
         destination node ID, or a list of destination node IDs
     weight : string
-        edge attribute to minimize when solving shortest path. default is edge
-        length in meters.
+        edge attribute to minimize when solving shortest path
     cpus : int
         how many CPU cores to use; if None, use all available
 
     Returns
     -------
-    path : list or list of lists
+    path : list
         list of node IDs constituting the shortest path, or, if orig and dest
         are lists, then a list of path lists
     """
@@ -524,10 +527,10 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
         utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")
 
         if cpus == 1:
-            # if single-threading, calculate each shortest path in a loop
+            # if single-threading, calculate each shortest path one at a time
             paths = [_single_shortest_path(G, o, d, weight) for o, d in zip(orig, dest)]
         else:
-            # if multi-threading, map arguments to function
+            # if multi-threading, calculate shortest paths in parallel
             args = ((G, o, d, weight) for o, d in zip(orig, dest))
             pool = mp.Pool(cpus)
             sma = pool.starmap_async(_single_shortest_path, args)
@@ -540,7 +543,7 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
 
 def k_shortest_paths(G, orig, dest, k, weight="length"):
     """
-    Get `k` shortest paths from origin node to destination node.
+    Solve `k` shortest paths from an origin node to a destination node.
 
     See also `shortest_path` to get just the one shortest path.
 
