@@ -1,6 +1,7 @@
 """Calculate distances and shortest paths and find nearest node/edge(s) to point(s)."""
 
 import itertools
+import multiprocessing as mp
 import warnings
 
 import networkx as nx
@@ -447,14 +448,11 @@ def get_nearest_edges(G, X, Y, method=None, dist=None):
     return nearest_edges(G, X, Y, dist)
 
 
-def shortest_path(G, orig, dest, weight="length"):
+def _single_shortest_path(G, orig, dest, weight):
     """
-    Get shortest path from origin node to destination node.
+    Calculate the shortest path from origin node to destination node.
 
-    See also `k_shortest_paths` to get multiple shortest paths.
-
-    This function is a convenience wrapper around networkx.shortest_path. For
-    more functionality or different algorithms, use networkx directly.
+    This function is a convenience wrapper around networkx.shortest_path.
 
     Parameters
     ----------
@@ -465,16 +463,79 @@ def shortest_path(G, orig, dest, weight="length"):
     dest : int
         destination node ID
     weight : string
-        edge attribute to minimize when solving shortest path. default is edge
-        length in meters.
+        edge attribute to minimize when solving shortest path
 
     Returns
     -------
     path : list
-        list of node IDs consituting the shortest path
+        list of node IDs constituting the shortest path
     """
-    path = nx.shortest_path(G, orig, dest, weight=weight)
-    return path
+    try:
+        return nx.shortest_path(G, orig, dest, weight=weight)
+    except nx.exception.NetworkXNoPath:  # pragma: no cover
+        utils.log(f"Cannot solve path from {orig} to {dest}")
+        return None
+
+
+def shortest_path(G, orig, dest, weight="length", cpus=1):
+    """
+    Calculate shortest path(s) from origin node(s) to destination node(s).
+
+    If `orig` and `dest` are single node IDs, this will return a list of the
+    nodes constituting the shortest path between them.  If `orig` and `dest`
+    are lists of node IDs, this will return a list of lists of the nodes
+    constituting the shortest path between each origin-destination pair. If a
+    path cannot be solved, this will return None for that path.
+
+    See also `k_shortest_paths` to get multiple shortest paths. For additional
+    functionality or different algorithms, use NetworkX directly.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    orig : int or list
+        origin node ID, or a list of origin node IDs
+    dest : int or list
+        destination node ID, or a list of destination node IDs
+    weight : string
+        edge attribute to minimize when solving shortest path. default is edge
+        length in meters.
+    cpus : int
+        how many CPU cores to use; if None, use all available
+
+    Returns
+    -------
+    path : list or list of lists
+        list of node IDs constituting the shortest path, or, if orig and dest
+        are lists, then a list of path lists
+    """
+    if not (hasattr(orig, "__iter__") or hasattr(dest, "__iter__")):
+        # if neither orig nor dest is iterable, just return the shortest path
+        return _single_shortest_path(G, orig, dest, weight)
+
+    else:
+        # if orig/dest are iterable, ensure they have same lengths
+        if len(orig) != len(dest):  # pragma: no cover
+            raise ValueError("orig and dest must contain same number of elements")
+
+        if cpus is None:
+            cpus = mp.cpu_count()
+        utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")
+
+        if cpus == 1:
+            # if single-threading, calculate each shortest path in a loop
+            paths = [_single_shortest_path(G, o, d, weight) for o, d in zip(orig, dest)]
+        else:
+            # if multi-threading, map arguments to function
+            args = ((G, o, d, weight) for o, d in zip(orig, dest))
+            pool = mp.Pool(cpus)
+            sma = pool.starmap_async(_single_shortest_path, args)
+            paths = sma.get()
+            pool.close()
+            pool.join()
+
+        return paths
 
 
 def k_shortest_paths(G, orig, dest, k, weight="length"):
