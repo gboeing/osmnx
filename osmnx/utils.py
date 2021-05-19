@@ -104,6 +104,7 @@ def config(
     osm_xml_way_attrs=settings.osm_xml_way_attrs,
     osm_xml_way_tags=settings.osm_xml_way_tags,
     overpass_endpoint=settings.overpass_endpoint,
+    overpass_rate_limit=settings.overpass_rate_limit,
     overpass_settings=settings.overpass_settings,
     timeout=settings.timeout,
     use_cache=settings.use_cache,
@@ -184,6 +185,10 @@ def config(
         edge tags for for saving .osm XML files with save_graph_xml function
     overpass_endpoint : string
         base API endpoint to use for overpass queries
+    overpass_rate_limit : bool
+        if True, check the overpass server status endpoint for how long to
+        pause before making request. Necessary if server uses slot management,
+        but can be set to False if you are running your own overpass instance.
     overpass_settings : string
         Settings string for overpass queries. For example, to query historical
         OSM data as of a certain date:
@@ -232,6 +237,7 @@ def config(
     settings.osm_xml_way_attrs = osm_xml_way_attrs
     settings.osm_xml_way_tags = osm_xml_way_tags
     settings.overpass_endpoint = overpass_endpoint
+    settings.overpass_rate_limit = overpass_rate_limit
     settings.overpass_settings = overpass_settings
     settings.timeout = timeout
     settings.use_cache = use_cache
