@@ -1,6 +1,6 @@
 # Change log
 
-## 1.1.1 (TBD)
+## 1.1.1 (2021-05-19)
 
   - fix overpass status endpoint checks with explicit IP address resolution
   - fix slot management on local overpass instances by optionally disabling rate limiting
