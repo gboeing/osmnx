@@ -87,8 +87,8 @@ def add_edge_bearings(G, precision=1):
     Vectorized function to calculate (initial) bearing from origin node to
     destination node for each edge in a directed, unprojected graph then add
     these bearings as new edge attributes. Bearing represents angle in degrees
-    (clockwise) between north and the geodesic line from from the origin node
-    to the destination node. Ignores self-loop edges as their bearings are
+    (clockwise) between north and the geodesic line from the origin node to
+    the destination node. Ignores self-loop edges as their bearings are
     undefined.
 
     Parameters
