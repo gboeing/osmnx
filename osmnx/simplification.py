@@ -266,7 +266,8 @@ def simplify_graph(G, strict=True, remove_rings=True):
                 # if there's only 1 unique value in this attribute list,
                 # consolidate it to the single value (the zero-th)
                 edge_attributes[key] = edge_attributes[key][0]
-            elif key != "length":
+            # also keep all travel_time values, to be able to sum them later
+            elif key not in ["length", "travel_time"]:
                 # otherwise, if there are multiple values, keep one of each value
                 edge_attributes[key] = list(set(edge_attributes[key]))
 
