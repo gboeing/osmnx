@@ -223,7 +223,7 @@ def _get_first_polygon(results, query):
     """
     polygon_types = {"Polygon", "MultiPolygon"}
     for result in results:
-        if result["geojson"]["type"] in polygon_types:
+        if "geojson" in result and result["geojson"]["type"] in polygon_types:
             return result
 
     # if we never found a polygon, throw an error
