@@ -272,7 +272,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
             elif len(set(edge_attributes[key])) == 1:
                 edge_attributes[key] = edge_attributes[key][0]
             # otherwise, if there are multiple values, keep one of each value
-            else
+            else:
                 edge_attributes[key] = list(set(edge_attributes[key]))
 
         # construct the geometry and sum the lengths of the segments
