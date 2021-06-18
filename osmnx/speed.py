@@ -9,7 +9,7 @@ import pandas as pd
 from . import utils_graph
 
 
-def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=1):
+def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=1, agg=np.mean):
     """
     Add edge speeds (km per hour) to graph as new `speed_kph` edge attributes.
 
@@ -18,9 +18,10 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=1):
     `maxspeed` value on any edge, function assigns the mean of all `maxspeed`
     values in graph.
 
-    This mean-imputation can obviously be imprecise, and the caller can
-    override it by passing in `hwy_speeds` and/or `fallback` arguments that
-    correspond to local speed limit standards.
+    This mean-imputation can obviously be imprecise, and the user can override
+    it by passing in `hwy_speeds` and/or `fallback` arguments that correspond
+    to local speed limit standards. The user can also specify a different
+    aggregation function to impute missing values from the observed values.
 
     If edge `maxspeed` attribute has "mph" in it, value will automatically be
     converted from miles per hour to km per hour. Any other speed units should
@@ -45,6 +46,8 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=1):
         values on any edge
     precision : int
         decimal precision to round speed_kph
+    agg : function
+        aggregation function to impute missing values from observed values
 
     Returns
     -------
@@ -63,7 +66,7 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=1):
     if "maxspeed" in edges.columns:
         # collapse any maxspeed lists (can happen during graph simplification)
         # into a single value
-        edges["maxspeed"] = edges["maxspeed"].map(_collapse_multiple_maxspeed_values)
+        edges["maxspeed"] = edges["maxspeed"].apply(_collapse_multiple_maxspeed_values, agg=agg)
 
         # create speed_kph by cleaning maxspeed strings and converting mph to
         # kph if necessary
@@ -84,12 +87,12 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=1):
     # highway type
     for hwy, group in edges.groupby("highway"):
         if hwy not in hwy_speed_avg:
-            hwy_speed_avg.loc[hwy] = group["speed_kph"].mean()
+            hwy_speed_avg.loc[hwy] = agg(group["speed_kph"])
 
     # if any highway types had no preexisting speed values, impute their speed
     # with fallback value provided by caller. if fallback=np.nan, impute speed
     # as the mean speed of all highway types that did have preexisting values
-    hwy_speed_avg = hwy_speed_avg.fillna(fallback).fillna(hwy_speed_avg.mean())
+    hwy_speed_avg = hwy_speed_avg.fillna(fallback).fillna(agg(hwy_speed_avg))
 
     # for each edge missing speed data, assign it the imputed value for its
     # highway type
@@ -190,20 +193,22 @@ def _clean_maxspeed(value, convert_mph=True):
         return None
 
 
-def _collapse_multiple_maxspeed_values(value):
+def _collapse_multiple_maxspeed_values(value, agg):
     """
-    Collapse a list of maxspeed values into its mean value.
+    Collapse a list of maxspeed values to a single value.
 
     Parameters
     ----------
     value : list or string
         an OSM way maxspeed value, or a list of them
+    agg : function
+        the aggregation function to reduce the list to a single value
 
     Returns
     -------
-    mean_value : int
-        an integer representation of the mean value in the list, converted
-        to kph if original value was in mph.
+    agg_value : int
+        an integer representation of the aggregated value in the list,
+        converted to kph if original value was in mph.
     """
     # if this isn't a list, just return it right back to the caller
     if not isinstance(value, list):
@@ -212,9 +217,8 @@ def _collapse_multiple_maxspeed_values(value):
     else:
         try:
             # clean each value in list and convert to kph if it is mph then
-            # return mean value
+            # return a single aggregated value
             values = [_clean_maxspeed(x) for x in value]
-            mean_value = int(pd.Series(values).dropna().mean())
-            return mean_value
+            return int(agg(pd.Series(values).dropna()))
         except ValueError:
             return None
