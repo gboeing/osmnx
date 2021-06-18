@@ -225,7 +225,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
         raise Exception("This graph has already been simplified, cannot simplify it again.")
 
     utils.log("Begin topologically simplifying the graph...")
-    
+
     # define edge segment attributes to sum upon edge simplification
     attrs_to_sum = {"length", "travel_time"}
 
