@@ -226,6 +226,9 @@ def simplify_graph(G, strict=True, remove_rings=True):
 
     utils.log("Begin topologically simplifying the graph...")
 
+    # define edge segment attributes to sum upon edge simplification
+    attrs_to_sum = {"length", "travel_time"}
+
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
     initial_node_count = len(G)
@@ -238,48 +241,51 @@ def simplify_graph(G, strict=True, remove_rings=True):
 
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
-        edge_attributes = dict()
+        path_attributes = dict()
         for u, v in zip(path[:-1], path[1:]):
 
             # there should rarely be multiple edges between interstitial nodes
             # usually happens if OSM has duplicate ways digitized for just one
             # street... we will keep only one of the edges (see below)
-            if G.number_of_edges(u, v) != 1:
-                utils.log(f"Found multiple edges between {u} and {v} when simplifying")
+            edge_count = G.number_of_edges(u, v)
+            if edge_count != 1:
+                utils.log(f"Found {edge_count} edges between {u} and {v} when simplifying")
 
             # get edge between these nodes: if multiple edges exist between
             # them (see above), we retain only one in the simplified graph
-            edge = G.edges[u, v, 0]
-            for key in edge:
-                if key in edge_attributes:
+            edge_data = G.edges[u, v, 0]
+            for attr in edge_data:
+                if attr in path_attributes:
                     # if this key already exists in the dict, append it to the
                     # value list
-                    edge_attributes[key].append(edge[key])
+                    path_attributes[attr].append(edge_data[attr])
                 else:
                     # if this key doesn't already exist, set the value to a list
                     # containing the one value
-                    edge_attributes[key] = [edge[key]]
+                    path_attributes[attr] = [edge_data[attr]]
 
-        for key in edge_attributes:
-            # don't touch the length attribute, we'll sum it at the end
-            if len(set(edge_attributes[key])) == 1 and key != "length":
+        # consolidate the path's edge segments' attribute values
+        for attr in path_attributes:
+            if attr in attrs_to_sum:
+                # if this attribute must be summed, sum it now
+                path_attributes[attr] = sum(path_attributes[attr])
+            elif len(set(path_attributes[attr])) == 1:
                 # if there's only 1 unique value in this attribute list,
-                # consolidate it to the single value (the zero-th)
-                edge_attributes[key] = edge_attributes[key][0]
-            elif key != "length":
-                # otherwise, if there are multiple values, keep one of each value
-                edge_attributes[key] = list(set(edge_attributes[key]))
+                # consolidate it to the single value (the zero-th):
+                path_attributes[attr] = path_attributes[attr][0]
+            else:
+                # otherwise, if there are multiple values, keep one of each
+                path_attributes[attr] = list(set(path_attributes[attr]))
 
-        # construct the geometry and sum the lengths of the segments
-        edge_attributes["geometry"] = LineString(
+        # construct the new consolidated edge's geometry for this path
+        path_attributes["geometry"] = LineString(
             [Point((G.nodes[node]["x"], G.nodes[node]["y"])) for node in path]
         )
-        edge_attributes["length"] = sum(edge_attributes["length"])
 
-        # add the nodes and edges to their lists for processing at the end
+        # add the nodes and edge to their lists for processing at the end
         all_nodes_to_remove.extend(path[1:-1])
         all_edges_to_add.append(
-            {"origin": path[0], "destination": path[-1], "attr_dict": edge_attributes}
+            {"origin": path[0], "destination": path[-1], "attr_dict": path_attributes}
         )
 
     # for each edge to add in the list we assembled, create a new edge between
