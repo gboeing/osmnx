@@ -1,5 +1,11 @@
 # Change log
 
+## TBD
+
+  - fix geocoding when no geojson is returned
+  - fix graph simplification to properly handle travel_time edge attributes
+  - allow user-defined aggregation function when imputing missing edge speeds
+
 ## 1.1.1 (2021-05-19)
 
   - fix overpass status endpoint checks with explicit IP address resolution
