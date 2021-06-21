@@ -13,15 +13,16 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=1, agg=np.mean)
     """
     Add edge speeds (km per hour) to graph as new `speed_kph` edge attributes.
 
-    Imputes free-flow travel speeds for all edges based on mean `maxspeed`
-    value of edges, per highway type. For highway types in graph that have no
-    `maxspeed` value on any edge, function assigns the mean of all `maxspeed`
-    values in graph.
+    By default, this imputes free-flow travel speeds for all edges via the
+    mean `maxspeed` value of the edges of each highway type. For highway types
+    in the graph that have no `maxspeed` value on any edge, it assigns the
+    mean of all `maxspeed` values in graph.
 
-    This mean-imputation can obviously be imprecise, and the user can override
-    it by passing in `hwy_speeds` and/or `fallback` arguments that correspond
-    to local speed limit standards. The user can also specify a different
-    aggregation function to impute missing values from the observed values.
+    This default mean-imputation can obviously be imprecise, and the user can
+    override it by passing in `hwy_speeds` and/or `fallback` arguments that
+    correspond to local speed limit standards. The user can also specify a
+    different aggregation function (such as the median) to impute missing
+    values from the observed values.
 
     If edge `maxspeed` attribute has "mph" in it, value will automatically be
     converted from miles per hour to km per hour. Any other speed units should
@@ -47,7 +48,9 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=1, agg=np.mean)
     precision : int
         decimal precision to round speed_kph
     agg : function
-        aggregation function to impute missing values from observed values
+        aggregation function to impute missing values from observed values.
+        the default is numpy.mean, but you might also consider for example
+        numpy.median, numpy.nanmedian, or your own custom function
 
     Returns
     -------
