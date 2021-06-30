@@ -525,8 +525,8 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
         # if neither orig nor dest is iterable, just return the shortest path
         return _single_shortest_path(G, orig, dest, weight)
 
-    else:
-        # if orig/dest are iterable, ensure they have same lengths
+    elif hasattr(orig, "__iter__") and hasattr(dest, "__iter__"):
+        # if both orig and dest are iterables ensure they have same lengths
         if len(orig) != len(dest):  # pragma: no cover
             raise ValueError("orig and dest must contain same number of elements")
 
@@ -547,6 +547,10 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
             pool.join()
 
         return paths
+
+    else:
+        # if only one of orig or dest is iterable and the other is not
+        raise ValueError("orig and dest must either both be iterable or neither must be iterable")
 
 
 def k_shortest_paths(G, orig, dest, k, weight="length"):
