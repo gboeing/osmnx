@@ -1,6 +1,7 @@
 """Global settings that can be configured by user with utils.config()."""
 
 import logging as lg
+import requests
 
 # default locations to save data, logs, images, and cache
 data_folder = "./data"
@@ -109,3 +110,7 @@ overpass_rate_limit = True
 # for Google Maps Elevation API but also accepts "airmap"
 # this setting is deprecated and will be removed in a future release
 elevation_provider = "google"
+
+# requests session that can be overridden based on user's needs
+# to include providing certificates for client/server authentication
+session = requests.Session()

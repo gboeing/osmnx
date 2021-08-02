@@ -110,6 +110,7 @@ def config(
     use_cache=settings.use_cache,
     useful_tags_node=settings.useful_tags_node,
     useful_tags_way=settings.useful_tags_way,
+    session=settings.session
 ):
     """
     Configure OSMnx by setting the default global settings' values.
@@ -204,6 +205,8 @@ def config(
         OSM "node" tags to add as graph node attributes, when present
     useful_tags_way : list
         OSM "way" tags to add as graph edge attributes, when present
+    session : requests.Session
+        session to be used by downloader for making HTTP requests to external APIs
 
     Returns
     -------
@@ -243,6 +246,7 @@ def config(
     settings.use_cache = use_cache
     settings.useful_tags_node = useful_tags_node
     settings.useful_tags_way = useful_tags_way
+    settings.session = session
 
     log(f"Configured OSMnx {_version.__version__}")
     log(f"HTTP response caching is {'on' if settings.use_cache else 'off'}")
