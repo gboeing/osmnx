@@ -105,8 +105,8 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
         if is_projected(gdf.crs):  # pragma: no cover
             raise ValueError("Geometry must be unprojected to calculate UTM zone")
 
-        # calculate longitude of centroid of union of all geometries in gdf
-        avg_lng = gdf["geometry"].unary_union.centroid.x
+        # calculate approximate longitude of centroid of union of all geometries in gdf
+        avg_lng = gdf["geometry"].representative_point().x.mean()
 
         # calculate UTM zone from avg longitude to define CRS to project to
         utm_zone = int(np.floor((avg_lng + 180) / 6) + 1)
