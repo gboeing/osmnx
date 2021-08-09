@@ -106,7 +106,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
             raise ValueError("Geometry must be unprojected to calculate UTM zone")
 
         # calculate approximate longitude of centroid of union of all geometries in gdf
-        avg_lng = gdf["geometry"].to_crs("epsg:4326").representative_point().x.mean()
+        avg_lng = gdf["geometry"].representative_point().x.mean()
 
         # calculate UTM zone from avg longitude to define CRS to project to
         utm_zone = int(np.floor((avg_lng + 180) / 6) + 1)
