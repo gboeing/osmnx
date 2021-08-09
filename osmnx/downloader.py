@@ -315,17 +315,19 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
         # if overpass rate limiting is False, then there is zero pause
         return 0
 
+    sc = None
+
     try:
         url = base_endpoint.rstrip("/") + "/status"
         response = requests.get(url, headers=_get_http_headers())
+        sc = response.status_code
         status = response.text.split("\n")[3]
         status_first_token = status.split(" ")[0]
 
     except Exception:  # pragma: no cover
         # if we cannot reach the status endpoint or parse its output, log an
         # error and return default duration
-        sc = response.status_code
-        utils.log(f"Unable to query {url} got status {sc}", level=lg.ERROR)
+        utils.log(f"Unable to query {url}, got status {sc}", level=lg.ERROR)
         return default_duration
 
     try:
