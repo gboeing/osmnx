@@ -318,8 +318,8 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
     sc = None
 
     try:
-        url = base_endpoint.rstrip("/") + "/status"
-        response = settings.session.get(url, headers=_get_http_headers())
+        url = base_endpoint.rstrip("/") + "/status"        
+        response = settings.session.get(url, headers=_get_http_headers())   
         sc = response.status_code
         status = response.text.split("\n")[3]
         status_first_token = status.split(" ")[0]
