@@ -110,7 +110,7 @@ def config(
     use_cache=settings.use_cache,
     useful_tags_node=settings.useful_tags_node,
     useful_tags_way=settings.useful_tags_way,
-    session=settings.session
+    session=settings.session,
 ):
     """
     Configure OSMnx by setting the default global settings' values.

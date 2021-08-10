@@ -649,7 +649,9 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
         # transmit the HTTP GET request
         utils.log(f"Get {prepared_url} with timeout={settings.timeout}")
         headers = _get_http_headers()
-        response = settings.session.get(url, params=params, timeout=settings.timeout, headers=headers)
+        response = settings.session.get(
+            url, params=params, timeout=settings.timeout, headers=headers
+        )
         sc = response.status_code
 
         # log the response size and domain
