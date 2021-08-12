@@ -206,7 +206,9 @@ def config(
     useful_tags_way : list
         OSM "way" tags to add as graph edge attributes, when present
     session : requests.Session
-        session to be used by downloader for making HTTP requests to external APIs
+        session used by downloader for making HTTP requests to external APIs
+        override to provide proxies, client/server SSL certificates, or
+        basic authentication using username and password
 
     Returns
     -------
