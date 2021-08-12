@@ -319,7 +319,7 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
 
     try:
         url = base_endpoint.rstrip("/") + "/status"
-        response = requests.get(url, headers=_get_http_headers())
+        response = requests.get(url, headers=_get_http_headers(), **settings.requests_config)
         sc = response.status_code
         status = response.text.split("\n")[3]
         status_first_token = status.split(" ")[0]
@@ -649,7 +649,13 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
         # transmit the HTTP GET request
         utils.log(f"Get {prepared_url} with timeout={settings.timeout}")
         headers = _get_http_headers()
-        response = requests.get(url, params=params, timeout=settings.timeout, headers=headers)
+        response = requests.get(
+            url,
+            params=params,
+            timeout=settings.timeout,
+            headers=headers,
+            **settings.requests_config,
+        )
         sc = response.status_code
 
         # log the response size and domain
@@ -722,7 +728,9 @@ def overpass_request(data, pause=None, error_pause=60):
         # transmit the HTTP POST request
         utils.log(f"Post {prepared_url} with timeout={settings.timeout}")
         headers = _get_http_headers()
-        response = requests.post(url, data=data, timeout=settings.timeout, headers=headers)
+        response = requests.post(
+            url, data=data, timeout=settings.timeout, headers=headers, **settings.requests_config
+        )
         sc = response.status_code
 
         # log the response size and domain
