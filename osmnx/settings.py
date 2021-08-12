@@ -2,8 +2,6 @@
 
 import logging as lg
 
-import requests
-
 # default locations to save data, logs, images, and cache
 data_folder = "./data"
 logs_folder = "./logs"
@@ -112,6 +110,5 @@ overpass_rate_limit = True
 # this setting is deprecated and will be removed in a future release
 elevation_provider = "google"
 
-# requests session that can be overridden based on user's needs
-# to include providing certificates for client/server authentication
-session = requests.Session()
+# dictionary of configuration to initialize requests.Session for repeated calls to external APIs
+session_config = {"auth": None, "cert": None, "verify": None}

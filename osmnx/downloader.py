@@ -245,7 +245,7 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     return headers
 
 
-def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
+def _get_pause(session, base_endpoint, recursive_delay=5, default_duration=60):
     """
     Get a pause duration from the Overpass API status endpoint.
 
@@ -255,6 +255,9 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
 
     Parameters
     ----------
+    session : requests.Session
+        session used for making HTTP requests to external APIs that can be
+        modified through settings.session_config
     base_endpoint : string
         base Overpass API endpoint (without "/status" at the end)
     recursive_delay : int
@@ -275,7 +278,7 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
 
     try:
         url = base_endpoint.rstrip("/") + "/status"
-        response = settings.session.get(url, headers=_get_http_headers())
+        response = session.get(url, headers=_get_http_headers())
         sc = response.status_code
         status = response.text.split("\n")[3]
         status_first_token = status.split(" ")[0]
@@ -304,7 +307,7 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
         # check back in recursive_delay seconds
         elif status_first_token == "Currently":
             time.sleep(recursive_delay)
-            pause = _get_pause(base_endpoint)
+            pause = _get_pause(session, base_endpoint)
 
         # any other status is unrecognized: log error, return default duration
         else:
@@ -451,6 +454,8 @@ def _osm_network_download(polygon, network_type, custom_filter):
     else:
         osm_filter = _get_osm_filter(network_type)
 
+    session = _create_session()
+
     response_jsons = []
 
     # create overpass settings string
@@ -463,7 +468,7 @@ def _osm_network_download(polygon, network_type, custom_filter):
     # time. The '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
         query_str = f"{overpass_settings};(way{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
-        response_json = overpass_request(data={"data": query_str})
+        response_json = overpass_request(session, data={"data": query_str})
         response_jsons.append(response_json)
     utils.log(
         f"Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)"
@@ -491,6 +496,8 @@ def _osm_geometries_download(polygon, tags):
     response_jsons : list
         list of JSON responses from the Overpass server
     """
+    session = _create_session()
+
     response_jsons = []
 
     # subdivide query polygon to get list of sub-divided polygon coord strings
@@ -499,7 +506,7 @@ def _osm_geometries_download(polygon, tags):
     # pass exterior coordinates of each polygon in list to API, one at a time
     for polygon_coord_str in polygon_coord_strs:
         query_str = _create_overpass_query(polygon_coord_str, tags)
-        response_json = overpass_request(data={"data": query_str})
+        response_json = overpass_request(session, data={"data": query_str})
         response_jsons.append(response_json)
 
     utils.log(
@@ -598,6 +605,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
         return cached_response_json
 
     else:
+        session = _create_session()
         # if this URL is not already in the cache, pause, then request it
         utils.log(f"Pausing {pause} seconds before making HTTP GET request")
         time.sleep(pause)
@@ -605,9 +613,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
         # transmit the HTTP GET request
         utils.log(f"Get {prepared_url} with timeout={settings.timeout}")
         headers = _get_http_headers()
-        response = settings.session.get(
-            url, params=params, timeout=settings.timeout, headers=headers
-        )
+        response = session.get(url, params=params, timeout=settings.timeout, headers=headers)
         sc = response.status_code
 
         # log the response size and domain
@@ -636,12 +642,15 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
         return response_json
 
 
-def overpass_request(data, pause=None, error_pause=60):
+def overpass_request(session, data, pause=None, error_pause=60):
     """
     Send a HTTP POST request to the Overpass API and return JSON response.
 
     Parameters
     ----------
+    session : requests.Session
+        session used for making HTTP requests to external APIs that can be
+        modified through settings.session_config
     data : OrderedDict
         key-value pairs of parameters
     pause : int
@@ -670,14 +679,14 @@ def overpass_request(data, pause=None, error_pause=60):
     else:
         # if this URL is not already in the cache, pause, then request it
         if pause is None:
-            this_pause = _get_pause(base_endpoint)
-        utils.log(f"Pausing {this_pause} seconds before making HTTP POST request")
-        time.sleep(this_pause)
+            this_pause = _get_pause(session, base_endpoint)
+            utils.log(f"Pausing {this_pause} seconds before making HTTP POST request")
+            time.sleep(this_pause)
 
         # transmit the HTTP POST request
         utils.log(f"Post {prepared_url} with timeout={settings.timeout}")
         headers = _get_http_headers()
-        response = settings.session.post(url, data=data, timeout=settings.timeout, headers=headers)
+        response = session.post(url, data=data, timeout=settings.timeout, headers=headers)
         sc = response.status_code
 
         # log the response size and domain
@@ -695,7 +704,7 @@ def overpass_request(data, pause=None, error_pause=60):
                 # 429 is 'too many requests' and 504 is 'gateway timeout' from
                 # server overload: handle these by pausing then recursively
                 # re-trying until we get a valid response from the server
-                this_pause = error_pause + _get_pause(base_endpoint)
+                this_pause = error_pause + _get_pause(session, base_endpoint)
                 utils.log(f"{domain} returned {sc}: retry in {this_pause} secs", level=lg.WARNING)
                 time.sleep(this_pause)
                 response_json = overpass_request(data, pause, error_pause)
@@ -707,3 +716,23 @@ def overpass_request(data, pause=None, error_pause=60):
 
         _save_to_cache(prepared_url, response_json, sc)
         return response_json
+
+
+def _create_session():
+    """
+    Create a requests Session object from settings.session_config dictionary of parameters.
+
+    Returns
+    -------
+    session : requests.Session
+    """
+    session = requests.Session()
+
+    if settings.session_config["auth"] is not None:
+        session.auth = settings.session_config["auth"]
+    if settings.session_config["cert"] is not None:
+        session.cert = settings.session_config["cert"]
+    if settings.session_config["verify"] is not None:
+        session.verify = settings.session_config["verify"]
+
+    return session

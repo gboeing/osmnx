@@ -110,7 +110,7 @@ def config(
     use_cache=settings.use_cache,
     useful_tags_node=settings.useful_tags_node,
     useful_tags_way=settings.useful_tags_way,
-    session=settings.session,
+    session_config=settings.session_config,
 ):
     """
     Configure OSMnx by setting the default global settings' values.
@@ -205,10 +205,13 @@ def config(
         OSM "node" tags to add as graph node attributes, when present
     useful_tags_way : list
         OSM "way" tags to add as graph edge attributes, when present
-    session : requests.Session
-        session used by downloader for making HTTP requests to external APIs
-        override to provide proxies, client/server SSL certificates, or
-        basic authentication using username and password
+    session_config : dict
+        dictionary that supports overriding configuration for requests Session
+        to be used to during external API requests. currently supports auth, cert,
+        and verify as keys. auth is a tuple of (username, password). cert is the
+        path to a single file (containing the private key and certificate) or a tuple
+        of both files' paths. verify can be the path to a CA_BUNDLE file, or directory
+        of trusted CAs.
 
     Returns
     -------
@@ -248,7 +251,7 @@ def config(
     settings.use_cache = use_cache
     settings.useful_tags_node = useful_tags_node
     settings.useful_tags_way = useful_tags_way
-    settings.session = session
+    settings.session_config = session_config
 
     log(f"Configured OSMnx {_version.__version__}")
     log(f"HTTP response caching is {'on' if settings.use_cache else 'off'}")
