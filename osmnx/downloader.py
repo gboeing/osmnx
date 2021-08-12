@@ -728,11 +728,11 @@ def _create_session():
     """
     session = requests.Session()
 
-    if settings.session_config["auth"] is not None:
+    if "auth" in settings.session_config and settings.session_config["auth"] is not None:
         session.auth = settings.session_config["auth"]
-    if settings.session_config["cert"] is not None:
+    if "cert" in settings.session_config and settings.session_config["cert"] is not None:
         session.cert = settings.session_config["cert"]
-    if settings.session_config["verify"] is not None:
+    if "verify" in settings.session_config and settings.session_config["verify"] is not None:
         session.verify = settings.session_config["verify"]
 
     return session
