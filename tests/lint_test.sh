@@ -20,7 +20,7 @@ flake8 .
 pydocstyle .
 
 # build the docs
-# make -C ./docs html
+make -C ./docs html
 
 # run the tests
 coverage run --source ./osmnx --module pytest --verbose
