@@ -110,7 +110,7 @@ def config(
     use_cache=settings.use_cache,
     useful_tags_node=settings.useful_tags_node,
     useful_tags_way=settings.useful_tags_way,
-    requests_config=settings.requests_config,
+    requests_kwargs=settings.requests_kwargs,
 ):
     """
     Configure OSMnx by setting the default global settings' values.
@@ -205,7 +205,7 @@ def config(
         OSM "node" tags to add as graph node attributes, when present
     useful_tags_way : list
         OSM "way" tags to add as graph edge attributes, when present
-    requests_config : dict
+    requests_kwargs : dict
         dictionary that supports overriding keyword arguments to be used
         by the requests package. more information on options such as auth,
         cert, verify, and proxies can be found in the documentation
@@ -249,7 +249,7 @@ def config(
     settings.use_cache = use_cache
     settings.useful_tags_node = useful_tags_node
     settings.useful_tags_way = useful_tags_way
-    settings.requests_config = requests_config
+    settings.requests_kwargs = requests_kwargs
 
     log(f"Configured OSMnx {_version.__version__}")
     log(f"HTTP response caching is {'on' if settings.use_cache else 'off'}")

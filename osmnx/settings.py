@@ -111,4 +111,4 @@ overpass_rate_limit = True
 elevation_provider = "google"
 
 # dictionary of configuration to be used by requests for connection to external APIs
-requests_config = {}
+requests_kwargs = {}
