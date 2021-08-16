@@ -106,11 +106,11 @@ def config(
     overpass_endpoint=settings.overpass_endpoint,
     overpass_rate_limit=settings.overpass_rate_limit,
     overpass_settings=settings.overpass_settings,
+    requests_kwargs=settings.requests_kwargs,
     timeout=settings.timeout,
     use_cache=settings.use_cache,
     useful_tags_node=settings.useful_tags_node,
     useful_tags_way=settings.useful_tags_way,
-    requests_kwargs=settings.requests_kwargs,
 ):
     """
     Configure OSMnx by setting the default global settings' values.
@@ -193,8 +193,14 @@ def config(
     overpass_settings : string
         Settings string for overpass queries. For example, to query historical
         OSM data as of a certain date:
-        ``'[out:json][timeout:90][date:"2019-10-28T19:20:00Z"]'``.
-        Use with caution.
+        ``'[out:json][timeout:90][date:"2019-10-28T19:20:00Z"]'``. Use with
+        caution.
+    requests_kwargs : dict
+        optional keyword args to pass to the requests package when connecting
+        to APIs, for example to configure authentication or provide a path to
+        a local certificate file. More info on options such as auth, cert,
+        verify, and proxies can be found in the requests package advanced docs
+        at https://docs.python-requests.org/
     timeout : int
         the timeout interval for the HTTP request and for API to use while
         running the query
@@ -205,11 +211,6 @@ def config(
         OSM "node" tags to add as graph node attributes, when present
     useful_tags_way : list
         OSM "way" tags to add as graph edge attributes, when present
-    requests_kwargs : dict
-        dictionary that supports overriding keyword arguments to be used
-        by the requests package. more information on options such as auth,
-        cert, verify, and proxies can be found in the documentation
-        https://docs.python-requests.org/en/master/user/advanced/
 
     Returns
     -------

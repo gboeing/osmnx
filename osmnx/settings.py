@@ -92,6 +92,10 @@ default_user_agent = "OSMnx Python package (https://github.com/gboeing/osmnx)"
 default_referer = "OSMnx Python package (https://github.com/gboeing/osmnx)"
 default_accept_language = "en"
 
+# dict of optional keyword arguments to pass to the requests package when
+# connecting to APIs
+requests_kwargs = {}
+
 # base API endpoint to use for nominatim queries
 # and your nominatim API key, if you are using a host that requires one
 nominatim_endpoint = "https://nominatim.openstreetmap.org/"
@@ -109,6 +113,3 @@ overpass_rate_limit = True
 # for Google Maps Elevation API but also accepts "airmap"
 # this setting is deprecated and will be removed in a future release
 elevation_provider = "google"
-
-# dictionary of configuration to be used by requests for connection to external APIs
-requests_kwargs = {}
