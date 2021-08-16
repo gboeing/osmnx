@@ -5,7 +5,8 @@
   - fix geocoding when no geojson is returned
   - fix graph simplification to properly handle travel_time edge attributes
   - allow user-defined aggregation function when imputing missing edge speeds
-  - use a computationally cheaper method for obtaining UTM zone number for graph projection
+  - allow user to configure requests package keyword arguments when connecting to APIs
+  - faster graph projection by calculating UTM zone number with a computationally cheaper method
 
 ## 1.1.1 (2021-05-19)
 
