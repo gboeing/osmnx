@@ -109,3 +109,6 @@ overpass_rate_limit = True
 # for Google Maps Elevation API but also accepts "airmap"
 # this setting is deprecated and will be removed in a future release
 elevation_provider = "google"
+
+# dictionary of configuration to be used by requests for connection to external APIs
+requests_kwargs = {}
