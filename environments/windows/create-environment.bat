@@ -1,3 +1,4 @@
+CALL %USERPROFILE%\miniconda3\Scripts\activate.bat
 CALL conda deactivate
 CALL conda env remove -n ox --yes
 CALL conda clean --all --yes --quiet
