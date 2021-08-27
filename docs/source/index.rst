@@ -98,7 +98,9 @@ If you have a usage question, please ask it on `StackOverflow`_. If you've disco
 License
 -------
 
-The project is licensed under the MIT license.
+OSMnx is licensed under the MIT license. OpenStreetMap's open data `license`_ requires that derivative works provide proper attribution.
+
+.. _license: https://www.openstreetmap.org/copyright
 
 
 
