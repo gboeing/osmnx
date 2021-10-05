@@ -393,6 +393,9 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3):
                 split_polygons.extend(split(polygon, line))
             else:
                 split_polygons.append(polygon)
+
+        # Take list of split polygons, and move it back to the input list, preparing to split
+        # it by the next line. Repeat until all lines have been processed.
         polygons = split_polygons
         split_polygons = []
 
