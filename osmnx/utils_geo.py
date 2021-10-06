@@ -388,7 +388,7 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3):
     return geometry
 
 
-def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3):
+def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.5, min_num=3):
     """
     Identify geometries that intersect a (multi)polygon.
 
@@ -404,7 +404,7 @@ def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3
         the polygon to intersect with the geometries
     quadrat_width : numeric
         linear length (in polygon's units) of quadrat lines with which to cut
-        up the polygon (default = 0.05 degrees, approx 4km at NYC's latitude)
+        up the polygon (default = 0.5 degrees, approx 40km at NYC's latitude)
     min_num : int
         the minimum number of linear quadrat lines (e.g., min_num=3 would
         produce a quadrat grid of 4 squares)
