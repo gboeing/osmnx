@@ -382,10 +382,20 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3):
     lines = vertical_lines + horizont_lines
 
     # recursively split the geometry by each quadrat line
+    geometries = [geometry]
     for line in lines:
-        geometry = MultiPolygon(split(geometry, line))
+        split_geoms = list()
+        for polygon in geometries:
+            # split polygon by line if they intersect, otherwise just keep it
+            if polygon.intersects(line):
+                split_geoms.extend(split(polygon, line))
+            else:
+                split_geoms.append(polygon)
 
-    return geometry
+        # now process these split geoms on the next line in the list of lines
+        geometries = split_geoms
+
+    return MultiPolygon(geometries)
 
 
 def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3):
