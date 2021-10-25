@@ -7,6 +7,7 @@
   - allow user-defined aggregation function when imputing missing edge speeds
   - allow user to configure requests package keyword arguments when connecting to APIs
   - faster graph projection by calculating UTM zone number with a computationally cheaper method
+  - improve efficiency of quadrat-based geometry cutting
 
 ## 1.1.1 (2021-05-19)
 
