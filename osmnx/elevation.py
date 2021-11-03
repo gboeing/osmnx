@@ -77,6 +77,8 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
 
     if cpus is None:
         cpus = mp.cpu_count()
+    cpus = min(cpus, mp.cpu_count())
+    utils.log(f"Attaching elevations with {cpus} CPUs...")
 
     # if a list of filepaths is passed, compose them all as a virtual raster
     # use the sha1 hash of the filepaths list as the vrt filename
@@ -84,7 +86,7 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
         filepaths = [str(p) for p in filepath]
         sha = sha1(str(filepaths).encode("utf-8")).hexdigest()
         filepath = f"./.osmnx_{sha}.vrt"
-        gdal.BuildVRT(filepath, filepaths)
+        gdal.BuildVRT(filepath, filepaths).FlushCache()
 
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
     if cpus == 1:
