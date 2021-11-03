@@ -86,7 +86,7 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
         filepaths = [str(p) for p in filepath]
         sha = sha1(str(filepaths).encode("utf-8")).hexdigest()
         filepath = f"./.osmnx_{sha}.vrt"
-        gdal.BuildVRT(filepath, filepaths)
+        gdal.BuildVRT(filepath, filepaths).FlushCache()
 
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
     if cpus == 1:
