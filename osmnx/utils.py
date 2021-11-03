@@ -4,6 +4,7 @@ import datetime as dt
 import logging as lg
 import sys
 import unicodedata
+from contextlib import redirect_stdout
 from pathlib import Path
 
 from . import _version
@@ -299,14 +300,8 @@ def log(message, level=None, name=None, filename=None):
         elif level == lg.ERROR:
             logger.error(message)
 
-    # if logging to console, convert message to ascii and print to console
+    # if logging to console (terminal window) is turned on
     if settings.log_console:
-        # capture current stdout, then switch it to the console, print the
-        # message, then switch back to what had been the stdout. this prevents
-        # logging to notebook in jupyter: instead, it goes to terminal
-        standard_out = sys.stdout
-        sys.stdout = sys.__stdout__
-
         # prepend timestamp
         message = f"{ts()} {message}"
 
@@ -314,8 +309,11 @@ def log(message, level=None, name=None, filename=None):
         message = (
             unicodedata.normalize("NFKD", str(message)).encode("ascii", errors="replace").decode()
         )
-        print(message)
-        sys.stdout = standard_out
+
+        # print explicitly to terminal in case jupyter notebook is the stdout
+        terminal = sys.__stdout__
+        with redirect_stdout(terminal):
+            print(message, file=terminal, flush=True)
 
 
 def _get_logger(level, name, filename):
