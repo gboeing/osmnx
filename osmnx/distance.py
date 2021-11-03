@@ -568,7 +568,7 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
     dest : int
         destination node ID
     k : int
-        number of shortest paths to get
+        number of shortest paths to solve
     weight : string
         edge attribute to minimize when solving shortest paths. default is
         edge length in meters.
