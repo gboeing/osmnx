@@ -77,6 +77,8 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
 
     if cpus is None:
         cpus = mp.cpu_count()
+    cpus = min(cpus, mp.cpu_count())
+    utils.log(f"Attaching elevations with {cpus} CPUs...")
 
     # if a list of filepaths is passed, compose them all as a virtual raster
     # use the sha1 hash of the filepaths list as the vrt filename

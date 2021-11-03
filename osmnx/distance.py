@@ -532,6 +532,7 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
 
         if cpus is None:
             cpus = mp.cpu_count()
+        cpus = min(cpus, mp.cpu_count())
         utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")
 
         if cpus == 1:
