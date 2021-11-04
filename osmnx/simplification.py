@@ -1,6 +1,7 @@
 """Simplify, correct, and consolidate network topology."""
 
 import logging as lg
+from collections.abc import Sequence
 
 import geopandas as gpd
 import networkx as nx
@@ -423,10 +424,9 @@ def _merge_nodes_geometric(G, tolerance):
     merged = utils_graph.graph_to_gdfs(G, edges=False)["geometry"].buffer(tolerance).unary_union
 
     # if only a single node results, make it iterable to convert to GeoSeries
-    if isinstance(merged, Polygon):
-        merged = [merged]
+    merged = merged if isinstance(merged, Sequence) else [merged]
 
-    return gpd.GeoSeries(list(merged), crs=G.graph["crs"])
+    return gpd.GeoSeries(merged, crs=G.graph["crs"])
 
 
 def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=True):
@@ -478,7 +478,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     # graph's node points then spatial join to give each node the label of
     # cluster it's within
     node_points = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
-    gdf = gpd.sjoin(node_points, node_clusters, how="left", op="within")
+    gdf = gpd.sjoin(node_points, node_clusters, how="left", predicate="within")
     gdf = gdf.drop(columns="geometry").rename(columns={"index_right": "cluster"})
 
     # STEP 3
