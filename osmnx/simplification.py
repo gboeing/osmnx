@@ -7,7 +7,6 @@ import geopandas as gpd
 import networkx as nx
 from shapely.geometry import LineString
 from shapely.geometry import Point
-from shapely.geometry import Polygon
 
 from . import stats
 from . import utils
