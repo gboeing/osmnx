@@ -250,6 +250,58 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     return headers
 
 
+def _gethostbyname(host: str) -> list:
+    """
+    Recieve IP address from `host` URL using `google's public JSON API for DNS over HTTPS`_.
+
+    Parameters
+    ----------
+    host : string
+        the `host` to consistently resolve the IP address of
+
+    Returns
+    -------
+    list : dict
+        list of resolved IP addresses
+
+    .. _google's public JSON API for DNS over HTTPS:
+    https://developers.google.com/speed/public-dns/docs/doh/json
+    """
+    # alternatively one can use: https://8.8.8.8/resolve?name={host}
+    _dns_url = f"https://dns.google/resolve?name={host}"
+    # send get request
+    try:
+        _response = requests.get(_dns_url)
+
+    except requests.exceptions.ProxyError:
+        utils.log(
+            (
+                f"Failed to establish a new connection to '{host}' via proxy server. "
+                "Proxy connection failed. Check and fix HTTPS proxy settings."
+            )
+        )
+        return [host]
+
+    except requests.ConnectionError:
+        utils.log(
+            (
+                f"Failed to establish a new connection to '{host}'. "
+                "Try setting HTTPS proxy, e.g. via 'HTTPS_PROXY' environment variable."
+            )
+        )
+        return [host]
+
+    # if request was successful return the host IP(s)
+    # Status = 0 -> // NOERROR - Standard DNS response code (32 bit integer)
+    if _response.ok and _response.json()["Status"] == 0:
+        utils.log(f"Retrieved response from '{_dns_url}'")
+        return [answer["data"] for answer in _response.json()["Answer"]]
+    # in case host could not be resolved return the host itself
+    else:
+        utils.log(f"'{host}' could not be resolved. Response status: {_response.json()['Status']}")
+        return [host]
+
+
 def _config_dns(url):
     """
     Force socket.getaddrinfo to use IP address instead of host.
@@ -277,7 +329,11 @@ def _config_dns(url):
     None
     """
     host = urlparse(url).netloc.split(":")[0]
-    ip = socket.gethostbyname(host)
+    try:
+        ip = socket.gethostbyname(host)
+    except socket.gaierror:
+        # get IP address using google's public JSON API for DNS over HTTPS
+        ip = _gethostbyname(host)[0]
 
     def _getaddrinfo(*args):
         if args[0] == host:
@@ -629,8 +685,14 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
         raise ValueError('Nominatim request_type must be "search", "reverse", or "lookup"')
 
+    base_endpoint = settings.nominatim_endpoint.rstrip("/")
+
+    # resolve url to same IP even if there is server round-robin redirecting
+    _config_dns(base_endpoint)
+
     # prepare Nominatim API URL and see if request already exists in cache
     url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
+
     prepared_url = requests.Request("GET", url, params=params).prepare().url
     cached_response_json = _retrieve_from_cache(prepared_url)
 
