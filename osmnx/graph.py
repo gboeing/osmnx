@@ -458,11 +458,17 @@ def graph_from_polygon(
         # truncate the graph to the extent of the polygon
         G = truncate.truncate_graph_polygon(G, polygon, retain_all, truncate_by_edge)
 
-        # simplify the graph topology as the last step. don't truncate after
+        # simplify the graph topology after truncation. don't truncate after
         # simplifying or you may have simplified out to an endpoint beyond the
         # truncation distance, which would strip out the entire edge
         if simplify:
             G = simplification.simplify_graph(G)
+
+        # count how many physical streets connect to each intersection/deadend
+        # note this will be somewhat inaccurate due to periphery effects, so
+        # it's best to parameterize function with clean_periphery=True
+        spn = utils_graph.count_streets_per_node(G)
+        nx.set_node_attributes(G, values=spn, name="street_count")
 
     utils.log(f"graph_from_polygon returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G
