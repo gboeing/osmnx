@@ -1,6 +1,7 @@
 """Graph creation functions."""
 
 import itertools
+import warnings
 
 import networkx as nx
 from shapely.geometry import MultiPolygon
@@ -469,6 +470,11 @@ def graph_from_polygon(
         # it's best to parameterize function with clean_periphery=True
         spn = utils_graph.count_streets_per_node(G)
         nx.set_node_attributes(G, values=spn, name="street_count")
+        msg = (
+            "the graph-level street_count attribute will likely be inaccurate "
+            "when you set clean_periphery=False"
+        )
+        warnings.warn(msg)
 
     utils.log(f"graph_from_polygon returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G
