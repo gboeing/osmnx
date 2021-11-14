@@ -329,8 +329,8 @@ def test_find_nearest():
 
 def test_api_endpoints():
 
-    ip = ox.downloader._get_host_by_name('overpass-api.de')
-    ip = ox.downloader._get_host_by_name('AAAAAAAAAAA')
+    ip = ox.downloader._get_host_by_name("overpass-api.de")
+    ip = ox.downloader._get_host_by_name("AAAAAAAAAAA")
 
     params = OrderedDict()
     params["format"] = "json"
