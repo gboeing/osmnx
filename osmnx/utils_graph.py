@@ -207,7 +207,7 @@ def count_streets_per_node(G, nodes=None):
         "and will be removed from the `utils_graph` module in a future release."
     )
     warnings.warn(msg)
-    return stats.streets_per_node(G, nodes)
+    return stats.count_streets_per_node(G, nodes)
 
 
 def get_route_edge_attributes(
