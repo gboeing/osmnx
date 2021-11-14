@@ -14,6 +14,7 @@ from . import osm_xml
 from . import projection
 from . import settings
 from . import simplification
+from . import stats
 from . import truncate
 from . import utils
 from . import utils_geo
@@ -444,7 +445,7 @@ def graph_from_polygon(
         # count how many physical streets in buffered graph connect to each
         # intersection in un-buffered graph, to retain true counts for each
         # intersection, even if some of its neighbors are outside the polygon
-        spn = utils_graph.count_streets_per_node(G_buff, nodes=G.nodes)
+        spn = stats.count_streets_per_node(G_buff, nodes=G.nodes)
         nx.set_node_attributes(G, values=spn, name="street_count")
 
     # if clean_periphery=False, just use the polygon as provided
@@ -468,7 +469,7 @@ def graph_from_polygon(
         # count how many physical streets connect to each intersection/deadend
         # note this will be somewhat inaccurate due to periphery effects, so
         # it's best to parameterize function with clean_periphery=True
-        spn = utils_graph.count_streets_per_node(G)
+        spn = stats.count_streets_per_node(G)
         nx.set_node_attributes(G, values=spn, name="street_count")
         msg = (
             "the graph-level street_count attribute will likely be inaccurate "
