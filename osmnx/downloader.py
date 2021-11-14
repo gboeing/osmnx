@@ -250,6 +250,39 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     return headers
 
 
+def _get_host_by_name(host):
+    """
+    Resolve IP address from host using Google's public API for DNS over HTTPS.
+
+    Necessary fallback as socket.gethostbyname will not always work when using
+    a proxy. See https://developers.google.com/speed/public-dns/docs/doh/json
+
+    Parameters
+    ----------
+    host : string
+        the host to consistently resolve the IP address of
+
+    Returns
+    -------
+    ip_address : string
+        resolved IP address
+    """
+    dns_url = f"https://dns.google/resolve?name={host}"
+    response = requests.get(dns_url)
+    data = response.json()
+
+    # status = 0 means NOERROR: standard DNS response code
+    if response.ok and data["Status"] == 0:
+        ip_address = data["Answer"][0]["data"]
+        utils.log(f"Google resolved '{host}' to '{ip_address}'")
+        return ip_address
+
+    # in case host could not be resolved return the host itself
+    else:
+        utils.log(f"Google could not resolve '{host}'. Response status: {data['Status']}")
+        return host
+
+
 def _config_dns(url):
     """
     Force socket.getaddrinfo to use IP address instead of host.
@@ -277,7 +310,12 @@ def _config_dns(url):
     None
     """
     host = urlparse(url).netloc.split(":")[0]
-    ip = socket.gethostbyname(host)
+    try:
+        ip = socket.gethostbyname(host)
+    except socket.gaierror:  # pragma: no cover
+        # this error occurs sometimes when using a proxy. instead, you must
+        # get IP address using google's public JSON API for DNS over HTTPS
+        ip = _get_host_by_name(host)[0]
 
     def _getaddrinfo(*args):
         if args[0] == host:
@@ -629,8 +667,12 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
         raise ValueError('Nominatim request_type must be "search", "reverse", or "lookup"')
 
+    # resolve url to same IP even if there is server round-robin redirecting
+    _config_dns(settings.nominatim_endpoint.rstrip("/"))
+
     # prepare Nominatim API URL and see if request already exists in cache
     url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
+
     prepared_url = requests.Request("GET", url, params=params).prepare().url
     cached_response_json = _retrieve_from_cache(prepared_url)
 
