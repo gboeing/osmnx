@@ -10,6 +10,7 @@
   - faster graph projection by calculating UTM zone number with a computationally cheaper method
   - improve efficiency of quadrat-based geometry cutting
   - fall back on google dns resolution when necessary if using a proxy
+  - move count_streets_per_node function to stats module
   - resolve shapely and geopandas deprecation warnings
 
 ## 1.1.1 (2021-05-19)
