@@ -250,56 +250,38 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     return headers
 
 
-def _gethostbyname(host: str) -> list:
+def _get_host_by_name(host):
     """
-    Recieve IP address from `host` URL using `google's public JSON API for DNS over HTTPS`_.
+    Resolve IP address from host using Google's public API for DNS over HTTPS.
+
+    Necessary fallback as socket.gethostbyname will not always work when using
+    a proxy. See https://developers.google.com/speed/public-dns/docs/doh/json
 
     Parameters
     ----------
     host : string
-        the `host` to consistently resolve the IP address of
+        the host to consistently resolve the IP address of
 
     Returns
     -------
-    list : dict
-        list of resolved IP addresses
-
-    .. _google's public JSON API for DNS over HTTPS:
-    https://developers.google.com/speed/public-dns/docs/doh/json
+    ip_address : string
+        resolved IP address
     """
-    # alternatively one can use: https://8.8.8.8/resolve?name={host}
-    _dns_url = f"https://dns.google/resolve?name={host}"
-    # send get request
-    try:
-        _response = requests.get(_dns_url)
 
-    except requests.exceptions.ProxyError:
-        utils.log(
-            (
-                f"Failed to establish a new connection to '{host}' via proxy server. "
-                "Proxy connection failed. Check and fix HTTPS proxy settings."
-            )
-        )
-        return [host]
+    dns_url = f"https://dns.google/resolve?name={host}"
+    response = requests.get(dns_url)
+    data = response.json()
 
-    except requests.ConnectionError:
-        utils.log(
-            (
-                f"Failed to establish a new connection to '{host}'. "
-                "Try setting HTTPS proxy, e.g. via 'HTTPS_PROXY' environment variable."
-            )
-        )
-        return [host]
+    # status = 0 means NOERROR: standard DNS response code
+    if response.ok and data["Status"] == 0:
+        utils.log(f"Retrieved response from '{dns_url}'")
+        ip_address = data["Answer"][0]["data"]
+        return ip_address
 
-    # if request was successful return the host IP(s)
-    # Status = 0 -> // NOERROR - Standard DNS response code (32 bit integer)
-    if _response.ok and _response.json()["Status"] == 0:
-        utils.log(f"Retrieved response from '{_dns_url}'")
-        return [answer["data"] for answer in _response.json()["Answer"]]
     # in case host could not be resolved return the host itself
     else:
-        utils.log(f"'{host}' could not be resolved. Response status: {_response.json()['Status']}")
-        return [host]
+        utils.log(f"'{host}' could not be resolved. Response status: {data['Status']}")
+        return host
 
 
 def _config_dns(url):
@@ -331,9 +313,10 @@ def _config_dns(url):
     host = urlparse(url).netloc.split(":")[0]
     try:
         ip = socket.gethostbyname(host)
-    except socket.gaierror:
+    except socket.gaierror:  # pragma: no cover
+        # this error occurs sometimes when using a proxy. instead, you must
         # get IP address using google's public JSON API for DNS over HTTPS
-        ip = _gethostbyname(host)[0]
+        ip = _get_host_by_name(host)[0]
 
     def _getaddrinfo(*args):
         if args[0] == host:
