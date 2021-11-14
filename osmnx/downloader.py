@@ -267,20 +267,19 @@ def _get_host_by_name(host):
     ip_address : string
         resolved IP address
     """
-
     dns_url = f"https://dns.google/resolve?name={host}"
     response = requests.get(dns_url)
     data = response.json()
 
     # status = 0 means NOERROR: standard DNS response code
     if response.ok and data["Status"] == 0:
-        utils.log(f"Retrieved response from '{dns_url}'")
         ip_address = data["Answer"][0]["data"]
+        utils.log(f"Google resolved '{host}' to '{ip_address}'")
         return ip_address
 
     # in case host could not be resolved return the host itself
     else:
-        utils.log(f"'{host}' could not be resolved. Response status: {data['Status']}")
+        utils.log(f"Google could not resolve '{host}'. Response status: {data['Status']}")
         return host
 
 
@@ -668,10 +667,8 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
         raise ValueError('Nominatim request_type must be "search", "reverse", or "lookup"')
 
-    base_endpoint = settings.nominatim_endpoint.rstrip("/")
-
     # resolve url to same IP even if there is server round-robin redirecting
-    _config_dns(base_endpoint)
+    _config_dns(settings.nominatim_endpoint.rstrip("/"))
 
     # prepare Nominatim API URL and see if request already exists in cache
     url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
