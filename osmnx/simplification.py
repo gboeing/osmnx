@@ -477,14 +477,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     # graph's node points then spatial join to give each node the label of
     # cluster it's within
     node_points = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
-
-    # since geopandas 0.10.0, sjoin uses predicate instead of op.
-    v_maj, v_min, _ = gpd.__version__.split(".")
-    if int(v_maj) == 0 and int(v_min) < 10:
-        op_kwd = {"op": "within"}
-    else:
-        op_kwd = {"predicate": "within"}
-    gdf = gpd.sjoin(node_points, node_clusters, how="left", **op_kwd)
+    gdf = gpd.sjoin(node_points, node_clusters, how="left", predicate="within")
     gdf = gdf.drop(columns="geometry").rename(columns={"index_right": "cluster"})
 
     # STEP 3
