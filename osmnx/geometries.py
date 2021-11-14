@@ -813,7 +813,7 @@ def _assemble_multipolygon_component_polygons(element, geometries):
     if merged_inner_linestrings.geom_type == "LineString":
         inner_polygons += polygonize(merged_inner_linestrings)
     elif merged_inner_linestrings.geom_type == "MultiLineString":
-        for merged_inner_linestring in list(merged_inner_linestrings):
+        for merged_inner_linestring in merged_inner_linestrings.geoms:
             inner_polygons += polygonize(merged_inner_linestring)
 
     if not outer_polygons:

@@ -15,8 +15,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        python-version: ['3.7', '3.8', '3.9']
         os: [ubuntu-latest]
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        include:
+          - os: ubuntu-latest
+            environment-file: tests/environment-dev.yml
+            miniforge-variant: Mambaforge
+            miniforge-version: 4.9.2-4
 
     defaults:
       run:
@@ -29,23 +34,16 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Cache conda
-        uses: actions/cache@v2
-        env:
-          CACHE_NUMBER: 0
-        with:
-          path: ~/conda_pkgs_dir
-          key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ env.CACHE_NUMBER }}-${{ hashFiles('tests/environment-dev.yml') }}
-
-      - name: Setup conda environment
+      - name: Setup conda environment with mambaforge
         uses: conda-incubator/setup-miniconda@v2
         with:
-          python-version: ${{ matrix.python-version }}
-          use-only-tar-bz2: true  # required for caching
-          show-channel-urls: true
-          channel-priority: strict
+          use-mamba: true
           activate-environment: osmnx-dev
-          environment-file: tests/environment-dev.yml
+          python-version: ${{ matrix.python-version }}
+          condarc-file: ${{ matrix.condarc-file }}
+          environment-file: ${{ matrix.environment-file }}
+          miniforge-variant: ${{ matrix.miniforge-variant }}
+          miniforge-version: ${{ matrix.miniforge-version }}
 
       - name: Install OSMnx
         run: |
