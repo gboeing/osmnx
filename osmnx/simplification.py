@@ -1,12 +1,13 @@
 """Simplify, correct, and consolidate network topology."""
 
 import logging as lg
-from collections.abc import Sequence
 
 import geopandas as gpd
 import networkx as nx
 from shapely.geometry import LineString
+from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
+from shapely.geometry import Polygon
 
 from . import stats
 from . import utils
@@ -423,9 +424,9 @@ def _merge_nodes_geometric(G, tolerance):
     merged = utils_graph.graph_to_gdfs(G, edges=False)["geometry"].buffer(tolerance).unary_union
 
     # if only a single node results, make it iterable to convert to GeoSeries
-    merged = merged if isinstance(merged, Sequence) else [merged]
+    merged = MultiPolygon([merged]) if isinstance(merged, Polygon) else merged
 
-    return gpd.GeoSeries(merged, crs=G.graph["crs"])
+    return gpd.GeoSeries(merged.geoms, crs=G.graph["crs"])
 
 
 def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=True):
