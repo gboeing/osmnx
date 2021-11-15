@@ -532,6 +532,11 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
                 y=nodes_subset["y"].iloc[0],
             )
 
+    # calculate street_count attribute for all nodes lacking it
+    null_nodes = [n for n, sc in H.nodes(data="street_count") if sc is None]
+    street_count = stats.count_streets_per_node(H, nodes=null_nodes)
+    nx.set_node_attributes(H, street_count, name="street_count")
+
     if not G.edges or not reconnect_edges:
         # if reconnect_edges is False or there are no edges in original graph
         # (after dead-end removed), then skip edges and return new graph as-is
