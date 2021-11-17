@@ -11,17 +11,14 @@ LABEL description="OSMnx is a Python package to retrieve, model, analyze, and vi
 
 COPY requirements.txt /tmp/
 
-# configure conda and install packages in one RUN to keep image tidy
-RUN conda config --set show_channel_urls true && \
-    conda config --set channel_priority strict && \
-    conda config --prepend channels conda-forge && \
-    conda update --yes -n base conda && \
-    conda install --update-all --force-reinstall --yes --file /tmp/requirements.txt && \
+# install packages in one RUN to keep image tidy
+RUN mamba update --yes -c conda-forge --strict-channel-priority -n base mamba && \
+    mamba install --update-all --force-reinstall --yes -c conda-forge --strict-channel-priority --file /tmp/requirements.txt && \
     rm -f -r -v /opt/conda/share/jupyter/kernels/python3 && \
     python -m ipykernel install --sys-prefix --name ox --display-name "Python (ox)" && \
-    conda clean --all --yes && \
-    conda info --all && \
-    conda list && \
+    mamba clean --all --yes && \
+    mamba info --all && \
+    mamba list && \
     jupyter kernelspec list && \
     ipython -c "import osmnx; print('OSMnx version', osmnx.__version__)"
 
