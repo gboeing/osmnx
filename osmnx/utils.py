@@ -2,6 +2,7 @@
 
 import datetime as dt
 import logging as lg
+import os
 import sys
 import unicodedata
 from contextlib import redirect_stdout
@@ -311,9 +312,12 @@ def log(message, level=None, name=None, filename=None):
         )
 
         # print explicitly to terminal in case jupyter notebook is the stdout
-        terminal = sys.__stdout__
-        with redirect_stdout(terminal):
-            print(message, file=terminal, flush=True)
+        if getattr(sys.stdout, "_original_stdstream_copy", None) is not None:
+            # redirect captured pipe back to original
+            os.dup2(sys.stdout._original_stdstream_copy, sys.__stdout__.fileno())
+            sys.stdout._original_stdstream_copy = None
+        with redirect_stdout(sys.__stdout__):
+            print(message, file=sys.__stdout__, flush=True)
 
 
 def _get_logger(level, name, filename):
