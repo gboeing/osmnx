@@ -293,7 +293,7 @@ def plot_graph_route(
     # scatterplot origin and destination points (first/last nodes in route)
     x = (G.nodes[route[0]]["x"], G.nodes[route[-1]]["x"])
     y = (G.nodes[route[0]]["y"], G.nodes[route[-1]]["y"])
-    ax.scatter(x, y, s=orig_dest_size, c=route_color, alpha=route_alpha, edgecolor="none")
+    ax.scatter(x, y, s=orig_dest_size, color=route_color, alpha=route_alpha, edgecolor="none")
 
     # assemble the route edge geometries' x and y coords then plot the line
     x = []
@@ -310,7 +310,7 @@ def plot_graph_route(
             # otherwise, the edge is a straight line from node to node
             x.extend((G.nodes[u]["x"], G.nodes[v]["x"]))
             y.extend((G.nodes[u]["y"], G.nodes[v]["y"]))
-    ax.plot(x, y, c=route_color, lw=route_linewidth, alpha=route_alpha)
+    ax.plot(x, y, color=route_color, lw=route_linewidth, alpha=route_alpha)
 
     # save and show the figure as specified, passing relevant kwargs
     sas_kwargs = {"save", "show", "close", "filepath", "file_format", "dpi"}
