@@ -258,7 +258,7 @@ def plot_graph_route(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
+    G : networkx.MultiDiGraph or networkx.MultiGraph
         input graph
     route : list
         route as a list of node IDs
