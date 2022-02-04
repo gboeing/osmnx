@@ -258,7 +258,7 @@ def plot_graph_route(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
+    G : networkx.MultiDiGraph or networkx.MultiGraph
         input graph
     route : list
         route as a list of node IDs
@@ -304,6 +304,9 @@ def plot_graph_route(
         if "geometry" in data:
             # if geometry attribute exists, add all its coords to list
             xs, ys = data["geometry"].xy
+            # When graph is nx.MultiGraph check if geometry of edge is in correct order
+            if not G.is_directed() and G.nodes[u]["x"] != data["geometry"].coords[0][0]:
+                xs, ys = xs[::-1], ys[::-1]
             x.extend(xs)
             y.extend(ys)
         else:
