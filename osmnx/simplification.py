@@ -496,11 +496,12 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
                 suffix = 0
                 for wcc in wccs:
                     # set subcluster xy to the centroid of just these nodes
-                    subcluster_centroid = node_points.loc[wcc].unary_union.centroid
-                    gdf.loc[wcc, "x"] = subcluster_centroid.x
-                    gdf.loc[wcc, "y"] = subcluster_centroid.y
+                    idx = list(wcc)
+                    subcluster_centroid = node_points.loc[idx].unary_union.centroid
+                    gdf.loc[idx, "x"] = subcluster_centroid.x
+                    gdf.loc[idx, "y"] = subcluster_centroid.y
                     # move to subcluster by appending suffix to cluster label
-                    gdf.loc[wcc, "cluster"] = f"{cluster_label}-{suffix}"
+                    gdf.loc[idx, "cluster"] = f"{cluster_label}-{suffix}"
                     suffix += 1
 
     # give nodes unique integer IDs (subclusters with suffixes are strings)
