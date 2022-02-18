@@ -4,6 +4,7 @@ import logging as lg
 from collections import OrderedDict
 
 import geopandas as gpd
+import pandas as pd
 
 from . import downloader
 from . import projection
@@ -107,7 +108,7 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
     # geocode each query and add to GeoDataFrame as a new row
     gdf = gpd.GeoDataFrame()
     for q, wr in zip(query, which_result):
-        gdf = gdf.append(_geocode_query_to_gdf(q, wr, by_osmid))
+        gdf = pd.concat([gdf, _geocode_query_to_gdf(q, wr, by_osmid)])
 
     # reset GeoDataFrame index and set its CRS
     gdf = gdf.reset_index(drop=True)
