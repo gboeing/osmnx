@@ -528,7 +528,7 @@ def plot_figure_ground(
                 # anything larger from extending past smallest street's line.
                 # circle marker sizes are in area, so use diameter squared.
                 circle_diameter = max(edge_widths)
-                circle_area = circle_diameter ** 2
+                circle_area = circle_diameter**2
                 node_widths[node] = circle_area
 
         # assign the node size to each node in the graph
