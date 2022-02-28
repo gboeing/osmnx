@@ -74,14 +74,9 @@ def graph_from_bbox(
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
-
-
-    When downloading large areas (Europe sized, not close to the equator),
-    OSMnx might project long edges of the bounding box differently than
-    expected and not all the wanted graph will be downloaded. If that is a
-    problem, make sure to split long edges in several shorter ones and check
-    on a map if the bounding box is correct.
+    other custom settings via ox.config(). Very large query areas will use the
+    utils_geo._consolidate_subdivide_geometry function to perform multiple
+    queries: see that function's documentation for caveats.
     """
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -153,7 +148,9 @@ def graph_from_point(
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
+    other custom settings via ox.config(). Very large query areas will use the
+    utils_geo._consolidate_subdivide_geometry function to perform multiple
+    queries: see that function's documentation for caveats.
     """
     if dist_type not in {"bbox", "network"}:  # pragma: no cover
         raise ValueError('dist_type must be "bbox" or "network"')
@@ -241,7 +238,9 @@ def graph_from_address(
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
+    other custom settings via ox.config(). Very large query areas will use the
+    utils_geo._consolidate_subdivide_geometry function to perform multiple
+    queries: see that function's documentation for caveats.
     """
     # geocode the address string to a (lat, lng) point
     point = geocoder.geocode(query=address)
@@ -327,7 +326,9 @@ def graph_from_place(
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
+    other custom settings via ox.config(). Very large query areas will use the
+    utils_geo._consolidate_subdivide_geometry function to perform multiple
+    queries: see that function's documentation for caveats.
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, (str, dict)):
@@ -404,14 +405,9 @@ def graph_from_polygon(
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
-
-
-    When downloading large areas (Europe sized, not close to the equator),
-    OSMnx might project long edges of the bounding box differently than
-    expected and not all the wanted graph will be downloaded. If that is a
-    problem, make sure to split long edges in several shorter ones and check
-    on a map if the bounding box is correct.
+    other custom settings via ox.config(). Very large query areas will use the
+    utils_geo._consolidate_subdivide_geometry function to perform multiple
+    queries: see that function's documentation for caveats.
     """
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding

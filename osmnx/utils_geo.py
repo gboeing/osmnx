@@ -272,6 +272,11 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
     sub-polygons if its area exceeds max size (in geometry's units). Configure
     the max size via max_query_area_size in the settings module.
 
+    When the geometry has a very large area relative to its vertex count,
+    the resulting MultiPolygon's boundary may differ somewhat from the input,
+    due to the way long straight lines are projected. You can interpolate
+    additional vertices along your input geometry's exterior to mitigate this.
+
     Parameters
     ----------
     geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
