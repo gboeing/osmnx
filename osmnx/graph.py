@@ -75,6 +75,13 @@ def graph_from_bbox(
     -----
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
+
+
+    When downloading large areas (Europe sized, not close to the equator),
+    OSMnx might project long edges of the bounding box differently than
+    expected and not all the wanted graph will be downloaded. If that is a
+    problem, make sure to split long edges in several shorter ones and check
+    on a map if the bounding box is correct.
     """
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -398,6 +405,13 @@ def graph_from_polygon(
     -----
     You can configure the Overpass server timeout, memory allocation, and
     other custom settings via ox.config().
+
+
+    When downloading large areas (Europe sized, not close to the equator),
+    OSMnx might project long edges of the bounding box differently than
+    expected and not all the wanted graph will be downloaded. If that is a
+    problem, make sure to split long edges in several shorter ones and check
+    on a map if the bounding box is correct.
     """
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
