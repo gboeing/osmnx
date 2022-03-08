@@ -620,7 +620,9 @@ def plot_footprints(
 
     # retain only Polygons and MultiPolygons, then plot
     gdf = gdf[gdf["geometry"].type.isin({"Polygon", "MultiPolygon"})]
-    ax = gdf.plot(ax=ax, facecolor=color, edgecolor=edge_color, linewidth=edge_linewidth, alpha=alpha)
+    ax = gdf.plot(
+        ax=ax, facecolor=color, edgecolor=edge_color, linewidth=edge_linewidth, alpha=alpha
+    )
 
     # determine figure extents
     if bbox is None:
