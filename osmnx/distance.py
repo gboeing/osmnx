@@ -285,7 +285,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         # then minimize euclidean distance from point to the possible matches
         ne_dist = list()
         for xy in zip(X, Y):
-            dists = geoms.iloc[list(rtree.nearest(xy))].distance(Point(xy))
+            dists = geoms.iloc[list(rtree.nearest(xy, num_results=10))].distance(Point(xy))
             ne_dist.append((dists.idxmin(), dists.min()))
         ne, dist = zip(*ne_dist)
 
