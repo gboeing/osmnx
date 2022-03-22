@@ -212,14 +212,14 @@ def load_graphml_stream(
     # assume default will be bytes string and decode
     try:
         graphml_string = str(graphml_stream.decode(encoding))
-    except LookupError:
+    except LookupError: #pragma: no cover
         utils.log(
             f'Unable to load stream, likely due to invalid encoding, tried "{encoding}"', level=40
         )
         raise ValueError(
             f'Unable to load stream, likely due to invalid encoding, tried "{encoding}"'
         ) from LookupError
-    except AttributeError:
+    except AttributeError: #pragma: no cover
         # if unable to decode due to not being bytes, wrap in str and pass along
         graphml_string = str(graphml_stream)
 
