@@ -211,7 +211,7 @@ def load_graphml(
     """
     if (filepath is None and graphml_str is None) or (
         filepath is not None and graphml_str is not None
-    ):
+    ):  # pragma: no cover
         raise ValueError("You must pass one and only one of `filepath` or `graphml_str`.")
 
     # specify default graph/node/edge attribute values' data types
