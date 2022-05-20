@@ -193,7 +193,7 @@ def load_graphml(
     filepath : string or pathlib.Path
         path to the GraphML file
     graphml_str : string
-        a string representation of the contents of a GraphML file
+        a valid and decoded string representation of a GraphML file's contents
     node_dtypes : dict
         dict of node attribute names:types to convert values' data types. the
         type can be a python type or a custom string converter function.
