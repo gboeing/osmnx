@@ -43,7 +43,6 @@ from .simplification import simplify_graph
 from .speed import add_edge_speeds
 from .speed import add_edge_travel_times
 from .stats import basic_stats
-from .stats import extended_stats
 from .utils import citation
 from .utils import config
 from .utils import log
