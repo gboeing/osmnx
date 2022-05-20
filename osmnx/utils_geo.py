@@ -79,38 +79,6 @@ def interpolate_points(geom, dist):
         raise TypeError(f"unhandled geometry type {geom.geom_type}")
 
 
-def redistribute_vertices(geom, dist):
-    """
-    Do not use, deprecated.
-
-    Parameters
-    ----------
-    geom : shapely.geometry.LineString or shapely.geometry.MultiLineString
-        deprecated, do not use
-    dist : float
-        deprecated, do not use
-
-    Returns
-    -------
-    list or shapely.geometry.MultiLineString
-    """
-    msg = (
-        "The `redistribute_vertices` function has been deprecated and will be removed in a "
-        "future release. Use the more efficient `utils_geo.interpolate_points` instead."
-    )
-    warnings.warn(msg)
-    if geom.geom_type == "LineString":
-        num_vert = round(geom.length / dist)
-        if num_vert == 0:
-            num_vert = 1
-        return [geom.interpolate(n / num_vert, normalized=True) for n in range(num_vert + 1)]
-    elif geom.geom_type == "MultiLineString":
-        parts = [redistribute_vertices(part, dist) for part in geom.geoms]
-        return type(geom)([p for p in parts if not p])
-    else:  # pragma: no cover
-        raise ValueError(f"unhandled geometry {geom.geom_type}")
-
-
 def _round_polygon_coords(p, precision):
     """
     Round the coordinates of a shapely Polygon to some decimal precision.

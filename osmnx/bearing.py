@@ -1,7 +1,5 @@
 """Calculate graph edge bearings."""
 
-import warnings
-
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -52,32 +50,6 @@ def calculate_bearing(lat1, lng1, lat2, lng2):
 
     # normalize to 0-360 degrees to get compass bearing
     return initial_bearing % 360
-
-
-def get_bearing(origin_point, destination_point):
-    """
-    Do not use, deprecated.
-
-    Parameters
-    ----------
-    origin_point : tuple
-        deprecated, do not use
-    destination_point : tuple
-        deprecated, do not use
-
-    Returns
-    -------
-    bearing : float
-        deprecated, do not use
-    """
-    msg = (
-        "The `get_bearing` function has been deprecated and will be removed in a "
-        "future release. Use the vectorized `bearing.calculate_bearing` instead."
-    )
-    warnings.warn(msg)
-    return calculate_bearing(
-        origin_point[0], origin_point[1], destination_point[0], destination_point[1]
-    )
 
 
 def add_edge_bearings(G, precision=1):

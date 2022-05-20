@@ -304,14 +304,7 @@ def count_streets_per_node(G, nodes=None):
     return streets_per_node
 
 
-def basic_stats(
-    G,
-    area=None,
-    clean_int_tol=None,
-    clean_intersects=None,
-    tolerance=None,
-    circuity_dist=None,
-):
+def basic_stats(G, area=None, clean_int_tol=None):
     """
     Calculate basic descriptive geometric and topological measures of a graph.
 
@@ -330,12 +323,6 @@ def basic_stats(
         if `area` is also provided) and use this tolerance value; refer to the
         `simplification.consolidate_intersections` function documentation for
         details
-    clean_intersects : bool
-        deprecated, do not use
-    tolerance : float
-        deprecated, do not use
-    circuity_dist : string
-        deprecated, do not use
 
     Returns
     -------
@@ -362,33 +349,6 @@ def basic_stats(
           - `streets_per_node_counts` - see `streets_per_node_counts` function documentation
           - `streets_per_node_proportions` - see `streets_per_node_proportions` function documentation
     """
-    if circuity_dist is not None:
-        msg = (
-            "The `circuity_dist` argument has been deprecated and will be "
-            "removed in a future release."
-        )
-        warnings.warn(msg)
-
-    if clean_intersects is not None:
-        if clean_int_tol is None:
-            clean_int_tol = 15
-        msg = (
-            "The `clean_intersects` and `tolerance` arguments have been "
-            "deprecated and will be removed in a future release. Use the "
-            "`clean_int_tol` argument instead."
-        )
-        warnings.warn(msg)
-
-    if tolerance is not None:
-        if clean_int_tol is None:
-            clean_int_tol = tolerance
-        msg = (
-            "The `clean_intersects` and `tolerance` arguments have been "
-            "deprecated and will be removed in a future release. Use the "
-            "`clean_int_tol` argument instead."
-        )
-        warnings.warn(msg)
-
     Gu = utils_graph.get_undirected(G)
     stats = dict()
 

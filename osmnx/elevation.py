@@ -2,7 +2,6 @@
 
 import multiprocessing as mp
 import time
-import warnings
 from hashlib import sha1
 from pathlib import Path
 
@@ -218,43 +217,6 @@ def add_node_elevations_google(
     utils.log("Added elevation data from web service to all nodes.")
 
     return G
-
-
-def add_node_elevations(
-    G, api_key, max_locations_per_batch=350, pause_duration=0, precision=3
-):  # pragma: no cover
-    """
-    Do not use, deprecated, will be removed in a future release.
-
-    This function and the `elevation_provider` setting are deprecated.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        deprecated, do not use
-    api_key : string
-        deprecated, do not use
-    max_locations_per_batch : int
-        deprecated, do not use
-    pause_duration : float
-        deprecated, do not use
-    precision : int
-        deprecated, do not use
-
-    Returns
-    -------
-    G : networkx.MultiDiGraph
-    """
-    msg = (
-        "The add_node_elevations function and the 'airmap' elevation_provider are "
-        "deprecated and will be removed in a future release. Use the "
-        "add_node_elevations_google function or the add_node_elevations_raster "
-        "function instead."
-    )
-    warnings.warn(msg)
-    return add_node_elevations_google(
-        G, api_key, max_locations_per_batch, pause_duration, precision
-    )
 
 
 def add_edge_grades(G, add_absolute=True, precision=3):
