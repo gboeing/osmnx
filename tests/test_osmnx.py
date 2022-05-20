@@ -441,6 +441,10 @@ def test_graph_save_load():
     ed = {"length": str, "osmid": float}
     G2 = ox.load_graphml(filepath, node_dtypes=nd, edge_dtypes=ed)
 
+    # test load from stream
+    stream = open("tests/input_data/short.graphml", "rb").read()
+    G = ox.load_graphml_stream(stream, encoding="utf-8", node_dtypes=nd, edge_dtypes=ed)
+
 
 def test_graph_from_functions():
 

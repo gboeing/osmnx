@@ -167,6 +167,113 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     utils.log(f'Saved graph as GraphML file at "{filepath}"')
 
 
+def load_graphml_stream(
+    graphml_stream, encoding="utf-8", node_dtypes=None, edge_dtypes=None, graph_dtypes=None
+):
+    """
+    Load an OSMnx-saved GraphML instance from bytes string or string.
+
+    This Attempts to decode the bytes string from the specified encoding or
+    defaults to utf-8. If unable to decode, assumes it's already a string
+    and attempts to load.
+
+    This converts node, edge, and graph-level attributes (serialized as
+    strings) to their appropriate data types. These can be customized as
+    needed by passing in dtypes arguments providing types or custom converter
+    functions. For example, if you want to convert some attribute's values to
+    `bool`, consider using the built-in `ox.io._convert_bool_string` function
+    to properly handle "True"/"False" string literals as True/False booleans:
+    `ox.load_graphml(fp, node_dtypes={my_attr: ox.io._convert_bool_string})`
+
+    If you manually configured the `all_oneway=True` setting, you may need to
+    manually specify here that edge `oneway` attributes should be type `str`.
+
+    Parameters
+    ----------
+    graphml_stream : bytes|string
+        Bytes or string of the GraphML file
+    encoding : str
+        the character encoding for the saved files. Defaults to UTF-8
+    node_dtypes : dict
+        dict of node attribute names:types to convert values' data types. the
+        type can be a python type or a custom string converter function.
+    edge_dtypes : dict
+        dict of edge attribute names:types to convert values' data types. the
+        type can be a python type or a custom string converter function.
+    graph_dtypes : dict
+        dict of graph-level attribute names:types to convert values' data
+        types. the type can be a python type or a custom string converter
+        function.
+
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+    """
+    # assume default will be bytes string and decode
+    try:
+        graphml_string = str(graphml_stream.decode(encoding))
+    except LookupError:  # pragma: no cover
+        utils.log(
+            f'Unable to load stream, likely due to invalid encoding, tried "{encoding}"', level=40
+        )
+        raise ValueError(
+            f'Unable to load stream, likely due to invalid encoding, tried "{encoding}"'
+        ) from LookupError
+    except AttributeError:  # pragma: no cover
+        # if unable to decode due to not being bytes, wrap in str and pass along
+        graphml_string = str(graphml_stream)
+
+    # specify default graph/node/edge attribute values' data types
+    default_graph_dtypes = {"simplified": _convert_bool_string}
+    default_node_dtypes = {
+        "elevation": float,
+        "elevation_res": float,
+        "lat": float,
+        "lon": float,
+        "osmid": int,
+        "street_count": int,
+        "x": float,
+        "y": float,
+    }
+    default_edge_dtypes = {
+        "bearing": float,
+        "grade": float,
+        "grade_abs": float,
+        "length": float,
+        "oneway": _convert_bool_string,
+        "osmid": int,
+        "speed_kph": float,
+        "travel_time": float,
+    }
+
+    # override default graph/node/edge attr types with user-passed types, if any
+    if graph_dtypes is not None:
+        default_graph_dtypes.update(graph_dtypes)
+    if node_dtypes is not None:
+        default_node_dtypes.update(node_dtypes)
+    if edge_dtypes is not None:
+        default_edge_dtypes.update(edge_dtypes)
+
+    # read the graphml file from above string
+    try:
+        G = nx.parse_graphml(
+            graphml_string, node_type=default_node_dtypes["osmid"], force_multigraph=True
+        )
+    except Exception:
+        utils.log("Unable to parse stream, invalid format", level=40)
+        raise ValueError("Unable to parse stream, invalid format") from Exception
+    # convert graph/node/edge attribute data types
+    utils.log("Converting node, edge, and graph-level attribute data types")
+    G = _convert_graph_attr_types(G, default_graph_dtypes)
+    G = _convert_node_attr_types(G, default_node_dtypes)
+    G = _convert_edge_attr_types(G, default_edge_dtypes)
+
+    utils.log(
+        f"Loaded graph with {len(G)} nodes and {len(G.edges)} edges from graph_stream bytes object"
+    )
+    return G
+
+
 def load_graphml(filepath, node_dtypes=None, edge_dtypes=None, graph_dtypes=None):
     """
     Load an OSMnx-saved GraphML file from disk.
