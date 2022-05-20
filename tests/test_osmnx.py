@@ -85,8 +85,6 @@ def test_coords_rounding():
         ]
     )
 
-    _ = ox.utils_geo.redistribute_vertices(shape1, 0.01)
-
     shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
 
     shape1 = Polygon([(1.123456, 2.123456), (3.123456, 4.123456), (6.123456, 5.123456)])
@@ -112,20 +110,15 @@ def test_stats():
     # create graph, add a new node, add bearings, project it
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     G.add_node(0, x=location_point[1], y=location_point[0])
-    _ = ox.bearing.get_bearing((0, 0), (1, 1))
+    _ = ox.bearing.calculate_bearing(0, 0, 1, 1)
     G = ox.add_edge_bearings(G)
     G_proj = ox.project_graph(G)
 
     # calculate stats
-    cspn = ox.utils_graph.count_streets_per_node(G)
+    cspn = ox.stats.count_streets_per_node(G)
     stats = ox.basic_stats(G)
     stats = ox.basic_stats(G, area=1000)
-    stats = ox.basic_stats(
-        G_proj, area=1000, clean_intersects=True, tolerance=15, circuity_dist="euclidean"
-    )
-
-    # calculate extended stats
-    stats = ox.extended_stats(G, connectivity=True, anc=False, ecc=True, bc=True, cc=True)
+    stats = ox.basic_stats(G_proj, area=1000, clean_int_tol=15)
 
     # calculate entropy
     Gu = ox.get_undirected(G)
@@ -172,14 +165,14 @@ def test_osm_xml():
     default_all_oneway = ox.settings.all_oneway
     ox.settings.all_oneway = True
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
-    ox.io.save_graph_xml(G, merge_edges=False)
+    ox.save_graph_xml(G, merge_edges=False)
 
     # test osm xml output merge edges
-    ox.io.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")])
+    ox.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")])
 
     # test osm xml output from gdfs
     nodes, edges = ox.graph_to_gdfs(G)
-    ox.io.save_graph_xml([nodes, edges])
+    ox.save_graph_xml([nodes, edges])
 
     # test ordered nodes from way
     df = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
@@ -198,8 +191,8 @@ def test_elevation():
     G = ox.elevation.add_node_elevations_raster(G, rasters[0], cpus=1)
 
     # add node elevations from multiple raster files
-    G = ox.elevation.add_node_elevations_raster(G, rasters)
-    assert pd.notnull(pd.Series(dict(G.nodes(data="elevation")))).all()
+    # G = ox.elevation.add_node_elevations_raster(G, rasters)
+    # assert pd.notnull(pd.Series(dict(G.nodes(data="elevation")))).all()
 
     # add edge grades and their absolute values
     G = ox.add_edge_grades(G, add_absolute=True)
@@ -301,30 +294,11 @@ def test_find_nearest():
     X = points.x.values
     Y = points.y.values
 
-    # get nearest node
-    nn, d = ox.get_nearest_node(Gp, location_point, method="euclidean", return_dist=True)
-    nn = ox.get_nearest_node(Gp, location_point, method="euclidean", return_dist=False)
-
     # get nearest nodes
     nn0, dist0 = ox.distance.nearest_nodes(G, X[0], Y[0], return_dist=True)
-    nn1, dist1 = ox.get_nearest_nodes(G, X, Y, return_dist=True)
-    nn2, dist2 = ox.get_nearest_nodes(Gp, X, Y, method="kdtree", return_dist=True)
-    nn3, dist3 = ox.get_nearest_nodes(G, X, Y, method="balltree", return_dist=True)
-    nn4 = ox.get_nearest_nodes(G, X, Y)
-    nn5 = ox.get_nearest_nodes(Gp, X, Y, method="kdtree")
-    nn6 = ox.get_nearest_nodes(G, X, Y, method="balltree")
 
     # get nearest edge
-    u, v, k, g, d = ox.get_nearest_edge(Gp, location_point, return_geom=True, return_dist=True)
-    u, v, k, g = ox.get_nearest_edge(Gp, location_point, return_geom=True)
-    u, v, k, d = ox.get_nearest_edge(Gp, location_point, return_dist=True)
-    u, v, k = ox.get_nearest_edge(Gp, location_point)
-
-    # get nearest edges
     ne0 = ox.distance.nearest_edges(Gp, X[0], Y[0], interpolate=50)
-    ne1 = ox.get_nearest_edges(Gp, X, Y)
-    ne2 = ox.get_nearest_edges(Gp, X, Y, method="kdtree")
-    ne3 = ox.get_nearest_edges(G, X, Y, method="balltree", dist=0.0001)
 
 
 def test_api_endpoints():

@@ -14,7 +14,6 @@ You can use NetworkX directly for additional topological network measures.
 
 import itertools
 import logging as lg
-import warnings
 from collections import Counter
 
 import networkx as nx
