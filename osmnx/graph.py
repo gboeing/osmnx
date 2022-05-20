@@ -776,11 +776,11 @@ def _add_paths(G, paths, bidirectional=False):
         edges = list(zip(nodes[:-1], nodes[1:]))
 
         # add all the edge tuples and give them the path's tag:value attrs
-        path['reversed'] = False
+        path["reversed"] = False
         G.add_edges_from(edges, **path)
 
-        # if the path is NOT one-way, reverse direction of each edge and add 
+        # if the path is NOT one-way, reverse direction of each edge and add
         # this path going the opposite direction too
         if not is_one_way:
-            path['reversed'] = True
+            path["reversed"] = True
             G.add_edges_from([(v, u) for u, v in edges], **path)
