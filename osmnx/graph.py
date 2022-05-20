@@ -772,12 +772,15 @@ def _add_paths(G, paths, bidirectional=False):
         if not settings.all_oneway:
             path["oneway"] = is_one_way
 
-        # zip path nodes to get (u, v) tuples like [(0,1), (1,2), (2,3)]. if
-        # the path is NOT one-way, reverse direction of each edge and add this
-        # path going the opposite direction too
+        # zip path nodes to get (u, v) tuples like [(0,1), (1,2), (2,3)].
         edges = list(zip(nodes[:-1], nodes[1:]))
-        if not is_one_way:
-            edges.extend([(v, u) for u, v in edges])
 
         # add all the edge tuples and give them the path's tag:value attrs
+        path["reversed"] = False
         G.add_edges_from(edges, **path)
+
+        # if the path is NOT one-way, reverse direction of each edge and add
+        # this path going the opposite direction too
+        if not is_one_way:
+            path["reversed"] = True
+            G.add_edges_from([(v, u) for u, v in edges], **path)

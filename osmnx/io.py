@@ -222,6 +222,7 @@ def load_graphml(filepath, node_dtypes=None, edge_dtypes=None, graph_dtypes=None
         "length": float,
         "oneway": _convert_bool_string,
         "osmid": int,
+        "reversed": _convert_bool_string,
         "speed_kph": float,
         "travel_time": float,
     }
