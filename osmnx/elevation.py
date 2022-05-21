@@ -54,6 +54,8 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
     If `filepath` is a list of paths, this will generate a virtual raster
     composed of the files at those paths as an intermediate step.
 
+    See also the `add_edge_grades` function.
+
     Parameters
     ----------
     G : networkx.MultiDiGraph
@@ -204,7 +206,8 @@ def add_edge_grades(G, add_absolute=True, precision=3):
     for each edge in the graph and add it to the edge as an attribute. Nodes
     must already have `elevation` attributes to use this function.
 
-    See also the `add_node_elevations` function.
+    See also the `add_node_elevations_raster` and `add_node_elevations_google`
+    functions.
 
     Parameters
     ----------
