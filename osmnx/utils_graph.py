@@ -10,7 +10,6 @@ import pandas as pd
 from shapely.geometry import LineString
 from shapely.geometry import Point
 
-from . import stats
 from . import utils
 
 
@@ -180,34 +179,6 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
 
     utils.log("Created graph from node/edge GeoDataFrames")
     return G
-
-
-def count_streets_per_node(G, nodes=None):
-    """
-    Do not use, deprecated.
-
-    This function has moved to the `stats` module.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    nodes : list
-        which node IDs to get counts for. if None, use all graph nodes,
-        otherwise calculate counts only for these node IDs
-
-    Returns
-    -------
-    streets_per_node : dict
-        counts of how many physical streets connect to each node, with keys =
-        node ids and values = counts
-    """
-    msg = (
-        "The `count_streets_per_node` function has moved to the `stats` module "
-        "and will be removed from the `utils_graph` module in a future release."
-    )
-    warnings.warn(msg)
-    return stats.count_streets_per_node(G, nodes)
 
 
 def get_route_edge_attributes(

@@ -7,7 +7,6 @@ import networkx as nx
 import pandas as pd
 from shapely import wkt
 
-from . import osm_xml
 from . import settings
 from . import utils
 from . import utils_graph
@@ -412,73 +411,3 @@ def _stringify_nonnumeric_cols(gdf):
             gdf[col] = gdf[col].fillna("").astype(str)
 
     return gdf
-
-
-def save_graph_xml(
-    data,
-    filepath=None,
-    node_tags=settings.osm_xml_node_tags,
-    node_attrs=settings.osm_xml_node_attrs,
-    edge_tags=settings.osm_xml_way_tags,
-    edge_attrs=settings.osm_xml_way_attrs,
-    oneway=False,
-    merge_edges=True,
-    edge_tag_aggs=None,
-):
-    """
-    Do not use: deprecated. Use osm_xml.save_graph_xml instead.
-
-    Parameters
-    ----------
-    data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
-        geopandas GeoDataFrames
-    filepath : string or pathlib.Path
-        path to the .osm file including extension. if None, use default data
-        folder + graph.osm
-    node_tags : list
-        osm node tags to include in output OSM XML
-    node_attrs: list
-        osm node attributes to include in output OSM XML
-    edge_tags : list
-        osm way tags to include in output OSM XML
-    edge_attrs : list
-        osm way attributes to include in output OSM XML
-    oneway : bool
-        the default oneway value used to fill this tag where missing
-    merge_edges : bool
-        if True merges graph edges such that each OSM way has one entry
-        and one entry only in the OSM XML. Otherwise, every OSM way
-        will have a separate entry for each node pair it contains.
-    edge_tag_aggs : list of length-2 string tuples
-        useful only if merge_edges is True, this argument allows the user
-        to specify edge attributes to aggregate such that the merged
-        OSM way entry tags accurately represent the sum total of
-        their component edge attributes. For example, if the user
-        wants the OSM way to have a "length" attribute, the user must
-        specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
-        this method to aggregate the lengths of the individual
-        component edges. Otherwise, the length attribute will simply
-        reflect the length of the first edge associated with the way.
-
-    Returns
-    -------
-    None
-    """
-    import warnings
-
-    msg = (
-        "The save_graph_xml function has been moved to the osm_xml module and "
-        "will be removed in a future release. Use the osm_xml module instead."
-    )
-    warnings.warn(msg)
-    osm_xml.save_graph_xml(
-        data,
-        filepath,
-        node_tags,
-        node_attrs,
-        edge_tags,
-        edge_attrs,
-        oneway,
-        merge_edges,
-        edge_tag_aggs,
-    )

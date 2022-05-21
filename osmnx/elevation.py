@@ -2,7 +2,6 @@
 
 import multiprocessing as mp
 import time
-import warnings
 from hashlib import sha1
 from pathlib import Path
 
@@ -12,7 +11,6 @@ import pandas as pd
 import requests
 
 from . import downloader
-from . import settings
 from . import utils
 from . import utils_graph
 
@@ -55,6 +53,8 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
 
     If `filepath` is a list of paths, this will generate a virtual raster
     composed of the files at those paths as an intermediate step.
+
+    See also the `add_edge_grades` function.
 
     Parameters
     ----------
@@ -139,12 +139,8 @@ def add_node_elevations_google(
     G : networkx.MultiDiGraph
         graph with node elevation attributes
     """
-    # different elevation API endpoints formatted ready for use
-    endpoints = {
-        "google": "https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}",
-        "airmap": "https://api.airmap.com/elevation/v1/ele?points={}",
-    }
-    url_template = endpoints[settings.elevation_provider]
+    # elevation API endpoint ready for use
+    url_template = "https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}"
 
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
     # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
@@ -160,13 +156,8 @@ def add_node_elevations_google(
     results = []
     for i in range(0, len(node_points), max_locations_per_batch):
         chunk = node_points.iloc[i : i + max_locations_per_batch]
-
-        if settings.elevation_provider == "google":
-            locations = "|".join(chunk)
-            url = url_template.format(locations, api_key)
-        elif settings.elevation_provider == "airmap":
-            locations = ",".join(chunk)
-            url = url_template.format(locations)
+        locations = "|".join(chunk)
+        url = url_template.format(locations, api_key)
 
         # check if this request is already in the cache (if global use_cache=True)
         cached_response_json = downloader._retrieve_from_cache(url)
@@ -177,14 +168,7 @@ def add_node_elevations_google(
                 # request the elevations from the API
                 utils.log(f"Requesting node elevations: {url}")
                 time.sleep(pause_duration)
-                if settings.elevation_provider == "google":
-                    response = requests.get(url)
-                elif settings.elevation_provider == "airmap":
-                    headers = {
-                        "X-API-Key": api_key,
-                        "Content-Type": "application/json; charset=utf-8",
-                    }
-                    response = requests.get(url, headers=headers)
+                response = requests.get(url)
                 response_json = response.json()
                 downloader._save_to_cache(url, response_json, response.status_code)
             except Exception as e:
@@ -192,10 +176,7 @@ def add_node_elevations_google(
                 utils.log(f"Server responded with {response.status_code}: {response.reason}")
 
         # append these elevation results to the list of all results
-        if settings.elevation_provider == "google":
-            results.extend(response_json["results"])
-        elif settings.elevation_provider == "airmap":
-            results.extend(response_json["data"])
+        results.extend(response_json["results"])
 
     # sanity check that all our vectors have the same number of elements
     if not (len(results) == len(G) == len(node_points)):
@@ -209,52 +190,12 @@ def add_node_elevations_google(
 
     # add elevation as an attribute to the nodes
     df = pd.DataFrame(node_points, columns=["node_points"])
-    if settings.elevation_provider == "google":
-        df["elevation"] = [result["elevation"] for result in results]
-    elif settings.elevation_provider == "airmap":
-        df["elevation"] = results
+    df["elevation"] = [result["elevation"] for result in results]
     df["elevation"] = df["elevation"].round(precision)
     nx.set_node_attributes(G, name="elevation", values=df["elevation"].to_dict())
-    utils.log("Added elevation data from web service to all nodes.")
+    utils.log("Added elevation data from Google to all nodes.")
 
     return G
-
-
-def add_node_elevations(
-    G, api_key, max_locations_per_batch=350, pause_duration=0, precision=3
-):  # pragma: no cover
-    """
-    Do not use, deprecated, will be removed in a future release.
-
-    This function and the `elevation_provider` setting are deprecated.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        deprecated, do not use
-    api_key : string
-        deprecated, do not use
-    max_locations_per_batch : int
-        deprecated, do not use
-    pause_duration : float
-        deprecated, do not use
-    precision : int
-        deprecated, do not use
-
-    Returns
-    -------
-    G : networkx.MultiDiGraph
-    """
-    msg = (
-        "The add_node_elevations function and the 'airmap' elevation_provider are "
-        "deprecated and will be removed in a future release. Use the "
-        "add_node_elevations_google function or the add_node_elevations_raster "
-        "function instead."
-    )
-    warnings.warn(msg)
-    return add_node_elevations_google(
-        G, api_key, max_locations_per_batch, pause_duration, precision
-    )
 
 
 def add_edge_grades(G, add_absolute=True, precision=3):
@@ -265,7 +206,8 @@ def add_edge_grades(G, add_absolute=True, precision=3):
     for each edge in the graph and add it to the edge as an attribute. Nodes
     must already have `elevation` attributes to use this function.
 
-    See also the `add_node_elevations` function.
+    See also the `add_node_elevations_raster` and `add_node_elevations_google`
+    functions.
 
     Parameters
     ----------

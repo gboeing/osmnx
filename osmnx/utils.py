@@ -89,7 +89,6 @@ def config(
     default_crs=settings.default_crs,
     default_referer=settings.default_referer,
     default_user_agent=settings.default_user_agent,
-    elevation_provider=settings.elevation_provider,
     imgs_folder=settings.imgs_folder,
     log_console=settings.log_console,
     log_file=settings.log_file,
@@ -151,8 +150,6 @@ def config(
         HTTP header referer
     default_user_agent : string
         HTTP header user-agent
-    elevation_provider : string {"google", "airmap"}
-        the API provider to use for adding node elevations
     imgs_folder : string or pathlib.Path
         path to folder in which to save plot images by default
     log_file : bool
@@ -229,7 +226,6 @@ def config(
     settings.default_crs = default_crs
     settings.default_referer = default_referer
     settings.default_user_agent = default_user_agent
-    settings.elevation_provider = elevation_provider
     settings.imgs_folder = imgs_folder
     settings.log_console = log_console
     settings.log_file = log_file

@@ -1,7 +1,6 @@
 """Create interactive Leaflet web maps of graphs and routes via folium."""
 
 import json
-from warnings import warn
 
 from . import utils_graph
 
@@ -19,9 +18,6 @@ def plot_graph_folium(
     tiles="cartodbpositron",
     zoom=1,
     fit_bounds=True,
-    edge_color=None,
-    edge_width=None,
-    edge_opacity=None,
     **kwargs,
 ):
     """
@@ -44,12 +40,6 @@ def plot_graph_folium(
         initial zoom level for the map
     fit_bounds : bool
         if True, fit the map to the boundaries of the graph's edges
-    edge_color : string
-        deprecated, do not use, use kwargs instead
-    edge_width : numeric
-        deprecated, do not use, use kwargs instead
-    edge_opacity : numeric
-        deprecated, do not use, use kwargs instead
     kwargs
         keyword arguments to pass to folium.PolyLine(), see folium docs for
         options (for example `color="#333333", weight=5, opacity=0.7`)
@@ -58,17 +48,6 @@ def plot_graph_folium(
     -------
     folium.folium.Map
     """
-    # deprecation warning
-    if edge_color is not None:  # pragma: no cover
-        kwargs["color"] = edge_color
-        warn("`edge_color` has been deprecated and will be removed: use kwargs instead")
-    if edge_width is not None:  # pragma: no cover
-        kwargs["weight"] = edge_width
-        warn("`edge_width` has been deprecated and will be removed: use kwargs instead")
-    if edge_opacity is not None:  # pragma: no cover
-        kwargs["opacity"] = edge_opacity
-        warn("`edge_opacity` has been deprecated and will be removed: use kwargs instead")
-
     # create gdf of all graph edges
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)
     return _plot_folium(gdf_edges, graph_map, popup_attribute, tiles, zoom, fit_bounds, **kwargs)
@@ -82,9 +61,6 @@ def plot_route_folium(
     tiles="cartodbpositron",
     zoom=1,
     fit_bounds=True,
-    route_color=None,
-    route_width=None,
-    route_opacity=None,
     **kwargs,
 ):
     """
@@ -106,12 +82,6 @@ def plot_route_folium(
         initial zoom level for the map
     fit_bounds : bool
         if True, fit the map to the boundaries of the route's edges
-    route_color : string
-        deprecated, do not use, use kwargs instead
-    route_width : numeric
-        deprecated, do not use, use kwargs instead
-    route_opacity : numeric
-        deprecated, do not use, use kwargs instead
     kwargs
         keyword arguments to pass to folium.PolyLine(), see folium docs for
         options (for example `color="#cc0000", weight=5, opacity=0.7`)
@@ -120,17 +90,6 @@ def plot_route_folium(
     -------
     folium.folium.Map
     """
-    # deprecation warning
-    if route_color is not None:  # pragma: no cover
-        kwargs["color"] = route_color
-        warn("`route_color` has been deprecated and will be removed: use kwargs instead")
-    if route_width is not None:  # pragma: no cover
-        kwargs["weight"] = route_width
-        warn("`route_width` has been deprecated and will be removed: use kwargs instead")
-    if route_opacity is not None:  # pragma: no cover
-        kwargs["opacity"] = route_opacity
-        warn("`route_opacity` has been deprecated and will be removed: use kwargs instead")
-
     # create gdf of the route edges in order
     node_pairs = zip(route[:-1], route[1:])
     uvk = ((u, v, min(G[u][v], key=lambda k: G[u][v][k]["length"])) for u, v in node_pairs)
