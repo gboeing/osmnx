@@ -192,8 +192,8 @@ def test_elevation():
     G = ox.elevation.add_node_elevations_raster(G, rasters[0], cpus=1)
 
     # add node elevations from multiple raster files
-    # G = ox.elevation.add_node_elevations_raster(G, rasters)
-    # assert pd.notnull(pd.Series(dict(G.nodes(data="elevation")))).all()
+    G = ox.elevation.add_node_elevations_raster(G, rasters)
+    assert pd.notnull(pd.Series(dict(G.nodes(data="elevation")))).all()
 
     # add edge grades and their absolute values
     G = ox.add_edge_grades(G, add_absolute=True)
