@@ -422,7 +422,7 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
 
         return paths
 
-    else:
+    else:  # pragma: no cover
         # if only one of orig or dest is iterable and the other is not
         raise ValueError("orig and dest must either both be iterable or neither must be iterable")
 
