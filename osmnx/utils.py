@@ -9,7 +9,6 @@ import warnings
 from contextlib import redirect_stdout
 from pathlib import Path
 
-from . import _version
 from . import settings
 
 
@@ -115,7 +114,7 @@ def config(
     useful_tags_way=settings.useful_tags_way,
 ):
     """
-    Do not use: deprecated.
+    Do not use: deprecated. Use the settings module directly.
 
     Parameters
     ----------
@@ -192,8 +191,9 @@ def config(
     """
     warnings.warn(
         "The `utils.config` function is deprecated and will be removed in a "
-        "future release. Instead, use the `settings` module directly. For "
-        "example, `ox.settings.log_console=True`."
+        "future release. Instead, use the `settings` module directly to "
+        "configure a global setting's value. For example, "
+        "`ox.settings.log_console=True`."
     )
 
     # set each global setting to the argument value
@@ -230,9 +230,6 @@ def config(
     settings.useful_tags_node = useful_tags_node
     settings.useful_tags_way = useful_tags_way
     settings.requests_kwargs = requests_kwargs
-
-    log(f"Configured OSMnx {_version.__version__}")
-    log(f"HTTP response caching is {'on' if settings.use_cache else 'off'}")
 
 
 def log(message, level=None, name=None, filename=None):
