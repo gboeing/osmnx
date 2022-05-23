@@ -306,7 +306,7 @@ def get_digraph(G, weight="length"):
     """
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
-    to_remove = list()
+    to_remove = []
 
     # identify all the parallel edges in the MultiDiGraph
     parallels = ((u, v) for u, v in G.edges(keys=False) if len(G.get_edge_data(u, v)) > 1)
