@@ -6,6 +6,7 @@
   - add "reversed" edge attribute to support node-order-dependent edge attributes
   - add new edge_color and edge_linewidth arguments to plot_footprints function
   - fix nearest_edges function selecting arbitrary edge when bounding boxes overlap
+  - fix get_digraph function's parallel edge handling
   - fix pandas and geopandas version compatibility
   - fix log output appearing in Jupyter notebooks on Unix-like systems
   - remove old functions and arguments previously deprecated in v1.1
