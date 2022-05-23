@@ -306,15 +306,16 @@ def get_digraph(G, weight="length"):
     """
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
-    to_remove = []
+    to_remove = list()
 
     # identify all the parallel edges in the MultiDiGraph
     parallels = ((u, v) for u, v in G.edges(keys=False) if len(G.get_edge_data(u, v)) > 1)
 
-    # remove the parallel edge with greater "weight" attribute value
+    # among all sets of parallel edges, remove all except the one with the
+    # minimum "weight" attribute value
     for u, v in set(parallels):
-        k, _ = max(G.get_edge_data(u, v).items(), key=lambda x: x[1][weight])
-        to_remove.append((u, v, k))
+        k_min, _ = min(G.get_edge_data(u, v).items(), key=lambda x: x[1][weight])
+        to_remove.extend((u, v, k) for k in G[u][v] if k != k_min)
 
     G.remove_edges_from(to_remove)
     utils.log("Converted MultiDiGraph to DiGraph")
