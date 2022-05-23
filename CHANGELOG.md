@@ -1,6 +1,6 @@
 # Change log
 
-## 1.2.0 (TBD)
+## 1.2.0 (2022-05-23)
 
   - add ability to load GraphML string data to the load_graphml function
   - add "reversed" edge attribute to support node-order-dependent edge attributes
