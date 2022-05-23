@@ -309,7 +309,7 @@ def get_digraph(G, weight="length"):
     to_remove = []
 
     # identify all the parallel edges in the MultiDiGraph
-    parallels = ((u, v) for u, v, k in G.edges(keys=True) if k > 0)
+    parallels = ((u, v) for u, v in G.edges(keys=False) if len(G.get_edge_data(u, v)) > 1)
 
     # remove the parallel edge with greater "weight" attribute value
     for u, v in set(parallels):
