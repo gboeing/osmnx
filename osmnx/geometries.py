@@ -65,7 +65,7 @@ def geometries_from_bbox(north, south, east, west, tags):
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
+    other custom settings via the `settings` module.
     """
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -106,7 +106,7 @@ def geometries_from_point(center_point, tags, dist=1000):
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
+    other custom settings via the `settings` module.
     """
     # create bounding box from center point and distance in each direction
     north, south, east, west = utils_geo.bbox_from_point(center_point, dist)
@@ -151,7 +151,7 @@ def geometries_from_address(address, tags, dist=1000):
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
+    other custom settings via the `settings` module.
     """
     # geocode the address string to a (lat, lng) point
     center_point = geocoder.geocode(query=address)
@@ -208,7 +208,7 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
+    other custom settings via the `settings` module.
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, (str, dict)):
@@ -261,7 +261,7 @@ def geometries_from_polygon(polygon, tags):
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
+    other custom settings via the `settings` module.
     """
     # verify that the geometry is valid and a Polygon/MultiPolygon
     if not polygon.is_valid:
