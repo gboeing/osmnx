@@ -101,7 +101,7 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 
-def add_edge_lengths(G, precision=3, uvk=None):
+def add_edge_lengths(G, precision=3, *, uvk=None):
     """
     Add `length` attribute (in meters) to each edge.
 
