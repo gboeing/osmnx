@@ -101,7 +101,7 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 
-def add_edge_lengths(G, precision=3):
+def add_edge_lengths(G, precision=3, uvk=None):
     """
     Add `length` attribute (in meters) to each edge.
 
@@ -117,6 +117,8 @@ def add_edge_lengths(G, precision=3):
         unprojected, unsimplified input graph
     precision : int
         decimal precision to round lengths
+    uvk : tuple
+        tuple of edges to which length attributes will be added
 
     Returns
     -------
@@ -124,7 +126,8 @@ def add_edge_lengths(G, precision=3):
         graph with edge length attributes
     """
     # extract edge IDs and corresponding coordinates from their nodes
-    uvk = tuple(G.edges)
+    if uvk == None:
+        uvk = tuple(G.edges)
     x = G.nodes(data="x")
     y = G.nodes(data="y")
     try:
