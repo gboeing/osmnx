@@ -126,7 +126,7 @@ def add_edge_lengths(G, precision=3, *, uvk=None):
         graph with edge length attributes
     """
     # extract edge IDs and corresponding coordinates from their nodes
-    if uvk == None:
+    if uvk is None:
         uvk = tuple(G.edges)
     x = G.nodes(data="x")
     y = G.nodes(data="y")
