@@ -338,7 +338,7 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
     Parameters
     ----------
     base_endpoint : string
-        base Overpass API endpoint (without "/status" at the end)
+        base Overpass API url (without "/status" at the end)
     recursive_delay : int
         how long to wait between recursive calls if the server is currently
         running a query
