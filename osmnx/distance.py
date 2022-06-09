@@ -101,15 +101,25 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 
-def add_edge_lengths(G, precision=3):
+def add_edge_lengths(G, precision=3, edges=None):
     """
     Add `length` attribute (in meters) to each edge.
 
     Vectorized function to calculate great-circle distance between each edge's
     incident nodes. Ensure graph is in unprojected coordinates, and
-    unsimplified to get accurate distances. Note: this function is run by all
-    the `graph.graph_from_x` functions automatically to add `length`
-    attributes to all edges.
+    unsimplified to get accurate distances.
+
+    Note: this function is run by all the `graph.graph_from_x` functions
+    automatically to add `length` attributes to all edges. It calculates edge
+    lengths as the great-circle distance from node `u` to node `v`. When
+    OSMnx automatically runs this function upon graph creation, it does it
+    before simplifying the graph: thus it calculates the straight-line lengths
+    of edge segments that are themselves all straight. Only after
+    simplification do edges take on a (potentially) curvilinear geometry. If
+    you wish to calculate edge lengths later, you are calculating
+    straight-line distances which necessarily ignore the curvilinear geometry.
+    You only want to run this function on a graph with all straight edges
+    (such as is the case with an unsimplified graph).
 
     Parameters
     ----------
@@ -117,14 +127,21 @@ def add_edge_lengths(G, precision=3):
         unprojected, unsimplified input graph
     precision : int
         decimal precision to round lengths
+    edges : tuple
+        tuple of (u, v, k) tuples representing subset of edges to add length
+        attributes to. if None, add lengths to all edges.
 
     Returns
     -------
     G : networkx.MultiDiGraph
         graph with edge length attributes
     """
+    if edges is None:
+        uvk = tuple(G.edges)
+    else:
+        uvk = edges
+
     # extract edge IDs and corresponding coordinates from their nodes
-    uvk = tuple(G.edges)
     x = G.nodes(data="x")
     y = G.nodes(data="y")
     try:
