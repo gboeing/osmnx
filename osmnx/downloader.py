@@ -338,7 +338,7 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
     Parameters
     ----------
     base_endpoint : string
-        base Overpass API endpoint (without "/status" at the end)
+        base Overpass API url (without "/status" at the end)
     recursive_delay : int
         how long to wait between recursive calls if the server is currently
         running a query
@@ -359,7 +359,7 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
         url = base_endpoint.rstrip("/") + "/status"
         response = requests.get(url, headers=_get_http_headers(), **settings.requests_kwargs)
         sc = response.status_code
-        status = response.text.split("\n")[3]
+        status = response.text.split("\n")[4]
         status_first_token = status.split(" ")[0]
 
     except Exception:  # pragma: no cover

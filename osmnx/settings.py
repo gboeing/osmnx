@@ -69,11 +69,11 @@ memory : int
     None, server will use its default allocation size. Use with caution.
     Default is `None`.
 nominatim_endpoint : string
-    Base API endpoint to use for Nominatim queries. Default is
+    The base API url to use for Nominatim queries. Default is
     `"https://nominatim.openstreetmap.org/"`.
 nominatim_key : string
-    Your Nominatim API key, if you are using an endpoint that requires one.
-    Default is `None`.
+    Your Nominatim API key, if you are using an API instance that requires
+    one. Default is `None`.
 osm_xml_node_attrs : list
     Node attributes for saving .osm XML files with `save_graph_xml` function.
     Default is `["id", "timestamp", "uid", "user", "version", "changeset",
@@ -88,7 +88,7 @@ osm_xml_way_tags : list
     Edge tags for for saving .osm XML files with `save_graph_xml` function.
     Default is `["highway", "lanes", "maxspeed", "name", "oneway"]`.
 overpass_endpoint : string
-    Base API endpoint to use for overpass queries. Default is
+    The base API url to use for overpass queries. Default is
     `"https://overpass-api.de/api"`.
 overpass_rate_limit : bool
     If True, check the Overpass server status endpoint for how long to
