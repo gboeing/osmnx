@@ -114,6 +114,7 @@ def test_stats():
     _ = ox.bearing.calculate_bearing(0, 0, 1, 1)
     G = ox.add_edge_bearings(G)
     G_proj = ox.project_graph(G)
+    G_proj = ox.distance.add_edge_lengths(G_proj, edges=tuple(G_proj.edges)[0:3])
 
     # calculate stats
     cspn = ox.stats.count_streets_per_node(G)
