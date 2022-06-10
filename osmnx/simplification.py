@@ -1,5 +1,6 @@
 """Simplify, correct, and consolidate network topology."""
 
+from collections import defaultdict
 import logging as lg
 
 import geopandas as gpd
@@ -242,7 +243,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
 
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
-        path_attributes = dict()
+        path_attributes = defaultdict(list)
         for u, v in zip(path[:-1], path[1:]):
 
             # there should rarely be multiple edges between interstitial nodes
@@ -256,14 +257,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
             # them (see above), we retain only one in the simplified graph
             edge_data = G.edges[u, v, 0]
             for attr in edge_data:
-                if attr in path_attributes:
-                    # if this key already exists in the dict, append it to the
-                    # value list
-                    path_attributes[attr].append(edge_data[attr])
-                else:
-                    # if this key doesn't already exist, set the value to a list
-                    # containing the one value
-                    path_attributes[attr] = [edge_data[attr]]
+                path_attributes[attr].append(edge_data[attr])
 
         # consolidate the path's edge segments' attribute values
         for attr in path_attributes:
