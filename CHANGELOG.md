@@ -1,5 +1,10 @@
 # Change log
 
+## 1.2.1 (TBD)
+
+  - fix rate limit checking and pausing on newest versions of Overpass API
+  - allow add_edge_lengths function to be run on a subset of edges
+
 ## 1.2.0 (2022-05-23)
 
   - add ability to load GraphML string data to the load_graphml function
