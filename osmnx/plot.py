@@ -528,7 +528,7 @@ def plot_figure_ground(
                 # anything larger from extending past smallest street's line.
                 # circle marker sizes are in area, so use diameter squared.
                 circle_diameter = max(edge_widths)
-                circle_area = circle_diameter ** 2
+                circle_area = circle_diameter**2
                 node_widths[node] = circle_area
 
         # assign the node size to each node in the graph
@@ -560,6 +560,8 @@ def plot_footprints(
     ax=None,
     figsize=(8, 8),
     color="orange",
+    edge_color="none",
+    edge_linewidth=0,
     alpha=None,
     bgcolor="#111111",
     bbox=None,
@@ -582,6 +584,10 @@ def plot_footprints(
         if ax is None, create new figure with size (width, height)
     color : string
         color of the footprints
+    edge_color : string
+        color of the edge of the footprints
+    edge_linewidth : float
+        width of the edge of the footprints
     alpha : float
         opacity of the footprints
     bgcolor : string
@@ -614,7 +620,9 @@ def plot_footprints(
 
     # retain only Polygons and MultiPolygons, then plot
     gdf = gdf[gdf["geometry"].type.isin({"Polygon", "MultiPolygon"})]
-    ax = gdf.plot(ax=ax, facecolor=color, edgecolor="none", linewidth=0, alpha=alpha)
+    ax = gdf.plot(
+        ax=ax, facecolor=color, edgecolor=edge_color, linewidth=edge_linewidth, alpha=alpha
+    )
 
     # determine figure extents
     if bbox is None:

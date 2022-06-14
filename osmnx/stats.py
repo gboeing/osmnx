@@ -14,7 +14,6 @@ You can use NetworkX directly for additional topological network measures.
 
 import itertools
 import logging as lg
-import warnings
 from collections import Counter
 
 import networkx as nx
@@ -304,14 +303,7 @@ def count_streets_per_node(G, nodes=None):
     return streets_per_node
 
 
-def basic_stats(
-    G,
-    area=None,
-    clean_int_tol=None,
-    clean_intersects=None,
-    tolerance=None,
-    circuity_dist=None,
-):
+def basic_stats(G, area=None, clean_int_tol=None):
     """
     Calculate basic descriptive geometric and topological measures of a graph.
 
@@ -330,12 +322,6 @@ def basic_stats(
         if `area` is also provided) and use this tolerance value; refer to the
         `simplification.consolidate_intersections` function documentation for
         details
-    clean_intersects : bool
-        deprecated, do not use
-    tolerance : float
-        deprecated, do not use
-    circuity_dist : string
-        deprecated, do not use
 
     Returns
     -------
@@ -362,33 +348,6 @@ def basic_stats(
           - `streets_per_node_counts` - see `streets_per_node_counts` function documentation
           - `streets_per_node_proportions` - see `streets_per_node_proportions` function documentation
     """
-    if circuity_dist is not None:
-        msg = (
-            "The `circuity_dist` argument has been deprecated and will be "
-            "removed in a future release."
-        )
-        warnings.warn(msg)
-
-    if clean_intersects is not None:
-        if clean_int_tol is None:
-            clean_int_tol = 15
-        msg = (
-            "The `clean_intersects` and `tolerance` arguments have been "
-            "deprecated and will be removed in a future release. Use the "
-            "`clean_int_tol` argument instead."
-        )
-        warnings.warn(msg)
-
-    if tolerance is not None:
-        if clean_int_tol is None:
-            clean_int_tol = tolerance
-        msg = (
-            "The `clean_intersects` and `tolerance` arguments have been "
-            "deprecated and will be removed in a future release. Use the "
-            "`clean_int_tol` argument instead."
-        )
-        warnings.warn(msg)
-
     Gu = utils_graph.get_undirected(G)
     stats = dict()
 
@@ -425,92 +384,4 @@ def basic_stats(
         if clean_int_tol:
             stats["clean_intersection_density_km"] = stats["clean_intersection_count"] / area_km
 
-    return stats
-
-
-def extended_stats(G, connectivity=False, anc=False, ecc=False, bc=False, cc=False):
-    """
-    Do not use: deprecated and will be removed in a future release.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        deprecated
-    connectivity : bool
-        deprecated
-    anc : bool
-        deprecated
-    ecc : bool
-        deprecated
-    bc : bool
-        deprecated
-    cc : bool
-        deprecated
-
-    Returns
-    -------
-    dict
-    """
-    msg = (
-        "The extended_stats function has been deprecated and will be removed in a "
-        "future release. Use NetworkX directly for extended topological measures."
-    )
-    warnings.warn(msg)
-    stats = dict()
-    D = utils_graph.get_digraph(G, weight="length")
-    Gu = nx.Graph(D)
-    Gs = utils_graph.get_largest_component(G, strongly=True)
-    avg_neighbor_degree = nx.average_neighbor_degree(G)
-    stats["avg_neighbor_degree"] = avg_neighbor_degree
-    stats["avg_neighbor_degree_avg"] = sum(avg_neighbor_degree.values()) / len(avg_neighbor_degree)
-    avg_wtd_nbr_deg = nx.average_neighbor_degree(G, weight="length")
-    stats["avg_weighted_neighbor_degree"] = avg_wtd_nbr_deg
-    stats["avg_weighted_neighbor_degree_avg"] = sum(avg_wtd_nbr_deg.values()) / len(avg_wtd_nbr_deg)
-    degree_centrality = nx.degree_centrality(G)
-    stats["degree_centrality"] = degree_centrality
-    stats["degree_centrality_avg"] = sum(degree_centrality.values()) / len(degree_centrality)
-    stats["clustering_coefficient"] = nx.clustering(Gu)
-    stats["clustering_coefficient_avg"] = nx.average_clustering(Gu)
-    stats["clustering_coefficient_weighted"] = nx.clustering(Gu, weight="length")
-    stats["clustering_coefficient_weighted_avg"] = nx.average_clustering(Gu, weight="length")
-    pagerank = nx.pagerank(D, weight="length")
-    stats["pagerank"] = pagerank
-    pagerank_max_node = max(pagerank, key=lambda x: pagerank[x])
-    stats["pagerank_max_node"] = pagerank_max_node
-    stats["pagerank_max"] = pagerank[pagerank_max_node]
-    pagerank_min_node = min(pagerank, key=lambda x: pagerank[x])
-    stats["pagerank_min_node"] = pagerank_min_node
-    stats["pagerank_min"] = pagerank[pagerank_min_node]
-    if connectivity:
-        stats["node_connectivity"] = nx.node_connectivity(Gs)
-        stats["edge_connectivity"] = nx.edge_connectivity(Gs)
-        utils.log("Calculated node and edge connectivity")
-    if anc:
-        stats["node_connectivity_avg"] = nx.average_node_connectivity(G)
-        utils.log("Calculated average node connectivity")
-    if ecc:
-        length_func = nx.single_source_dijkstra_path_length
-        sp = {source: dict(length_func(Gs, source, weight="length")) for source in Gs.nodes}
-        utils.log("Calculated shortest path lengths")
-        eccentricity = nx.eccentricity(Gs, sp=sp)
-        stats["eccentricity"] = eccentricity
-        diameter = nx.diameter(Gs, e=eccentricity)
-        stats["diameter"] = diameter
-        radius = nx.radius(Gs, e=eccentricity)
-        stats["radius"] = radius
-        center = nx.center(Gs, e=eccentricity)
-        stats["center"] = center
-        periphery = nx.periphery(Gs, e=eccentricity)
-        stats["periphery"] = periphery
-    if cc:
-        close_cent = nx.closeness_centrality(G, distance="length")
-        stats["closeness_centrality"] = close_cent
-        stats["closeness_centrality_avg"] = sum(close_cent.values()) / len(close_cent)
-        utils.log("Calculated closeness centrality")
-    if bc:
-        btwn_cent = nx.betweenness_centrality(D, weight="length")
-        stats["betweenness_centrality"] = btwn_cent
-        stats["betweenness_centrality_avg"] = sum(btwn_cent.values()) / len(btwn_cent)
-        utils.log("Calculated betweenness centrality")
-    utils.log("Calculated extended stats")
     return stats

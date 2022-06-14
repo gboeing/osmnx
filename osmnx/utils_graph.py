@@ -10,7 +10,6 @@ import pandas as pd
 from shapely.geometry import LineString
 from shapely.geometry import Point
 
-from . import stats
 from . import utils
 
 
@@ -182,34 +181,6 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     return G
 
 
-def count_streets_per_node(G, nodes=None):
-    """
-    Do not use, deprecated.
-
-    This function has moved to the `stats` module.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    nodes : list
-        which node IDs to get counts for. if None, use all graph nodes,
-        otherwise calculate counts only for these node IDs
-
-    Returns
-    -------
-    streets_per_node : dict
-        counts of how many physical streets connect to each node, with keys =
-        node ids and values = counts
-    """
-    msg = (
-        "The `count_streets_per_node` function has moved to the `stats` module "
-        "and will be removed from the `utils_graph` module in a future release."
-    )
-    warnings.warn(msg)
-    return stats.count_streets_per_node(G, nodes)
-
-
 def get_route_edge_attributes(
     G, route, attribute=None, minimize_key="length", retrieve_default=None
 ):
@@ -338,12 +309,13 @@ def get_digraph(G, weight="length"):
     to_remove = []
 
     # identify all the parallel edges in the MultiDiGraph
-    parallels = ((u, v) for u, v, k in G.edges(keys=True) if k > 0)
+    parallels = ((u, v) for u, v in G.edges(keys=False) if len(G.get_edge_data(u, v)) > 1)
 
-    # remove the parallel edge with greater "weight" attribute value
+    # among all sets of parallel edges, remove all except the one with the
+    # minimum "weight" attribute value
     for u, v in set(parallels):
-        k, _ = max(G.get_edge_data(u, v).items(), key=lambda x: x[1][weight])
-        to_remove.append((u, v, k))
+        k_min, _ = min(G.get_edge_data(u, v).items(), key=lambda x: x[1][weight])
+        to_remove.extend((u, v, k) for k in G[u][v] if k != k_min)
 
     G.remove_edges_from(to_remove)
     utils.log("Converted MultiDiGraph to DiGraph")

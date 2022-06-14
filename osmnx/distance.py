@@ -2,7 +2,6 @@
 
 import itertools
 import multiprocessing as mp
-import warnings
 
 import networkx as nx
 import numpy as np
@@ -102,15 +101,25 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 
-def add_edge_lengths(G, precision=3):
+def add_edge_lengths(G, precision=3, edges=None):
     """
     Add `length` attribute (in meters) to each edge.
 
     Vectorized function to calculate great-circle distance between each edge's
     incident nodes. Ensure graph is in unprojected coordinates, and
-    unsimplified to get accurate distances. Note: this function is run by all
-    the `graph.graph_from_x` functions automatically to add `length`
-    attributes to all edges.
+    unsimplified to get accurate distances.
+
+    Note: this function is run by all the `graph.graph_from_x` functions
+    automatically to add `length` attributes to all edges. It calculates edge
+    lengths as the great-circle distance from node `u` to node `v`. When
+    OSMnx automatically runs this function upon graph creation, it does it
+    before simplifying the graph: thus it calculates the straight-line lengths
+    of edge segments that are themselves all straight. Only after
+    simplification do edges take on a (potentially) curvilinear geometry. If
+    you wish to calculate edge lengths later, you are calculating
+    straight-line distances which necessarily ignore the curvilinear geometry.
+    You only want to run this function on a graph with all straight edges
+    (such as is the case with an unsimplified graph).
 
     Parameters
     ----------
@@ -118,14 +127,21 @@ def add_edge_lengths(G, precision=3):
         unprojected, unsimplified input graph
     precision : int
         decimal precision to round lengths
+    edges : tuple
+        tuple of (u, v, k) tuples representing subset of edges to add length
+        attributes to. if None, add lengths to all edges.
 
     Returns
     -------
     G : networkx.MultiDiGraph
         graph with edge length attributes
     """
+    if edges is None:
+        uvk = tuple(G.edges)
+    else:
+        uvk = edges
+
     # extract edge IDs and corresponding coordinates from their nodes
-    uvk = tuple(G.edges)
     x = G.nodes(data="x")
     y = G.nodes(data="y")
     try:
@@ -285,7 +301,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         # then minimize euclidean distance from point to the possible matches
         ne_dist = list()
         for xy in zip(X, Y):
-            dists = geoms.iloc[list(rtree.nearest(xy))].distance(Point(xy))
+            dists = geoms.iloc[list(rtree.nearest(xy, num_results=10))].distance(Point(xy))
             ne_dist.append((dists.idxmin(), dists.min()))
         ne, dist = zip(*ne_dist)
 
@@ -328,132 +344,6 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         return ne, dist
     else:
         return ne
-
-
-def get_nearest_node(G, point, method=None, return_dist=False):
-    """
-    Do not use, deprecated.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        deprecated, do not use
-    point : tuple
-        deprecated, do not use
-    method : string
-        deprecated, do not use
-    return_dist : bool
-        deprecated, do not use
-
-    Returns
-    -------
-    int or tuple
-    """
-    msg = (
-        "The `get_nearest_node` function has been deprecated and will be removed in a "
-        "future release. Use the more efficient `distance.nearest_nodes` instead."
-    )
-    warnings.warn(msg)
-    nn, dist = nearest_nodes(G, X=[point[1]], Y=[point[0]], return_dist=True)
-    if return_dist:
-        return nn[0], dist[0]
-    else:
-        return nn[0]
-
-
-def get_nearest_edge(G, point, return_geom=False, return_dist=False):
-    """
-    Do not use, deprecated.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        deprecated, do not use
-    point : tuple
-        deprecated, do not use
-    return_geom : bool
-        deprecated, do not use
-    return_dist : bool
-        deprecated, do not use
-
-    Returns
-    -------
-    tuple
-    """
-    msg = (
-        "The `get_nearest_edge` function has been deprecated and will be removed in a "
-        "future release. Use the more efficient `distance.nearest_edges` instead."
-    )
-    warnings.warn(msg)
-    ne, dist = nearest_edges(G, X=[point[1]], Y=[point[0]], return_dist=True)
-    u, v, key = ne[0]
-    geom = utils_graph.graph_to_gdfs(G, nodes=False).loc[(u, v, key), "geometry"]
-    if return_dist and return_geom:
-        return u, v, key, geom, dist[0]
-    elif return_dist:
-        return u, v, key, dist[0]
-    elif return_geom:
-        return u, v, key, geom
-    else:
-        return u, v, key
-
-
-def get_nearest_nodes(G, X, Y, method=None, return_dist=False):
-    """
-    Do not use, deprecated.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        deprecated, do not use
-    X : list
-        deprecated, do not use
-    Y : list
-        deprecated, do not use
-    method : string
-        deprecated, do not use
-    return_dist : bool
-        deprecated, do not use
-
-    Returns
-    -------
-    numpy.array or tuple of numpy.array
-    """
-    msg = (
-        "The `get_nearest_nodes` function has been deprecated and will be removed in a "
-        "future release. Use the more efficient `distance.nearest_nodes` instead."
-    )
-    warnings.warn(msg)
-    return nearest_nodes(G, X=X, Y=Y, return_dist=return_dist)
-
-
-def get_nearest_edges(G, X, Y, method=None, dist=None):
-    """
-    Do not use, deprecated.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        deprecated, do not use
-    X : list-like
-        deprecated, do not use
-    Y : list-like
-        deprecated, do not use
-    method : string
-        deprecated, do not use
-    dist : float
-        deprecated, do not use
-
-    Returns
-    -------
-    numpy.array
-    """
-    msg = (
-        "The `get_nearest_edges` function has been deprecated and will be removed in a "
-        "future release. Use the more efficient `distance.nearest_edges` instead."
-    )
-    warnings.warn(msg)
-    return nearest_edges(G, X, Y, dist)
 
 
 def _single_shortest_path(G, orig, dest, weight):
@@ -549,7 +439,7 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
 
         return paths
 
-    else:
+    else:  # pragma: no cover
         # if only one of orig or dest is iterable and the other is not
         raise ValueError("orig and dest must either both be iterable or neither must be iterable")
 

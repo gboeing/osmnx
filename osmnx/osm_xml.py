@@ -123,7 +123,9 @@ def save_graph_xml(
     >>> oxwt = ox.settings.osm_xml_way_tags
     >>> utn = list(set(utn + oxna + oxnt))
     >>> utw = list(set(utw + oxwa + oxwt))
-    >>> ox.config(all_oneway=True, useful_tags_node=utn, useful_tags_way=utw)
+    >>> ox.settings.all_oneway = True
+    >>> ox.settings.useful_tags_node = utn
+    >>> ox.settings.useful_tags_way = utw
     >>> G = ox.graph_from_place('Piedmont, CA, USA', network_type='drive')
     >>> ox.save_graph_xml(G, filepath='./data/graph.osm')
 

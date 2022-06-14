@@ -74,7 +74,9 @@ def graph_from_bbox(
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
+    other custom settings via the `settings` module. Very large query areas
+    will use the utils_geo._consolidate_subdivide_geometry function to perform
+    multiple queries: see that function's documentation for caveats.
     """
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -146,7 +148,9 @@ def graph_from_point(
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
+    other custom settings via the `settings` module. Very large query areas
+    will use the utils_geo._consolidate_subdivide_geometry function to perform
+    multiple queries: see that function's documentation for caveats.
     """
     if dist_type not in {"bbox", "network"}:  # pragma: no cover
         raise ValueError('dist_type must be "bbox" or "network"')
@@ -234,7 +238,9 @@ def graph_from_address(
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
+    other custom settings via the `settings` module. Very large query areas
+    will use the utils_geo._consolidate_subdivide_geometry function to perform
+    multiple queries: see that function's documentation for caveats.
     """
     # geocode the address string to a (lat, lng) point
     point = geocoder.geocode(query=address)
@@ -320,7 +326,9 @@ def graph_from_place(
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
+    other custom settings via the `settings` module. Very large query areas
+    will use the utils_geo._consolidate_subdivide_geometry function to perform
+    multiple queries: see that function's documentation for caveats.
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, (str, dict)):
@@ -397,7 +405,9 @@ def graph_from_polygon(
     Notes
     -----
     You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via ox.config().
+    other custom settings via the `settings` module. Very large query areas
+    will use the utils_geo._consolidate_subdivide_geometry function to perform
+    multiple queries: see that function's documentation for caveats.
     """
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
@@ -762,12 +772,15 @@ def _add_paths(G, paths, bidirectional=False):
         if not settings.all_oneway:
             path["oneway"] = is_one_way
 
-        # zip path nodes to get (u, v) tuples like [(0,1), (1,2), (2,3)]. if
-        # the path is NOT one-way, reverse direction of each edge and add this
-        # path going the opposite direction too
+        # zip path nodes to get (u, v) tuples like [(0,1), (1,2), (2,3)].
         edges = list(zip(nodes[:-1], nodes[1:]))
-        if not is_one_way:
-            edges.extend([(v, u) for u, v in edges])
 
         # add all the edge tuples and give them the path's tag:value attrs
+        path["reversed"] = False
         G.add_edges_from(edges, **path)
+
+        # if the path is NOT one-way, reverse direction of each edge and add
+        # this path going the opposite direction too
+        if not is_one_way:
+            path["reversed"] = True
+            G.add_edges_from([(v, u) for u, v in edges], **path)

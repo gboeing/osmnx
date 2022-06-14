@@ -85,8 +85,6 @@ def test_coords_rounding():
         ]
     )
 
-    _ = ox.utils_geo.redistribute_vertices(shape1, 0.01)
-
     shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
 
     shape1 = Polygon([(1.123456, 2.123456), (3.123456, 4.123456), (6.123456, 5.123456)])
@@ -105,6 +103,7 @@ def test_geocode_to_gdf():
     # test loading spatial boundaries and plotting
     city = ox.geocode_to_gdf("R2999176", by_osmid=True)
     city = ox.geocode_to_gdf(place1, which_result=1, buffer_dist=100)
+    city = ox.geocode_to_gdf(place2)
     city_projected = ox.project_gdf(city, to_crs="epsg:3395")
 
 
@@ -112,20 +111,16 @@ def test_stats():
     # create graph, add a new node, add bearings, project it
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     G.add_node(0, x=location_point[1], y=location_point[0])
-    _ = ox.bearing.get_bearing((0, 0), (1, 1))
+    _ = ox.bearing.calculate_bearing(0, 0, 1, 1)
     G = ox.add_edge_bearings(G)
     G_proj = ox.project_graph(G)
+    G_proj = ox.distance.add_edge_lengths(G_proj, edges=tuple(G_proj.edges)[0:3])
 
     # calculate stats
-    cspn = ox.utils_graph.count_streets_per_node(G)
+    cspn = ox.stats.count_streets_per_node(G)
     stats = ox.basic_stats(G)
     stats = ox.basic_stats(G, area=1000)
-    stats = ox.basic_stats(
-        G_proj, area=1000, clean_intersects=True, tolerance=15, circuity_dist="euclidean"
-    )
-
-    # calculate extended stats
-    stats = ox.extended_stats(G, connectivity=True, anc=False, ecc=True, bc=True, cc=True)
+    stats = ox.basic_stats(G_proj, area=1000, clean_int_tol=15)
 
     # calculate entropy
     Gu = ox.get_undirected(G)
@@ -172,14 +167,14 @@ def test_osm_xml():
     default_all_oneway = ox.settings.all_oneway
     ox.settings.all_oneway = True
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
-    ox.io.save_graph_xml(G, merge_edges=False)
+    ox.save_graph_xml(G, merge_edges=False, filepath=Path(ox.settings.data_folder) / "graph.osm")
 
     # test osm xml output merge edges
-    ox.io.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")])
+    ox.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")])
 
     # test osm xml output from gdfs
     nodes, edges = ox.graph_to_gdfs(G)
-    ox.io.save_graph_xml([nodes, edges])
+    ox.save_graph_xml([nodes, edges])
 
     # test ordered nodes from way
     df = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
@@ -266,12 +261,10 @@ def test_plots():
     # plot and save to disk
     filepath = Path(ox.settings.data_folder) / "test.svg"
     fig, ax = ox.plot_graph(G, show=False, save=True, close=True, filepath=filepath)
-    fig, ax = ox.plot_graph(Gp, edge_linewidth=0)
-
+    fig, ax = ox.plot_graph(Gp, edge_linewidth=0, figsize=(5, 5), bgcolor="y")
     fig, ax = ox.plot_graph(
-        G,
-        figsize=(5, 5),
-        bgcolor="y",
+        Gp,
+        ax=ax,
         dpi=180,
         node_color="k",
         node_size=5,
@@ -295,36 +288,20 @@ def test_plots():
 def test_find_nearest():
 
     # get graph and x/y coords to search
-    G = ox.graph_from_point(location_point, dist=500, network_type="drive")
+    G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
     Gp = ox.project_graph(G)
     points = ox.utils_geo.sample_points(ox.get_undirected(Gp), 5)
     X = points.x.values
     Y = points.y.values
 
-    # get nearest node
-    nn, d = ox.get_nearest_node(Gp, location_point, method="euclidean", return_dist=True)
-    nn = ox.get_nearest_node(Gp, location_point, method="euclidean", return_dist=False)
-
     # get nearest nodes
     nn0, dist0 = ox.distance.nearest_nodes(G, X[0], Y[0], return_dist=True)
-    nn1, dist1 = ox.get_nearest_nodes(G, X, Y, return_dist=True)
-    nn2, dist2 = ox.get_nearest_nodes(Gp, X, Y, method="kdtree", return_dist=True)
-    nn3, dist3 = ox.get_nearest_nodes(G, X, Y, method="balltree", return_dist=True)
-    nn4 = ox.get_nearest_nodes(G, X, Y)
-    nn5 = ox.get_nearest_nodes(Gp, X, Y, method="kdtree")
-    nn6 = ox.get_nearest_nodes(G, X, Y, method="balltree")
+    nn1, dist1 = ox.distance.nearest_nodes(Gp, X[0], Y[0], return_dist=True)
 
     # get nearest edge
-    u, v, k, g, d = ox.get_nearest_edge(Gp, location_point, return_geom=True, return_dist=True)
-    u, v, k, g = ox.get_nearest_edge(Gp, location_point, return_geom=True)
-    u, v, k, d = ox.get_nearest_edge(Gp, location_point, return_dist=True)
-    u, v, k = ox.get_nearest_edge(Gp, location_point)
-
-    # get nearest edges
-    ne0 = ox.distance.nearest_edges(Gp, X[0], Y[0], interpolate=50)
-    ne1 = ox.get_nearest_edges(Gp, X, Y)
-    ne2 = ox.get_nearest_edges(Gp, X, Y, method="kdtree")
-    ne3 = ox.get_nearest_edges(G, X, Y, method="balltree", dist=0.0001)
+    ne0 = ox.distance.nearest_edges(Gp, X[0], Y[0], interpolate=None)
+    ne1 = ox.distance.nearest_edges(Gp, X[0], Y[0], interpolate=50)
+    ne2 = ox.distance.nearest_edges(G, X[0], Y[0], interpolate=50, return_dist=True)
 
 
 def test_api_endpoints():
@@ -385,7 +362,8 @@ def test_graph_save_load():
 
     # save graph as shapefile and geopackage
     G = ox.graph_from_place(place1, network_type="drive")
-    ox.save_graph_shapefile(G)
+    ox.save_graph_shapefile(G, directed=True)
+    ox.save_graph_shapefile(G, filepath=Path(ox.settings.data_folder) / "graph_shapefile")
     ox.save_graph_geopackage(G, directed=False)
 
     # save/load geopackage and convert graph to/from node/edge GeoDataFrames
@@ -412,6 +390,7 @@ def test_graph_save_load():
     # save/load graph as graphml file
     ox.save_graphml(G, gephi=True)
     ox.save_graphml(G, gephi=False)
+    ox.save_graphml(G, gephi=False, filepath=Path(ox.settings.data_folder) / "graph.graphml")
     filepath = Path(ox.settings.data_folder) / "graph.graphml"
     G2 = ox.load_graphml(
         filepath,
@@ -441,6 +420,11 @@ def test_graph_save_load():
     ed = {"length": str, "osmid": float}
     G2 = ox.load_graphml(filepath, node_dtypes=nd, edge_dtypes=ed)
 
+    # test loading graphml from a file stream
+    file_bytes = open("tests/input_data/short.graphml", "rb").read()
+    data = str(file_bytes.decode())
+    G = ox.load_graphml(graphml_str=data, node_dtypes=nd, edge_dtypes=ed)
+
 
 def test_graph_from_functions():
 
@@ -455,6 +439,7 @@ def test_graph_from_functions():
     # truncate graph by bounding box
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=400)
     G = ox.truncate.truncate_graph_bbox(G, north, south, east, west)
+    G = ox.utils_graph.get_largest_component(G, strongly=True)
 
     # graph from address
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
@@ -478,6 +463,7 @@ def test_graph_from_functions():
         location_point, dist=500, custom_filter=cf, dist_type="bbox", network_type="all"
     )
 
+    ox.settings.memory = "1073741824"
     G = ox.graph_from_point(
         location_point,
         dist=500,
@@ -496,6 +482,7 @@ def test_geometries():
     tags = {"landuse": True, "building": True, "highway": True}
     gdf = ox.geometries_from_bbox(north, south, east, west, tags=tags)
     fig, ax = ox.plot_footprints(gdf)
+    fig, ax = ox.plot_footprints(gdf, ax=ax, bbox=(10, 0, 10, 0))
 
     # geometries_from_point - tests multipolygon creation
     gdf = ox.geometries_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)

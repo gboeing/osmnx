@@ -5,10 +5,10 @@ import logging as lg
 import os
 import sys
 import unicodedata
+import warnings
 from contextlib import redirect_stdout
 from pathlib import Path
 
-from . import _version
 from . import settings
 
 
@@ -89,7 +89,6 @@ def config(
     default_crs=settings.default_crs,
     default_referer=settings.default_referer,
     default_user_agent=settings.default_user_agent,
-    elevation_provider=settings.elevation_provider,
     imgs_folder=settings.imgs_folder,
     log_console=settings.log_console,
     log_file=settings.log_file,
@@ -115,109 +114,88 @@ def config(
     useful_tags_way=settings.useful_tags_way,
 ):
     """
-    Configure OSMnx by setting the default global settings' values.
-
-    Any parameters not passed by the caller are (re-)set to their original
-    default values.
+    Do not use: deprecated. Use the settings module directly.
 
     Parameters
     ----------
     all_oneway : bool
-        Only use if specifically saving to .osm XML file with save_graph_xml
-        function. if True, forces all ways to be loaded as oneway ways,
-        preserving the original order of nodes stored in the OSM way XML.
-        This also retains original OSM string values for oneway attribute
-        values, rather than converting them to a True/False bool.
+        deprecated
     bidirectional_network_types : list
-        network types for which a fully bidirectional graph will be created
+        deprecated
     cache_folder : string or pathlib.Path
-        path to folder in which to save/load HTTP response cache
+        deprecated
     data_folder : string or pathlib.Path
-        path to folder in which to save/load graph files by default
+        deprecated
     cache_only_mode : bool
-        If True, download network data from Overpass then raise a
-        CacheOnlyModeInterrupt error for user to catch. This prevents graph
-        building from taking place and instead just saves OSM response data to
-        cache. Useful for sequentially caching lots of raw data (as you can
-        only query Overpass one request at a time) then using the cache to
-        quickly build many graphs simultaneously with multiprocessing.
+        deprecated
     default_accept_language : string
-        HTTP header accept-language
+        deprecated
     default_access : string
-        default filter for OSM "access" key
+        deprecated
     default_crs : string
-        default coordinate reference system to set when creating graphs
+        deprecated
     default_referer : string
-        HTTP header referer
+        deprecated
     default_user_agent : string
-        HTTP header user-agent
-    elevation_provider : string {"google", "airmap"}
-        the API provider to use for adding node elevations
+        deprecated
     imgs_folder : string or pathlib.Path
-        path to folder in which to save plot images by default
+        deprecated
     log_file : bool
-        if True, save log output to a file in logs_folder
+        deprecated
     log_filename : string
-        name of the log file, without file extension
+        deprecated
     log_console : bool
-        if True, print log output to the console (terminal window)
+        deprecated
     log_level : int
-        one of Python's logger.level constants
+        deprecated
     log_name : string
-        name of the logger
+        deprecated
     logs_folder : string or pathlib.Path
-        path to folder in which to save log files
+        deprecated
     max_query_area_size : int
-        maximum area for any part of the geometry in meters: any polygon
-        bigger than this will get divided up for multiple queries to API
-        (default 50km x 50km)
+        deprecated
     memory : int
-        Overpass server memory allocation size for the query, in bytes. If
-        None, server will use its default allocation size. Use with caution.
+        deprecated
     nominatim_endpoint : string
-        base API endpoint to use for nominatim queries
+        deprecated
     nominatim_key : string
-        your API key, if you are using an endpoint that requires one
+        deprecated
     osm_xml_node_attrs : list
-        node attributes for saving .osm XML files with save_graph_xml function
+        deprecated
     osm_xml_node_tags : list
-        node tags for saving .osm XML files with save_graph_xml function
+        deprecated
     osm_xml_way_attrs : list
-        edge attributes for saving .osm XML files with save_graph_xml function
+        deprecated
     osm_xml_way_tags : list
-        edge tags for for saving .osm XML files with save_graph_xml function
+        deprecated
     overpass_endpoint : string
-        base API endpoint to use for overpass queries
+        deprecated
     overpass_rate_limit : bool
-        if True, check the overpass server status endpoint for how long to
-        pause before making request. Necessary if server uses slot management,
-        but can be set to False if you are running your own overpass instance.
+        deprecated
     overpass_settings : string
-        Settings string for overpass queries. For example, to query historical
-        OSM data as of a certain date:
-        ``'[out:json][timeout:90][date:"2019-10-28T19:20:00Z"]'``. Use with
-        caution.
+        deprecated
     requests_kwargs : dict
-        optional keyword args to pass to the requests package when connecting
-        to APIs, for example to configure authentication or provide a path to
-        a local certificate file. More info on options such as auth, cert,
-        verify, and proxies can be found in the requests package advanced docs
-        at https://docs.python-requests.org/
+        deprecated
     timeout : int
-        the timeout interval for the HTTP request and for API to use while
-        running the query
+        deprecated
     use_cache : bool
-        if True, cache HTTP responses locally instead of calling API
-        repeatedly for the same request
+        deprecated
     useful_tags_node : list
-        OSM "node" tags to add as graph node attributes, when present
+        deprecated
     useful_tags_way : list
-        OSM "way" tags to add as graph edge attributes, when present
+        deprecated
 
     Returns
     -------
     None
     """
+    warnings.warn(
+        "The `utils.config` function is deprecated and will be removed in a "
+        "future release. Instead, use the `settings` module directly to "
+        "configure a global setting's value. For example, "
+        "`ox.settings.log_console=True`."
+    )
+
     # set each global setting to the argument value
     settings.all_oneway = all_oneway
     settings.bidirectional_network_types = bidirectional_network_types
@@ -229,7 +207,6 @@ def config(
     settings.default_crs = default_crs
     settings.default_referer = default_referer
     settings.default_user_agent = default_user_agent
-    settings.elevation_provider = elevation_provider
     settings.imgs_folder = imgs_folder
     settings.log_console = log_console
     settings.log_file = log_file
@@ -253,9 +230,6 @@ def config(
     settings.useful_tags_node = useful_tags_node
     settings.useful_tags_way = useful_tags_way
     settings.requests_kwargs = requests_kwargs
-
-    log(f"Configured OSMnx {_version.__version__}")
-    log(f"HTTP response caching is {'on' if settings.use_cache else 'off'}")
 
 
 def log(message, level=None, name=None, filename=None):
