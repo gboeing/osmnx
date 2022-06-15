@@ -109,7 +109,7 @@ def test_geocode_to_gdf():
 
 def test_stats():
     # create graph, add a new node, add bearings, project it
-    G = ox.graph_from_point(location_point, dist=500, network_type="drive")
+    G = ox.graph_from_place(place1, network_type="all")
     G.add_node(0, x=location_point[1], y=location_point[0])
     _ = ox.bearing.calculate_bearing(0, 0, 1, 1)
     G = ox.add_edge_bearings(G)
@@ -351,7 +351,7 @@ def test_api_endpoints():
     # This should fail because we didn't provide a valid endpoint
     ox.settings.overpass_endpoint = "http://NOT_A_VALID_ENDPOINT/api/"
     with pytest.raises(Exception):
-        G = ox.graph_from_place(place1, network_type="drive")
+        G = ox.graph_from_place(place1, network_type="all")
 
     ox.settings.nominatim_key = default_key
     ox.settings.nominatim_endpoint = default_nominatim_endpoint
@@ -361,7 +361,7 @@ def test_api_endpoints():
 def test_graph_save_load():
 
     # save graph as shapefile and geopackage
-    G = ox.graph_from_place(place1, network_type="drive")
+    G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     ox.save_graph_shapefile(G, directed=True)
     ox.save_graph_shapefile(G, filepath=Path(ox.settings.data_folder) / "graph_shapefile")
     ox.save_graph_geopackage(G, directed=False)
@@ -445,7 +445,7 @@ def test_graph_from_functions():
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
 
     # graph from list of places
-    G = ox.graph_from_place([place1], network_type="drive", clean_periphery=False)
+    G = ox.graph_from_place([place1], network_type="all", clean_periphery=False)
 
     # graph from polygon
     G = ox.graph_from_polygon(polygon, network_type="walk", truncate_by_edge=True)
