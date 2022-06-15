@@ -4,6 +4,7 @@
 
   - fix rate limit checking and pausing on newest versions of Overpass API
   - allow add_edge_lengths function to be run on a subset of edges
+  - resolve pandas deprecation warning
 
 ## 1.2.0 (2022-05-23)
 
