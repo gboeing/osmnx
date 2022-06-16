@@ -30,15 +30,14 @@ from shapely.geometry import Polygon
 import osmnx as ox
 
 
-ox.config(
-    log_console=True,
-    log_file=True,
-    use_cache=True,
-    data_folder=".temp/data",
-    logs_folder=".temp/logs",
-    imgs_folder=".temp/imgs",
-    cache_folder=".temp/cache",
-)
+ox.config(log_console=True)
+ox.settings.log_console = True
+ox.settings.log_file = True
+ox.settings.use_cache = True
+ox.settings.data_folder = ".temp/data"
+ox.settings.logs_folder = ".temp/logs"
+ox.settings.imgs_folder = ".temp/imgs"
+ox.settings.cache_folder = ".temp/cache"
 
 # define queries to use throughout tests
 location_point = (37.791427, -122.410018)

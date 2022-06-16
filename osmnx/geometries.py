@@ -802,7 +802,7 @@ def _assemble_multipolygon_component_polygons(element, geometries):
     if merged_outer_linestrings.geom_type == "LineString":
         outer_polygons += polygonize(merged_outer_linestrings)
     elif merged_outer_linestrings.geom_type == "MultiLineString":
-        for merged_outer_linestring in list(merged_outer_linestrings):
+        for merged_outer_linestring in list(merged_outer_linestrings.geoms):
             outer_polygons += polygonize(merged_outer_linestring)
 
     # Merge inner linestring fragments.
@@ -869,7 +869,7 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
         if outer_polygon.geom_type == "Polygon":
             outer_polygons_with_holes.append(outer_polygon)
         elif outer_polygon.geom_type == "MultiPolygon":
-            outer_polygons_with_holes.extend(list(outer_polygon))
+            outer_polygons_with_holes.extend(list(outer_polygon.geoms))
 
     # if only one polygon with holes was created, return that single polygon
     if len(outer_polygons_with_holes) == 1:
