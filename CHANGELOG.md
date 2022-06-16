@@ -1,5 +1,9 @@
 # Change log
 
+## TBD
+
+  - resolve shapely deprecation warning
+
 ## 1.2.1 (2022-06-16)
 
   - fix rate limit checking and pausing on newest versions of Overpass API
