@@ -1,6 +1,6 @@
 # Change log
 
-## 1.2.1 (TBD)
+## 1.2.1 (2022-06-16)
 
   - fix rate limit checking and pausing on newest versions of Overpass API
   - allow add_edge_lengths function to be run on a subset of edges
