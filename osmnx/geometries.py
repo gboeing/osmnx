@@ -869,7 +869,7 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
         if outer_polygon.geom_type == "Polygon":
             outer_polygons_with_holes.append(outer_polygon)
         elif outer_polygon.geom_type == "MultiPolygon":
-            outer_polygons_with_holes.extend(list(outer_polygon))
+            outer_polygons_with_holes.extend(list(outer_polygon.geoms))
 
     # if only one polygon with holes was created, return that single polygon
     if len(outer_polygons_with_holes) == 1:
