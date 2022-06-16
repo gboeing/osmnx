@@ -802,7 +802,7 @@ def _assemble_multipolygon_component_polygons(element, geometries):
     if merged_outer_linestrings.geom_type == "LineString":
         outer_polygons += polygonize(merged_outer_linestrings)
     elif merged_outer_linestrings.geom_type == "MultiLineString":
-        for merged_outer_linestring in list(merged_outer_linestrings):
+        for merged_outer_linestring in list(merged_outer_linestrings.geoms):
             outer_polygons += polygonize(merged_outer_linestring)
 
     # Merge inner linestring fragments.
