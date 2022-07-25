@@ -329,6 +329,8 @@ def consolidate_intersections(
     tolerance argument should be adjusted to approximately match street design
     standards in the specific street network, and you should always use a
     projected graph to work in meaningful and consistent units like meters.
+    Note the tolerance represents a per-node buffering radius: for example, to
+    consolidate nodes within 10 meters of each other, use tolerance=5.
 
     When rebuild_graph=False, it uses a purely geometrical (and relatively
     fast) algorithm to identify "geometrically close" nodes, merge them, and
