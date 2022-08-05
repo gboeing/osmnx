@@ -1,6 +1,6 @@
 # Change log
 
-## TBD
+## 1.2.2 (2022-08-05)
 
   - fix compatibility with rasterio 1.3
   - fix API version when saving OSM XML
