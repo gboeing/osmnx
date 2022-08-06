@@ -1,4 +1,4 @@
-CALL %USERPROFILE%\miniconda3\Scripts\activate.bat
+CALL %USERPROFILE%\mambaforge\Scripts\activate.bat
 CALL mamba deactivate
 CALL mamba env remove -n ox --yes
 CALL mamba clean --all --yes --quiet
