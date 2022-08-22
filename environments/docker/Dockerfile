@@ -12,11 +12,11 @@ LABEL description="OSMnx is a Python package to retrieve, model, analyze, and vi
 COPY requirements.txt /tmp/
 
 # install packages in one RUN to keep image tidy
-RUN mamba update --yes -c conda-forge --strict-channel-priority -n base mamba && \
-    mamba install --update-all --force-reinstall --yes -c conda-forge --strict-channel-priority --file /tmp/requirements.txt && \
+RUN mamba update --yes -c conda-forge --strict-channel-priority --no-banner -n base mamba && \
+    mamba install --update-all --force-reinstall --yes -c conda-forge --strict-channel-priority --no-banner --file /tmp/requirements.txt && \
     rm -f -r -v /opt/conda/share/jupyter/kernels/python3 && \
     python -m ipykernel install --sys-prefix --name ox --display-name "Python (ox)" && \
-    mamba clean --all --yes && \
+    mamba clean --all --yes --quiet --no-banner && \
     mamba info --all && \
     mamba list && \
     jupyter kernelspec list && \
