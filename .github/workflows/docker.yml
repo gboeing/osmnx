@@ -12,7 +12,7 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: ./environments/docker
+          context: "{{defaultContext}}/environments/docker"
           push: false
           platforms: amd64
           tags: ${{ env.OWNER }}/osmnx:latest
