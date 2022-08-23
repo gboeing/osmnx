@@ -6,37 +6,14 @@ env:
 on: [push]
 jobs:
   amd64-base:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v3
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      -
-        name: Build and push
-        uses: docker/build-push-action@v3
-        with:
-          context: "./environments/docker"
-          push: false
-          platforms: amd64
-          tags: ${{ env.OWNER }}/osmnx:latest
-  aarch64-base:
-    runs-on: ubuntu-latest
-    steps:
-      -
-        name: Checkout
-        uses: actions/checkout@v3
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      -
-        name: Build and push
-        uses: docker/build-push-action@v3
-        with:
-          context: "./environments/docker"
-          push: false
-          platforms: arm64
-          tags: ${{ env.OWNER }}/osmnx:aarch64-latest
-          build-args: ARCH=aarch64-latest
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      platform: amd64
+      resulting_tag: 'latest'
+      base_tag: 'latest'
+  # aarch64-base:
+  #   uses: ./.github/workflows/docker-build-push.yml
+  #   with:
+  #     platform: arm64
+  #     resulting_tag: 'aarch64-latest'
+  #     base_tag: 'aarch64-latest'

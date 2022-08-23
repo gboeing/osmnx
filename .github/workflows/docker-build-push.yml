@@ -1,0 +1,40 @@
+name: Build new image, and upload to GitHub artifacts
+
+env:
+  OWNER: ${{ github.repository_owner }}
+
+on:
+  workflow_call:
+    inputs:
+      resulting_tag:
+        description: Resulting tag name [latest/aarch64-latest]
+        required: true
+        type: string
+      platform:
+        description: Image platform to build for [arm64/amd64]
+        required: true
+        type: string
+      base_tag:
+        description: Tag of the notebook base image [latest/aarch64-latest]
+        required: true
+        type: string
+
+jobs:
+  build-upload:
+    runs-on: ubuntu-latest
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          context: "./environments/docker"
+          push: false
+          platforms: ${{ inputs.platform }}
+          tags: ${{ env.OWNER }}/osmnx:${{ inputs.resulting_tag }}
+          build-args: ARCH=${{ inputs.base_tag }}
