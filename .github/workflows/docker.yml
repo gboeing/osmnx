@@ -11,9 +11,9 @@ jobs:
       platform: amd64
       resulting_tag: 'latest'
       base_tag: 'latest'
-  # aarch64-base:
-  #   uses: ./.github/workflows/docker-build-push.yml
-  #   with:
-  #     platform: arm64
-  #     resulting_tag: 'aarch64-latest'
-  #     base_tag: 'aarch64-latest'
+  aarch64-base:
+    uses: ./.github/workflows/docker-build-push.yml
+    with:
+      platform: arm64
+      resulting_tag: 'aarch64-latest'
+      base_tag: 'aarch64-latest'
