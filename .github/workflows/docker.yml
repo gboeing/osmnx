@@ -1,0 +1,14 @@
+name: Build and push docker images
+
+env:
+  OWNER: ${{ github.repository_owner }}
+
+on:
+  workflow_dispatch:
+jobs:
+  amd64-base:
+    uses: docker/build-push-action@v3
+    with:
+      context: ./environments/docker
+      push: false
+      tags: ${{ env.OWNER }}/osmnx:latest
