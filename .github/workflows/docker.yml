@@ -23,7 +23,7 @@ jobs:
           platforms: amd64
           tags: ${{ env.OWNER }}/osmnx:latest
   aarch64-base:
-    runs-on: [self-hosted, linux, ARM64]
+    runs-on: ubuntu-latest
     steps:
       -
         name: Checkout
@@ -39,3 +39,4 @@ jobs:
           push: false
           platforms: arm64
           tags: ${{ env.OWNER }}/osmnx:aarch64-latest
+          build-args: ARCH=aarch64-latest
