@@ -4,10 +4,10 @@
 # Web: https://github.com/gboeing/osmnx
 ########################################################################
 
-# use --build-arg ARCH=aarch64-latest to build for ARM
-ARG ARCH='latest'
+# use --build-arg JUPYTER_TAG=aarch64-latest to build for ARM
+ARG JUPYTER_TAG='latest'
 
-FROM jupyter/base-notebook:$ARCH
+FROM jupyter/base-notebook:$JUPYTER_TAG
 LABEL maintainer="Geoff Boeing <boeing@usc.edu>"
 LABEL url="https://github.com/gboeing/osmnx"
 LABEL description="OSMnx is a Python package to retrieve, model, analyze, and visualize OpenStreetMap networks and other spatial data."

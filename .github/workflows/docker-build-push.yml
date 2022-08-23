@@ -14,8 +14,8 @@ on:
         description: Image platform to build for [arm64/amd64]
         required: true
         type: string
-      base_tag:
-        description: Tag of the notebook base image [latest/aarch64-latest]
+      jupyter_tag:
+        description: Tag of the notebook image to build from [latest/aarch64-latest]
         required: true
         type: string
 
@@ -40,4 +40,4 @@ jobs:
           push: false
           platforms: ${{ inputs.platform }}
           tags: ${{ env.OWNER }}/osmnx:${{ inputs.resulting_tag }}
-          build-args: ARCH=${{ inputs.base_tag }}
+          build-args: JUPYTER_TAG=${{ inputs.jupyter_tag }}
