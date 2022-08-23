@@ -3,8 +3,7 @@ name: Build and push docker images
 env:
   OWNER: ${{ github.repository_owner }}
 
-on:
-  workflow_dispatch:
+on: [push]
 jobs:
   amd64-base:
     runs-on: ubuntu-latest
