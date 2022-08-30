@@ -42,8 +42,7 @@ def _query_raster(nodes, filepath, band):
     """
     # must open raster file here: cannot pickle it to pass in multiprocessing
     with rasterio.open(filepath) as raster:
-        nodes_generator = (tuple(x) for x in nodes.values)
-        values = np.array(tuple(raster.sample(nodes_generator, band)), dtype=float).squeeze()
+        values = np.array(tuple(raster.sample(nodes.values, band)), dtype=float).squeeze()
         values[values == raster.nodata] = np.nan
         return zip(nodes.index, values)
 
