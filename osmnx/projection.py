@@ -159,7 +159,7 @@ def project_graph(G, to_crs=None):
     # STEP 2: PROJECT THE EDGES
     if "simplified" in G.graph and G.graph["simplified"]:
         # if graph has previously been simplified, project the edge geometries
-        gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=True)
+        gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
         gdf_edges_proj = project_gdf(gdf_edges, to_crs=to_crs)
     else:
         # if not, you don't have to project these edges because the nodes
