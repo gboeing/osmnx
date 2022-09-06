@@ -1,5 +1,9 @@
 # Change log
 
+## TBD
+
+  - fix bug that added unsimplified edge geometry attributes when projecting
+
 ## 1.2.2 (2022-08-05)
 
   - fix compatibility with rasterio 1.3
