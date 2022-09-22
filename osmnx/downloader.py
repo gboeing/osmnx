@@ -460,50 +460,39 @@ def _create_overpass_query(polygon_coord_str, tags):
     if not isinstance(tags, dict):  # pragma: no cover
         raise TypeError(error_msg)
 
-    tags_dict = dict()
+    # make sure every value in dict is bool, str, or list of str
+    error_msg = "tags must be a dict with values of bool, str, or list of str"
+    if not isinstance(tags, dict):  # pragma: no cover
+        raise TypeError(error_msg)
+
+    # add node/way/relation query components one at a time
+    components = []
     for key, value in tags.items():
 
-        if isinstance(value, bool):
-            tags_dict[key] = value
+        if isinstance(value, bool) and value:
+            # if bool (ie, True) just pass the key, no value
+            tag_str = f"[{key}]"
 
         elif isinstance(value, str):
-            tags_dict[key] = [value]
+            tag_str = f"[{key}='{value}']"
 
         elif isinstance(value, list):
             if not all(isinstance(s, str) for s in value):  # pragma: no cover
                 raise TypeError(error_msg)
-            tags_dict[key] = value
+
+            if len(value) == 1:
+                tag_str = f"[{key}='{value[0]}']"
+            else:
+                tag_str = "[{0}~'^({1})$']".format(key, "|".join(value))
 
         else:  # pragma: no cover
             raise TypeError(error_msg)
 
-    # convert the tags dict into a list of {tag:value} dicts
-    tags_list = []
-    for key, value in tags_dict.items():
-        if isinstance(value, bool):
-            tags_list.append({key: value})
-        else:
-            for value_item in value:
-                tags_list.append({key: value_item})
-
-    # add node/way/relation query components one at a time
-    components = []
-    for d in tags_list:
-        for key, value in d.items():
-
-            if isinstance(value, bool):
-                # if bool (ie, True) just pass the key, no value
-                tag_str = f"['{key}'](poly:'{polygon_coord_str}');(._;>;);"
-            else:
-                # otherwise, pass "key"="value"
-                tag_str = f"['{key}'='{value}'](poly:'{polygon_coord_str}');(._;>;);"
-
-            for kind in ("node", "way", "relation"):
-                components.append(f"({kind}{tag_str});")
+        components.append(f"nwr.all{tag_str};")
 
     # finalize query and return
     components = "".join(components)
-    query = f"{overpass_settings};({components});out;"
+    query = f"{overpass_settings};nwr(poly:'{polygon_coord_str}')->.all;({components});(._;>;);out;"
 
     return query
 
