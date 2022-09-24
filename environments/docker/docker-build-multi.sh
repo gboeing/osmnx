@@ -23,6 +23,9 @@ docker login
 docker buildx build --platform=linux/amd64,linux/arm64 --push -t $DOCKERUSER/$PACKAGE:$TAG .
 
 # import package and print its version as a test, then export conda env to yml
+echo "Pushed $DOCKERUSER/$PACKAGE:$TAG to Docker Hub"
+echo "Testing image..."
 IMPORTED_VERSION=$(docker run --rm $DOCKERUSER/$PACKAGE:$TAG /bin/bash -c "python -c \"import $PACKAGE; print($PACKAGE.__version__)\"")
-echo "$Imported PACKAGE version $IMPORTED_VERSION, expected $VERSION"
+echo "Imported $PACKAGE version $IMPORTED_VERSION, expected $VERSION"
 docker run --rm -v "$PWD":/home/jovyan/work $DOCKERUSER/$PACKAGE:$TAG /bin/bash -c "conda env export -n base > /home/jovyan/work/environment.yml"
+echo "Exported conda env to yml file"
