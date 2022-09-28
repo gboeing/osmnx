@@ -546,8 +546,8 @@ def _osm_network_download(polygon, network_type, custom_filter):
     # time. The '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
         if type(osm_filter) == list:
-            waystring = ';'.join(["way"+part+f"(poly:'{polygon_coord_str}')" for part in osm_filter])
-            query_str = f"{overpass_settings};({waystring};>;);out;"
+            waystring = ''.join(["way"+part+f"(poly:'{polygon_coord_str}');>;" for part in osm_filter])
+            query_str = f"{overpass_settings};({waystring});out;"
         else:
             query_str = f"{overpass_settings};(way{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
         response_json = overpass_request(data={"data": query_str})
