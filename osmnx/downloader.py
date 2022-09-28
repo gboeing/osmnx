@@ -518,8 +518,9 @@ def _osm_network_download(polygon, network_type, custom_filter):
         boundary to fetch the network ways/nodes within
     network_type : string
         what type of street network to get if custom_filter is None
-    custom_filter : string
-        a custom ways filter to be used instead of the network_type presets
+    custom_filter : string | list of strings
+        a custom ways filter to be used instead of the network_type presets. 
+        If a list of strings is provided, those a combined with the union criteria.
 
     Returns
     -------
@@ -544,7 +545,11 @@ def _osm_network_download(polygon, network_type, custom_filter):
     # pass each polygon exterior coordinates in the list to the API, one at a
     # time. The '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
-        query_str = f"{overpass_settings};(way{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
+        if type(osm_filter) == list:
+            waystring = ';'.join(["way"+part+f"(poly:'{polygon_coord_str}')" for part in osm_filter])
+            query_str = f"{overpass_settings};({waystring};>;);out;"
+        else:
+            query_str = f"{overpass_settings};(way{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
         response_json = overpass_request(data={"data": query_str})
         response_jsons.append(response_json)
     utils.log(

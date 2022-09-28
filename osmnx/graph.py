@@ -61,11 +61,12 @@ def graph_from_bbox(
     clean_periphery : bool
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
-    custom_filter : string
+    custom_filter : string | list of strings
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
+        If a list of strings is provided, those are combined with the union criteria.
 
     Returns
     -------
@@ -135,11 +136,12 @@ def graph_from_point(
     clean_periphery : bool,
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
-    custom_filter : string
+    custom_filter : string | list of strings
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
+        If a list of strings is provided, those are combined with the union criteria.
 
     Returns
     -------
@@ -225,11 +227,12 @@ def graph_from_address(
     clean_periphery : bool,
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
-    custom_filter : string
+    custom_filter : string | list of strings
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
+        If a list of strings is provided, those are combined with the union criteria.
 
     Returns
     -------
@@ -313,11 +316,12 @@ def graph_from_place(
     clean_periphery : bool
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
-    custom_filter : string
+    custom_filter : string | list of strings
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
+        If a list of strings is provided, those are combined with the union criteria.
 
     Returns
     -------
@@ -392,11 +396,12 @@ def graph_from_polygon(
     clean_periphery : bool
         if True, buffer 500m to get a graph larger than requested, then
         simplify, then truncate it to requested spatial boundaries
-    custom_filter : string
+    custom_filter : string | list of strings
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
         in a network_type that is in settings.bidirectional_network_types if
         you want graph to be fully bi-directional.
+        If a list of strings is provided, those are combined with the union criteria.
 
     Returns
     -------
