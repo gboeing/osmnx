@@ -66,7 +66,7 @@ Usage examples and demonstrations of these features are in the `examples`_ GitHu
 .. _GeoPandas: https://geopandas.org/
 .. _NetworkX: https://networkx.org/
 .. _journal article: https://geoffboeing.com/publications/osmnx-complex-street-networks/
-.. _change log: https://github.com/gboeing/osmnx/blob/master/CHANGELOG.md
+.. _change log: https://github.com/gboeing/osmnx/blob/main/CHANGELOG.md
 
 
 
