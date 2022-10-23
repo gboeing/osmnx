@@ -104,9 +104,12 @@ def save_graph_xml(
 
     This function exists only to allow serialization to the .osm file format
     for applications that require it, and has constraints to conform to that.
-    To save/load full-featured OSMnx graphs to/from disk for later use, use
-    the `io.save_graphml` and `io.load_graphml` functions instead. To load a
-    graph from a .osm file, use the `graph.graph_from_xml` function.
+    As such, this function has a limited use case which does not include
+    saving/loading graphs for subsequent OSMnx analysis. To save/load graphs
+    to/from disk for later use in OSMnx, use the `io.save_graphml` and
+    `io.load_graphml` functions instead. To load a graph from a .osm file that
+    you have downloaded or generated elsewhere, use the `graph.graph_from_xml`
+    function.
 
     Note: for large networks this function can take a long time to run. Before
     using this function, make sure you configured OSMnx as described in the
