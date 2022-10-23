@@ -65,6 +65,7 @@ setup(
     version="1.2.2",
     description=DESC,
     long_description=LONG_DESCRIPTION,
+    long_description_content_type="text/x-rst",
     classifiers=CLASSIFIERS,
     url="https://github.com/gboeing/osmnx",
     author="Geoff Boeing",
