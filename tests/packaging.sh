@@ -21,7 +21,8 @@ cd ..
 
 # build the distribution then get its SHA256
 rm -rf ./build ./dist
-python setup.py sdist bdist_wheel --universal
+python setup.py sdist bdist_wheel
+twine check dist/*
 SHA=$(openssl dgst -sha256 -r "./dist/$PACKAGE-$VERSION.tar.gz"  | awk '{print $1}')
 
 # rerender the conda-forge feedstock
