@@ -3,6 +3,7 @@
 ## TBD
 
   - fix bug that added unsimplified edge geometry attributes when projecting
+  - deprecate save_graph_shapefile function
 
 ## 1.2.2 (2022-08-05)
 
