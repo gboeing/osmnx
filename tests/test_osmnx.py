@@ -43,7 +43,7 @@ ox.settings.cache_folder = ".temp/cache"
 location_point = (37.791427, -122.410018)
 address = "600 Montgomery St, San Francisco, California, USA"
 place1 = {"city": "Piedmont", "state": "California", "country": "USA"}
-place2 = "Bunker Hill, Los Angeles, California"
+place2 = "Civic Center, Los Angeles, California"
 p = (
     "POLYGON ((-122.262 37.869, -122.255 37.869, -122.255 37.874,"
     "-122.262 37.874, -122.262 37.869))"

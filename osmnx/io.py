@@ -1,6 +1,7 @@
 """Serialize graphs to/from files on disk."""
 
 import ast
+import warnings
 from pathlib import Path
 
 import networkx as nx
@@ -59,11 +60,11 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
 
 def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     """
-    Save graph nodes and edges to disk as ESRI shapefiles.
+    Do not use: deprecated. Use the save_graph_geopackage function instead.
 
-    The shapefile format is proprietary and outdated. Whenever possible, you
-    should use the superior GeoPackage file format instead via the
-    save_graph_geopackage function.
+    The Shapefile format is proprietary and outdated. Instead, use the
+    superior GeoPackage file format via the save_graph_geopackage function.
+    See http://switchfromshapefile.org/ for more information.
 
     Parameters
     ----------
@@ -83,6 +84,12 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     -------
     None
     """
+    warnings.warn(
+        "The `save_graph_shapefile` function is deprecated and will be removed "
+        "in a future release. Instead, use the `save_graph_geopackage` function "
+        "to save graphs as GeoPackage files for subsequent GIS analysis."
+    )
+
     # default filepath if none was provided
     if filepath is None:
         filepath = Path(settings.data_folder) / "graph_shapefile"
