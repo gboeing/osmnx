@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
+from matplotlib import colormaps
 
 from . import graph
 from . import projection
@@ -42,7 +43,7 @@ def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=Fal
     -------
     color_list : list
     """
-    color_list = [cm.get_cmap(cmap)(x) for x in np.linspace(start, stop, n)]
+    color_list = [colormaps[cmap](x) for x in np.linspace(start, stop, n)]
     if return_hex:
         color_list = [colors.to_hex(c) for c in color_list]
     else:
@@ -677,7 +678,7 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
 
         # linearly map a color to each attribute value
         normalizer = colors.Normalize(full_min, full_max)
-        scalar_mapper = cm.ScalarMappable(normalizer, cm.get_cmap(cmap))
+        scalar_mapper = cm.ScalarMappable(normalizer, colormaps[cmap])
         color_series = vals.map(scalar_mapper.to_rgba)
         color_series.loc[pd.isnull(vals)] = na_color
 
