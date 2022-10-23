@@ -4,6 +4,7 @@
 
   - fix bug that added unsimplified edge geometry attributes when projecting
   - deprecate save_graph_shapefile function
+  - resolve matplotlib deprecation warning
 
 ## 1.2.2 (2022-08-05)
 
