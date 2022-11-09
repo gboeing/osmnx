@@ -17,11 +17,11 @@ Thanks for using OSMnx and for considering contributing to it by opening an issu
   - search through the [open issues](https://github.com/gboeing/osmnx/issues?q=is%3Aopen+is%3Aissue) and [closed issues](https://github.com/gboeing/osmnx/issues?q=is%3Aissue+is%3Aclosed) to see if it has already been reported
   - if the problem is with a dependency of this project, open an issue in the dependency's repo
   - if the problem is with OSMnx and you can fix it simply, please open a pull request
-  - if the problem persists, please open an issue in the [issue tracker](https://github.com/gboeing/osmnx/issues) filling out all sections of the template, including a minimal working example so others can independently and completely reproduce the problem
+  - if the problem persists, please open an issue in the [issue tracker](https://github.com/gboeing/osmnx/issues), and *provide all the information requested in the new issue template*, including a minimal working example so others can independently and completely reproduce the problem
 
 #### If you have a feature proposal or want to contribute:
 
-  - post your proposal on the [issue tracker](https://github.com/gboeing/osmnx/issues) so we can review it together (some proposals may not be a good fit for the project)
+  - post your proposal on the [issue tracker](https://github.com/gboeing/osmnx/issues), and *provide all the information requested in the new issue template*, so we can review it together (some proposals may not be a good fit for the project)
   - fork the repo, make your change, [test it](./tests), and submit a PR
   - respond to code review
   - adhere to the following project standards
