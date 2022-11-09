@@ -7,11 +7,15 @@ assignees: ''
 
 ---
 
-**Read these instructions carefully**
+**Read these instructions carefully. Use the template below and fill out every section. Your issue will be automatically closed if you don't provide all of the information requested in the template, because we need this information to address your issue. Before you proceed, review the contributing guidelines in the CONTRIBUTING.md file.**
 
-Please don't use the issue tracker to ask "how-to" or usage questions. If asked here, they will be closed automatically. Instead, ask "how-to" and usage questions on [StackOverflow](https://stackoverflow.com/).
+Feature requests are for proposing an enhancement to OSMnx before opening a pull request to add your proposed functionality to the codebase. Please don't use the issue tracker to ask "how-to" or usage questions. If asked here, they will be closed automatically. Instead, ask "how-to" and usage questions on [StackOverflow](https://stackoverflow.com/search?q=osmnx).
 
-Feature requests are for proposing an enhancement to OSMnx before opening a pull request to add your proposed functionality to the codebase. Your issue will be closed automatically if you don't provide the requested information that we need below. Before you proceed, review the contributing guidelines in this repo's CONTRIBUTING.md file.
+**Do not delete the following template. Fill it out completely.**
+
+  - [ ] I have read the OSMnx [contributing guidelines](../blob/main/CONTRIBUTING.md)
+  - [ ] I have read the OSMnx [documentation](https://osmnx.readthedocs.io/) and [usage examples](https://github.com/gboeing/osmnx-examples)
+  - [ ] I have searched the open/closed issues and pull requests for others similar to mine
 
 **Is your feature proposal related to a problem?**
 

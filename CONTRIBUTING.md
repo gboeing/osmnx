@@ -1,6 +1,6 @@
 # OSMnx contributing guidelines
 
-Thanks for using OSMnx and for considering contributing to it by opening an issue or pull request.
+Thanks for using OSMnx and for considering contributing to it by opening an issue or pull request. If you open an issue, fill out every section of the new issue template. Your issue will be automatically closed if you don't provide all of the information requested in the template, because we need this information to address your issue. Please note that we reserve the issue tracker for reporting bugs and proposing new features, not for asking usage questions.
 
 #### If you have a "how-to" or usage question rather than a bug report or new feature proposal:
 

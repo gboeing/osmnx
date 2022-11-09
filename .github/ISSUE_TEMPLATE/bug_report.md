@@ -7,11 +7,17 @@ assignees: ''
 
 ---
 
-**Read these instructions carefully**
+**Read these instructions carefully. Use the template below and fill out every section. Your issue will be automatically closed if you don't provide all of the information requested in the template, because we need this information to assist you. Before you proceed, review the contributing guidelines in the CONTRIBUTING.md file.**
 
-Please don't use the issue tracker to ask "how-to" or usage questions. If asked here, they will be closed automatically. Instead, ask "how-to" and usage questions on [StackOverflow](https://stackoverflow.com/).
+Please don't use the issue tracker to ask "how-to" or usage questions. If asked here, they will be closed automatically. Instead, ask "how-to" and usage questions on [StackOverflow](https://stackoverflow.com/search?q=osmnx). If you installed OSMnx via conda and are experiencing installation problems, please open an issue at its [feedstock](https://github.com/conda-forge/osmnx-feedstock/issues) instead.
 
-Bug reports are for reporting a bug you have found in OSMnx's codebase. Your issue will be closed automatically if you don't provide the requested information that we need in order to help you. Before you proceed, review the contributing guidelines in this repo's CONTRIBUTING.md file. If you installed OSMnx via conda and are experiencing installation problems, please open an issue at its [feedstock](https://github.com/conda-forge/osmnx-feedstock/issues). If you've found a problem in OSMnx itself, first search the open/closed issues and StackOverflow to see if the problem has already been noted. If it hasn't, fill in the bug reporting template below. We need this information to assist you:
+Bug reports are for reporting a bug you have found in OSMnx's codebase. First search the open/closed issues and StackOverflow to see if the problem has already been noted. If it hasn't, fill in the bug reporting template below.
+
+**Do not delete the following template. Fill it out completely.**
+
+  - [ ] I have read the OSMnx [contributing guidelines](../blob/main/CONTRIBUTING.md)
+  - [ ] I have read the OSMnx [documentation](https://osmnx.readthedocs.io/) and [usage examples](https://github.com/gboeing/osmnx-examples)
+  - [ ] I have searched the open/closed issues and [StackOverflow](https://stackoverflow.com/search?q=osmnx) for problems similar to mine
 
 **Problem description**
   - What did you do?
@@ -31,7 +37,7 @@ Bug reports are for reporting a bug you have found in OSMnx's codebase. Your iss
 
 **Provide a complete minimal reproducible example**
 
-Your example code snippet here must be *minimal* so it doesn't contain extraneous code unrelated to your specific problem and it must be *complete* so we can independently run it from top to bottom by copying/pasting it into a Python interpreter. That means all imports and all variables must be defined. If you're unsure how to create a good reproducible example, read [this guide](https://stackoverflow.com/help/minimal-reproducible-example). Do not post a screenshot of your code or error message: provide it as text.
+Your example code snippet here must be *minimal* so it doesn't contain extraneous code or data unrelated to your specific problem and it must be *complete* so we can independently run it from top to bottom by copying/pasting it into a Python interpreter. That means all imports and all variables must be defined. If you're unsure how to create a good reproducible example, read [this guide](https://matthewrocklin.com/blog/work/2018/02/28/minimal-bug-reports). Do not post a screenshot of your code or error message: provide it as text.
 
 ```python
 # your code goes here

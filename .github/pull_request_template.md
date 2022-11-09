@@ -1,6 +1,6 @@
 **Read these instructions carefully**
 
-Before you proceed, review the contributing guidelines in this repo's CONTRIBUTING.md file, especially the sections on project coding standards and tests.
+Before you proceed, review the contributing guidelines in the CONTRIBUTING.md file, especially the sections on project coding standards and tests.
 
 In this pull request, please include:
 
