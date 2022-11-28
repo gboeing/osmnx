@@ -36,7 +36,7 @@ Usage
 
 To get started with OSMnx, read its `user reference`_ and work through its `examples`_ repo for introductory usage demonstrations and sample code. Make sure you have read the `GeoPandas`_ and `NetworkX`_ user guides if you're not already familiar with these packages, as OSMnx uses their data structures and functionality.
 
-OSMnx is built on top of GeoPandas, NetworkX, and matplotlib and interacts with OpenStreetMap's APIs to:
+OSMnx is built on top of `GeoPandas`_, `NetworkX`_, and `matplotlib`_ and interacts with `OpenStreetMap`_ APIs to:
 
   * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
   * Download any other spatial geometries, place boundaries, building footprints, or points of interest as a GeoDataFrame
@@ -65,6 +65,8 @@ Usage examples and demonstrations of these features are in the `examples`_ GitHu
 .. _examples: https://github.com/gboeing/osmnx-examples
 .. _GeoPandas: https://geopandas.org/
 .. _NetworkX: https://networkx.org/
+.. _matplotlib: https://matplotlib.org/
+.. _OpenStreetMap: https://www.openstreetmap.org/copyright/
 .. _journal article: https://geoffboeing.com/publications/osmnx-complex-street-networks/
 .. _change log: https://github.com/gboeing/osmnx/blob/main/CHANGELOG.md
 
