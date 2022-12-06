@@ -18,7 +18,7 @@ from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
-from shapely.geos import TopologicalError
+from shapely.errors import TopologicalError
 from shapely.ops import linemerge
 from shapely.ops import polygonize
 
