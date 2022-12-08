@@ -239,12 +239,15 @@ def simplify_graph(G, strict=True, remove_rings=True):
 
     # generate each path that needs to be simplified
     for path in _get_paths_to_simplify(G, strict=strict):
-
+        # Keep track of the edges that were merged
+        merged_edges = []
+        
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
         path_attributes = dict()
         for u, v in zip(path[:-1], path[1:]):
-
+            merged_edges.append((u, v))
+            
             # there should rarely be multiple edges between interstitial nodes
             # usually happens if OSM has duplicate ways digitized for just one
             # street... we will keep only one of the edges (see below)
@@ -282,7 +285,10 @@ def simplify_graph(G, strict=True, remove_rings=True):
         path_attributes["geometry"] = LineString(
             [Point((G.nodes[node]["x"], G.nodes[node]["y"])) for node in path]
         )
-
+        
+        # Add the merged edges as a new attribute of the simplified edge
+        path_attributes["merged_edges"] = merged_edges
+        
         # add the nodes and edge to their lists for processing at the end
         all_nodes_to_remove.extend(path[1:-1])
         all_edges_to_add.append(
