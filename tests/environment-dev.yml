@@ -13,7 +13,7 @@ dependencies:
     - pyproj
     - requests
     - Rtree
-    - Shapely
+    - Shapely=1.8.*
 
     # extras
     - folium
