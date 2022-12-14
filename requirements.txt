@@ -1,7 +1,7 @@
 geopandas>=0.12
 matplotlib>=3.6
 networkx>=2.8
-numpy>=1.24
+numpy>=1.23
 pandas>=1.5
 pyproj>=3.4
 requests>=2.28
