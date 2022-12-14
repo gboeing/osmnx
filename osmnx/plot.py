@@ -8,7 +8,10 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
-from matplotlib import colormaps
+try:
+    from matplotlib import colormaps
+except ImportError:
+    from matplotlib.pyplot import colormaps
 
 from . import graph
 from . import projection
