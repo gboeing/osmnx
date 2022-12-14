@@ -15,6 +15,7 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 from shapely.errors import TopologicalError
+
 try:
     from shapely.errors import GEOSException
 except ImportError:
