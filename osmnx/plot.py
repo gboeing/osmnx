@@ -11,7 +11,8 @@ import pandas as pd
 try:
     from matplotlib import colormaps
 except ImportError:
-    from matplotlib.pyplot import colormaps
+    from matplotlib.pyplot import colormaps as mpl_cmaps
+    colormaps = {c: cm.get_cmap(c) for c in mpl_cmaps()}
 
 from . import graph
 from . import projection
