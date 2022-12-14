@@ -6,6 +6,7 @@
   - hard code Google DNS IP address
   - resolve matplotlib deprecation warning
   - deprecate save_graph_shapefile function
+  - add add_node_elevations_opentopodata function
 
 ## 1.2.2 (2022-08-05)
 

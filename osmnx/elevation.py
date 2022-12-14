@@ -108,39 +108,11 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
     return G
 
 
-def add_node_elevations_google(
-    G, api_key, max_locations_per_batch=350, pause_duration=0, precision=3
+def __add_node_elevations_api(
+    G, url_template, max_locations_per_batch=350, pause_duration=0, precision=3
 ):  # pragma: no cover
-    """
-    Add `elevation` (meters) attribute to each node using a web service.
 
-    This uses the Google Maps Elevation API and requires an API key. For a
-    free, local alternative, see the `add_node_elevations_raster` function.
-    See also the `add_edge_grades` function.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    api_key : string
-        a Google Maps Elevation API key
-    max_locations_per_batch : int
-        max number of coordinate pairs to submit in each API call (if this is
-        too high, the server will reject the request because its character
-        limit exceeds the max allowed)
-    pause_duration : float
-        time to pause between API calls, which can be increased if you get
-        rate limited
-    precision : int
-        decimal precision to round elevation values
-
-    Returns
-    -------
-    G : networkx.MultiDiGraph
-        graph with node elevation attributes
-    """
-    # elevation API endpoint ready for use
-    url_template = "https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}"
+    assert url_template is not None
 
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
     # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
@@ -157,7 +129,7 @@ def add_node_elevations_google(
     for i in range(0, len(node_points), max_locations_per_batch):
         chunk = node_points.iloc[i : i + max_locations_per_batch]
         locations = "|".join(chunk)
-        url = url_template.format(locations, api_key)
+        url = url_template.format(locations)
 
         # check if this request is already in the cache (if global use_cache=True)
         cached_response_json = downloader._retrieve_from_cache(url)
@@ -196,6 +168,90 @@ def add_node_elevations_google(
     utils.log("Added elevation data from Google to all nodes.")
 
     return G
+
+
+def add_node_elevations_google(
+    G, api_key, max_locations_per_batch=350, pause_duration=0, precision=3
+):  # pragma: no cover
+    """
+    Add `elevation` (meters) attribute to each node using a web service.
+
+    This uses the Google Maps Elevation API and requires an API key. For a free
+    alternative of Open Topo Data see the `add_node_elevations_opentopodata` function.
+    For a free, local alternative, see the `add_node_elevations_raster` function
+    See also the `add_edge_grades` function.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    api_key : string
+        a Google Maps Elevation API key
+    max_locations_per_batch : int
+        max number of coordinate pairs to submit in each API call (if this is
+        too high, the server will reject the request because its character
+        limit exceeds the max allowed)
+    pause_duration : float
+        time to pause between API calls, which can be increased if you get
+        rate limited
+    precision : int
+        decimal precision to round elevation values
+
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+        graph with node elevation attributes
+    """
+    url_template = (
+        "https://maps.googleapis.com/maps/api/elevation/json?locations={}"
+        + "&key={}".format(api_key)
+    )
+    return __add_node_elevations_api(
+        G, url_template, max_locations_per_batch, pause_duration, precision
+    )
+
+
+def add_node_elevations_opentopodata(
+    G,
+    max_locations_per_batch=100,
+    pause_duration=1,
+    precision=3,
+    endpoint="api.opentopodata.org",
+    dataset="aster30m",
+):  # pragma: no cover
+    """
+    Add `elevation` (meters) attribute to each node using a web service.
+
+    This uses the free public API of Open Topo Data API.
+    See also the `add_edge_grades` function.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    max_locations_per_batch : int
+        max number of coordinate pairs to submit in each API call (if this is
+        too high, the server will reject the request because its character
+        limit exceeds the max allowed)
+    pause_duration : float
+        time to pause between API calls, which can be increased if you get
+        rate limited
+    precision : int
+        decimal precision to round elevation values
+    endpoint : string
+        entpoint for query, which is by default the public API. Could be a local instance.
+    dataset : string
+        dataset to use
+
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+        graph with node elevation attributes
+    """
+    url_template = "https://{}/v1/{}".format(endpoint, dataset) + "?locations={}"
+    return __add_node_elevations_api(
+        G, url_template, max_locations_per_batch, pause_duration, precision
+    )
 
 
 def add_edge_grades(G, add_absolute=True, precision=3):

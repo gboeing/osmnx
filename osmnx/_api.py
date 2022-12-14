@@ -9,6 +9,7 @@ from .distance import nearest_nodes
 from .distance import shortest_path
 from .elevation import add_edge_grades
 from .elevation import add_node_elevations_google
+from .elevation import add_node_elevations_opentopodata
 from .elevation import add_node_elevations_raster
 from .folium import plot_graph_folium
 from .folium import plot_route_folium
