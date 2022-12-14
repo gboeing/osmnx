@@ -202,7 +202,9 @@ def simplify_graph(G, strict=True, remove_rings=True):
     a new `geometry` attribute on the new edge. Note that only simplified
     edges receive a `geometry` attribute. Some of the resulting consolidated
     edges may comprise multiple OSM ways, and if so, their multiple attribute
-    values are stored as a list.
+    values are stored as a list. In addition, the simplified edges receive a
+    `merged_edges` attribute that contains a list of all the edges (u, v, key)
+    that were merged together.
 
     Parameters
     ----------
