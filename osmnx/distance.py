@@ -6,8 +6,8 @@ import multiprocessing as mp
 import networkx as nx
 import numpy as np
 import pandas as pd
-from rtree.index import Index as RTreeIndex
 from shapely.geometry import Point
+from shapely.strtree import STRtree
 
 from . import projection
 from . import utils
@@ -243,18 +243,17 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     will return the nearest edge to each point.
 
     If `interpolate` is None, search for the nearest edge to each point, one
-    at a time, using an r-tree and minimizing the euclidean distances from the
+    at a time, using an R-tree and minimizing the euclidean distances from the
     point to the possible matches. For accuracy, use a projected graph and
-    points. This method is precise and also fastest if searching for few
-    points relative to the graph's size.
+    points. This method is precise and fast, particularly when searching for
+    relatively few points compared to the graph's size.
 
-    For a faster method if searching for many points relative to the graph's
-    size, use the `interpolate` argument to interpolate points along the edges
-    and index them. If the graph is projected, this uses a k-d tree for
-    euclidean nearest neighbor search, which requires that scipy is installed
-    as an optional dependency. If graph is unprojected, this uses a ball tree
-    for haversine nearest neighbor search, which requires that scikit-learn is
-    installed as an optional dependency.
+    For an alternative method, use the `interpolate` argument to interpolate
+    points along the edges and index them. If the graph is projected, this
+    uses a k-d tree for euclidean nearest neighbor search, which requires that
+    scipy is installed as an optional dependency. If graph is unprojected,
+    this uses a ball tree for haversine nearest neighbor search, which
+    requires that scikit-learn is installed as an optional dependency.
 
     Parameters
     ----------
@@ -293,17 +292,16 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     if interpolate is None:
 
         # build the r-tree spatial index by position for subsequent iloc
-        rtree = RTreeIndex()
-        for pos, bounds in enumerate(geoms.bounds.values):
-            rtree.insert(pos, bounds)
+        rtree = STRtree(geoms)
 
-        # use r-tree to find possible nearest neighbors, one point at a time,
-        # then minimize euclidean distance from point to the possible matches
-        ne_dist = list()
-        for xy in zip(X, Y):
-            dists = geoms.iloc[list(rtree.nearest(xy, num_results=10))].distance(Point(xy))
-            ne_dist.append((dists.idxmin(), dists.min()))
-        ne, dist = zip(*ne_dist)
+        # use r-tree to find each point's nearest neighbor and distance
+        points = [Point(xy) for xy in zip(X, Y)]
+        pos, dist = rtree.query_nearest(points, all_matches=False, return_distance=True)
+
+        # if user passed X/Y lists, the 2nd subarray contains geom indices
+        if len(pos.shape) > 1:
+            pos = pos[1]
+        ne = geoms.iloc[pos].index
 
     # otherwise, if interpolation distance was provided
     else:
