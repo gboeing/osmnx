@@ -4,6 +4,7 @@
   - support Shapely 2.0
   - drop RTree package dependency
   - much faster nearest edges search using STRTree index
+  - allow user to specify alternative elevation APIs
 
 ## 1.2.3 (2022-12-14)
 
