@@ -4,6 +4,7 @@
   - support Shapely 2.0
   - drop RTree package dependency
   - much faster nearest edges search using STRTree index
+  - allow using alternative Google Maps compatible elevation APIs, such as Open Topo Data
 
 ## 1.2.3 (2022-12-14)
 
