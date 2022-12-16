@@ -1,5 +1,10 @@
 # Change log
 
+## 1.3.0 (TBD)
+  - support Shapely 2.0
+  - drop RTree package dependency
+  - much faster nearest edges search using STRTree index
+
 ## 1.2.3 (2022-12-14)
 
   - fix bug that added unsimplified edge geometry attributes when projecting
