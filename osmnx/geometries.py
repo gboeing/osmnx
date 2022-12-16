@@ -14,6 +14,7 @@ import warnings
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+from shapely.errors import GEOSException
 from shapely.errors import TopologicalError
 from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
@@ -570,7 +571,7 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_polyg
             # if it is a Polygon
             try:
                 geometry = Polygon([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
-            except ValueError as e:
+            except (GEOSException, ValueError) as e:
                 # XMLs may include geometries that are incomplete, in which
                 # case return an empty geometry
                 utils.log(
@@ -584,7 +585,7 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_polyg
                 geometry = LineString(
                     [(coords[node]["lon"], coords[node]["lat"]) for node in nodes]
                 )
-            except ValueError as e:
+            except (GEOSException, ValueError) as e:
                 # XMLs may include geometries that are incomplete, in which
                 # case return an empty geometry
                 utils.log(

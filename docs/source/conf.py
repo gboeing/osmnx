@@ -39,7 +39,6 @@ autodoc_mock_imports = [
     "pyproj",
     "rasterio",
     "requests",
-    "rtree",
     "scipy",
     "scipy.spatial",
     "shapely",
