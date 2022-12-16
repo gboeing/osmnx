@@ -109,13 +109,21 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
 
 
 def add_node_elevations_google(
-    G, api_key, max_locations_per_batch=350, pause_duration=0, precision=3
+    G,
+    api_key,
+    url_template="https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}",
+    max_locations_per_batch=350,
+    pause_duration=0,
+    precision=3,
 ):  # pragma: no cover
     """
     Add `elevation` (meters) attribute to each node using a web service.
 
-    This uses the Google Maps Elevation API and requires an API key. For a
-    free, local alternative, see the `add_node_elevations_raster` function.
+    This uses the Google Maps Elevation API by default and requires an API key. This
+    function is also compatible with the free Open Topo Data API which either can
+    be used by public API or hosted locally.
+
+    For a free, local alternative, see the `add_node_elevations_raster` function.
     See also the `add_edge_grades` function.
 
     Parameters
@@ -123,7 +131,10 @@ def add_node_elevations_google(
     G : networkx.MultiDiGraph
         input graph
     api_key : string
-        a Google Maps Elevation API key
+        a Google Maps Elevation API key.
+    url_template : string
+        a URL to the API containing exactly two parameters `locations` and `key`.
+        Example for Open Topo Data: `https://api.opentopodata.org/v1/aster30m?locations={}&key={}`
     max_locations_per_batch : int
         max number of coordinate pairs to submit in each API call (if this is
         too high, the server will reject the request because its character
@@ -139,9 +150,6 @@ def add_node_elevations_google(
     G : networkx.MultiDiGraph
         graph with node elevation attributes
     """
-    # elevation API endpoint ready for use
-    url_template = "https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}"
-
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
     # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
     # in more locations per API call
