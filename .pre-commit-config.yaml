@@ -1,0 +1,40 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-added-large-files
+        args: [--maxkb=50]
+      - id: check-case-conflict
+      - id: check-json
+      - id: check-merge-conflict
+        args: [--assume-in-merge]
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: fix-byte-order-marker
+      - id: mixed-line-ending
+      - id: no-commit-to-branch
+        args: [--branch, main]
+      - id: requirements-txt-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/pycqa/isort
+    rev: v5.11.3
+    hooks:
+      - id: isort
+
+  - repo: https://github.com/psf/black
+    rev: 22.12.0
+    hooks:
+      - id: black
+        args: [--line-length=100]
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+
+  - repo: https://github.com/pycqa/pydocstyle
+    rev: 6.1.1
+    hooks:
+      - id: pydocstyle
+        exclude: "tests/test_osmnx.py"
