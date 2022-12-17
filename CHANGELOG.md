@@ -38,7 +38,7 @@
   - deprecate utils.config function in favor of using settings module directly
 
 ## 1.1.2 (2021-11-17)
-  
+
   - fix geocoding when no geojson is returned
   - fix graph simplification to properly handle travel_time edge attributes
   - fix streets per node not being calculated when clean_periphery=False

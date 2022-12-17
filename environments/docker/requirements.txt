@@ -22,6 +22,7 @@ osmnx
 pandana
 pillow
 pip
+pre-commit
 psycopg2
 pydocstyle
 pyproj
@@ -30,9 +31,9 @@ pytest
 python == 3.10.*
 python-igraph
 rasterio
-seaborn
 scikit-learn
 scipy
+seaborn
 sphinx
 statsmodels
 urbanaccess

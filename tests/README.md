@@ -1,6 +1,6 @@
 # OSMnx tests
 
-First, ensure that you have installed the necessary [dependencies](environment-dev.yml). Then use the scripts in this folder to:
+First, ensure that you have installed the necessary [dependencies](environment-dev.yml). Then use the repo's [pre-commit hooks](../.pre-commit-config.yaml) and/or the scripts in this folder to:
 
   - format the code according to the project's style
   - lint the code
