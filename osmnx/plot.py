@@ -8,7 +8,13 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
-from matplotlib import colormaps
+
+try:
+    from matplotlib import colormaps
+except ImportError:
+    from matplotlib.pyplot import colormaps as mpl_cmaps
+
+    colormaps = {c: cm.get_cmap(c) for c in mpl_cmaps()}
 
 from . import graph
 from . import projection
