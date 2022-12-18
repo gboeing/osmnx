@@ -31,7 +31,7 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Setup conda environment with micromamba
+      - name: Setup Conda environment with Micromamba
         uses: mamba-org/provision-with-micromamba@v14
         with:
           cache-downloads: true
