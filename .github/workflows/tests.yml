@@ -19,11 +19,6 @@ jobs:
       matrix:
         python-version: ['3.9', '3.10', '3.11']
         os: [ubuntu-latest]
-        include:
-          - os: ubuntu-latest
-            environment-file: tests/environment-dev.yml
-            miniforge-variant: Mambaforge
-            miniforge-version: 4.9.2-4
 
     defaults:
       run:
@@ -36,16 +31,16 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Setup conda environment with mambaforge
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Setup conda environment with micromamba
+        uses: mamba-org/provision-with-micromamba@v14
         with:
-          use-mamba: true
-          activate-environment: osmnx-dev
-          python-version: ${{ matrix.python-version }}
-          condarc-file: ${{ matrix.condarc-file }}
-          environment-file: ${{ matrix.environment-file }}
-          miniforge-variant: ${{ matrix.miniforge-variant }}
-          miniforge-version: ${{ matrix.miniforge-version }}
+          cache-downloads: true
+          cache-env: true
+          channels: conda-forge
+          channel-priority: strict
+          environment-file: tests/environment-dev.yml
+          environment-name: osmnx-dev
+          extra-specs: python=${{ matrix.python-version }}
 
       - name: Install OSMnx
         run: |
