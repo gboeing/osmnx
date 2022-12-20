@@ -1,7 +1,7 @@
 # Change log
 
 ## 1.3.0 (TBD)
-  - support Shapely 2.0
+  - fully support Shapely 2.0 and drop support for Shapely 1.x
   - drop RTree package dependency
   - much faster nearest edges search using STRTree index
   - allow using alternative Google Maps compatible elevation APIs, such as Open Topo Data
