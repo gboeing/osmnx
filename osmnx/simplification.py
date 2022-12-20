@@ -192,7 +192,32 @@ def _get_paths_to_simplify(G, strict=True):
                 yield _build_path(G, endpoint, successor, endpoints)
 
 
-def simplify_graph(G, strict=True, remove_rings=True):
+def _remove_rings(G):
+    """
+    Remove self-contained rings from graph.
+
+    This identifies any connected components that form a self-contained ring
+    without any endpoints, and removes them from the graph.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+        graph with self-contained rings removed
+    """
+    nodes_in_rings = set()
+    for wcc in nx.weakly_connected_components(G):
+        if not any(_is_endpoint(G, n) for n in wcc):
+            nodes_in_rings.update(wcc)
+    G.remove_nodes_from(nodes_in_rings)
+    return G
+
+
+def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
     """
     Simplify a graph's topology by removing interstitial nodes.
 
@@ -202,9 +227,9 @@ def simplify_graph(G, strict=True, remove_rings=True):
     a new `geometry` attribute on the new edge. Note that only simplified
     edges receive a `geometry` attribute. Some of the resulting consolidated
     edges may comprise multiple OSM ways, and if so, their multiple attribute
-    values are stored as a list. In addition, the simplified edges receive a
-    `merged_edges` attribute that contains a list of all the edges (u, v, key)
-    that were merged together.
+    values are stored as a list. Optionally, the simplified edges can receive
+    a `merged_edges` attribute that contains a list of all the (u, v) node
+    pairs that were merged together.
 
     Parameters
     ----------
@@ -217,6 +242,9 @@ def simplify_graph(G, strict=True, remove_rings=True):
         have multiple OSM IDs within them too.
     remove_rings : bool
         if True, remove isolated self-contained rings that have no endpoints
+    track_merged : bool
+        if True, add `merged_edges` attribute on simplified edges, containing
+        a list of all the (u, v) node pairs that were merged together
 
     Returns
     -------
@@ -241,14 +269,16 @@ def simplify_graph(G, strict=True, remove_rings=True):
 
     # generate each path that needs to be simplified
     for path in _get_paths_to_simplify(G, strict=strict):
-        # Keep track of the edges that were merged
-        merged_edges = []
 
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
+        merged_edges = []
         path_attributes = dict()
         for u, v in zip(path[:-1], path[1:]):
-            merged_edges.append((u, v))
+
+            if track_merged:
+                # keep track of the edges that were merged
+                merged_edges.append((u, v))
 
             # there should rarely be multiple edges between interstitial nodes
             # usually happens if OSM has duplicate ways digitized for just one
@@ -288,8 +318,9 @@ def simplify_graph(G, strict=True, remove_rings=True):
             [Point((G.nodes[node]["x"], G.nodes[node]["y"])) for node in path]
         )
 
-        # Add the merged edges as a new attribute of the simplified edge
-        path_attributes["merged_edges"] = merged_edges
+        if track_merged:
+            # add the merged edges as a new attribute of the simplified edge
+            path_attributes["merged_edges"] = merged_edges
 
         # add the nodes and edge to their lists for processing at the end
         all_nodes_to_remove.extend(path[1:-1])
@@ -306,14 +337,7 @@ def simplify_graph(G, strict=True, remove_rings=True):
     G.remove_nodes_from(set(all_nodes_to_remove))
 
     if remove_rings:
-        # remove any connected components that form a self-contained ring
-        # without any endpoints
-        wccs = nx.weakly_connected_components(G)
-        nodes_in_rings = set()
-        for wcc in wccs:
-            if not any(_is_endpoint(G, n) for n in wcc):
-                nodes_in_rings.update(wcc)
-        G.remove_nodes_from(nodes_in_rings)
+        G = _remove_rings(G)
 
     # mark graph as having been simplified
     G.graph["simplified"] = True
