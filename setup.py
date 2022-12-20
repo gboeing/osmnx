@@ -43,9 +43,9 @@ CLASSIFIERS = [
     "Topic :: Scientific/Engineering :: Information Analysis",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 
 DESC = (
@@ -62,7 +62,7 @@ else:
 # now call setup
 setup(
     name="osmnx",
-    version="1.2.2",
+    version="1.3.0dev",
     description=DESC,
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/x-rst",
@@ -73,7 +73,7 @@ setup(
     license="MIT",
     platforms="any",
     packages=["osmnx"],
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     install_requires=INSTALL_REQUIRES,
     extras_require={
         "entropy": ["scipy"],

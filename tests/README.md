@@ -1,6 +1,6 @@
 # OSMnx tests
 
-First, ensure that you have installed the necessary [dependencies](environment-dev.yml). Then use the scripts in this folder to:
+First, ensure that you have installed the necessary [dependencies](environment-dev.yml). Then use the repo's [pre-commit hooks](../.pre-commit-config.yaml) and/or the scripts in this folder to:
 
   - format the code according to the project's style
   - lint the code
@@ -37,7 +37,7 @@ All PRs trigger continuous integration tests via GitHub Actions. See the [config
 
 ## Release a new version
 
-Update `CHANGELOG.md` and edit the version number in `setup.py`, `osmnx/__init__.py`, and `docs/source/conf.py`. If needed, update `LICENSE.txt` dates and `requirements.txt` dependency versions. Then change directories to the repository's root and run:
+Update `CHANGELOG.md` and edit the version number in `setup.py`, `osmnx/_version.py`, and `docs/source/conf.py`. If needed, update `LICENSE.txt` dates and `requirements.txt` dependency versions. Then change directories to the repository's root and run:
 
 ```
 bash ./tests/packaging.sh

@@ -12,7 +12,6 @@ dependencies:
     - pandas
     - pyproj
     - requests
-    - Rtree
     - Shapely
 
     # extras
@@ -28,6 +27,7 @@ dependencies:
     - flake8
     - flake8-bugbear
     - isort
+    - pre-commit
     - pydocstyle
     - pytest
     - sphinx

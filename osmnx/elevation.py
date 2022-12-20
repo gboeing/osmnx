@@ -109,21 +109,30 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
 
 
 def add_node_elevations_google(
-    G, api_key, max_locations_per_batch=350, pause_duration=0, precision=3
+    G,
+    api_key,
+    max_locations_per_batch=350,
+    pause_duration=0,
+    precision=3,
+    url_template="https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}",
 ):  # pragma: no cover
     """
     Add `elevation` (meters) attribute to each node using a web service.
 
-    This uses the Google Maps Elevation API and requires an API key. For a
-    free, local alternative, see the `add_node_elevations_raster` function.
-    See also the `add_edge_grades` function.
+    By default, this uses the Google Maps Elevation API but you can optionally
+    use an equivalent API with the same interface and response format, such as
+    Open Topo Data. The Google Maps Elevation API requires an API key but
+    other providers may not.
+
+    For a free local alternative see the `add_node_elevations_raster`
+    function. See also the `add_edge_grades` function.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
     api_key : string
-        a Google Maps Elevation API key
+        a valid API key
     max_locations_per_batch : int
         max number of coordinate pairs to submit in each API call (if this is
         too high, the server will reject the request because its character
@@ -133,15 +142,16 @@ def add_node_elevations_google(
         rate limited
     precision : int
         decimal precision to round elevation values
+    url_template : string
+        a URL string template for the API endpoint, containing exactly two
+        parameters: `locations` and `key`; for example, for Open Topo Data:
+        "https://api.opentopodata.org/v1/aster30m?locations={}&key={}"
 
     Returns
     -------
     G : networkx.MultiDiGraph
         graph with node elevation attributes
     """
-    # elevation API endpoint ready for use
-    url_template = "https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}"
-
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
     # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
     # in more locations per API call
@@ -164,16 +174,17 @@ def add_node_elevations_google(
         if cached_response_json is not None:
             response_json = cached_response_json
         else:
-            try:
-                # request the elevations from the API
-                utils.log(f"Requesting node elevations: {url}")
-                time.sleep(pause_duration)
-                response = requests.get(url)
+            # request the elevations from the API
+            utils.log(f"Requesting node elevations: {url}")
+            time.sleep(pause_duration)
+            response = requests.get(url)
+            if response.status_code == 200:
                 response_json = response.json()
                 downloader._save_to_cache(url, response_json, response.status_code)
-            except Exception as e:
-                utils.log(e)
-                utils.log(f"Server responded with {response.status_code}: {response.reason}")
+            else:
+                raise Exception(
+                    f"Server responded with {response.status_code}: {response.reason} \n{response.json()}"
+                )
 
         # append these elevation results to the list of all results
         results.extend(response_json["results"])
@@ -181,19 +192,17 @@ def add_node_elevations_google(
     # sanity check that all our vectors have the same number of elements
     if not (len(results) == len(G) == len(node_points)):
         raise Exception(
-            f"Graph has {len(G)} nodes but we received {len(results)} results from elevation API"
+            f"Graph has {len(G)} nodes but we received {len(results)} results. \n{response_json}"
         )
     else:
-        utils.log(
-            f"Graph has {len(G)} nodes and we received {len(results)} results from elevation API"
-        )
+        utils.log(f"Graph has {len(G)} nodes and we received {len(results)} results.")
 
     # add elevation as an attribute to the nodes
     df = pd.DataFrame(node_points, columns=["node_points"])
     df["elevation"] = [result["elevation"] for result in results]
     df["elevation"] = df["elevation"].round(precision)
     nx.set_node_attributes(G, name="elevation", values=df["elevation"].to_dict())
-    utils.log("Added elevation data from Google to all nodes.")
+    utils.log("Added elevation data from API to all nodes.")
 
     return G
 
