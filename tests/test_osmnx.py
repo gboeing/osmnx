@@ -447,7 +447,8 @@ def test_graph_from_functions():
     G = ox.graph_from_place([place1], network_type="all", clean_periphery=False)
 
     # graph from polygon
-    G = ox.graph_from_polygon(polygon, network_type="walk", truncate_by_edge=True)
+    G = ox.graph_from_polygon(polygon, network_type="walk", truncate_by_edge=True, simplify=False)
+    G = ox.simplify_graph(G, strict=False, remove_rings=False, track_merged=True)
 
     # test custom query filter
     cf = (
