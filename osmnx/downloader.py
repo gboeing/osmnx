@@ -41,7 +41,7 @@ def _get_osm_filter(network_type):
     # define built-in queries to send to the API. specifying way["highway"]
     # means that all ways returned must have a highway tag. the filters then
     # remove ways by tag/value.
-    filters = dict()
+    filters = {}
 
     # driving: filter out un-drivable roads, service roads, private ways, and
     # anything specifying motor=no. also filter out any non-service roads that
@@ -460,7 +460,7 @@ def _create_overpass_query(polygon_coord_str, tags):
     if not isinstance(tags, dict):  # pragma: no cover
         raise TypeError(error_msg)
 
-    tags_dict = dict()
+    tags_dict = {}
     for key, value in tags.items():
 
         if isinstance(value, bool):

@@ -307,7 +307,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     else:
 
         # interpolate points along edges to index with k-d tree or ball tree
-        uvk_xy = list()
+        uvk_xy = []
         for uvk, geom in zip(geoms.index, geoms.values):
             uvk_xy.extend((uvk, xy) for xy in utils_geo.interpolate_points(geom, interpolate))
         labels, xy = zip(*uvk_xy)

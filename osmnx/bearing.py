@@ -155,7 +155,7 @@ def _extract_edge_bearings(Gu, min_length=0, weight=None):
     """
     if nx.is_directed(Gu) or projection.is_projected(Gu.graph["crs"]):  # pragma: no cover
         raise ValueError("graph must be undirected and unprojected to analyze edge bearings")
-    bearings = list()
+    bearings = []
     for u, v, data in Gu.edges(data=True):
         # ignore self-loops and any edges below min_length
         if u != v and data["length"] >= min_length:

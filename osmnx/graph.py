@@ -562,8 +562,8 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     G = nx.MultiDiGraph(**metadata)
 
     # extract nodes and paths from the downloaded osm data
-    nodes = dict()
-    paths = dict()
+    nodes = {}
+    paths = {}
     for response_json in response_jsons:
         nodes_temp, paths_temp = _parse_nodes_paths(response_json)
         nodes.update(nodes_temp)
@@ -649,8 +649,8 @@ def _parse_nodes_paths(response_json):
     nodes, paths : tuple of dicts
         dicts' keys = osmid and values = dict of attributes
     """
-    nodes = dict()
-    paths = dict()
+    nodes = {}
+    paths = {}
     for element in response_json["elements"]:
         if element["type"] == "node":
             nodes[element["id"]] = _convert_node(element)
