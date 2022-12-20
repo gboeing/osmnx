@@ -4,6 +4,7 @@ repos:
     hooks:
       - id: check-added-large-files
         args: [--maxkb=50]
+      - id: check-builtin-literals
       - id: check-case-conflict
       - id: check-json
       - id: check-merge-conflict
