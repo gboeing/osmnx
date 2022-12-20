@@ -5,6 +5,7 @@
   - drop RTree package dependency
   - much faster nearest edges search using STRTree index
   - allow using alternative Google Maps compatible elevation APIs, such as Open Topo Data
+  - optionally track merged_edges as a new edge attribute in simplify_graph function
 
 ## 1.2.3 (2022-12-14)
 
