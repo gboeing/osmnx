@@ -273,7 +273,7 @@ def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
         merged_edges = []
-        path_attributes = dict()
+        path_attributes = {}
         for u, v in zip(path[:-1], path[1:]):
 
             if track_merged:

@@ -349,7 +349,7 @@ def basic_stats(G, area=None, clean_int_tol=None):
           - `streets_per_node_proportions` - see `streets_per_node_proportions` function documentation
     """
     Gu = utils_graph.get_undirected(G)
-    stats = dict()
+    stats = {}
 
     stats["n"] = len(G.nodes)
     stats["m"] = len(G.edges)

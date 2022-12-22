@@ -369,8 +369,8 @@ def _create_gdf(response_jsons, polygon, tags):
         utils.log(f"Converting {elements_count} elements in JSON responses to geometries")
 
         # Dictionaries to hold nodes and complete geometries
-        coords = dict()
-        geometries = dict()
+        coords = {}
+        geometries = {}
 
         # Set to hold the unique IDs of elements that do not have tags
         untagged_element_ids = set()
@@ -502,7 +502,7 @@ def _parse_node_to_point(element):
     point : dict
         dict of OSM ID, OSM element type, tags and geometry
     """
-    point = dict()
+    point = {}
     point["osmid"] = element["id"]
     point["element_type"] = "node"
 
@@ -537,7 +537,7 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_polyg
     """
     nodes = element["nodes"]
 
-    linestring_or_polygon = dict()
+    linestring_or_polygon = {}
     linestring_or_polygon["osmid"] = element["id"]
     linestring_or_polygon["element_type"] = "way"
     linestring_or_polygon["nodes"] = nodes
@@ -704,7 +704,7 @@ def _parse_relation_to_multipolygon(element, geometries):
     multipolygon : dict
         dict of tags and geometry for a single multipolygon
     """
-    multipolygon = dict()
+    multipolygon = {}
     multipolygon["osmid"] = element["id"]
     multipolygon["element_type"] = "relation"
 
