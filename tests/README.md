@@ -43,4 +43,4 @@ Update `CHANGELOG.md` and edit the version number in `setup.py`, `osmnx/_version
 bash ./tests/packaging.sh
 ```
 
-This will tag the repo with the new version number, upload the PyPI distribution, and update the conda-forge feedstock. Then, open a pull request at the [feedstock](https://github.com/conda-forge/osmnx-feedstock/pulls) to release on conda-forge. Finally, update the [Docker image](../environments/docker) and the [examples repo](https://github.com/gboeing/osmnx-examples) with the new version.
+This will tag the repo with the new version number, upload the PyPI distribution, and update the conda-forge feedstock. Then, open a pull request at the [feedstock](https://github.com/conda-forge/osmnx-feedstock/pulls) to release on conda-forge. Finally, when the new version is available on conda-forge, update the [Docker image](../environments/docker) and the [examples repo](https://github.com/gboeing/osmnx-examples) to use the new version.
