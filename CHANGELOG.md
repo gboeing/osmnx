@@ -1,6 +1,6 @@
 # Change log
 
-## 1.3.0 (TBD)
+## 1.3.0 (2023-01-01)
   - fully support Shapely 2.0 and drop support for Shapely 1.x
   - drop RTree package dependency
   - much faster nearest edges search using STRTree index
