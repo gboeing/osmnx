@@ -27,7 +27,7 @@ jobs:
     steps:
 
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 2
 
@@ -65,4 +65,4 @@ jobs:
           coverage report -m
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
