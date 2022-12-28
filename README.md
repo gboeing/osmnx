@@ -29,7 +29,7 @@ If you use OSMnx in your work, please cite the journal article.
 
 ## Features
 
-OSMnx is built on top of [GeoPandas](https://geopandas.org/), [NetworkX](https://networkx.org/), and [matplotlib](https://matplotlib.org/) and interacts with [OpenStreetMap](https://www.openstreetmap.org/copyright/) APIs to:
+OSMnx is built on top of [GeoPandas](https://geopandas.org/), [NetworkX](https://networkx.org/), and [matplotlib](https://matplotlib.org/) and interacts with [OpenStreetMap](https://www.openstreetmap.org/) APIs to:
 
   * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
   * Download any other spatial geometries, place boundaries, building footprints, or points of interest as a GeoDataFrame
@@ -48,4 +48,9 @@ OSMnx is built on top of [GeoPandas](https://geopandas.org/), [NetworkX](https:/
   * Visualize travel distance and travel time with isoline and isochrone maps
   * Plot figure-ground diagrams of street networks and building footprints
 
-All of these features are demonstrated in the [examples](https://github.com/gboeing/osmnx-examples) repo and documented in the [documentation](https://osmnx.readthedocs.io/). Feature development details are in the change log. Read the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/) for further technical details.
+All of these features are demonstrated in the [examples](https://github.com/gboeing/osmnx-examples) repo and documented in the [documentation](https://osmnx.readthedocs.io/). Feature development details are in the [change log](CHANGELOG.md). Read the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/) for further technical details.
+
+## License
+
+OSMnx is licensed under the MIT license. OpenStreetMap's open data [license](https://www.openstreetmap.org/copyright/) requires that derivative works provide proper attribution.
+
