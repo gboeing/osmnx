@@ -164,7 +164,9 @@ def save_graph_xml(
         this method to aggregate the lengths of the individual
         component edges. Otherwise, the length attribute will simply
         reflect the length of the first edge associated with the way.
-    osm_version : OpenStreetMap data version to write in the XML file header. Default 0.6.
+    osm_version : int
+        OpenStreetMap data version to write in the XML file header. Default 0.6.
+    
     Returns
     -------
     None
