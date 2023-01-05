@@ -169,6 +169,7 @@ def save_graph_xml(
         OpenStreetMap data version to write in the XML file header. Default 0.6.
     coordinate_precision : int
         Number of decimal places to keep when writing latitude and longitude values. Default 7.
+
     Returns
     -------
     None
