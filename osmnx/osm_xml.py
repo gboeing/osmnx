@@ -98,6 +98,7 @@ def save_graph_xml(
     oneway=False,
     merge_edges=True,
     edge_tag_aggs=None,
+    osm_version=0.6
 ):
     """
     Save graph to disk as an OSM-formatted XML .osm file.
@@ -163,7 +164,7 @@ def save_graph_xml(
         this method to aggregate the lengths of the individual
         component edges. Otherwise, the length attribute will simply
         reflect the length of the first edge associated with the way.
-
+    osm_version : OpenStreetMap data version to write in the XML file header. Default 0.6.
     Returns
     -------
     None
@@ -221,7 +222,7 @@ def save_graph_xml(
         )
 
     # initialize XML tree with an OSM root element then append nodes/edges
-    root = etree.Element("osm", attrib={"version": "0.6", "generator": "OSMnx"})
+    root = etree.Element("osm", attrib={"version": str(osm_version), "generator": "OSMnx"})
     root = _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags)
     root = _append_edges_xml_tree(
         root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges
