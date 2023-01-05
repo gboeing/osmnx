@@ -99,7 +99,7 @@ def save_graph_xml(
     merge_edges=True,
     edge_tag_aggs=None,
     osm_version=0.6,
-    coordinate_precision=6
+    coordinate_precision=7
 ):
     """
     Save graph to disk as an OSM-formatted XML .osm file.
