@@ -99,7 +99,7 @@ def save_graph_xml(
     merge_edges=True,
     edge_tag_aggs=None,
     osm_version=0.6,
-    coordinate_precision=7
+    coordinate_precision=7,
 ):
     """
     Save graph to disk as an OSM-formatted XML .osm file.
@@ -235,7 +235,7 @@ def save_graph_xml(
     )
 
     # write to disk
-    etree.ElementTree(root).write(filepath, encoding='utf-8', xml_declaration=True)
+    etree.ElementTree(root).write(filepath, encoding="utf-8", xml_declaration=True)
     utils.log(f'Saved graph as .osm file at "{filepath}"')
 
 
@@ -260,7 +260,7 @@ def _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags):
         xml tree with nodes appended
     """
     for _, row in gdf_nodes.iterrows():
-        row = row.dropna().astype(str)        
+        row = row.dropna().astype(str)
         node = etree.SubElement(root, "node", attrib=row[node_attrs].to_dict())
 
         for tag in node_tags:
@@ -325,15 +325,15 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
                         etree.SubElement(edge, "tag", attrib={"k": tag, "v": first[tag]})
             else:
                 for tag in edge_tags:
-                    if (tag in first) and (
-                        tag not in (t for t, agg in edge_tag_aggs)
-                    ):
+                    if (tag in first) and (tag not in (t for t, agg in edge_tag_aggs)):
                         etree.SubElement(edge, "tag", attrib={"k": tag, "v": first[tag]})
 
                 for tag, agg in edge_tag_aggs:
                     if tag in all_way_edges.columns:
                         etree.SubElement(
-                            edge, "tag", attrib={"k": tag, "v": str(all_way_edges[tag].aggregate(agg))}
+                            edge,
+                            "tag",
+                            attrib={"k": tag, "v": str(all_way_edges[tag].aggregate(agg))},
                         )
     else:
         # NOTE: this will generate separate OSM ways for each network edge,
@@ -343,7 +343,7 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
         # OSM XML schema standard, however, the data will still comprise a
         # valid network and will be readable by *most* OSM tools.
         for _, row in gdf_edges.iterrows():
-            row = row.dropna().astype(str)               
+            row = row.dropna().astype(str)
             edge = etree.SubElement(root, "way", attrib=row[edge_attrs].to_dict())
             etree.SubElement(edge, "nd", attrib={"ref": row["u"]})
             etree.SubElement(edge, "nd", attrib={"ref": row["v"]})
