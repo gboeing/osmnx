@@ -98,7 +98,8 @@ def save_graph_xml(
     oneway=False,
     merge_edges=True,
     edge_tag_aggs=None,
-    osm_version=0.6
+    osm_version=0.6,
+    coordinate_precision=6
 ):
     """
     Save graph to disk as an OSM-formatted XML .osm file.
@@ -166,7 +167,8 @@ def save_graph_xml(
         reflect the length of the first edge associated with the way.
     osm_version : int
         OpenStreetMap data version to write in the XML file header. Default 0.6.
-    
+    coordinate_precision : int
+        Number of decimal places to keep when writing latitude and longitude values. Default 7.
     Returns
     -------
     None
@@ -198,6 +200,8 @@ def save_graph_xml(
 
     # rename columns per osm specification
     gdf_nodes.rename(columns={"x": "lon", "y": "lat"}, inplace=True)
+    gdf_nodes.lon = gdf_nodes.lon.round(coordinate_precision)
+    gdf_nodes.lat = gdf_nodes.lat.round(coordinate_precision)
     gdf_nodes = gdf_nodes.reset_index().rename(columns={"osmid": "id"})
     if "id" in gdf_edges.columns:
         gdf_edges = gdf_edges[[col for col in gdf_edges if col != "id"]]
