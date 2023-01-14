@@ -233,7 +233,7 @@ def save_graph_xml(
 
     # write to disk
     etree.ElementTree(root).write(filepath)
-    utils.log(f'Saved graph as .osm file at "{filepath}"')
+    utils.log(f"Saved graph as .osm file at {filepath!r}")
 
 
 def _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags):

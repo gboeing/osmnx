@@ -101,7 +101,7 @@ def _get_osm_filter(network_type):
     if network_type in filters:
         osm_filter = filters[network_type]
     else:  # pragma: no cover
-        raise ValueError(f'Unrecognized network_type "{network_type}"')
+        raise ValueError(f"Unrecognized network_type {network_type!r}")
 
     return osm_filter
 
@@ -155,7 +155,7 @@ def _save_to_cache(url, response_json, sc):
 
             # dump to json, and save to file
             cache_filepath.write_text(json.dumps(response_json), encoding="utf-8")
-            utils.log(f'Saved response to cache file "{cache_filepath}"')
+            utils.log(f"Saved response to cache file {cache_filepath!r}")
 
 
 def _url_in_cache(url):
@@ -210,10 +210,10 @@ def _retrieve_from_cache(url, check_remark=False):
             # return None if check_remark is True and there is a server
             # remark in the cached response
             if check_remark and "remark" in response_json:
-                utils.log(f'Found remark, so ignoring cache file "{cache_filepath}"')
+                utils.log(f"Found remark, so ignoring cache file {cache_filepath!r}")
                 return None
 
-            utils.log(f'Retrieved response from cache file "{cache_filepath}"')
+            utils.log(f"Retrieved response from cache file {cache_filepath!r}")
             return response_json
 
 
@@ -273,12 +273,12 @@ def _get_host_by_name(host):
     # status = 0 means NOERROR: standard DNS response code
     if response.ok and data["Status"] == 0:
         ip_address = data["Answer"][0]["data"]
-        utils.log(f"Google resolved '{host}' to '{ip_address}'")
+        utils.log(f"Google resolved {host!r} to {ip_address!r}")
         return ip_address
 
     # in case host could not be resolved return the host itself
     else:
-        utils.log(f"Google could not resolve '{host}'. Response status: {data['Status']}")
+        utils.log(f"Google could not resolve {host!r}. Response status: {data['Status']}")
         return host
 
 
@@ -389,7 +389,7 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
 
         # any other status is unrecognized: log error, return default duration
         else:
-            utils.log(f'Unrecognized server status: "{status}"', level=lg.ERROR)
+            utils.log(f"Unrecognized server status: {status!r}", level=lg.ERROR)
             return default_duration
 
     return pause
@@ -492,10 +492,10 @@ def _create_overpass_query(polygon_coord_str, tags):
 
             if isinstance(value, bool):
                 # if bool (ie, True) just pass the key, no value
-                tag_str = f"['{key}'](poly:'{polygon_coord_str}');(._;>;);"
+                tag_str = f"[{key!r}](poly:{polygon_coord_str!r});(._;>;);"
             else:
                 # otherwise, pass "key"="value"
-                tag_str = f"['{key}'='{value}'](poly:'{polygon_coord_str}');(._;>;);"
+                tag_str = f"[{key!r}={value!r}](poly:{polygon_coord_str!r});(._;>;);"
 
             for kind in ("node", "way", "relation"):
                 components.append(f"({kind}{tag_str});")
@@ -543,7 +543,7 @@ def _osm_network_download(polygon, network_type, custom_filter):
     # pass each polygon exterior coordinates in the list to the API, one at a
     # time. The '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
-        query_str = f"{overpass_settings};(way{osm_filter}(poly:'{polygon_coord_str}');>;);out;"
+        query_str = f"{overpass_settings};(way{osm_filter}(poly:{polygon_coord_str!r});>;);out;"
         response_json = overpass_request(data={"data": query_str})
         response_jsons.append(response_json)
     utils.log(
@@ -782,7 +782,7 @@ def overpass_request(data, pause=None, error_pause=60):
         try:
             response_json = response.json()
             if "remark" in response_json:
-                utils.log(f'Server remark: "{response_json["remark"]}"', level=lg.WARNING)
+                utils.log(f'Server remark: {response_json["remark"]!r}', level=lg.WARNING)
 
         except Exception:  # pragma: no cover
             if sc in {429, 504}:
