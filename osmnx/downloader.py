@@ -1,19 +1,18 @@
 """Interact with the OSM APIs."""
 
-import datetime as dt
 import json
 import logging as lg
 import re
 import socket
 import time
 from collections import OrderedDict
+from datetime import datetime as dt
 from hashlib import sha1
 from pathlib import Path
 from urllib.parse import urlparse
 
 import numpy as np
 import requests
-from dateutil import parser as date_parser
 
 from . import projection
 from . import settings
@@ -378,8 +377,8 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
         # if first token is 'Slot', it tells you when your slot will be free
         if status_first_token == "Slot":
             utc_time_str = status.split(" ")[3]
-            utc_time = date_parser.parse(utc_time_str).replace(tzinfo=None)
-            pause = int(np.ceil((utc_time - dt.datetime.utcnow()).total_seconds()))
+            utc_time = dt.strptime(utc_time_str, "%Y-%m-%dT%H:%M:%SZ,")
+            pause = int(np.ceil((utc_time - dt.utcnow()).total_seconds()))
             pause = max(pause, 1)
 
         # if first token is 'Currently', it is currently running a query so
