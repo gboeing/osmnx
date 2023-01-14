@@ -55,7 +55,7 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
     # save the nodes and edges as GeoPackage layers
     gdf_nodes.to_file(filepath, layer="nodes", driver="GPKG", index=True, encoding=encoding)
     gdf_edges.to_file(filepath, layer="edges", driver="GPKG", index=True, encoding=encoding)
-    utils.log(f'Saved graph as GeoPackage at "{filepath}"')
+    utils.log(f"Saved graph as GeoPackage at {filepath!r}")
 
 
 def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
@@ -113,7 +113,7 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     # save the nodes and edges as separate ESRI shapefiles
     gdf_nodes.to_file(filepath_nodes, driver="ESRI Shapefile", index=True, encoding=encoding)
     gdf_edges.to_file(filepath_edges, driver="ESRI Shapefile", index=True, encoding=encoding)
-    utils.log(f'Saved graph as shapefiles at "{filepath}"')
+    utils.log(f"Saved graph as shapefiles at {filepath!r}")
 
 
 def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
@@ -170,7 +170,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
             data[attr] = str(value)
 
     nx.write_graphml(G, path=filepath, encoding=encoding)
-    utils.log(f'Saved graph as GraphML file at "{filepath}"')
+    utils.log(f"Saved graph as GraphML file at {filepath!r}")
 
 
 def load_graphml(
@@ -271,7 +271,7 @@ def load_graphml(
     G = _convert_node_attr_types(G, default_node_dtypes)
     G = _convert_edge_attr_types(G, default_edge_dtypes)
 
-    utils.log(f'Loaded graph with {len(G)} nodes and {len(G.edges)} edges from "{source}"')
+    utils.log(f"Loaded graph with {len(G)} nodes and {len(G.edges)} edges from {source!r}")
     return G
 
 
@@ -392,7 +392,7 @@ def _convert_bool_string(value):
     elif isinstance(value, bool):
         return value
     else:  # pragma: no cover
-        raise ValueError(f'invalid literal for boolean: "{value}"')
+        raise ValueError(f"invalid literal for boolean: {value!r}")
 
 
 def _stringify_nonnumeric_cols(gdf):

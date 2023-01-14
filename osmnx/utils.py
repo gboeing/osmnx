@@ -72,7 +72,7 @@ def ts(style="datetime", template=None):
         elif style == "time":
             template = "{:%H:%M:%S}"
         else:  # pragma: no cover
-            raise ValueError(f'unrecognized timestamp style "{style}"')
+            raise ValueError(f"unrecognized timestamp style {style!r}")
 
     ts = template.format(dt.datetime.now())
     return ts
