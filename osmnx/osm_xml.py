@@ -166,9 +166,11 @@ def save_graph_xml(
         component edges. Otherwise, the length attribute will simply
         reflect the length of the first edge associated with the way.
     osm_version : int
-        OpenStreetMap data version to write in the XML file header. Default 0.6.
+        OpenStreetMap data version to write in the XML file header.
+        Default 0.6.
     coordinate_precision : int
-        Number of decimal places to keep when writing latitude and longitude values. Default 7.
+        Number of decimal places to keep when writing latitude and longitude values.
+        Default 7.
 
     Returns
     -------
