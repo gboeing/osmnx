@@ -203,8 +203,8 @@ def save_graph_xml(
 
     # rename columns per osm specification
     gdf_nodes.rename(columns={"x": "lon", "y": "lat"}, inplace=True)
-    gdf_nodes.lon = gdf_nodes.lon.round(coordinate_precision)
-    gdf_nodes.lat = gdf_nodes.lat.round(coordinate_precision)
+    gdf_nodes['lon'] = gdf_nodes['lon'].round(coordinate_precision)
+    gdf_nodes['lat'] = gdf_nodes['lat'].round(coordinate_precision)
     gdf_nodes = gdf_nodes.reset_index().rename(columns={"osmid": "id"})
     if "id" in gdf_edges.columns:
         gdf_edges = gdf_edges[[col for col in gdf_edges if col != "id"]]
