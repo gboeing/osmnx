@@ -343,13 +343,13 @@ def test_api_endpoints():
     # Test changing the endpoint.
     # It should fail because we didn't provide a valid key
     ox.settings.nominatim_endpoint = "http://open.mapquestapi.com/nominatim/v1/"
-    with pytest.raises(Exception):
+    with pytest.raises(Exception) as ex:
         response_json = ox.downloader.nominatim_request(params=params, request_type="search")
 
     # Test changing the endpoint.
     # This should fail because we didn't provide a valid endpoint
     ox.settings.overpass_endpoint = "http://NOT_A_VALID_ENDPOINT/api/"
-    with pytest.raises(Exception):
+    with pytest.raises(Exception) as ex:
         G = ox.graph_from_place(place1, network_type="all")
 
     ox.settings.nominatim_key = default_key

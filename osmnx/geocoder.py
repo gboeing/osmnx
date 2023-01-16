@@ -39,10 +39,10 @@ def geocode(query):
         lat = float(response_json[0]["lat"])
         lng = float(response_json[0]["lon"])
         point = (lat, lng)
-        utils.log(f'Geocoded "{query}" to {point}')
+        utils.log(f"Geocoded {query!r} to {point}")
         return point
     else:
-        raise ValueError(f'Nominatim could not geocode query "{query}"')
+        raise ValueError(f"Nominatim could not geocode query {query!r}")
 
 
 def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
@@ -156,7 +156,7 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
     # choose the right result from the JSON response
     if not results:
         # if no results were returned, raise error
-        raise ValueError(f'Nominatim geocoder returned 0 results for query "{query}"')
+        raise ValueError(f"Nominatim geocoder returned 0 results for query {query!r}")
 
     elif by_osmid:
         # if searching by OSM ID, always take the first (ie, only) result
@@ -172,13 +172,13 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
 
     else:  # pragma: no cover
         # else, we got fewer results than which_result, raise error
-        msg = f'Nominatim geocoder only returned {len(results)} result(s) for query "{query}"'
+        msg = f"Nominatim geocoder only returned {len(results)} result(s) for query {query!r}"
         raise ValueError(msg)
 
     # if we got a non (Multi)Polygon geometry type (like a point), log warning
     geom_type = result["geojson"]["type"]
     if geom_type not in {"Polygon", "MultiPolygon"}:
-        msg = f'Nominatim geocoder returned a {geom_type} as the geometry for query "{query}"'
+        msg = f"Nominatim geocoder returned a {geom_type} as the geometry for query {query!r}"
         utils.log(msg, level=lg.WARNING)
 
     # build the GeoJSON feature from the chosen result
@@ -228,4 +228,4 @@ def _get_first_polygon(results, query):
             return result
 
     # if we never found a polygon, throw an error
-    raise ValueError(f'Nominatim could not geocode query "{query}" to polygonal boundaries')
+    raise ValueError(f"Nominatim could not geocode query {query!r} to polygonal boundaries")

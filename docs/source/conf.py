@@ -24,7 +24,6 @@ sys.path.insert(0, str(Path().resolve().parent.parent))
 
 # mock import these packages because readthedocs doesn't have them installed
 autodoc_mock_imports = [
-    "dateutil",
     "geopandas",
     "matplotlib",
     "matplotlib.cm",
