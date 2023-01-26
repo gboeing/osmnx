@@ -267,8 +267,14 @@ def _get_host_by_name(host):
         resolved IP address
     """
     dns_url = f"https://8.8.8.8/resolve?name={host}"
-    response = requests.get(dns_url)
-    data = response.json()
+    try:
+        response = requests.get(dns_url)
+        data = response.json()
+    except requests.exceptions.RequestException as e:
+        # if anything goes wrong trying to reach the Google DNS servers, (e.g.,
+        # a proxy is restricting access), return the host itself
+        utils.log(f"Got an error when trying to resolve {host!r} from Google DNS: {str(e)}")
+        return host
 
     # status = 0 means NOERROR: standard DNS response code
     if response.ok and data["Status"] == 0:
