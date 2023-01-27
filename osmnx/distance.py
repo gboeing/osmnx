@@ -349,7 +349,7 @@ def _single_shortest_path(G, orig, dest, weight):
     Solve the shortest path from an origin node to a destination node.
 
     This function is a convenience wrapper around networkx.shortest_path, with
-    exception handling for unsolvable paths.
+    exception handling for unsolvable paths. It uses Dijkstra's algorithm.
 
     Parameters
     ----------
@@ -368,7 +368,7 @@ def _single_shortest_path(G, orig, dest, weight):
         list of node IDs constituting the shortest path
     """
     try:
-        return nx.shortest_path(G, orig, dest, weight=weight)
+        return nx.shortest_path(G, orig, dest, weight=weight, method="dijkstra")
     except nx.exception.NetworkXNoPath:  # pragma: no cover
         utils.log(f"Cannot solve path from {orig} to {dest}")
         return None
@@ -378,13 +378,13 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
     """
     Solve shortest path from origin node(s) to destination node(s).
 
-    If `orig` and `dest` are single node IDs, this will return a list of the
-    nodes constituting the shortest path between them.  If `orig` and `dest`
-    are lists of node IDs, this will return a list of lists of the nodes
-    constituting the shortest path between each origin-destination pair. If a
-    path cannot be solved, this will return None for that path. You can
-    parallelize solving multiple paths with the `cpus` parameter, but be
-    careful to not exceed your available RAM.
+    Uses Dijkstra's algorithm. If `orig` and `dest` are single node IDs, this
+    will return a list of the nodes constituting the shortest path between
+    them. If `orig` and `dest` are lists of node IDs, this will return a list
+    of lists of the nodes constituting the shortest path between each
+    origin-destination pair. If a path cannot be solved, this will return None
+    for that path. You can parallelize solving multiple paths with the `cpus`
+    parameter, but be careful to not exceed your available RAM.
 
     See also `k_shortest_paths` to solve multiple shortest paths between a
     single origin and destination. For additional functionality or different
@@ -446,7 +446,8 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
     """
     Solve `k` shortest paths from an origin node to a destination node.
 
-    See also `shortest_path` to get just the one shortest path.
+    Uses Yen's algorithm. See also `shortest_path` to solve just the one
+    shortest path.
 
     Parameters
     ----------
