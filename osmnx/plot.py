@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import geopandas as gpd
 import matplotlib.cm as cm
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
@@ -136,6 +137,7 @@ def plot_graph(
     edge_color="#999999",
     edge_linewidth=1,
     edge_alpha=None,
+    edge_zorder=None,
     show=True,
     close=False,
     save=False,
@@ -170,11 +172,14 @@ def plot_graph(
         nodes below edges
     edge_color : string or list
         color(s) of the edges' lines
-    edge_linewidth : float
+    edge_linewidth : float or list
         width of the edges' lines: if 0, then skip plotting the edges
-    edge_alpha : float
+    edge_alpha : float or list
         opacity of the edges, note: if you passed RGBA values to edge_color,
         set edge_alpha=None to use the alpha channel in edge_color
+    edge_zorder : list of float
+        zorder to plot edges relative to one another, note: zorder of edges is
+        still 1 on plot
     show : bool
         if True, call pyplot.show() to show the figure
     close : bool
@@ -211,6 +216,20 @@ def plot_graph(
     if max_edge_lw > 0:
         # plot the edges' geometries
         gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
+        
+        if edge_zorder is not None:
+            gdf_edges = gpd.GeoDataFrame(gdf_edges)
+            gdf_edges['color'] = edge_color
+            gdf_edges['linewidth'] = edge_linewidth
+            gdf_edges['alpha'] = edge_alpha
+            gdf_edges['zorder'] = edge_zorder
+            gdf_edges.sort_values('zorder', inplace=True)
+            
+            edge_color = gdf_edges.color
+            edge_linewidth = gdf_edges.linewidth
+            if edge_alpha is not None:
+                edge_alpha = gdf_edges.alpha
+            
         ax = gdf_edges.plot(ax=ax, color=edge_color, lw=edge_linewidth, alpha=edge_alpha, zorder=1)
 
     if max_node_size > 0:
