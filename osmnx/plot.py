@@ -216,20 +216,20 @@ def plot_graph(
     if max_edge_lw > 0:
         # plot the edges' geometries
         gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
-        
+
         if edge_zorder is not None:
             gdf_edges = gpd.GeoDataFrame(gdf_edges)
-            gdf_edges['color'] = edge_color
-            gdf_edges['linewidth'] = edge_linewidth
-            gdf_edges['alpha'] = edge_alpha
-            gdf_edges['zorder'] = edge_zorder
-            gdf_edges.sort_values('zorder', inplace=True)
-            
+            gdf_edges["color"] = edge_color
+            gdf_edges["linewidth"] = edge_linewidth
+            gdf_edges["alpha"] = edge_alpha
+            gdf_edges["zorder"] = edge_zorder
+            gdf_edges.sort_values("zorder", inplace=True)
+
             edge_color = gdf_edges.color
             edge_linewidth = gdf_edges.linewidth
             if edge_alpha is not None:
                 edge_alpha = gdf_edges.alpha
-            
+
         ax = gdf_edges.plot(ax=ax, color=edge_color, lw=edge_linewidth, alpha=edge_alpha, zorder=1)
 
     if max_node_size > 0:
