@@ -42,7 +42,9 @@ def sample_points(G, n):
         which each point was drawn
     """
     if nx.is_directed(G):  # pragma: no cover
-        warnings.warn("graph should be undirected to not oversample bidirectional edges")
+        warnings.warn(
+            "graph should be undirected to not oversample bidirectional edges", stacklevel=1
+        )
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
     weights = gdf_edges["length"] / gdf_edges["length"].sum()
     idx = np.random.choice(gdf_edges.index, size=n, p=weights)
