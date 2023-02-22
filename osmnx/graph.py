@@ -485,7 +485,7 @@ def graph_from_polygon(
             "the graph-level street_count attribute will likely be inaccurate "
             "when you set clean_periphery=False"
         )
-        warnings.warn(msg)
+        warnings.warn(msg, stacklevel=1)
 
     utils.log(f"graph_from_polygon returned graph with {len(G)} nodes and {len(G.edges)} edges")
     return G

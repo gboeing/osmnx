@@ -193,7 +193,8 @@ def config(
         "The `utils.config` function is deprecated and will be removed in a "
         "future release. Instead, use the `settings` module directly to "
         "configure a global setting's value. For example, "
-        "`ox.settings.log_console=True`."
+        "`ox.settings.log_console=True`.",
+        stacklevel=1,
     )
 
     # set each global setting to the argument value

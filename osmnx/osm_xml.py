@@ -184,7 +184,7 @@ def save_graph_xml(
             "In order for save_graph_xml to behave properly the graph must "
             "have been created with the `all_oneway` setting set to True."
         )
-        warnings.warn(msg)
+        warnings.warn(msg, stacklevel=1)
 
     try:
         gdf_nodes, gdf_edges = data

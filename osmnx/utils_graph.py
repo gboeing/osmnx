@@ -153,7 +153,8 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
             # ValueError if geometry column contains non-point geometry types
             warnings.warn(
                 "discarding the gdf_nodes geometry column, though its "
-                "values differ from the coordinates in the x and y columns"
+                "values differ from the coordinates in the x and y columns",
+                stacklevel=1,
             )
         gdf_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
 
