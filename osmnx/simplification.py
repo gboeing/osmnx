@@ -289,7 +289,10 @@ def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
 
             # get edge between these nodes: if multiple edges exist between
             # them (see above), we retain only one in the simplified graph
-            edge_data = G.edges[u, v, 0]
+            # We can't assume that there exists an edge from u to v
+            # with key=0, so we get a list of all edges from u to v
+            # and just take the first one.
+            edge_data = list(G.get_edge_data(u, v).values())[0]
             for attr in edge_data:
                 if attr in path_attributes:
                     # if this key already exists in the dict, append it to the
