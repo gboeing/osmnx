@@ -48,7 +48,7 @@ def _get_osm_filter(network_type):
     filters["drive"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
-        f"escalator|footway|path|pedestrian|planned|platform|proposed|raceway|service|"
+        f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|service|"
         f'steps|track"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
         f'["service"!~"alley|driveway|emergency_access|parking|parking_aisle|private"]'
