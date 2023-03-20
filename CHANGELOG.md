@@ -2,6 +2,8 @@
 
 ## TBD
 
+  - ignore ways tagged highway=no or highway=razed in built-in filters
+  - do not assume an edge with key=0 exists between each node pair when simplifying graph
   - drop dateutil package dependency
 
 ## 1.3.0 (2023-01-01)
