@@ -724,7 +724,6 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
     fig.canvas.flush_events()
 
     if save:
-
         # default filepath, if none provided
         if filepath is None:
             filepath = Path(settings.imgs_folder) / "image.png"

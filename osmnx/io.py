@@ -339,7 +339,6 @@ def _convert_edge_attr_types(G, dtypes=None):
     """
     # for each edge in the graph, eval attribute value lists and convert types
     for _, _, data in G.edges(data=True, keys=False):
-
         # remove extraneous "id" attribute added by graphml saving
         data.pop("id", None)
 

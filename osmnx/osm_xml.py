@@ -300,7 +300,6 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
     """
     gdf_edges.reset_index(inplace=True)
     if merge_edges:
-
         for _, all_way_edges in gdf_edges.groupby("id"):
             first = all_way_edges.iloc[0]
             edge = etree.SubElement(root, "way", attrib=first[edge_attrs].dropna().to_dict())

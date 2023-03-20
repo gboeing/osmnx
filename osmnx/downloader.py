@@ -136,7 +136,6 @@ def _save_to_cache(url, response_json, sc):
     None
     """
     if settings.use_cache:
-
         if sc != 200:
             utils.log(f"Did not save to cache because status code is {sc}")
 
@@ -201,7 +200,6 @@ def _retrieve_from_cache(url, check_remark=False):
     """
     # if the tool is configured to use the cache
     if settings.use_cache:
-
         # return cached response for this url if exists, otherwise return None
         cache_filepath = _url_in_cache(url)
         if cache_filepath is not None:
@@ -461,7 +459,6 @@ def _create_overpass_query(polygon_coord_str, tags):
 
     tags_dict = {}
     for key, value in tags.items():
-
         if isinstance(value, bool):
             tags_dict[key] = value
 
@@ -489,7 +486,6 @@ def _create_overpass_query(polygon_coord_str, tags):
     components = []
     for d in tags_list:
         for key, value in d.items():
-
             if isinstance(value, bool):
                 # if bool (ie, True) just pass the key, no value
                 tag_str = f"[{key!r}](poly:{polygon_coord_str!r});(._;>;);"

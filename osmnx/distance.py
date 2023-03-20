@@ -290,7 +290,6 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
     # if no interpolation distance was provided
     if interpolate is None:
-
         # build the r-tree spatial index by position for subsequent iloc
         rtree = STRtree(geoms)
 
@@ -305,7 +304,6 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
     # otherwise, if interpolation distance was provided
     else:
-
         # interpolate points along edges to index with k-d tree or ball tree
         uvk_xy = []
         for uvk, geom in zip(geoms.index, geoms.values):
