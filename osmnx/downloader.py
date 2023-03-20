@@ -58,7 +58,8 @@ def _get_osm_filter(network_type):
     filters["drive_service"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
-        f'escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|steps|track"]'
+        f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|steps|"
+        f'track"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
         f'["service"!~"emergency_access|parking|parking_aisle|private"]'
     )
@@ -94,9 +95,10 @@ def _get_osm_filter(network_type):
 
     # to download all ways, including private-access ones, just filter out
     # everything not currently in use
-    filters[
-        "all_private"
-    ] = '["highway"]["area"!~"yes"]["highway"!~"abandoned|construction|no|planned|platform|proposed|raceway|razed"]'
+    filters["all_private"] = (
+        '["highway"]["area"!~"yes"]["highway"!~"abandoned|construction|no|planned|platform|'
+        'proposed|raceway|razed"]'
+    )
 
     if network_type in filters:
         osm_filter = filters[network_type]
