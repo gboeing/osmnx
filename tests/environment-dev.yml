@@ -22,7 +22,7 @@ dependencies:
     - scipy
 
     # linting/testing
-    - black=22.*
+    - black=23.*
     - coverage
     - flake8
     - flake8-bugbear
