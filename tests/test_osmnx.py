@@ -1,6 +1,6 @@
 """Unit tests for the package."""
 
-# use agg backend so you don't need a display on travis-ci
+# use agg backend so you don't need a display on ci
 # do this first before pyplot is imported by anything
 import matplotlib as mpl
 
@@ -184,7 +184,6 @@ def test_osm_xml():
 
 
 def test_elevation():
-
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
     rasters = list(Path("tests/input_data").glob("elevation*.tif"))
 
@@ -200,7 +199,6 @@ def test_elevation():
 
 
 def test_routing():
-
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
 
     # give each edge speed and travel time attributes
@@ -285,7 +283,6 @@ def test_plots():
 
 
 def test_find_nearest():
-
     # get graph and x/y coords to search
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
     Gp = ox.project_graph(G)
@@ -304,7 +301,6 @@ def test_find_nearest():
 
 
 def test_api_endpoints():
-
     ip = ox.downloader._get_host_by_name("overpass-api.de")
     ip = ox.downloader._get_host_by_name("AAAAAAAAAAA")
 
@@ -341,12 +337,6 @@ def test_api_endpoints():
     response_json = ox.downloader.nominatim_request(params=params, request_type="search")
 
     # Test changing the endpoint.
-    # It should fail because we didn't provide a valid key
-    ox.settings.nominatim_endpoint = "http://open.mapquestapi.com/nominatim/v1/"
-    with pytest.raises(Exception) as ex:
-        response_json = ox.downloader.nominatim_request(params=params, request_type="search")
-
-    # Test changing the endpoint.
     # This should fail because we didn't provide a valid endpoint
     ox.settings.overpass_endpoint = "http://NOT_A_VALID_ENDPOINT/api/"
     with pytest.raises(Exception) as ex:
@@ -358,7 +348,6 @@ def test_api_endpoints():
 
 
 def test_graph_save_load():
-
     # save graph as shapefile and geopackage
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     ox.save_graph_shapefile(G, directed=True)
@@ -426,7 +415,6 @@ def test_graph_save_load():
 
 
 def test_graph_from_functions():
-
     # graph from bounding box
     _ = ox.utils_geo.bbox_from_point(location_point, project_utm=True, return_crs=True)
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
@@ -473,7 +461,6 @@ def test_graph_from_functions():
 
 
 def test_geometries():
-
     # geometries_from_bbox - bounding box query to return empty GeoDataFrame
     gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
 

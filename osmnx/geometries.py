@@ -384,7 +384,6 @@ def _create_gdf(response_jsons, polygon, tags):
             # to dictionaries of coordinates, Shapely Points, LineStrings,
             # Polygons and MultiPolygons
             for element in response_json["elements"]:
-
                 # id numbers are only unique within element types
                 # create unique id from combination of type and id
                 unique_id = f"{element['type']}/{element['id']}"
@@ -565,7 +564,6 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_polyg
     # same) depending upon the tags the geometry could be a Shapely LineString
     # or Polygon
     elif element["nodes"][0] == element["nodes"][-1]:
-
         # determine if closed way represents LineString or Polygon
         if _is_closed_way_a_polygon(element):
             # if it is a Polygon
@@ -636,7 +634,6 @@ def _is_closed_way_a_polygon(element, polygon_features=_polygon_features):
 
     # if the element doesn't have any tags leave it as a Linestring
     if element_tags is not None:
-
         # if the element is specifically tagged 'area':'no' -> LineString
         if element_tags.get("area") == "no":
             pass
@@ -649,7 +646,6 @@ def _is_closed_way_a_polygon(element, polygon_features=_polygon_features):
 
             # for each key in the intersecting keys (if any found)
             for key in intersecting_keys:
-
                 # Get the key's value from the element's tags
                 key_value = element_tags.get(key)
 
@@ -667,7 +663,6 @@ def _is_closed_way_a_polygon(element, polygon_features=_polygon_features):
                 # if the key is for a blocklist i.e. tags that should not
                 # become Polygons
                 elif blocklist_or_passlist == "blocklist":
-
                     # if the value for that key in the element is not in
                     # the blocklist -> Polygon
                     if key_value not in polygon_features_values:
@@ -676,7 +671,6 @@ def _is_closed_way_a_polygon(element, polygon_features=_polygon_features):
                 # if the key is for a passlist i.e. specific tags should
                 # become Polygons
                 elif blocklist_or_passlist == "passlist":
-
                     # if the value for that key in the element is in the
                     # passlist -> Polygon
                     if key_value in polygon_features_values:
@@ -907,13 +901,11 @@ def _buffer_invalid_geometries(gdf):
     """
     # only apply the filters if the GeoDataFrame is not empty
     if not gdf.empty:
-
         # create a filter for rows with invalid geometries
         invalid_geometry_filter = ~gdf["geometry"].is_valid
 
         # if there are invalid geometries
         if invalid_geometry_filter.any():
-
             # get their unique_ids from the index
             invalid_geometry_ids = gdf.loc[invalid_geometry_filter].index.to_list()
 
@@ -958,7 +950,6 @@ def _filter_gdf_by_polygon_and_tags(gdf, polygon, tags):
     """
     # only apply the filters if the GeoDataFrame is not empty
     if not gdf.empty:
-
         # create two filters, initially all True
         polygon_filter = pd.Series(True, index=gdf.index)
         combined_tag_filter = pd.Series(True, index=gdf.index)

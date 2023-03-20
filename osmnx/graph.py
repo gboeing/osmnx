@@ -755,7 +755,6 @@ def _add_paths(G, paths, bidirectional=False):
     reversed_values = {"-1", "reverse", "T"}
 
     for path in paths:
-
         # extract/remove the ordered list of nodes from this path element so
         # we don't add it as a superfluous attribute to the edge later
         nodes = path.pop("nodes")

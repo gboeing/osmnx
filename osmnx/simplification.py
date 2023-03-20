@@ -269,13 +269,11 @@ def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
 
     # generate each path that needs to be simplified
     for path in _get_paths_to_simplify(G, strict=strict):
-
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
         merged_edges = []
         path_attributes = {}
         for u, v in zip(path[:-1], path[1:]):
-
             if track_merged:
                 # keep track of the edges that were merged
                 merged_edges.append((u, v))
@@ -554,7 +552,6 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     # regroup now that we potentially have new cluster labels from step 3
     groups = gdf.groupby("cluster")
     for cluster_label, nodes_subset in groups:
-
         osmids = nodes_subset.index.to_list()
         if len(osmids) == 1:
             # if cluster is a single node, add that node to new graph
@@ -600,11 +597,9 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     # for every group of merged nodes with more than 1 node in it, extend the
     # edge geometries to reach the new node point
     for cluster_label, nodes_subset in groups:
-
         # but only if there were multiple nodes merged together,
         # otherwise it's the same old edge as in original graph
         if len(nodes_subset) > 1:
-
             # get coords of merged nodes point centroid to prepend or
             # append to the old edge geom's coords
             x = H.nodes[cluster_label]["x"]

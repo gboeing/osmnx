@@ -42,7 +42,6 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     crs = G.graph["crs"]
 
     if nodes:
-
         if not G.nodes:  # pragma: no cover
             raise ValueError("graph contains no nodes")
 
@@ -59,14 +58,12 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         utils.log("Created nodes GeoDataFrame from graph")
 
     if edges:
-
         if not G.edges:  # pragma: no cover
             raise ValueError("graph contains no edges")
 
         u, v, k, data = zip(*G.edges(keys=True, data=True))
 
         if fill_edge_geometry:
-
             # subroutine to get geometry for every edge: if edge already has
             # geometry return it, otherwise create it using the incident nodes
             x_lookup = nx.get_node_attributes(G, "x")
@@ -369,16 +366,12 @@ def get_undirected(G):
     # edge or self-loop. so, look through the edges and remove any duplicates.
     duplicate_edges = set()
     for u1, v1, key1, data1 in H.edges(keys=True, data=True):
-
         # if we haven't already flagged this edge as a duplicate
         if (u1, v1, key1) not in duplicate_edges:
-
             # look at every other edge between u and v, one at a time
             for key2 in H[u1][v1]:
-
                 # don't compare this edge to itself
                 if key1 != key2:
-
                     # compare the first edge's data to the second's
                     # if they match up, flag the duplicate for removal
                     data2 = H.edges[u1, v1, key2]
@@ -415,7 +408,6 @@ def _is_duplicate_edge(data1, data2):
 
     # if they contain the same osmid or set of osmids (due to simplification)
     if osmid1 == osmid2:
-
         # if both edges have geometry attributes and they match each other
         if ("geometry" in data1) and ("geometry" in data2):
             if _is_same_geometry(data1["geometry"], data2["geometry"]):
@@ -491,10 +483,8 @@ def _update_edge_keys(G):
 
     # for each group of duplicate edges
     for _, group in groups:
-
         # for each pair of edges within this group
         for geom1, geom2 in itertools.combinations(group["geometry"], 2):
-
             # if they don't have the same geometry, flag them as different
             # streets: flag edge uvk, but not edge vuk, otherwise we would
             # increment both their keys and they'll still duplicate each other

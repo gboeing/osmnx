@@ -316,7 +316,6 @@ def _get_logger(level, name, filename):
 
     # if a logger with this name is not already set up
     if not getattr(logger, "handler_set", None):
-
         # get today's date and construct a log filename
         log_filename = Path(settings.logs_folder) / f'{filename}_{ts(style="date")}.log'
 
