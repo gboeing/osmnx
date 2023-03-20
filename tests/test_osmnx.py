@@ -1,6 +1,6 @@
 """Unit tests for the package."""
 
-# use agg backend so you don't need a display on travis-ci
+# use agg backend so you don't need a display on ci
 # do this first before pyplot is imported by anything
 import matplotlib as mpl
 
