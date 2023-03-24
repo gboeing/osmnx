@@ -266,6 +266,9 @@ def _get_host_by_name(host):
     ip_address : string
         resolved IP address
     """
+    if settings.dns_http_url is None:
+        return host
+
     dns_url = settings.dns_http_url % f'name={host}'
     try:
         response = requests.get(dns_url)

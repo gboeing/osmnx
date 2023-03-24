@@ -46,7 +46,8 @@ default_user_agent : string
     `"OSMnx Python package (https://github.com/gboeing/osmnx)"`.
 dns_http_url: string
     Endpoint to query DNS via DoH, if query via DNS protocol fails.
-    Enter a `%s` where the dns-query is to be placed. Default is:
+    Enter a `%s` where the dns-query is to be placed.
+    Set to None in order to disable DoH. Default is:
     `"https://8.8.8.8/resolve?%s"`
 imgs_folder : string or pathlib.Path
     Path to folder in which to save plotted images by default. Default is
