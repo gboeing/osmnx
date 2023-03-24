@@ -266,7 +266,7 @@ def _get_host_by_name(host):
     ip_address : string
         resolved IP address
     """
-    dns_url = f"https://8.8.8.8/resolve?name={host}"
+    dns_url = settings.dns_http_url % f'name={host}'
     try:
         response = requests.get(dns_url)
         data = response.json()
