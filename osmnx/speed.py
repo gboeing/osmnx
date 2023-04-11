@@ -183,16 +183,23 @@ def _clean_maxspeed(value, convert_mph=True):
     value_clean : string
     """
     MPH_TO_KPH = 1.60934
-    pattern = re.compile(r"[^\d\.,;]")
-
+    # regex from https://wiki.openstreetmap.org/wiki/Key:maxspeed#Developers, plus comma.
+    # re.compile isn't necessary here.
+    pattern = "^([0-9][\\.,0-9]+?)(?:[ ]?(?:km/h|kmh|kph|mph|knots))?$"
+    values = re.split(r"\|", value)  # this creates a list even if it's a single value
     try:
-        # strip out everything but numbers, periods, commas, semicolons
-        value_clean = float(re.sub(pattern, "", value).replace(",", "."))
-        if convert_mph and "mph" in value.lower():
-            value_clean = value_clean * MPH_TO_KPH
-        return value_clean
+        lst = []
+        for v in values:
+            match = re.match(pattern, v)
+            value_clean = float(match.group(1).replace(",", "."))
+            if convert_mph and "mph" in v.lower():
+                value_clean = value_clean * MPH_TO_KPH
+            lst.append(value_clean)
+        lst_avg = sum(lst) / len(lst)
+        return lst_avg
 
-    except ValueError:
+    except (ValueError, AttributeError):
+        # if the match has no group, it raises an AttributeError
         return None
 
 
