@@ -573,7 +573,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     for node, data in nodes.items():
         G.add_node(node, **data)
         
-    paths = {k:v for k,v in paths.items() if len(set(v['nodes'])-set(list(nodes.keys()))) ==0 }
+    paths = {k: v for k, v in paths.items() if len(set(v['nodes']) - set(list(nodes.keys()))) == 0 }
 
     # add each osm way (ie, a path of edges) to the graph
     _add_paths(G, paths.values(), bidirectional)
