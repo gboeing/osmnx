@@ -269,7 +269,7 @@ def _get_host_by_name(host):
     if settings.dns_http_url is None:
         return host
 
-    dns_url = settings.dns_http_url % f'name={host}'
+    dns_url = settings.dns_http_url % f"name={host}"
     try:
         response = requests.get(dns_url)
         data = response.json()
