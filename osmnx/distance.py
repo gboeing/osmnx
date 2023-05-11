@@ -147,8 +147,10 @@ def add_edge_lengths(G, precision=3, edges=None):
     try:
         # two-dimensional array of coordinates: y0, x0, y1, x1
         c = np.array([(y[u], x[u], y[v], x[v]) for u, v, k in uvk])
-    except KeyError:  # pragma: no cover
-        raise KeyError("some edges missing nodes, possibly due to input data clipping issue")
+        # ensure all coordinates can be converted to float and are non-null
+        assert not np.isnan(c.astype(float)).any()
+    except (AssertionError, KeyError):  # pragma: no cover
+        raise ValueError("some edges missing nodes, possibly due to input data clipping issue")
 
     # calculate great circle distances, round, and fill nulls with zeros
     dists = great_circle_vec(c[:, 0], c[:, 1], c[:, 2], c[:, 3]).round(precision)
