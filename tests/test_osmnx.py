@@ -304,6 +304,13 @@ def test_api_endpoints():
     ip = ox.downloader._get_host_by_name("overpass-api.de")
     ip = ox.downloader._get_host_by_name("AAAAAAAAAAA")
 
+    _dns_http_url_default = ox.settings.dns_http_url
+    ox.settings.dns_http_url = "http://aaaaaa.hostdoesntexist.org/nothinguseful?%s"
+    ip = ox.downloader._get_host_by_name("overpass-api.de")
+    ox.settings.dns_http_url = None
+    ip = ox.downloader._get_host_by_name("overpass-api.de")
+    ox.settings.dns_http_url = _dns_http_url_default
+
     params = OrderedDict()
     params["format"] = "json"
     params["address_details"] = 0
