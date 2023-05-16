@@ -2,6 +2,7 @@
 
 ## TBD
 
+  - improve DNS resolution when using proxies or on networks blocking DNS-over-HTTPS
   - ignore ways tagged highway=no or highway=razed in built-in filters
   - do not assume an edge with key=0 exists between each node pair when simplifying graph
   - drop dateutil package dependency
