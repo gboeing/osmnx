@@ -47,7 +47,7 @@ default_user_agent : string
 doh_url_template : string
     Endpoint to resolve DNS-over-HTTPS if local DNS resolution fails. Set to
     None to disable DoH, but see `downloader._config_dns` documentation for
-    caveats. Default is: `"https://8.8.8.8/resolve?name={host}"`
+    caveats. Default is: `"https://8.8.8.8/resolve?name={hostname}"`
 imgs_folder : string or pathlib.Path
     Path to folder in which to save plotted images by default. Default is
     `"./images"`.
@@ -139,7 +139,7 @@ default_access = '["access"!~"private"]'
 default_crs = "epsg:4326"
 default_referer = "OSMnx Python package (https://github.com/gboeing/osmnx)"
 default_user_agent = "OSMnx Python package (https://github.com/gboeing/osmnx)"
-doh_url_template = "https://8.8.8.8/resolve?name={host}"
+doh_url_template = "https://8.8.8.8/resolve?name={hostname}"
 imgs_folder = "./images"
 log_console = False
 log_file = False

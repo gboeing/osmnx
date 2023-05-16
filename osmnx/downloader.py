@@ -249,9 +249,9 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     return headers
 
 
-def _resolve_host_via_doh(host):
+def _resolve_host_via_doh(hostname):
     """
-    Resolve hostname to IP address via Google's public API for DNS-over-HTTPS.
+    Resolve hostname to IP address via Google's public DNS-over-HTTPS API.
 
     Necessary fallback as socket.gethostbyname will not always work when using
     a proxy. See https://developers.google.com/speed/public-dns/docs/doh/json
@@ -262,7 +262,7 @@ def _resolve_host_via_doh(host):
 
     Parameters
     ----------
-    host : string
+    hostname : string
         the hostname to consistently resolve the IP address of
 
     Returns
@@ -272,11 +272,11 @@ def _resolve_host_via_doh(host):
     """
     if settings.doh_url_template is None:
         # if user has set the url template to None, return hostname itself
-        utils.log("User set `doh_url_template=None`, requesting host directly", level=lg.WARNING)
-        return host
+        utils.log("User set `doh_url_template=None`, requesting host by name", level=lg.WARNING)
+        return hostname
 
     try:
-        response = requests.get(settings.doh_url_template.format(host=host))
+        response = requests.get(settings.doh_url_template.format(hostname=hostname))
         data = response.json()
         if response.ok and data["Status"] == 0:
             # status 0 means NOERROR, so return the IP address
@@ -286,8 +286,10 @@ def _resolve_host_via_doh(host):
 
     # if we cannot reach DoH server or cannot resolve host, return hostname itself
     except requests.exceptions.RequestException:
-        utils.log(f"Failed to resolve {host!r} via DoH, requesting host directly", level=lg.ERROR)
-        return host
+        utils.log(
+            f"Failed to resolve {hostname!r} IP via DoH, requesting host by name", level=lg.ERROR
+        )
+        return hostname
 
 
 def _config_dns(url):
@@ -298,7 +300,7 @@ def _config_dns(url):
     for both 1) checking the necessary pause duration and 2) sending the query
     itself even if there is round-robin redirecting among multiple server
     machines on the server-side. Mutates the getaddrinfo function so it uses
-    the same IP address everytime it finds the host name in the URL.
+    the same IP address everytime it finds the hostname in the URL.
 
     For example, the domain overpass-api.de just redirects to one of its
     subdomains (currently z.overpass-api.de and lz4.overpass-api.de). So if we
@@ -316,21 +318,21 @@ def _config_dns(url):
     -------
     None
     """
-    host = urlparse(url).netloc.split(":")[0]
+    hostname = urlparse(url).netloc.split(":")[0]
     try:
-        ip = socket.gethostbyname(host)
+        ip = socket.gethostbyname(hostname)
     except socket.gaierror:  # pragma: no cover
         # may occur when using a proxy, so instead resolve IP address via DoH
         utils.log(
-            f"Encountered gaierror while trying to resolve {host!r}, trying again via DoH...",
+            f"Encountered gaierror while trying to resolve {hostname!r}, trying again via DoH...",
             level=lg.ERROR,
         )
-        ip = _resolve_host_via_doh(host)
+        ip = _resolve_host_via_doh(hostname)
 
-    # mutate socket.getaddrinfo to map host -> IP address
+    # mutate socket.getaddrinfo to map hostname -> IP address
     def _getaddrinfo(*args):
-        if args[0] == host:
-            utils.log(f"Resolved {host!r} to {ip!r}")
+        if args[0] == hostname:
+            utils.log(f"Resolved {hostname!r} to {ip!r}")
             return _original_getaddrinfo(ip, *args[1:])
         else:
             return _original_getaddrinfo(*args)
