@@ -251,27 +251,27 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
 
 def _resolve_host_via_doh(host):
     """
-    Resolve host to IP address using Google's public API for DNS-over-HTTPS.
+    Resolve hostname to IP address via Google's public API for DNS-over-HTTPS.
 
     Necessary fallback as socket.gethostbyname will not always work when using
     a proxy. See https://developers.google.com/speed/public-dns/docs/doh/json
     If the user has set `settings.doh_url_template=None` or if resolution
-    fails (e.g., due to local network blocking DNS-over-HTTPS) the host itself
-    will be returned instead. Note that this means that server slot management
-    may be violated: see `_config_dns` documentation for more details.
+    fails (e.g., due to local network blocking DNS-over-HTTPS) the hostname
+    itself will be returned instead. Note that this means that server slot
+    management may be violated: see `_config_dns` documentation for details.
 
     Parameters
     ----------
     host : string
-        the host to consistently resolve the IP address of
+        the hostname to consistently resolve the IP address of
 
     Returns
     -------
     ip_address : string
-        resolved IP address of host, or host itself if resolution failed
+        resolved IP address of host, or hostname itself if resolution failed
     """
     if settings.doh_url_template is None:
-        # if user has set the url template to None, return host itself
+        # if user has set the url template to None, return hostname itself
         utils.log("User set `doh_url_template=None`, requesting host directly", level=lg.WARNING)
         return host
 
@@ -284,7 +284,7 @@ def _resolve_host_via_doh(host):
         else:
             raise requests.exceptions.RequestException
 
-    # if we cannot reach DoH server or cannot resolve host, return host itself
+    # if we cannot reach DoH server or cannot resolve host, return hostname itself
     except requests.exceptions.RequestException:
         utils.log(f"Failed to resolve {host!r} via DoH, requesting host directly", level=lg.ERROR)
         return host
@@ -292,7 +292,7 @@ def _resolve_host_via_doh(host):
 
 def _config_dns(url):
     """
-    Force socket.getaddrinfo to use IP address instead of host.
+    Force socket.getaddrinfo to use IP address instead of hostname.
 
     Resolves the URL's domain to an IP address so that we use the same server
     for both 1) checking the necessary pause duration and 2) sending the query
