@@ -44,14 +44,13 @@ default_referer : string
 default_user_agent : string
     HTTP header user-agent. Default is
     `"OSMnx Python package (https://github.com/gboeing/osmnx)"`.
-dns_http_url: string
-    Endpoint to query DNS via DoH, if query via DNS protocol fails.
-    Enter a `%s` where the dns-query is to be placed.
-    Set to None in order to disable DoH. Default is:
-    `"https://8.8.8.8/resolve?%s"`
+doh_url_template : string
+    Endpoint to resolve DNS-over-HTTPS if local DNS resolution fails. Set to
+    None to disable DoH, but see `downloader._config_dns` documentation for
+    caveats. Default is: `"https://8.8.8.8/resolve?name={host}"`
 imgs_folder : string or pathlib.Path
     Path to folder in which to save plotted images by default. Default is
-    "./images".
+    `"./images"`.
 log_file : bool
     If True, save log output to a file in logs_folder. Default is `False`.
 log_filename : string
@@ -140,7 +139,7 @@ default_access = '["access"!~"private"]'
 default_crs = "epsg:4326"
 default_referer = "OSMnx Python package (https://github.com/gboeing/osmnx)"
 default_user_agent = "OSMnx Python package (https://github.com/gboeing/osmnx)"
-dns_http_url = "https://8.8.8.8/resolve?%s"
+doh_url_template = "https://8.8.8.8/resolve?name={host}"
 imgs_folder = "./images"
 log_console = False
 log_file = False

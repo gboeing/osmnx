@@ -249,12 +249,16 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     return headers
 
 
-def _get_host_by_name(host):
+def _resolve_host_via_doh(host):
     """
-    Resolve IP address from host using Google's public API for DNS over HTTPS.
+    Resolve host to IP address using Google's public API for DNS-over-HTTPS.
 
     Necessary fallback as socket.gethostbyname will not always work when using
     a proxy. See https://developers.google.com/speed/public-dns/docs/doh/json
+    If the user has set `settings.doh_url_template=None` or if resolution
+    fails (e.g., due to local network blocking DNS-over-HTTPS) the host itself
+    will be returned instead. Note that this means that server slot management
+    may be violated: see `_config_dns` documentation for more details.
 
     Parameters
     ----------
@@ -264,30 +268,25 @@ def _get_host_by_name(host):
     Returns
     -------
     ip_address : string
-        resolved IP address
+        resolved IP address of host, or host itself if resolution failed
     """
-    if settings.dns_http_url is None:
+    if settings.doh_url_template is None:
+        # if user has set the url template to None, return host itself
+        utils.log("User set `doh_url_template=None`, requesting host directly", level=lg.WARNING)
         return host
 
-    dns_url = settings.dns_http_url % f"name={host}"
     try:
-        response = requests.get(dns_url)
+        response = requests.get(settings.doh_url_template.format(host=host))
         data = response.json()
-    except requests.exceptions.RequestException as e:
-        # if anything goes wrong trying to reach the Google DNS servers, (e.g.,
-        # a proxy is restricting access), return the host itself
-        utils.log(f"Got an error when trying to resolve {host!r} from Google DNS: {str(e)}")
-        return host
+        if response.ok and data["Status"] == 0:
+            # status 0 means NOERROR, so return the IP address
+            return data["Answer"][0]["data"]
+        else:
+            raise requests.exceptions.RequestException
 
-    # status = 0 means NOERROR: standard DNS response code
-    if response.ok and data["Status"] == 0:
-        ip_address = data["Answer"][0]["data"]
-        utils.log(f"Google resolved {host!r} to {ip_address!r}")
-        return ip_address
-
-    # in case host could not be resolved return the host itself
-    else:
-        utils.log(f"Google could not resolve {host!r}. Response status: {data['Status']}")
+    # if we cannot reach DoH server or cannot resolve host, return host itself
+    except requests.exceptions.RequestException:
+        utils.log(f"Failed to resolve {host!r} via DoH, requesting host directly", level=lg.ERROR)
         return host
 
 
@@ -321,13 +320,17 @@ def _config_dns(url):
     try:
         ip = socket.gethostbyname(host)
     except socket.gaierror:  # pragma: no cover
-        # this error occurs sometimes when using a proxy. instead, you must
-        # get IP address using google's public JSON API for DNS over HTTPS
-        ip = _get_host_by_name(host)[0]
+        # may occur when using a proxy, so instead resolve IP address via DoH
+        utils.log(
+            f"Encountered gaierror while trying to resolve {host!r}, trying again via DoH...",
+            level=lg.ERROR,
+        )
+        ip = _resolve_host_via_doh(host)
 
+    # mutate socket.getaddrinfo to map host -> IP address
     def _getaddrinfo(*args):
         if args[0] == host:
-            utils.log(f"Resolved {host} to {ip}")
+            utils.log(f"Resolved {host!r} to {ip!r}")
             return _original_getaddrinfo(ip, *args[1:])
         else:
             return _original_getaddrinfo(*args)
