@@ -301,8 +301,15 @@ def test_find_nearest():
 
 
 def test_api_endpoints():
-    ip = ox.downloader._get_host_by_name("overpass-api.de")
-    ip = ox.downloader._get_host_by_name("AAAAAAAAAAA")
+    ip = ox.downloader._resolve_host_via_doh("overpass-api.de")
+    ip = ox.downloader._resolve_host_via_doh("AAAAAAAAAAA")
+
+    _doh_url_template_default = ox.settings.doh_url_template
+    ox.settings.doh_url_template = "http://aaaaaa.hostdoesntexist.org/nothinguseful"
+    ip = ox.downloader._resolve_host_via_doh("overpass-api.de")
+    ox.settings.doh_url_template = None
+    ip = ox.downloader._resolve_host_via_doh("overpass-api.de")
+    ox.settings.doh_url_template = _doh_url_template_default
 
     params = OrderedDict()
     params["format"] = "json"

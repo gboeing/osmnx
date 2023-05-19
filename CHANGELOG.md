@@ -1,7 +1,9 @@
 # Change log
 
-## TBD
+## 1.3.1 (TBD)
 
+  - improve DNS resolution when using proxies or on networks blocking DNS-over-HTTPS
+  - ensure node coordinates are non-null and covertible to float in the add_edge_lengths function
   - ignore ways tagged highway=no or highway=razed in built-in filters
   - do not assume an edge with key=0 exists between each node pair when simplifying graph
   - drop dateutil package dependency
