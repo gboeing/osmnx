@@ -4,6 +4,8 @@
 # do this first before pyplot is imported by anything
 import matplotlib as mpl
 
+from osmnx.speed import _clean_maxspeed
+
 mpl.use("Agg")
 
 import bz2
@@ -502,3 +504,27 @@ def test_geometries():
         gdf = ox.geometries_from_xml(filename)
         assert "Willow Street" in gdf["name"].values
     os.remove(temp_filename)
+
+
+def test_cleaning():
+    # Commas and points should be returned as decimals
+    value = "100,2"
+    assert _clean_maxspeed(value) == 100.2
+    value = "100.2"
+    assert _clean_maxspeed(value) == 100.2
+
+    # units should be stripped away
+    value = "100 km/h"
+    assert _clean_maxspeed(value) == 100.0
+    # mph should be converted to kmh
+    value = "100 mph"
+    assert _clean_maxspeed(value) == pytest.approx(160.934)
+
+    # numbers with vertical bars should be split and averaged
+    value = "60|100"
+    assert _clean_maxspeed(value) == 80
+
+    value = "signal"
+    assert _clean_maxspeed(value) is None
+    value = "100;70"
+    assert _clean_maxspeed(value) is None
