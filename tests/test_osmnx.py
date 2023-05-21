@@ -208,6 +208,16 @@ def test_routing():
     G = ox.add_edge_speeds(G, hwy_speeds={"motorway": 100})
     G = ox.add_edge_travel_times(G)
 
+    # test value cleaning
+    assert _clean_maxspeed("100,2") == 100.2
+    assert _clean_maxspeed("100.2") == 100.2
+    assert _clean_maxspeed("100 km/h") == 100.0
+    assert _clean_maxspeed("100 mph") == pytest.approx(160.934)
+    assert _clean_maxspeed("60|100") == 80
+    assert _clean_maxspeed("60|100 mph") == pytest.approx(128.7472)
+    assert _clean_maxspeed("signal") is None
+    assert _clean_maxspeed("100;70") is None
+
     orig_x = np.array([-122.404771])
     dest_x = np.array([-122.401429])
     orig_y = np.array([37.794302])
@@ -504,27 +514,3 @@ def test_geometries():
         gdf = ox.geometries_from_xml(filename)
         assert "Willow Street" in gdf["name"].values
     os.remove(temp_filename)
-
-
-def test_cleaning():
-    # Commas and points should be returned as decimals
-    value = "100,2"
-    assert _clean_maxspeed(value) == 100.2
-    value = "100.2"
-    assert _clean_maxspeed(value) == 100.2
-
-    # units should be stripped away
-    value = "100 km/h"
-    assert _clean_maxspeed(value) == 100.0
-    # mph should be converted to kmh
-    value = "100 mph"
-    assert _clean_maxspeed(value) == pytest.approx(160.934)
-
-    # numbers with vertical bars should be split and averaged
-    value = "60|100"
-    assert _clean_maxspeed(value) == 80
-
-    value = "signal"
-    assert _clean_maxspeed(value) is None
-    value = "100;70"
-    assert _clean_maxspeed(value) is None
