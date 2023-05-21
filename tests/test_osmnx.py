@@ -4,6 +4,8 @@
 # do this first before pyplot is imported by anything
 import matplotlib as mpl
 
+from osmnx.speed import _clean_maxspeed
+
 mpl.use("Agg")
 
 import bz2
@@ -205,6 +207,16 @@ def test_routing():
     G = ox.add_edge_speeds(G)
     G = ox.add_edge_speeds(G, hwy_speeds={"motorway": 100})
     G = ox.add_edge_travel_times(G)
+
+    # test value cleaning
+    assert _clean_maxspeed("100,2") == 100.2
+    assert _clean_maxspeed("100.2") == 100.2
+    assert _clean_maxspeed("100 km/h") == 100.0
+    assert _clean_maxspeed("100 mph") == pytest.approx(160.934)
+    assert _clean_maxspeed("60|100") == 80
+    assert _clean_maxspeed("60|100 mph") == pytest.approx(128.7472)
+    assert _clean_maxspeed("signal") is None
+    assert _clean_maxspeed("100;70") is None
 
     orig_x = np.array([-122.404771])
     dest_x = np.array([-122.401429])

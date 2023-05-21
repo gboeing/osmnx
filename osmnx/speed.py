@@ -167,32 +167,45 @@ def add_edge_travel_times(G, precision=1):
     return G
 
 
-def _clean_maxspeed(value, convert_mph=True):
+def _clean_maxspeed(maxspeed, agg=np.mean, convert_mph=True):
     """
     Clean a maxspeed string and convert mph to kph if necessary.
 
+    If present, splits maxspeed on "|" (which denotes that the value contains
+    different speeds per lane) then aggregates the resulting values. See
+    https://wiki.openstreetmap.org/wiki/Key:maxspeed for details on values and
+    formats.
+
     Parameters
     ----------
-    value : string
-        an OSM way maxspeed value
+    maxspeed : string
+        a valid OpenStreetMap way maxspeed value
+    agg : function
+        aggregation function if maxspeed contains multiple values (default
+        is numpy.mean)
     convert_mph : bool
-        if True, convert mph to kph
+        if True, convert miles per hour to km per hour
 
     Returns
     -------
-    value_clean : string
+    clean_value : string
     """
-    MPH_TO_KPH = 1.60934
-    pattern = re.compile(r"[^\d\.,;]")
-
+    MILES_TO_KM = 1.60934
+    # regex adapted from OSM wiki
+    pattern = "^([0-9][\\.,0-9]+?)(?:[ ]?(?:km/h|kmh|kph|mph|knots))?$"
+    values = re.split(r"\|", maxspeed)  # creates a list even if it's a single value
     try:
-        # strip out everything but numbers, periods, commas, semicolons
-        value_clean = float(re.sub(pattern, "", value).replace(",", "."))
-        if convert_mph and "mph" in value.lower():
-            value_clean = value_clean * MPH_TO_KPH
-        return value_clean
+        clean_values = []
+        for value in values:
+            match = re.match(pattern, value)
+            clean_value = float(match.group(1).replace(",", "."))
+            if convert_mph and "mph" in maxspeed.lower():
+                clean_value = clean_value * MILES_TO_KM
+            clean_values.append(clean_value)
+        return agg(clean_values)
 
-    except ValueError:
+    except (ValueError, AttributeError):
+        # if the match has no group, it raises an AttributeError
         return None
 
 
