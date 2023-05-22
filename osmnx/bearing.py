@@ -282,7 +282,7 @@ def plot_orientation(
     """
     warn(
         "The `plot_orientation` function moved to the `plot` module. Calling it "
-        "via the bearing module will raise an error in a future release."
+        "via the bearing module will cause an exception in a future release."
     )
     return plot.plot_orientation(
         Gu,
