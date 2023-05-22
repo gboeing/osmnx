@@ -226,6 +226,7 @@ def test_routing():
     dest_node = ox.distance.nearest_nodes(G, dest_x, dest_y)[0]
 
     route = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
+    route_edges = ox.utils_graph.route_to_gdf(G, route, "travel_time")
     attributes = ox.utils_graph.get_route_edge_attributes(G, route)
     attributes = ox.utils_graph.get_route_edge_attributes(G, route, "travel_time")
 
