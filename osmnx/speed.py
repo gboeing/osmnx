@@ -172,9 +172,9 @@ def _clean_maxspeed(maxspeed, agg=np.mean, convert_mph=True):
     Clean a maxspeed string and convert mph to kph if necessary.
 
     If present, splits maxspeed on "|" (which denotes that the value contains
-    different speeds per lane) then aggregates the resulting values. See
-    https://wiki.openstreetmap.org/wiki/Key:maxspeed for details on values and
-    formats.
+    different speeds per lane) then aggregates the resulting values. Invalid
+    inputs return None. See https://wiki.openstreetmap.org/wiki/Key:maxspeed
+    for details on values and formats.
 
     Parameters
     ----------
@@ -205,7 +205,7 @@ def _clean_maxspeed(maxspeed, agg=np.mean, convert_mph=True):
         return agg(clean_values)
 
     except (ValueError, AttributeError):
-        # if the match has no group, it raises an AttributeError
+        # if invalid input, return None
         return None
 
 
