@@ -179,6 +179,29 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     return G
 
 
+def route_to_gdf(G, route, weight="length"):
+    """
+    Return a GeoDataFrame of the edges in a path, in order.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    route : list
+        list of nodes IDs constituting the path
+    weight : string
+        if there are parallel edges between two nodes, choose lowest weight
+
+    Returns
+    -------
+    gdf_edges : geopandas.GeoDataFrame
+        GeoDataFrame of the edges
+    """
+    node_pairs = zip(route[:-1], route[1:])
+    uvk = ((u, v, min(G[u][v].items(), key=lambda i: i[1][weight])[0]) for u, v in node_pairs)
+    return graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
+
+
 def get_route_edge_attributes(
     G, route, attribute=None, minimize_key="length", retrieve_default=None
 ):
