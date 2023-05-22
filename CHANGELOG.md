@@ -2,6 +2,8 @@
 
 ## 1.3.1 (TBD)
 
+  - deprecate folium module in favor of using GeoPandas.GeoDataFrame.explore directly
+  - add route_to_gdf function to utils_graph module
   - improve DNS resolution when using proxies or on networks blocking DNS-over-HTTPS
   - improve processing of per-lane values when adding edge speeds
   - ensure node coordinates are non-null and covertible to float in the add_edge_lengths function
