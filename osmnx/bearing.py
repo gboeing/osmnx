@@ -17,10 +17,10 @@ def calculate_bearing(lat1, lng1, lat2, lng2):
     """
     Calculate the compass bearing(s) between pairs of lat-lng points.
 
-    Vectorized function to calculate (initial) bearings between two points'
+    Vectorized function to calculate initial bearings between two points'
     coordinates or between arrays of points' coordinates. Expects coordinates
-    in decimal degrees. Bearing represents angle in degrees (clockwise)
-    between north and the geodesic line from point 1 to point 2.
+    in decimal degrees. Bearing represents the clockwise angle in degrees
+    between north and the geodesic line from (lat1, lng1) to (lat2, lng2).
 
     Parameters
     ----------
