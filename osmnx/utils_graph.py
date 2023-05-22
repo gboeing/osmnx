@@ -188,7 +188,7 @@ def route_to_gdf(G, route, weight="length"):
     G : networkx.MultiDiGraph
         input graph
     route : list
-        list of nodes IDs constituting the path
+        list of node IDs constituting the path
     weight : string
         if there are parallel edges between two nodes, choose lowest weight
 
@@ -213,7 +213,7 @@ def get_route_edge_attributes(
     G : networkx.MultiDiGraph
         input graph
     route : list
-        list of nodes IDs constituting the path
+        list of node IDs constituting the path
     attribute : string
         the name of the attribute to get the value of for each edge. If None,
         the complete data dict is returned for each edge.
