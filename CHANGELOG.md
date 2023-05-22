@@ -7,7 +7,7 @@
   - ensure node coordinates are non-null and covertible to float in the add_edge_lengths function
   - ignore ways tagged highway=no or highway=razed in built-in filters
   - do not assume an edge with key=0 exists between each node pair when simplifying graph
-  - deprecate bearing.plot_orientation and move plot_orientation function to plot module
+  - move plot_orientation function from bearing module to plot module
   - drop dateutil package dependency
 
 ## 1.3.0 (2023-01-01)
