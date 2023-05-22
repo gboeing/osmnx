@@ -127,7 +127,8 @@ def test_stats():
     Gu = ox.get_undirected(G)
     entropy = ox.bearing.orientation_entropy(Gu, weight="length")
     fig, ax = ox.bearing.plot_orientation(Gu, area=True, title="Title")
-    fig, ax = ox.bearing.plot_orientation(Gu, ax=ax, area=False, title="Title")
+    fig, ax = ox.plot_orientation(Gu, area=True, title="Title")
+    fig, ax = ox.plot_orientation(Gu, ax=ax, area=False, title="Title")
 
     # test cleaning and rebuilding graph
     G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
