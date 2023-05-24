@@ -217,7 +217,7 @@ def save_graph_xml(
         table["user"] = "osmnx"
         table["version"] = "1"
         table["changeset"] = "1"
-        table["timestamp"] = "2017-01-01T00:00:00Z"
+        table["timestamp"] = utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}")
 
     # misc. string replacements to meet OSM XML spec
     if "oneway" in gdf_edges.columns:
