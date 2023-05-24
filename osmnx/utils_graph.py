@@ -1,7 +1,7 @@
 """Graph utility functions."""
 
 import itertools
-import warnings
+from warnings import warn
 
 import geopandas as gpd
 import networkx as nx
@@ -148,10 +148,9 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
         except (AssertionError, ValueError):  # pragma: no cover
             # AssertionError if x/y coords don't match geometry column
             # ValueError if geometry column contains non-point geometry types
-            warnings.warn(
+            warn(
                 "discarding the gdf_nodes geometry column, though its "
-                "values differ from the coordinates in the x and y columns",
-                stacklevel=1,
+                "values differ from the coordinates in the x and y columns"
             )
         gdf_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
 
@@ -197,8 +196,8 @@ def route_to_gdf(G, route, weight="length"):
     gdf_edges : geopandas.GeoDataFrame
         GeoDataFrame of the edges
     """
-    node_pairs = zip(route[:-1], route[1:])
-    uvk = ((u, v, min(G[u][v].items(), key=lambda i: i[1][weight])[0]) for u, v in node_pairs)
+    pairs = zip(route[:-1], route[1:])
+    uvk = ((u, v, min(G[u][v].items(), key=lambda i: i[1][weight])[0]) for u, v in pairs)
     return graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
 
 
@@ -206,30 +205,33 @@ def get_route_edge_attributes(
     G, route, attribute=None, minimize_key="length", retrieve_default=None
 ):
     """
-    Get a list of attribute values for each edge in a path.
+    Do not use: deprecated.
+
+    Use the `route_to_gdf` function instead.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph
+        deprecated
     route : list
-        list of node IDs constituting the path
+        deprecated
     attribute : string
-        the name of the attribute to get the value of for each edge. If None,
-        the complete data dict is returned for each edge.
+        deprecated
     minimize_key : string
-        if there are parallel edges between two nodes, select the one with the
-        lowest value of minimize_key
+        deprecated
     retrieve_default : Callable[Tuple[Any, Any], Any]
-        function called with the edge nodes as parameters to retrieve a
-        default value, if the edge does not contain the given attribute
-        (otherwise a `KeyError` is raised)
+        deprecated
 
     Returns
     -------
     attribute_values : list
-        list of edge attribute values
+        deprecated
     """
+    msg = (
+        "The `get_route_edge_attributes` function has been deprecated and will "
+        "be removed in a future release. Use the `route_to_gdf` function instead."
+    )
+    warn(msg)
     attribute_values = []
     for u, v in zip(route[:-1], route[1:]):
         # if there are parallel edges between two nodes, select the one with the
