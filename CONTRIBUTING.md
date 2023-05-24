@@ -29,4 +29,6 @@ Thanks for using OSMnx and for considering contributing to it by opening an issu
     - `isort` sorted imports
     - `numpy` style docstrings
 
+This project requires minimum Python and NumPy versions in accordance with [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html).
+
 Every piece of software is a work in progress. This project is the result of many hours of work contributed freely by myself and the many people that build the projects it depends on. Thank you for contributing!
