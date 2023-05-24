@@ -2,8 +2,6 @@
 
 ## 1.4.0 (TBD)
 
-  - add route_to_gdf function to utils_graph module
-  - deprecate folium module in favor of using GeoPandas.GeoDataFrame.explore directly
   - move plot_orientation function from bearing module to plot module
   - provide consistent error if no data elements are returned from server
 
