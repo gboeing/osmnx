@@ -98,8 +98,8 @@ def save_graph_xml(
     oneway=False,
     merge_edges=True,
     edge_tag_aggs=None,
-    osm_version=0.6,
-    coordinate_precision=7,
+    api_version=0.6,
+    precision=6,
 ):
     """
     Save graph to disk as an OSM-formatted XML .osm file.
@@ -165,12 +165,10 @@ def save_graph_xml(
         this method to aggregate the lengths of the individual
         component edges. Otherwise, the length attribute will simply
         reflect the length of the first edge associated with the way.
-    osm_version : int
-        OpenStreetMap data version to write in the XML file header.
-        Default 0.6.
-    coordinate_precision : int
-        Number of decimal places to keep when writing latitude and longitude values.
-        Default 7.
+    api_version : float
+        OpenStreetMap API version to write to the XML file header
+    precision : int
+        number of decimal places to round latitude and longitude values
 
     Returns
     -------
@@ -203,8 +201,8 @@ def save_graph_xml(
 
     # rename columns per osm specification
     gdf_nodes.rename(columns={"x": "lon", "y": "lat"}, inplace=True)
-    gdf_nodes["lon"] = gdf_nodes["lon"].round(coordinate_precision)
-    gdf_nodes["lat"] = gdf_nodes["lat"].round(coordinate_precision)
+    gdf_nodes["lon"] = gdf_nodes["lon"].round(precision)
+    gdf_nodes["lat"] = gdf_nodes["lat"].round(precision)
     gdf_nodes = gdf_nodes.reset_index().rename(columns={"osmid": "id"})
     if "id" in gdf_edges.columns:
         gdf_edges = gdf_edges[[col for col in gdf_edges if col != "id"]]
@@ -231,7 +229,7 @@ def save_graph_xml(
         )
 
     # initialize XML tree with an OSM root element then append nodes/edges
-    root = etree.Element("osm", attrib={"version": str(osm_version), "generator": "OSMnx"})
+    root = etree.Element("osm", attrib={"version": str(api_version), "generator": "OSMnx"})
     root = _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags)
     root = _append_edges_xml_tree(
         root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges
