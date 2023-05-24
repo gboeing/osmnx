@@ -1,9 +1,11 @@
 """Calculate graph edge bearings."""
 
-import matplotlib.pyplot as plt
+from warnings import warn
+
 import networkx as nx
 import numpy as np
 
+from . import plot
 from . import projection
 
 # scipy is an optional dependency for entropy calculation
@@ -17,10 +19,10 @@ def calculate_bearing(lat1, lng1, lat2, lng2):
     """
     Calculate the compass bearing(s) between pairs of lat-lng points.
 
-    Vectorized function to calculate (initial) bearings between two points'
+    Vectorized function to calculate initial bearings between two points'
     coordinates or between arrays of points' coordinates. Expects coordinates
-    in decimal degrees. Bearing represents angle in degrees (clockwise)
-    between north and the geodesic line from point 1 to point 2.
+    in decimal degrees. Bearing represents the clockwise angle in degrees
+    between north and the geodesic line from (lat1, lng1) to (lat2, lng2).
 
     Parameters
     ----------
@@ -235,118 +237,67 @@ def plot_orientation(
     xtick_font=None,
 ):
     """
-    Plot a polar histogram of a spatial network's bidirectional edge bearings.
+    Do not use: deprecated.
 
-    Ignores self-loop edges as their bearings are undefined.
-
-    For more info see: Boeing, G. 2019. "Urban Spatial Order: Street Network
-    Orientation, Configuration, and Entropy." Applied Network Science, 4 (1),
-    67. https://doi.org/10.1007/s41109-019-0189-1
+    The plot_orientation function moved to the plot module. Calling it via the
+    bearing module will raise an error in a future release.
 
     Parameters
     ----------
     Gu : networkx.MultiGraph
-        undirected, unprojected graph with `bearing` attributes on each edge
+        deprecated, do not use
     num_bins : int
-        number of bins; for example, if `num_bins=36` is provided, then each
-        bin will represent 10° around the compass
+        deprecated, do not use
     min_length : float
-        ignore edges with `length` attributes less than `min_length`
+        deprecated, do not use
     weight : string
-        if not None, weight edges' bearings by this (non-null) edge attribute
+        deprecated, do not use
     ax : matplotlib.axes.PolarAxesSubplot
-        if not None, plot on this preexisting axis; must have projection=polar
+        deprecated, do not use
     figsize : tuple
-        if ax is None, create new figure with size (width, height)
+        deprecated, do not use
     area : bool
-        if True, set bar length so area is proportional to frequency,
-        otherwise set bar length so height is proportional to frequency
+        deprecated, do not use
     color : string
-        color of histogram bars
+        deprecated, do not use
     edgecolor : string
-        color of histogram bar edges
+        deprecated, do not use
     linewidth : float
-        width of histogram bar edges
+        deprecated, do not use
     alpha : float
-        opacity of histogram bars
+        deprecated, do not use
     title : string
-        title for plot
+        deprecated, do not use
     title_y : float
-        y position to place title
+        deprecated, do not use
     title_font : dict
-        the title's fontdict to pass to matplotlib
+        deprecated, do not use
     xtick_font : dict
-        the xtick labels' fontdict to pass to matplotlib
+        deprecated, do not use
 
     Returns
     -------
     fig, ax : tuple
         matplotlib figure, axis
     """
-    if title_font is None:
-        title_font = {"family": "DejaVu Sans", "size": 24, "weight": "bold"}
-    if xtick_font is None:
-        xtick_font = {
-            "family": "DejaVu Sans",
-            "size": 10,
-            "weight": "bold",
-            "alpha": 1.0,
-            "zorder": 3,
-        }
-
-    # get the bearings' distribution's bin counts and edges
-    bin_counts, bin_edges = _bearings_distribution(Gu, num_bins, min_length, weight)
-
-    # positions: where to center each bar. ignore the last bin edge, because
-    # it's the same as the first (i.e., 0° = 360°)
-    positions = np.radians(bin_edges[:-1])
-
-    # width: make bars fill the circumference without gaps or overlaps
-    width = 2 * np.pi / num_bins
-
-    # radius: how long to make each bar
-    bin_frequency = bin_counts / bin_counts.sum()
-    if area:
-        # set bar length so area is proportional to frequency
-        radius = np.sqrt(bin_frequency)
-    else:
-        # set bar length so height is proportional to frequency
-        radius = bin_frequency
-
-    # create ax (if necessary) then set N at top and go clockwise
-    if ax is None:
-        fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "polar"})
-    else:
-        fig = ax.figure
-    ax.set_theta_zero_location("N")
-    ax.set_theta_direction("clockwise")
-    ax.set_ylim(top=radius.max())
-
-    # configure the y-ticks and remove their labels
-    ax.set_yticks(np.linspace(0, radius.max(), 5))
-    ax.set_yticklabels(labels="")
-
-    # configure the x-ticks and their labels
-    xticklabels = ["N", "", "E", "", "S", "", "W", ""]
-    ax.set_xticks(ax.get_xticks())
-    ax.set_xticklabels(labels=xticklabels, fontdict=xtick_font)
-    ax.tick_params(axis="x", which="major", pad=-2)
-
-    # draw the bars
-    ax.bar(
-        positions,
-        height=radius,
-        width=width,
-        align="center",
-        bottom=0,
-        zorder=2,
+    warn(
+        "The `plot_orientation` function moved to the `plot` module. Calling it "
+        "via the `bearing` module will cause an exception in a future release."
+    )
+    return plot.plot_orientation(
+        Gu,
+        num_bins=num_bins,
+        min_length=min_length,
+        weight=weight,
+        ax=ax,
+        figsize=figsize,
+        area=area,
         color=color,
         edgecolor=edgecolor,
         linewidth=linewidth,
         alpha=alpha,
+        title=title,
+        title_y=title_y,
+        title_font=title_font,
+        xtick_font=xtick_font,
     )
-
-    if title:
-        ax.set_title(title, y=title_y, fontdict=title_font)
-    fig.tight_layout()
-    return fig, ax
