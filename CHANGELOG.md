@@ -1,6 +1,6 @@
 # Change log
 
-## 1.3.1 (TBD)
+## 1.3.1 (2023-05-24)
 
   - improve DNS resolution when using proxies or on networks blocking DNS-over-HTTPS
   - improve processing of per-lane values when adding edge speeds
