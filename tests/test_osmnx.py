@@ -480,8 +480,11 @@ def test_graph_from_functions():
 
 
 def test_geometries():
-    # geometries_from_bbox - bounding box query to return empty GeoDataFrame
-    gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
+    # geometries_from_bbox - bounding box query to return no data
+    try:
+        gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
+    except ox._errors.EmptyOverpassResponse:
+        pass
 
     # geometries_from_bbox - successful
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
