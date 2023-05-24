@@ -1,13 +1,17 @@
 # Change log
 
-## 1.3.1 (TBD)
+## 1.4.0 (TBD)
+
+  - move plot_orientation function from bearing module to plot module
+
+## 1.3.1 (2023-05-24)
 
   - improve DNS resolution when using proxies or on networks blocking DNS-over-HTTPS
   - improve processing of per-lane values when adding edge speeds
+  - improve file writing in save_graph_xml function
   - ensure node coordinates are non-null and covertible to float in the add_edge_lengths function
   - ignore ways tagged highway=no or highway=razed in built-in filters
   - do not assume an edge with key=0 exists between each node pair when simplifying graph
-  - move plot_orientation function from bearing module to plot module
   - drop dateutil package dependency
 
 ## 1.3.0 (2023-01-01)
