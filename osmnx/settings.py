@@ -2,17 +2,17 @@
 Global settings that can be configured by the user.
 
 all_oneway : bool
-    If True, forces all ways to be loaded as oneway ways, preserving the
-    original order of nodes stored in the OSM way XML. This also retains
+    Only use if specifically saving to .osm XML file with the `save_graph_xml`
+    function. If True, forces all ways to be loaded as oneway ways, preserving
+    the original order of nodes stored in the OSM way XML. This also retains
     original OSM string values for oneway attribute values, rather than
-    converting them to a True/False bool. Only use if specifically saving to
-    .osm XML file with the `save_graph_xml` function. Default is `False`.
+    converting them to a True/False bool. Default is `False`.
 bidirectional_network_types : list
     Network types for which a fully bidirectional graph will be created.
     Default is `["walk"]`.
 cache_folder : string or pathlib.Path
-    Path to folder in which to save/load HTTP response cache. Default is
-    `"./cache"`.
+    Path to folder in which to save/load HTTP response cache, if the
+    `use_cache` setting equals `True`. Default is `"./cache"`.
 cache_only_mode : bool
     If True, download network data from Overpass then raise a
     `CacheOnlyModeInterrupt` error for user to catch. This prevents graph
