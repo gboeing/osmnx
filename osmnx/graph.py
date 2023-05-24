@@ -551,7 +551,8 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
 
     # make sure we got data back from the server request(s)
     if not any(rj["elements"] for rj in response_jsons):  # pragma: no cover
-        raise EmptyOverpassResponse("There are no data elements in the response JSON")
+        msg = "There are no data elements in the server response. Check log and query location/filters."
+        raise EmptyOverpassResponse(msg)
 
     # create the graph as a MultiDiGraph and set its meta-attributes
     metadata = {

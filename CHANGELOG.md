@@ -3,6 +3,7 @@
 ## 1.4.0 (TBD)
 
   - move plot_orientation function from bearing module to plot module
+  - provide consistent error if no data elements are returned from server
 
 ## 1.3.1 (2023-05-24)
 

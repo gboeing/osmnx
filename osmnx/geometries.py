@@ -29,6 +29,7 @@ from . import osm_xml
 from . import settings
 from . import utils
 from . import utils_geo
+from ._errors import EmptyOverpassResponse
 from ._polygon_features import _polygon_features
 
 
@@ -352,116 +353,107 @@ def _create_gdf(response_jsons, polygon, tags):
     """
     elements_count = sum(len(rj["elements"]) for rj in response_jsons)
 
-    # if there are no elements in the responses
+    # make sure we got data back from the server request(s)
     if elements_count == 0:
-        # create an empty GeoDataFrame
-        gdf = gpd.GeoDataFrame()
+        msg = (
+            "There are no data elements in the server response. Check log and query location/tags."
+        )
+        raise EmptyOverpassResponse(msg)
+
+    # begin processing the elements retrieved from the server
+    utils.log(f"Converting {elements_count} elements in JSON responses to geometries")
+
+    # Dictionaries to hold nodes and complete geometries
+    coords = {}
+    geometries = {}
+
+    # Set to hold the unique IDs of elements that do not have tags
+    untagged_element_ids = set()
+
+    # identify which relation types to parse to (multi)polygons
+    relation_types = {"boundary", "multipolygon"}
+
+    # extract geometries from the downloaded osm data
+    for response_json in response_jsons:
+        # Parses the JSON of OSM nodes, ways and (multipolygon) relations
+        # to dictionaries of coordinates, Shapely Points, LineStrings,
+        # Polygons and MultiPolygons
+        for element in response_json["elements"]:
+            # id numbers are only unique within element types
+            # create unique id from combination of type and id
+            unique_id = f"{element['type']}/{element['id']}"
+
+            # add elements that are not nodes and that are without tags or
+            # with empty tags to the untagged_element_ids set (untagged
+            # nodes are not added to the geometries dict at all)
+            if (element["type"] != "node") and (("tags" not in element) or (not element["tags"])):
+                untagged_element_ids.add(unique_id)
+
+            if element["type"] == "node":
+                # Parse all nodes to coords
+                coords[element["id"]] = _parse_node_to_coords(element=element)
+
+                # If the node has tags and the tags are not empty parse it
+                # to a Point. Empty check is necessary for JSONs created
+                # from XML where nodes without tags are assigned tags={}
+                if "tags" in element and len(element["tags"]) > 0:
+                    point = _parse_node_to_point(element=element)
+                    geometries[unique_id] = point
+
+            elif element["type"] == "way":
+                # Parse all ways to linestrings or polygons
+                linestring_or_polygon = _parse_way_to_linestring_or_polygon(
+                    element=element, coords=coords
+                )
+                geometries[unique_id] = linestring_or_polygon
+
+            elif (
+                element["type"] == "relation" and element.get("tags").get("type") in relation_types
+            ):
+                # parse relations to (multi)polygons
+                multipolygon = _parse_relation_to_multipolygon(
+                    element=element, geometries=geometries
+                )
+                geometries[unique_id] = multipolygon
+
+    utils.log(f"{len(geometries)} geometries created in the dict")
+
+    # remove untagged elements from the final dict of geometries
+    for untagged_element_id in untagged_element_ids:
+        geometries.pop(untagged_element_id, None)
+
+    utils.log(f"{len(untagged_element_ids)} untagged geometries removed")
+
+    # Create GeoDataFrame
+    gdf = gpd.GeoDataFrame.from_dict(geometries, orient="index")
+
+    # ensure gdf has a geometry col before assigning crs
+    if "geometry" not in gdf.columns:
+        # if there is no geometry column, create a null column
         gdf["geometry"] = np.nan
-        gdf.set_geometry("geometry")
-        gdf.crs = settings.default_crs
+    gdf.set_geometry("geometry")
 
-        # log a warning
-        utils.log("No data elements: check query tags and location.", level=lg.WARNING)
-        return gdf
+    # Set default crs
+    gdf.crs = settings.default_crs
 
-    # else if there were elements in the response
-    else:
-        utils.log(f"Converting {elements_count} elements in JSON responses to geometries")
+    # Apply .buffer(0) to any invalid geometries
+    gdf = _buffer_invalid_geometries(gdf)
 
-        # Dictionaries to hold nodes and complete geometries
-        coords = {}
-        geometries = {}
+    # Filter final gdf to requested tags and query polygon
+    gdf = _filter_gdf_by_polygon_and_tags(gdf, polygon=polygon, tags=tags)
 
-        # Set to hold the unique IDs of elements that do not have tags
-        untagged_element_ids = set()
+    # bug in geopandas <0.9 raises a TypeError if trying to plot empty
+    # geometries but missing geometries (gdf['geometry'] = None) cannot be
+    # projected e.g. gdf.to_crs(). Remove rows with empty (e.g. Point())
+    # or missing (e.g. None) geometry, and suppress gpd warning caused by
+    # calling gdf["geometry"].isna() on GeoDataFrame with empty geometries
+    if not gdf.empty:
+        warnings.filterwarnings("ignore", "GeoSeries.isna", UserWarning)
+        gdf = gdf[~(gdf["geometry"].is_empty | gdf["geometry"].isna())].copy()
+        warnings.resetwarnings()
 
-        # identify which relation types to parse to (multi)polygons
-        relation_types = {"boundary", "multipolygon"}
-
-        # extract geometries from the downloaded osm data
-        for response_json in response_jsons:
-            # Parses the JSON of OSM nodes, ways and (multipolygon) relations
-            # to dictionaries of coordinates, Shapely Points, LineStrings,
-            # Polygons and MultiPolygons
-            for element in response_json["elements"]:
-                # id numbers are only unique within element types
-                # create unique id from combination of type and id
-                unique_id = f"{element['type']}/{element['id']}"
-
-                # add elements that are not nodes and that are without tags or
-                # with empty tags to the untagged_element_ids set (untagged
-                # nodes are not added to the geometries dict at all)
-                if (element["type"] != "node") and (
-                    ("tags" not in element) or (not element["tags"])
-                ):
-                    untagged_element_ids.add(unique_id)
-
-                if element["type"] == "node":
-                    # Parse all nodes to coords
-                    coords[element["id"]] = _parse_node_to_coords(element=element)
-
-                    # If the node has tags and the tags are not empty parse it
-                    # to a Point. Empty check is necessary for JSONs created
-                    # from XML where nodes without tags are assigned tags={}
-                    if "tags" in element and len(element["tags"]) > 0:
-                        point = _parse_node_to_point(element=element)
-                        geometries[unique_id] = point
-
-                elif element["type"] == "way":
-                    # Parse all ways to linestrings or polygons
-                    linestring_or_polygon = _parse_way_to_linestring_or_polygon(
-                        element=element, coords=coords
-                    )
-                    geometries[unique_id] = linestring_or_polygon
-
-                elif (
-                    element["type"] == "relation"
-                    and element.get("tags").get("type") in relation_types
-                ):
-                    # parse relations to (multi)polygons
-                    multipolygon = _parse_relation_to_multipolygon(
-                        element=element, geometries=geometries
-                    )
-                    geometries[unique_id] = multipolygon
-
-        utils.log(f"{len(geometries)} geometries created in the dict")
-
-        # remove untagged elements from the final dict of geometries
-        for untagged_element_id in untagged_element_ids:
-            geometries.pop(untagged_element_id, None)
-
-        utils.log(f"{len(untagged_element_ids)} untagged geometries removed")
-
-        # Create GeoDataFrame
-        gdf = gpd.GeoDataFrame.from_dict(geometries, orient="index")
-
-        # ensure gdf has a geometry col before assigning crs
-        if "geometry" not in gdf.columns:
-            # if there is no geometry column, create a null column
-            gdf["geometry"] = np.nan
-        gdf.set_geometry("geometry")
-
-        # Set default crs
-        gdf.crs = settings.default_crs
-
-        # Apply .buffer(0) to any invalid geometries
-        gdf = _buffer_invalid_geometries(gdf)
-
-        # Filter final gdf to requested tags and query polygon
-        gdf = _filter_gdf_by_polygon_and_tags(gdf, polygon=polygon, tags=tags)
-
-        # bug in geopandas <0.9 raises a TypeError if trying to plot empty
-        # geometries but missing geometries (gdf['geometry'] = None) cannot be
-        # projected e.g. gdf.to_crs(). Remove rows with empty (e.g. Point())
-        # or missing (e.g. None) geometry, and suppress gpd warning caused by
-        # calling gdf["geometry"].isna() on GeoDataFrame with empty geometries
-        if not gdf.empty:
-            warnings.filterwarnings("ignore", "GeoSeries.isna", UserWarning)
-            gdf = gdf[~(gdf["geometry"].is_empty | gdf["geometry"].isna())].copy()
-            warnings.resetwarnings()
-
-        utils.log(f"{len(gdf)} geometries in the final GeoDataFrame")
-        return gdf
+    utils.log(f"{len(gdf)} geometries in the final GeoDataFrame")
+    return gdf
 
 
 def _parse_node_to_coords(element):
