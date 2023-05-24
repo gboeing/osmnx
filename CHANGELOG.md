@@ -1,5 +1,9 @@
 # Change log
 
+## 1.4.0 (TBD)
+
+  - move plot_orientation function from bearing module to plot module
+
 ## 1.3.1 (2023-05-24)
 
   - improve DNS resolution when using proxies or on networks blocking DNS-over-HTTPS
