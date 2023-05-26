@@ -1,5 +1,9 @@
 # Change log
 
+## 1.3.1.post0 (2023-05-26)
+
+  - add Python 3.8 compatibility back for one final release
+
 ## 1.3.1 (2023-05-24)
 
   - improve DNS resolution when using proxies or on networks blocking DNS-over-HTTPS
