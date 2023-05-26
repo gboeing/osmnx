@@ -1,6 +1,14 @@
-"""Create interactive Leaflet web maps of graphs and routes via folium."""
+"""Create interactive Leaflet web maps of graphs and routes via folium.
+
+This module is deprecated. Do not use. It will be removed in a future release.
+You can generate and explore interactive web maps of graph nodes, edges,
+and/or routes automatically using GeoPandas.GeoDataFrame.explore instead, for
+example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the OSMnx
+usage example repo for complete details and demonstrations.
+"""
 
 import json
+from warnings import warn
 
 from . import utils_graph
 
@@ -21,33 +29,41 @@ def plot_graph_folium(
     **kwargs,
 ):
     """
-    Plot a graph as an interactive Leaflet web map.
+    Do not use: deprecated.
 
-    Note that anything larger than a small city can produce a large web map
-    file that is slow to render in your browser.
+    You can generate and explore interactive web maps of graph nodes, edges,
+    and/or routes automatically using GeoPandas.GeoDataFrame.explore instead,
+    for example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the
+    OSMnx usage example repo for complete details and demonstrations.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph
+        deprecated
     graph_map : folium.folium.Map
-        if not None, plot the graph on this preexisting folium map object
+        deprecated
     popup_attribute : string
-        edge attribute to display in a pop-up when an edge is clicked
+        deprecated
     tiles : string
-        name of a folium tileset
+        deprecated
     zoom : int
-        initial zoom level for the map
+        deprecated
     fit_bounds : bool
-        if True, fit the map to the boundaries of the graph's edges
+        deprecated
     kwargs
-        keyword arguments to pass to folium.PolyLine(), see folium docs for
-        options (for example `color="#333333", weight=5, opacity=0.7`)
+        deprecated
 
     Returns
     -------
     folium.folium.Map
     """
+    warn(
+        "The `folium` module has been deprecated and will be removed in a future release. "
+        "You can generate and explore interactive web maps of graph nodes, edges, "
+        "and/or routes automatically using GeoPandas.GeoDataFrame.explore instead, "
+        "for example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the "
+        "OSMnx usage example repo for complete details and demonstrations."
+    )
     # create gdf of all graph edges
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)
     return _plot_folium(gdf_edges, graph_map, popup_attribute, tiles, zoom, fit_bounds, **kwargs)
@@ -64,32 +80,43 @@ def plot_route_folium(
     **kwargs,
 ):
     """
-    Plot a route as an interactive Leaflet web map.
+    Do not use: deprecated.
+
+    You can generate and explore interactive web maps of graph nodes, edges,
+    and/or routes automatically using GeoPandas.GeoDataFrame.explore instead,
+    for example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the
+    OSMnx usage example repo for complete details and demonstrations.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
-        input graph
+        deprecated
     route : list
-        the route as a list of nodes
+        deprecated
     route_map : folium.folium.Map
-        if not None, plot the route on this preexisting folium map object
+        deprecated
     popup_attribute : string
-        edge attribute to display in a pop-up when an edge is clicked
+        deprecated
     tiles : string
-        name of a folium tileset
+        deprecated
     zoom : int
-        initial zoom level for the map
+        deprecated
     fit_bounds : bool
-        if True, fit the map to the boundaries of the route's edges
+        deprecated
     kwargs
-        keyword arguments to pass to folium.PolyLine(), see folium docs for
-        options (for example `color="#cc0000", weight=5, opacity=0.7`)
+        deprecated
 
     Returns
     -------
     folium.folium.Map
     """
+    warn(
+        "The `folium` module has been deprecated and will be removed in a future release. "
+        "You can generate and explore interactive web maps of graph nodes, edges, "
+        "and/or routes automatically using GeoPandas.GeoDataFrame.explore instead, "
+        "for example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the "
+        "OSMnx usage example repo for complete details and demonstrations."
+    )
     # create gdf of the route edges in order
     node_pairs = zip(route[:-1], route[1:])
     uvk = ((u, v, min(G[u][v].items(), key=lambda k: k[1]["length"])[0]) for u, v in node_pairs)

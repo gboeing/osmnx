@@ -127,7 +127,8 @@ def test_stats():
     Gu = ox.get_undirected(G)
     entropy = ox.bearing.orientation_entropy(Gu, weight="length")
     fig, ax = ox.bearing.plot_orientation(Gu, area=True, title="Title")
-    fig, ax = ox.bearing.plot_orientation(Gu, ax=ax, area=False, title="Title")
+    fig, ax = ox.plot_orientation(Gu, area=True, title="Title")
+    fig, ax = ox.plot_orientation(Gu, ax=ax, area=False, title="Title")
 
     # test cleaning and rebuilding graph
     G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
@@ -226,6 +227,7 @@ def test_routing():
     dest_node = ox.distance.nearest_nodes(G, dest_x, dest_y)[0]
 
     route = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
+    route_edges = ox.utils_graph.route_to_gdf(G, route, "travel_time")
     attributes = ox.utils_graph.get_route_edge_attributes(G, route)
     attributes = ox.utils_graph.get_route_edge_attributes(G, route, "travel_time")
 
@@ -480,8 +482,11 @@ def test_graph_from_functions():
 
 
 def test_geometries():
-    # geometries_from_bbox - bounding box query to return empty GeoDataFrame
-    gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
+    # geometries_from_bbox - bounding box query to return no data
+    try:
+        gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
+    except ox._errors.EmptyOverpassResponse:
+        pass
 
     # geometries_from_bbox - successful
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
