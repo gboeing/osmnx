@@ -226,7 +226,17 @@ def test_routing():
     orig_node = ox.distance.nearest_nodes(G, orig_x, orig_y)[0]
     dest_node = ox.distance.nearest_nodes(G, dest_x, dest_y)[0]
 
+    # test non-numeric weight (should raise ValueError)
+    try:
+        route = ox.shortest_path(G, orig_node, dest_node, weight="highway")
+        raise AssertionError()
+    except ValueError:
+        pass
+    # test missing weight (should raise warning)
+    route = ox.shortest_path(G, orig_node, dest_node, weight="time")
+    # test good weight
     route = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
+
     route_edges = ox.utils_graph.route_to_gdf(G, route, "travel_time")
     attributes = ox.utils_graph.get_route_edge_attributes(G, route)
     attributes = ox.utils_graph.get_route_edge_attributes(G, route, "travel_time")
