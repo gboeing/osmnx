@@ -410,7 +410,7 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
         list of node IDs constituting the shortest path, or, if orig and dest
         are lists, then a list of path lists
     """
-    _verify_weights(G, weight)
+    _verify_edge_attribute(G, weight)
 
     # if neither orig nor dest is iterable, just return the shortest path
     if not (hasattr(orig, "__iter__") or hasattr(dest, "__iter__")):
@@ -473,24 +473,24 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
         a generator of `k` shortest paths ordered by total weight. each path
         is a list of node IDs.
     """
-    _verify_weights(G, weight)
+    _verify_edge_attribute(G, weight)
     paths_gen = nx.shortest_simple_paths(utils_graph.get_digraph(G, weight), orig, dest, weight)
     for path in itertools.islice(paths_gen, 0, k):
         yield path
 
 
-def _verify_weights(G, weight):
+def _verify_edge_attribute(G, attr):
     """
-    Verify weight values are numeric and non-null across graph edges.
+    Verify attribute values are numeric and non-null across graph edges.
 
-    Raises a `ValueError` if weight attribute contains non-numeric values and
-    raises a warning if weight attribute is missing or null on any edges.
+    Raises a `ValueError` if attribute contains non-numeric values and raises
+    a warning if attribute is missing or null on any edges.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
-    weight : string
+    attr : string
         edge attribute to verify
 
     Returns
@@ -498,9 +498,9 @@ def _verify_weights(G, weight):
     None
     """
     try:
-        weights = np.array(tuple(G.edges(data=weight)))[:, 2]
+        weights = np.array(tuple(G.edges(data=attr)))[:, 2]
         weights_float = weights.astype(float)
         if np.isnan(weights_float).any():
-            warn(f"The attribute {weight!r} is missing or null on some edges.", stacklevel=2)
+            warn(f"The attribute {attr!r} is missing or null on some edges.", stacklevel=2)
     except ValueError:
-        raise ValueError(f"The edge attribute {weight!r} contains non-numeric values.")
+        raise ValueError(f"The edge attribute {attr!r} contains non-numeric values.")
