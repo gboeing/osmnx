@@ -150,7 +150,8 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
             # ValueError if geometry column contains non-point geometry types
             warn(
                 "discarding the gdf_nodes geometry column, though its "
-                "values differ from the coordinates in the x and y columns"
+                "values differ from the coordinates in the x and y columns",
+                stacklevel=2,
             )
         gdf_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
 
@@ -227,11 +228,11 @@ def get_route_edge_attributes(
     attribute_values : list
         deprecated
     """
-    msg = (
+    warn(
         "The `get_route_edge_attributes` function has been deprecated and will "
-        "be removed in a future release. Use the `route_to_gdf` function instead."
+        "be removed in a future release. Use the `route_to_gdf` function instead.",
+        stacklevel=2,
     )
-    warn(msg)
     attribute_values = []
     for u, v in zip(route[:-1], route[1:]):
         # if there are parallel edges between two nodes, select the one with the

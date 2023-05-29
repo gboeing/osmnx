@@ -2,6 +2,7 @@
 
 import itertools
 import multiprocessing as mp
+from warnings import warn
 
 import networkx as nx
 import numpy as np
@@ -409,12 +410,14 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
         list of node IDs constituting the shortest path, or, if orig and dest
         are lists, then a list of path lists
     """
+    _verify_edge_attribute(G, weight)
+
+    # if neither orig nor dest is iterable, just return the shortest path
     if not (hasattr(orig, "__iter__") or hasattr(dest, "__iter__")):
-        # if neither orig nor dest is iterable, just return the shortest path
         return _single_shortest_path(G, orig, dest, weight)
 
+    # if both orig and dest are iterables, ensure they have same lengths
     elif hasattr(orig, "__iter__") and hasattr(dest, "__iter__"):
-        # if both orig and dest are iterables ensure they have same lengths
         if len(orig) != len(dest):  # pragma: no cover
             raise ValueError("orig and dest must contain same number of elements")
 
@@ -423,11 +426,12 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
         cpus = min(cpus, mp.cpu_count())
         utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")
 
+        # if single-threading, calculate each shortest path one at a time
         if cpus == 1:
-            # if single-threading, calculate each shortest path one at a time
             paths = [_single_shortest_path(G, o, d, weight) for o, d in zip(orig, dest)]
+
+        # if multi-threading, calculate shortest paths in parallel
         else:
-            # if multi-threading, calculate shortest paths in parallel
             args = ((G, o, d, weight) for o, d in zip(orig, dest))
             pool = mp.Pool(cpus)
             sma = pool.starmap_async(_single_shortest_path, args)
@@ -437,8 +441,8 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
 
         return paths
 
+    # if only one of orig or dest is iterable and the other is not
     else:  # pragma: no cover
-        # if only one of orig or dest is iterable and the other is not
         raise ValueError("orig and dest must either both be iterable or neither must be iterable")
 
 
@@ -469,6 +473,34 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
         a generator of `k` shortest paths ordered by total weight. each path
         is a list of node IDs.
     """
+    _verify_edge_attribute(G, weight)
     paths_gen = nx.shortest_simple_paths(utils_graph.get_digraph(G, weight), orig, dest, weight)
     for path in itertools.islice(paths_gen, 0, k):
         yield path
+
+
+def _verify_edge_attribute(G, attr):
+    """
+    Verify attribute values are numeric and non-null across graph edges.
+
+    Raises a `ValueError` if attribute contains non-numeric values and raises
+    a warning if attribute is missing or null on any edges.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    attr : string
+        edge attribute to verify
+
+    Returns
+    -------
+    None
+    """
+    try:
+        values = np.array(tuple(G.edges(data=attr)))[:, 2]
+        values_float = values.astype(float)
+        if np.isnan(values_float).any():
+            warn(f"The attribute {attr!r} is missing or null on some edges.", stacklevel=2)
+    except ValueError:
+        raise ValueError(f"The edge attribute {attr!r} contains non-numeric values.")

@@ -1,8 +1,8 @@
 """Serialize graphs to/from files on disk."""
 
 import ast
-import warnings
 from pathlib import Path
+from warnings import warn
 
 import networkx as nx
 import pandas as pd
@@ -84,11 +84,11 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     -------
     None
     """
-    warnings.warn(
+    warn(
         "The `save_graph_shapefile` function is deprecated and will be removed "
         "in a future release. Instead, use the `save_graph_geopackage` function "
         "to save graphs as GeoPackage files for subsequent GIS analysis.",
-        stacklevel=1,
+        stacklevel=2,
     )
 
     # default filepath if none was provided

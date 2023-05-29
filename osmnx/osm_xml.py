@@ -1,8 +1,8 @@
 """Read/write .osm formatted XML files."""
-
 import bz2
 import xml.sax
 from pathlib import Path
+from warnings import warn
 from xml.etree import ElementTree as etree
 
 import networkx as nx
@@ -184,13 +184,11 @@ def save_graph_xml(
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
     if not settings.all_oneway:  # pragma: no cover
-        import warnings
-
-        msg = (
+        warn(
             "In order for save_graph_xml to behave properly the graph must "
-            "have been created with the `all_oneway` setting set to True."
+            "have been created with the `all_oneway` setting set to True.",
+            stacklevel=2,
         )
-        warnings.warn(msg, stacklevel=1)
 
     try:
         gdf_nodes, gdf_edges = data
