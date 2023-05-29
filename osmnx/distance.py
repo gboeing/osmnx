@@ -498,9 +498,9 @@ def _verify_edge_attribute(G, attr):
     None
     """
     try:
-        weights = np.array(tuple(G.edges(data=attr)))[:, 2]
-        weights_float = weights.astype(float)
-        if np.isnan(weights_float).any():
+        values = np.array(tuple(G.edges(data=attr)))[:, 2]
+        values_float = values.astype(float)
+        if np.isnan(values_float).any():
             warn(f"The attribute {attr!r} is missing or null on some edges.", stacklevel=2)
     except ValueError:
         raise ValueError(f"The edge attribute {attr!r} contains non-numeric values.")
