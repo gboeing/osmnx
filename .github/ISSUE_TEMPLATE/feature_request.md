@@ -11,7 +11,7 @@ assignees: ''
 
 Feature requests are for proposing an enhancement to OSMnx before opening a pull request to add your proposed functionality to the codebase. Please don't use the issue tracker to ask "how-to" or usage questions. If asked here, they will be closed automatically. Instead, ask "how-to" and usage questions on [StackOverflow](https://stackoverflow.com/search?q=osmnx).
 
-**Do not delete the following template. Fill it out completely.**
+**Completely fill out the following template.**
 
   - [ ] I have read the OSMnx [contributing guidelines](../blob/main/CONTRIBUTING.md)
   - [ ] I have read the OSMnx [documentation](https://osmnx.readthedocs.io/) and [usage examples](https://github.com/gboeing/osmnx-examples)

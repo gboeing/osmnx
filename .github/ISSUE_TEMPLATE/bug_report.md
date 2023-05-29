@@ -13,7 +13,7 @@ Please don't use the issue tracker to ask "how-to" or usage questions. If asked 
 
 Bug reports are for reporting a bug you have found in OSMnx's codebase. First search the open/closed issues and StackOverflow to see if the problem has already been noted. If it hasn't, fill in the bug reporting template below.
 
-**Do not delete the following template. Fill it out completely.**
+**Completely fill out the following template.**
 
   - [ ] I have read the OSMnx [contributing guidelines](../blob/main/CONTRIBUTING.md)
   - [ ] I have read the OSMnx [documentation](https://osmnx.readthedocs.io/) and [usage examples](https://github.com/gboeing/osmnx-examples)
@@ -28,6 +28,7 @@ Bug reports are for reporting a bug you have found in OSMnx's codebase. First se
   - What operating system are you using?
   - What Python version are you using?
   - What OSMnx version are you using?
+  - How did you install OSMnx?
   - Provide a complete list of your environment's packages and their versions (for example, run `conda list` or `pip list` then paste the output between the two "details" tags below)
 
 <details>
