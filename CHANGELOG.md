@@ -2,6 +2,7 @@
 
 ## 1.4.0 (TBD)
 
+  - adopt NEP 29 policy for minimum required Python and NumPy versions
   - add route_to_gdf function to utils_graph module
   - deprecate the get_route_edge_attributes function in favor of the new route_to_gdf function
   - deprecate folium module in favor of using GeoPandas.GeoDataFrame.explore directly
