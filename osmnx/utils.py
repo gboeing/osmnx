@@ -5,9 +5,9 @@ import logging as lg
 import os
 import sys
 import unicodedata
-import warnings
 from contextlib import redirect_stdout
 from pathlib import Path
+from warnings import warn
 
 from . import settings
 
@@ -189,12 +189,12 @@ def config(
     -------
     None
     """
-    warnings.warn(
+    warn(
         "The `utils.config` function is deprecated and will be removed in a "
         "future release. Instead, use the `settings` module directly to "
         "configure a global setting's value. For example, "
         "`ox.settings.log_console=True`.",
-        stacklevel=1,
+        stacklevel=2,
     )
 
     # set each global setting to the argument value

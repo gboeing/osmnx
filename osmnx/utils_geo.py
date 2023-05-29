@@ -1,6 +1,6 @@
 """Geospatial utility functions."""
 
-import warnings
+from warnings import warn
 
 import networkx as nx
 import numpy as np
@@ -42,9 +42,7 @@ def sample_points(G, n):
         which each point was drawn
     """
     if nx.is_directed(G):  # pragma: no cover
-        warnings.warn(
-            "graph should be undirected to not oversample bidirectional edges", stacklevel=1
-        )
+        warn("graph should be undirected to not oversample bidirectional edges", stacklevel=2)
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
     weights = gdf_edges["length"] / gdf_edges["length"].sum()
     idx = np.random.choice(gdf_edges.index, size=n, p=weights)
