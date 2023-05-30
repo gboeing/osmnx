@@ -8,7 +8,7 @@
   - deprecate folium module in favor of using GeoPandas.GeoDataFrame.explore directly
   - move plot_orientation function from bearing module to plot module
   - verify edge weight attribute values before solving shortest paths
-  - provide consistent error when no data elements are returned from server
+  - provide consistent error when no data elements are returned from Overpass
 
 ## 1.3.1.post0 (2023-05-26)
 
