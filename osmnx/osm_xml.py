@@ -19,9 +19,8 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
     SAX content handler for OSM XML.
 
     Used to build an Overpass-like response JSON object in self.object. For
-    format notes, see
-    http://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes and
-    http://overpass-api.de/output_formats.html#json
+    format notes, see https://overpass-api.de/ and
+    https://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes
     """
 
     def __init__(self):

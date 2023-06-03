@@ -59,9 +59,8 @@ OSMnx geocodes place names and addresses with the OpenStreetMap Nominatim API. U
 
 OSMnx automatically processes network topology from the original raw OpenStreetMap data such that nodes represent intersections/dead-ends and edges represent the street segments that link them. MultiDiGraphs are nonplanar directed graphs with possible self-loops and parallel edges. Thus, a one-way street will be represented with a single directed edge from node u to node v, but a bidirectional street will be represented with two reciprocal directed edges (with identical geometries): one from node u to node v and another from v to u, to represent both possible directions of flow. OSMnx can convert a MultiDiGraph to a MultiGraph if you prefer an undirected representation of the network. It can also convert a MultiDiGraph to/from GeoPandas node and edge GeoDataFrames.
 
-Usage examples and demonstrations of these features are in the `examples`_ GitHub repo. More feature development details are in the `change log`_. Read the `journal article`_ for further technical details. Package usage is detailed in the `user reference`_.
+Usage examples and demonstrations of these features are in the `examples`_ GitHub repo. More feature development details are in the `change log`_. Read the `journal article`_ for further technical details. Package usage is detailed in the :doc:`osmnx`.
 
-.. _user reference: osmnx.html
 .. _examples: https://github.com/gboeing/osmnx-examples
 .. _GeoPandas: https://geopandas.org/
 .. _NetworkX: https://networkx.org/

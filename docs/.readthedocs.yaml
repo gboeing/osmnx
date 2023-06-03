@@ -1,0 +1,19 @@
+version: 2
+
+build:
+  os: "ubuntu-22.04"
+  tools:
+    python: "3.11"
+  jobs:
+    pre_build:
+      - python -m sphinx -b linkcheck -D linkcheck_ignore="osmnx.html" docs/ _build/linkcheck
+
+formats: all
+
+python:
+   install:
+   - requirements: docs/requirements.txt
+
+sphinx:
+  configuration: docs/conf.py
+  fail_on_warning: true
