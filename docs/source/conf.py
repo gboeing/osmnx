@@ -31,14 +31,20 @@ autodoc_mock_imports = [
     "matplotlib.pyplot",
     "networkx",
     "numpy",
+    "osgeo",
     "pandas",
     "pyproj",
+    "rasterio",
     "requests",
+    "scipy",
+    "scipy.spatial",
     "shapely",
     "shapely.errors",
     "shapely.geometry",
     "shapely.ops",
     "shapely.strtree",
+    "sklearn",
+    "sklearn.neighbors",
 ]
 
 # -- General configuration ------------------------------------------------
