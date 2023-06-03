@@ -668,7 +668,7 @@ def _is_path_one_way(path, bidirectional, oneway_values):
     Parameters
     ----------
     path : dict
-        a path's tag:value attribute data
+        a path's `tag:value` attribute data
     bidirectional : bool
         whether this is a bi-directional network type
     oneway_values : set
@@ -716,7 +716,7 @@ def _is_path_reversed(path, reversed_values):
     Parameters
     ----------
     path : dict
-        a path's tag:value attribute data
+        a path's `tag:value` attribute data
     reversed_values : set
         the values OSM uses in its 'oneway' tag to denote travel can only
         occur in the opposite direction of the node order
@@ -740,7 +740,7 @@ def _add_paths(G, paths, bidirectional=False):
     G : networkx.MultiDiGraph
         graph to add paths to
     paths : list
-        list of paths' tag:value attribute data dicts
+        list of paths' `tag:value` attribute data dicts
     bidirectional : bool
         if True, create bi-directional edges for one-way streets
 

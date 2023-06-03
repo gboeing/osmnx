@@ -145,7 +145,7 @@ def add_node_elevations_google(
     url_template : string
         a URL string template for the API endpoint, containing exactly two
         parameters: `locations` and `key`; for example, for Open Topo Data:
-        "https://api.opentopodata.org/v1/aster30m?locations={}&key={}"
+        `"https://api.opentopodata.org/v1/aster30m?locations={}&key={}"`
 
     Returns
     -------

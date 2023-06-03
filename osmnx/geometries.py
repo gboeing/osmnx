@@ -676,7 +676,7 @@ def _parse_relation_to_multipolygon(element, geometries):
     Parse multipolygon from OSM relation (type:MultiPolygon).
 
     See more information about relations from OSM documentation:
-    http://wiki.openstreetmap.org/wiki/Relation
+    https://wiki.openstreetmap.org/wiki/Relation
 
     Parameters
     ----------

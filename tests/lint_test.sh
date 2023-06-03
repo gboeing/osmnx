@@ -21,6 +21,7 @@ pydocstyle .
 
 # build the docs
 make -C ./docs html
+python -m sphinx -b linkcheck -D linkcheck_ignore="osmnx.html" docs/ docs/_build/linkcheck
 
 # run the tests
 coverage run --source ./osmnx --module pytest --verbose
