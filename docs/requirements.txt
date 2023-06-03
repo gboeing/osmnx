@@ -1,1 +1,1 @@
-docutils<0.18
+sphinx>=7.0.0

@@ -26,9 +26,6 @@ sys.path.insert(0, str(Path().resolve().parent.parent))
 autodoc_mock_imports = [
     "geopandas",
     "matplotlib",
-    "matplotlib.cm",
-    "matplotlib.colors",
-    "matplotlib.pyplot",
     "networkx",
     "numpy",
     "osgeo",
@@ -37,14 +34,8 @@ autodoc_mock_imports = [
     "rasterio",
     "requests",
     "scipy",
-    "scipy.spatial",
     "shapely",
-    "shapely.errors",
-    "shapely.geometry",
-    "shapely.ops",
-    "shapely.strtree",
     "sklearn",
-    "sklearn.neighbors",
 ]
 
 # -- General configuration ------------------------------------------------
