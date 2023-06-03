@@ -38,7 +38,7 @@ autodoc_mock_imports = [
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 needs_sphinx = "6"
 extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon"]
-templates_path = ["_templates"]
+templates_path = []
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 source_suffix = ".rst"
 root_doc = "index"
@@ -47,4 +47,4 @@ language = "en"
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 html_theme = "default"
-html_static_path = ["_static"]
+html_static_path = []
