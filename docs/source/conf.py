@@ -57,7 +57,7 @@ author = "Geoff Boeing"
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-version = release = "1.3.1"
+version = release = "1.4.0-alpha"
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #
