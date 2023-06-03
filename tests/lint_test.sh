@@ -4,7 +4,7 @@
 set -e
 
 # delete temp files and folders
-rm -r -f .coverage .pytest_cache .temp ./docs/build osmnx/__pycache__ tests/__pycache__
+rm -r -f .coverage .pytest_cache .temp ./docs/_build osmnx/__pycache__ tests/__pycache__
 find . -type f -name "*.vrt" -delete
 
 # check if imports are organized properly
@@ -29,5 +29,5 @@ coverage run --source ./osmnx --module pytest --verbose
 coverage report -m
 
 # delete temp files and folders
-rm -r -f .coverage .pytest_cache .temp ./docs/build osmnx/__pycache__ tests/__pycache__
+rm -r -f .coverage .pytest_cache .temp ./docs/_build osmnx/__pycache__ tests/__pycache__
 find . -type f -name "*.vrt" -delete
