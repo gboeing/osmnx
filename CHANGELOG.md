@@ -3,12 +3,12 @@
 ## 1.4.0 (TBD)
 
   - adopt NEP 29 policy for minimum required Python and NumPy versions
-  - add route_to_gdf function to utils_graph module
-  - deprecate the get_route_edge_attributes function in favor of the new route_to_gdf function
-  - deprecate folium module in favor of using GeoPandas.GeoDataFrame.explore directly
-  - move plot_orientation function from bearing module to plot module
   - verify edge weight attribute values before solving shortest paths
   - provide consistent error when no data elements are returned from Overpass
+  - add route_to_gdf function to utils_graph module to return a GeoDataFrame of the edges in a path
+  - deprecate the get_route_edge_attributes function in favor of the new route_to_gdf function
+  - deprecate folium module in favor of using geopandas.GeoDataFrame.explore directly
+  - move plot_orientation function from bearing module to plot module
 
 ## 1.3.1.post0 (2023-05-26)
 
