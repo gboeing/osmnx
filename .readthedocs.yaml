@@ -8,8 +8,7 @@ build:
   tools:
     python: "3.10"
 
-formats:
-  - all
+formats: all
 
 sphinx:
   configuration: docs/source/conf.py
