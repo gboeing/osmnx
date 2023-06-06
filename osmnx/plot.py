@@ -974,4 +974,6 @@ def _verify_mpl():
     None
     """
     if cm is None or colors is None or plt is None or colormaps is None:
-        raise ImportError("matplotlib must be installed for visualization")
+        raise ImportError(
+            "matplotlib must be installed as an optional dependency for visualization"
+        )
