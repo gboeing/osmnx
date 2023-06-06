@@ -1,4 +1,4 @@
-"""Plot spatial geometries, street networks, and routes."""
+"""Visualize spatial footprints, street networks, routes, and orientations."""
 
 from pathlib import Path
 
@@ -15,7 +15,7 @@ from . import utils
 from . import utils_geo
 from . import utils_graph
 
-# matplotlib is an optional dependency for visualization
+# matplotlib is an optional dependency needed for visualization
 try:
     import matplotlib.cm as cm
     import matplotlib.colors as colors
@@ -153,7 +153,7 @@ def plot_graph(
     bbox=None,
 ):
     """
-    Plot a graph.
+    Visualize a graph.
 
     Parameters
     ----------
@@ -265,7 +265,7 @@ def plot_graph_route(
     **pg_kwargs,
 ):
     """
-    Plot a route along a graph.
+    Visualize a route along a graph.
 
     Parameters
     ----------
@@ -333,7 +333,7 @@ def plot_graph_route(
 
 def plot_graph_routes(G, routes, route_colors="r", route_linewidths=4, **pgr_kwargs):
     """
-    Plot several routes along a graph.
+    Visualize several routes along a graph.
 
     Parameters
     ----------
@@ -587,7 +587,7 @@ def plot_footprints(
     dpi=600,
 ):
     """
-    Plot a GeoDataFrame of geospatial entities' footprints.
+    Visualize a GeoDataFrame of geospatial entities' footprints.
 
     Parameters
     ----------
