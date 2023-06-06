@@ -29,7 +29,7 @@ If you use OSMnx in your work, please cite the journal article.
 
 ## Features
 
-OSMnx is built on top of [GeoPandas](https://geopandas.org/), [NetworkX](https://networkx.org/), and [matplotlib](https://matplotlib.org/) and interacts with [OpenStreetMap](https://www.openstreetmap.org/) APIs to:
+OSMnx is built on top of [NetworkX](https://networkx.org/) and [GeoPandas](https://geopandas.org/), and interacts with [OpenStreetMap](https://www.openstreetmap.org/) APIs to:
 
   * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
   * Download any other spatial geometries, place boundaries, building footprints, or points of interest as a GeoDataFrame
@@ -44,7 +44,7 @@ OSMnx is built on top of [GeoPandas](https://geopandas.org/), [NetworkX](https:/
   * Conduct topological and spatial analyses to automatically calculate dozens of indicators
   * Calculate and visualize street bearings and orientations
   * Calculate and visualize shortest-path routes that minimize distance, travel time, elevation, etc
-  * Visualize street networks as a static map or interactive Leaflet web map
+  * Explore street networks as a static map or interactive web map
   * Visualize travel distance and travel time with isoline and isochrone maps
   * Plot figure-ground diagrams of street networks and building footprints
 
@@ -53,4 +53,3 @@ All of these features are demonstrated in the [examples](https://github.com/gboe
 ## License
 
 OSMnx is licensed under the MIT license. OpenStreetMap's open data [license](https://www.openstreetmap.org/copyright/) requires that derivative works provide proper attribution.
-

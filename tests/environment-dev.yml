@@ -6,7 +6,6 @@ channels:
 dependencies:
     # required
     - geopandas
-    - matplotlib
     - networkx
     - numpy
     - pandas
@@ -17,6 +16,7 @@ dependencies:
     # extras
     - folium
     - gdal
+    - matplotlib
     - rasterio
     - scikit-learn
     - scipy
