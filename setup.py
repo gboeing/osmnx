@@ -76,9 +76,10 @@ setup(
     python_requires=">=3.9",
     install_requires=INSTALL_REQUIRES,
     extras_require={
+        "all": ["gdal", "matplotlib", "rasterio", "scikit-learn", "scipy"],
         "entropy": ["scipy"],
         "nearest_neighbor": ["scikit-learn", "scipy"],
+        "visualization": ["matplotlib"],
         "raster": ["gdal", "rasterio"],
-        "web_map": ["folium"],
     },
 )

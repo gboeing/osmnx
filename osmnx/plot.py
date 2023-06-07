@@ -1,14 +1,10 @@
-"""Plot spatial geometries, street networks, and routes."""
+"""Visualize spatial footprints, street networks, routes, and orientations."""
 
 from pathlib import Path
 
-import matplotlib.cm as cm
-import matplotlib.colors as colors
-import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import pandas as pd
-from matplotlib import colormaps
 
 from . import bearing
 from . import graph
@@ -18,6 +14,15 @@ from . import simplification
 from . import utils
 from . import utils_geo
 from . import utils_graph
+
+# matplotlib is an optional dependency needed for visualization
+try:
+    import matplotlib.cm as cm
+    import matplotlib.colors as colors
+    import matplotlib.pyplot as plt
+    from matplotlib import colormaps
+except ImportError:  # pragma: no cover
+    cm = colors = plt = colormaps = None
 
 
 def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=False):
@@ -44,6 +49,7 @@ def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=Fal
     -------
     color_list : list
     """
+    _verify_mpl()
     color_list = [colormaps[cmap](x) for x in np.linspace(start, stop, n)]
     if return_hex:
         color_list = [colors.to_hex(c) for c in color_list]
@@ -84,6 +90,7 @@ def get_node_colors_by_attr(
     node_colors : pandas.Series
         series labels are node IDs and values are colors
     """
+    _verify_mpl()
     vals = pd.Series(nx.get_node_attributes(G, attr))
     return _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size)
 
@@ -120,6 +127,7 @@ def get_edge_colors_by_attr(
     edge_colors : pandas.Series
         series labels are edge IDs (u, v, key) and values are colors
     """
+    _verify_mpl()
     vals = pd.Series(nx.get_edge_attributes(G, attr))
     return _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size)
 
@@ -145,7 +153,7 @@ def plot_graph(
     bbox=None,
 ):
     """
-    Plot a graph.
+    Visualize a graph.
 
     Parameters
     ----------
@@ -196,6 +204,7 @@ def plot_graph(
     fig, ax : tuple
         matplotlib figure, axis
     """
+    _verify_mpl()
     max_node_size = max(node_size) if hasattr(node_size, "__iter__") else node_size
     max_edge_lw = max(edge_linewidth) if hasattr(edge_linewidth, "__iter__") else edge_linewidth
     if max_node_size <= 0 and max_edge_lw <= 0:  # pragma: no cover
@@ -256,7 +265,7 @@ def plot_graph_route(
     **pg_kwargs,
 ):
     """
-    Plot a route along a graph.
+    Visualize a route along a graph.
 
     Parameters
     ----------
@@ -283,6 +292,7 @@ def plot_graph_route(
     fig, ax : tuple
         matplotlib figure, axis
     """
+    _verify_mpl()
     if ax is None:
         # plot the graph but not the route, and override any user show/close
         # args for now: we'll do that later
@@ -323,7 +333,7 @@ def plot_graph_route(
 
 def plot_graph_routes(G, routes, route_colors="r", route_linewidths=4, **pgr_kwargs):
     """
-    Plot several routes along a graph.
+    Visualize several routes along a graph.
 
     Parameters
     ----------
@@ -343,6 +353,8 @@ def plot_graph_routes(G, routes, route_colors="r", route_linewidths=4, **pgr_kwa
     fig, ax : tuple
         matplotlib figure, axis
     """
+    _verify_mpl()
+
     # check for valid arguments
     if not all(isinstance(r, list) for r in routes):  # pragma: no cover
         raise ValueError("routes must be a list of route lists")
@@ -442,6 +454,7 @@ def plot_figure_ground(
     fig, ax : tuple
         matplotlib figure, axis
     """
+    _verify_mpl()
     multiplier = 1.2
 
     # if user did not pass in custom street widths, create a dict of defaults
@@ -574,7 +587,7 @@ def plot_footprints(
     dpi=600,
 ):
     """
-    Plot a GeoDataFrame of geospatial entities' footprints.
+    Visualize a GeoDataFrame of geospatial entities' footprints.
 
     Parameters
     ----------
@@ -614,6 +627,8 @@ def plot_footprints(
     fig, ax : tuple
         matplotlib figure, axis
     """
+    _verify_mpl()
+
     if ax is None:
         fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor, frameon=False)
         ax.set_facecolor(bgcolor)
@@ -635,6 +650,143 @@ def plot_footprints(
     # configure axis appearance, save/show figure as specified, and return
     ax = _config_ax(ax, gdf.crs, (north, south, east, west), 0)
     fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi)
+    return fig, ax
+
+
+def plot_orientation(
+    Gu,
+    num_bins=36,
+    min_length=0,
+    weight=None,
+    ax=None,
+    figsize=(5, 5),
+    area=True,
+    color="#003366",
+    edgecolor="k",
+    linewidth=0.5,
+    alpha=0.7,
+    title=None,
+    title_y=1.05,
+    title_font=None,
+    xtick_font=None,
+):
+    """
+    Plot a polar histogram of a spatial network's bidirectional edge bearings.
+
+    Ignores self-loop edges as their bearings are undefined.
+
+    For more info see: Boeing, G. 2019. "Urban Spatial Order: Street Network
+    Orientation, Configuration, and Entropy." Applied Network Science, 4 (1),
+    67. https://doi.org/10.1007/s41109-019-0189-1
+
+    Parameters
+    ----------
+    Gu : networkx.MultiGraph
+        undirected, unprojected graph with `bearing` attributes on each edge
+    num_bins : int
+        number of bins; for example, if `num_bins=36` is provided, then each
+        bin will represent 10° around the compass
+    min_length : float
+        ignore edges with `length` attributes less than `min_length`
+    weight : string
+        if not None, weight edges' bearings by this (non-null) edge attribute
+    ax : matplotlib.axes.PolarAxesSubplot
+        if not None, plot on this preexisting axis; must have projection=polar
+    figsize : tuple
+        if ax is None, create new figure with size (width, height)
+    area : bool
+        if True, set bar length so area is proportional to frequency,
+        otherwise set bar length so height is proportional to frequency
+    color : string
+        color of histogram bars
+    edgecolor : string
+        color of histogram bar edges
+    linewidth : float
+        width of histogram bar edges
+    alpha : float
+        opacity of histogram bars
+    title : string
+        title for plot
+    title_y : float
+        y position to place title
+    title_font : dict
+        the title's fontdict to pass to matplotlib
+    xtick_font : dict
+        the xtick labels' fontdict to pass to matplotlib
+
+    Returns
+    -------
+    fig, ax : tuple
+        matplotlib figure, axis
+    """
+    _verify_mpl()
+
+    if title_font is None:
+        title_font = {"family": "DejaVu Sans", "size": 24, "weight": "bold"}
+    if xtick_font is None:
+        xtick_font = {
+            "family": "DejaVu Sans",
+            "size": 10,
+            "weight": "bold",
+            "alpha": 1.0,
+            "zorder": 3,
+        }
+
+    # get the bearings' distribution's bin counts and edges
+    bin_counts, bin_edges = bearing._bearings_distribution(Gu, num_bins, min_length, weight)
+
+    # positions: where to center each bar. ignore the last bin edge, because
+    # it's the same as the first (i.e., 0° = 360°)
+    positions = np.radians(bin_edges[:-1])
+
+    # width: make bars fill the circumference without gaps or overlaps
+    width = 2 * np.pi / num_bins
+
+    # radius: how long to make each bar
+    bin_frequency = bin_counts / bin_counts.sum()
+    if area:
+        # set bar length so area is proportional to frequency
+        radius = np.sqrt(bin_frequency)
+    else:
+        # set bar length so height is proportional to frequency
+        radius = bin_frequency
+
+    # create ax (if necessary) then set N at top and go clockwise
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "polar"})
+    else:
+        fig = ax.figure
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction("clockwise")
+    ax.set_ylim(top=radius.max())
+
+    # configure the y-ticks and remove their labels
+    ax.set_yticks(np.linspace(0, radius.max(), 5))
+    ax.set_yticklabels(labels="")
+
+    # configure the x-ticks and their labels
+    xticklabels = ["N", "", "E", "", "S", "", "W", ""]
+    ax.set_xticks(ax.get_xticks())
+    ax.set_xticklabels(labels=xticklabels, fontdict=xtick_font)
+    ax.tick_params(axis="x", which="major", pad=-2)
+
+    # draw the bars
+    ax.bar(
+        positions,
+        height=radius,
+        width=width,
+        align="center",
+        bottom=0,
+        zorder=2,
+        color=color,
+        edgecolor=edgecolor,
+        linewidth=linewidth,
+        alpha=alpha,
+    )
+
+    if title:
+        ax.set_title(title, y=title_y, fontdict=title_font)
+    fig.tight_layout()
     return fig, ax
 
 
@@ -813,136 +965,15 @@ def _config_ax(ax, crs, bbox, padding):
     return ax
 
 
-def plot_orientation(
-    Gu,
-    num_bins=36,
-    min_length=0,
-    weight=None,
-    ax=None,
-    figsize=(5, 5),
-    area=True,
-    color="#003366",
-    edgecolor="k",
-    linewidth=0.5,
-    alpha=0.7,
-    title=None,
-    title_y=1.05,
-    title_font=None,
-    xtick_font=None,
-):
+def _verify_mpl():
     """
-    Plot a polar histogram of a spatial network's bidirectional edge bearings.
-
-    Ignores self-loop edges as their bearings are undefined.
-
-    For more info see: Boeing, G. 2019. "Urban Spatial Order: Street Network
-    Orientation, Configuration, and Entropy." Applied Network Science, 4 (1),
-    67. https://doi.org/10.1007/s41109-019-0189-1
-
-    Parameters
-    ----------
-    Gu : networkx.MultiGraph
-        undirected, unprojected graph with `bearing` attributes on each edge
-    num_bins : int
-        number of bins; for example, if `num_bins=36` is provided, then each
-        bin will represent 10° around the compass
-    min_length : float
-        ignore edges with `length` attributes less than `min_length`
-    weight : string
-        if not None, weight edges' bearings by this (non-null) edge attribute
-    ax : matplotlib.axes.PolarAxesSubplot
-        if not None, plot on this preexisting axis; must have projection=polar
-    figsize : tuple
-        if ax is None, create new figure with size (width, height)
-    area : bool
-        if True, set bar length so area is proportional to frequency,
-        otherwise set bar length so height is proportional to frequency
-    color : string
-        color of histogram bars
-    edgecolor : string
-        color of histogram bar edges
-    linewidth : float
-        width of histogram bar edges
-    alpha : float
-        opacity of histogram bars
-    title : string
-        title for plot
-    title_y : float
-        y position to place title
-    title_font : dict
-        the title's fontdict to pass to matplotlib
-    xtick_font : dict
-        the xtick labels' fontdict to pass to matplotlib
+    Verify that matplotlib is installed and successfully imported.
 
     Returns
     -------
-    fig, ax : tuple
-        matplotlib figure, axis
+    None
     """
-    if title_font is None:
-        title_font = {"family": "DejaVu Sans", "size": 24, "weight": "bold"}
-    if xtick_font is None:
-        xtick_font = {
-            "family": "DejaVu Sans",
-            "size": 10,
-            "weight": "bold",
-            "alpha": 1.0,
-            "zorder": 3,
-        }
-
-    # get the bearings' distribution's bin counts and edges
-    bin_counts, bin_edges = bearing._bearings_distribution(Gu, num_bins, min_length, weight)
-
-    # positions: where to center each bar. ignore the last bin edge, because
-    # it's the same as the first (i.e., 0° = 360°)
-    positions = np.radians(bin_edges[:-1])
-
-    # width: make bars fill the circumference without gaps or overlaps
-    width = 2 * np.pi / num_bins
-
-    # radius: how long to make each bar
-    bin_frequency = bin_counts / bin_counts.sum()
-    if area:
-        # set bar length so area is proportional to frequency
-        radius = np.sqrt(bin_frequency)
-    else:
-        # set bar length so height is proportional to frequency
-        radius = bin_frequency
-
-    # create ax (if necessary) then set N at top and go clockwise
-    if ax is None:
-        fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "polar"})
-    else:
-        fig = ax.figure
-    ax.set_theta_zero_location("N")
-    ax.set_theta_direction("clockwise")
-    ax.set_ylim(top=radius.max())
-
-    # configure the y-ticks and remove their labels
-    ax.set_yticks(np.linspace(0, radius.max(), 5))
-    ax.set_yticklabels(labels="")
-
-    # configure the x-ticks and their labels
-    xticklabels = ["N", "", "E", "", "S", "", "W", ""]
-    ax.set_xticks(ax.get_xticks())
-    ax.set_xticklabels(labels=xticklabels, fontdict=xtick_font)
-    ax.tick_params(axis="x", which="major", pad=-2)
-
-    # draw the bars
-    ax.bar(
-        positions,
-        height=radius,
-        width=width,
-        align="center",
-        bottom=0,
-        zorder=2,
-        color=color,
-        edgecolor=edgecolor,
-        linewidth=linewidth,
-        alpha=alpha,
-    )
-
-    if title:
-        ax.set_title(title, y=title_y, fontdict=title_font)
-    fig.tight_layout()
-    return fig, ax
+    if cm is None or colors is None or plt is None or colormaps is None:  # pragma: no cover
+        raise ImportError(
+            "matplotlib must be installed as an optional dependency for visualization"
+        )
