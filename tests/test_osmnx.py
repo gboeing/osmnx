@@ -114,8 +114,10 @@ def test_stats():
     G.add_node(0, x=location_point[1], y=location_point[0])
     _ = ox.bearing.calculate_bearing(0, 0, 1, 1)
     G = ox.add_edge_bearings(G)
+    G = ox.add_edge_bearings(G, precision=2)
     G_proj = ox.project_graph(G)
     G_proj = ox.distance.add_edge_lengths(G_proj, edges=tuple(G_proj.edges)[0:3])
+    G_proj = ox.distance.add_edge_lengths(G_proj, edges=tuple(G_proj.edges)[0:3], precision=2)
 
     # calculate stats
     cspn = ox.stats.count_streets_per_node(G)
@@ -199,6 +201,7 @@ def test_elevation():
 
     # add edge grades and their absolute values
     G = ox.add_edge_grades(G, add_absolute=True)
+    G = ox.add_edge_grades(G, add_absolute=True, precision=2)
 
 
 def test_routing():
@@ -206,8 +209,9 @@ def test_routing():
 
     # give each edge speed and travel time attributes
     G = ox.add_edge_speeds(G)
-    G = ox.add_edge_speeds(G, hwy_speeds={"motorway": 100})
+    G = ox.add_edge_speeds(G, hwy_speeds={"motorway": 100}, precision=2)
     G = ox.add_edge_travel_times(G)
+    G = ox.add_edge_travel_times(G, precision=2)
 
     # test value cleaning
     assert _clean_maxspeed("100,2") == 100.2

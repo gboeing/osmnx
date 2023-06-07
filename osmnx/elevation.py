@@ -4,6 +4,7 @@ import multiprocessing as mp
 import time
 from hashlib import sha1
 from pathlib import Path
+from warnings import warn
 
 import networkx as nx
 import numpy as np
@@ -113,7 +114,7 @@ def add_node_elevations_google(
     api_key,
     max_locations_per_batch=350,
     pause_duration=0,
-    precision=3,
+    precision=None,
     url_template="https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}",
 ):  # pragma: no cover
     """
@@ -141,7 +142,7 @@ def add_node_elevations_google(
         time to pause between API calls, which can be increased if you get
         rate limited
     precision : int
-        decimal precision to round elevation values
+        deprecated, do not use
     url_template : string
         a URL string template for the API endpoint, containing exactly two
         parameters: `locations` and `key`; for example, for Open Topo Data:
@@ -152,6 +153,14 @@ def add_node_elevations_google(
     G : networkx.MultiDiGraph
         graph with node elevation attributes
     """
+    if precision is None:
+        precision = 3
+    else:
+        warn(
+            "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
+
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
     # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
     # in more locations per API call
@@ -207,7 +216,7 @@ def add_node_elevations_google(
     return G
 
 
-def add_edge_grades(G, add_absolute=True, precision=3):
+def add_edge_grades(G, add_absolute=True, precision=None):
     """
     Add `grade` attribute to each graph edge.
 
@@ -225,13 +234,21 @@ def add_edge_grades(G, add_absolute=True, precision=3):
     add_absolute : bool
         if True, also add absolute value of grade as `grade_abs` attribute
     precision : int
-        decimal precision to round grade values
+        deprecated, do not use
 
     Returns
     -------
     G : networkx.MultiDiGraph
         graph with edge `grade` (and optionally `grade_abs`) attributes
     """
+    if precision is None:
+        precision = 3
+    else:
+        warn(
+            "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
+
     elev_lookup = G.nodes(data="elevation")
     u, v, k, lengths = zip(*G.edges(keys=True, data="length"))
     uvk = tuple(zip(u, v, k))

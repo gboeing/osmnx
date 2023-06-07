@@ -1,6 +1,7 @@
 """Calculate graph edge speeds and travel times."""
 
 import re
+from warnings import warn
 
 import networkx as nx
 import numpy as np
@@ -9,7 +10,7 @@ import pandas as pd
 from . import utils_graph
 
 
-def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=1, agg=np.mean):
+def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.mean):
     """
     Add edge speeds (km per hour) to graph as new `speed_kph` edge attributes.
 
@@ -46,7 +47,7 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=1, agg=np.mean)
         type did not appear in `hwy_speeds` and had no preexisting speed
         values on any edge
     precision : int
-        decimal precision to round speed_kph
+        deprecated, do not use
     agg : function
         aggregation function to impute missing values from observed values.
         the default is numpy.mean, but you might also consider for example
@@ -57,6 +58,14 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=1, agg=np.mean)
     G : networkx.MultiDiGraph
         graph with speed_kph attributes on all edges
     """
+    if precision is None:
+        precision = 1
+    else:
+        warn(
+            "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
+
     if fallback is None:
         fallback = np.nan
 
@@ -121,7 +130,7 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=1, agg=np.mean)
     return G
 
 
-def add_edge_travel_times(G, precision=1):
+def add_edge_travel_times(G, precision=None):
     """
     Add edge travel time (seconds) to graph as new `travel_time` edge attributes.
 
@@ -135,13 +144,21 @@ def add_edge_travel_times(G, precision=1):
     G : networkx.MultiDiGraph
         input graph
     precision : int
-        decimal precision to round travel_time
+        deprecated, do not use
 
     Returns
     -------
     G : networkx.MultiDiGraph
         graph with travel_time attributes on all edges
     """
+    if precision is None:
+        precision = 1
+    else:
+        warn(
+            "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
+
     edges = utils_graph.graph_to_gdfs(G, nodes=False)
 
     # verify edge length and speed_kph attributes exist and contain no nulls

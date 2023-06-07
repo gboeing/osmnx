@@ -102,7 +102,7 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
 
 
-def add_edge_lengths(G, precision=3, edges=None):
+def add_edge_lengths(G, precision=None, edges=None):
     """
     Add `length` attribute (in meters) to each edge.
 
@@ -127,7 +127,7 @@ def add_edge_lengths(G, precision=3, edges=None):
     G : networkx.MultiDiGraph
         unprojected, unsimplified input graph
     precision : int
-        decimal precision to round lengths
+        deprecated, do not use
     edges : tuple
         tuple of (u, v, k) tuples representing subset of edges to add length
         attributes to. if None, add lengths to all edges.
@@ -137,6 +137,14 @@ def add_edge_lengths(G, precision=3, edges=None):
     G : networkx.MultiDiGraph
         graph with edge length attributes
     """
+    if precision is None:
+        precision = 3
+    else:
+        warn(
+            "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
+
     if edges is None:
         uvk = tuple(G.edges)
     else:
