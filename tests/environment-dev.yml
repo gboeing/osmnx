@@ -30,4 +30,5 @@ dependencies:
     - pre-commit
     - pydocstyle
     - pytest
-    - sphinx
+    - sphinx=6.2.*
+    - sphinx-rtd-theme=1.2.*
