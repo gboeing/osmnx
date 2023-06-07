@@ -1,34 +1,34 @@
 name: osmnx-dev
 
 channels:
-    - conda-forge
+  - conda-forge
 
 dependencies:
-    # required
-    - geopandas
-    - networkx
-    - numpy
-    - pandas
-    - pyproj
-    - requests
-    - shapely
+  # required
+  - geopandas
+  - networkx
+  - numpy
+  - pandas
+  - pyproj
+  - requests
+  - shapely
 
-    # extras
-    - folium
-    - gdal
-    - matplotlib
-    - rasterio
-    - scikit-learn
-    - scipy
+  # extras
+  - folium
+  - gdal
+  - matplotlib
+  - rasterio
+  - scikit-learn
+  - scipy
 
-    # linting/testing
-    - black=23.*
-    - coverage
-    - flake8
-    - flake8-bugbear
-    - isort
-    - pre-commit
-    - pydocstyle
-    - pytest
-    - sphinx
-    - sphinx-rtd-theme
+  # linting/testing
+  - black=23.*
+  - coverage
+  - flake8
+  - flake8-bugbear
+  - furo
+  - isort
+  - pre-commit
+  - pydocstyle
+  - pytest
+  - sphinx

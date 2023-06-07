@@ -10,6 +10,7 @@ dill
 flake8
 flake8-bugbear
 folium
+furo
 gdal
 isort
 jupyterlab
@@ -35,6 +36,5 @@ scikit-learn
 scipy
 seaborn
 sphinx
-sphinx-rtd-theme
 statsmodels
 urbanaccess
