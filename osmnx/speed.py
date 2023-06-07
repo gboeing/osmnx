@@ -61,7 +61,10 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
     if precision is None:
         precision = 1
     else:
-        warn("the `precision` parameter is deprecated and will be removed in a future release")
+        warn(
+            "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
 
     if fallback is None:
         fallback = np.nan
@@ -151,7 +154,10 @@ def add_edge_travel_times(G, precision=None):
     if precision is None:
         precision = 1
     else:
-        warn("the `precision` parameter is deprecated and will be removed in a future release")
+        warn(
+            "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
 
     edges = utils_graph.graph_to_gdfs(G, nodes=False)
 

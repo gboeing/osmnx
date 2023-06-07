@@ -211,7 +211,8 @@ def round_geometry_coords(geom, precision):
     shapely.geometry.geometry
     """
     warn(
-        "the `round_geometry_coords` function is deprecated and will be removed in a future release"
+        "the `round_geometry_coords` function is deprecated and will be removed in a future release",
+        stacklevel=2,
     )
 
     if isinstance(geom, Point):

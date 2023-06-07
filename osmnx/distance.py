@@ -140,7 +140,10 @@ def add_edge_lengths(G, precision=None, edges=None):
     if precision is None:
         precision = 3
     else:
-        warn("the `precision` parameter is deprecated and will be removed in a future release")
+        warn(
+            "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
 
     if edges is None:
         uvk = tuple(G.edges)

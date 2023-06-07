@@ -156,7 +156,10 @@ def add_node_elevations_google(
     if precision is None:
         precision = 3
     else:
-        warn("the `precision` parameter is deprecated and will be removed in a future release")
+        warn(
+            "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
 
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
     # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
@@ -241,7 +244,10 @@ def add_edge_grades(G, add_absolute=True, precision=None):
     if precision is None:
         precision = 3
     else:
-        warn("the `precision` parameter is deprecated and will be removed in a future release")
+        warn(
+            "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
 
     elev_lookup = G.nodes(data="elevation")
     u, v, k, lengths = zip(*G.edges(keys=True, data="length"))

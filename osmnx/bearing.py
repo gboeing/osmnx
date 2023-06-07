@@ -80,7 +80,10 @@ def add_edge_bearings(G, precision=None):
     if precision is None:
         precision = 1
     else:
-        warn("the `precision` parameter is deprecated and will be removed in a future release")
+        warn(
+            "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
 
     if projection.is_projected(G.graph["crs"]):  # pragma: no cover
         raise ValueError("graph must be unprojected to add edge bearings")
