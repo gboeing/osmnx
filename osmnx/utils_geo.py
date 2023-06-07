@@ -197,19 +197,23 @@ def _round_multilinestring_coords(mls, precision):
 
 def round_geometry_coords(geom, precision):
     """
-    Round the coordinates of a shapely geometry to some decimal precision.
+    Do not use: deprecated.
 
     Parameters
     ----------
     geom : shapely.geometry.geometry {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon}
-        the geometry to round the coordinates of
+        deprecated, do not use
     precision : int
-        decimal precision to round coordinates to
+        deprecated, do not use
 
     Returns
     -------
     shapely.geometry.geometry
     """
+    warn(
+        "the `round_geometry_coords` function is deprecated and will be removed in a future release"
+    )
+
     if isinstance(geom, Point):
         return _round_point_coords(geom, precision)
 
