@@ -54,7 +54,7 @@ def calculate_bearing(lat1, lng1, lat2, lng2):
     return initial_bearing % 360
 
 
-def add_edge_bearings(G, precision=1):
+def add_edge_bearings(G, precision=None):
     """
     Add compass `bearing` attributes to all graph edges.
 
@@ -70,13 +70,18 @@ def add_edge_bearings(G, precision=1):
     G : networkx.MultiDiGraph
         unprojected graph
     precision : int
-        decimal precision to round bearing
+        deprecated, do not use
 
     Returns
     -------
     G : networkx.MultiDiGraph
         graph with edge bearing attributes
     """
+    if precision is None:
+        precision = 1
+    else:
+        warn("the `precision` parameter is deprecated and will be removed in a future release")
+
     if projection.is_projected(G.graph["crs"]):  # pragma: no cover
         raise ValueError("graph must be unprojected to add edge bearings")
 
