@@ -26,7 +26,6 @@ autodoc_mock_imports = [
     "numpy",
     "osgeo",
     "pandas",
-    "pyproj",
     "rasterio",
     "requests",
     "scipy",

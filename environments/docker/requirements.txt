@@ -20,16 +20,14 @@ nbqa
 nodejs
 numexpr
 osmnx
-pandana
 pillow
 pip
 pre-commit
 psycopg2
 pydocstyle
-pyproj
 pysal
 pytest
-python == 3.10.*
+python == 3.11.*
 python-igraph
 rasterio
 scikit-learn
@@ -37,4 +35,3 @@ scipy
 seaborn
 sphinx
 statsmodels
-urbanaccess

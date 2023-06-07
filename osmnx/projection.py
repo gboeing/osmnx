@@ -2,7 +2,6 @@
 
 import geopandas as gpd
 import numpy as np
-from pyproj import CRS
 
 from . import settings
 from . import utils
@@ -13,19 +12,19 @@ def is_projected(crs):
     """
     Determine if a coordinate reference system is projected or not.
 
-    This is a convenience wrapper around the pyproj.CRS.is_projected function.
-
     Parameters
     ----------
     crs : string or pyproj.CRS
-        the coordinate reference system
+        the identifier of the coordinate reference system, which can be
+        anything accepted by pyproj.CRS.from_user_input() such as an authority
+        string or a WKT string
 
     Returns
     -------
     projected : bool
         True if crs is projected, otherwise False
     """
-    return CRS.from_user_input(crs).is_projected
+    return gpd.GeoSeries(crs=crs).crs.is_projected
 
 
 def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):

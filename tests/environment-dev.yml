@@ -9,7 +9,6 @@ dependencies:
   - networkx
   - numpy
   - pandas
-  - pyproj
   - requests
   - shapely
 
