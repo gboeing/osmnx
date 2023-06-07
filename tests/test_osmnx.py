@@ -193,7 +193,7 @@ def test_elevation():
     rasters = list(Path("tests/input_data").glob("elevation*.tif"))
 
     # add node elevations from a single raster file (some nodes will be null)
-    G = ox.elevation.add_node_elevations_raster(G, rasters[0], precision=2, cpus=1)
+    G = ox.elevation.add_node_elevations_raster(G, rasters[0], cpus=1)
 
     # add node elevations from multiple raster files
     G = ox.elevation.add_node_elevations_raster(G, rasters)
@@ -201,6 +201,7 @@ def test_elevation():
 
     # add edge grades and their absolute values
     G = ox.add_edge_grades(G, add_absolute=True)
+    G = ox.add_edge_grades(G, add_absolute=True, precision=2)
 
 
 def test_routing():
