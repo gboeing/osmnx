@@ -9,6 +9,7 @@
   - deprecate the get_route_edge_attributes function in favor of the new route_to_gdf function
   - deprecate folium module in favor of using geopandas.GeoDataFrame.explore directly
   - move plot_orientation function from bearing module to plot module
+  - make matplotlib an optional dependency required only for the plot module
 
 ## 1.3.1.post0 (2023-05-26)
 

@@ -1,1 +1,2 @@
-sphinx==6.*
+furo
+sphinx == 6.*

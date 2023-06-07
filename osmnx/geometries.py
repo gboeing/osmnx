@@ -1,11 +1,11 @@
 """
 Download geospatial entities' geometries and attributes from OpenStreetMap.
 
-Retrieve points of interest, building footprints, or any other objects from
-OSM, including their geometries and attribute data, and construct a
-GeoDataFrame of them. You can use this module to query for nodes, ways, and
-relations (the latter of type "multipolygon" or "boundary" only) by passing a
-dictionary of desired tags/values.
+Retrieve points of interest, building footprints, transit lines/stops, or any
+other objects from OSM, including their geometries and attribute data, and
+construct a GeoDataFrame of them. You can use this module to query for nodes,
+ways, and relations (the latter of type "multipolygon" or "boundary" only) by
+passing a dictionary of desired tags/values.
 """
 
 import logging as lg

@@ -14,7 +14,7 @@ from . import utils
 
 def geocode(query):
     """
-    Geocode a query string to (lat, lng) with the Nominatim geocoder.
+    Geocode a query string to (lat, lng) with the Nominatim API.
 
     Parameters
     ----------
