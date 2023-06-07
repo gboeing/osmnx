@@ -10,6 +10,7 @@ dill
 flake8
 flake8-bugbear
 folium
+furo
 gdal
 isort
 jupyterlab
