@@ -3,7 +3,7 @@ OSMnx |version|
 
 OSMnx is a Python package that lets you download geospatial data from OpenStreetMap and model, project, visualize, and analyze real-world street networks and any other geospatial geometries. You can download and model walkable, drivable, or bikeable urban networks with a single line of Python code then easily analyze and visualize them. You can just as easily download and work with other infrastructure types, amenities/points of interest, building footprints, elevation data, street bearings/orientations, and speed/travel time.
 
-If you use OSMnx in your work, please cite the journal article:
+**If you use OSMnx in your work, please cite the journal article:**
 
 Boeing, G. 2017. `OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks`_. *Computers, Environment and Urban Systems* 65, 126-139. doi:10.1016/j.compenvurbsys.2017.05.004
 
@@ -38,22 +38,22 @@ To get started with OSMnx, read its `user reference`_ and work through its `exam
 
 OSMnx is built on top of `NetworkX`_ and `GeoPandas`_, and interacts with `OpenStreetMap`_ APIs to:
 
-  * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
-  * Download any other spatial geometries, place boundaries, building footprints, or points of interest as a GeoDataFrame
-  * Download by city name, polygon, bounding box, or point/address + network distance
-  * Download drivable, walkable, bikeable, or all street networks
-  * Download node elevations and calculate edge grades (inclines)
-  * Impute missing speeds and calculate graph edge travel times
-  * Simplify and correct the network's topology to clean-up nodes and consolidate intersections
-  * Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes
-  * Save networks to disk as shapefiles, GeoPackages, and GraphML
-  * Save/load street network to/from a local .osm XML file
-  * Conduct topological and spatial analyses to automatically calculate dozens of indicators
-  * Calculate and visualize street bearings and orientations
-  * Calculate and visualize shortest-path routes that minimize distance, travel time, elevation, etc
-  * Explore street networks as a static map or interactive web map
-  * Visualize travel distance and travel time with isoline and isochrone maps
-  * Plot figure-ground diagrams of street networks and building footprints
+* Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
+* Download any other spatial geometries, place boundaries, building footprints, or points of interest as a GeoDataFrame
+* Download by city name, polygon, bounding box, or point/address + network distance
+* Download drivable, walkable, bikeable, or all street networks
+* Download node elevations and calculate edge grades (inclines)
+* Impute missing speeds and calculate graph edge travel times
+* Simplify and correct the network's topology to clean-up nodes and consolidate intersections
+* Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes
+* Save networks to disk as shapefiles, GeoPackages, and GraphML
+* Save/load street network to/from a local .osm XML file
+* Conduct topological and spatial analyses to automatically calculate dozens of indicators
+* Calculate and visualize street bearings and orientations
+* Calculate and visualize shortest-path routes that minimize distance, travel time, elevation, etc
+* Explore street networks as a static map or interactive web map
+* Visualize travel distance and travel time with isoline and isochrone maps
+* Plot figure-ground diagrams of street networks and building footprints
 
 OSMnx geocodes place names and addresses with the OpenStreetMap Nominatim API. Using OSMnx's :code:`geometries` module, you can retrieve any geospatial objects (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap Overpass API as a GeoPandas GeoDataFrame. Using OSMnx's :code:`graph` module, you can retrieve any spatial network data (such as streets, paths, canals, etc) from the Overpass API and model them as NetworkX MultiDiGraphs.
 
