@@ -34,7 +34,7 @@ rasterio
 scikit-learn
 scipy
 seaborn
-sphinx == 5.3.*
+sphinx
 sphinx-rtd-theme
 statsmodels
 urbanaccess
