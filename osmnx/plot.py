@@ -973,7 +973,7 @@ def _verify_mpl():
     -------
     None
     """
-    if cm is None or colors is None or plt is None or colormaps is None:
+    if cm is None or colors is None or plt is None or colormaps is None:  # pragma: no cover
         raise ImportError(
             "matplotlib must be installed as an optional dependency for visualization"
         )
