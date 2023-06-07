@@ -1,2 +1,2 @@
-sphinx == 6.2.*
-sphinx-rtd-theme == 1.2.*
+furo
+sphinx == 6.*
