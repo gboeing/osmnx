@@ -1,7 +1,7 @@
-Internals reference
+Internals Reference
 ===================
 
-This is the complete OSMnx internals reference, including private internal functions. If you are looking for the user reference to OSMnx's public-facing API, you can find `it here`_.
+This is the complete OSMnx internals reference, including private internal functions. If you are instead looking for a user guide to OSMnx's public API, see the :doc:`osmnx`.
 
 osmnx.bearing module
 --------------------
@@ -162,6 +162,3 @@ osmnx.utils_graph module
     :members:
     :private-members:
     :noindex:
-
-
-.. _it here: osmnx.html

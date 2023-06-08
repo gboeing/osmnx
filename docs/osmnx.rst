@@ -1,4 +1,4 @@
-User reference
+User Reference
 ==============
 
 User reference for the OSMnx package.
