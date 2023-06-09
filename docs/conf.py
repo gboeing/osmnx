@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path().resolve().parent))
 author = "Geoff Boeing"
 copyright = "2016–2023, Geoff Boeing"
 project = "OSMnx"
-version = release = "1.4.0-alpha"
+version = release = "1.4.0"
 
 # mock import these packages because readthedocs doesn't have them installed
 autodoc_mock_imports = [
