@@ -312,7 +312,14 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
                 etree.SubElement(edge, "nd", attrib={"ref": first["v"]})
             else:
                 # topological sort
-                ordered_nodes = _get_unique_nodes_ordered_from_way(all_way_edges)
+                try:
+                    ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(way_df)
+                
+                # handle roundabouts
+                except nx.NetworkXUnfeasible:    
+                    first_node = way_df.iloc[0]["u"]
+                    ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(way_df.iloc[1:])
+                    ordered_nodes = [first_node] + ordered_nodes
                 for node in ordered_nodes:
                     etree.SubElement(edge, "nd", attrib={"ref": str(node)})
 
