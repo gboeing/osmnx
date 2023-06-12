@@ -1,4 +1,4 @@
-name: tests
+name: tests-min
 
 on:
   schedule:
