@@ -38,8 +38,8 @@ jobs:
           cache-env: true
           channels: conda-forge
           channel-priority: strict
-          environment-file: tests/environment-dev.yml
-          environment-name: osmnx-dev
+          environment-file: tests/environment-tests.yml
+          environment-name: osmnx-tests
           extra-specs: python=${{ matrix.python-version }}
 
       - name: Install OSMnx

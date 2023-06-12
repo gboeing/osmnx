@@ -1,4 +1,4 @@
-name: osmnx-dev
+name: osmnx-tests
 
 channels:
   - conda-forge
