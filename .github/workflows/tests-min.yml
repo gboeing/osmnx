@@ -1,0 +1,64 @@
+name: tests
+
+on:
+  schedule:
+    - cron: '0 6 * * 2' # Every Tuesday at 06:00 UTC
+
+jobs:
+
+  build:
+
+    name: Python ${{ matrix.python-version }} ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    steps:
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Setup Conda environment with Micromamba
+        uses: mamba-org/provision-with-micromamba@v14
+        with:
+          cache-downloads: true
+          cache-env: true
+          channels: conda-forge
+          channel-priority: strict
+          environment-file: tests/environment-tests-min.yml
+          environment-name: osmnx-tests-min
+
+      - name: Install OSMnx
+        run: |
+          python setup.py install
+          conda list
+          conda info --all
+
+      - name: Lint code
+        run: |
+          isort . --check-only
+          black . --line-length 100 --check --diff
+          flake8 .
+          pydocstyle .
+
+      - name: Test docs
+        run: |
+          make -C ./docs html
+          python -m sphinx -b linkcheck -D linkcheck_ignore="osmnx.html" docs/ docs/_build/linkcheck
+
+      - name: Test code
+        run: |
+          coverage run --source ./osmnx --module pytest --verbose
+          coverage xml -i
+          coverage report -m
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v3
