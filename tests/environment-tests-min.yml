@@ -1,6 +1,6 @@
-# Same as environment-tests.yml, but pinned to min versions from the repo's
+# Same as environment-tests.yml but pinned to minimum versions from the repo's
 # requirements.txt file. Allows you to create a conda environment to run the
-# test suite against the lowest supported versions of Python and the required
+# test suite against the oldest supported versions of Python and required
 # dependencies.
 name: osmnx-tests-min
 
@@ -8,14 +8,14 @@ channels:
   - conda-forge
 
 dependencies:
-  # required
-  - geopandas=0.12.*
-  - networkx=2.5.*
-  - numpy=1.20.*
-  - pandas=1.1.*
-  - python=3.8.*
-  - requests=2.25.*
-  - shapely=2.0.*
+  # required and pinned to minimum versions from requirements.txt
+  - geopandas=0.12
+  - networkx=2.5
+  - numpy=1.20
+  - pandas=1.1
+  - python=3.8
+  - requests=2.25
+  - shapely=2.0
 
   # extras
   - folium
@@ -26,7 +26,7 @@ dependencies:
   - scipy
 
   # linting/testing
-  - black=23.*
+  - black=23
   - coverage
   - flake8
   - flake8-bugbear
