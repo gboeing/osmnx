@@ -3,6 +3,7 @@ name: tests-min
 on:
   schedule:
     - cron: '0 6 * * 2' # Every Tuesday at 06:00 UTC
+  workflow_dispatch:
 
 jobs:
 
