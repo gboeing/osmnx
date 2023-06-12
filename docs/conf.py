@@ -18,7 +18,8 @@ copyright = "2016–2023, Geoff Boeing"
 project = "OSMnx"
 version = release = "1.4.0"
 
-# mock import these packages because readthedocs doesn't have them installed
+# mock import all required + optional dependency packages because readthedocs
+# does not have them installed
 autodoc_mock_imports = [
     "geopandas",
     "matplotlib",
