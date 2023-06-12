@@ -1,8 +1,11 @@
 # Change log
 
-## 1.4.0 (TBD)
+## TBD
 
   - adopt NEP 29 policy for minimum required Python and NumPy versions
+
+## 1.4.0 (2023-06-11)
+
   - verify edge weight attribute values before solving shortest paths
   - provide consistent error when no data elements are returned from Overpass
   - add route_to_gdf function to utils_graph module to return a GeoDataFrame of the edges in a path
