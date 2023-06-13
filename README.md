@@ -11,7 +11,7 @@
 
 If you use OSMnx in your work, please cite the journal article.
 
-**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](https://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems* 65, 126-139. doi:10.1016/j.compenvurbsys.2017.05.004
+**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](https://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems* 65, 126–139. doi:10.1016/j.compenvurbsys.2017.05.004
 
 
 ## Getting Started
@@ -32,7 +32,7 @@ If you use OSMnx in your work, please cite the journal article.
 OSMnx is pronounced as the initialism: "oh-ess-em-en-ecks". It is built on top of [NetworkX](https://networkx.org/) and [GeoPandas](https://geopandas.org/), and interacts with [OpenStreetMap](https://www.openstreetmap.org/) APIs to:
 
   * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
-  * Download any other spatial geometries (e.g., political boundaries, building footprints, amenities, transit lines or stops) as a GeoDataFrame
+  * Download any other spatial geometries (e.g., political boundaries, building footprints, grocery stores, transit stops) as a GeoDataFrame
   * Download by city name, polygon, bounding box, or point/address + distance
   * Model driving, walking, biking, and other travel modes
   * Download node elevations and calculate edge grades (inclines)
