@@ -58,7 +58,7 @@ jobs:
       - name: Test docs
         run: |
           make -C ./docs html
-          python -m sphinx -b linkcheck -D linkcheck_ignore="osmnx.html" docs/ docs/_build/linkcheck
+          python -m sphinx -b linkcheck docs/ docs/_build/linkcheck
 
       - name: Test code
         run: |
