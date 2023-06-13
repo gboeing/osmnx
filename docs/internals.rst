@@ -16,8 +16,8 @@ osmnx.bearing module
 
 .. automodule:: osmnx.bearing
     :members:
-    :noindex:
     :private-members:
+    :noindex:
 
 osmnx.distance module
 ---------------------
