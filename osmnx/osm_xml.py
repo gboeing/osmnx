@@ -317,11 +317,14 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
                 except nx.NetworkXUnfeasible:
                     first_node = way_df.iloc[0]["u"]
                     try:
-                        ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(way_df.iloc[1:])
+                        ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(
+                            way_df.iloc[1:]
+                        )
                     except nx.NetworkXUnfeasible:
                         raise nx.NetworkXUnfeasible(
-                            f"Way ID {osmid} cannot be converted to a DAG, but it doesn't appear "
-                            "do be a roundabout a roundabout so OSMnx doesn't know what to do with it."
+                            f"Way ID {osmid} cannot be converted to a DAG, but it "
+                            "doesn't appear to be a roundabout a roundabout so OSMnx "
+                            "doesn't know what to do with it."
                         )
                     ordered_nodes = [first_node] + ordered_nodes
                 for node in ordered_nodes:
@@ -341,7 +344,10 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
                         etree.SubElement(
                             edge,
                             "tag",
-                            attrib={"k": tag, "v": str(all_way_edges[tag].aggregate(agg))},
+                            attrib={
+                                "k": tag,
+                                "v": str(all_way_edges[tag].aggregate(agg)),
+                            },
                         )
     else:
         # NOTE: this will generate separate OSM ways for each network edge,
