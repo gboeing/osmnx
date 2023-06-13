@@ -15,19 +15,19 @@ If you want other packages, such as :code:`jupyterlab`, installed in this enviro
 
 To upgrade OSMnx to a newer release, remove the conda environment you created and then create a new one again, as above. Don't just run "conda update" or you could get package conflicts.
 
-You can equivalently use mamba as a drop-in replacement for conda.
+Alternatively, you can use mamba as a drop-in replacement for conda.
 
 Docker
 ------
 
-You can run OSMnx + Jupyter directly with the official OSMnx `Docker`_ image.
+You can run OSMnx + JupyterLab directly from the official OSMnx `Docker`_ image.
 
 Pip
 ---
 
 If you already have all of its dependencies installed and tested on your system, you can install OSMnx with `pip`_.
 
-The OSMnx package is pure Python and its installation alone is thus trivially simple. However, OSMnx depends on other packages which themselves may rely on other tricky dependencies or C extensions. Installing these dependencies with pip can be complicated depending on your system's configuration. Conda makes the complete installation seamless: if you don't know exactly what you're doing, just use conda as described above.
+The OSMnx package is pure Python and its installation alone is thus trivially simple. However, OSMnx depends on other packages which themselves may rely on other tricky dependencies or C extensions. Installing these dependencies with pip can be complicated depending on your system's configuration. Conda makes the complete installation easy: if you don't know exactly what you're doing, just use conda as described above.
 
 .. _conda: https://conda.io/
 .. _Docker: https://hub.docker.com/r/gboeing/osmnx

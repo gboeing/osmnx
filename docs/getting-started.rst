@@ -13,7 +13,7 @@ Make sure you have read the `NetworkX`_ and `GeoPandas`_ user guides if you're n
 Features
 --------
 
-OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of `NetworkX`_ and `GeoPandas`_, and interacts with `OpenStreetMap`_ APIs to:
+OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of NetworkX and GeoPandas, and interacts with `OpenStreetMap`_ APIs to:
 
 * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
 * Download any other spatial geometries (e.g., political boundaries, building footprints, grocery stores, transit stops) as a GeoDataFrame
@@ -32,10 +32,10 @@ OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of 
 * Visualize travel distance and travel time with isoline and isochrone maps
 * Plot figure-ground diagrams of street networks and building footprints
 
-Usage examples and demonstrations of all these features are in the `OSMnx Examples`_ repository and package usage is detailed in the :doc:`osmnx`.
+Examples and demonstrations of all these features are in the `OSMnx Examples`_ repository and package usage is detailed in the :doc:`osmnx`.
 
-Overview
---------
+Using OSMnx
+-----------
 
 OSMnx geocodes place names and addresses with the OpenStreetMap Nominatim API. Using OSMnx's :code:`geometries` module, you can retrieve any geospatial objects (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap Overpass API as a GeoPandas GeoDataFrame.
 
@@ -75,11 +75,10 @@ More Info
 
 All of this functionality is demonstrated step-by-step in the `OSMnx Examples`_ repository, and usage is detailed in the :doc:`osmnx`.
 
-More feature development details are in the `change log`_. Consult the :doc:`further-reading` list for additional technical details.
+More feature development details are in the `Change Log`_. Consult the :doc:`further-reading` resources for additional technical details and research.
 
 .. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
 .. _GeoPandas: https://geopandas.org/
 .. _NetworkX: https://networkx.org/
 .. _OpenStreetMap: https://www.openstreetmap.org/
-.. _journal article: https://geoffboeing.com/publications/osmnx-complex-street-networks/
-.. _change log: https://github.com/gboeing/osmnx/blob/main/CHANGELOG.md
+.. _Change Log: https://github.com/gboeing/osmnx/blob/main/CHANGELOG.md
