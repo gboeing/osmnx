@@ -5,8 +5,14 @@ See license in LICENSE.txt.
 """
 
 import os
+from itertools import chain
 
 from setuptools import setup
+
+# provide a short description of package
+DESC = (
+    "Retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data"
+)
 
 # provide a long description using reStructuredText
 LONG_DESCRIPTION = r"""
@@ -52,9 +58,15 @@ CLASSIFIERS = [
     "Topic :: Scientific/Engineering :: Visualization",
 ]
 
-DESC = (
-    "Retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data"
-)
+# identify optional dependencies
+extras = {
+    "entropy": ["scipy"],
+    "neighbors": ["scikit-learn", "scipy"],
+    "visualization": ["matplotlib"],
+    "raster": ["gdal", "rasterio"],
+}
+extras["all"] = sorted(set(chain(*extras.values())))
+extras = dict(sorted(extras.items()))
 
 # only specify install_requires if not in RTD environment
 if os.getenv("READTHEDOCS") == "True":
@@ -65,25 +77,19 @@ else:
 
 # now call setup
 setup(
-    name="osmnx",
-    version="1.4.1dev",
-    description=DESC,
-    long_description=LONG_DESCRIPTION,
-    long_description_content_type="text/x-rst",
-    classifiers=CLASSIFIERS,
-    url="https://github.com/gboeing/osmnx",
     author="Geoff Boeing",
     author_email="boeing@usc.edu",
-    license="MIT",
-    platforms="any",
-    packages=["osmnx"],
-    python_requires=">=3.8",
+    classifiers=CLASSIFIERS,
+    description=DESC,
+    extras_require=extras,
     install_requires=INSTALL_REQUIRES,
-    extras_require={
-        "all": ["gdal", "matplotlib", "rasterio", "scikit-learn", "scipy"],
-        "entropy": ["scipy"],
-        "nearest_neighbor": ["scikit-learn", "scipy"],
-        "visualization": ["matplotlib"],
-        "raster": ["gdal", "rasterio"],
-    },
+    license="MIT",
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type="text/x-rst",
+    name="osmnx",
+    packages=["osmnx"],
+    platforms="any",
+    python_requires=">=3.8",
+    url="https://github.com/gboeing/osmnx",
+    version="1.4.1dev",
 )
