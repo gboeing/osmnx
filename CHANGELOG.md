@@ -2,6 +2,7 @@
 
 ## TBD
 
+  - expand and reorganize the documentation
   - adopt NEP 29 policy for minimum required Python and NumPy versions
 
 ## 1.4.0 (2023-06-11)
