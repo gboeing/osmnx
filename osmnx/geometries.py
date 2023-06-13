@@ -30,7 +30,47 @@ from . import settings
 from . import utils
 from . import utils_geo
 from ._errors import EmptyOverpassResponse
-from ._polygon_features import _polygon_features
+
+# dict of tags to determine if closed ways should be polygons, based on JSON
+# from https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features
+_POLYGON_FEATURES = {
+    "building": {"polygon": "all"},
+    "highway": {"polygon": "passlist", "values": ["services", "rest_area", "escape", "elevator"]},
+    "natural": {
+        "polygon": "blocklist",
+        "values": ["coastline", "cliff", "ridge", "arete", "tree_row"],
+    },
+    "landuse": {"polygon": "all"},
+    "waterway": {"polygon": "passlist", "values": ["riverbank", "dock", "boatyard", "dam"]},
+    "amenity": {"polygon": "all"},
+    "leisure": {"polygon": "all"},
+    "barrier": {
+        "polygon": "passlist",
+        "values": ["city_wall", "ditch", "hedge", "retaining_wall", "spikes"],
+    },
+    "railway": {
+        "polygon": "passlist",
+        "values": ["station", "turntable", "roundhouse", "platform"],
+    },
+    "area": {"polygon": "all"},
+    "boundary": {"polygon": "all"},
+    "man_made": {"polygon": "blocklist", "values": ["cutline", "embankment", "pipeline"]},
+    "power": {"polygon": "passlist", "values": ["plant", "substation", "generator", "transformer"]},
+    "place": {"polygon": "all"},
+    "shop": {"polygon": "all"},
+    "aeroway": {"polygon": "blocklist", "values": ["taxiway"]},
+    "tourism": {"polygon": "all"},
+    "historic": {"polygon": "all"},
+    "public_transport": {"polygon": "all"},
+    "office": {"polygon": "all"},
+    "building:part": {"polygon": "all"},
+    "military": {"polygon": "all"},
+    "ruins": {"polygon": "all"},
+    "area:highway": {"polygon": "all"},
+    "craft": {"polygon": "all"},
+    "golf": {"polygon": "all"},
+    "indoor": {"polygon": "all"},
+}
 
 
 def geometries_from_bbox(north, south, east, west, tags):
@@ -505,7 +545,7 @@ def _parse_node_to_point(element):
     return point
 
 
-def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_polygon_features):
+def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_POLYGON_FEATURES):
     """
     Parse open LineString, closed LineString or Polygon from OSM 'way'.
 
@@ -588,7 +628,7 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_polyg
     return linestring_or_polygon
 
 
-def _is_closed_way_a_polygon(element, polygon_features=_polygon_features):
+def _is_closed_way_a_polygon(element, polygon_features=_POLYGON_FEATURES):
     """
     Determine whether a closed OSM way represents a Polygon, not a LineString.
 

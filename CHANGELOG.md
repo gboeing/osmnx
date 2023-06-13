@@ -3,6 +3,7 @@
 ## TBD
 
   - adopt NEP 29 policy for minimum required Python and NumPy versions
+  - remove internal \_polygon_features module and move its data to geometries module
 
 ## 1.4.0 (2023-06-11)
 
