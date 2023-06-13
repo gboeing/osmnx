@@ -313,14 +313,13 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
             else:
                 # topological sort
                 try:
-                    ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(way_df)
+                    ordered_nodes = _get_unique_nodes_ordered_from_way(all_way_edges)
                 except nx.NetworkXUnfeasible:
-                    first_node = way_df.iloc[0]["u"]
+                    first_node = all_way_edges.iloc[0]["u"]
                     try:
-                        ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(
-                            way_df.iloc[1:]
-                        )
+                        ordered_nodes = _get_unique_nodes_ordered_from_way(all_way_edges)
                     except nx.NetworkXUnfeasible:
+                        osmid = first["osmid"]
                         raise nx.NetworkXUnfeasible(
                             f"Way ID {osmid} cannot be converted to a DAG, but it "
                             "doesn't appear to be a roundabout a roundabout so OSMnx "
