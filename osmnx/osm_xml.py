@@ -227,17 +227,15 @@ def save_graph_xml(
 
     # initialize XML tree with an OSM root element then append nodes/edges
     root = etree.Element("osm", attrib={"version": str(api_version), "generator": "OSMnx"})
-    root = _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags)
-    root = _append_edges_xml_tree(
-        root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges
-    )
+    root = _append_nodes_xml(root, gdf_nodes, node_attrs, node_tags)
+    root = _append_edges_xml(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges)
 
     # write to disk
     etree.ElementTree(root).write(filepath, encoding="utf-8", xml_declaration=True)
     utils.log(f"Saved graph as .osm file at {filepath!r}")
 
 
-def _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags):
+def _append_nodes_xml(root, gdf_nodes, node_attrs, node_tags):
     """
     Append nodes to an XML tree.
 
@@ -267,7 +265,7 @@ def _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags):
     return root
 
 
-def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges):
+def _append_edges_xml(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges):
     """
     Append edges to an XML tree.
 
