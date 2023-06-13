@@ -1,8 +1,8 @@
-"""Custom errors."""
+"""Define custom errors and exceptions."""
 
 
 class CacheOnlyModeInterrupt(InterruptedError):  # pragma: no cover
-    """Exception for cache_only_mode interruption."""
+    """Exception for settings.cache_only_mode=True interruption."""
 
     def __init__(self, *args, **kwargs):
         """Create exception."""
@@ -10,7 +10,7 @@ class CacheOnlyModeInterrupt(InterruptedError):  # pragma: no cover
 
 
 class EmptyOverpassResponse(ValueError):  # pragma: no cover
-    """Exception for empty overpass response."""
+    """Exception for empty Overpass API response."""
 
     def __init__(self, *args, **kwargs):
         """Create exception."""

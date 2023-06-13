@@ -1,4 +1,4 @@
-"""Expose most common parts of public API directly in `osmnx.` namespace."""
+"""Expose most common parts of public API directly in package namespace."""
 
 from .bearing import add_edge_bearings
 from .bearing import orientation_entropy
