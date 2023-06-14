@@ -326,8 +326,8 @@ def _append_merged_edge_attrs(xml_edge, sample_edge, all_edges_df, edge_tags, ed
     """
     if edge_tag_aggs is None:
         for tag in edge_tags:
-            if tag in first:
-                etree.SubElement(edge, "tag", attrib={"k": tag, "v": sample_edge[tag]})
+            if tag in sample_edge:
+                etree.SubElement(xml_edge, "tag", attrib={"k": tag, "v": sample_edge[tag]})
     else:
         for tag in edge_tags:
             if (tag in sample_edge) and (tag not in (t for t, agg in edge_tag_aggs)):
