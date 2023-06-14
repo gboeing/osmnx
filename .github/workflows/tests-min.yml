@@ -1,8 +1,8 @@
-name: tests-min
+name: Test Minimal Dependency Versions
 
 on:
   schedule:
-    - cron: '0 6 * * 2' # Every Tuesday at 06:00 UTC
+    - cron: '0 6 * * 0' # Every Sunday at 06:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -53,7 +53,7 @@ jobs:
       - name: Test docs
         run: |
           make -C ./docs html
-          python -m sphinx -b linkcheck -D linkcheck_ignore="osmnx.html" docs/ docs/_build/linkcheck
+          python -m sphinx -b linkcheck docs/ docs/_build/linkcheck
 
       - name: Test code
         run: |

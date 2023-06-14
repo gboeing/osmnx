@@ -2,6 +2,7 @@
 
 ## TBD
 
+  - expand and reorganize the documentation
   - adopt NEP 29 policy for minimum required Python and NumPy versions
   - remove internal \_polygon_features module and move its data to geometries module
 
@@ -27,7 +28,7 @@
   - improve DNS resolution when using proxies or on networks blocking DNS-over-HTTPS
   - improve processing of per-lane values when adding edge speeds
   - improve file writing in save_graph_xml function
-  - ensure node coordinates are non-null and covertible to float in the add_edge_lengths function
+  - ensure node coordinates are non-null and convertible to float in the add_edge_lengths function
   - ignore ways tagged highway=no or highway=razed in built-in filters
   - do not assume an edge with key=0 exists between each node pair when simplifying graph
   - drop dateutil package dependency
@@ -168,7 +169,7 @@
 ## 0.16.0 (2020-09-07)
 
   - new geometries module for creating GeoDataFrames from tag/value queries
-  - deprecate old pois and fooptrints modules (replaced by geometries module)
+  - deprecate old pois and footprints modules (replaced by geometries module)
   - auto-select first Polygon/MultiPolygon when geocoding with which_result=None
   - new k_shortest_paths function to solve *k* shortest paths from origin to destination
   - new shortest_path convenience function

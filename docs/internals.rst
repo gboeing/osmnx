@@ -3,6 +3,14 @@ Internals Reference
 
 This is the complete OSMnx internals reference, including private internal functions. If you are instead looking for a user guide to OSMnx's public API, see the :doc:`osmnx`.
 
+osmnx._api module
+-----------------
+
+.. automodule:: osmnx._api
+    :members:
+    :private-members:
+    :noindex:
+
 osmnx.bearing module
 --------------------
 
@@ -31,6 +39,14 @@ osmnx.elevation module
 ----------------------
 
 .. automodule:: osmnx.elevation
+    :members:
+    :private-members:
+    :noindex:
+
+osmnx._errors module
+--------------------
+
+.. automodule:: osmnx._errors
     :members:
     :private-members:
     :noindex:
@@ -159,6 +175,14 @@ osmnx.utils_graph module
 ------------------------
 
 .. automodule:: osmnx.utils_graph
+    :members:
+    :private-members:
+    :noindex:
+
+osmnx._version module
+---------------------
+
+.. automodule:: osmnx._version
     :members:
     :private-members:
     :noindex:

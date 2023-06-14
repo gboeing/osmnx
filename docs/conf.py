@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path().resolve().parent))
 author = "Geoff Boeing"
 copyright = "2016–2023, Geoff Boeing"
 project = "OSMnx"
-version = release = "1.4.0"
+version = release = "1.4.1dev"
 
 # mock import all required + optional dependency packages because readthedocs
 # does not have them installed

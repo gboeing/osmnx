@@ -7,11 +7,11 @@
 
 # OSMnx
 
-**OSMnx** is a Python package that lets you download geospatial data from OpenStreetMap and model, project, visualize, and analyze real-world street networks and any other geospatial geometries. You can download and model walkable, drivable, or bikeable urban networks with a single line of Python code then easily analyze and visualize them. You can just as easily download and work with other infrastructure types, amenities/points of interest, building footprints, elevation data, street bearings/orientations, and speed/travel time. OSMnx is pronounced as the initialism: "oh-ess-em-en-ecks".
+**OSMnx** is a Python package that lets you download geospatial data from OpenStreetMap and model, project, visualize, and analyze real-world street networks and any other geospatial geometries. You can download and model walking, driving, or biking networks with a single line of code then easily analyze and visualize them. You can just as easily download and work with other infrastructure types, amenities/points of interest, building footprints, elevation data, street bearings/orientations, speed/travel time, and routing.
 
 If you use OSMnx in your work, please cite the journal article.
 
-**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](https://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems* 65, 126-139. doi:10.1016/j.compenvurbsys.2017.05.004
+**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](https://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems* 65, 126–139. doi:10.1016/j.compenvurbsys.2017.05.004
 
 
 ## Getting Started
@@ -29,18 +29,18 @@ If you use OSMnx in your work, please cite the journal article.
 
 ## Features
 
-OSMnx is built on top of [NetworkX](https://networkx.org/) and [GeoPandas](https://geopandas.org/), and interacts with [OpenStreetMap](https://www.openstreetmap.org/) APIs to:
+OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of [NetworkX](https://networkx.org/) and [GeoPandas](https://geopandas.org/), and interacts with [OpenStreetMap](https://www.openstreetmap.org/) APIs to:
 
   * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
-  * Download any other spatial geometries, place boundaries, building footprints, or points of interest as a GeoDataFrame
-  * Download by city name, polygon, bounding box, or point/address + network distance
-  * Download drivable, walkable, bikeable, or all street networks
+  * Download any other spatial geometries (e.g., political boundaries, building footprints, grocery stores, transit stops) as a GeoDataFrame
+  * Download by city name, polygon, bounding box, or point/address + distance
+  * Model driving, walking, biking, and other travel modes
   * Download node elevations and calculate edge grades (inclines)
   * Impute missing speeds and calculate graph edge travel times
-  * Simplify and correct the network's topology to clean-up nodes and consolidate intersections
+  * Simplify and correct the network's topology to clean-up nodes and consolidate complex intersections
   * Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes
-  * Save networks to disk as shapefiles, GeoPackages, and GraphML
-  * Save/load street network to/from a local .osm XML file
+  * Save networks to disk as GeoPackages or GraphML files
+  * Save/load a street network to/from a .osm XML file
   * Conduct topological and spatial analyses to automatically calculate dozens of indicators
   * Calculate and visualize street bearings and orientations
   * Calculate and visualize shortest-path routes that minimize distance, travel time, elevation, etc

@@ -6,7 +6,7 @@ build:
     python: "3.11"
   jobs:
     pre_build:
-      - python -m sphinx -b linkcheck -D linkcheck_ignore="osmnx.html" docs/ _build/linkcheck
+      - python -m sphinx -b linkcheck docs/ _build/linkcheck
 
 formats: all
 
