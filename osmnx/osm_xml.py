@@ -267,6 +267,113 @@ def _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags):
     return root
 
 
+def _create_way_for_each_edge(root, gdf_edges, edge_attrs, edge_tags):
+    """Append a new way to an empty xml tree graph for each edge in way.
+
+    Parameters
+    ----------
+    root : ElementTree.Element
+        an empty xml tree
+    gdf_edges : geopandas.GeoDataFrame
+        GeoDataFrame of graph edges
+    edge_attrs : list
+        osm way attributes to include in output OSM XML
+    edge_tags : list
+        osm way tags to include in output OSM XML
+
+    NOTE: this will generate separate OSM ways for each network edge,
+    even if the edges are all part of the same original OSM way. As
+    such, each way will be comprised of two nodes, and there will be
+    many ways with the same OSM id. This does not conform to the
+    OSM XML schema standard, however, the data will still comprise a
+    valid network and will be readable by *most* OSM tools.
+    """
+    for _, row in gdf_edges.iterrows():
+        row = row.dropna().astype(str)
+        edge = etree.SubElement(root, "way", attrib=row[edge_attrs].to_dict())
+        etree.SubElement(edge, "nd", attrib={"ref": row["u"]})
+        etree.SubElement(edge, "nd", attrib={"ref": row["v"]})
+        for tag in edge_tags:
+            if tag in row:
+                etree.SubElement(edge, "tag", attrib={"k": tag, "v": row[tag]})
+    return
+
+
+def _append_merged_edge_attrs(xml_edge, sample_edge, all_edges_df, edge_tags, edge_tag_aggs):
+    """Extract edge attributes and append to XML edge.
+
+    Parameters
+    ----------
+    xml_edge : ElementTree.SubElement
+        XML representation of an output graph edge
+    sample_edge: pandas.Series
+        sample row from the the dataframe of way edges
+    all_edges_df: pandas.DataFrame
+        a dataframe with one row for each edge in an OSM way
+    edge_tags : list
+        osm way tags to include in output OSM XML
+    edge_tag_aggs : list of length-2 string tuples
+        useful only if merge_edges is True, this argument allows the user
+        to specify edge attributes to aggregate such that the merged
+        OSM way entry tags accurately represent the sum total of
+        their component edge attributes. For example, if the user
+        wants the OSM way to have a "length" attribute, the user must
+        specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
+        this method to aggregate the lengths of the individual
+        component edges. Otherwise, the length attribute will simply
+        reflect the length of the first edge associated with the way.
+
+    """
+    if edge_tag_aggs is None:
+        for tag in edge_tags:
+            if tag in sample_edge:
+                etree.SubElement(xml_edge, "tag", attrib={"k": tag, "v": sample_edge[tag]})
+    else:
+        for tag in edge_tags:
+            if (tag in sample_edge) and (tag not in (t for t, agg in edge_tag_aggs)):
+                etree.SubElement(xml_edge, "tag", attrib={"k": tag, "v": sample_edge[tag]})
+
+        for tag, agg in edge_tag_aggs:
+            if tag in all_edges_df.columns:
+                etree.SubElement(
+                    xml_edge,
+                    "tag",
+                    attrib={
+                        "k": tag,
+                        "v": str(all_edges_df[tag].aggregate(agg)),
+                    },
+                )
+    return
+
+
+def _append_nodes_as_edge_attrs(xml_edge, sample_edge, all_edges_df):
+    """Extract list of ordered nodes and append as attributes of XML edge.
+
+    Parameters
+    ----------
+    xml_edge : ElementTree.SubElement
+        XML representation of an output graph edge
+    sample_edge: pandas.Series
+        sample row from the the dataframe of way edges
+    all_edges_df: pandas.DataFrame
+        a dataframe with one row for each edge in an OSM way
+    """
+    if len(all_edges_df) == 1:
+        etree.SubElement(xml_edge, "nd", attrib={"ref": sample_edge["u"]})
+        etree.SubElement(xml_edge, "nd", attrib={"ref": sample_edge["v"]})
+    else:
+        # topological sort
+        try:
+            ordered_nodes = _get_unique_nodes_ordered_from_way(all_edges_df)
+        except nx.NetworkXUnfeasible:
+            first_node = all_edges_df.iloc[0]["u"]
+            ordered_nodes = _get_unique_nodes_ordered_from_way(all_edges_df.iloc[1:])
+            ordered_nodes = [first_node] + ordered_nodes
+        for node in ordered_nodes:
+            etree.SubElement(xml_edge, "nd", attrib={"ref": str(node)})
+    return
+
+
 def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges):
     """
     Append edges to an XML tree.
@@ -306,47 +413,24 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
         for _, all_way_edges in gdf_edges.groupby("id"):
             first = all_way_edges.iloc[0].dropna().astype(str)
             edge = etree.SubElement(root, "way", attrib=first[edge_attrs].dropna().to_dict())
+            _append_nodes_as_edge_attrs(
+                xml_edge=edge, sample_edge=first, all_edges_df=all_way_edges
+            )
+            _append_merged_edge_attrs(
+                xml_edge=edge,
+                sample_edge=first,
+                edge_tags=edge_tags,
+                edge_tag_aggs=edge_tag_aggs,
+                all_edges_df=all_way_edges,
+            )
 
-            if len(all_way_edges) == 1:
-                etree.SubElement(edge, "nd", attrib={"ref": first["u"]})
-                etree.SubElement(edge, "nd", attrib={"ref": first["v"]})
-            else:
-                # topological sort
-                ordered_nodes = _get_unique_nodes_ordered_from_way(all_way_edges)
-                for node in ordered_nodes:
-                    etree.SubElement(edge, "nd", attrib={"ref": str(node)})
-
-            if edge_tag_aggs is None:
-                for tag in edge_tags:
-                    if tag in first:
-                        etree.SubElement(edge, "tag", attrib={"k": tag, "v": first[tag]})
-            else:
-                for tag in edge_tags:
-                    if (tag in first) and (tag not in (t for t, agg in edge_tag_aggs)):
-                        etree.SubElement(edge, "tag", attrib={"k": tag, "v": first[tag]})
-
-                for tag, agg in edge_tag_aggs:
-                    if tag in all_way_edges.columns:
-                        etree.SubElement(
-                            edge,
-                            "tag",
-                            attrib={"k": tag, "v": str(all_way_edges[tag].aggregate(agg))},
-                        )
     else:
-        # NOTE: this will generate separate OSM ways for each network edge,
-        # even if the edges are all part of the same original OSM way. As
-        # such, each way will be comprised of two nodes, and there will be
-        # many ways with the same OSM id. This does not conform to the
-        # OSM XML schema standard, however, the data will still comprise a
-        # valid network and will be readable by *most* OSM tools.
-        for _, row in gdf_edges.iterrows():
-            row = row.dropna().astype(str)
-            edge = etree.SubElement(root, "way", attrib=row[edge_attrs].to_dict())
-            etree.SubElement(edge, "nd", attrib={"ref": row["u"]})
-            etree.SubElement(edge, "nd", attrib={"ref": row["v"]})
-            for tag in edge_tags:
-                if tag in row:
-                    etree.SubElement(edge, "tag", attrib={"k": tag, "v": row[tag]})
+        _create_way_for_each_edge(
+            root=root,
+            gdf_edges=gdf_edges,
+            edge_attrs=edge_attrs,
+            edge_tags=edge_tags,
+        )
 
     return root
 

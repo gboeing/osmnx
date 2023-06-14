@@ -19,6 +19,7 @@
   - move plot_orientation function from bearing module to plot module
   - make matplotlib an optional dependency required only for the plot module
   - drop pyproj package dependency
+  - fix bug in save_graph_xml due to roundabout ways
 
 ## 1.3.1.post0 (2023-05-26)
 
