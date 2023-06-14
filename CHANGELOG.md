@@ -3,9 +3,10 @@
 ## TBD
 
   - adopt NEP 29 policy for minimum required Python and NumPy versions
+  - fix bug in save_graph_xml due to roundabout ways
+  - remove internal \_polygon_features module and move its data to geometries module
   - pin optional dependencies to minimum required versions in setup.py
   - expand and reorganize the documentation
-  - remove internal \_polygon_features module and move its data to geometries module
 
 ## 1.4.0 (2023-06-11)
 
@@ -22,7 +23,7 @@
 
 ## 1.3.1.post0 (2023-05-26)
 
-  - add Python 3.8 compatibility back for one final release
+  - add Python 3.8 compatibility back
 
 ## 1.3.1 (2023-05-24)
 
