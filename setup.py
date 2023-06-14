@@ -58,12 +58,12 @@ CLASSIFIERS = [
     "Topic :: Scientific/Engineering :: Visualization",
 ]
 
-# identify optional dependencies
+# identify optional dependencies: pin in environments/ci/env-tests-minimal.yml
 extras = {
-    "entropy": ["scipy"],
-    "neighbors": ["scikit-learn", "scipy"],
-    "visualization": ["matplotlib"],
-    "raster": ["gdal", "rasterio"],
+    "entropy": ["scipy>=1.5"],
+    "neighbors": ["scikit-learn>=0.23", "scipy>=1.5"],
+    "visualization": ["matplotlib>=3.5"],
+    "raster": ["gdal", "rasterio>=1.3"],
 }
 extras["all"] = sorted(set(chain(*extras.values())))
 extras = dict(sorted(extras.items()))

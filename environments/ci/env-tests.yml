@@ -1,4 +1,4 @@
-name: osmnx-tests
+name: env-tests
 
 channels:
   - conda-forge
@@ -9,6 +9,7 @@ dependencies:
   - networkx
   - numpy
   - pandas
+  - python
   - requests
   - shapely
 
