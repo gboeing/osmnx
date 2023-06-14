@@ -38,7 +38,7 @@ jobs:
           cache-env: true
           channels: conda-forge
           channel-priority: strict
-          environment-file: environment/ci/env-tests.yml
+          environment-file: environments/ci/env-tests.yml
           environment-name: env-tests
           extra-specs: python=${{ matrix.python-version }}
 
