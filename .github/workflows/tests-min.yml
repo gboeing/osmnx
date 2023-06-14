@@ -1,15 +1,19 @@
 name: Test Minimal Dependency Versions
 
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   schedule:
-    - cron: '0 6 * * 0' # Every Sunday at 06:00 UTC
+    - cron: '0 7 * * 1' # Every Monday at 07:00 UTC
   workflow_dispatch:
 
 jobs:
 
   build:
 
-    name: Python ${{ matrix.python-version }} ${{ matrix.os }}
+    name: Test Minimal Dependency Versions
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -34,8 +38,8 @@ jobs:
           cache-env: true
           channels: conda-forge
           channel-priority: strict
-          environment-file: tests/environment-tests-min.yml
-          environment-name: osmnx-tests-min
+          environment-file: environments/ci/env-tests-minimal.yml
+          environment-name: env-tests-minimal
 
       - name: Install OSMnx
         run: |
