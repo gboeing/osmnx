@@ -28,6 +28,7 @@ from shapely.geometry import MultiPoint
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
+from xml.etree import ElementTree as etree
 
 import osmnx as ox
 
@@ -186,9 +187,23 @@ def test_osm_xml():
     assert ordered_nodes == [2, 3, 10, 5, 8]
 
     # test roundabout handling
-    df = pd.DataFrame({"u": [1, 2, 3, 4, 5], "v": [2, 3, 4, 5, 1]})
-    ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(df)
-    assert ordered_nodes == [1, 2, 3, 4, 5]
+    overpass_date_str = '[date:"2023-04-01T00:00:00Z"]'
+    ox.settings.overpass_settings += overpass_date_str
+    ox.settings.bidirectional_network_types = []
+    g = ox.graph_from_point(
+        (39.09091886432667, -84.52266036019037),
+        dist=int(np.floor(1609.34 * (5.5))),
+        dist_type="bbox",
+        network_type="drive",
+        simplify=False,
+        retain_all=False,
+    )
+    nodes, edges = ox.graph_to_gdfs(g)
+    way_df = edges[edges["osmid"] == 570883705]  # roundabout
+    root = etree.Element("osm", attrib={"version": "0.6", "generator": "OSMnx"})
+    first = way_df.iloc[0].dropna().astype(str)
+    edge = etree.SubElement(root, "way")
+    ox.osm_xml._append_nodes_as_edge_attrs(edge, first, way_df)
 
     ox.settings.all_oneway = default_all_oneway
 
