@@ -368,7 +368,7 @@ def _append_nodes_as_edge_attrs(xml_edge, sample_edge, all_edges_df):
         except nx.NetworkXUnfeasible:
             first_node = all_edges_df.iloc[0]["u"]
             try:
-                ordered_nodes = _get_unique_nodes_ordered_from_way(all_edges_df)
+                ordered_nodes = _get_unique_nodes_ordered_from_way(all_edges_df.iloc[1:])
             except nx.NetworkXUnfeasible:
                 osmid = sample_edge["osmid"]
                 raise nx.NetworkXUnfeasible(
