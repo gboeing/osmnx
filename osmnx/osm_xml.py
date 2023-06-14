@@ -184,8 +184,8 @@ def save_graph_xml(
 
     if not settings.all_oneway:  # pragma: no cover
         warn(
-            "In order for save_graph_xml to behave properly the graph must "
-            "have been created with the `all_oneway` setting set to True.",
+            "For the `save_graph_xml` function to behave properly, the graph "
+            "must have been created with `ox.settings.all_oneway=True`.",
             stacklevel=2,
         )
 
@@ -211,7 +211,7 @@ def save_graph_xml(
     # add default values for required attributes
     for table in (gdf_nodes, gdf_edges):
         table["uid"] = "1"
-        table["user"] = "osmnx"
+        table["user"] = "OSMnx"
         table["version"] = "1"
         table["changeset"] = "1"
         table["timestamp"] = utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}")
@@ -268,25 +268,25 @@ def _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags):
 
 
 def _create_way_for_each_edge(root, gdf_edges, edge_attrs, edge_tags):
-    """Append a new way to an empty xml tree graph for each edge in way.
+    """
+    Append a new way to an empty XML tree graph for each edge in way.
+
+    This will generate separate OSM ways for each network edge, even if the
+    edges are all part of the same original OSM way. As such, each way will be
+    composed of two nodes, and there will be many ways with the same OSM ID.
+    This does not conform to the OSM XML schema standard, but the data will
+    still comprise a valid network and will be readable by most OSM tools.
 
     Parameters
     ----------
     root : ElementTree.Element
-        an empty xml tree
+        an empty XML tree
     gdf_edges : geopandas.GeoDataFrame
         GeoDataFrame of graph edges
     edge_attrs : list
         osm way attributes to include in output OSM XML
     edge_tags : list
         osm way tags to include in output OSM XML
-
-    NOTE: this will generate separate OSM ways for each network edge,
-    even if the edges are all part of the same original OSM way. As
-    such, each way will be comprised of two nodes, and there will be
-    many ways with the same OSM id. This does not conform to the
-    OSM XML schema standard, however, the data will still comprise a
-    valid network and will be readable by *most* OSM tools.
     """
     for _, row in gdf_edges.iterrows():
         row = row.dropna().astype(str)
@@ -300,7 +300,8 @@ def _create_way_for_each_edge(root, gdf_edges, edge_attrs, edge_tags):
 
 
 def _append_merged_edge_attrs(xml_edge, sample_edge, all_edges_df, edge_tags, edge_tag_aggs):
-    """Extract edge attributes and append to XML edge.
+    """
+    Extract edge attributes and append to XML edge.
 
     Parameters
     ----------
@@ -313,15 +314,14 @@ def _append_merged_edge_attrs(xml_edge, sample_edge, all_edges_df, edge_tags, ed
     edge_tags : list
         osm way tags to include in output OSM XML
     edge_tag_aggs : list of length-2 string tuples
-        useful only if merge_edges is True, this argument allows the user
-        to specify edge attributes to aggregate such that the merged
-        OSM way entry tags accurately represent the sum total of
-        their component edge attributes. For example, if the user
-        wants the OSM way to have a "length" attribute, the user must
-        specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
-        this method to aggregate the lengths of the individual
-        component edges. Otherwise, the length attribute will simply
-        reflect the length of the first edge associated with the way.
+        useful only if merge_edges is True, this argument allows the user to
+        specify edge attributes to aggregate such that the merged OSM way
+        entry tags accurately represent the sum total of their component edge
+        attributes. For example if the user wants the OSM way to have a length
+        attribute, the user must specify `edge_tag_aggs=[('length', 'sum')]`
+        to tell this method to aggregate the lengths of the individual
+        component edges. Otherwise, the length attribute will simply reflect
+        the length of the first edge associated with the way.
 
     """
     if edge_tag_aggs is None:
@@ -347,7 +347,8 @@ def _append_merged_edge_attrs(xml_edge, sample_edge, all_edges_df, edge_tags, ed
 
 
 def _append_nodes_as_edge_attrs(xml_edge, sample_edge, all_edges_df):
-    """Extract list of ordered nodes and append as attributes of XML edge.
+    """
+    Extract list of ordered nodes and append as attributes of XML edge.
 
     Parameters
     ----------
@@ -406,7 +407,7 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
     Returns
     -------
     root : ElementTree.Element
-        xml tree with edges appended
+        XML tree with edges appended
     """
     gdf_edges.reset_index(inplace=True)
     if merge_edges:
@@ -437,7 +438,7 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
 
 def _get_unique_nodes_ordered_from_way(df_way_edges):
     """
-    Recover original node order from df of edges associated w/ single OSM way.
+    Recover original node order from edges associated with a single OSM way.
 
     Parameters
     ----------
@@ -448,17 +449,16 @@ def _get_unique_nodes_ordered_from_way(df_way_edges):
     Returns
     -------
     unique_ordered_nodes : list
-        An ordered list of unique node IDs.
-        Note: If the edges do not all connect (e.g. [(1, 2), (2,3),
-        (10, 11), (11, 12), (12, 13)]), then this method will return
-        only those nodes associated with the largest component of
-        connected edges, even if subsequent connected chunks are contain
-        more total nodes. This is done to ensure a proper topological
-        representation of nodes in the XML way records because if there
-        are unconnected components, the sorting algorithm cannot recover
-        their original order. We would not likely ever encounter this
-        kind of disconnected structure of nodes within a given way, but
-        it is not explicitly forbidden in the OSM XML design schema.
+        An ordered list of unique node IDs. If the edges do not all connect
+        (e.g. [(1, 2), (2,3), (10, 11), (11, 12), (12, 13)]), then this method
+        will return only those nodes associated with the largest component of
+        connected edges, even if subsequent connected chunks are contain more
+        total nodes. This ensures a proper topological representation of nodes
+        in the XML way records because if there are unconnected components,
+        the sorting algorithm cannot recover their original order. We would
+        not likely ever encounter this kind of disconnected structure of nodes
+        within a given way, but it is not explicitly forbidden in the OSM XML
+        design schema.
     """
     G = nx.MultiDiGraph()
     df_way_edges.reset_index(inplace=True)
