@@ -1,4 +1,4 @@
-name: Test latest versions
+name: CI
 
 on:
   push:
