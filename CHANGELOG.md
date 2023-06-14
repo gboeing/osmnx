@@ -2,8 +2,9 @@
 
 ## TBD
 
-  - expand and reorganize the documentation
   - adopt NEP 29 policy for minimum required Python and NumPy versions
+  - pin optional dependencies to minimum required versions in setup.py
+  - expand and reorganize the documentation
   - remove internal \_polygon_features module and move its data to geometries module
 
 ## 1.4.0 (2023-06-11)
