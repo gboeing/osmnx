@@ -1,4 +1,4 @@
-name: Test Minimal Dependency Versions
+name: Test minimal versions
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
 
   build:
 
-    name: Test Minimal Dependency Versions
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
