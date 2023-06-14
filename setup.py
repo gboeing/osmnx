@@ -58,7 +58,7 @@ CLASSIFIERS = [
     "Topic :: Scientific/Engineering :: Visualization",
 ]
 
-# identify optional dependencies
+# identify optional dependencies: pin in environments/ci/env-tests-minimal.yml
 extras = {
     "entropy": ["scipy>=1.5"],
     "neighbors": ["scikit-learn>=0.23", "scipy>=1.5"],
