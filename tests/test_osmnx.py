@@ -185,6 +185,11 @@ def test_osm_xml():
     ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(df)
     assert ordered_nodes == [2, 3, 10, 5, 8]
 
+    # test roundabout handling
+    df = pd.DataFrame({"u": [1, 2, 3, 4, 5], "v": [2, 3, 4, 5, 1]})
+    ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(df)
+    assert ordered_nodes == [1, 2, 3, 4, 5]
+
     ox.settings.all_oneway = default_all_oneway
 
 
