@@ -1,17 +1,28 @@
 Getting Started
 ===============
 
-Preliminaries
--------------
+Get Started in 4 Easy Steps
+---------------------------
 
-You can install OSMnx by following the :doc:`installation` guide.
+1. Install OSMnx by following the :doc:`installation` guide.
 
-After it's installed, get started by reading the :doc:`osmnx` and working through the step-by-step `OSMnx Examples`_ repository for introductory usage demonstrations and sample code.
+2. Read ":ref:`Introducing OSMnx`" below on this page.
 
-Make sure you have read the `NetworkX`_ and `GeoPandas`_ user guides if you're not already familiar with these packages, as OSMnx uses their data structures and functionality.
+3. Work through the step-by-step `OSMnx Examples`_ gallery for introductory tutorials and sample code.
 
-Features
---------
+4. Refer to the :doc:`osmnx` for complete details on using the package.
+
+Finally, if you're not already familiar with `NetworkX`_ and `GeoPandas`_, make sure you read their user guides as OSMnx uses their data structures and functionality.
+
+.. _Introducing OSMnx:
+
+Introducing OSMnx
+-----------------
+
+This quick introduction explains key concepts and the basic functionality of OSMnx.
+
+Overview
+^^^^^^^^
 
 OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of NetworkX and GeoPandas, and interacts with `OpenStreetMap`_ APIs to:
 
@@ -32,10 +43,7 @@ OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of 
 * Visualize travel distance and travel time with isoline and isochrone maps
 * Plot figure-ground diagrams of street networks and building footprints
 
-Examples and demonstrations of all these features are in the `OSMnx Examples`_ repository and package usage is detailed in the :doc:`osmnx`.
-
-Using OSMnx
------------
+The `OSMnx Examples`_ gallery contains tutorials and demonstrations of all these features, and package usage is detailed in the :doc:`osmnx`.
 
 Querying
 ^^^^^^^^
@@ -73,27 +81,27 @@ You can save your OSMnx graph to disk as a GraphML file, GeoPackage, or .osm XML
 Working with Elevation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Local raster file or web service.
+You can attach elevation data from a local raster file or web service.
 
 Network Statistics
 ^^^^^^^^^^^^^^^^^^
 
-Measures and bearing stats.
+You can calculate a variety of network measures and bearing/orientation statistics.
 
 Routing
 ^^^^^^^
 
-Speed and travel time. Nearest nodes/edges. Shortest paths.
+You can impute speed and travel time, calculate nearest nodes/edges to points, and solve shortest paths for routing.
 
 Visualization
 ^^^^^^^^^^^^^
 
-Plot graphs, routes, figure-ground diagrams, building footprints, orientation rose diagrams, interactive web maps.
+You can plot graphs, routes, figure-ground diagrams, building footprints, orientation rose diagrams, or explore with interactive web maps.
 
 More Info
 ^^^^^^^^^
 
-All of this functionality is demonstrated step-by-step in the `OSMnx Examples`_ repository, and usage is detailed in the :doc:`osmnx`.
+All of this functionality is demonstrated step-by-step in the `OSMnx Examples`_ gallery, and usage is detailed in the :doc:`osmnx`.
 
 More feature development details are in the `Change Log`_. Consult the :doc:`further-reading` resources for additional technical details and research.
 

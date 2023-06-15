@@ -1,7 +1,7 @@
 Internals Reference
 ===================
 
-This is the complete OSMnx internals reference, including private internal functions. If you are instead looking for a user guide to OSMnx's public API, see the :doc:`osmnx`.
+This is the complete OSMnx internals reference for developers, including private internal modules and functions. If you are instead looking for a user guide to OSMnx's public API, see the :doc:`osmnx`.
 
 osmnx._api module
 -----------------
