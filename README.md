@@ -52,4 +52,4 @@ All of these features are demonstrated in the [examples](https://github.com/gboe
 
 ## License
 
-OSMnx is licensed under the MIT license. OpenStreetMap's open data [license](https://www.openstreetmap.org/copyright/) requires that derivative works provide proper attribution.
+OSMnx is open source and licensed under the MIT license. OpenStreetMap's open data [license](https://www.openstreetmap.org/copyright/) requires that derivative works provide proper attribution.
