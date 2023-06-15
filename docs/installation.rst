@@ -26,6 +26,5 @@ If you already have all of its dependencies installed and tested on your system,
 
 .. _conda: https://conda.io/
 .. _conda-forge: https://conda-forge.org/
-.. _mamba: https://mamba.readthedocs.io/
 .. _Docker: https://hub.docker.com/r/gboeing/osmnx
 .. _pip: https://pypi.org/project/osmnx/
