@@ -8,11 +8,9 @@ repos:
       - id: check-builtin-literals
       - id: check-case-conflict
       - id: check-docstring-first
-      - id: check-executables-have-shebangs
       - id: check-json
       - id: check-merge-conflict
         args: [--assume-in-merge]
-      - id: check-shebang-scripts-are-executable
       - id: check-xml
       - id: check-yaml
       - id: debug-statements
