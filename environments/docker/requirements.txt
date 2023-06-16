@@ -15,7 +15,6 @@ jupyterlab
 mapclassify
 nbdime
 nbqa
-numba
 numexpr
 osmnx
 pillow
