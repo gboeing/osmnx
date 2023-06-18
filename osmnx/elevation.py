@@ -132,8 +132,8 @@ def add_node_elevations_google(
     ----------
     G : networkx.MultiDiGraph
         input graph
-    api_key : Optional[string]
-        a valid API key, сan be omitted if the API does not require a key
+    api_key : string
+        a valid API key, сan be None if the API does not require a key
     max_locations_per_batch : int
         max number of coordinate pairs to submit in each API call (if this is
         too high, the server will reject the request because its character
