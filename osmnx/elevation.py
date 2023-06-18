@@ -111,7 +111,7 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
 
 def add_node_elevations_google(
     G,
-    api_key,
+    api_key=None,
     max_locations_per_batch=350,
     pause_duration=0,
     precision=None,
@@ -132,8 +132,8 @@ def add_node_elevations_google(
     ----------
     G : networkx.MultiDiGraph
         input graph
-    api_key : string
-        a valid API key
+    api_key : Optional[string]
+        a valid API key, сan be omitted if the API does not require a key
     max_locations_per_batch : int
         max number of coordinate pairs to submit in each API call (if this is
         too high, the server will reject the request because its character
