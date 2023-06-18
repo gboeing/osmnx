@@ -9,8 +9,44 @@ from itertools import chain
 
 from setuptools import setup
 
+# version of the package
+VERSION = "1.4.1dev"
+
+# minimum required python version
+PYTHON_REQUIRES = ">=3.8"
+
+# optional dependency versions: pin in /environments/ci/env-tests-minimal.yml
+extras = {
+    "entropy": ["scipy>=1.5"],
+    "neighbors": ["scikit-learn>=0.23", "scipy>=1.5"],
+    "raster": ["gdal", "rasterio>=1.3"],
+    "visualization": ["matplotlib>=3.5"],
+}
+extras["all"] = sorted(set(chain(*extras.values())))
+EXTRAS_REQUIRE = dict(sorted(extras.items()))
+
+# list of classifiers from the PyPI classifiers trove
+CLASSIFIERS = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+
 # provide a short description of package
-DESC = (
+DESCRIPTION = (
     "Retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data"
 )
 
@@ -38,36 +74,6 @@ demonstrations and sample code.
 .. _OSMnx Documentation: https://osmnx.readthedocs.io/
 """
 
-# list of classifiers from the PyPI classifiers trove
-CLASSIFIERS = [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Topic :: Scientific/Engineering :: GIS",
-    "Topic :: Scientific/Engineering :: Information Analysis",
-    "Topic :: Scientific/Engineering :: Mathematics",
-    "Topic :: Scientific/Engineering :: Physics",
-    "Topic :: Scientific/Engineering :: Visualization",
-]
-
-# identify optional dependencies: pin in environments/ci/env-tests-minimal.yml
-extras = {
-    "entropy": ["scipy>=1.5"],
-    "neighbors": ["scikit-learn>=0.23", "scipy>=1.5"],
-    "visualization": ["matplotlib>=3.5"],
-    "raster": ["gdal", "rasterio>=1.3"],
-}
-extras["all"] = sorted(set(chain(*extras.values())))
-extras = dict(sorted(extras.items()))
-
 # only specify install_requires if not in RTD environment
 if os.getenv("READTHEDOCS") == "True":
     INSTALL_REQUIRES = []
@@ -80,8 +86,8 @@ setup(
     author="Geoff Boeing",
     author_email="boeing@usc.edu",
     classifiers=CLASSIFIERS,
-    description=DESC,
-    extras_require=extras,
+    description=DESCRIPTION,
+    extras_require=EXTRAS_REQUIRE,
     install_requires=INSTALL_REQUIRES,
     license="MIT",
     long_description=LONG_DESCRIPTION,
@@ -89,7 +95,7 @@ setup(
     name="osmnx",
     packages=["osmnx"],
     platforms="any",
-    python_requires=">=3.8",
+    python_requires=PYTHON_REQUIRES,
     url="https://github.com/gboeing/osmnx",
-    version="1.4.1dev",
+    version=VERSION,
 )

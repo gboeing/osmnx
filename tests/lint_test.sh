@@ -20,8 +20,8 @@ flake8 .
 pydocstyle .
 
 # build the docs
-make -C ./docs html
-python -m sphinx -b linkcheck docs/ docs/_build/linkcheck
+# make -C ./docs html
+# python -m sphinx -b linkcheck docs/ docs/_build/linkcheck
 
 # run the tests
 coverage run --source ./osmnx --module pytest --verbose

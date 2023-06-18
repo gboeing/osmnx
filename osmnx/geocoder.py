@@ -71,7 +71,8 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
     which_result : int
         which geocoding result to use. if None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one. to get
-        the top match regardless of geometry type, set which_result=1
+        the top match regardless of geometry type, set which_result=1.
+        ignored if by_osmid=True.
     by_osmid : bool
         if True, handle query as an OSM ID for lookup rather than text search
     buffer_dist : float
@@ -137,7 +138,8 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
     which_result : int
         which geocoding result to use. if None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one. to get
-        the top match regardless of geometry type, set which_result=1
+        the top match regardless of geometry type, set which_result=1.
+        ignored if by_osmid=True.
     by_osmid : bool
         if True, handle query as an OSM ID for lookup rather than text search
 
