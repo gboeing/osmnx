@@ -18,7 +18,7 @@ If you use OSMnx in your work, please cite the journal article.
 
 *How do I install OSMnx?* Follow the [installation](https://osmnx.readthedocs.io/en/stable/#installation) instructions.
 
-*How do I use OSMnx?* Check out the usage examples/tutorials in the [examples](https://github.com/gboeing/osmnx-examples) repo.
+*How do I use OSMnx?* Check out the usage examples/tutorials in the [examples](https://github.com/gboeing/osmnx-examples) gallery.
 
 *How does this or that function work?* Read its [documentation](https://osmnx.readthedocs.io/).
 
