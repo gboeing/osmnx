@@ -4,6 +4,7 @@
 
   - adopt NEP 29 policy for minimum required Python and NumPy versions
   - fix bug in save_graph_xml due to roundabout ways
+  - make API key optional in elevation.add_node_elevations_google function
   - remove internal \_polygon_features module and move its data to geometries module
   - pin optional dependencies to minimum required versions in setup.py
   - expand and reorganize the documentation
