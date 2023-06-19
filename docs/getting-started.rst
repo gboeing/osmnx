@@ -27,7 +27,7 @@ Overview
 OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of NetworkX and GeoPandas, and interacts with `OpenStreetMap`_ APIs to:
 
 * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
-* Download any other spatial geometries (e.g., political boundaries, building footprints, grocery stores, transit stops) as a GeoDataFrame
+* Download any other geospatial entities (e.g., political boundaries, building footprints, grocery stores, transit stops) as a GeoDataFrame
 * Download by city name, polygon, bounding box, or point/address + distance
 * Model driving, walking, biking, and other travel modes
 * Download node elevations and calculate edge grades (inclines)
@@ -45,15 +45,22 @@ OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of 
 
 The `OSMnx Examples`_ gallery contains tutorials and demonstrations of all these features, and package usage is detailed in the :doc:`osmnx`.
 
-Querying
-^^^^^^^^
+Configuration
+^^^^^^^^^^^^^
 
-OSMnx geocodes place names and addresses with the OpenStreetMap Nominatim API. You can use the :code:`geocoder` module to geocode place names or addresses to lat-lng coordinates. Or, you can retrieve places (or any other geospatial entities) by name or by OSM ID.
+You can configure OSMnx using the :code:`settings` module. Here you can adjust logging behavior, caching, server endpoints, and more. You can also configure OSMnx to retrieve historical snapshots of OpenStreetMap data as of a certain date.
+
+Geocoding and Querying
+^^^^^^^^^^^^^^^^^^^^^^
+
+OSMnx geocodes place names and addresses with the OpenStreetMap Nominatim API. You can use the :code:`geocoder` module to geocode place names or addresses to lat-lng coordinates. Or, you can retrieve places (or any other geospatial entities) by name or by OpenStreetMap ID.
+
+Using the :code:`geometries` and :code:`graph` modules (as described below), you can download data by lat-lng point, address, bounding box, bounding polygon, or place name (e.g., neighborhood, city, county, etc).
 
 Urban Amenities
 ^^^^^^^^^^^^^^^
 
-Using OSMnx's :code:`geometries` module, you can search for and download any geospatial objects (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap Overpass API as a GeoPandas GeoDataFrame. This uses :code:`tag:value` pairs to search.
+Using OSMnx's :code:`geometries` module, you can search for and download any geospatial objects (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap Overpass API as a GeoPandas GeoDataFrame. This uses :code:`tag:value` pairs to search for matching objects.
 
 Modeling a Network
 ^^^^^^^^^^^^^^^^^^
@@ -61,8 +68,6 @@ Modeling a Network
 Using OSMnx's :code:`graph` module, you can retrieve any spatial network data (such as streets, paths, canals, etc) from the Overpass API and model them as NetworkX MultiDiGraphs. MultiDiGraphs are nonplanar directed graphs with possible self-loops and parallel edges.
 
 Thus, a one-way street will be represented with a single directed edge from node *u* to node *v*, but a bidirectional street will be represented with two reciprocal directed edges (with identical geometries): one from node *u* to node *v* and another from *v* to *u*, to represent both possible directions of flow. Because these graphs are nonplanar, they correctly model the topology of interchanges, bridges, and tunnels. That is, edge crossings in a two-dimensional plane are not intersections in an OSMnx model unless they represent true junctions in the three-dimensional real world.
-
-You can automatically download and model a network by lat-lng point, address, bounding box, bounding polygon, or place name (e.g., neighborhood, city, county, etc.)
 
 Topology Clean-Up
 ^^^^^^^^^^^^^^^^^
@@ -87,19 +92,21 @@ You can save your OSMnx graph to disk as a GraphML file or GeoPackage using the 
 Working with Elevation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Using the :code:`elevation` module, you can automatically attach elevation data to the graph's nodes from a local raster file or web service such as the Google Maps Elevation API.
+Using the :code:`elevation` module, you can automatically attach elevation data to the graph's nodes from a local raster file or web service such as the Google Maps Elevation API. You can also calculate edge grades (i.e., inclines).
 
 Network Statistics
 ^^^^^^^^^^^^^^^^^^
 
-You can use the :code:`stats` module to calculate a variety of geometric and topological measures as well as street network bearing/orientation statistics.
+You can use the :code:`stats` module to calculate a variety of geometric and topological measures as well as street network bearing/orientation statistics. These measures define streets as the edges in an undirected representation of the graph to prevent double-counting bidirectional edges of a two-way street.
+
+You can use NetworkX directly to calculate additional topological network measures.
 
 Routing
 ^^^^^^^
 
-The :code:`speed` module can impute missing speeds (km/hour) to the graph edges. It can also calculate free-flow travel times for each edge. This imputation can obviously be imprecise, but the user can override it by passing in arguments that define local speed limits.
+The :code:`speed` module can impute missing speeds to the graph edges. It can also calculate free-flow travel times for each edge. This imputation can obviously be imprecise, and the user can override it by passing in arguments that define local speed limits.
 
-The :code:`distance` module can find the nearest node(s) or edge(s) to arrays of x/y (or lng/lat) coordinates using a very fast spatial index. It can also solve shortest paths for network routing, in parallel with multiprocessing.
+The :code:`distance` module can find the nearest node(s) or edge(s) to coordinates using a very fast spatial index. It can also solve shortest paths for network routing, parallelized with multiprocessing, using different weights (e.g., length, travel time, elevation change, etc).
 
 Visualization
 ^^^^^^^^^^^^^

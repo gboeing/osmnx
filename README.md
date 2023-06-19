@@ -7,7 +7,7 @@
 
 # OSMnx
 
-**OSMnx** is a Python package that lets you download geospatial data from OpenStreetMap and model, project, visualize, and analyze real-world street networks and any other geospatial geometries. You can download and model walking, driving, or biking networks with a single line of code then easily analyze and visualize them. You can just as easily download and work with other infrastructure types, amenities/points of interest, building footprints, elevation data, street bearings/orientations, speed/travel time, and routing.
+**OSMnx** is a Python package that lets you download geospatial data from OpenStreetMap and model, project, visualize, and analyze real-world street networks and any other geospatial entities. You can download and model walking, driving, or biking networks with a single line of code then easily analyze and visualize them. You can just as easily download and work with other infrastructure types, amenities/points of interest, building footprints, elevation data, street bearings/orientations, speed/travel time, and routing.
 
 If you use OSMnx in your work, please cite the journal article.
 
@@ -32,7 +32,7 @@ If you use OSMnx in your work, please cite the journal article.
 OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of [NetworkX](https://networkx.org/) and [GeoPandas](https://geopandas.org/), and interacts with [OpenStreetMap](https://www.openstreetmap.org/) APIs to:
 
   * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
-  * Download any other spatial geometries (e.g., political boundaries, building footprints, grocery stores, transit stops) as a GeoDataFrame
+  * Download any other geospatial entities (e.g., political boundaries, building footprints, grocery stores, transit stops) as a GeoDataFrame
   * Download by city name, polygon, bounding box, or point/address + distance
   * Model driving, walking, biking, and other travel modes
   * Download node elevations and calculate edge grades (inclines)
@@ -48,7 +48,7 @@ OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of 
   * Visualize travel distance and travel time with isoline and isochrone maps
   * Plot figure-ground diagrams of street networks and building footprints
 
-All of these features are demonstrated in the [examples](https://github.com/gboeing/osmnx-examples) repo and documented in the [documentation](https://osmnx.readthedocs.io/). Feature development details are in the [change log](CHANGELOG.md). Read the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/) for further technical details.
+All of these features are demonstrated in the [examples](https://github.com/gboeing/osmnx-examples) gallery and documented in the [documentation](https://osmnx.readthedocs.io/). Feature development details are in the [change log](CHANGELOG.md). Read the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/) for further technical details.
 
 ## License
 

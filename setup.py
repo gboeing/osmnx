@@ -10,7 +10,7 @@ from itertools import chain
 from setuptools import setup
 
 # version of the package
-VERSION = "1.4.1dev"
+VERSION = "1.4.1.dev0"
 
 # minimum required python version
 PYTHON_REQUIRES = ">=3.8"
@@ -46,15 +46,13 @@ CLASSIFIERS = [
 ]
 
 # provide a short description of package
-DESCRIPTION = (
-    "Retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data"
-)
+DESCRIPTION = "Retrieve, model, analyze, and visualize OpenStreetMap street networks and other geospatial data"
 
 # provide a long description using reStructuredText
 LONG_DESCRIPTION = r"""
 OSMnx is a Python package that lets you download geospatial data from
 OpenStreetMap and model, project, visualize, and analyze real-world street
-networks and any other geospatial geometries. You can download and model
+networks and any other geospatial entities. You can download and model
 walking, driving, or biking networks with a single line of code then easily
 analyze and visualize them. You can just as easily download and work with
 other infrastructure types, amenities/points of interest, building footprints,
@@ -63,16 +61,23 @@ elevation data, street bearings/orientations, speed/travel time, and routing.
 Citation info: Boeing, G. 2017. `OSMnx: New Methods for Acquiring,
 Constructing, Analyzing, and Visualizing Complex Street Networks`_.
 *Computers, Environment and Urban Systems* 65, 126-139.
-doi:10.1016/j.compenvurbsys.2017.05.004
 
 To get started, read the `OSMnx Documentation`_ and work through the
-step-by-step `OSMnx Examples`_ repository for introductory usage
-demonstrations and sample code.
+`OSMnx Examples`_ gallery for step-by-step tutorials and sample code.
 
 .. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: http://geoffboeing.com/publications/osmnx-complex-street-networks/
-.. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
 .. _OSMnx Documentation: https://osmnx.readthedocs.io/
+.. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
 """
+
+# define keywords
+KEYWORDS = ["GIS", "Networks", "OpenStreetMap", "Routing"]
+
+# define project URLs
+PROJECT_URLS = {
+    "Documentation": "https://osmnx.readthedocs.io/",
+    "Repository": "https://github.com/gboeing/osmnx",
+}
 
 # only specify install_requires if not in RTD environment
 if os.getenv("READTHEDOCS") == "True":
@@ -89,13 +94,14 @@ setup(
     description=DESCRIPTION,
     extras_require=EXTRAS_REQUIRE,
     install_requires=INSTALL_REQUIRES,
+    keywords=KEYWORDS,
     license="MIT",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/x-rst",
     name="osmnx",
     packages=["osmnx"],
     platforms="any",
+    project_urls=PROJECT_URLS,
     python_requires=PYTHON_REQUIRES,
-    url="https://github.com/gboeing/osmnx",
     version=VERSION,
 )
