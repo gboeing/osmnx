@@ -10,7 +10,7 @@ from itertools import chain
 from setuptools import setup
 
 # version of the package
-VERSION = "1.4.1dev"
+VERSION = "1.4.1.dev0"
 
 # minimum required python version
 PYTHON_REQUIRES = ">=3.8"
