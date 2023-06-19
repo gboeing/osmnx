@@ -70,6 +70,15 @@ To get started, read the `OSMnx Documentation`_ and work through the
 .. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
 """
 
+# define keywords
+KEYWORDS = ["GIS", "Networks", "OpenStreetMap", "Routing"]
+
+# define project URLs
+PROJECT_URLS = {
+    "Documentation": "https://osmnx.readthedocs.io/",
+    "Repository": "https://github.com/gboeing/osmnx",
+}
+
 # only specify install_requires if not in RTD environment
 if os.getenv("READTHEDOCS") == "True":
     INSTALL_REQUIRES = []
@@ -85,13 +94,14 @@ setup(
     description=DESCRIPTION,
     extras_require=EXTRAS_REQUIRE,
     install_requires=INSTALL_REQUIRES,
+    keywords=KEYWORDS,
     license="MIT",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/x-rst",
     name="osmnx",
     packages=["osmnx"],
     platforms="any",
+    project_urls=PROJECT_URLS,
     python_requires=PYTHON_REQUIRES,
-    url="https://github.com/gboeing/osmnx",
     version=VERSION,
 )
