@@ -7,7 +7,7 @@
 FROM jupyter/base-notebook
 LABEL maintainer="Geoff Boeing <boeing@usc.edu>"
 LABEL url="https://github.com/gboeing/osmnx"
-LABEL description="OSMnx is a Python package to retrieve, model, analyze, and visualize OpenStreetMap networks and other spatial data."
+LABEL description="OSMnx is a Python package to retrieve, model, analyze, and visualize OpenStreetMap networks and other geospatial data."
 
 COPY requirements.txt /tmp/
 

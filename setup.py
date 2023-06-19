@@ -46,15 +46,13 @@ CLASSIFIERS = [
 ]
 
 # provide a short description of package
-DESCRIPTION = (
-    "Retrieve, model, analyze, and visualize OpenStreetMap street networks and other spatial data"
-)
+DESCRIPTION = "Retrieve, model, analyze, and visualize OpenStreetMap street networks and other geospatial data"
 
 # provide a long description using reStructuredText
 LONG_DESCRIPTION = r"""
 OSMnx is a Python package that lets you download geospatial data from
 OpenStreetMap and model, project, visualize, and analyze real-world street
-networks and any other geospatial geometries. You can download and model
+networks and any other geospatial entities. You can download and model
 walking, driving, or biking networks with a single line of code then easily
 analyze and visualize them. You can just as easily download and work with
 other infrastructure types, amenities/points of interest, building footprints,

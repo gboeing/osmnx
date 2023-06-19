@@ -27,7 +27,7 @@ Overview
 OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of NetworkX and GeoPandas, and interacts with `OpenStreetMap`_ APIs to:
 
 * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
-* Download any other spatial geometries (e.g., political boundaries, building footprints, grocery stores, transit stops) as a GeoDataFrame
+* Download any other geospatial entities (e.g., political boundaries, building footprints, grocery stores, transit stops) as a GeoDataFrame
 * Download by city name, polygon, bounding box, or point/address + distance
 * Model driving, walking, biking, and other travel modes
 * Download node elevations and calculate edge grades (inclines)
