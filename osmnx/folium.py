@@ -4,7 +4,7 @@ This module is deprecated. Do not use. It will be removed in a future release.
 You can generate and explore interactive web maps of graph nodes, edges,
 and/or routes automatically using GeoPandas.GeoDataFrame.explore instead, for
 example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the OSMnx
-usage example repo for complete details and demonstrations.
+examples gallery for complete details and demonstrations.
 """
 
 import json
@@ -34,7 +34,7 @@ def plot_graph_folium(
     You can generate and explore interactive web maps of graph nodes, edges,
     and/or routes automatically using GeoPandas.GeoDataFrame.explore instead,
     for example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the
-    OSMnx usage example repo for complete details and demonstrations.
+    OSMnx examples gallery for complete details and demonstrations.
 
     Parameters
     ----------
@@ -62,7 +62,7 @@ def plot_graph_folium(
         "You can generate and explore interactive web maps of graph nodes, edges, "
         "and/or routes automatically using GeoPandas.GeoDataFrame.explore instead, "
         "for example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the "
-        "OSMnx usage example repo for complete details and demonstrations.",
+        "OSMnx examples gallery for complete details and demonstrations.",
         stacklevel=2,
     )
     # create gdf of all graph edges
@@ -86,7 +86,7 @@ def plot_route_folium(
     You can generate and explore interactive web maps of graph nodes, edges,
     and/or routes automatically using GeoPandas.GeoDataFrame.explore instead,
     for example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the
-    OSMnx usage example repo for complete details and demonstrations.
+    OSMnx examples gallery for complete details and demonstrations.
 
     Parameters
     ----------
@@ -116,7 +116,7 @@ def plot_route_folium(
         "You can generate and explore interactive web maps of graph nodes, edges, "
         "and/or routes automatically using GeoPandas.GeoDataFrame.explore instead, "
         "for example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the "
-        "OSMnx usage example repo for complete details and demonstrations.",
+        "OSMnx examples gallery for complete details and demonstrations.",
         stacklevel=2,
     )
     # create gdf of the route edges in order

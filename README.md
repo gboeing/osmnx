@@ -48,7 +48,7 @@ OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of 
   * Visualize travel distance and travel time with isoline and isochrone maps
   * Plot figure-ground diagrams of street networks and building footprints
 
-All of these features are demonstrated in the [examples](https://github.com/gboeing/osmnx-examples) repo and documented in the [documentation](https://osmnx.readthedocs.io/). Feature development details are in the [change log](CHANGELOG.md). Read the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/) for further technical details.
+All of these features are demonstrated in the [examples](https://github.com/gboeing/osmnx-examples) gallery and documented in the [documentation](https://osmnx.readthedocs.io/). Feature development details are in the [change log](CHANGELOG.md). Read the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/) for further technical details.
 
 ## License
 

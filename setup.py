@@ -63,15 +63,13 @@ elevation data, street bearings/orientations, speed/travel time, and routing.
 Citation info: Boeing, G. 2017. `OSMnx: New Methods for Acquiring,
 Constructing, Analyzing, and Visualizing Complex Street Networks`_.
 *Computers, Environment and Urban Systems* 65, 126-139.
-doi:10.1016/j.compenvurbsys.2017.05.004
 
 To get started, read the `OSMnx Documentation`_ and work through the
-step-by-step `OSMnx Examples`_ repository for introductory usage
-demonstrations and sample code.
+`OSMnx Examples`_ gallery for step-by-step tutorials and sample code.
 
 .. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: http://geoffboeing.com/publications/osmnx-complex-street-networks/
-.. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
 .. _OSMnx Documentation: https://osmnx.readthedocs.io/
+.. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
 """
 
 # only specify install_requires if not in RTD environment
