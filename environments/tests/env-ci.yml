@@ -1,4 +1,4 @@
-name: env-tests
+name: env-ci
 
 channels:
   - conda-forge

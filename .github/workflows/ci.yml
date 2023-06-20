@@ -31,16 +31,14 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Setup Conda environment with Micromamba
-        uses: mamba-org/provision-with-micromamba@v14
+      - name: Create environment with Micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
           cache-downloads: true
-          cache-env: true
-          channels: conda-forge
-          channel-priority: strict
-          environment-file: environments/ci/env-tests.yml
-          environment-name: env-tests
-          extra-specs: python=${{ matrix.python-version }}
+          cache-environment: true
+          create-args: python=${{ matrix.python-version }}
+          environment-file: environments/tests/env-ci.yml
+          post-cleanup: none
 
       - name: Install OSMnx
         run: |

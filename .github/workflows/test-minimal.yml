@@ -27,15 +27,13 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Setup Conda environment with Micromamba
-        uses: mamba-org/provision-with-micromamba@v14
+      - name: Create environment with Micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
           cache-downloads: true
-          cache-env: true
-          channels: conda-forge
-          channel-priority: strict
-          environment-file: environments/ci/env-tests-minimal.yml
-          environment-name: env-tests-minimal
+          cache-environment: true
+          environment-file: environments/tests/env-test-minimal.yml
+          post-cleanup: none
 
       - name: Install OSMnx
         run: |
