@@ -1,11 +1,11 @@
 # OSMnx tests
 
-First, ensure that you have installed the necessary [dependencies](environment-dev.yml). Then use the repository's [pre-commit hooks](../.pre-commit-config.yaml) and/or the scripts in this folder to:
+First, ensure that you have installed the necessary [dependencies](../environments/tests/env-test-minimal.yml) for the test suite. Then use the repository's [pre-commit hooks](../.pre-commit-config.yaml) and/or the scripts in this folder to:
 
-  - format the code according to the project's style
+  - format code/docstrings to the project's style
   - lint the code
   - lint the docstrings
-  - run unit tests and coverage
+  - run tests and coverage
 
 You can read more about the project's standards and code/docstring style in the [contributing guidelines](../CONTRIBUTING.md).
 
@@ -27,13 +27,13 @@ bash ./tests/lint_test.sh
 
 ## Continuous integration
 
-All PRs trigger continuous integration tests via GitHub Actions. See the [configuration](../.github/workflows/tests.yml). The following tests are automatically run:
+All PRs trigger continuous integration tests via GitHub Actions. See the [configuration](../.github/workflows/ci.yml). The following steps are automatically run:
 
   - build the docs
   - check code formatting
-  - docstrings linter
-  - code linter
-  - unit tests and coverage
+  - lint the docstrings
+  - lint the code
+  - tests and coverage
 
 ## Release a new version
 

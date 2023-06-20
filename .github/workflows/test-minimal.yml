@@ -32,7 +32,7 @@ jobs:
         with:
           cache-downloads: true
           cache-environment: true
-          environment-file: environments/ci/env-tests-minimal.yml
+          environment-file: environments/tests/env-test-minimal.yml
           post-cleanup: none
 
       - name: Install OSMnx

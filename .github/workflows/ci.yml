@@ -37,7 +37,7 @@ jobs:
           cache-downloads: true
           cache-environment: true
           create-args: python=${{ matrix.python-version }}
-          environment-file: environments/ci/env-tests.yml
+          environment-file: environments/tests/env-ci.yml
           post-cleanup: none
 
       - name: Install OSMnx

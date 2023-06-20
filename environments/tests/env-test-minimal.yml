@@ -1,7 +1,7 @@
-# Same as env-tests.yml but pinned to minimum required versions. Allows you to
+# Same as env-ci.yml but pinned to minimum required versions. Allows you to
 # create a conda environment to run the test suite against the oldest
 # supported versions of Python and required dependencies.
-name: env-tests-minimal
+name: env-test-minimal
 
 channels:
   - conda-forge
