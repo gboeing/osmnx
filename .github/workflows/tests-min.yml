@@ -32,9 +32,6 @@ jobs:
         with:
           cache-downloads: true
           cache-environment: true
-          condarc: |
-            channels: conda-forge
-            channel-priority: strict
           environment-file: environments/ci/env-tests-minimal.yml
           post-cleanup: none
 

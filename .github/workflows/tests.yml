@@ -36,9 +36,6 @@ jobs:
         with:
           cache-downloads: true
           cache-environment: true
-          condarc: |
-            channels: conda-forge
-            channel-priority: strict
           create-args: python=${{ matrix.python-version }}
           environment-file: environments/ci/env-tests.yml
           post-cleanup: none
