@@ -1,6 +1,6 @@
 # OSMnx tests
 
-First, ensure that you have installed the necessary [dependencies](../environments/tests/env-test-minimal.yml) for the test suite. Then use the repository's [pre-commit hooks](../.pre-commit-config.yaml) and/or the scripts in this folder to:
+First, ensure that you have installed the necessary [dependencies](../environments/tests/env-ci.yml) for the test suite. Then use the repository's [pre-commit hooks](../.pre-commit-config.yaml) and/or the scripts in this folder to:
 
   - format code/docstrings to the project's style
   - lint the code
