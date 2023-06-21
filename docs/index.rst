@@ -16,13 +16,7 @@ Boeing, G. 2017. `OSMnx: New Methods for Acquiring, Constructing, Analyzing, and
 Installation
 ------------
 
-You can install OSMnx with conda:
-
-.. code-block:: shell
-
-    conda create -n ox -c conda-forge --strict-channel-priority osmnx
-
-For more options and details, read the :doc:`installation` guide.
+Follow the :doc:`installation` guide to install OSMnx.
 
 
 Getting Started
@@ -32,10 +26,10 @@ Read the :doc:`getting-started` guide and work through the `OSMnx Examples`_ gal
 
 .. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
 
+
 Support
 -------
-
-If you have a "how-to" or usage question, please ask it on `StackOverflow`_, as we reserve the `repository`_'s issue tracker for bug tracking and feature development.
+If you have any trouble, consult the :doc:`osmnx`. If you have a "how-to" or usage question, please ask it on `StackOverflow`_, as we reserve the `repository`_'s issue tracker for bug tracking and feature development.
 
 .. _repository: https://github.com/gboeing/osmnx
 .. _StackOverflow: https://stackoverflow.com/search?q=osmnx
@@ -76,7 +70,6 @@ Documentation
    :maxdepth: 1
 
    further-reading
-
 
 
 Indices
