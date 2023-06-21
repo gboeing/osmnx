@@ -12,6 +12,7 @@ import os
 import tempfile
 from collections import OrderedDict
 from pathlib import Path
+from xml.etree import ElementTree as etree
 
 import folium
 import geopandas as gpd
@@ -26,10 +27,8 @@ from shapely.geometry import MultiPoint
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
-from xml.etree import ElementTree as etree
 
 import osmnx as ox
-
 
 ox.config(log_console=True)
 ox.settings.log_console = True
