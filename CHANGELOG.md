@@ -3,10 +3,10 @@
 ## TBD
 
   - fix bug in save_graph_xml due to roundabout ways
-  - make API key optional in elevation.add_node_elevations_google function
+  - make API key properly optional in elevation.add_node_elevations_google function
   - remove internal \_polygon_features module and move its data to geometries module
-  - migrate from setup.py and setup.cfg to pyproject.toml
-  - pin optional dependencies to minimum required versions in pyproject.toml
+  - migrate from setup.py, setup.cfg, and requirements.txt to pyproject.toml
+  - pin optional dependencies to minimum required versions
   - adopt NEP 29 policy for minimum required Python and NumPy versions
   - expand and reorganize the documentation
 
