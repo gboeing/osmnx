@@ -83,7 +83,6 @@ Repository = "https://github.com/gboeing/osmnx"
 
 [tool.black]
 line_length = 100
-quiet = true
 
 [tool.ruff]
 exclude = ["./build/*"]
