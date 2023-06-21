@@ -14,7 +14,7 @@ You can read more about the project's standards and code/docstring style in the 
 Format the code and sort imports according to the project's style by changing directories to the repository's root and running:
 
 ```
-bash ./tests/black.sh
+bash ./tests/format.sh
 ```
 
 ## Lint and test
