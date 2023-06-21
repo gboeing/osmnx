@@ -33,3 +33,4 @@ scipy
 seaborn
 sphinx
 statsmodels
+twine
