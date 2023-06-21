@@ -1,0 +1,97 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = ["setuptools>=61"]
+
+[project]
+authors = [
+    {name = "Geoff Boeing", email = "boeing@usc.edu"},
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = [
+    "geopandas>=0.12",
+    "networkx>=2.5",
+    "numpy>=1.20",
+    "pandas>=1.1",
+    "requests>=2.25",
+    "shapely>=2.0",
+]
+description = "Retrieve, model, analyze, and visualize OpenStreetMap street networks and other geospatial data"
+keywords = ["GIS", "Networks", "OpenStreetMap", "Routing"]
+license = {file = "LICENSE.txt"}
+maintainers = [
+    {name = "OSMnx contributors"},
+]
+name = "osmnx"
+requires-python = ">=3.8"
+version = "1.4.1.dev0"
+
+[project.optional-dependencies]
+entropy = ["scipy>=1.5"]
+neighbors = [
+  "scikit-learn>=0.23",
+  "scipy>=1.5",
+]
+raster = [
+  "gdal",
+  "rasterio>=1.3",
+]
+visualization = ["matplotlib>=3.5"]
+
+[project.readme]
+text = """\
+OSMnx is a Python package that lets you download geospatial data from
+OpenStreetMap and model, project, visualize, and analyze real-world street
+networks and any other geospatial entities. You can download and model
+walking, driving, or biking networks with a single line of code then easily
+analyze and visualize them. You can just as easily download and work with
+other infrastructure types, amenities/points of interest, building footprints,
+elevation data, street bearings/orientations, speed/travel time, and routing.
+
+Citation info: Boeing, G. 2017. `OSMnx: New Methods for Acquiring,
+Constructing, Analyzing, and Visualizing Complex Street Networks`_.
+*Computers, Environment and Urban Systems* 65, 126-139.
+
+To get started, read the `OSMnx Documentation`_ and work through the
+`OSMnx Examples`_ gallery for step-by-step tutorials and sample code.
+
+.. _OSMnx\\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: http://geoffboeing.com/publications/osmnx-complex-street-networks/
+.. _OSMnx Documentation: https://osmnx.readthedocs.io/
+.. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
+"""
+content-type = "text/x-rst"
+
+[project.urls]
+Documentation = "https://osmnx.readthedocs.io/"
+Repository = "https://github.com/gboeing/osmnx"
+
+[tool.black]
+line_length = 100
+
+[tool.isort]
+force_single_line = "True"
+line_length = 100
+skip = "test_osmnx.py"
+
+[tool.pydocstyle]
+add-select = "D417"
+convention = "numpy"
+
+[tool.setuptools]
+packages = ["osmnx"]
