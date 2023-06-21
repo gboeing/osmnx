@@ -43,7 +43,7 @@ jobs:
 
       - name: Lint code
         run: |
-          black . --line-length 100 --check --diff
+          black . ---check
           ruff check .
 
       - name: Test docs
