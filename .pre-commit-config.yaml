@@ -21,7 +21,6 @@ repos:
       - id: mixed-line-ending
       - id: no-commit-to-branch
         args: [--branch, main]
-      - id: requirements-txt-fixer
       - id: trailing-whitespace
 
   - repo: https://github.com/psf/black
