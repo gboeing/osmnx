@@ -9,46 +9,29 @@
 
 **OSMnx** is a Python package that lets you download geospatial data from OpenStreetMap and model, project, visualize, and analyze real-world street networks and any other geospatial entities. You can download and model walking, driving, or biking networks with a single line of code then easily analyze and visualize them. You can just as easily download and work with other infrastructure types, amenities/points of interest, building footprints, elevation data, street bearings/orientations, speed/travel time, and routing.
 
-If you use OSMnx in your work, please cite the journal article.
+## Citation
 
-**Citation info**: Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](https://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems* 65, 126–139.
+If you use OSMnx in your work, please cite the journal article:
 
+Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](https://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems* 65, 126–139.
+
+## Installation
+
+You can install OSMnx with conda:
+
+```
+conda create -n ox -c conda-forge --strict-channel-priority osmnx
+```
+
+For more options and details, read the [installation](https://osmnx.readthedocs.io/en/latest/installation.html) guide.
 
 ## Getting Started
 
-*How do I install OSMnx?* Follow the [installation](https://osmnx.readthedocs.io/en/stable/#installation) instructions.
+Read the [Getting Started](https://osmnx.readthedocs.io/en/latest/getting-started.html) guide for an introduction to the OSMnx package, what you can do with it, and how to use it.
 
-*How do I use OSMnx?* Check out the usage examples/tutorials in the [examples](https://github.com/gboeing/osmnx-examples) gallery.
+## Support
 
-*How does this or that function work?* Read its [documentation](https://osmnx.readthedocs.io/).
-
-*What can I do with OSMnx?* Check out recent [projects](https://geoffboeing.com/2018/03/osmnx-features-roundup/) and blog posts that use OSMnx.
-
-*I have a usage question.* Please ask it on [StackOverflow](https://stackoverflow.com/search?q=osmnx).
-
-
-## Features
-
-OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of [NetworkX](https://networkx.org/) and [GeoPandas](https://geopandas.org/), and interacts with [OpenStreetMap](https://www.openstreetmap.org/) APIs to:
-
-  * Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
-  * Download any other geospatial entities (e.g., political boundaries, building footprints, grocery stores, transit stops) as a GeoDataFrame
-  * Download by city name, polygon, bounding box, or point/address + distance
-  * Model driving, walking, biking, and other travel modes
-  * Download node elevations and calculate edge grades (inclines)
-  * Impute missing speeds and calculate graph edge travel times
-  * Simplify and correct the network's topology to clean-up nodes and consolidate complex intersections
-  * Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes
-  * Save networks to disk as GeoPackages or GraphML files
-  * Save/load a street network to/from a .osm XML file
-  * Conduct topological and spatial analyses to automatically calculate dozens of indicators
-  * Calculate and visualize street bearings and orientations
-  * Calculate and visualize shortest-path routes that minimize distance, travel time, elevation, etc
-  * Explore street networks as a static map or interactive web map
-  * Visualize travel distance and travel time with isoline and isochrone maps
-  * Plot figure-ground diagrams of street networks and building footprints
-
-All of these features are demonstrated in the [examples](https://github.com/gboeing/osmnx-examples) gallery and documented in the [documentation](https://osmnx.readthedocs.io/). Feature development details are in the [change log](CHANGELOG.md). Read the [journal article](https://geoffboeing.com/publications/osmnx-complex-street-networks/) for further technical details.
+If you have a "how-to" or usage question, please ask it on [StackOverflow](https://stackoverflow.com/search?q=osmnx), as we reserve the repository's issue tracker for bug tracking and feature development.
 
 ## License
 
