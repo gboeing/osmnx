@@ -85,7 +85,8 @@ Repository = "https://github.com/gboeing/osmnx"
 line_length = 100
 
 [tool.ruff]
-exclude = ["./build/*"]
+cache-dir = "~/.cache/ruff"
+exclude = ["build/*"]
 ignore = ["E501"]
 line-length = 100
 select = ["B", "C", "D", "E", "F", "I", "W"]
