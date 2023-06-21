@@ -1,3 +1,3 @@
 #!/bin/bash
-isort .
+ruff check . --fix-only --no-cache
 black .

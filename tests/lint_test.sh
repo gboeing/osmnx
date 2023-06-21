@@ -7,17 +7,8 @@ set -e
 rm -r -f .coverage .pytest_cache .temp ./docs/_build osmnx/__pycache__ tests/__pycache__
 find . -type f -name "*.vrt" -delete
 
-# check if imports are organized properly
-isort . --check-only
-
-# check if code is formatted properly
-black . --check --diff
-
-# lint the code
-flake8 .
-
-# lint the docstrings
-pydocstyle .
+# lint
+pre-commit run --all-files
 
 # build the docs
 # make -C ./docs html

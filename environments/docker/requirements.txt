@@ -7,11 +7,8 @@ cartopy
 contextily
 coverage
 cython
-flake8
-flake8-bugbear
 folium
 furo
-isort
 jupyterlab
 mapclassify
 nbdime
@@ -22,12 +19,12 @@ pillow
 pip
 pre-commit
 psycopg2
-pydocstyle
 pysal
 pytest
 python == 3.11.*
 python-igraph
 rasterio
+ruff
 scikit-learn
 scipy
 seaborn
