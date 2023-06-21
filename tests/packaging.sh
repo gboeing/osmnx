@@ -21,7 +21,7 @@ cd ..
 
 # build the distribution then get its SHA256
 rm -rf ./build ./dist
-python setup.py sdist bdist_wheel
+python -m build --sdist --wheel
 twine check --strict dist/*
 SHA=$(openssl dgst -sha256 -r "./dist/$PACKAGE-$VERSION.tar.gz"  | awk '{print $1}')
 

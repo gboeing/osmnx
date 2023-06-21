@@ -42,7 +42,7 @@ jobs:
 
       - name: Install OSMnx
         run: |
-          python setup.py install
+          pip install -e .
           conda list
           conda info --all
 
