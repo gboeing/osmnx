@@ -11,7 +11,7 @@ find . -type f -name "*.vrt" -delete
 isort . --check-only
 
 # check if code is formatted properly
-black . --line-length 100 --check --diff
+black . --check --diff
 
 # lint the code
 flake8 .
