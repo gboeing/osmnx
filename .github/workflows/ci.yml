@@ -48,8 +48,8 @@ jobs:
 
       - name: Lint code
         run: |
-          black . --check
-          ruff check .
+          black . --check --verbose
+          ruff check . --verbose
 
       - name: Test docs
         run: |
