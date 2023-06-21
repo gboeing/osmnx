@@ -2,6 +2,7 @@ beautifulsoup4
 black
 bokeh
 bottleneck
+build
 cartopy
 contextily
 coverage
