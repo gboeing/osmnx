@@ -48,10 +48,8 @@ jobs:
 
       - name: Lint code
         run: |
-          isort . --check-only
           black . --line-length 100 --check --diff
-          flake8 .
-          pydocstyle .
+          ruff check .
 
       - name: Test docs
         run: |

@@ -27,11 +27,9 @@ dependencies:
   # linting/testing
   - black=23
   - coverage
-  - flake8
-  - flake8-bugbear
-  - furo
-  - isort
-  - pre-commit
-  - pydocstyle
   - pytest
+  - ruff
+
+  # docs
+  - furo
   - sphinx=6  # pin to version from docs/requirements.txt
