@@ -12,17 +12,17 @@ fi
 # update necessary python packaging packages
 eval "$(conda shell.bash hook)"
 conda activate base
-mamba update conda-smithy setuptools twine --yes --no-banner
+mamba update conda-smithy --yes --no-banner
 
 # get the current package version number
 cd ./$PACKAGE
 VERSION=$(python -c "from _version import __version__ as v; print(v)")
 cd ..
 
-# build the distribution then get its SHA256
+# build and validate the distribution then get its SHA256
 rm -rf ./build ./dist
-python -m build --sdist --wheel
-twine check --strict dist/*
+hatch build --clean
+twine check --strict ./dist/*
 SHA=$(openssl dgst -sha256 -r "./dist/$PACKAGE-$VERSION.tar.gz"  | awk '{print $1}')
 
 # rerender the conda-forge feedstock
