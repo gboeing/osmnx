@@ -28,15 +28,16 @@ For more options and details, read the :doc:`installation` guide.
 Getting Started
 ---------------
 
-Read the :doc:`getting-started` guide for an introduction to the OSMnx package, what you can do with it, and how to use it.
+Read the :doc:`getting-started` guide and work through the `OSMnx Examples`_ gallery for step-by-step tutorials and sample code.
 
+.. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
 
 Support
 -------
 
-If you have a "how-to" or usage question, please ask it on `StackOverflow`_. If you've discovered a bug in OSMnx, please open an issue at the OSMnx `GitHub`_ repository.
+If you have a "how-to" or usage question, please ask it on `StackOverflow`_, as we reserve the `repository`_'s issue tracker for bug tracking and feature development.
 
-.. _GitHub: https://github.com/gboeing/osmnx
+.. _repository: https://github.com/gboeing/osmnx
 .. _StackOverflow: https://stackoverflow.com/search?q=osmnx
 
 

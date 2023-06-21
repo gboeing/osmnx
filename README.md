@@ -27,7 +27,7 @@ For more options and details, read the [installation](https://osmnx.readthedocs.
 
 ## Getting Started
 
-Read the [Getting Started](https://osmnx.readthedocs.io/en/latest/getting-started.html) guide for an introduction to the OSMnx package, what you can do with it, and how to use it.
+Read the [Getting Started](https://osmnx.readthedocs.io/en/latest/getting-started.html) guide and work through the [OSMnx Examples](https://github.com/gboeing/osmnx-examples) gallery for step-by-step tutorials and sample code.
 
 ## Support
 
