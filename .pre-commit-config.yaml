@@ -11,6 +11,7 @@ repos:
       - id: check-json
       - id: check-merge-conflict
         args: [--assume-in-merge]
+      - id: check-toml
       - id: check-xml
       - id: check-yaml
       - id: debug-statements
@@ -20,27 +21,15 @@ repos:
       - id: mixed-line-ending
       - id: no-commit-to-branch
         args: [--branch, main]
-      - id: requirements-txt-fixer
       - id: trailing-whitespace
-
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
 
   - repo: https://github.com/psf/black
     rev: 23.3.0
     hooks:
       - id: black
-        args: [--line-length=100]
+        args: ["--check"]
 
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.0.274
     hooks:
-      - id: flake8
-
-  - repo: https://github.com/pycqa/pydocstyle
-    rev: 6.3.0
-    hooks:
-      - id: pydocstyle
-        exclude: "tests/test_osmnx.py"
+      - id: ruff

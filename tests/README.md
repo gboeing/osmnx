@@ -14,7 +14,7 @@ You can read more about the project's standards and code/docstring style in the 
 Format the code and sort imports according to the project's style by changing directories to the repository's root and running:
 
 ```
-bash ./tests/black.sh
+bash ./tests/format.sh
 ```
 
 ## Lint and test
@@ -37,7 +37,7 @@ All PRs trigger continuous integration tests via GitHub Actions. See the [config
 
 ## Release a new version
 
-Update `CHANGELOG.md` and edit the version number in `setup.py`, `osmnx/_version.py`, and `docs/conf.py`. If needed, update `LICENSE.txt` dates and `requirements.txt` dependency versions. Then change directories to the repository's root and run:
+Update `CHANGELOG.md` and edit the version number in `pyproject.toml`, `osmnx/_version.py`, and `docs/conf.py`. If needed, update `LICENSE.txt` dates and `pyproject.toml` dependency versions. Then change directories to the repository's root and run:
 
 ```
 bash ./tests/packaging.sh

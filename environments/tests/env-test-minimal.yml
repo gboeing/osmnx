@@ -7,16 +7,16 @@ channels:
   - conda-forge
 
 dependencies:
-  # required dependencies pinned to minimum versions from /requirements.txt
+  # required dependencies pinned to minimum versions from /pyproject.toml
   - geopandas=0.12
   - networkx=2.5
   - numpy=1.20
   - pandas=1.1
-  - python=3.8  # pin to version from /setup.py
+  - python=3.8  # pin to minimum version from /pyproject.toml
   - requests=2.25
   - shapely=2.0
 
-  # extras pinned to minimum versions from /setup.py
+  # extras pinned to minimum versions from /pyproject.toml
   - folium
   - gdal
   - matplotlib=3.5
@@ -27,11 +27,9 @@ dependencies:
   # linting/testing
   - black=23
   - coverage
-  - flake8
-  - flake8-bugbear
-  - furo
-  - isort
-  - pre-commit
-  - pydocstyle
   - pytest
+  - ruff
+
+  # docs
+  - furo
   - sphinx=6  # pin to version from docs/requirements.txt

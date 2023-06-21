@@ -37,16 +37,14 @@ jobs:
 
       - name: Install OSMnx
         run: |
-          python setup.py install
+          pip install -e .
           conda list
           conda info --all
 
       - name: Lint code
         run: |
-          isort . --check-only
-          black . --line-length 100 --check --diff
-          flake8 .
-          pydocstyle .
+          black . --check --verbose
+          ruff check . --verbose
 
       - name: Test docs
         run: |

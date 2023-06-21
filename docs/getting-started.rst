@@ -10,7 +10,7 @@ Get Started in Four Steps
 
 3. Work through the `OSMnx Examples`_ gallery for step-by-step tutorials and sample code.
 
-4. Refer to the :doc:`osmnx` for complete details on using the package.
+4. Consult the :doc:`osmnx` for complete details on using the package.
 
 Finally, if you're not already familiar with `NetworkX`_ and `GeoPandas`_, make sure you read their user guides as OSMnx uses their data structures and functionality.
 
@@ -120,8 +120,23 @@ All of this functionality is demonstrated step-by-step in the `OSMnx Examples`_ 
 
 More feature development details are in the `Change Log`_. Consult the :doc:`further-reading` resources for additional technical details and research.
 
+Frequently Asked Questions
+--------------------------
+
+*How do I install OSMnx?* Follow the :doc:`installation` guide.
+
+*How do I use OSMnx?* Check out the step-by-step tutorials in the `OSMnx Examples`_ gallery.
+
+*How does this or that function work?* Consult the :doc:`osmnx`.
+
+*What can I do with OSMnx?* Check out recent `projects`_ that use OSMnx.
+
+*I have a usage question.* Please ask it on `StackOverflow`_.
+
 .. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
 .. _GeoPandas: https://geopandas.org/
 .. _NetworkX: https://networkx.org/
 .. _OpenStreetMap: https://www.openstreetmap.org/
 .. _Change Log: https://github.com/gboeing/osmnx/blob/main/CHANGELOG.md
+.. _projects: https://geoffboeing.com/2018/03/osmnx-features-roundup/
+.. _StackOverflow: https://stackoverflow.com/search?q=osmnx

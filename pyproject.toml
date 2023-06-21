@@ -1,0 +1,74 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[project]
+authors = [{name = "Geoff Boeing", email = "boeing@usc.edu"}]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = [
+    "geopandas>=0.12",
+    "networkx>=2.5",
+    "numpy>=1.20",
+    "pandas>=1.1",
+    "requests>=2.25",
+    "shapely>=2.0",
+]
+description = "Retrieve, model, analyze, and visualize OpenStreetMap street networks and other geospatial data"
+keywords = ["GIS", "Networks", "OpenStreetMap", "Routing"]
+license = {text = "MIT License"}
+maintainers = [{name = "OSMnx contributors"}]
+name = "osmnx"
+readme = "README.md"
+requires-python = ">=3.8"
+version = "1.4.1.dev0"
+
+[project.optional-dependencies]
+entropy = ["scipy>=1.5"]
+neighbors = ["scikit-learn>=0.23", "scipy>=1.5"]
+raster = ["gdal", "rasterio>=1.3"]
+visualization = ["matplotlib>=3.5"]
+
+[project.urls]
+Documentation = "https://osmnx.readthedocs.io/"
+Repository = "https://github.com/gboeing/osmnx"
+
+[tool.black]
+line_length = 100
+
+[tool.ruff]
+cache-dir = "~/.cache/ruff"
+exclude = ["build/*"]
+ignore = ["E501"]
+line-length = 100
+select = ["B", "C", "D", "E", "F", "I", "W"]
+
+[tool.ruff.isort]
+force-single-line = true
+
+[tool.ruff.mccabe]
+max-complexity = 15
+
+[tool.ruff.per-file-ignores]
+"./osmnx/__init__.py" = ["F401", "F403"]
+"./osmnx/_api.py" = ["F401"]
+"./tests/test_osmnx.py" = ["E402", "D103", "F841", "I001"]
+
+[tool.ruff.pydocstyle]
+convention = "numpy"

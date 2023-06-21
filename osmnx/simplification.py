@@ -179,7 +179,7 @@ def _get_paths_to_simplify(G, strict=True):
     path_to_simplify : list
     """
     # first identify all the nodes that are endpoints
-    endpoints = set([n for n in G.nodes if _is_endpoint(G, n, strict=strict)])
+    endpoints = {n for n in G.nodes if _is_endpoint(G, n, strict=strict)}
     utils.log(f"Identified {len(endpoints)} edge endpoints")
 
     # for each endpoint node, look at each of its successor nodes

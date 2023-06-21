@@ -1,34 +1,40 @@
+# basics
+osmnx
+python == 3.11.*
+
+# helpful
 beautifulsoup4
-black
 bokeh
 bottleneck
 cartopy
 contextily
-coverage
 cython
-flake8
-flake8-bugbear
 folium
-furo
-isort
 jupyterlab
 mapclassify
+numexpr
+pillow
+psycopg2
+pysal
+python-igraph
+seaborn
+statsmodels
+
+# docs
+furo
+pip
+sphinx
+
+# packaging
+conda-smithy
+hatch
+twine
+
+# linting/testing
+black
+coverage
 nbdime
 nbqa
-numexpr
-osmnx
-pillow
-pip
 pre-commit
-psycopg2
-pydocstyle
-pysal
 pytest
-python == 3.11.*
-python-igraph
-rasterio
-scikit-learn
-scipy
-seaborn
-sphinx
-statsmodels
+ruff
