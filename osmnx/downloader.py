@@ -719,7 +719,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
         try:
             response_json = response.json()
 
-        except Exception:  # pragma: no cover
+        except Exception as e:  # pragma: no cover
             if sc in {429, 504}:
                 # 429 is 'too many requests' and 504 is 'gateway timeout' from
                 # server overload: handle these by pausing then recursively
@@ -731,7 +731,9 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
             else:
                 # else, this was an unhandled status code, throw an exception
                 utils.log(f"{domain} returned {sc}", level=lg.ERROR)
-                raise Exception(f"Server returned:\n{response} {response.reason}\n{response.text}")
+                raise Exception(
+                    f"Server returned:\n{response} {response.reason}\n{response.text}"
+                ) from e
 
         _save_to_cache(prepared_url, response_json, sc)
         return response_json
@@ -796,7 +798,7 @@ def overpass_request(data, pause=None, error_pause=60):
             if "remark" in response_json:
                 utils.log(f'Server remark: {response_json["remark"]!r}', level=lg.WARNING)
 
-        except Exception:  # pragma: no cover
+        except Exception as e:  # pragma: no cover
             if sc in {429, 504}:
                 # 429 is 'too many requests' and 504 is 'gateway timeout' from
                 # server overload: handle these by pausing then recursively
@@ -809,7 +811,9 @@ def overpass_request(data, pause=None, error_pause=60):
             else:
                 # else, this was an unhandled status code, throw an exception
                 utils.log(f"{domain} returned {sc}", level=lg.ERROR)
-                raise Exception(f"Server returned\n{response} {response.reason}\n{response.text}")
+                raise Exception(
+                    f"Server returned\n{response} {response.reason}\n{response.text}"
+                ) from e
 
         _save_to_cache(prepared_url, response_json, sc)
         return response_json

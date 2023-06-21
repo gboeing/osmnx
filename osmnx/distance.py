@@ -158,8 +158,10 @@ def add_edge_lengths(G, precision=None, edges=None):
         c = np.array([(y[u], x[u], y[v], x[v]) for u, v, k in uvk])
         # ensure all coordinates can be converted to float and are non-null
         assert not np.isnan(c.astype(float)).any()
-    except (AssertionError, KeyError):  # pragma: no cover
-        raise ValueError("some edges missing nodes, possibly due to input data clipping issue")
+    except (AssertionError, KeyError) as e:  # pragma: no cover
+        raise ValueError(
+            "some edges missing nodes, possibly due to input data clipping issue"
+        ) from e
 
     # calculate great circle distances, round, and fill nulls with zeros
     dists = great_circle_vec(c[:, 0], c[:, 1], c[:, 2], c[:, 3]).round(precision)
@@ -510,5 +512,5 @@ def _verify_edge_attribute(G, attr):
         values_float = values.astype(float)
         if np.isnan(values_float).any():
             warn(f"The attribute {attr!r} is missing or null on some edges.", stacklevel=2)
-    except ValueError:
-        raise ValueError(f"The edge attribute {attr!r} contains non-numeric values.")
+    except ValueError as e:
+        raise ValueError(f"The edge attribute {attr!r} contains non-numeric values.") from e
