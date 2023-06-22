@@ -29,7 +29,7 @@ Read the :doc:`getting-started` guide and work through the `OSMnx Examples`_ gal
 
 Support
 -------
-If you have any trouble, consult the :doc:`osmnx`. If you have a "how-to" or usage question, please ask it on `StackOverflow`_, as we reserve the `repository`_'s issue tracker for bug tracking and feature development.
+If you have any trouble, consult the :doc:`user-reference`. If you have a "how-to" or usage question, please ask it on `StackOverflow`_, as we reserve the `repository`_'s issue tracker for bug tracking and feature development.
 
 .. _repository: https://github.com/gboeing/osmnx
 .. _StackOverflow: https://stackoverflow.com/search?q=osmnx
@@ -59,12 +59,12 @@ Documentation
 .. toctree::
    :maxdepth: 1
 
-   osmnx
+   user-reference
 
 .. toctree::
    :maxdepth: 1
 
-   internals
+   internals-reference
 
 .. toctree::
    :maxdepth: 1
