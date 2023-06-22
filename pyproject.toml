@@ -58,7 +58,7 @@ cache-dir = "~/.cache/ruff"
 exclude = ["build/*"]
 ignore = ["E501"]
 line-length = 100
-select = ["B", "C", "D", "E", "F", "I", "W"]
+select = ["A", "B", "C", "D", "E", "ERA", "F", "I", "W"]
 
 [tool.ruff.isort]
 force-single-line = true
@@ -67,6 +67,7 @@ force-single-line = true
 max-complexity = 15
 
 [tool.ruff.per-file-ignores]
+"./docs/conf.py" = ["A001"]
 "./osmnx/__init__.py" = ["F401", "F403"]
 "./osmnx/_api.py" = ["F401"]
 "./tests/test_osmnx.py" = ["E402", "D103", "F841", "I001"]
