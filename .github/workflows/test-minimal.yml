@@ -47,11 +47,6 @@ jobs:
           hatch build --clean
           twine check --strict ./dist/*
 
-      - name: Test docs
-        run: |
-          make -C ./docs html
-          python -m sphinx -b linkcheck docs/ docs/_build/linkcheck
-
       - name: Test code
         run: |
           coverage run --source ./osmnx --module pytest --verbose
