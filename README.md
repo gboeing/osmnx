@@ -25,7 +25,7 @@ Read the [Getting Started](https://osmnx.readthedocs.io/en/latest/getting-starte
 
 ## Support
 
-If you have any trouble, consult the [User Reference](https://osmnx.readthedocs.io/en/latest/osmnx.html). If you have a "how-to" or usage question, please ask it on [StackOverflow](https://stackoverflow.com/search?q=osmnx), as we reserve the [repository](https://github.com/gboeing/osmnx)'s issue tracker for bug tracking and feature development.
+If you have any trouble, consult the [User Reference](https://osmnx.readthedocs.io/en/latest/user-reference.html). If you have a "how-to" or usage question, please ask it on [StackOverflow](https://stackoverflow.com/search?q=osmnx), as we reserve the [repository](https://github.com/gboeing/osmnx)'s issue tracker for bug tracking and feature development.
 
 ## License
 

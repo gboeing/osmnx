@@ -10,7 +10,7 @@ Get Started in Four Steps
 
 3. Work through the `OSMnx Examples`_ gallery for step-by-step tutorials and sample code.
 
-4. Consult the :doc:`osmnx` for complete details on using the package.
+4. Consult the :doc:`user-reference` for complete details on using the package.
 
 Finally, if you're not already familiar with `NetworkX`_ and `GeoPandas`_, make sure you read their user guides as OSMnx uses their data structures and functionality.
 
@@ -43,7 +43,7 @@ OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of 
 * Visualize travel distance and travel time with isoline and isochrone maps
 * Plot figure-ground diagrams of street networks and building footprints
 
-The `OSMnx Examples`_ gallery contains tutorials and demonstrations of all these features, and package usage is detailed in the :doc:`osmnx`.
+The `OSMnx Examples`_ gallery contains tutorials and demonstrations of all these features, and package usage is detailed in the :doc:`user-reference`.
 
 Configuration
 ^^^^^^^^^^^^^
@@ -114,9 +114,9 @@ Visualization
 You can plot graphs, routes, network figure-ground diagrams, building footprints, and street network orientation rose diagrams (polar histograms) with the :code:`plot` module. You can also explore street networks, routes, or urban amenities as interactive folium/leaflet web maps.
 
 More Info
-^^^^^^^^^
+---------
 
-All of this functionality is demonstrated step-by-step in the `OSMnx Examples`_ gallery, and usage is detailed in the :doc:`osmnx`.
+All of this functionality is demonstrated step-by-step in the `OSMnx Examples`_ gallery, and usage is detailed in the :doc:`user-reference`.
 
 More feature development details are in the `Change Log`_. Consult the :doc:`further-reading` resources for additional technical details and research.
 
@@ -127,7 +127,7 @@ Frequently Asked Questions
 
 *How do I use OSMnx?* Check out the step-by-step tutorials in the `OSMnx Examples`_ gallery.
 
-*How does this or that function work?* Consult the :doc:`osmnx`.
+*How does this or that function work?* Consult the :doc:`user-reference`.
 
 *What can I do with OSMnx?* Check out recent `projects`_ that use OSMnx.
 
