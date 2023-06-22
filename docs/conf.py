@@ -16,7 +16,10 @@ sys.path.insert(0, str(Path().resolve().parent))
 author = "Geoff Boeing"
 copyright = "2016–2023, Geoff Boeing"
 project = "OSMnx"
-version = release = "1.4.1.dev0"
+
+# dynamically load version from /osmnx/_version.py
+with open("../osmnx/_version.py", "r") as f:
+    version = release = f.read().split(" = ")[1].replace('"', "")
 
 # mock import all required + optional dependency packages because readthedocs
 # does not have them installed

@@ -37,7 +37,7 @@ All PRs trigger continuous integration tests via GitHub Actions. See the [config
 
 ## Release a new version
 
-Update `CHANGELOG.md` and edit the version number in `pyproject.toml`, `osmnx/_version.py`, and `docs/conf.py`. If needed, update `LICENSE.txt` dates and `pyproject.toml` dependency versions. Then change directories to the repository's root and run:
+Update `CHANGELOG.md` and edit the version number in `osmnx/_version.py`. If needed, update `LICENSE.txt` dates and `pyproject.toml` dependency versions. Then change directories to the repository's root and run:
 
 ```
 bash ./tests/packaging.sh

@@ -31,13 +31,13 @@ dependencies = [
     "shapely>=2.0",
 ]
 description = "Retrieve, model, analyze, and visualize OpenStreetMap street networks and other geospatial data"
+dynamic = ["version"]
 keywords = ["GIS", "Networks", "OpenStreetMap", "Routing"]
 license = {text = "MIT License"}
 maintainers = [{name = "OSMnx contributors"}]
 name = "osmnx"
 readme = "README.md"
 requires-python = ">=3.8"
-version = "1.4.1.dev0"
 
 [project.optional-dependencies]
 entropy = ["scipy>=1.5"]
@@ -51,6 +51,9 @@ Repository = "https://github.com/gboeing/osmnx"
 
 [tool.black]
 line_length = 100
+
+[tool.hatch.version]
+path = "osmnx/_version.py"
 
 [tool.ruff]
 cache-dir = "~/.cache/ruff"
