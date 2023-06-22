@@ -11,7 +11,7 @@ fi
 
 # update necessary python packaging packages
 eval "$(conda shell.bash hook)"
-conda activate base
+conda activate ox
 mamba update conda-smithy --yes --no-banner
 
 # get the current package version number
