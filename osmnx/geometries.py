@@ -950,7 +950,6 @@ def _buffer_invalid_geometries(gdf):
                 level=lg.WARNING,
             )
 
-            # apply .buffer(0)
             gdf.loc[invalid_geometry_filter, "geometry"] = gdf.loc[
                 invalid_geometry_filter, "geometry"
             ].buffer(0)

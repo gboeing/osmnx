@@ -4,8 +4,12 @@
 set -e
 
 # delete temp files and folders
-rm -r -f .coverage .pytest_cache .temp ./docs/_build osmnx/__pycache__ tests/__pycache__
+rm -r -f .coverage .pytest_cache .temp ./dist/ ./docs/_build osmnx/__pycache__ tests/__pycache__
 find . -type f -name "*.vrt" -delete
+
+# test building and validating the package
+hatch build --clean
+twine check --strict ./dist/*
 
 # lint
 pre-commit run --all-files
@@ -21,5 +25,5 @@ coverage run --source ./osmnx --module pytest --verbose
 coverage report -m
 
 # delete temp files and folders
-rm -r -f .coverage .pytest_cache .temp ./docs/_build osmnx/__pycache__ tests/__pycache__
+rm -r -f .coverage .pytest_cache .temp ./dist/ ./docs/_build osmnx/__pycache__ tests/__pycache__
 find . -type f -name "*.vrt" -delete

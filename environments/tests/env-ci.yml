@@ -24,8 +24,11 @@ dependencies:
   # linting/testing
   - black=23
   - coverage
+  - hatch
+  - pre-commit
   - pytest
   - ruff
+  - twine
 
   # docs
   - furo

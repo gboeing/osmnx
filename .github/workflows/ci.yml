@@ -48,13 +48,9 @@ jobs:
 
       - name: Lint code
         run: |
-          black . --check --verbose
-          ruff check . --verbose
-
-      - name: Test docs
-        run: |
-          make -C ./docs html
-          python -m sphinx -b linkcheck docs/ docs/_build/linkcheck
+          pre-commit run --all-files
+          hatch build --clean
+          twine check --strict ./dist/*
 
       - name: Test code
         run: |
