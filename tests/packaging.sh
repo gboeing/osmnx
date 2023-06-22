@@ -15,9 +15,7 @@ conda activate ox
 mamba update conda-smithy --yes --no-banner
 
 # get the current package version number
-cd ./$PACKAGE
-VERSION=$(python -c "from _version import __version__ as v; print(v)")
-cd ..
+VERSION=$(hatch version)
 
 # build and validate the distribution then get its SHA256
 rm -rf ./build ./dist
@@ -33,8 +31,9 @@ conda smithy rerender --commit auto
 
 # wait for user to update feedstock recipe
 echo ""
-echo "Ready to push git tags, upload PyPI distribution, and update conda-forge feedstock."
-echo "$PACKAGE version is $VERSION and sha256 is $SHA"
+echo "Ready to push git tags, upload PyPI dist, and update conda-forge feedstock."
+echo "$PACKAGE version is $VERSION"
+echo "sha256 is $SHA"
 echo "Please update \"$PACKAGE-feedstock/recipe/meta.yaml\" version, sha256, and build number before proceeding!"
 echo ""
 read -r -n 1 -p "Ready to proceed? (y/n) " INPUT
