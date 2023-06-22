@@ -43,8 +43,9 @@ jobs:
 
       - name: Lint code
         run: |
-          black . --check --verbose
-          ruff check . --verbose
+          pre-commit run --all-files
+          hatch build --clean
+          twine check --strict ./dist/*
 
       - name: Test docs
         run: |
