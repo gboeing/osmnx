@@ -1,11 +1,11 @@
 """
-Download geospatial features' geometries and attributes from OpenStreetMap.
+Download OpenStreetMap geospatial features' geometries and attributes.
 
 Retrieve points of interest, building footprints, transit lines/stops, or any
-other objects from OSM, including their geometries and attribute data, and
+other features from OSM, including their geometries and attribute data, and
 construct a GeoDataFrame of them. You can use this module to query for nodes,
 ways, and relations (the latter of type "multipolygon" or "boundary" only) by
-passing a dictionary of desired tags/values.
+passing a dictionary of desired OSM tags.
 """
 
 import logging as lg
@@ -77,6 +77,10 @@ def geometries_from_bbox(north, south, east, west, tags):
     """
     Create a GeoDataFrame of OSM features within a N, S, E, W bounding box.
 
+    You can use the `settings` module to retrieve a snapshot of historical OSM
+    data as of a certain date, or to configure the Overpass server timeout,
+    memory allocation, and other custom settings.
+
     Parameters
     ----------
     north : float
@@ -103,11 +107,6 @@ def geometries_from_bbox(north, south, east, west, tags):
     Returns
     -------
     gdf : geopandas.GeoDataFrame
-
-    Notes
-    -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via the `settings` module.
     """
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -121,6 +120,10 @@ def geometries_from_bbox(north, south, east, west, tags):
 def geometries_from_point(center_point, tags, dist=1000):
     """
     Create GeoDataFrame of OSM features within some distance N, S, E, W of a point.
+
+    You can use the `settings` module to retrieve a snapshot of historical OSM
+    data as of a certain date, or to configure the Overpass server timeout,
+    memory allocation, and other custom settings.
 
     Parameters
     ----------
@@ -144,11 +147,6 @@ def geometries_from_point(center_point, tags, dist=1000):
     Returns
     -------
     gdf : geopandas.GeoDataFrame
-
-    Notes
-    -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via the `settings` module.
     """
     # create bounding box from center point and distance in each direction
     north, south, east, west = utils_geo.bbox_from_point(center_point, dist)
@@ -165,6 +163,10 @@ def geometries_from_point(center_point, tags, dist=1000):
 def geometries_from_address(address, tags, dist=1000):
     """
     Create GeoDataFrame of OSM features within some distance N, S, E, W of address.
+
+    You can use the `settings` module to retrieve a snapshot of historical OSM
+    data as of a certain date, or to configure the Overpass server timeout,
+    memory allocation, and other custom settings.
 
     Parameters
     ----------
@@ -189,11 +191,6 @@ def geometries_from_address(address, tags, dist=1000):
     Returns
     -------
     gdf : geopandas.GeoDataFrame
-
-    Notes
-    -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via the `settings` module.
     """
     # geocode the address string to a (lat, lng) point
     center_point = geocoder.geocode(query=address)
@@ -206,7 +203,7 @@ def geometries_from_address(address, tags, dist=1000):
 
 def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     """
-    Create GeoDataFrame of OSM features within boundaries of geocodable place(s).
+    Create GeoDataFrame of OSM features within boundaries of some place(s).
 
     The query must be geocodable and OSM must have polygon boundaries for the
     geocode result. If OSM does not have a polygon for this place, you can
@@ -220,6 +217,10 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     the OSM ID of the place, you can retrieve its boundary polygon using the
     geocode_to_gdf function, then pass it to the geometries_from_polygon
     function.
+
+    You can use the `settings` module to retrieve a snapshot of historical OSM
+    data as of a certain date, or to configure the Overpass server timeout,
+    memory allocation, and other custom settings.
 
     Parameters
     ----------
@@ -246,11 +247,6 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     Returns
     -------
     gdf : geopandas.GeoDataFrame
-
-    Notes
-    -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via the `settings` module.
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, (str, dict)):
@@ -279,6 +275,10 @@ def geometries_from_polygon(polygon, tags):
     """
     Create GeoDataFrame of OSM features within boundaries of a (multi)polygon.
 
+    You can use the `settings` module to retrieve a snapshot of historical OSM
+    data as of a certain date, or to configure the Overpass server timeout,
+    memory allocation, and other custom settings.
+
     Parameters
     ----------
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
@@ -299,11 +299,6 @@ def geometries_from_polygon(polygon, tags):
     Returns
     -------
     gdf : geopandas.GeoDataFrame
-
-    Notes
-    -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via the `settings` module.
     """
     # verify that the geometry is valid and a Polygon/MultiPolygon
     if not polygon.is_valid:

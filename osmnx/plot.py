@@ -1,4 +1,4 @@
-"""Visualize spatial footprints, street networks, routes, and orientations."""
+"""Visualize street networks, routes, orientations, and geospatial features."""
 
 from pathlib import Path
 
