@@ -1,4 +1,4 @@
-"""Graph creation functions."""
+"""Download and create graphs from OpenStreetMap data."""
 
 import itertools
 from warnings import warn
@@ -36,7 +36,11 @@ def graph_from_bbox(
     custom_filter=None,
 ):
     """
-    Create a graph from OSM within some bounding box.
+    Download and create a graph within some bounding box.
+
+    You can use the `settings` module to retrieve a snapshot of historical OSM
+    data as of a certain date, or to configure the Overpass server timeout,
+    memory allocation, and other custom settings.
 
     Parameters
     ----------
@@ -73,10 +77,9 @@ def graph_from_bbox(
 
     Notes
     -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via the `settings` module. Very large query areas
-    will use the utils_geo._consolidate_subdivide_geometry function to perform
-    multiple queries: see that function's documentation for caveats.
+    Very large query areas use the `utils_geo._consolidate_subdivide_geometry`
+    function to automatically make multiple requests: see that function's
+    documentation for caveats.
     """
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
@@ -108,7 +111,11 @@ def graph_from_point(
     custom_filter=None,
 ):
     """
-    Create a graph from OSM within some distance of some (lat, lng) point.
+    Download and create a graph within some distance of a (lat, lng) point.
+
+    You can use the `settings` module to retrieve a snapshot of historical OSM
+    data as of a certain date, or to configure the Overpass server timeout,
+    memory allocation, and other custom settings.
 
     Parameters
     ----------
@@ -147,10 +154,9 @@ def graph_from_point(
 
     Notes
     -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via the `settings` module. Very large query areas
-    will use the utils_geo._consolidate_subdivide_geometry function to perform
-    multiple queries: see that function's documentation for caveats.
+    Very large query areas use the `utils_geo._consolidate_subdivide_geometry`
+    function to automatically make multiple requests: see that function's
+    documentation for caveats.
     """
     if dist_type not in {"bbox", "network"}:  # pragma: no cover
         raise ValueError('dist_type must be "bbox" or "network"')
@@ -195,7 +201,11 @@ def graph_from_address(
     custom_filter=None,
 ):
     """
-    Create a graph from OSM within some distance of some address.
+    Download and create a graph within some distance of an address.
+
+    You can use the `settings` module to retrieve a snapshot of historical OSM
+    data as of a certain date, or to configure the Overpass server timeout,
+    memory allocation, and other custom settings.
 
     Parameters
     ----------
@@ -237,10 +247,9 @@ def graph_from_address(
 
     Notes
     -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via the `settings` module. Very large query areas
-    will use the utils_geo._consolidate_subdivide_geometry function to perform
-    multiple queries: see that function's documentation for caveats.
+    Very large query areas use the `utils_geo._consolidate_subdivide_geometry`
+    function to automatically make multiple requests: see that function's
+    documentation for caveats.
     """
     # geocode the address string to a (lat, lng) point
     point = geocoder.geocode(query=address)
@@ -277,7 +286,7 @@ def graph_from_place(
     custom_filter=None,
 ):
     """
-    Create graph from OSM within the boundaries of some geocodable place(s).
+    Download and create a graph within the boundaries of some place(s).
 
     The query must be geocodable and OSM must have polygon boundaries for the
     geocode result. If OSM does not have a polygon for this place, you can
@@ -290,6 +299,10 @@ def graph_from_place(
     the which_result argument to use a different geocode result. If you know
     the OSM ID of the place, you can retrieve its boundary polygon using the
     geocode_to_gdf function, then pass it to the graph_from_polygon function.
+
+    You can use the `settings` module to retrieve a snapshot of historical OSM
+    data as of a certain date, or to configure the Overpass server timeout,
+    memory allocation, and other custom settings.
 
     Parameters
     ----------
@@ -325,10 +338,9 @@ def graph_from_place(
 
     Notes
     -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via the `settings` module. Very large query areas
-    will use the utils_geo._consolidate_subdivide_geometry function to perform
-    multiple queries: see that function's documentation for caveats.
+    Very large query areas use the `utils_geo._consolidate_subdivide_geometry`
+    function to automatically make multiple requests: see that function's
+    documentation for caveats.
     """
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, (str, dict)):
@@ -372,7 +384,11 @@ def graph_from_polygon(
     custom_filter=None,
 ):
     """
-    Create a graph from OSM within the boundaries of some shapely polygon.
+    Download and create a graph within the boundaries of a (multi)polygon.
+
+    You can use the `settings` module to retrieve a snapshot of historical OSM
+    data as of a certain date, or to configure the Overpass server timeout,
+    memory allocation, and other custom settings.
 
     Parameters
     ----------
@@ -404,10 +420,9 @@ def graph_from_polygon(
 
     Notes
     -----
-    You can configure the Overpass server timeout, memory allocation, and
-    other custom settings via the `settings` module. Very large query areas
-    will use the utils_geo._consolidate_subdivide_geometry function to perform
-    multiple queries: see that function's documentation for caveats.
+    Very large query areas use the `utils_geo._consolidate_subdivide_geometry`
+    function to automatically make multiple requests: see that function's
+    documentation for caveats.
     """
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
