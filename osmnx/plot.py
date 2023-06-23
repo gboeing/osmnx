@@ -587,7 +587,7 @@ def plot_footprints(
     dpi=600,
 ):
     """
-    Visualize a GeoDataFrame of geospatial entities' footprints.
+    Visualize a GeoDataFrame of geospatial features' footprints.
 
     Parameters
     ----------

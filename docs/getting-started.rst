@@ -26,9 +26,9 @@ Overview
 
 OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of NetworkX and GeoPandas, and interacts with `OpenStreetMap`_ APIs to:
 
-* Download and model street networks or other networked infrastructure anywhere in the world with a single line of code
-* Download any other geospatial entities (e.g., political boundaries, building footprints, grocery stores, transit stops) as a GeoDataFrame
-* Download by city name, polygon, bounding box, or point/address + distance
+* Download and model street networks or other infrastructure anywhere in the world with a single line of code
+* Download geospatial features (e.g., political boundaries, building footprints, grocery stores, transit stops) as a GeoDataFrame
+* Query by city name, polygon, bounding box, or point/address + distance
 * Model driving, walking, biking, and other travel modes
 * Download node elevations and calculate edge grades (inclines)
 * Impute missing speeds and calculate graph edge travel times
@@ -53,14 +53,14 @@ You can configure OSMnx using the :code:`settings` module. Here you can adjust l
 Geocoding and Querying
 ^^^^^^^^^^^^^^^^^^^^^^
 
-OSMnx geocodes place names and addresses with the OpenStreetMap Nominatim API. You can use the :code:`geocoder` module to geocode place names or addresses to lat-lng coordinates. Or, you can retrieve places (or any other geospatial entities) by name or by OpenStreetMap ID.
+OSMnx geocodes place names and addresses with the OpenStreetMap Nominatim API. You can use the :code:`geocoder` module to geocode place names or addresses to lat-lng coordinates. Or, you can retrieve places or any other geospatial features by name or OpenStreetMap ID.
 
-Using the :code:`geometries` and :code:`graph` modules (as described below), you can download data by lat-lng point, address, bounding box, bounding polygon, or place name (e.g., neighborhood, city, county, etc).
+Using the :code:`geometries` and :code:`graph` modules, as described below, you can download data by lat-lng point, address, bounding box, bounding polygon, or place name (e.g., neighborhood, city, county, etc).
 
 Urban Amenities
 ^^^^^^^^^^^^^^^
 
-Using OSMnx's :code:`geometries` module, you can search for and download any geospatial objects (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap Overpass API as a GeoPandas GeoDataFrame. This uses :code:`tag:value` pairs to search for matching objects.
+Using OSMnx's :code:`geometries` module, you can search for and download any geospatial `features`_ (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap Overpass API as a GeoPandas GeoDataFrame. This uses OpenStreetMap :code:`tag:value` pairs to search for matching features.
 
 Modeling a Network
 ^^^^^^^^^^^^^^^^^^
@@ -137,6 +137,7 @@ Frequently Asked Questions
 .. _GeoPandas: https://geopandas.org/
 .. _NetworkX: https://networkx.org/
 .. _OpenStreetMap: https://www.openstreetmap.org/
+.. _features: https://wiki.openstreetmap.org/wiki/Map_features
 .. _Change Log: https://github.com/gboeing/osmnx/blob/main/CHANGELOG.md
 .. _projects: https://geoffboeing.com/2018/03/osmnx-features-roundup/
 .. _StackOverflow: https://stackoverflow.com/search?q=osmnx
