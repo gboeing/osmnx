@@ -1,8 +1,8 @@
 Getting Started
 ===============
 
-Get Started in Four Steps
--------------------------
+Get Started in 4 Steps
+----------------------
 
 1. Install OSMnx by following the :doc:`installation` guide.
 
@@ -86,7 +86,7 @@ It can also convert a MultiDiGraph to/from GeoPandas node and edge GeoDataFrames
 
 You can easily project your graphs to different coordinate reference systems using the :code:`projection` module. If you're unsure which CRS you want to project to, OSMnx can automatically determine an appropriate UTM CRS for you.
 
-You can save your OSMnx graph to disk as a GraphML file or GeoPackage using the :code:`io` module.
+You can save your OSMnx graph to disk as a GraphML file or GeoPackage using the :code:`io` module. Use the GraphML format whenever saving a graph for later work with OSMnx.
 
 Working with Elevation
 ^^^^^^^^^^^^^^^^^^^^^^
