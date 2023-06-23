@@ -30,7 +30,7 @@ dependencies = [
     "requests>=2.25",
     "shapely>=2.0",
 ]
-description = "Retrieve, model, analyze, and visualize OpenStreetMap street networks and other geospatial data"
+description = "Download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap"
 dynamic = ["version"]
 keywords = ["GIS", "Networks", "OpenStreetMap", "Routing"]
 license = {text = "MIT License"}
