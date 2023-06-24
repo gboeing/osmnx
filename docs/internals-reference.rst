@@ -28,9 +28,9 @@ osmnx.distance module
     :noindex:
 
 osmnx._downloader module
------------------------
+------------------------
 
-.. automodule:: osmnx.downloader
+.. automodule:: osmnx._downloader
     :members:
     :private-members:
     :noindex:
