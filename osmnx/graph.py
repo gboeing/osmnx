@@ -127,8 +127,7 @@ def graph_from_point(
     dist_type : string {"network", "bbox"}
         if "bbox", retain only those nodes within a bounding box of the
         distance parameter. if "network", retain only those nodes within some
-        network distance from the center-most node (requires that scikit-learn
-        is installed as an optional dependency).
+        network distance from the center-most node.
     network_type : string, {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         what type of street network to get if custom_filter is None
     simplify : bool
@@ -218,8 +217,7 @@ def graph_from_address(
     dist_type : string {"network", "bbox"}
         if "bbox", retain only those nodes within a bounding box of the
         distance parameter. if "network", retain only those nodes within some
-        network distance from the center-most node (requires that scikit-learn
-        is installed as an optional dependency).
+        network distance from the center-most node.
     network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         what type of street network to get if custom_filter is None
     simplify : bool
