@@ -341,14 +341,14 @@ def test_find_nearest():
 
 
 def test_api_endpoints():
-    ip = ox.downloader._resolve_host_via_doh("overpass-api.de")
-    ip = ox.downloader._resolve_host_via_doh("AAAAAAAAAAA")
+    ip = ox._downloader._resolve_host_via_doh("overpass-api.de")
+    ip = ox._downloader._resolve_host_via_doh("AAAAAAAAAAA")
 
     _doh_url_template_default = ox.settings.doh_url_template
     ox.settings.doh_url_template = "http://aaaaaa.hostdoesntexist.org/nothinguseful"
-    ip = ox.downloader._resolve_host_via_doh("overpass-api.de")
+    ip = ox._downloader._resolve_host_via_doh("overpass-api.de")
     ox.settings.doh_url_template = None
-    ip = ox.downloader._resolve_host_via_doh("overpass-api.de")
+    ip = ox._downloader._resolve_host_via_doh("overpass-api.de")
     ox.settings.doh_url_template = _doh_url_template_default
 
     params = OrderedDict()
@@ -357,11 +357,11 @@ def test_api_endpoints():
 
     # Bad Address - should return an empty response
     params["q"] = "AAAAAAAAAAA"
-    response_json = ox.downloader.nominatim_request(params=params, request_type="search")
+    response_json = ox._downloader._nominatim_request(params=params, request_type="search")
 
     # Good Address - should return a valid response with a valid osm_id
     params["q"] = "Newcastle A186 Westgate Rd"
-    response_json = ox.downloader.nominatim_request(params=params, request_type="search")
+    response_json = ox._downloader._nominatim_request(params=params, request_type="search")
 
     # Lookup
     params = OrderedDict()
@@ -369,11 +369,11 @@ def test_api_endpoints():
     params["address_details"] = 0
     params["osm_ids"] = "W68876073"
 
-    response_json = ox.downloader.nominatim_request(params=params, request_type="lookup")
+    response_json = ox._downloader._nominatim_request(params=params, request_type="lookup")
 
     # Invalid nominatim query type
     with pytest.raises(ValueError):
-        response_json = ox.downloader.nominatim_request(params=params, request_type="xyz")
+        response_json = ox._downloader._nominatim_request(params=params, request_type="xyz")
 
     default_key = ox.settings.nominatim_key
     default_nominatim_endpoint = ox.settings.nominatim_endpoint
@@ -381,7 +381,7 @@ def test_api_endpoints():
 
     # Searching on public nominatim should work even if a key was provided
     ox.settings.nominatim_key = "NOT_A_KEY"
-    response_json = ox.downloader.nominatim_request(params=params, request_type="search")
+    response_json = ox._downloader._nominatim_request(params=params, request_type="search")
 
     # Test changing the endpoint.
     # This should fail because we didn't provide a valid endpoint

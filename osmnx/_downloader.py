@@ -556,7 +556,7 @@ def _osm_network_download(polygon, network_type, custom_filter):
     # time. The '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
         query_str = f"{overpass_settings};(way{osm_filter}(poly:{polygon_coord_str!r});>;);out;"
-        response_json = overpass_request(data={"data": query_str})
+        response_json = _overpass_request(data={"data": query_str})
         response_jsons.append(response_json)
     utils.log(
         f"Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)"
@@ -592,7 +592,7 @@ def _osm_geometries_download(polygon, tags):
     # pass exterior coordinates of each polygon in list to API, one at a time
     for polygon_coord_str in polygon_coord_strs:
         query_str = _create_overpass_query(polygon_coord_str, tags)
-        response_json = overpass_request(data={"data": query_str})
+        response_json = _overpass_request(data={"data": query_str})
         response_jsons.append(response_json)
 
     utils.log(
@@ -651,11 +651,11 @@ def _osm_place_download(query, by_osmid=False, limit=1, polygon_geojson=1):
             raise TypeError("query must be a dict or a string")
 
     # request the URL, return the JSON
-    response_json = nominatim_request(params=params, request_type=request_type)
+    response_json = _nominatim_request(params=params, request_type=request_type)
     return response_json
 
 
-def nominatim_request(params, request_type="search", pause=1, error_pause=60):
+def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
     """
     Send a HTTP GET request to the Nominatim API and return JSON response.
 
@@ -726,7 +726,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
                 # re-trying until we get a valid response from the server
                 utils.log(f"{domain} returned {sc}: retry in {error_pause} secs", level=lg.WARNING)
                 time.sleep(error_pause)
-                response_json = nominatim_request(params, request_type, pause, error_pause)
+                response_json = _nominatim_request(params, request_type, pause, error_pause)
 
             else:
                 # else, this was an unhandled status code, throw an exception
@@ -739,7 +739,7 @@ def nominatim_request(params, request_type="search", pause=1, error_pause=60):
         return response_json
 
 
-def overpass_request(data, pause=None, error_pause=60):
+def _overpass_request(data, pause=None, error_pause=60):
     """
     Send a HTTP POST request to the Overpass API and return JSON response.
 
@@ -806,7 +806,7 @@ def overpass_request(data, pause=None, error_pause=60):
                 this_pause = error_pause + _get_pause(base_endpoint)
                 utils.log(f"{domain} returned {sc}: retry in {this_pause} secs", level=lg.WARNING)
                 time.sleep(this_pause)
-                response_json = overpass_request(data, pause, error_pause)
+                response_json = _overpass_request(data, pause, error_pause)
 
             else:
                 # else, this was an unhandled status code, throw an exception

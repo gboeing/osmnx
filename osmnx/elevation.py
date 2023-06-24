@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from . import downloader
+from . import _downloader
 from . import utils
 from . import utils_graph
 
@@ -179,7 +179,7 @@ def add_node_elevations_google(
         url = url_template.format(locations, api_key)
 
         # check if this request is already in the cache (if global use_cache=True)
-        cached_response_json = downloader._retrieve_from_cache(url)
+        cached_response_json = _downloader._retrieve_from_cache(url)
         if cached_response_json is not None:
             response_json = cached_response_json
         else:
@@ -189,7 +189,7 @@ def add_node_elevations_google(
             response = requests.get(url)
             if response.status_code == 200:
                 response_json = response.json()
-                downloader._save_to_cache(url, response_json, response.status_code)
+                _downloader._save_to_cache(url, response_json, response.status_code)
             else:
                 raise Exception(
                     f"Server responded with {response.status_code}: {response.reason} \n{response.json()}"
