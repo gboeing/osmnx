@@ -9,6 +9,12 @@ from .distance import shortest_path
 from .elevation import add_edge_grades
 from .elevation import add_node_elevations_google
 from .elevation import add_node_elevations_raster
+from .features import features_from_address
+from .features import features_from_bbox
+from .features import features_from_place
+from .features import features_from_point
+from .features import features_from_polygon
+from .features import features_from_xml
 from .folium import plot_graph_folium
 from .folium import plot_route_folium
 from .geocoder import geocode
