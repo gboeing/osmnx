@@ -25,22 +25,16 @@ osmnx.elevation module
 .. automodule:: osmnx.elevation
     :members:
 
-osmnx.folium module
--------------------
+osmnx.features module
+---------------------
 
-.. automodule:: osmnx.folium
+.. automodule:: osmnx.features
     :members:
 
 osmnx.geocoder module
 ---------------------
 
 .. automodule:: osmnx.geocoder
-    :members:
-
-osmnx.geometries module
------------------------
-
-.. automodule:: osmnx.geometries
     :members:
 
 osmnx.graph module

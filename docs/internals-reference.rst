@@ -51,6 +51,14 @@ osmnx._errors module
     :private-members:
     :noindex:
 
+osmnx.features module
+---------------------
+
+.. automodule:: osmnx.features
+    :members:
+    :private-members:
+    :noindex:
+
 osmnx.folium module
 -------------------
 

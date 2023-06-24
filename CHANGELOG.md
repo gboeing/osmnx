@@ -4,7 +4,8 @@
 
   - fix bug in save_graph_xml due to roundabout ways
   - make API key properly optional in elevation.add_node_elevations_google function
-  - remove private \_polygon_features module and move its data to geometries module
+  - rename geometries module as features module and deprecate geometries module
+  - remove private \_polygon_features module and move its data to features module
   - make the internal downloader module private
   - deprecate interpolate parameter in distance.nearest_edges function
   - migrate from setup.py, setup.cfg, and requirements.txt to pyproject.toml
