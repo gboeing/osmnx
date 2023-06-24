@@ -253,20 +253,9 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
     If `X` and `Y` are single coordinate values, this will return the nearest
     edge to that point. If `X` and `Y` are lists of coordinate values, this
-    will return the nearest edge to each point.
-
-    If `interpolate` is None, search for the nearest edge to each point, one
-    at a time, using an R-tree and minimizing the euclidean distances from the
-    point to the possible matches. For accuracy, use a projected graph and
-    points. This method is precise and fast, particularly when searching for
-    relatively few points compared to the graph's size.
-
-    For an alternative method, use the `interpolate` argument to interpolate
-    points along the edges and index them. If the graph is projected, this
-    uses a k-d tree for euclidean nearest neighbor search, which requires that
-    scipy is installed as an optional dependency. If graph is unprojected,
-    this uses a ball tree for haversine nearest neighbor search, which
-    requires that scikit-learn is installed as an optional dependency.
+    will return the nearest edge to each point. This function uses an R-tree
+    spatial index and minimizes the euclidean distance from each point to the
+    possible matches. For accurate results, use a projected graph and points.
 
     Parameters
     ----------
@@ -279,8 +268,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         points' y (latitude) coordinates, in same CRS/units as graph and
         containing no nulls
     interpolate : float
-        spacing distance between interpolated points, in same units as graph.
-        smaller values generate more points.
+        deprecated, do not use
     return_dist : bool
         optionally also return distance between points and nearest edges
 
@@ -303,10 +291,10 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
     # if no interpolation distance was provided
     if interpolate is None:
-        # build the r-tree spatial index by position for subsequent iloc
+        # build an r-tree spatial index by position for subsequent iloc
         rtree = STRtree(geoms)
 
-        # use r-tree to find each point's nearest neighbor and distance
+        # use the r-tree to find each point's nearest neighbor and distance
         points = [Point(xy) for xy in zip(X, Y)]
         pos, dist = rtree.query_nearest(points, all_matches=False, return_distance=True)
 
@@ -317,6 +305,11 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
     # otherwise, if interpolation distance was provided
     else:
+        warn(
+            "The `interpolate` parameter has been deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
+
         # interpolate points along edges to index with k-d tree or ball tree
         uvk_xy = []
         for uvk, geom in zip(geoms.index, geoms.values):

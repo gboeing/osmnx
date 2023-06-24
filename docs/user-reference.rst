@@ -19,12 +19,6 @@ osmnx.distance module
 .. automodule:: osmnx.distance
     :members:
 
-osmnx.downloader module
------------------------
-
-.. automodule:: osmnx.downloader
-    :members:
-
 osmnx.elevation module
 ----------------------
 

@@ -1,4 +1,4 @@
-"""Project spatial geometries and spatial networks."""
+"""Reproject a graph, GeoDataFrame, or geometry to a different CRS."""
 
 import geopandas as gpd
 import numpy as np

@@ -7,8 +7,8 @@ import networkx as nx
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
 
+from . import _downloader
 from . import distance
-from . import downloader
 from . import geocoder
 from . import osm_xml
 from . import projection
@@ -127,8 +127,7 @@ def graph_from_point(
     dist_type : string {"network", "bbox"}
         if "bbox", retain only those nodes within a bounding box of the
         distance parameter. if "network", retain only those nodes within some
-        network distance from the center-most node (requires that scikit-learn
-        is installed as an optional dependency).
+        network distance from the center-most node.
     network_type : string, {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         what type of street network to get if custom_filter is None
     simplify : bool
@@ -218,8 +217,7 @@ def graph_from_address(
     dist_type : string {"network", "bbox"}
         if "bbox", retain only those nodes within a bounding box of the
         distance parameter. if "network", retain only those nodes within some
-        network distance from the center-most node (requires that scikit-learn
-        is installed as an optional dependency).
+        network distance from the center-most node.
     network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         what type of street network to get if custom_filter is None
     simplify : bool
@@ -444,7 +442,7 @@ def graph_from_polygon(
         poly_buff, _ = projection.project_geometry(poly_proj_buff, crs=crs_utm, to_latlong=True)
 
         # download the network data from OSM within buffered polygon
-        response_jsons = downloader._osm_network_download(poly_buff, network_type, custom_filter)
+        response_jsons = _downloader._osm_network_download(poly_buff, network_type, custom_filter)
 
         # create buffered graph from the downloaded data
         bidirectional = network_type in settings.bidirectional_network_types
@@ -476,7 +474,7 @@ def graph_from_polygon(
     # if clean_periphery=False, just use the polygon as provided
     else:
         # download the network data from OSM
-        response_jsons = downloader._osm_network_download(polygon, network_type, custom_filter)
+        response_jsons = _downloader._osm_network_download(polygon, network_type, custom_filter)
 
         # create graph from the downloaded data
         bidirectional = network_type in settings.bidirectional_network_types

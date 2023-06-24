@@ -23,7 +23,7 @@ from shapely.geometry import Polygon
 from shapely.ops import linemerge
 from shapely.ops import polygonize
 
-from . import downloader
+from . import _downloader
 from . import geocoder
 from . import osm_xml
 from . import settings
@@ -312,7 +312,7 @@ def geometries_from_polygon(polygon, tags):
         )
 
     # download the geometry data from OSM
-    response_jsons = downloader._osm_geometries_download(polygon, tags)
+    response_jsons = _downloader._osm_geometries_download(polygon, tags)
 
     # create GeoDataFrame from the downloaded data
     gdf = _create_gdf(response_jsons, polygon, tags)

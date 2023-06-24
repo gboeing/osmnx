@@ -27,10 +27,10 @@ osmnx.distance module
     :private-members:
     :noindex:
 
-osmnx.downloader module
------------------------
+osmnx._downloader module
+------------------------
 
-.. automodule:: osmnx.downloader
+.. automodule:: osmnx._downloader
     :members:
     :private-members:
     :noindex:
