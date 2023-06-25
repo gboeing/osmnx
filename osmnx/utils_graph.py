@@ -82,9 +82,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             gdf_edges = gpd.GeoDataFrame(data)
             if "geometry" not in gdf_edges.columns:
                 # if no edges have a geometry attribute, create null column
-                gdf_edges["geometry"] = np.nan
-            gdf_edges.set_geometry("geometry")
-            gdf_edges.crs = crs
+                gdf_edges = gdf_edges.set_geometry([None] * len(gdf_edges), crs=crs)
 
         # add u, v, key attributes as index
         gdf_edges["u"] = u
