@@ -1,0 +1,10 @@
+codecov:
+  require_ci_to_pass: no
+  notify:
+    wait_for_ci: no
+coverage:
+  status:
+    project:
+      default:
+        target: auto  # compare against coverage from the base commit
+        threshold: 0.1%  # allow coverage to drop by x% and still pass
