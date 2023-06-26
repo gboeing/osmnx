@@ -18,7 +18,7 @@ mamba update conda-smithy --yes --no-banner
 VERSION=$(hatch version)
 
 # build and validate the distribution then get its SHA256
-rm -rf ./build ./dist
+rm -rf ./dist
 hatch build --clean
 twine check --strict ./dist/*
 SHA=$(openssl dgst -sha256 -r "./dist/$PACKAGE-$VERSION.tar.gz"  | awk '{print $1}')
@@ -51,7 +51,7 @@ cd ../$PACKAGE
 git tag -a "v$VERSION" -m "v$VERSION"
 git push origin --tags
 twine upload ./dist/*
-rm -rf ./build ./dist
+rm -rf ./dist
 
 # all done
 echo ""
