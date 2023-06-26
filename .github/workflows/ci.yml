@@ -22,7 +22,7 @@ jobs:
 
     defaults:
       run:
-        shell: bash -elo pipefail {0}
+        shell: bash
 
     steps:
 
