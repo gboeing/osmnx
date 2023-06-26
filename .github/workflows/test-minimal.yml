@@ -18,7 +18,7 @@ jobs:
 
     defaults:
       run:
-        shell: bash
+        shell: bash -elo pipefail {0}
 
     steps:
 
