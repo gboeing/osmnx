@@ -5,7 +5,6 @@ from warnings import warn
 
 import geopandas as gpd
 import networkx as nx
-import numpy as np
 import pandas as pd
 from shapely.geometry import LineString
 from shapely.geometry import Point
