@@ -18,11 +18,8 @@ pre-commit run --all-files
 # make -C ./docs html
 # python -m sphinx -b linkcheck docs/ docs/_build/linkcheck
 
-# run the tests
-coverage run --source ./osmnx --module pytest --verbose
-
-# report the test coverage
-coverage report -m
+# run the tests and report the test coverage
+pytest --cov=./osmnx --cov-report=term-missing --verbose
 
 # delete temp files and folders
 rm -r -f .coverage .pytest_cache .temp ./dist/ ./docs/_build osmnx/__pycache__ tests/__pycache__

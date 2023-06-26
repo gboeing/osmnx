@@ -23,10 +23,10 @@ dependencies:
 
   # linting/testing
   - black=23
-  - coverage
   - hatch
   - pre-commit
   - pytest
+  - pytest-cov
   - ruff
   - twine
 
