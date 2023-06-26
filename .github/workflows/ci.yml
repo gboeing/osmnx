@@ -22,7 +22,7 @@ jobs:
 
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash -elo pipefail {0}
 
     steps:
 
@@ -51,8 +51,6 @@ jobs:
           pre-commit run --all-files
           hatch build --clean
           twine check --strict ./dist/*
-          black . --check
-          ruff check .
 
       - name: Test code
         run: |
