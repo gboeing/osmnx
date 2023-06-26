@@ -48,11 +48,11 @@ jobs:
 
       - name: Lint code
         run: |
-          black . --check
-          ruff check .
           pre-commit run --all-files
           hatch build --clean
           twine check --strict ./dist/*
+          black . --check
+          ruff check .
 
       - name: Test code
         run: |
