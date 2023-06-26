@@ -22,7 +22,7 @@ jobs:
 
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
 
     steps:
 
@@ -48,7 +48,7 @@ jobs:
 
       - name: Lint code
         run: |
-          pre-commit run --all-files
+          SKIP=no-commit-to-branch pre-commit run --all-files
           hatch build --clean
           twine check --strict ./dist/*
 
