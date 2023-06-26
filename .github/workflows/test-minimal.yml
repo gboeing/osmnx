@@ -48,7 +48,4 @@ jobs:
           twine check --strict ./dist/*
 
       - name: Test code
-        run: pytest --cov=./osmnx --cov-report=xml --cov-report=term-missing --verbose
-
-      - name: Upload coverage report
-        uses: codecov/codecov-action@v3
+        run: pytest --cov=./osmnx --cov-report=term-missing --verbose
