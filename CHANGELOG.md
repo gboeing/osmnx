@@ -28,7 +28,7 @@
 
 ## 1.3.1.post0 (2023-05-26)
 
-  - add Python 3.8 compatibility back
+  - restore Python 3.8 compatibility
 
 ## 1.3.1 (2023-05-24)
 
@@ -149,7 +149,7 @@
   - refactor get_undirected functionality for better speed and efficiency
   - extract all private/internal .osm XML functionality into new osm_xml module
   - deprecate io.save_graph_xml with warning (function moved to osm_xml module)
-  - remove internal _is_simplified function
+  - remove internal \_is_simplified function
   - remove deprecated pois module
   - remove deprecated footprints module
   - remove deprecated utils_graph.induce_subgraph function
