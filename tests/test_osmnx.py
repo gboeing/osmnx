@@ -176,7 +176,7 @@ def test_osm_xml():
 
     # test osm xml output from gdfs
     nodes, edges = ox.graph_to_gdfs(G)
-    ox.save_graph_xml([nodes, edges])
+    ox.osm_xml.save_graph_xml([nodes, edges])
 
     # test ordered nodes from way
     df = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
