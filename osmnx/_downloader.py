@@ -665,10 +665,10 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
         key-value pairs of parameters
     request_type : string {"search", "reverse", "lookup"}
         which Nominatim API endpoint to query
-    pause : int
+    pause : float
         how long to pause before request, in seconds. per the nominatim usage
         policy: "an absolute maximum of 1 request per second" is allowed
-    error_pause : int
+    error_pause : float
         how long to pause in seconds before re-trying request if error
 
     Returns
@@ -747,10 +747,10 @@ def _overpass_request(data, pause=None, error_pause=60):
     ----------
     data : OrderedDict
         key-value pairs of parameters
-    pause : int
+    pause : float
         how long to pause in seconds before request, if None, will query API
         status endpoint to find when next slot is available
-    error_pause : int
+    error_pause : float
         how long to pause in seconds (in addition to `pause`) before re-trying
         request if error
 
