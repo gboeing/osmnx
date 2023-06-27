@@ -529,6 +529,10 @@ def test_features():
     gdf = ox.geometries_from_place(place1, tags=tags)
     gdf = ox.geometries_from_place([place1], tags=tags)
 
+    # geometries_from_polygon
+    polygon = ox.geocode_to_gdf(place1).geometry.iloc[0]
+    ox.geometries_from_polygon(polygon, tags)
+
     # geometries_from_address - includes testing overpass settings and snapshot from 2019
     ox.settings.overpass_settings = '[out:json][timeout:200][date:"2019-10-28T19:20:00Z"]'
     gdf = ox.geometries_from_address(address, tags=tags)
