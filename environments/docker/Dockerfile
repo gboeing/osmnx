@@ -1,13 +1,13 @@
-########################################################################
+##############################################################################
 # OSMnx Dockerfile
 # License: MIT, see full license in LICENSE.txt
-# Web: https://github.com/gboeing/osmnx
-########################################################################
+# Web: https://osmnx.readthedocs.io
+##############################################################################
 
 FROM jupyter/base-notebook
 LABEL maintainer="Geoff Boeing <boeing@usc.edu>"
-LABEL url="https://github.com/gboeing/osmnx"
-LABEL description="OSMnx is a Python package to retrieve, model, analyze, and visualize OpenStreetMap networks and other geospatial data."
+LABEL url="https://osmnx.readthedocs.io"
+LABEL description="OSMnx is a Python package to download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap."
 
 COPY requirements.txt /tmp/
 
