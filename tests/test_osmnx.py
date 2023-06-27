@@ -340,7 +340,7 @@ def test_find_nearest():
     ne2 = ox.distance.nearest_edges(G, X[0], Y[0], interpolate=50, return_dist=True)
 
 
-def test_api_endpoints():
+def test_endpoints():
     ip = ox._downloader._resolve_host_via_doh("overpass-api.de")
     ip = ox._downloader._resolve_host_via_doh("AAAAAAAAAAA")
 
@@ -507,7 +507,7 @@ def test_graph_from_functions():
     )
 
 
-def test_geometries():
+def test_features():
     # geometries_from_bbox - bounding box query to return no data
     try:
         gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
@@ -528,6 +528,10 @@ def test_geometries():
     tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
     gdf = ox.geometries_from_place(place1, tags=tags)
     gdf = ox.geometries_from_place([place1], tags=tags)
+
+    # geometries_from_polygon
+    polygon = ox.geocode_to_gdf(place1).geometry.iloc[0]
+    ox.geometries_from_polygon(polygon, tags)
 
     # geometries_from_address - includes testing overpass settings and snapshot from 2019
     ox.settings.overpass_settings = '[out:json][timeout:200][date:"2019-10-28T19:20:00Z"]'

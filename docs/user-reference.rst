@@ -25,6 +25,12 @@ osmnx.elevation module
 .. automodule:: osmnx.elevation
     :members:
 
+osmnx.features module
+---------------------
+
+.. automodule:: osmnx.features
+    :members:
+
 osmnx.folium module
 -------------------
 

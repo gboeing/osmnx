@@ -4,7 +4,8 @@
 
   - fix bug in save_graph_xml due to roundabout ways
   - make API key properly optional in elevation.add_node_elevations_google function
-  - remove private \_polygon_features module and move its data to geometries module
+  - rename geometries module as features module and deprecate geometries module
+  - remove private \_polygon_features module and move its data to features module
   - make the internal downloader module private
   - deprecate interpolate parameter in distance.nearest_edges function
   - migrate from setup.py, setup.cfg, and requirements.txt to pyproject.toml
@@ -27,7 +28,7 @@
 
 ## 1.3.1.post0 (2023-05-26)
 
-  - add Python 3.8 compatibility back
+  - restore Python 3.8 compatibility
 
 ## 1.3.1 (2023-05-24)
 
@@ -148,7 +149,7 @@
   - refactor get_undirected functionality for better speed and efficiency
   - extract all private/internal .osm XML functionality into new osm_xml module
   - deprecate io.save_graph_xml with warning (function moved to osm_xml module)
-  - remove internal _is_simplified function
+  - remove internal \_is_simplified function
   - remove deprecated pois module
   - remove deprecated footprints module
   - remove deprecated utils_graph.induce_subgraph function

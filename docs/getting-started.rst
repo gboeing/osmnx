@@ -54,12 +54,12 @@ Geocoding and Querying
 
 OSMnx geocodes place names and addresses with the OpenStreetMap Nominatim API. You can use the :code:`geocoder` module to geocode place names or addresses to lat-lng coordinates. Or, you can retrieve places or any other geospatial features by name or OpenStreetMap ID.
 
-Using the :code:`geometries` and :code:`graph` modules, as described below, you can download data by lat-lng point, address, bounding box, bounding polygon, or place name (e.g., neighborhood, city, county, etc).
+Using the :code:`features` and :code:`graph` modules, as described below, you can download data by lat-lng point, address, bounding box, bounding polygon, or place name (e.g., neighborhood, city, county, etc).
 
 Urban Amenities
 ^^^^^^^^^^^^^^^
 
-Using OSMnx's :code:`geometries` module, you can search for and download any geospatial `features`_ (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap Overpass API as a GeoPandas GeoDataFrame. This uses OpenStreetMap `tags`_ to search for matching features.
+Using OSMnx's :code:`features` module, you can search for and download any geospatial `features`_ (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap Overpass API as a GeoPandas GeoDataFrame. This uses OpenStreetMap `tags`_ to search for matching features.
 
 Modeling a Network
 ^^^^^^^^^^^^^^^^^^

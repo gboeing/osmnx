@@ -435,7 +435,6 @@ def _make_overpass_polygon_coord_strs(polygon):
     Parameters
     ----------
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        geographic boundaries to fetch the OSM geometries within
 
     Returns
     -------
@@ -446,7 +445,6 @@ def _make_overpass_polygon_coord_strs(polygon):
     gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj)
     geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
     polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
-    utils.log(f"Requesting data within polygon from API in {len(polygon_coord_strs)} request(s)")
     return polygon_coord_strs
 
 
@@ -551,6 +549,7 @@ def _osm_network_download(polygon, network_type, custom_filter):
 
     # subdivide query polygon to get list of sub-divided polygon coord strings
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
+    utils.log(f"Requesting data from API in {len(polygon_coord_strs)} request(s)")
 
     # pass each polygon exterior coordinates in the list to the API, one at a
     # time. The '>' makes it recurse so we get ways and the ways' nodes.
@@ -568,9 +567,9 @@ def _osm_network_download(polygon, network_type, custom_filter):
     return response_jsons
 
 
-def _osm_geometries_download(polygon, tags):
+def _osm_features_download(polygon, tags):
     """
-    Retrieve non-networked elements within boundary from the Overpass API.
+    Retrieve OSM features within boundary from the Overpass API.
 
     Parameters
     ----------
@@ -588,6 +587,7 @@ def _osm_geometries_download(polygon, tags):
 
     # subdivide query polygon to get list of sub-divided polygon coord strings
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
+    utils.log(f"Requesting data from API in {len(polygon_coord_strs)} request(s)")
 
     # pass exterior coordinates of each polygon in list to API, one at a time
     for polygon_coord_str in polygon_coord_strs:
@@ -596,7 +596,7 @@ def _osm_geometries_download(polygon, tags):
         response_jsons.append(response_json)
 
     utils.log(
-        f"Got all geometries data within polygon from API in {len(polygon_coord_strs)} request(s)"
+        f"Got all features data within polygon from API in {len(polygon_coord_strs)} request(s)"
     )
 
     return response_jsons
