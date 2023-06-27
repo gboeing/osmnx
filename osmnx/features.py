@@ -12,7 +12,6 @@ import logging as lg
 import warnings
 
 import geopandas as gpd
-import numpy as np
 import pandas as pd
 from shapely.errors import GEOSException
 from shapely.errors import TopologicalError
@@ -459,16 +458,11 @@ def _create_gdf(response_jsons, polygon, tags):
 
     utils.log(f"{len(untagged_element_ids)} untagged features removed")
 
-    # Create GeoDataFrame
+    # create GeoDataFrame, ensure it has geometry, then set crs
     gdf = gpd.GeoDataFrame.from_dict(geometries, orient="index")
-
-    # ensure gdf has a geometry col before assigning crs
     if "geometry" not in gdf.columns:
         # if there is no geometry column, create a null column
-        gdf["geometry"] = np.nan
-    gdf.set_geometry("geometry")
-
-    # Set default crs
+        gdf.set_geometry([None] * len(gdf))
     gdf.crs = settings.default_crs
 
     # Apply .buffer(0) to any invalid geometries
