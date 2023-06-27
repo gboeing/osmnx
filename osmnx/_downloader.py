@@ -302,12 +302,12 @@ def _config_dns(url):
     machines on the server-side. Mutates the getaddrinfo function so it uses
     the same IP address everytime it finds the hostname in the URL.
 
-    For example, the domain overpass-api.de just redirects to one of its
-    subdomains (currently z.overpass-api.de and lz4.overpass-api.de). So if we
-    check the status endpoint of overpass-api.de, we may see results for
-    subdomain z, but when we submit the query itself it gets redirected to
-    subdomain lz4. This could result in violating server lz4's slot management
-    timing.
+    For example, the server overpass-api.de just redirects to one of the other
+    servers (currently gall.openstreetmap.de and lambert.openstreetmap.de). So
+    if we check the status endpoint of overpass-api.de, we may see results for
+    server gall, but when we submit the query itself it gets redirected to
+    server lambert. This could result in violating server lambert's slot
+    management timing.
 
     Parameters
     ----------
