@@ -8,6 +8,7 @@ import networkx as nx
 import pandas as pd
 from shapely import wkt
 
+from . import osm_xml
 from . import settings
 from . import utils
 from . import utils_graph
@@ -274,6 +275,107 @@ def load_graphml(
 
     utils.log(f"Loaded graph with {len(G)} nodes and {len(G.edges)} edges from {source!r}")
     return G
+
+
+def save_graph_xml(
+    data,
+    filepath=None,
+    node_tags=settings.osm_xml_node_tags,
+    node_attrs=settings.osm_xml_node_attrs,
+    edge_tags=settings.osm_xml_way_tags,
+    edge_attrs=settings.osm_xml_way_attrs,
+    oneway=False,
+    merge_edges=True,
+    edge_tag_aggs=None,
+    api_version=0.6,
+    precision=6,
+):
+    """
+    Save graph to disk as an OSM-formatted XML .osm file.
+
+    This function exists only to allow serialization to the .osm file format
+    for applications that require it, and has constraints to conform to that.
+    As such, this function has a limited use case which does not include
+    saving/loading graphs for subsequent OSMnx analysis. To save/load graphs
+    to/from disk for later use in OSMnx, use the `io.save_graphml` and
+    `io.load_graphml` functions instead. To load a graph from a .osm file that
+    you have downloaded or generated elsewhere, use the `graph.graph_from_xml`
+    function.
+
+    Note: for large networks this function can take a long time to run. Before
+    using this function, make sure you configured OSMnx as described in the
+    example below when you created the graph.
+
+    Example
+    -------
+    >>> import osmnx as ox
+    >>> utn = ox.settings.useful_tags_node
+    >>> oxna = ox.settings.osm_xml_node_attrs
+    >>> oxnt = ox.settings.osm_xml_node_tags
+    >>> utw = ox.settings.useful_tags_way
+    >>> oxwa = ox.settings.osm_xml_way_attrs
+    >>> oxwt = ox.settings.osm_xml_way_tags
+    >>> utn = list(set(utn + oxna + oxnt))
+    >>> utw = list(set(utw + oxwa + oxwt))
+    >>> ox.settings.all_oneway = True
+    >>> ox.settings.useful_tags_node = utn
+    >>> ox.settings.useful_tags_way = utw
+    >>> G = ox.graph_from_place('Piedmont, CA, USA', network_type='drive')
+    >>> ox.save_graph_xml(G, filepath='./data/graph.osm')
+
+    Parameters
+    ----------
+    data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
+        geopandas GeoDataFrames
+    filepath : string or pathlib.Path
+        path to the .osm file including extension. if None, use default data
+        folder + graph.osm
+    node_tags : list
+        osm node tags to include in output OSM XML
+    node_attrs: list
+        osm node attributes to include in output OSM XML
+    edge_tags : list
+        osm way tags to include in output OSM XML
+    edge_attrs : list
+        osm way attributes to include in output OSM XML
+    oneway : bool
+        the default oneway value used to fill this tag where missing
+    merge_edges : bool
+        if True merges graph edges such that each OSM way has one entry
+        and one entry only in the OSM XML. Otherwise, every OSM way
+        will have a separate entry for each node pair it contains.
+    edge_tag_aggs : list of length-2 string tuples
+        useful only if merge_edges is True, this argument allows the user
+        to specify edge attributes to aggregate such that the merged
+        OSM way entry tags accurately represent the sum total of
+        their component edge attributes. For example, if the user
+        wants the OSM way to have a "length" attribute, the user must
+        specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
+        this method to aggregate the lengths of the individual
+        component edges. Otherwise, the length attribute will simply
+        reflect the length of the first edge associated with the way.
+    api_version : float
+        OpenStreetMap API version to write to the XML file header
+    precision : int
+        number of decimal places to round latitude and longitude values
+
+    Returns
+    -------
+    None
+    """
+    osm_xml._save_graph_xml(
+        data,
+        filepath,
+        node_tags,
+        node_attrs,
+        edge_tags,
+        edge_attrs,
+        oneway,
+        merge_edges,
+        edge_tag_aggs,
+        api_version,
+        precision,
+    )
 
 
 def _convert_graph_attr_types(G, dtypes=None):
