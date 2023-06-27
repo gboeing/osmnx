@@ -469,7 +469,7 @@ def _create_gdf(response_jsons, polygon, tags):
     gdf.set_geometry("geometry")
 
     # Set default crs
-    gdf.crs = settings.default_crs
+    gdf = gdf.set_crs(settings.default_crs)
 
     # Apply .buffer(0) to any invalid geometries
     gdf = _buffer_invalid_geometries(gdf)

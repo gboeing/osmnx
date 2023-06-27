@@ -113,7 +113,7 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
 
     # reset GeoDataFrame index and set its CRS
     gdf = gdf.reset_index(drop=True)
-    gdf.crs = settings.default_crs
+    gdf = gdf.set_crs(settings.default_crs)
 
     # if buffer_dist was passed in, project the geometry to UTM, buffer it in
     # meters, then project it back to lat-lng
