@@ -9,6 +9,13 @@ from warnings import warn
 
 from . import features
 
+DEP_MSG = (
+    "The `geometries` module and `geometries_from_X` functions have been "
+    "renamed the `features` module and `features_from_X` functions. Use these "
+    "instead. The `geometries` module and function names are deprecated and "
+    "will be removed in a future release."
+)
+
 
 def geometries_from_bbox(north, south, east, west, tags):
     """
@@ -16,8 +23,8 @@ def geometries_from_bbox(north, south, east, west, tags):
 
     The `geometries` module and `geometries_from_X` functions have been
     renamed the `features` module and `features_from_X` functions. Use these
-    new names instead. Accessing them via the `geometries` module and function
-    names is deprecated and will be removed in a future release.
+    instead. The `geometries` module and functions are deprecated and will be
+    removed in a future release.
 
     Parameters
     ----------
@@ -36,13 +43,7 @@ def geometries_from_bbox(north, south, east, west, tags):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    warn(
-        "The `geometries` module and `geometries_from_X` functions have been "
-        "renamed the `features` module and `features_from_X` functions. Use these "
-        "new names instead. Accessing them via the `geometries` module and function "
-        "names is deprecated and will be removed in a future release.",
-        stacklevel=2,
-    )
+    warn(DEP_MSG, stacklevel=2)
     return features.features_from_bbox(north, south, east, west, tags)
 
 
@@ -52,8 +53,8 @@ def geometries_from_point(center_point, tags, dist=1000):
 
     The `geometries` module and `geometries_from_X` functions have been
     renamed the `features` module and `features_from_X` functions. Use these
-    new names instead. Accessing them via the `geometries` module and function
-    names is deprecated and will be removed in a future release.
+    instead. The `geometries` module and functions are deprecated and will be
+    removed in a future release.
 
     Parameters
     ----------
@@ -68,13 +69,7 @@ def geometries_from_point(center_point, tags, dist=1000):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    warn(
-        "The `geometries` module and `geometries_from_X` functions have been "
-        "renamed the `features` module and `features_from_X` functions. Use these "
-        "new names instead. Accessing them via the `geometries` module and function "
-        "names is deprecated and will be removed in a future release.",
-        stacklevel=2,
-    )
+    warn(DEP_MSG, stacklevel=2)
     return features.features_from_point(center_point, tags, dist)
 
 
@@ -84,8 +79,8 @@ def geometries_from_address(address, tags, dist=1000):
 
     The `geometries` module and `geometries_from_X` functions have been
     renamed the `features` module and `features_from_X` functions. Use these
-    new names instead. Accessing them via the `geometries` module and function
-    names is deprecated and will be removed in a future release.
+    instead. The `geometries` module and functions are deprecated and will be
+    removed in a future release.
 
     Parameters
     ----------
@@ -100,13 +95,7 @@ def geometries_from_address(address, tags, dist=1000):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    warn(
-        "The `geometries` module and `geometries_from_X` functions have been "
-        "renamed the `features` module and `features_from_X` functions. Use these "
-        "new names instead. Accessing them via the `geometries` module and function "
-        "names is deprecated and will be removed in a future release.",
-        stacklevel=2,
-    )
+    warn(DEP_MSG, stacklevel=2)
     return features.features_from_address(address, tags, dist)
 
 
@@ -116,8 +105,8 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
 
     The `geometries` module and `geometries_from_X` functions have been
     renamed the `features` module and `features_from_X` functions. Use these
-    new names instead. Accessing them via the `geometries` module and function
-    names is deprecated and will be removed in a future release.
+    instead. The `geometries` module and functions are deprecated and will be
+    removed in a future release.
 
     Parameters
     ----------
@@ -134,13 +123,7 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    warn(
-        "The `geometries` module and `geometries_from_X` functions have been "
-        "renamed the `features` module and `features_from_X` functions. Use these "
-        "new names instead. Accessing them via the `geometries` module and function "
-        "names is deprecated and will be removed in a future release.",
-        stacklevel=2,
-    )
+    warn(DEP_MSG, stacklevel=2)
     return features.features_from_place(query, tags, which_result, buffer_dist)
 
 
@@ -150,8 +133,8 @@ def geometries_from_polygon(polygon, tags):
 
     The `geometries` module and `geometries_from_X` functions have been
     renamed the `features` module and `features_from_X` functions. Use these
-    new names instead. Accessing them via the `geometries` module and function
-    names is deprecated and will be removed in a future release.
+    instead. The `geometries` module and functions are deprecated and will be
+    removed in a future release.
 
     Parameters
     ----------
@@ -164,13 +147,7 @@ def geometries_from_polygon(polygon, tags):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    warn(
-        "The `geometries` module and `geometries_from_X` functions have been "
-        "renamed the `features` module and `features_from_X` functions. Use these "
-        "new names instead. Accessing them via the `geometries` module and function "
-        "names is deprecated and will be removed in a future release.",
-        stacklevel=2,
-    )
+    warn(DEP_MSG, stacklevel=2)
     return features.features_from_polygon(polygon, tags)
 
 
@@ -180,8 +157,8 @@ def geometries_from_xml(filepath, polygon=None, tags=None):
 
     The `geometries` module and `geometries_from_X` functions have been
     renamed the `features` module and `features_from_X` functions. Use these
-    new names instead. Accessing them via the `geometries` module and function
-    names is deprecated and will be removed in a future release.
+    instead. The `geometries` module and functions are deprecated and will be
+    removed in a future release.
 
     Parameters
     ----------
@@ -196,11 +173,5 @@ def geometries_from_xml(filepath, polygon=None, tags=None):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    warn(
-        "The `geometries` module and `geometries_from_X` functions have been "
-        "renamed the `features` module and `features_from_X` functions. Use these "
-        "new names instead. Accessing them via the `geometries` module and function "
-        "names is deprecated and will be removed in a future release.",
-        stacklevel=2,
-    )
+    warn(DEP_MSG, stacklevel=2)
     return features.features_from_xml(filepath, polygon, tags)
