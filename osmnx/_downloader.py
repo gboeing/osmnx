@@ -602,16 +602,16 @@ def _osm_features_download(polygon, tags):
     return response_jsons
 
 
-def _osm_place_download(query, by_osmid=False, limit=1, polygon_geojson=1):
+def _retrieve_osm_element(query, by_osmid=False, limit=1, polygon_geojson=1):
     """
-    Retrieve a place from the Nominatim API.
+    Retrieve an OSM element from the Nominatim API.
 
     Parameters
     ----------
     query : string or dict
         query string or structured query dict
     by_osmid : bool
-        if True, handle query as an OSM ID for lookup rather than text search
+        if True, treat query as an OSM ID lookup rather than text search
     limit : int
         max number of results to return
     polygon_geojson : int
@@ -687,6 +687,7 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
     prepared_url = requests.Request("GET", url, params=params).prepare().url
     cached_response_json = _retrieve_from_cache(prepared_url)
 
+    # add key after checking cache so the check is key independent
     if settings.nominatim_key:
         params["key"] = settings.nominatim_key
 

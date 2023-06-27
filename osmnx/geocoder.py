@@ -1,4 +1,10 @@
-"""Geocode queries and create GeoDataFrames of place boundaries."""
+"""
+Geocode place names or addresses or retrieve OSM elements by place name or ID.
+
+This module uses the Nominatim API's "search" and "lookup" endpoints. For more
+details see https://wiki.openstreetmap.org/wiki/Elements and
+https://nominatim.org/.
+"""
 
 import logging as lg
 from collections import OrderedDict
@@ -14,9 +20,9 @@ from . import utils
 
 def geocode(query):
     """
-    Geocode a query string to (lat, lng) with the Nominatim API.
+    Geocode place names or addresses to (lat, lng) with the Nominatim API.
 
-    This geocodes your query using the Nominatim "search" endpoint.
+    This geocodes the query via the Nominatim "search" endpoint.
 
     Parameters
     ----------
@@ -49,25 +55,24 @@ def geocode(query):
 
 def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
     """
-    Retrieve place(s) by name or ID from the Nominatim API as a GeoDataFrame.
+    Retrieve OSM elements by place name or OSM ID with the Nominatim API.
 
-    You can use this function to search for OSM elements by place name or by
-    OSM ID lookup. If searching by place name, the `query` argument can be a
-    string or structured dict, or a list of such strings/dicts to send to the
-    geocoder. This uses the Nominatim "search" endpoint to geocode the place
-    name to a best-matching OSM element, then returns that element and its
-    attribute data.
+    If searching by place name, the `query` argument can be a string or
+    structured dict, or a list of such strings/dicts to send to the geocoder.
+    This uses the Nominatim "search" endpoint to geocode the place name to the
+    best-matching OSM element, then returns that element and its attribute
+    data.
 
     You can instead query by OSM ID by passing `by_osmid=True`. This uses the
-    Nominatim "lookup" endpoint to identify the OSM element with that ID. In
+    Nominatim "lookup" endpoint to retrieve the OSM element with that ID. In
     this case, the function treats the `query` argument as an OSM ID (or list
-    of OSM IDs). These OSM IDs must be prepended with their types: node (N),
-    way (W), or relation (R) in accordance with the Nominatim API format. For
-    example, `query=["R2192363", "N240109189", "W427818536"]`.
+    of OSM IDs), which must be prepended with their types: node (N), way (W),
+    or relation (R) in accordance with the Nominatim API format. For example,
+    `query=["R2192363", "N240109189", "W427818536"]`.
 
     If `query` is a list, then `which_result` must be either a single value or
     a list with the same length as `query`. The queries you provide must be
-    resolvable to places in the Nominatim database. The resulting
+    resolvable to elements in the Nominatim database. The resulting
     GeoDataFrame's geometry column contains place boundaries if they exist.
 
     Parameters
@@ -159,7 +164,7 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
     else:
         limit = which_result
 
-    results = _downloader._osm_place_download(query, by_osmid=by_osmid, limit=limit)
+    results = _downloader._retrieve_osm_element(query, by_osmid=by_osmid, limit=limit)
 
     # choose the right result from the JSON response
     if not results:
