@@ -2,10 +2,13 @@
 Download OpenStreetMap geospatial features' geometries and attributes.
 
 Retrieve points of interest, building footprints, transit lines/stops, or any
-other features from OSM, including their geometries and attribute data, and
-construct a GeoDataFrame of them. You can use this module to query for nodes,
-ways, and relations (the latter of type "multipolygon" or "boundary" only) by
-passing a dictionary of desired OSM tags.
+other map features from OSM, including their geometries and attribute data,
+then construct a GeoDataFrame of them. You can use this module to query for
+nodes, ways, and relations (the latter of type "multipolygon" or "boundary"
+only) by passing a dictionary of desired OSM tags.
+
+For more details, see https://wiki.openstreetmap.org/wiki/Map_features and
+https://wiki.openstreetmap.org/wiki/Elements
 """
 
 import logging as lg
@@ -80,6 +83,8 @@ def features_from_bbox(north, south, east, west, tags):
     data as of a certain date, or to configure the Overpass server timeout,
     memory allocation, and other custom settings.
 
+    For more details, see: https://wiki.openstreetmap.org/wiki/Map_features
+
     Parameters
     ----------
     north : float
@@ -124,6 +129,8 @@ def features_from_point(center_point, tags, dist=1000):
     data as of a certain date, or to configure the Overpass server timeout,
     memory allocation, and other custom settings.
 
+    For more details, see: https://wiki.openstreetmap.org/wiki/Map_features
+
     Parameters
     ----------
     center_point : tuple
@@ -167,6 +174,8 @@ def features_from_address(address, tags, dist=1000):
     data as of a certain date, or to configure the Overpass server timeout,
     memory allocation, and other custom settings.
 
+    For more details, see: https://wiki.openstreetmap.org/wiki/Map_features
+
     Parameters
     ----------
     address : string
@@ -206,20 +215,22 @@ def features_from_place(query, tags, which_result=None, buffer_dist=None):
 
     The query must be geocodable and OSM must have polygon boundaries for the
     geocode result. If OSM does not have a polygon for this place, you can
-    instead get features within it using the features_from_address
+    instead get features within it using the `features_from_address`
     function, which geocodes the place name to a point and gets the features
     within some distance of that point.
 
     If OSM does have polygon boundaries for this place but you're not finding
     it, try to vary the query string, pass in a structured query dict, or vary
-    the which_result argument to use a different geocode result. If you know
+    the `which_result` argument to use a different geocode result. If you know
     the OSM ID of the place, you can retrieve its boundary polygon using the
-    geocode_to_gdf function, then pass it to the features_from_polygon
+    `geocode_to_gdf` function, then pass it to the `features_from_polygon`
     function.
 
     You can use the `settings` module to retrieve a snapshot of historical OSM
     data as of a certain date, or to configure the Overpass server timeout,
     memory allocation, and other custom settings.
+
+    For more details, see: https://wiki.openstreetmap.org/wiki/Map_features
 
     Parameters
     ----------
@@ -278,6 +289,8 @@ def features_from_polygon(polygon, tags):
     data as of a certain date, or to configure the Overpass server timeout,
     memory allocation, and other custom settings.
 
+    For more details, see: https://wiki.openstreetmap.org/wiki/Map_features
+
     Parameters
     ----------
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
@@ -329,6 +342,8 @@ def features_from_xml(filepath, polygon=None, tags=None):
     If they are not supplied to the function, features_from_xml() will
     return features for all of the tagged elements in the file. If they are
     supplied they will be used to filter the final GeoDataFrame.
+
+    For more details, see: https://wiki.openstreetmap.org/wiki/Map_features
 
     Parameters
     ----------
