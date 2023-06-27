@@ -8,6 +8,7 @@
   - remove private \_polygon_features module and move its data to features module
   - make the internal downloader module private
   - deprecate interpolate parameter in distance.nearest_edges function
+  - move save_graph_xml function to io module with deprecation warning in osm_xml module
   - migrate from setup.py, setup.cfg, and requirements.txt to pyproject.toml
   - pin optional dependencies to minimum required versions
   - adopt NEP 29 policy for minimum required Python and NumPy versions

@@ -101,37 +101,73 @@ def save_graph_xml(
     precision=6,
 ):
     """
-    Save graph to disk as an OSM-formatted XML .osm file.
+    Do not use: deprecated.
 
-    This function exists only to allow serialization to the .osm file format
-    for applications that require it, and has constraints to conform to that.
-    As such, this function has a limited use case which does not include
-    saving/loading graphs for subsequent OSMnx analysis. To save/load graphs
-    to/from disk for later use in OSMnx, use the `io.save_graphml` and
-    `io.load_graphml` functions instead. To load a graph from a .osm file that
-    you have downloaded or generated elsewhere, use the `graph.graph_from_xml`
-    function.
+    Parameters
+    ----------
+    data : networkx.multidigraph
+        do not use, deprecated
+    filepath : string or pathlib.Path
+        do not use, deprecated
+    node_tags : list
+        do not use, deprecated
+    node_attrs: list
+        do not use, deprecated
+    edge_tags : list
+        do not use, deprecated
+    edge_attrs : list
+        do not use, deprecated
+    oneway : bool
+        do not use, deprecated
+    merge_edges : bool
+        do not use, deprecated
+    edge_tag_aggs : list of length-2 string tuples
+        do not use, deprecated
+    api_version : float
+        do not use, deprecated
+    precision : int
+        do not use, deprecated
 
-    Note: for large networks this function can take a long time to run. Before
-    using this function, make sure you configured OSMnx as described in the
-    example below when you created the graph.
-
-    Example
+    Returns
     -------
-    >>> import osmnx as ox
-    >>> utn = ox.settings.useful_tags_node
-    >>> oxna = ox.settings.osm_xml_node_attrs
-    >>> oxnt = ox.settings.osm_xml_node_tags
-    >>> utw = ox.settings.useful_tags_way
-    >>> oxwa = ox.settings.osm_xml_way_attrs
-    >>> oxwt = ox.settings.osm_xml_way_tags
-    >>> utn = list(set(utn + oxna + oxnt))
-    >>> utw = list(set(utw + oxwa + oxwt))
-    >>> ox.settings.all_oneway = True
-    >>> ox.settings.useful_tags_node = utn
-    >>> ox.settings.useful_tags_way = utw
-    >>> G = ox.graph_from_place('Piedmont, CA, USA', network_type='drive')
-    >>> ox.save_graph_xml(G, filepath='./data/graph.osm')
+    None
+    """
+    warn(
+        "The save_graph_xml has moved from the osm_xml module to the io module. "
+        " osm_xml.save_graph_xml has been deprecated and will be removed in a "
+        " future release. Access the function via the io module instead.",
+        stacklevel=2,
+    )
+    _save_graph_xml(
+        data,
+        filepath,
+        node_tags,
+        node_attrs,
+        edge_tags,
+        edge_attrs,
+        oneway,
+        merge_edges,
+        edge_tag_aggs,
+        api_version,
+        precision,
+    )
+
+
+def _save_graph_xml(
+    data,
+    filepath=None,
+    node_tags=settings.osm_xml_node_tags,
+    node_attrs=settings.osm_xml_node_attrs,
+    edge_tags=settings.osm_xml_way_tags,
+    edge_attrs=settings.osm_xml_way_attrs,
+    oneway=False,
+    merge_edges=True,
+    edge_tag_aggs=None,
+    api_version=0.6,
+    precision=6,
+):
+    """
+    Save graph to disk as an OSM-formatted XML .osm file.
 
     Parameters
     ----------
