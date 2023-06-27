@@ -31,10 +31,22 @@ osmnx.features module
 .. automodule:: osmnx.features
     :members:
 
+osmnx.folium module
+-------------------
+
+.. automodule:: osmnx.folium
+    :members:
+
 osmnx.geocoder module
 ---------------------
 
 .. automodule:: osmnx.geocoder
+    :members:
+
+osmnx.geometries module
+-----------------------
+
+.. automodule:: osmnx.geometries
     :members:
 
 osmnx.graph module
