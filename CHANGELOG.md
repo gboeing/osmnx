@@ -1,6 +1,10 @@
 # Change log
 
-## TBD
+## Unreleased
+
+  - adopt NEP 29 policy for minimum required Python and NumPy versions
+
+## 1.5.0 (TBD)
 
   - fix bug in save_graph_xml due to roundabout ways
   - make API key properly optional in elevation.add_node_elevations_google function
@@ -11,7 +15,6 @@
   - move save_graph_xml function to io module with deprecation warning in osm_xml module
   - migrate from setup.py, setup.cfg, and requirements.txt to pyproject.toml
   - pin optional dependencies to minimum required versions
-  - adopt NEP 29 policy for minimum required Python and NumPy versions
   - expand and reorganize the documentation
 
 ## 1.4.0 (2023-06-11)

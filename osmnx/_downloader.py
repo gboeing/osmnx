@@ -302,12 +302,12 @@ def _config_dns(url):
     machines on the server-side. Mutates the getaddrinfo function so it uses
     the same IP address everytime it finds the hostname in the URL.
 
-    For example, the domain overpass-api.de just redirects to one of its
-    subdomains (currently z.overpass-api.de and lz4.overpass-api.de). So if we
-    check the status endpoint of overpass-api.de, we may see results for
-    subdomain z, but when we submit the query itself it gets redirected to
-    subdomain lz4. This could result in violating server lz4's slot management
-    timing.
+    For example, the server overpass-api.de just redirects to one of the other
+    servers (currently gall.openstreetmap.de and lambert.openstreetmap.de). So
+    if we check the status endpoint of overpass-api.de, we may see results for
+    server gall, but when we submit the query itself it gets redirected to
+    server lambert. This could result in violating server lambert's slot
+    management timing.
 
     Parameters
     ----------
@@ -602,16 +602,16 @@ def _osm_features_download(polygon, tags):
     return response_jsons
 
 
-def _osm_place_download(query, by_osmid=False, limit=1, polygon_geojson=1):
+def _retrieve_osm_element(query, by_osmid=False, limit=1, polygon_geojson=1):
     """
-    Retrieve a place from the Nominatim API.
+    Retrieve an OSM element from the Nominatim API.
 
     Parameters
     ----------
     query : string or dict
         query string or structured query dict
     by_osmid : bool
-        if True, handle query as an OSM ID for lookup rather than text search
+        if True, treat query as an OSM ID lookup rather than text search
     limit : int
         max number of results to return
     polygon_geojson : int
@@ -665,10 +665,10 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
         key-value pairs of parameters
     request_type : string {"search", "reverse", "lookup"}
         which Nominatim API endpoint to query
-    pause : int
+    pause : float
         how long to pause before request, in seconds. per the nominatim usage
         policy: "an absolute maximum of 1 request per second" is allowed
-    error_pause : int
+    error_pause : float
         how long to pause in seconds before re-trying request if error
 
     Returns
@@ -687,6 +687,7 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
     prepared_url = requests.Request("GET", url, params=params).prepare().url
     cached_response_json = _retrieve_from_cache(prepared_url)
 
+    # add key after checking cache so the check is key independent
     if settings.nominatim_key:
         params["key"] = settings.nominatim_key
 
@@ -747,10 +748,10 @@ def _overpass_request(data, pause=None, error_pause=60):
     ----------
     data : OrderedDict
         key-value pairs of parameters
-    pause : int
+    pause : float
         how long to pause in seconds before request, if None, will query API
         status endpoint to find when next slot is available
-    error_pause : int
+    error_pause : float
         how long to pause in seconds (in addition to `pause`) before re-trying
         request if error
 

@@ -68,13 +68,13 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             x_lookup = nx.get_node_attributes(G, "x")
             y_lookup = nx.get_node_attributes(G, "y")
 
-            def make_geom(u, v, data, x=x_lookup, y=y_lookup):
+            def _make_geom(u, v, data, x=x_lookup, y=y_lookup):
                 if "geometry" in data:
                     return data["geometry"]
                 else:
                     return LineString((Point((x[u], y[u])), Point((x[v], y[v]))))
 
-            geom = map(make_geom, u, v, data)
+            geom = map(_make_geom, u, v, data)
             gdf_edges = gpd.GeoDataFrame(data, crs=crs, geometry=list(geom))
 
         else:

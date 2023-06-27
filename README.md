@@ -17,15 +17,15 @@ Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, an
 
 ## Installation
 
-Follow the [Installation](https://osmnx.readthedocs.io/en/latest/installation.html) guide to install OSMnx.
+Follow the [Installation](https://osmnx.readthedocs.io/en/stable/installation.html) guide to install OSMnx.
 
 ## Getting Started
 
-Read the [Getting Started](https://osmnx.readthedocs.io/en/latest/getting-started.html) guide and work through the [OSMnx Examples](https://github.com/gboeing/osmnx-examples) gallery for step-by-step tutorials and sample code.
+Read the [Getting Started](https://osmnx.readthedocs.io/en/stable/getting-started.html) guide and work through the [OSMnx Examples](https://github.com/gboeing/osmnx-examples) gallery for step-by-step tutorials and sample code.
 
 ## Support
 
-If you have any trouble, consult the [User Reference](https://osmnx.readthedocs.io/en/latest/user-reference.html). If you have a "how-to" or usage question, please ask it on [StackOverflow](https://stackoverflow.com/search?q=osmnx), as we reserve the [repository](https://github.com/gboeing/osmnx)'s issue tracker for bug tracking and feature development.
+If you have any trouble, consult the [User Reference](https://osmnx.readthedocs.io/en/stable/user-reference.html). The OSMnx repository is hosted on [GitHub](https://github.com/gboeing/osmnx). If you have a "how-to" or usage question, please ask it on [StackOverflow](https://stackoverflow.com/search?q=osmnx), as we reserve the repository's issue tracker for bug tracking and feature development.
 
 ## License
 

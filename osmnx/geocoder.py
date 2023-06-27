@@ -1,4 +1,10 @@
-"""Geocode queries and create GeoDataFrames of place boundaries."""
+"""
+Geocode place names or addresses or retrieve OSM elements by place name or ID.
+
+This module uses the Nominatim API's "search" and "lookup" endpoints. For more
+details see https://wiki.openstreetmap.org/wiki/Elements and
+https://nominatim.org/.
+"""
 
 import logging as lg
 from collections import OrderedDict
@@ -14,7 +20,9 @@ from . import utils
 
 def geocode(query):
     """
-    Geocode a query string to (lat, lng) with the Nominatim API.
+    Geocode place names or addresses to (lat, lng) with the Nominatim API.
+
+    This geocodes the query via the Nominatim "search" endpoint.
 
     Parameters
     ----------
@@ -47,34 +55,37 @@ def geocode(query):
 
 def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
     """
-    Retrieve place(s) by name or ID from the Nominatim API as a GeoDataFrame.
+    Retrieve OSM elements by place name or OSM ID with the Nominatim API.
 
-    You can query by place name or OSM ID. If querying by place name, the
-    query argument can be a string or structured dict, or a list of such
-    strings/dicts to send to geocoder. You can instead query by OSM ID by
-    setting `by_osmid=True`. In this case, geocode_to_gdf treats the query
-    argument as an OSM ID (or list of OSM IDs) for Nominatim lookup rather
-    than text search. OSM IDs must be prepended with their types: node (N),
-    way (W), or relation (R), in accordance with the Nominatim format. For
-    example, `query=["R2192363", "N240109189", "W427818536"]`.
+    If searching by place name, the `query` argument can be a string or
+    structured dict, or a list of such strings/dicts to send to the geocoder.
+    This uses the Nominatim "search" endpoint to geocode the place name to the
+    best-matching OSM element, then returns that element and its attribute
+    data.
 
-    If query argument is a list, then which_result should be either a single
-    value or a list with the same length as query. The queries you provide
-    must be resolvable to places in the Nominatim database. The resulting
-    GeoDataFrame's geometry column contains place boundaries if they exist in
-    OpenStreetMap.
+    You can instead query by OSM ID by passing `by_osmid=True`. This uses the
+    Nominatim "lookup" endpoint to retrieve the OSM element with that ID. In
+    this case, the function treats the `query` argument as an OSM ID (or list
+    of OSM IDs), which must be prepended with their types: node (N), way (W),
+    or relation (R) in accordance with the Nominatim API format. For example,
+    `query=["R2192363", "N240109189", "W427818536"]`.
+
+    If `query` is a list, then `which_result` must be either a single value or
+    a list with the same length as `query`. The queries you provide must be
+    resolvable to elements in the Nominatim database. The resulting
+    GeoDataFrame's geometry column contains place boundaries if they exist.
 
     Parameters
     ----------
-    query : string or dict or list
+    query : string or dict or list of strings/dicts
         query string(s) or structured dict(s) to geocode
     which_result : int
-        which geocoding result to use. if None, auto-select the first
+        which search result to return. if None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one. to get
         the top match regardless of geometry type, set which_result=1.
         ignored if by_osmid=True.
     by_osmid : bool
-        if True, handle query as an OSM ID for lookup rather than text search
+        if True, treat query as an OSM ID lookup rather than text search
     buffer_dist : float
         distance to buffer around the place geometry, in meters
 
@@ -153,7 +164,7 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
     else:
         limit = which_result
 
-    results = _downloader._osm_place_download(query, by_osmid=by_osmid, limit=limit)
+    results = _downloader._retrieve_osm_element(query, by_osmid=by_osmid, limit=limit)
 
     # choose the right result from the JSON response
     if not results:
