@@ -7,6 +7,7 @@
 ## 1.5.0 (TBD)
 
   - fix bug in save_graph_xml due to roundabout ways
+  - fix GeoPandas future warning
   - make API key properly optional in elevation.add_node_elevations_google function
   - rename geometries module as features module and deprecate geometries module
   - remove private \_polygon_features module and move its data to features module
