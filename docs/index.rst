@@ -29,9 +29,9 @@ Read the :doc:`getting-started` guide and work through the `OSMnx Examples`_ gal
 
 Support
 -------
-If you have any trouble, consult the :doc:`user-reference`. If you have a "how-to" or usage question, please ask it on `StackOverflow`_, as we reserve the `repository`_'s issue tracker for bug tracking and feature development.
+If you have any trouble, consult the :doc:`user-reference`. The OSMnx repository is hosted on `GitHub`_. If you have a "how-to" or usage question, please ask it on `StackOverflow`_, as we reserve the repository's issue tracker for bug tracking and feature development.
 
-.. _repository: https://github.com/gboeing/osmnx
+.. _GitHub: https://github.com/gboeing/osmnx
 .. _StackOverflow: https://stackoverflow.com/search?q=osmnx
 
 
