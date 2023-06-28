@@ -1,8 +1,6 @@
 name: Feature proposal
 description: Propose an enhancement before opening a pull request to add it
-title: ''
 labels: enh
-assignees: ''
 body:
 
   - type: checkboxes
