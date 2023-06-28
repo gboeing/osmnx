@@ -22,12 +22,12 @@ statsmodels
 
 # docs
 furo
-pip
 sphinx
 
 # packaging
 conda-smithy
 hatch
+pip
 twine
 
 # linting/testing
