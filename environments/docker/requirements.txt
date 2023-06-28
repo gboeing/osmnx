@@ -32,9 +32,9 @@ twine
 
 # linting/testing
 black
-coverage
 nbdime
 nbqa
 pre-commit
 pytest
+pytest-cov
 ruff
