@@ -1,4 +1,4 @@
-name: Bug report
+name: Report a bug
 description: Report a bug in OSMnx's code
 labels: bug
 body:

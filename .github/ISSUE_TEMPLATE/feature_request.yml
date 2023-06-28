@@ -1,4 +1,4 @@
-name: Feature proposal
+name: Propose a feature
 description: Propose an enhancement before opening a pull request to add it
 labels: enh
 body:
