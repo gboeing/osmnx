@@ -47,6 +47,15 @@ body:
     validations:
       required: true
 
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment packages and versions
+      description: Paste the complete output of `conda list` here. Auto-rendered as code, no need for backticks.
+      render: shell
+    validations:
+      required: true
+
   - type: dropdown
     id: installation
     attributes:
@@ -57,15 +66,6 @@ body:
         - "OSMnx Docker image"
         - "pip"
         - "other (describe below)"
-    validations:
-      required: true
-
-  - type: textarea
-    id: environment
-    attributes:
-      label: Environment packages and versions
-      description: Paste the complete output of `conda list` here. Auto-rendered as code, no need for backticks.
-      render: shell
     validations:
       required: true
 
