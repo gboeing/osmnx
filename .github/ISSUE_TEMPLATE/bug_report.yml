@@ -3,6 +3,10 @@ description: Report a bug in OSMnx's code
 labels: bug
 body:
 
+  - type: markdown
+    attributes:
+      value: "Thanks for using OSMnx!"
+
   - type: checkboxes
     id: contributing
     attributes:

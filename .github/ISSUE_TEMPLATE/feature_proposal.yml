@@ -3,11 +3,15 @@ description: Propose an enhancement before opening a pull request to add it
 labels: enh
 body:
 
+  - type: markdown
+    attributes:
+      value: "Thanks for using OSMnx!"
+
   - type: checkboxes
     id: contributing
     attributes:
       label: Contributing guidelines
-      description: Before you proceed, read the [contributing guidelines](../../CONTRIBUTING.md) regarding where to ask usage questions and how to propose an enhancement.
+      description: Before you proceed, read the [contributing guidelines](../../CONTRIBUTING.md) regarding where to ask usage questions and how to propose a feature.
       options:
         - label: I understand the contributing guidelines
           required: true
