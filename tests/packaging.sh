@@ -56,5 +56,5 @@ rm -rf ./dist
 # all done
 echo ""
 echo "Done: git tags pushed, PyPI distribution uploaded, and conda-forge feedstock updated."
-echo "Please open a pull request at https://github.com/$GHUSER/$PACKAGE-feedstock/pulls"
+echo "Please open a pull request at https://github.com/$GHUSER/$PACKAGE-feedstock"
 echo ""
