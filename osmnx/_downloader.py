@@ -530,10 +530,10 @@ def _osm_network_download(polygon, network_type, custom_filter):
     custom_filter : string
         a custom ways filter to be used instead of the network_type presets
 
-    Returns
-    -------
-    response_jsons : list
-        list of JSON responses from the Overpass server
+    Yields
+    ------
+    response_json : dict
+        JSON response from the Overpass server
     """
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type, if provided, otherwise use custom_filter
@@ -541,8 +541,6 @@ def _osm_network_download(polygon, network_type, custom_filter):
         osm_filter = custom_filter
     else:
         osm_filter = _get_osm_filter(network_type)
-
-    response_jsons = []
 
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
@@ -556,15 +554,10 @@ def _osm_network_download(polygon, network_type, custom_filter):
     for polygon_coord_str in polygon_coord_strs:
         query_str = f"{overpass_settings};(way{osm_filter}(poly:{polygon_coord_str!r});>;);out;"
         response_json = _overpass_request(data={"data": query_str})
-        response_jsons.append(response_json)
-    utils.log(
-        f"Got all network data within polygon from API in {len(polygon_coord_strs)} request(s)"
-    )
+        yield response_json
 
     if settings.cache_only_mode:  # pragma: no cover
         raise CacheOnlyModeInterrupt("settings.cache_only_mode=True")
-
-    return response_jsons
 
 
 def _osm_features_download(polygon, tags):
