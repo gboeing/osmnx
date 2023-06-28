@@ -9,7 +9,7 @@ body:
       label: Contributing guidelines
       description: Before you proceed, read the [contributing guidelines](../../CONTRIBUTING.md) regarding where to ask usage questions and how to file a bug report.
       options:
-        - label: "I understand the contributing guidelines"
+        - label: I understand the contributing guidelines
           required: true
 
   - type: checkboxes
@@ -18,7 +18,7 @@ body:
       label: Documentation
       description: Before you proceed, review the [documentation](https://osmnx.readthedocs.io/) and [OSMnx examples](https://github.com/gboeing/osmnx-examples) gallery, which cover key concepts, installation, and package usage.
       options:
-        - label: "My problem is not addressed by the documentation or examples"
+        - label: My problem is not addressed by the documentation or examples
           required: true
 
   - type: checkboxes
@@ -27,7 +27,7 @@ body:
       label: Existing issues
       description: Before you proceed, search the open and closed issues to see if the problem has already been reported.
       options:
-        - label: "My problem does not appear in an existing issue"
+        - label: My problem does not appear in an existing issue
           required: true
 
   - type: input
@@ -81,7 +81,8 @@ body:
     id: mwe
     attributes:
       label: Complete minimal reproducible example
-      description: "This example code snippet must be *minimal* so it doesn't contain extraneous code or data unrelated to your specific problem and it must be *complete* so we can independently run it from top to bottom by copying/pasting it into a Python interpreter. That means all imports and all variables must be defined. If you're unsure how to create a good reproducible example, read [this guide](https://matthewrocklin.com/blog/work/2018/02/28/minimal-bug-reports). Do not post a screenshot of your code or error message: provide it as text. Auto-rendered as code, no need for backticks."
+      description: |
+        This example code snippet must be *minimal* so it doesn't contain extraneous code or data unrelated to your specific problem and it must be *complete* so we can independently run it from top to bottom by copying/pasting it into a Python interpreter. That means all imports and all variables must be defined. If you're unsure how to create a good reproducible example, read [this guide](https://matthewrocklin.com/blog/work/2018/02/28/minimal-bug-reports). Do not post a screenshot of your code or error message: provide it as text. Auto-rendered as code, no need for backticks.
       render: python
     validations:
       required: true
