@@ -1,6 +1,6 @@
 # OSMnx tests
 
-First, ensure that you have installed the necessary [dependencies](../environments/tests/env-ci.yml) for the test suite. Then use the repository's [pre-commit hooks](../.pre-commit-config.yaml) and/or the scripts in this folder to:
+First, ensure that you have installed the necessary [dependencies](../environments/tests/env-ci.yml) for the test suite. Then use the repository's [pre-commit hooks](../.pre-commit-config.yaml) and the scripts in this folder to:
 
   - format code/docstrings to the project's style
   - lint the code
@@ -17,7 +17,7 @@ Format the code and sort imports according to the project's style by changing di
 bash ./tests/format.sh
 ```
 
-## Lint and test
+## Run the test suite
 
 Lint and test the code and docstrings by changing directories to the repository's root and running:
 
@@ -35,12 +35,12 @@ All PRs trigger continuous integration tests via GitHub Actions. See the [config
   - lint the code
   - tests and coverage
 
-## Release a new version
+## Packaging
 
-Update `CHANGELOG.md` and edit the version number in `osmnx/_version.py`. If needed, update `LICENSE.txt` dates and `pyproject.toml` dependency versions. Then change directories to the repository's root and run:
+To package and release a new version, update `CHANGELOG.md` and edit the version number in `osmnx/_version.py`. If needed, update `LICENSE.txt` dates and `pyproject.toml` dependency versions. Then change directories to the repository's root and run:
 
 ```
 bash ./tests/packaging.sh
 ```
 
-This will tag the repository with the new version number, upload the PyPI distribution, and update the conda-forge feedstock. Then, open a pull request at the [feedstock](https://github.com/conda-forge/osmnx-feedstock/pulls) to release on conda-forge. Finally, when the new version is available on conda-forge, update the [Docker image](../environments/docker) and the [examples gallery](https://github.com/gboeing/osmnx-examples) to use the new version.
+This will tag the repository with the new version number, upload the PyPI distribution, and update the conda-forge feedstock. Then, open a pull request at the [feedstock](https://github.com/conda-forge/osmnx-feedstock) to release on conda-forge. Finally, when the new version is available on conda-forge, update the [Docker image](../environments/docker) and the [examples gallery](https://github.com/gboeing/osmnx-examples) to use the new version.
