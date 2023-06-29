@@ -38,7 +38,7 @@ maintainers = [{name = "OSMnx contributors"}]
 name = "osmnx"
 readme = "README.md"
 requires-python = ">=3.8"
-urls.Documentation = "https://osmnx.readthedocs.io/"
+urls.Documentation = "https://osmnx.readthedocs.io"
 urls.Repository = "https://github.com/gboeing/osmnx"
 
 [project.optional-dependencies]
@@ -49,6 +49,9 @@ visualization = ["matplotlib>=3.5"]
 
 [tool.black]
 line_length = 100
+
+[tool.hatch.build]
+packages = ["osmnx"]
 
 [tool.hatch.version]
 path = "osmnx/_version.py"
