@@ -96,7 +96,7 @@ def features_from_bbox(north, south, east, west, tags):
     west : float
         western longitude of bounding box
     tags : dict
-        Dict of tags used for finding objects in the selected area. Results
+        Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
         OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
@@ -136,7 +136,7 @@ def features_from_point(center_point, tags, dist=1000):
     center_point : tuple
         the (lat, lng) center point around which to get the features
     tags : dict
-        Dict of tags used for finding objects in the selected area. Results
+        Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
         OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
@@ -182,7 +182,7 @@ def features_from_address(address, tags, dist=1000):
         the address to geocode and use as the central point around which to
         get the features
     tags : dict
-        Dict of tags used for finding objects in the selected area. Results
+        Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
         OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
@@ -237,7 +237,7 @@ def features_from_place(query, tags, which_result=None, buffer_dist=None):
     query : string or dict or list
         the query or queries to geocode to get place boundary polygon(s)
     tags : dict
-        Dict of tags used for finding objects in the selected area. Results
+        Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
         OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
@@ -296,7 +296,7 @@ def features_from_polygon(polygon, tags):
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         geographic boundaries to fetch features within
     tags : dict
-        Dict of tags used for finding objects in the selected area. Results
+        Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
         OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
@@ -350,9 +350,9 @@ def features_from_xml(filepath, polygon=None, tags=None):
     filepath : string or pathlib.Path
         path to file containing OSM XML data
     polygon : shapely.geometry.Polygon
-        optional geographic boundary to filter objects
+        optional geographic boundary to filter elements
     tags : dict
-        optional dict of tags for filtering objects from the XML. Results
+        optional dict of tags for filtering elements from the XML. Results
         returned are the union, not intersection of each individual tag.
         Each result matches at least one given tag. The dict keys should be
         OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
