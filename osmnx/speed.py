@@ -116,11 +116,9 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
     # caller did not pass in hwy_speeds or fallback arguments
     if pd.isnull(speed_kph).all():
         raise ValueError(
-            (
-                "this graph's edges have no preexisting `maxspeed` "
-                "attribute values so you must pass `hwy_speeds` or "
-                "`fallback` arguments."
-            )
+            "this graph's edges have no preexisting `maxspeed` "
+            "attribute values so you must pass `hwy_speeds` or "
+            "`fallback` arguments."
         )
 
     # add speed kph attribute to graph edges
