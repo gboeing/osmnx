@@ -478,8 +478,7 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
     """
     _verify_edge_attribute(G, weight)
     paths_gen = nx.shortest_simple_paths(utils_graph.get_digraph(G, weight), orig, dest, weight)
-    for path in itertools.islice(paths_gen, 0, k):
-        yield path
+    yield from itertools.islice(paths_gen, 0, k)
 
 
 def _verify_edge_attribute(G, attr):
