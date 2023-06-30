@@ -562,11 +562,6 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     """
     utils.log("Creating graph from downloaded OSM data...")
 
-    # make sure we got data back from the server request(s)
-    if not any(rj["elements"] for rj in response_jsons):  # pragma: no cover
-        msg = "There are no data elements in the server response. Check log and query location/filters."
-        raise EmptyOverpassResponse(msg)
-
     # create the graph as a MultiDiGraph and set its meta-attributes
     metadata = {
         "created_date": utils.ts(),
@@ -585,6 +580,11 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
 
         # add each osm way (ie, a path of edges) to the graph
         _add_paths(G, paths.values(), bidirectional)
+
+    # make sure we got data back from the server request(s)
+    if not any(G.nodes()):  # pragma: no cover
+        msg = "There are no data elements in the server response. Check log and query location/filters."
+        raise EmptyOverpassResponse(msg)
 
     # retain only the largest connected component if retain_all is False
     if not retain_all:
