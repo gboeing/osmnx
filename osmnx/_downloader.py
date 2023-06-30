@@ -554,7 +554,6 @@ def _osm_network_download(polygon, network_type, custom_filter):
     for polygon_coord_str in polygon_coord_strs:
         query_str = f"{overpass_settings};(way{osm_filter}(poly:{polygon_coord_str!r});>;);out;"
         yield _overpass_request(data={"data": query_str})
-        
 
     if settings.cache_only_mode:  # pragma: no cover
         raise CacheOnlyModeInterrupt("settings.cache_only_mode=True")
