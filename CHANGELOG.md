@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+  - improve memory efficiency during graph creation
   - adopt NEP 29 policy for minimum required Python and NumPy versions
 
 ## 1.5.0 (2023-06-28)
