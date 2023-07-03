@@ -548,8 +548,8 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
 
     Parameters
     ----------
-    response_jsons : list
-        list of dicts of JSON responses from from the Overpass API
+    response_jsons : iterable
+        iterable of dicts of JSON responses from from the Overpass API
     retain_all : bool
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
@@ -562,11 +562,6 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     """
     utils.log("Creating graph from downloaded OSM data...")
 
-    # make sure we got data back from the server request(s)
-    if not any(rj["elements"] for rj in response_jsons):  # pragma: no cover
-        msg = "There are no data elements in the server response. Check log and query location/filters."
-        raise EmptyOverpassResponse(msg)
-
     # create the graph as a MultiDiGraph and set its meta-attributes
     metadata = {
         "created_date": utils.ts(),
@@ -576,19 +571,20 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     G = nx.MultiDiGraph(**metadata)
 
     # extract nodes and paths from the downloaded osm data
-    nodes = {}
-    paths = {}
     for response_json in response_jsons:
-        nodes_temp, paths_temp = _parse_nodes_paths(response_json)
-        nodes.update(nodes_temp)
-        paths.update(paths_temp)
+        nodes, paths = _parse_nodes_paths(response_json)
 
-    # add each osm node to the graph
-    for node, data in nodes.items():
-        G.add_node(node, **data)
+        # add each osm node to the graph
+        for node, data in nodes.items():
+            G.add_node(node, **data)
 
-    # add each osm way (ie, a path of edges) to the graph
-    _add_paths(G, paths.values(), bidirectional)
+        # add each osm way (ie, a path of edges) to the graph
+        _add_paths(G, paths.values(), bidirectional)
+
+    # make sure we got data back from the server request(s)
+    if not any(G.nodes()):  # pragma: no cover
+        msg = "There are no data elements in the server response. Check log and query location/filters."
+        raise EmptyOverpassResponse(msg)
 
     # retain only the largest connected component if retain_all is False
     if not retain_all:
