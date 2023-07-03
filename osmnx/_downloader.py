@@ -18,7 +18,6 @@ from . import projection
 from . import settings
 from . import utils
 from . import utils_geo
-from ._errors import CacheOnlyModeInterrupt
 
 # capture getaddrinfo function to use original later after mutating it
 _original_getaddrinfo = socket.getaddrinfo
@@ -532,8 +531,8 @@ def _osm_network_download(polygon, network_type, custom_filter):
 
     Yields
     ------
-    response_json : dict
-        JSON response from the Overpass server
+    response_jsons : generator
+        generator of JSON response dicts from the Overpass server
     """
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type, if provided, otherwise use custom_filter
@@ -554,9 +553,6 @@ def _osm_network_download(polygon, network_type, custom_filter):
     for polygon_coord_str in polygon_coord_strs:
         query_str = f"{overpass_settings};(way{osm_filter}(poly:{polygon_coord_str!r});>;);out;"
         yield _overpass_request(data={"data": query_str})
-
-    if settings.cache_only_mode:  # pragma: no cover
-        raise CacheOnlyModeInterrupt("settings.cache_only_mode=True")
 
 
 def _osm_features_download(polygon, tags):
