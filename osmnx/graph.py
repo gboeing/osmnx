@@ -580,12 +580,13 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     utils.log(f"Retrieved all data from API in {response_count} request(s)")
     if settings.cache_only_mode:  # pragma: no cover
         # after consuming all response_jsons in loop, raise exception to catch
-        raise CacheOnlyModeInterrupt("settings.cache_only_mode=True")
+        raise CacheOnlyModeInterrupt("Interrupted because `settings.cache_only_mode=True`")
 
     # ensure we got some node/way data back from the server request(s)
     if (len(nodes) == 0) and (len(paths) == 0):  # pragma: no cover
-        msg = "There are no data elements in the server response. Check log and query location/filters."
-        raise EmptyOverpassResponse(msg)
+        raise EmptyOverpassResponse(
+            "No data elements in server response. Check query location/filters and log."
+        )
 
     # create the MultiDiGraph and set its graph-level attributes
     metadata = {
@@ -596,7 +597,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     G = nx.MultiDiGraph(**metadata)
 
     # add each OSM node and way (a path of edges) to the graph
-    utils.log(f"Adding {len(nodes):,} OSM nodes and {len(paths):,} OSM ways to graph...")
+    utils.log(f"Creating graph from {len(nodes):,} OSM nodes and {len(paths):,} OSM ways...")
     for node, data in nodes.items():
         G.add_node(node, **data)
     _add_paths(G, paths.values(), bidirectional)
