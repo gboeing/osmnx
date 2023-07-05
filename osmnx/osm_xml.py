@@ -3,7 +3,7 @@ import bz2
 import xml.sax
 from pathlib import Path
 from warnings import warn
-from xml.etree import ElementTree as etree
+from xml.etree import ElementTree as ET
 
 import networkx as nx
 import numpy as np
@@ -83,7 +83,7 @@ def _overpass_json_from_file(filepath):
 
     # warn if this XML file was created by OSMnx itself
     with _opener(Path(filepath)) as f:
-        root_attrs = etree.parse(f).getroot().attrib
+        root_attrs = ET.parse(f).getroot().attrib
         if "generator" in root_attrs and "OSMnx" in root_attrs["generator"]:
             warn(
                 "The XML file you are loading appears to have been created by "
@@ -276,14 +276,14 @@ def _save_graph_xml(
         )
 
     # initialize XML tree with an OSM root element then append nodes/edges
-    root = etree.Element("osm", attrib={"version": str(api_version), "generator": "OSMnx"})
+    root = ET.Element("osm", attrib={"version": str(api_version), "generator": "OSMnx"})
     root = _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags)
     root = _append_edges_xml_tree(
         root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges
     )
 
     # write to disk
-    etree.ElementTree(root).write(filepath, encoding="utf-8", xml_declaration=True)
+    ET.ElementTree(root).write(filepath, encoding="utf-8", xml_declaration=True)
     utils.log(f"Saved graph as .osm file at {filepath!r}")
 
 
@@ -309,11 +309,11 @@ def _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags):
     """
     for _, row in gdf_nodes.iterrows():
         row = row.dropna().astype(str)
-        node = etree.SubElement(root, "node", attrib=row[node_attrs].to_dict())
+        node = ET.SubElement(root, "node", attrib=row[node_attrs].to_dict())
 
         for tag in node_tags:
             if tag in row:
-                etree.SubElement(node, "tag", attrib={"k": tag, "v": row[tag]})
+                ET.SubElement(node, "tag", attrib={"k": tag, "v": row[tag]})
     return root
 
 
@@ -340,12 +340,12 @@ def _create_way_for_each_edge(root, gdf_edges, edge_attrs, edge_tags):
     """
     for _, row in gdf_edges.iterrows():
         row = row.dropna().astype(str)
-        edge = etree.SubElement(root, "way", attrib=row[edge_attrs].to_dict())
-        etree.SubElement(edge, "nd", attrib={"ref": row["u"]})
-        etree.SubElement(edge, "nd", attrib={"ref": row["v"]})
+        edge = ET.SubElement(root, "way", attrib=row[edge_attrs].to_dict())
+        ET.SubElement(edge, "nd", attrib={"ref": row["u"]})
+        ET.SubElement(edge, "nd", attrib={"ref": row["v"]})
         for tag in edge_tags:
             if tag in row:
-                etree.SubElement(edge, "tag", attrib={"k": tag, "v": row[tag]})
+                ET.SubElement(edge, "tag", attrib={"k": tag, "v": row[tag]})
     return
 
 
@@ -377,15 +377,15 @@ def _append_merged_edge_attrs(xml_edge, sample_edge, all_edges_df, edge_tags, ed
     if edge_tag_aggs is None:
         for tag in edge_tags:
             if tag in sample_edge:
-                etree.SubElement(xml_edge, "tag", attrib={"k": tag, "v": sample_edge[tag]})
+                ET.SubElement(xml_edge, "tag", attrib={"k": tag, "v": sample_edge[tag]})
     else:
         for tag in edge_tags:
             if (tag in sample_edge) and (tag not in (t for t, agg in edge_tag_aggs)):
-                etree.SubElement(xml_edge, "tag", attrib={"k": tag, "v": sample_edge[tag]})
+                ET.SubElement(xml_edge, "tag", attrib={"k": tag, "v": sample_edge[tag]})
 
         for tag, agg in edge_tag_aggs:
             if tag in all_edges_df.columns:
-                etree.SubElement(
+                ET.SubElement(
                     xml_edge,
                     "tag",
                     attrib={
@@ -410,8 +410,8 @@ def _append_nodes_as_edge_attrs(xml_edge, sample_edge, all_edges_df):
         a dataframe with one row for each edge in an OSM way
     """
     if len(all_edges_df) == 1:
-        etree.SubElement(xml_edge, "nd", attrib={"ref": sample_edge["u"]})
-        etree.SubElement(xml_edge, "nd", attrib={"ref": sample_edge["v"]})
+        ET.SubElement(xml_edge, "nd", attrib={"ref": sample_edge["u"]})
+        ET.SubElement(xml_edge, "nd", attrib={"ref": sample_edge["v"]})
     else:
         # topological sort
         try:
@@ -421,7 +421,7 @@ def _append_nodes_as_edge_attrs(xml_edge, sample_edge, all_edges_df):
             ordered_nodes = _get_unique_nodes_ordered_from_way(all_edges_df.iloc[1:])
             ordered_nodes = [first_node] + ordered_nodes
         for node in ordered_nodes:
-            etree.SubElement(xml_edge, "nd", attrib={"ref": str(node)})
+            ET.SubElement(xml_edge, "nd", attrib={"ref": str(node)})
     return
 
 
@@ -463,7 +463,7 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
     if merge_edges:
         for _, all_way_edges in gdf_edges.groupby("id"):
             first = all_way_edges.iloc[0].dropna().astype(str)
-            edge = etree.SubElement(root, "way", attrib=first[edge_attrs].dropna().to_dict())
+            edge = ET.SubElement(root, "way", attrib=first[edge_attrs].dropna().to_dict())
             _append_nodes_as_edge_attrs(
                 xml_edge=edge, sample_edge=first, all_edges_df=all_way_edges
             )
