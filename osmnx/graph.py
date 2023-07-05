@@ -598,8 +598,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
 
     # add each OSM node and way (a path of edges) to the graph
     utils.log(f"Creating graph from {len(nodes):,} OSM nodes and {len(paths):,} OSM ways...")
-    for node, data in nodes.items():
-        G.add_node(node, **data)
+    G.add_nodes_from(nodes.items())
     _add_paths(G, paths.values(), bidirectional)
 
     # retain only the largest connected component if retain_all=False
