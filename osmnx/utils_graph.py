@@ -266,7 +266,7 @@ def remove_isolated_nodes(G):
     # get the set of all isolated nodes, then remove them
     isolated_nodes = {node for node, degree in G.degree() if degree < 1}
     G.remove_nodes_from(isolated_nodes)
-    utils.log(f"Removed {len(isolated_nodes)} isolated nodes")
+    utils.log(f"Removed {len(isolated_nodes):,} isolated nodes")
     return G
 
 
@@ -303,7 +303,7 @@ def get_largest_component(G, strongly=False):
 
         # induce (frozen) subgraph then unfreeze it by making new MultiDiGraph
         G = nx.MultiDiGraph(G.subgraph(largest_cc))
-        utils.log(f"Got largest {kind} connected component ({len(G)} of {n} total nodes)")
+        utils.log(f"Got largest {kind} connected component ({len(G):,} of {n:,} total nodes)")
 
     return G
 
