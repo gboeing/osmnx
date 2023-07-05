@@ -19,6 +19,7 @@ from . import truncate
 from . import utils
 from . import utils_geo
 from . import utils_graph
+from ._errors import CacheOnlyModeInterrupt
 from ._errors import EmptyOverpassResponse
 from ._version import __version__
 
@@ -548,8 +549,8 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
 
     Parameters
     ----------
-    response_jsons : list
-        list of dicts of JSON responses from from the Overpass API
+    response_jsons : iterable
+        iterable of dicts of JSON responses from from the Overpass API
     retain_all : bool
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
@@ -560,14 +561,34 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     -------
     G : networkx.MultiDiGraph
     """
-    utils.log("Creating graph from downloaded OSM data...")
+    response_count = 0
+    nodes = {}
+    paths = {}
 
-    # make sure we got data back from the server request(s)
-    if not any(rj["elements"] for rj in response_jsons):  # pragma: no cover
-        msg = "There are no data elements in the server response. Check log and query location/filters."
-        raise EmptyOverpassResponse(msg)
+    # consume response_jsons generator to download data from server
+    for response_json in response_jsons:
+        response_count += 1
+        if settings.cache_only_mode:  # pragma: no cover
+            # if cache_only_mode, consume response_jsons then continue loop
+            continue
+        else:
+            # otherwise, extract nodes and paths from the downloaded OSM data
+            nodes_temp, paths_temp = _parse_nodes_paths(response_json)
+            nodes.update(nodes_temp)
+            paths.update(paths_temp)
 
-    # create the graph as a MultiDiGraph and set its meta-attributes
+    utils.log(f"Retrieved all data from API in {response_count} request(s)")
+    if settings.cache_only_mode:  # pragma: no cover
+        # after consuming all response_jsons in loop, raise exception to catch
+        raise CacheOnlyModeInterrupt("Interrupted because `settings.cache_only_mode=True`")
+
+    # ensure we got some node/way data back from the server request(s)
+    if (len(nodes) == 0) and (len(paths) == 0):  # pragma: no cover
+        raise EmptyOverpassResponse(
+            "No data elements in server response. Check query location/filters and log."
+        )
+
+    # create the MultiDiGraph and set its graph-level attributes
     metadata = {
         "created_date": utils.ts(),
         "created_with": f"OSMnx {__version__}",
@@ -575,26 +596,16 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     }
     G = nx.MultiDiGraph(**metadata)
 
-    # extract nodes and paths from the downloaded osm data
-    nodes = {}
-    paths = {}
-    for response_json in response_jsons:
-        nodes_temp, paths_temp = _parse_nodes_paths(response_json)
-        nodes.update(nodes_temp)
-        paths.update(paths_temp)
-
-    # add each osm node to the graph
-    for node, data in nodes.items():
-        G.add_node(node, **data)
-
-    # add each osm way (ie, a path of edges) to the graph
+    # add each OSM node and way (a path of edges) to the graph
+    utils.log(f"Creating graph from {len(nodes):,} OSM nodes and {len(paths):,} OSM ways...")
+    G.add_nodes_from(nodes.items())
     _add_paths(G, paths.values(), bidirectional)
 
-    # retain only the largest connected component if retain_all is False
+    # retain only the largest connected component if retain_all=False
     if not retain_all:
         G = utils_graph.get_largest_component(G)
 
-    utils.log(f"Created graph with {len(G)} nodes and {len(G.edges)} edges")
+    utils.log(f"Created graph with {len(G):,} nodes and {len(G.edges):,} edges")
 
     # add length (great-circle distance between nodes) attribute to each edge
     if len(G.edges) > 0:
