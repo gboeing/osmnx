@@ -73,24 +73,28 @@ def _overpass_json_from_file(filepath):
     -------
     OSMContentHandler object
     """
-    root_attrs = etree.parse(filepath).getroot().attrib
-    if "generator" in root_attrs and "OSMnx" in root_attrs["generator"]:
-        msg = (
-            "The XML file you are loading appears to have been created by "
-            "OSMnx. This use case is not supported and may not behave as "
-            "expected. To save/load graphs to/from disk for later use in "
-            "OSMnx, use the `io.save_graphml` and `io.load_graphml` "
-            "functions instead. Refer to the documentation for details."
-        )
-        warn(msg, stacklevel=2)
 
+    # open the XML file, handling bz2 or regular XML
     def _opener(filepath):
         if filepath.suffix == ".bz2":
             return bz2.BZ2File(filepath)
         else:
-            # assume an unrecognized file extension is just XML
-            return filepath.open(mode="rb")
+            return filepath.open()
 
+    # warn if this XML file was created by OSMnx itself
+    with _opener(Path(filepath)) as f:
+        root_attrs = etree.parse(f).getroot().attrib
+        if "generator" in root_attrs and "OSMnx" in root_attrs["generator"]:
+            warn(
+                "The XML file you are loading appears to have been created by "
+                "OSMnx. This use case is not supported and may not behave as "
+                "expected. To save/load graphs to/from disk for later use in "
+                "OSMnx, use the `io.save_graphml` and `io.load_graphml` "
+                "functions instead. Refer to the documentation for details.",
+                stacklevel=2,
+            )
+
+    # parse the XML to Overpass-like JSON
     with _opener(Path(filepath)) as f:
         handler = _OSMContentHandler()
         xml.sax.parse(f, handler)
