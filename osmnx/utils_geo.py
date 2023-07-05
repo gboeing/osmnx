@@ -399,7 +399,7 @@ def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3
     """
     # create an r-tree spatial index for the geometries
     sindex = geometries.sindex
-    utils.log(f"Created r-tree spatial index for {len(geometries)} geometries")
+    utils.log(f"Created r-tree spatial index for {len(geometries):,} geometries")
 
     # cut the polygon into chunks for spatial index intersecting
     multipoly = _quadrat_cut_geometry(polygon, quadrat_width=quadrat_width, min_num=min_num)
@@ -416,7 +416,7 @@ def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3
             precise_matches = possible_matches[possible_matches.intersects(poly)]
             geoms_in_poly.update(precise_matches.index)
 
-    utils.log(f"Identified {len(geoms_in_poly)} geometries inside polygon")
+    utils.log(f"Identified {len(geoms_in_poly):,} geometries inside polygon")
     return geoms_in_poly
 
 

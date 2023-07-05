@@ -181,7 +181,7 @@ def truncate_graph_polygon(
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
     G.remove_nodes_from(nodes_to_remove)
-    utils.log(f"Removed {len(nodes_to_remove)} nodes outside polygon")
+    utils.log(f"Removed {len(nodes_to_remove):,} nodes outside polygon")
 
     if not retain_all:
         # remove any isolated nodes and retain only the largest component

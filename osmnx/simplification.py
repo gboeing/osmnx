@@ -180,7 +180,7 @@ def _get_paths_to_simplify(G, strict=True):
     """
     # first identify all the nodes that are endpoints
     endpoints = {n for n in G.nodes if _is_endpoint(G, n, strict=strict)}
-    utils.log(f"Identified {len(endpoints)} edge endpoints")
+    utils.log(f"Identified {len(endpoints):,} edge endpoints")
 
     # for each endpoint node, look at each of its successor nodes
     for endpoint in endpoints:
@@ -344,8 +344,8 @@ def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
     G.graph["simplified"] = True
 
     msg = (
-        f"Simplified graph: {initial_node_count} to {len(G)} nodes, "
-        f"{initial_edge_count} to {len(G.edges)} edges"
+        f"Simplified graph: {initial_node_count:,} to {len(G):,} nodes, "
+        f"{initial_edge_count:,} to {len(G.edges):,} edges"
     )
     utils.log(msg)
     return G

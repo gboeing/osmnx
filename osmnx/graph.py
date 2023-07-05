@@ -96,7 +96,7 @@ def graph_from_bbox(
         custom_filter=custom_filter,
     )
 
-    utils.log(f"graph_from_bbox returned graph with {len(G)} nodes and {len(G.edges)} edges")
+    utils.log(f"graph_from_bbox returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
     return G
 
 
@@ -184,7 +184,7 @@ def graph_from_point(
         node = distance.nearest_nodes(G, X=[center_point[1]], Y=[center_point[0]])[0]
         G = truncate.truncate_graph_dist(G, node, max_dist=dist)
 
-    utils.log(f"graph_from_point returned graph with {len(G)} nodes and {len(G.edges)} edges")
+    utils.log(f"graph_from_point returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
     return G
 
 
@@ -265,7 +265,7 @@ def graph_from_address(
         clean_periphery=clean_periphery,
         custom_filter=custom_filter,
     )
-    utils.log(f"graph_from_address returned graph with {len(G)} nodes and {len(G.edges)} edges")
+    utils.log(f"graph_from_address returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
 
     if return_coords:
         return G, point
@@ -369,7 +369,7 @@ def graph_from_place(
         custom_filter=custom_filter,
     )
 
-    utils.log(f"graph_from_place returned graph with {len(G)} nodes and {len(G.edges)} edges")
+    utils.log(f"graph_from_place returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
     return G
 
 
@@ -501,7 +501,7 @@ def graph_from_polygon(
             stacklevel=2,
         )
 
-    utils.log(f"graph_from_polygon returned graph with {len(G)} nodes and {len(G.edges)} edges")
+    utils.log(f"graph_from_polygon returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
     return G
 
 
@@ -540,7 +540,7 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
     if simplify:
         G = simplification.simplify_graph(G)
 
-    utils.log(f"graph_from_xml returned graph with {len(G)} nodes and {len(G.edges)} edges")
+    utils.log(f"graph_from_xml returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
     return G
 
 
