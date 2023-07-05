@@ -19,8 +19,8 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
     SAX content handler for OSM XML.
 
     Used to build an Overpass-like response JSON object in self.object. For
-    format notes, see https://overpass-api.de/ and
-    https://wiki.openstreetmap.org/wiki/OSM_XML#OSM_XML_file_format_notes
+    format notes, see https://wiki.openstreetmap.org/wiki/OSM_XML and
+    https://overpass-api.de
     """
 
     def __init__(self):
@@ -73,6 +73,16 @@ def _overpass_json_from_file(filepath):
     -------
     OSMContentHandler object
     """
+    root_attrs = etree.parse(filepath).getroot().attrib
+    if "generator" in root_attrs and "OSMnx" in root_attrs["generator"]:
+        msg = (
+            "The XML file you are loading appears to have been created by "
+            "OSMnx. This use case is not supported and may not behave as "
+            "expected. To save/load graphs to/from disk for later use in "
+            "OSMnx, use the `io.save_graphml` and `io.load_graphml` "
+            "functions instead. Refer to the documentation for details."
+        )
+        warn(msg, stacklevel=2)
 
     def _opener(filepath):
         if filepath.suffix == ".bz2":
