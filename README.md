@@ -15,13 +15,13 @@ If you use OSMnx in your work, please cite the journal article:
 
 Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](https://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems* 65, 126–139.
 
+## Getting Started
+
+Read the [Getting Started](https://osmnx.readthedocs.io/en/stable/getting-started.html) guide for an introduction to the package, then work through the [OSMnx Examples](https://github.com/gboeing/osmnx-examples) gallery for step-by-step tutorials and sample code.
+
 ## Installation
 
 Follow the [Installation](https://osmnx.readthedocs.io/en/stable/installation.html) guide to install OSMnx.
-
-## Getting Started
-
-Read the [Getting Started](https://osmnx.readthedocs.io/en/stable/getting-started.html) guide and work through the [OSMnx Examples](https://github.com/gboeing/osmnx-examples) gallery for step-by-step tutorials and sample code.
 
 ## Support
 
