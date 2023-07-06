@@ -3,7 +3,7 @@ User Reference
 
 User Reference for the OSMnx package.
 
-This guide describes the usage of all public modules and functions. Every function can be accessed via `ox.module_name.function_name()` and most can also be accessed directly via `ox.function_name()` as a shortcut. Less-common functions are accessible only via `ox.module_name.function_name()`.
+This guide describes the usage of OSMnx's public API. Every function can be accessed via `ox.module_name.function_name()` and many can also be accessed directly via `ox.function_name()` as a shortcut.
 
 If you are looking for an introduction to OSMnx, read the :doc:`getting-started` guide.
 

@@ -115,7 +115,7 @@ You can plot graphs, routes, network figure-ground diagrams, building footprints
 More Info
 ---------
 
-All of this functionality is demonstrated step-by-step in the `OSMnx Examples`_ gallery, and usage is detailed in the :doc:`user-reference`. More feature development details are in the `Change Log`_. Consult the :doc:`further-reading` resources for additional technical details and research.
+All of this functionality is demonstrated step-by-step in the `OSMnx Examples`_ gallery, and usage is detailed in the :doc:`user-reference`. More feature development details are in the `Changelog`_. Consult the :doc:`further-reading` resources for additional technical details and research.
 
 Frequently Asked Questions
 --------------------------
@@ -137,6 +137,6 @@ Frequently Asked Questions
 .. _features: https://wiki.openstreetmap.org/wiki/Map_features
 .. _tags: https://wiki.openstreetmap.org/wiki/Tags
 .. _elements: https://wiki.openstreetmap.org/wiki/Elements
-.. _Change Log: https://github.com/gboeing/osmnx/blob/main/CHANGELOG.md
+.. _Changelog: https://github.com/gboeing/osmnx/blob/main/CHANGELOG.md
 .. _projects: https://geoffboeing.com/2018/03/osmnx-features-roundup/
 .. _StackOverflow: https://stackoverflow.com/search?q=osmnx

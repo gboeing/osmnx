@@ -13,18 +13,18 @@ Boeing, G. 2017. `OSMnx: New Methods for Acquiring, Constructing, Analyzing, and
 .. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: https://geoffboeing.com/publications/osmnx-complex-street-networks/
 
 
+Getting Started
+---------------
+
+Read the :doc:`getting-started` guide for an introduction to the package, then work through the `OSMnx Examples`_ gallery for step-by-step tutorials and sample code.
+
+.. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
+
+
 Installation
 ------------
 
 Follow the :doc:`installation` guide to install OSMnx.
-
-
-Getting Started
----------------
-
-Read the :doc:`getting-started` guide and work through the `OSMnx Examples`_ gallery for step-by-step tutorials and sample code.
-
-.. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
 
 
 Support
@@ -49,12 +49,12 @@ Documentation
 .. toctree::
    :maxdepth: 1
 
-   installation
+   getting-started
 
 .. toctree::
    :maxdepth: 1
 
-   getting-started
+   installation
 
 .. toctree::
    :maxdepth: 1
