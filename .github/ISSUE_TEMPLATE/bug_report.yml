@@ -67,10 +67,10 @@ body:
       description: Ensure you followed the [installation](https://osmnx.readthedocs.io/en/stable/installation.html) instructions.
       multiple: false
       options:
+        - Other (describe below)
         - Conda and conda-forge
         - OSMnx Docker image
         - Pip
-        - Other (describe below)
     validations:
       required: true
 
