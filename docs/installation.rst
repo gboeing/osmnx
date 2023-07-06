@@ -4,7 +4,7 @@ Installation
 Conda
 -----
 
-The official supported way to install OSMnx is with conda:
+The official, supported way to install OSMnx is with conda:
 
 .. code-block:: shell
 
