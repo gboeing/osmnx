@@ -59,7 +59,9 @@ def test_logging():
     ox.log("test a fake warning", level=lg.WARNING)
     ox.log("test a fake error", level=lg.ERROR)
 
-    ox.citation()
+    ox.citation(style="apa")
+    ox.citation(style="bibtex")
+    ox.citation(style="ieee")
     ox.ts(style="date")
     ox.ts(style="time")
 

@@ -532,7 +532,7 @@ def _osm_network_download(polygon, network_type, custom_filter):
     Yields
     ------
     response_json : dict
-        JSON response from the Overpass server
+        a generator of JSON responses from the Overpass server
     """
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type, if provided, otherwise use custom_filter

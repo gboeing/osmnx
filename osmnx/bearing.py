@@ -110,6 +110,10 @@ def orientation_entropy(Gu, num_bins=36, min_length=0, weight=None):
     across evenly spaced bins. Ignores self-loop edges as their bearings are
     undefined.
 
+    For more info see: Boeing, G. 2019. "Urban Spatial Order: Street Network
+    Orientation, Configuration, and Entropy." Applied Network Science, 4 (1),
+    67. https://doi.org/10.1007/s41109-019-0189-1
+
     Parameters
     ----------
     Gu : networkx.MultiGraph
