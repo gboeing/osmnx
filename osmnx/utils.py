@@ -12,57 +12,73 @@ from warnings import warn
 from . import settings
 
 
-def citation():
+def citation(style="bibtex"):
     """
     Print the OSMnx package's citation information.
 
-    Boeing, G. 2017. OSMnx: New Methods for Acquiring, Constructing, Analyzing,
-    and Visualizing Complex Street Networks. Computers, Environment and Urban
-    Systems, 65, 126-139. https://doi.org/10.1016/j.compenvurbsys.2017.05.004
+    Boeing, G. (2017). OSMnx: New Methods for Acquiring, Constructing,
+    Analyzing, and Visualizing Complex Street Networks. Computers, Environment
+    and Urban Systems, 65, 126-139.
+    https://doi.org/10.1016/j.compenvurbsys.2017.05.004
+
+    Parameters
+    ----------
+    style : string {"apa", "bibtex", "ieee"}
+        citation format, either APA or BibTeX or IEEE
 
     Returns
     -------
     None
     """
-    cite = (
-        "Citation:\n\n"
-        "Boeing, G. 2017. OSMnx: New Methods for Acquiring, "
-        "Constructing, Analyzing, and Visualizing Complex Street "
-        "Networks. Computers, Environment and Urban Systems, 65, 126-139. "
-        "https://doi.org/10.1016/j.compenvurbsys.2017.05.004\n\n"
-        "BibTeX entry for LaTeX users:\n\n"
-        "@article{boeing_osmnx_2017,\n"
-        "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, "
-        "{Constructing}, {Analyzing}, and {Visualizing} {Complex} "
-        "{Street} {Networks}},\n"
-        "    volume = {65},\n"
-        "    doi = {10.1016/j.compenvurbsys.2017.05.004},\n"
-        "    number = {126-139},\n"
-        "    journal = {Computers, Environment and Urban Systems},\n"
-        "    author = {Boeing, Geoff},\n"
-        "    year = {2017}\n"
-        "}"
-    )
-
-    print(cite)
+    if style == "apa":
+        print(
+            "Boeing, G. (2017). OSMnx: New Methods for Acquiring, Constructing, "
+            "Analyzing, and Visualizing Complex Street Networks. Computers, "
+            "Environment and Urban Systems, 65, 126-139. "
+            "https://doi.org/10.1016/j.compenvurbsys.2017.05.004"
+        )
+    elif style == "bibtex":
+        print(
+            "@article{boeing_osmnx_2017,\n"
+            "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, "
+            "{Constructing}, {Analyzing}, and {Visualizing} {Complex} "
+            "{Street} {Networks}},\n"
+            "    volume = {65},\n"
+            "    doi = {10.1016/j.compenvurbsys.2017.05.004},\n"
+            "    number = {126-139},\n"
+            "    journal = {Computers, Environment and Urban Systems},\n"
+            "    author = {Boeing, Geoff},\n"
+            "    year = {2017},\n"
+            "    pages = {126--139}\n"
+            "}"
+        )
+    elif style == "ieee":
+        print(
+            'G. Boeing, "OSMnx: New Methods for Acquiring, Constructing, '
+            'Analyzing, and Visualizing Complex Street Networks," Computers, '
+            "Environment and Urban Systems, vol. 65, pp. 126-139, 2017, "
+            "doi: 10.1016/j.compenvurbsys.2017.05.004."
+        )
+    else:  # pragma: no cover
+        raise ValueError(f"unrecognized citation style {style!r}")
 
 
 def ts(style="datetime", template=None):
     """
-    Get current timestamp as string.
+    Return current timestamp as a string.
 
     Parameters
     ----------
     style : string {"datetime", "date", "time"}
-        format the timestamp with this built-in template
+        format the timestamp with this built-in style
     template : string
-        if not None, format the timestamp with this template instead of one of
-        the built-in styles
+        if not None, format the timestamp with this format string instead of
+        one of the built-in styles
 
     Returns
     -------
     ts : string
-        the string timestamp
+        timestamp string
     """
     if template is None:
         if style == "datetime":
