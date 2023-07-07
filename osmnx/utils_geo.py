@@ -67,7 +67,7 @@ def interpolate_points(geom, dist):
 
     Yields
     ------
-    points : generator
+    point : tuple of floats
         a generator of (x, y) tuples of the interpolated points' coordinates
     """
     if isinstance(geom, LineString):

@@ -315,8 +315,8 @@ def basic_stats(G, area=None, clean_int_tol=None):
     G : networkx.MultiDiGraph
         input graph
     area : float
-        if not None, calculate density measures and use this area value (in
-        square meters) as the denominator
+        if not None, calculate density measures and use this value (in square
+        meters) as the denominator
     clean_int_tol : float
         if not None, calculate consolidated intersections count (and density,
         if `area` is also provided) and use this tolerance value; refer to the
@@ -326,7 +326,7 @@ def basic_stats(G, area=None, clean_int_tol=None):
     Returns
     -------
     stats : dict
-        dictionary containing the following attributes
+        dictionary containing the following keys
           - `circuity_avg` - see `circuity_avg` function documentation
           - `clean_intersection_count` - see `clean_intersection_count` function documentation
           - `clean_intersection_density_km` - `clean_intersection_count` per sq km

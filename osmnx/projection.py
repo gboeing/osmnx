@@ -16,8 +16,8 @@ def is_projected(crs):
     ----------
     crs : string or pyproj.CRS
         the identifier of the coordinate reference system, which can be
-        anything accepted by pyproj.CRS.from_user_input() such as an authority
-        string or a WKT string
+        anything accepted by `pyproj.CRS.from_user_input()` such as an
+        authority string or a WKT string
 
     Returns
     -------
@@ -29,10 +29,11 @@ def is_projected(crs):
 
 def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     """
-    Project a shapely geometry from its current CRS to another.
+    Reproject a shapely geometry from its current CRS to another.
 
-    If to_crs is None, project to the UTM CRS for the UTM zone in which the
-    geometry's centroid lies. Otherwise project to the CRS defined by to_crs.
+    If `to_crs` is None, project to the UTM CRS for the UTM zone in which the
+    geometry's centroid lies. Otherwise project to the CRS defined by
+    `to_crs`.
 
     Parameters
     ----------
@@ -40,12 +41,12 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
         the geometry to project
     crs : string or pyproj.CRS
         the starting CRS of the passed-in geometry. if None, it will be set to
-        settings.default_crs
+        `settings.default_crs`
     to_crs : string or pyproj.CRS
-        if None, project to UTM zone in which geometry's centroid lies,
-        otherwise project to this CRS
+        if None, reproject to the UTM zone in which `geometry`'s centroid
+        lies, otherwise reproject to this CRS
     to_latlong : bool
-        if True, project to settings.default_crs and ignore to_crs
+        if True, reproject to `settings.default_crs` and ignore `to_crs`
 
     Returns
     -------
@@ -63,11 +64,11 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
 
 def project_gdf(gdf, to_crs=None, to_latlong=False):
     """
-    Project a GeoDataFrame from its current CRS to another.
+    Reroject a GeoDataFrame from its current CRS to another.
 
-    If to_crs is None, project to the UTM CRS for the UTM zone in which the
+    If `to_crs` is None, project to the UTM CRS for the UTM zone in which the
     GeoDataFrame's centroid lies. Otherwise project to the CRS defined by
-    to_crs. The simple UTM zone calculation in this function works well for
+    `to_crs`. The simple UTM zone calculation in this function works well for
     most latitudes, but may not work for some extreme northern locations like
     Svalbard or far northern Norway.
 
@@ -76,10 +77,10 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
     gdf : geopandas.GeoDataFrame
         the GeoDataFrame to be projected
     to_crs : string or pyproj.CRS
-        if None, project to UTM zone in which gdf's centroid lies, otherwise
+        if None, project to UTM zone in which `gdf`'s centroid lies, otherwise
         project to this CRS
     to_latlong : bool
-        if True, project to settings.default_crs and ignore to_crs
+        if True, project to `settings.default_crs` and ignore `to_crs`
 
     Returns
     -------
@@ -120,11 +121,11 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
 
 def project_graph(G, to_crs=None):
     """
-    Project graph from its current CRS to another.
+    Reproject a graph from its current CRS to another.
 
-    If to_crs is None, project the graph to the UTM CRS for the UTM zone in
+    If `to_crs` is None, project the graph to the UTM CRS for the UTM zone in
     which the graph's centroid lies. Otherwise, project the graph to the CRS
-    defined by to_crs.
+    defined by `to_crs`.
 
     Parameters
     ----------

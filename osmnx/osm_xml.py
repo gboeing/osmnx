@@ -88,7 +88,7 @@ def _overpass_json_from_file(filepath):
         if "generator" in root_attrs and "OSMnx" in root_attrs["generator"]:
             warn(
                 "The XML file you are loading appears to have been generated "
-                "by OSMnx. This use case is not supported and may not behave "
+                "by OSMnx: this use case is not supported and may not behave "
                 "as expected. To save/load graphs to/from disk for later use "
                 "in OSMnx, use the `io.save_graphml` and `io.load_graphml` "
                 "functions instead. Refer to the documentation for details.",
@@ -117,6 +117,10 @@ def save_graph_xml(
 ):
     """
     Do not use: deprecated.
+
+    The `save_graph_xml` has moved from the `osm_xml` module to the `io`
+    module. `osm_xml.save_graph_xml` has been deprecated and will be removed
+    in a future release. Access the function via the `io` module instead.
 
     Parameters
     ----------

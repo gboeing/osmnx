@@ -470,9 +470,9 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
         edge attribute to minimize when solving shortest paths. default is
         edge length in meters.
 
-    Returns
-    -------
-    paths : generator
+    Yields
+    ------
+    path : list
         a generator of `k` shortest paths ordered by total weight. each path
         is a list of node IDs.
     """

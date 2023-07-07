@@ -177,6 +177,7 @@ def _get_paths_to_simplify(G, strict=True):
     Yields
     ------
     path_to_simplify : list
+        a generator of paths to simplify
     """
     # first identify all the nodes that are endpoints
     endpoints = {n for n in G.nodes if _is_endpoint(G, n, strict=strict)}
