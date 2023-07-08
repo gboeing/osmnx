@@ -4,7 +4,7 @@
 
   - adopt NEP 29 policy for minimum required Python and NumPy versions
 
-## 1.5.1 (TBD)
+## 1.5.1 (2023-07-08)
 
   - improve memory efficiency during graph creation
   - improve log messaging
