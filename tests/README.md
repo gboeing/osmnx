@@ -35,7 +35,7 @@ All PRs trigger continuous integration tests via GitHub Actions. See the [config
   - lint the code
   - tests and coverage
 
-## Packaging
+## Releases
 
 To package and release a new version, update `CHANGELOG.md` and edit the version number in `osmnx/_version.py`. If needed, update `LICENSE.txt` dates and `pyproject.toml` dependency versions. Then change directories to the repository's root and run:
 
