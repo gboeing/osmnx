@@ -30,6 +30,6 @@ repos:
         args: ["--check"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.0.274
+    rev: v0.0.277
     hooks:
       - id: ruff
