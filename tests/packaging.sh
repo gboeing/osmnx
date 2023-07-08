@@ -11,6 +11,7 @@ fi
 
 # update necessary python packaging packages
 eval "$(conda shell.bash hook)"
+conda deactivate
 conda activate ox
 mamba update conda-smithy --yes --no-banner
 
