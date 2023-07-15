@@ -220,7 +220,8 @@ def load_graphml(
     if (filepath is None and graphml_str is None) or (
         filepath is not None and graphml_str is not None
     ):  # pragma: no cover
-        raise ValueError("You must pass one and only one of `filepath` or `graphml_str`.")
+        msg = "You must pass one and only one of `filepath` or `graphml_str`."
+        raise ValueError(msg)
 
     # specify default graph/node/edge attribute values' data types
     default_graph_dtypes = {"simplified": _convert_bool_string}
@@ -494,7 +495,8 @@ def _convert_bool_string(value):
     elif isinstance(value, bool):
         return value
     else:  # pragma: no cover
-        raise ValueError(f"invalid literal for boolean: {value!r}")
+        msg = f"invalid literal for boolean: {value!r}"
+        raise ValueError(msg)
 
 
 def _stringify_nonnumeric_cols(gdf):

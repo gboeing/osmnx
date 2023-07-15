@@ -159,9 +159,8 @@ def add_edge_lengths(G, precision=None, edges=None):
         # ensure all coordinates can be converted to float and are non-null
         assert not np.isnan(c.astype(float)).any()
     except (AssertionError, KeyError) as e:  # pragma: no cover
-        raise ValueError(
-            "some edges missing nodes, possibly due to input data clipping issue"
-        ) from e
+        msg = "some edges missing nodes, possibly due to input data clipping issue"
+        raise ValueError(msg) from e
 
     # calculate great circle distances, round, and fill nulls with zeros
     dists = great_circle_vec(c[:, 0], c[:, 1], c[:, 2], c[:, 3]).round(precision)
@@ -213,20 +212,23 @@ def nearest_nodes(G, X, Y, return_dist=False):
         Y = np.array([Y])
 
     if np.isnan(X).any() or np.isnan(Y).any():  # pragma: no cover
-        raise ValueError("`X` and `Y` cannot contain nulls")
+        msg = "`X` and `Y` cannot contain nulls"
+        raise ValueError(msg)
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
 
     if projection.is_projected(G.graph["crs"]):
         # if projected, use k-d tree for euclidean nearest-neighbor search
         if cKDTree is None:  # pragma: no cover
-            raise ImportError("scipy must be installed to search a projected graph")
+            msg = "scipy must be installed to search a projected graph"
+            raise ImportError(msg)
         dist, pos = cKDTree(nodes).query(np.array([X, Y]).T, k=1)
         nn = nodes.index[pos]
 
     else:
         # if unprojected, use ball tree for haversine nearest-neighbor search
         if BallTree is None:  # pragma: no cover
-            raise ImportError("scikit-learn must be installed to search an unprojected graph")
+            msg = "scikit-learn must be installed to search an unprojected graph"
+            raise ImportError(msg)
         # haversine requires lat, lng coords in radians
         nodes_rad = np.deg2rad(nodes[["y", "x"]])
         points_rad = np.deg2rad(np.array([Y, X]).T)
@@ -286,7 +288,8 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         Y = np.array([Y])
 
     if np.isnan(X).any() or np.isnan(Y).any():  # pragma: no cover
-        raise ValueError("`X` and `Y` cannot contain nulls")
+        msg = "`X` and `Y` cannot contain nulls"
+        raise ValueError(msg)
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
 
     # if no interpolation distance was provided
@@ -320,14 +323,16 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         if projection.is_projected(G.graph["crs"]):
             # if projected, use k-d tree for euclidean nearest-neighbor search
             if cKDTree is None:  # pragma: no cover
-                raise ImportError("scipy must be installed to search a projected graph")
+                msg = "scipy must be installed to search a projected graph"
+                raise ImportError(msg)
             dist, pos = cKDTree(vertices).query(np.array([X, Y]).T, k=1)
             ne = vertices.index[pos]
 
         else:
             # if unprojected, use ball tree for haversine nearest-neighbor search
             if BallTree is None:  # pragma: no cover
-                raise ImportError("scikit-learn must be installed to search an unprojected graph")
+                msg = "scikit-learn must be installed to search an unprojected graph"
+                raise ImportError(msg)
             # haversine requires lat, lng coords in radians
             vertices_rad = np.deg2rad(vertices[["y", "x"]])
             points_rad = np.deg2rad(np.array([Y, X]).T)
@@ -422,7 +427,8 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
     # if both orig and dest are iterables, ensure they have same lengths
     elif hasattr(orig, "__iter__") and hasattr(dest, "__iter__"):
         if len(orig) != len(dest):  # pragma: no cover
-            raise ValueError("orig and dest must contain same number of elements")
+            msg = "orig and dest must contain same number of elements"
+            raise ValueError(msg)
 
         if cpus is None:
             cpus = mp.cpu_count()
@@ -446,7 +452,8 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
 
     # if only one of orig or dest is iterable and the other is not
     else:  # pragma: no cover
-        raise ValueError("orig and dest must either both be iterable or neither must be iterable")
+        msg = "orig and dest must either both be iterable or neither must be iterable"
+        raise ValueError(msg)
 
 
 def k_shortest_paths(G, orig, dest, k, weight="length"):
@@ -505,4 +512,5 @@ def _verify_edge_attribute(G, attr):
         if np.isnan(values_float).any():
             warn(f"The attribute {attr!r} is missing or null on some edges.", stacklevel=2)
     except ValueError as e:
-        raise ValueError(f"The edge attribute {attr!r} contains non-numeric values.") from e
+        msg = f"The edge attribute {attr!r} contains non-numeric values."
+        raise ValueError(msg) from e

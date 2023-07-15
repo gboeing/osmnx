@@ -158,7 +158,8 @@ def truncate_graph_polygon(
 
     if not to_keep:
         # no graph nodes within the polygon: can't create a graph from that
-        raise ValueError("Found no graph nodes within the requested polygon")
+        msg = "Found no graph nodes within the requested polygon"
+        raise ValueError(msg)
 
     # now identify all nodes whose point geometries lie outside the polygon
     gs_nodes_outside_poly = gs_nodes[~gs_nodes.index.isin(to_keep)]

@@ -74,7 +74,8 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
         graph with node elevation attributes
     """
     if rasterio is None or gdal is None:  # pragma: no cover
-        raise ImportError("gdal and rasterio must be installed to query raster files")
+        msg = "gdal and rasterio must be installed to query raster files"
+        raise ImportError(msg)
 
     if cpus is None:
         cpus = mp.cpu_count()
@@ -191,18 +192,16 @@ def add_node_elevations_google(
                 response_json = response.json()
                 _downloader._save_to_cache(url, response_json, response.status_code)
             else:
-                raise Exception(
-                    f"Server responded with {response.status_code}: {response.reason} \n{response.json()}"
-                )
+                msg = f"Server responded with {response.status_code}: {response.reason} \n{response.json()}"
+                raise Exception(msg)
 
         # append these elevation results to the list of all results
         results.extend(response_json["results"])
 
     # sanity check that all our vectors have the same number of elements
     if not (len(results) == len(G) == len(node_points)):
-        raise Exception(
-            f"Graph has {len(G)} nodes but we received {len(results)} results. \n{response_json}"
-        )
+        msg = f"Graph has {len(G)} nodes but we received {len(results)} results. \n{response_json}"
+        raise Exception(msg)
     else:
         utils.log(f"Graph has {len(G)} nodes and we received {len(results)} results.")
 

@@ -102,7 +102,8 @@ def _get_osm_filter(network_type):
     if network_type in filters:
         osm_filter = filters[network_type]
     else:  # pragma: no cover
-        raise ValueError(f"Unrecognized network_type {network_type!r}")
+        msg = f"Unrecognized network_type {network_type!r}"
+        raise ValueError(msg)
 
     return osm_filter
 
@@ -636,7 +637,8 @@ def _retrieve_osm_element(query, by_osmid=False, limit=1, polygon_geojson=1):
             for key in sorted(query):
                 params[key] = query[key]
         else:  # pragma: no cover
-            raise TypeError("query must be a dict or a string")
+            msg = "query must be a dict or a string"
+            raise TypeError(msg)
 
     # request the URL, return the JSON
     response_json = _nominatim_request(params=params, request_type=request_type)
@@ -664,7 +666,8 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
     response_json : dict
     """
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
-        raise ValueError('Nominatim request_type must be "search", "reverse", or "lookup"')
+        msg = 'Nominatim request_type must be "search", "reverse", or "lookup"'
+        raise ValueError(msg)
 
     # resolve url to same IP even if there is server round-robin redirecting
     _config_dns(settings.nominatim_endpoint.rstrip("/"))
@@ -720,9 +723,8 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
             else:
                 # else, this was an unhandled status code, throw an exception
                 utils.log(f"{domain} returned {sc}", level=lg.ERROR)
-                raise Exception(
-                    f"Server returned:\n{response} {response.reason}\n{response.text}"
-                ) from e
+                msg = f"Server returned:\n{response} {response.reason}\n{response.text}"
+                raise Exception(msg) from e
 
         _save_to_cache(prepared_url, response_json, sc)
         return response_json
@@ -800,9 +802,8 @@ def _overpass_request(data, pause=None, error_pause=60):
             else:
                 # else, this was an unhandled status code, throw an exception
                 utils.log(f"{domain} returned {sc}", level=lg.ERROR)
-                raise Exception(
-                    f"Server returned\n{response} {response.reason}\n{response.text}"
-                ) from e
+                msg = f"Server returned\n{response} {response.reason}\n{response.text}"
+                raise Exception(msg) from e
 
         _save_to_cache(prepared_url, response_json, sc)
         return response_json

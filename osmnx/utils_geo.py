@@ -76,7 +76,8 @@ def interpolate_points(geom, dist):
             point = geom.interpolate(n / num_vert, normalized=True)
             yield point.x, point.y
     else:  # pragma: no cover
-        raise TypeError(f"unhandled geometry type {geom.geom_type}")
+        msg = f"unhandled geometry type {geom.geom_type}"
+        raise TypeError(msg)
 
 
 def _round_polygon_coords(p, precision):
@@ -234,7 +235,8 @@ def round_geometry_coords(geom, precision):
         return _round_multipolygon_coords(geom, precision)
 
     else:  # pragma: no cover
-        raise TypeError(f"cannot round coordinates of unhandled geometry type: {type(geom)}")
+        msg = f"cannot round coordinates of unhandled geometry type: {type(geom)}"
+        raise TypeError(msg)
 
 
 def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
@@ -271,7 +273,8 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
     quadrat_width = np.sqrt(max_query_area_size)
 
     if not isinstance(geometry, (Polygon, MultiPolygon)):  # pragma: no cover
-        raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
+        msg = "Geometry must be a shapely Polygon or MultiPolygon"
+        raise TypeError(msg)
 
     # if geometry is either 1) a Polygon whose area exceeds the max size, or
     # 2) a MultiPolygon, then get the convex hull around the geometry
@@ -306,7 +309,8 @@ def _get_polygons_coordinates(geometry):
     polygon_coord_strs : list
     """
     if not isinstance(geometry, MultiPolygon):  # pragma: no cover
-        raise TypeError("Geometry must be a shapely MultiPolygon")
+        msg = "Geometry must be a shapely MultiPolygon"
+        raise TypeError(msg)
 
     # extract geometry's exterior coords
     polygons_coords = []

@@ -50,7 +50,8 @@ def geocode(query):
         utils.log(f"Geocoded {query!r} to {point}")
         return point
     else:
-        raise ValueError(f"Nominatim could not geocode query {query!r}")
+        msg = f"Nominatim could not geocode query {query!r}"
+        raise ValueError(msg)
 
 
 def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
@@ -95,7 +96,8 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
         a GeoDataFrame with one row for each query
     """
     if not isinstance(query, (str, dict, list)):  # pragma: no cover
-        raise ValueError("query must be a string or dict or list")
+        msg = "query must be a string or dict or list"
+        raise ValueError(msg)
 
     # if caller passed a list of queries but a scalar which_result value, then
     # turn which_result into a list with same length as query list
@@ -110,12 +112,14 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
 
     # ensure same length
     if len(query) != len(which_result):  # pragma: no cover
-        raise ValueError("which_result length must equal query length")
+        msg = "which_result length must equal query length"
+        raise ValueError(msg)
 
     # ensure query type of each item
     for q in query:
         if not isinstance(q, (str, dict)):  # pragma: no cover
-            raise ValueError("each query must be a dict or a string")
+            msg = "each query must be a dict or a string"
+            raise ValueError(msg)
 
     # geocode each query and add to GeoDataFrame as a new row
     gdf = gpd.GeoDataFrame()
@@ -169,7 +173,8 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
     # choose the right result from the JSON response
     if not results:
         # if no results were returned, raise error
-        raise ValueError(f"Nominatim geocoder returned 0 results for query {query!r}")
+        msg = f"Nominatim geocoder returned 0 results for query {query!r}"
+        raise ValueError(msg)
 
     elif by_osmid:
         # if searching by OSM ID, always take the first (ie, only) result
@@ -241,4 +246,5 @@ def _get_first_polygon(results, query):
             return result
 
     # if we never found a polygon, throw an error
-    raise ValueError(f"Nominatim could not geocode query {query!r} to polygonal boundaries")
+    msg = f"Nominatim could not geocode query {query!r} to polygonal boundaries"
+    raise ValueError(msg)

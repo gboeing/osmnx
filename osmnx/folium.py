@@ -153,7 +153,8 @@ def _plot_folium(gdf, m, popup_attribute, tiles, zoom, fit_bounds, **kwargs):
     """
     # check if we were able to import folium successfully
     if folium is None:  # pragma: no cover
-        raise ImportError("folium must be installed to use this optional feature")
+        msg = "folium must be installed to use this optional feature"
+        raise ImportError(msg)
 
     # get centroid
     x, y = gdf.unary_union.centroid.xy

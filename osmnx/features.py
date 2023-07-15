@@ -269,7 +269,8 @@ def features_from_place(query, tags, which_result=None, buffer_dist=None):
         # if it is a list, it contains multiple places to get
         gdf_place = geocoder.geocode_to_gdf(query, buffer_dist=buffer_dist)
     else:  # pragma: no cover
-        raise TypeError("query must be dict, string, or list of strings")
+        msg = "query must be dict, string, or list of strings"
+        raise TypeError(msg)
 
     # extract the geometry from the GeoDataFrame to use in API query
     polygon = gdf_place["geometry"].unary_union
@@ -314,14 +315,11 @@ def features_from_polygon(polygon, tags):
     """
     # verify that the geometry is valid and a Polygon/MultiPolygon
     if not polygon.is_valid:
-        raise ValueError("The geometry of `polygon` is invalid")
+        msg = "The geometry of `polygon` is invalid"
+        raise ValueError(msg)
     if not isinstance(polygon, (Polygon, MultiPolygon)):
-        raise TypeError(
-            "Boundaries must be a shapely Polygon or MultiPolygon. If you requested "
-            "features from place name, make sure your query resolves to a Polygon or "
-            "MultiPolygon, and not some other geometry, like a Point. See OSMnx "
-            "documentation for details."
-        )
+        msg = "Boundaries must be a shapely Polygon or MultiPolygon. If you requested features from place name, make sure your query resolves to a Polygon or MultiPolygon, and not some other geometry, like a Point. See OSMnx documentation for details."
+        raise TypeError(msg)
 
     # download the data from OSM
     response_jsons = _downloader._osm_features_download(polygon, tags)

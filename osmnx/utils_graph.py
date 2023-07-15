@@ -42,7 +42,8 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
     if nodes:
         if not G.nodes:  # pragma: no cover
-            raise ValueError("graph contains no nodes")
+            msg = "graph contains no nodes"
+            raise ValueError(msg)
 
         nodes, data = zip(*G.nodes(data=True))
 
@@ -58,7 +59,8 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
     if edges:
         if not G.edges:  # pragma: no cover
-            raise ValueError("graph contains no edges")
+            msg = "graph contains no edges"
+            raise ValueError(msg)
 
         u, v, k, data = zip(*G.edges(keys=True, data=True))
 
@@ -99,7 +101,8 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     elif edges:
         return gdf_edges
     else:  # pragma: no cover
-        raise ValueError("you must request nodes or edges or both")
+        msg = "you must request nodes or edges or both"
+        raise ValueError(msg)
 
 
 def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
@@ -133,7 +136,8 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     G : networkx.MultiDiGraph
     """
     if not ("x" in gdf_nodes.columns and "y" in gdf_nodes.columns):  # pragma: no cover
-        raise ValueError("gdf_nodes must contain x and y columns")
+        msg = "gdf_nodes must contain x and y columns"
+        raise ValueError(msg)
 
     # if gdf_nodes has a geometry attribute set, drop that column (as we use x
     # and y for geometry information) and warn the user if the geometry values

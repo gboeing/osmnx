@@ -208,7 +208,8 @@ def plot_graph(
     max_node_size = max(node_size) if hasattr(node_size, "__iter__") else node_size
     max_edge_lw = max(edge_linewidth) if hasattr(edge_linewidth, "__iter__") else edge_linewidth
     if max_node_size <= 0 and max_edge_lw <= 0:  # pragma: no cover
-        raise ValueError("Either node_size or edge_linewidth must be > 0 to plot something.")
+        msg = "Either node_size or edge_linewidth must be > 0 to plot something."
+        raise ValueError(msg)
 
     # create fig, ax as needed
     utils.log("Begin plotting the graph...")
@@ -357,17 +358,21 @@ def plot_graph_routes(G, routes, route_colors="r", route_linewidths=4, **pgr_kwa
 
     # check for valid arguments
     if not all(isinstance(r, list) for r in routes):  # pragma: no cover
-        raise ValueError("routes must be a list of route lists")
+        msg = "routes must be a list of route lists"
+        raise ValueError(msg)
     if len(routes) < 2:  # pragma: no cover
-        raise ValueError("You must pass more than 1 route")
+        msg = "You must pass more than 1 route"
+        raise ValueError(msg)
     if isinstance(route_colors, str):
         route_colors = [route_colors] * len(routes)
     if len(routes) != len(route_colors):  # pragma: no cover
-        raise ValueError("route_colors list must have same length as routes")
+        msg = "route_colors list must have same length as routes"
+        raise ValueError(msg)
     if isinstance(route_linewidths, int):
         route_linewidths = [route_linewidths] * len(routes)
     if len(routes) != len(route_linewidths):  # pragma: no cover
-        raise ValueError("route_linewidths list must have same length as routes")
+        msg = "route_linewidths list must have same length as routes"
+        raise ValueError(msg)
 
     # plot the graph and the first route
     override = {"route", "route_color", "route_linewidth", "show", "save", "close"}
@@ -500,7 +505,8 @@ def plot_figure_ground(
         )
         G = simplification.simplify_graph(G, strict=False)
     else:  # pragma: no cover
-        raise ValueError("You must pass an address or lat-lng point or graph.")
+        msg = "You must pass an address or lat-lng point or graph."
+        raise ValueError(msg)
 
     # we need an undirected graph to find every edge incident on a node
     Gu = utils_graph.get_undirected(G)
@@ -819,7 +825,8 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
         series labels are node/edge IDs and values are colors
     """
     if len(vals) == 0:
-        raise ValueError("There are no attribute values.")
+        msg = "There are no attribute values."
+        raise ValueError(msg)
 
     if num_bins is None:
         # calculate min/max values based on start/stop and data range
@@ -974,6 +981,5 @@ def _verify_mpl():
     None
     """
     if cm is None or colors is None or plt is None or colormaps is None:  # pragma: no cover
-        raise ImportError(
-            "matplotlib must be installed as an optional dependency for visualization"
-        )
+        msg = "matplotlib must be installed as an optional dependency for visualization"
+        raise ImportError(msg)

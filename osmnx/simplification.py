@@ -149,7 +149,8 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
                     # if successor has >1 successors, then successor must have
                     # been an endpoint because you can go in 2 new directions.
                     # this should never occur in practice
-                    raise Exception(f"Unexpected simplify pattern failed near {successor}")
+                    msg = f"Unexpected simplify pattern failed near {successor}"
+                    raise Exception(msg)
 
             # if this successor is an endpoint, we've completed the path
             return path
@@ -254,7 +255,8 @@ def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
         each simplified edge
     """
     if "simplified" in G.graph and G.graph["simplified"]:  # pragma: no cover
-        raise Exception("This graph has already been simplified, cannot simplify it again.")
+        msg = "This graph has already been simplified, cannot simplify it again."
+        raise Exception(msg)
 
     utils.log("Begin topologically simplifying the graph...")
 
