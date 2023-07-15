@@ -887,21 +887,21 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
         for inner_polygon in inner_polygons:
             if inner_polygon.within(outer_polygon):
                 try:
-                    outer_polygon = outer_polygon.difference(inner_polygon)
+                    outer_polygon_diff = outer_polygon.difference(inner_polygon)
                 except TopologicalError:  # pragma: no cover
                     utils.log(
-                        f"relation https://www.openstreetmap.org/relation/{element['id']} caused"
-                        " a TopologicalError, trying with zero buffer."
+                        f"relation https://www.openstreetmap.org/relation/{element['id']} "
+                        "caused a TopologicalError, trying with zero buffer."
                     )
-                    outer_polygon = outer_polygon.buffer(0).difference(inner_polygon.buffer(0))
+                    outer_polygon_diff = outer_polygon.buffer(0).difference(inner_polygon.buffer(0))
 
         # note: .buffer(0) can return either a Polygon or MultiPolygon
         # if it returns a MultiPolygon we need to extract the component
         # sub Polygons to add to outer_polygons_with_holes
-        if outer_polygon.geom_type == "Polygon":
-            outer_polygons_with_holes.append(outer_polygon)
-        elif outer_polygon.geom_type == "MultiPolygon":
-            outer_polygons_with_holes.extend(list(outer_polygon.geoms))
+        if outer_polygon_diff.geom_type == "Polygon":
+            outer_polygons_with_holes.append(outer_polygon_diff)
+        elif outer_polygon_diff.geom_type == "MultiPolygon":
+            outer_polygons_with_holes.extend(list(outer_polygon_diff.geoms))
 
     # if only one polygon with holes was created, return that single polygon
     if len(outer_polygons_with_holes) == 1:

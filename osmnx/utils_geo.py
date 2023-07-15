@@ -413,11 +413,11 @@ def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3
     for poly in multipoly.geoms:
         # first find approximate matches with spatial index, then precise
         # matches from those approximate ones
-        poly = poly.buffer(0)
-        if poly.is_valid and poly.area > 0:
-            possible_matches_iloc = sindex.intersection(poly.bounds)
+        poly_buff = poly.buffer(0)
+        if poly_buff.is_valid and poly_buff.area > 0:
+            possible_matches_iloc = sindex.intersection(poly_buff.bounds)
             possible_matches = geometries.iloc[list(possible_matches_iloc)]
-            precise_matches = possible_matches[possible_matches.intersects(poly)]
+            precise_matches = possible_matches[possible_matches.intersects(poly_buff)]
             geoms_in_poly.update(precise_matches.index)
 
     utils.log(f"Identified {len(geoms_in_poly):,} geometries inside polygon")
