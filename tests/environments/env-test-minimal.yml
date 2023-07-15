@@ -12,7 +12,7 @@ dependencies:
   - networkx=2.5
   - numpy=1.20
   - pandas=1.1
-  - python=3.8  # pin to minimum version from /pyproject.toml
+  - python=3.8 # pin to minimum version from /pyproject.toml
   - requests=2.25
   - shapely=2.0
 
@@ -35,4 +35,4 @@ dependencies:
 
   # docs
   - furo
-  - sphinx=6  # pin to version from /docs/requirements.txt
+  - sphinx=6 # pin to version from /docs/requirements.txt

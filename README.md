@@ -13,7 +13,7 @@
 
 If you use OSMnx in your work, please cite the journal article:
 
-Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](https://geoffboeing.com/publications/osmnx-complex-street-networks/)." *Computers, Environment and Urban Systems* 65, 126–139.
+Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](https://geoffboeing.com/publications/osmnx-complex-street-networks/)." _Computers, Environment and Urban Systems_ 65, 126–139.
 
 ## Getting Started
 
