@@ -90,10 +90,15 @@ force-single-line = true
 max-complexity = 14
 
 [tool.ruff.per-file-ignores]
-"./docs/conf.py" = ["A001"]
-"./osmnx/__init__.py" = ["F401", "F403"]
-"./osmnx/_api.py" = ["F401"]
-"./tests/test_osmnx.py" = ["E402", "D103", "F841", "I001", "PLR2004"]
+"./docs/conf.py" = ["A001"]  # allow copyright variable for sphinx
+"./osmnx/__init__.py" = ["F401",  # allow API imports to go unused
+                         "F403"]  # allow import * from API
+"./osmnx/_api.py" = ["F401"]  # allow API imports to go unused
+"./tests/test_osmnx.py" = ["E402",  # allow imports not at top
+                           "D103",  # allow missing function docstrings
+                           "F841",  # allow unused local variables
+                           "I001",  # allow unsorted imports
+                           "PLR2004"]  # allow magic values in comparisons
 
 [tool.ruff.pydocstyle]
 convention = "numpy"
