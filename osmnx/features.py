@@ -269,7 +269,8 @@ def features_from_place(query, tags, which_result=None, buffer_dist=None):
         # if it is a list, it contains multiple places to get
         gdf_place = geocoder.geocode_to_gdf(query, buffer_dist=buffer_dist)
     else:  # pragma: no cover
-        raise TypeError("query must be dict, string, or list of strings")
+        msg = "query must be dict, string, or list of strings"
+        raise TypeError(msg)
 
     # extract the geometry from the GeoDataFrame to use in API query
     polygon = gdf_place["geometry"].unary_union
@@ -314,14 +315,16 @@ def features_from_polygon(polygon, tags):
     """
     # verify that the geometry is valid and a Polygon/MultiPolygon
     if not polygon.is_valid:
-        raise ValueError("The geometry of `polygon` is invalid")
+        msg = "The geometry of `polygon` is invalid"
+        raise ValueError(msg)
     if not isinstance(polygon, (Polygon, MultiPolygon)):
-        raise TypeError(
-            "Boundaries must be a shapely Polygon or MultiPolygon. If you requested "
-            "features from place name, make sure your query resolves to a Polygon or "
-            "MultiPolygon, and not some other geometry, like a Point. See OSMnx "
-            "documentation for details."
+        msg = (
+            "Boundaries must be a shapely Polygon or MultiPolygon. If you "
+            "requested features from place name, make sure your query resolves "
+            "to a Polygon or MultiPolygon, and not some other geometry, like a "
+            "Point. See OSMnx documentation for details."
         )
+        raise TypeError(msg)
 
     # download the data from OSM
     response_jsons = _downloader._osm_features_download(polygon, tags)
@@ -549,7 +552,7 @@ def _parse_node_to_point(element):
     return point
 
 
-def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_POLYGON_FEATURES):
+def _parse_way_to_linestring_or_polygon(element, coords):
     """
     Parse open LineString, closed LineString or Polygon from OSM 'way'.
 
@@ -562,8 +565,6 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_POLYG
         element type "way" from overpass response JSON
     coords : dict
         dict of node IDs and their latitude/longitude coordinates
-    polygon_features : dict
-        dict for determining whether closed ways are LineStrings or Polygons
 
     Returns
     -------
@@ -883,24 +884,25 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
     # loop through the outer polygons subtracting the inner polygons and
     # appending to the list
     for outer_polygon in outer_polygons:
+        outer_polygon_diff = outer_polygon
         for inner_polygon in inner_polygons:
             if inner_polygon.within(outer_polygon):
                 try:
-                    outer_polygon = outer_polygon.difference(inner_polygon)
+                    outer_polygon_diff = outer_polygon.difference(inner_polygon)
                 except TopologicalError:  # pragma: no cover
                     utils.log(
-                        f"relation https://www.openstreetmap.org/relation/{element['id']} caused"
-                        " a TopologicalError, trying with zero buffer."
+                        f"relation https://www.openstreetmap.org/relation/{element['id']} "
+                        "caused a TopologicalError, trying with zero buffer."
                     )
-                    outer_polygon = outer_polygon.buffer(0).difference(inner_polygon.buffer(0))
+                    outer_polygon_diff = outer_polygon.buffer(0).difference(inner_polygon.buffer(0))
 
         # note: .buffer(0) can return either a Polygon or MultiPolygon
         # if it returns a MultiPolygon we need to extract the component
         # sub Polygons to add to outer_polygons_with_holes
-        if outer_polygon.geom_type == "Polygon":
-            outer_polygons_with_holes.append(outer_polygon)
-        elif outer_polygon.geom_type == "MultiPolygon":
-            outer_polygons_with_holes.extend(list(outer_polygon.geoms))
+        if outer_polygon_diff.geom_type == "Polygon":
+            outer_polygons_with_holes.append(outer_polygon_diff)
+        elif outer_polygon_diff.geom_type == "MultiPolygon":
+            outer_polygons_with_holes.extend(list(outer_polygon_diff.geoms))
 
     # if only one polygon with holes was created, return that single polygon
     if len(outer_polygons_with_holes) == 1:

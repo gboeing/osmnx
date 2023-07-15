@@ -159,7 +159,8 @@ def graph_from_point(
     documentation for caveats.
     """
     if dist_type not in {"bbox", "network"}:  # pragma: no cover
-        raise ValueError('dist_type must be "bbox" or "network"')
+        msg = 'dist_type must be "bbox" or "network"'
+        raise ValueError(msg)
 
     # create bounding box from center point and distance in each direction
     north, south, east, west = utils_geo.bbox_from_point(center_point, dist)
@@ -352,7 +353,8 @@ def graph_from_place(
         # if it is a list, it contains multiple places to get
         gdf_place = geocoder.geocode_to_gdf(query, buffer_dist=buffer_dist)
     else:  # pragma: no cover
-        raise TypeError("query must be dict, string, or list of strings")
+        msg = "query must be dict, string, or list of strings"
+        raise TypeError(msg)
 
     # extract the geometry from the GeoDataFrame to use in API query
     polygon = gdf_place["geometry"].unary_union
@@ -426,14 +428,16 @@ def graph_from_polygon(
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:  # pragma: no cover
-        raise ValueError("The geometry to query within is invalid")
+        msg = "The geometry to query within is invalid"
+        raise ValueError(msg)
     if not isinstance(polygon, (Polygon, MultiPolygon)):  # pragma: no cover
-        raise TypeError(
-            "Geometry must be a shapely Polygon or MultiPolygon. If you requested "
-            "graph from place name, make sure your query resolves to a Polygon or "
-            "MultiPolygon, and not some other geometry, like a Point. See OSMnx "
-            "documentation for details."
+        msg = (
+            "Geometry must be a shapely Polygon or MultiPolygon. If you "
+            "requested graph from place name, make sure your query resolves "
+            "to a Polygon or MultiPolygon, and not some other geometry, like "
+            "a Point. See OSMnx documentation for details."
         )
+        raise TypeError(msg)
 
     if clean_periphery:
         # create a new buffered polygon 0.5km around the desired one
@@ -585,13 +589,13 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     utils.log(f"Retrieved all data from API in {response_count} request(s)")
     if settings.cache_only_mode:  # pragma: no cover
         # after consuming all response_jsons in loop, raise exception to catch
-        raise CacheOnlyModeInterrupt("Interrupted because `settings.cache_only_mode=True`")
+        msg = "Interrupted because `settings.cache_only_mode=True`"
+        raise CacheOnlyModeInterrupt(msg)
 
     # ensure we got some node/way data back from the server request(s)
     if (len(nodes) == 0) and (len(paths) == 0):  # pragma: no cover
-        raise EmptyOverpassResponse(
-            "No data elements in server response. Check query location/filters and log."
-        )
+        msg = "No data elements in server response. Check query location/filters and log."
+        raise EmptyOverpassResponse(msg)
 
     # create the MultiDiGraph and set its graph-level attributes
     metadata = {

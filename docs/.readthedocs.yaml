@@ -11,8 +11,8 @@ build:
 formats: all
 
 python:
-   install:
-   - requirements: docs/requirements.txt
+  install:
+    - requirements: docs/requirements.txt
 
 sphinx:
   configuration: docs/conf.py

@@ -57,7 +57,7 @@ def _is_endpoint(G, node, strict=True):
         return True
 
     # rule 3
-    elif not (n == 2 and (d == 2 or d == 4)):
+    elif not (n == 2 and (d == 2 or d == 4)):  # noqa: PLR2004
         # else, if it does NOT have 2 neighbors AND either 2 or 4 directed
         # edges, it is an endpoint. either it has 1 or 3+ neighbors, in which
         # case it is a dead-end or an intersection of multiple streets or it has
@@ -128,8 +128,7 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
 
                 # 99%+ of the time there will be only 1 successor: add to path
                 if len(successors) == 1:
-                    successor = successors[0]
-                    path.append(successor)
+                    path.append(successors[0])
 
                 # handle relatively rare cases or OSM digitization quirks
                 elif len(successors) == 0:
@@ -149,7 +148,8 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
                     # if successor has >1 successors, then successor must have
                     # been an endpoint because you can go in 2 new directions.
                     # this should never occur in practice
-                    raise Exception(f"Unexpected simplify pattern failed near {successor}")
+                    msg = f"Unexpected simplify pattern failed near {successor}"
+                    raise Exception(msg)
 
             # if this successor is an endpoint, we've completed the path
             return path
@@ -254,7 +254,8 @@ def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
         each simplified edge
     """
     if "simplified" in G.graph and G.graph["simplified"]:  # pragma: no cover
-        raise Exception("This graph has already been simplified, cannot simplify it again.")
+        msg = "This graph has already been simplified, cannot simplify it again."
+        raise Exception(msg)
 
     utils.log("Begin topologically simplifying the graph...")
 
@@ -429,14 +430,12 @@ def consolidate_intersections(
             return G
         else:
             return _consolidate_intersections_rebuild_graph(G, tolerance, reconnect_edges)
-
+    elif not G:
+        # if graph has no nodes, just return empty GeoSeries
+        return gpd.GeoSeries(crs=G.graph["crs"])
     else:
-        if not G:
-            # if graph has no nodes, just return empty GeoSeries
-            return gpd.GeoSeries(crs=G.graph["crs"])
-        else:
-            # return the centroids of the merged intersection polygons
-            return _merge_nodes_geometric(G, tolerance).centroid
+        # return the centroids of the merged intersection polygons
+        return _merge_nodes_geometric(G, tolerance).centroid
 
 
 def _merge_nodes_geometric(G, tolerance):

@@ -86,7 +86,8 @@ def add_edge_bearings(G, precision=None):
         )
 
     if projection.is_projected(G.graph["crs"]):  # pragma: no cover
-        raise ValueError("graph must be unprojected to add edge bearings")
+        msg = "graph must be unprojected to add edge bearings"
+        raise ValueError(msg)
 
     # extract edge IDs and corresponding coordinates from their nodes
     uvk = [(u, v, k) for u, v, k in G.edges if u != v]
@@ -137,7 +138,8 @@ def orientation_entropy(Gu, num_bins=36, min_length=0, weight=None):
     """
     # check if we were able to import scipy
     if scipy is None:  # pragma: no cover
-        raise ImportError("scipy must be installed to calculate entropy")
+        msg = "scipy must be installed to calculate entropy"
+        raise ImportError(msg)
     bin_counts, _ = _bearings_distribution(Gu, num_bins, min_length, weight)
     return scipy.stats.entropy(bin_counts)
 
@@ -168,7 +170,8 @@ def _extract_edge_bearings(Gu, min_length=0, weight=None):
         the graph's bidirectional edge bearings
     """
     if nx.is_directed(Gu) or projection.is_projected(Gu.graph["crs"]):  # pragma: no cover
-        raise ValueError("graph must be undirected and unprojected to analyze edge bearings")
+        msg = "graph must be undirected and unprojected to analyze edge bearings"
+        raise ValueError(msg)
     bearings = []
     for u, v, data in Gu.edges(data=True):
         # ignore self-loops and any edges below min_length

@@ -18,7 +18,7 @@ copyright = "2016–2023, Geoff Boeing"
 project = "OSMnx"
 
 # dynamically load version from /osmnx/_version.py
-with open("../osmnx/_version.py") as f:
+with Path.open("../osmnx/_version.py") as f:
     version = release = f.read().split(" = ")[1].replace('"', "")
 
 # mock import all required + optional dependency packages because readthedocs

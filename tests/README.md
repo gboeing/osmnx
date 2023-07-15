@@ -2,10 +2,10 @@
 
 First, ensure that you have installed the necessary [dependencies](../environments/tests/env-ci.yml) for the test suite. Then use the repository's [pre-commit hooks](../.pre-commit-config.yaml) and the scripts in this folder to:
 
-  - format code/docstrings to the project's style
-  - lint the code
-  - lint the docstrings
-  - run tests and coverage
+- format code/docstrings to the project's style
+- lint the code
+- lint the docstrings
+- run tests and coverage
 
 You can read more about the project's standards and code/docstring style in the [contributing guidelines](../CONTRIBUTING.md).
 
@@ -29,11 +29,11 @@ bash ./tests/lint_test.sh
 
 All PRs trigger continuous integration tests via GitHub Actions. See the [configuration](../.github/workflows/ci.yml). The following steps are automatically run:
 
-  - build the docs
-  - check code formatting
-  - lint the docstrings
-  - lint the code
-  - tests and coverage
+- build the docs
+- check code formatting
+- lint the docstrings
+- lint the code
+- tests and coverage
 
 ## Releases
 

@@ -76,7 +76,8 @@ def interpolate_points(geom, dist):
             point = geom.interpolate(n / num_vert, normalized=True)
             yield point.x, point.y
     else:  # pragma: no cover
-        raise TypeError(f"unhandled geometry type {geom.geom_type}")
+        msg = f"unhandled geometry type {geom.geom_type}"
+        raise TypeError(msg)
 
 
 def _round_polygon_coords(p, precision):
@@ -234,7 +235,8 @@ def round_geometry_coords(geom, precision):
         return _round_multipolygon_coords(geom, precision)
 
     else:  # pragma: no cover
-        raise TypeError(f"cannot round coordinates of unhandled geometry type: {type(geom)}")
+        msg = f"cannot round coordinates of unhandled geometry type: {type(geom)}"
+        raise TypeError(msg)
 
 
 def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
@@ -271,7 +273,8 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
     quadrat_width = np.sqrt(max_query_area_size)
 
     if not isinstance(geometry, (Polygon, MultiPolygon)):  # pragma: no cover
-        raise TypeError("Geometry must be a shapely Polygon or MultiPolygon")
+        msg = "Geometry must be a shapely Polygon or MultiPolygon"
+        raise TypeError(msg)
 
     # if geometry is either 1) a Polygon whose area exceeds the max size, or
     # 2) a MultiPolygon, then get the convex hull around the geometry
@@ -306,7 +309,8 @@ def _get_polygons_coordinates(geometry):
     polygon_coord_strs : list
     """
     if not isinstance(geometry, MultiPolygon):  # pragma: no cover
-        raise TypeError("Geometry must be a shapely MultiPolygon")
+        msg = "Geometry must be a shapely MultiPolygon"
+        raise TypeError(msg)
 
     # extract geometry's exterior coords
     polygons_coords = []
@@ -409,11 +413,11 @@ def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3
     for poly in multipoly.geoms:
         # first find approximate matches with spatial index, then precise
         # matches from those approximate ones
-        poly = poly.buffer(0)
-        if poly.is_valid and poly.area > 0:
-            possible_matches_iloc = sindex.intersection(poly.bounds)
+        poly_buff = poly.buffer(0)
+        if poly_buff.is_valid and poly_buff.area > 0:
+            possible_matches_iloc = sindex.intersection(poly_buff.bounds)
             possible_matches = geometries.iloc[list(possible_matches_iloc)]
-            precise_matches = possible_matches[possible_matches.intersects(poly)]
+            precise_matches = possible_matches[possible_matches.intersects(poly_buff)]
             geoms_in_poly.update(precise_matches.index)
 
     utils.log(f"Identified {len(geoms_in_poly):,} geometries inside polygon")

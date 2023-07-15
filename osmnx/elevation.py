@@ -74,7 +74,8 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
         graph with node elevation attributes
     """
     if rasterio is None or gdal is None:  # pragma: no cover
-        raise ImportError("gdal and rasterio must be installed to query raster files")
+        msg = "gdal and rasterio must be installed to query raster files"
+        raise ImportError(msg)
 
     if cpus is None:
         cpus = mp.cpu_count()
@@ -160,6 +161,7 @@ def add_node_elevations_google(
             "the `precision` parameter is deprecated and will be removed in a future release",
             stacklevel=2,
         )
+    HTTP_OK = 200
 
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
     # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
@@ -187,22 +189,20 @@ def add_node_elevations_google(
             utils.log(f"Requesting node elevations: {url}")
             time.sleep(pause_duration)
             response = requests.get(url)
-            if response.status_code == 200:
+            if response.status_code == HTTP_OK:
                 response_json = response.json()
                 _downloader._save_to_cache(url, response_json, response.status_code)
             else:
-                raise Exception(
-                    f"Server responded with {response.status_code}: {response.reason} \n{response.json()}"
-                )
+                msg = f"Server responded with {response.status_code}: {response.reason} \n{response.json()}"
+                raise Exception(msg)
 
         # append these elevation results to the list of all results
         results.extend(response_json["results"])
 
     # sanity check that all our vectors have the same number of elements
     if not (len(results) == len(G) == len(node_points)):
-        raise Exception(
-            f"Graph has {len(G)} nodes but we received {len(results)} results. \n{response_json}"
-        )
+        msg = f"Graph has {len(G)} nodes but we received {len(results)} results. \n{response_json}"
+        raise Exception(msg)
     else:
         utils.log(f"Graph has {len(G)} nodes and we received {len(results)} results.")
 

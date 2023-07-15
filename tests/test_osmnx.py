@@ -20,6 +20,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
+from requests.exceptions import ConnectionError
 from shapely import wkt
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
@@ -165,7 +166,7 @@ def test_osm_xml():
             assert edge_key in G.edges
             assert G.edges[edge_key]["name"] in ("8th Street", "Willow Street")
 
-    os.remove(temp_filename)
+    Path.unlink(Path(temp_filename))
 
     # test .osm xml saving
     default_all_oneway = ox.settings.all_oneway
@@ -374,7 +375,7 @@ def test_endpoints():
     response_json = ox._downloader._nominatim_request(params=params, request_type="lookup")
 
     # Invalid nominatim query type
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Nominatim request_type must be"):
         response_json = ox._downloader._nominatim_request(params=params, request_type="xyz")
 
     default_key = ox.settings.nominatim_key
@@ -388,7 +389,7 @@ def test_endpoints():
     # Test changing the endpoint.
     # This should fail because we didn't provide a valid endpoint
     ox.settings.overpass_endpoint = "http://NOT_A_VALID_ENDPOINT/api/"
-    with pytest.raises(Exception) as ex:
+    with pytest.raises(ConnectionError, match="Max retries exceeded with url"):
         G = ox.graph_from_place(place1, network_type="all")
 
     ox.settings.nominatim_key = default_key
@@ -458,7 +459,7 @@ def test_graph_save_load():
     G2 = ox.load_graphml(filepath, node_dtypes=nd, edge_dtypes=ed)
 
     # test loading graphml from a file stream
-    file_bytes = open("tests/input_data/short.graphml", "rb").read()
+    file_bytes = Path.open(Path("tests/input_data/short.graphml"), "rb").read()
     data = str(file_bytes.decode())
     G = ox.load_graphml(graphml_str=data, node_dtypes=nd, edge_dtypes=ed)
 
@@ -550,4 +551,4 @@ def test_features():
     for filename in ("tests/input_data/West-Oakland.osm.bz2", temp_filename):
         gdf = ox.geometries_from_xml(filename)
         assert "Willow Street" in gdf["name"].values
-    os.remove(temp_filename)
+    Path.unlink(Path(temp_filename))
