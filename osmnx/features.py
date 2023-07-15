@@ -318,7 +318,12 @@ def features_from_polygon(polygon, tags):
         msg = "The geometry of `polygon` is invalid"
         raise ValueError(msg)
     if not isinstance(polygon, (Polygon, MultiPolygon)):
-        msg = "Boundaries must be a shapely Polygon or MultiPolygon. If you requested features from place name, make sure your query resolves to a Polygon or MultiPolygon, and not some other geometry, like a Point. See OSMnx documentation for details."
+        msg = (
+            "Boundaries must be a shapely Polygon or MultiPolygon. If you "
+            "requested features from place name, make sure your query resolves "
+            "to a Polygon or MultiPolygon, and not some other geometry, like a "
+            "Point. See OSMnx documentation for details."
+        )
         raise TypeError(msg)
 
     # download the data from OSM

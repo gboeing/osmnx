@@ -431,7 +431,12 @@ def graph_from_polygon(
         msg = "The geometry to query within is invalid"
         raise ValueError(msg)
     if not isinstance(polygon, (Polygon, MultiPolygon)):  # pragma: no cover
-        msg = "Geometry must be a shapely Polygon or MultiPolygon. If you requested graph from place name, make sure your query resolves to a Polygon or MultiPolygon, and not some other geometry, like a Point. See OSMnx documentation for details."
+        msg = (
+            "Geometry must be a shapely Polygon or MultiPolygon. If you "
+            "requested graph from place name, make sure your query resolves "
+            "to a Polygon or MultiPolygon, and not some other geometry, like "
+            "a Point. See OSMnx documentation for details."
+        )
         raise TypeError(msg)
 
     if clean_periphery:
