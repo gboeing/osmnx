@@ -884,6 +884,7 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
     # loop through the outer polygons subtracting the inner polygons and
     # appending to the list
     for outer_polygon in outer_polygons:
+        outer_polygon_diff = outer_polygon
         for inner_polygon in inner_polygons:
             if inner_polygon.within(outer_polygon):
                 try:
