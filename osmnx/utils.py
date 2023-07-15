@@ -31,14 +31,14 @@ def citation(style="bibtex"):
     None
     """
     if style == "apa":
-        print(
+        msg = (
             "Boeing, G. (2017). OSMnx: New Methods for Acquiring, Constructing, "
             "Analyzing, and Visualizing Complex Street Networks. Computers, "
             "Environment and Urban Systems, 65, 126-139. "
             "https://doi.org/10.1016/j.compenvurbsys.2017.05.004"
         )
     elif style == "bibtex":
-        print(
+        msg = (
             "@article{boeing_osmnx_2017,\n"
             "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, "
             "{Constructing}, {Analyzing}, and {Visualizing} {Complex} "
@@ -53,15 +53,17 @@ def citation(style="bibtex"):
             "}"
         )
     elif style == "ieee":
-        print(
+        msg = (
             'G. Boeing, "OSMnx: New Methods for Acquiring, Constructing, '
             'Analyzing, and Visualizing Complex Street Networks," Computers, '
             "Environment and Urban Systems, vol. 65, pp. 126-139, 2017, "
             "doi: 10.1016/j.compenvurbsys.2017.05.004."
         )
     else:  # pragma: no cover
-        msg = f"unrecognized citation style {style!r}"
-        raise ValueError(msg)
+        err_msg = f"unrecognized citation style {style!r}"
+        raise ValueError(err_msg)
+
+    print(msg)  # noqa: T201
 
 
 def ts(style="datetime", template=None):

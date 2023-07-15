@@ -62,7 +62,7 @@ cache-dir = "~/.cache/ruff"
 exclude = ["build/*"]
 ignore = ["E501"]
 line-length = 100
-select = ["A", "ARG", "B", "C", "D", "E", "EM", "ERA", "F", "I", "ISC", "PGH", "UP", "W"]
+select = ["A", "ARG", "B", "C", "D", "E", "EM", "ERA", "F", "I", "ISC", "PGH", "T20", "UP", "W"]
 target-version = "py38"
 
 [tool.ruff.isort]
