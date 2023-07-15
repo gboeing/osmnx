@@ -166,7 +166,7 @@ def test_osm_xml():
             assert edge_key in G.edges
             assert G.edges[edge_key]["name"] in ("8th Street", "Willow Street")
 
-    Path.unlink(temp_filename)
+    Path.unlink(Path(temp_filename))
 
     # test .osm xml saving
     default_all_oneway = ox.settings.all_oneway
@@ -459,7 +459,7 @@ def test_graph_save_load():
     G2 = ox.load_graphml(filepath, node_dtypes=nd, edge_dtypes=ed)
 
     # test loading graphml from a file stream
-    file_bytes = Path.open("tests/input_data/short.graphml", "rb").read()
+    file_bytes = Path.open(Path("tests/input_data/short.graphml"), "rb").read()
     data = str(file_bytes.decode())
     G = ox.load_graphml(graphml_str=data, node_dtypes=nd, edge_dtypes=ed)
 
@@ -551,4 +551,4 @@ def test_features():
     for filename in ("tests/input_data/West-Oakland.osm.bz2", temp_filename):
         gdf = ox.geometries_from_xml(filename)
         assert "Willow Street" in gdf["name"].values
-    Path.unlink(temp_filename)
+    Path.unlink(Path(temp_filename))
