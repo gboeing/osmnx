@@ -1,7 +1,7 @@
 SET ENV="ox"
 SET PACKAGE="osmnx"
 CALL %USERPROFILE%\mambaforge\Scripts\activate.bat && ^
-conda activate base && ^
+conda deactivate && ^
 mamba env remove -n %ENV% --yes && ^
 mamba clean --all --yes --quiet --no-banner && ^
 mamba create -c conda-forge --strict-channel-priority -n %ENV% --file "../docker/requirements.txt" --yes --no-banner && ^
