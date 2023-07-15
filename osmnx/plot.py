@@ -17,10 +17,10 @@ from . import utils_graph
 
 # matplotlib is an optional dependency needed for visualization
 try:
-    import matplotlib.cm as cm
-    import matplotlib.colors as colors
     import matplotlib.pyplot as plt
+    from matplotlib import cm
     from matplotlib import colormaps
+    from matplotlib import colors
 except ImportError:  # pragma: no cover
     cm = colors = plt = colormaps = None
 

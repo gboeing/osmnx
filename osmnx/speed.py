@@ -160,12 +160,11 @@ def add_edge_travel_times(G, precision=None):
     if not ("length" in edges.columns and "speed_kph" in edges.columns):  # pragma: no cover
         msg = "all edges must have `length` and `speed_kph` attributes."
         raise KeyError(msg)
-    else:
-        if (
-            pd.isnull(edges["length"]).any() or pd.isnull(edges["speed_kph"]).any()
-        ):  # pragma: no cover
-            msg = "edge `length` and `speed_kph` values must be non-null."
-            raise ValueError(msg)
+    elif (
+        pd.isnull(edges["length"]).any() or pd.isnull(edges["speed_kph"]).any()
+    ):  # pragma: no cover
+        msg = "edge `length` and `speed_kph` values must be non-null."
+        raise ValueError(msg)
 
     # convert distance meters to km, and speed km per hour to km per second
     distance_km = edges["length"] / 1000

@@ -353,7 +353,6 @@ def _create_way_for_each_edge(root, gdf_edges, edge_attrs, edge_tags):
         for tag in edge_tags:
             if tag in row:
                 ET.SubElement(edge, "tag", attrib={"k": tag, "v": row[tag]})
-    return
 
 
 def _append_merged_edge_attrs(xml_edge, sample_edge, all_edges_df, edge_tags, edge_tag_aggs):
@@ -400,7 +399,6 @@ def _append_merged_edge_attrs(xml_edge, sample_edge, all_edges_df, edge_tags, ed
                         "v": str(all_edges_df[tag].aggregate(agg)),
                     },
                 )
-    return
 
 
 def _append_nodes_as_edge_attrs(xml_edge, sample_edge, all_edges_df):
@@ -429,7 +427,6 @@ def _append_nodes_as_edge_attrs(xml_edge, sample_edge, all_edges_df):
             ordered_nodes = [first_node] + ordered_nodes
         for node in ordered_nodes:
             ET.SubElement(xml_edge, "nd", attrib={"ref": str(node)})
-    return
 
 
 def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges):
