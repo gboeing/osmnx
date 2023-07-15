@@ -20,6 +20,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
+from requests.exceptions import ConnectionError
 from shapely import wkt
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
@@ -374,7 +375,7 @@ def test_endpoints():
     response_json = ox._downloader._nominatim_request(params=params, request_type="lookup")
 
     # Invalid nominatim query type
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Nominatim request_type must be"):
         response_json = ox._downloader._nominatim_request(params=params, request_type="xyz")
 
     default_key = ox.settings.nominatim_key
@@ -388,7 +389,7 @@ def test_endpoints():
     # Test changing the endpoint.
     # This should fail because we didn't provide a valid endpoint
     ox.settings.overpass_endpoint = "http://NOT_A_VALID_ENDPOINT/api/"
-    with pytest.raises(Exception) as ex:
+    with pytest.raises(ConnectionError, match="Max retries exceeded with url"):
         G = ox.graph_from_place(place1, network_type="all")
 
     ox.settings.nominatim_key = default_key
