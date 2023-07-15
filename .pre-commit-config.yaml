@@ -33,7 +33,6 @@ repos:
     rev: "23.7.0"
     hooks:
       - id: black
-        args: ["--check"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: "v0.0.278"

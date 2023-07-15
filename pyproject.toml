@@ -60,8 +60,7 @@ path = "osmnx/_version.py"
 [tool.ruff]
 cache-dir = "~/.cache/ruff"
 exclude = ["build/*"]
-ignore = ["E501"]
-line-length = 100
+line-length = 110
 select = ["A", "ARG", "B", "C", "D", "E", "EM", "ERA", "F", "I", "ISC", "PGH", "PT", "PTH", "T20", "UP", "W"]
 target-version = "py38"
 
