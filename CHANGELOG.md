@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- adopt NEP 29 policy for minimum required Python and NumPy versions
+- TBD adopt NEP 29 policy for minimum required Python and NumPy versions
 
 ## 1.5.1 (2023-07-08)
 
