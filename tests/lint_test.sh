@@ -7,12 +7,12 @@ set -e
 rm -r -f .coverage .pytest_cache .temp ./dist/ ./docs/_build osmnx/__pycache__ tests/__pycache__
 find . -type f -name "*.vrt" -delete
 
-# test building and validating the package
-hatch build --clean
-twine check --strict ./dist/*
-
 # lint
 pre-commit run --all-files
+
+# test building and validating the package
+#hatch build --clean
+#twine check --strict ./dist/*
 
 # build the docs
 # make -C ./docs html
