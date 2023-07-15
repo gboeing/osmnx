@@ -137,8 +137,9 @@ def _save_to_cache(url, response_json, sc):
     -------
     None
     """
+    HTTP_OK = 200
     if settings.use_cache:
-        if sc != 200:
+        if sc != HTTP_OK:
             utils.log(f"Did not save to cache because status code is {sc}")
 
         elif response_json is None:

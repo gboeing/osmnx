@@ -360,7 +360,7 @@ def plot_graph_routes(G, routes, route_colors="r", route_linewidths=4, **pgr_kwa
     if not all(isinstance(r, list) for r in routes):  # pragma: no cover
         msg = "routes must be a list of route lists"
         raise ValueError(msg)
-    if len(routes) < 2:  # pragma: no cover
+    if len(routes) <= 1:  # pragma: no cover
         msg = "You must pass more than 1 route"
         raise ValueError(msg)
     if isinstance(route_colors, str):

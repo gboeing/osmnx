@@ -161,6 +161,7 @@ def add_node_elevations_google(
             "the `precision` parameter is deprecated and will be removed in a future release",
             stacklevel=2,
         )
+    HTTP_OK = 200
 
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
     # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
@@ -188,7 +189,7 @@ def add_node_elevations_google(
             utils.log(f"Requesting node elevations: {url}")
             time.sleep(pause_duration)
             response = requests.get(url)
-            if response.status_code == 200:
+            if response.status_code == HTTP_OK:
                 response_json = response.json()
                 _downloader._save_to_cache(url, response_json, response.status_code)
             else:
