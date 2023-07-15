@@ -547,7 +547,7 @@ def _parse_node_to_point(element):
     return point
 
 
-def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_POLYGON_FEATURES):
+def _parse_way_to_linestring_or_polygon(element, coords):
     """
     Parse open LineString, closed LineString or Polygon from OSM 'way'.
 
@@ -560,8 +560,6 @@ def _parse_way_to_linestring_or_polygon(element, coords, polygon_features=_POLYG
         element type "way" from overpass response JSON
     coords : dict
         dict of node IDs and their latitude/longitude coordinates
-    polygon_features : dict
-        dict for determining whether closed ways are LineStrings or Polygons
 
     Returns
     -------
