@@ -39,14 +39,16 @@ maintainers = [{name = "OSMnx contributors"}]
 name = "osmnx"
 readme = "README.md"
 requires-python = ">=3.8"  # match classifiers above and ruff target-version below
-urls.Documentation = "https://osmnx.readthedocs.io"
-urls.Repository = "https://github.com/gboeing/osmnx"
 
 [project.optional-dependencies]
 entropy = ["scipy>=1.5"]
 neighbors = ["scikit-learn>=0.23", "scipy>=1.5"]
 raster = ["gdal", "rasterio>=1.3"]
 visualization = ["matplotlib>=3.5"]
+
+[project.urls]
+Documentation = "https://osmnx.readthedocs.io"
+Repository = "https://github.com/gboeing/osmnx"
 
 [tool.black]
 line_length = 100
@@ -81,7 +83,7 @@ select = [
     "PTH", # check pathlib usage
     "T20", # check for print statements
     "UP",  # check outdated syntax a la pyupgrade
-    "W",    # check code style conventions a la pycodestyle warnings
+    "W",   # check code style conventions a la pycodestyle warnings
 ]
 target-version = "py38"
 
@@ -94,10 +96,10 @@ max-complexity = 14
 [tool.ruff.per-file-ignores]
 "./osmnx/_api.py" = ["F401"]  # allow API imports to go unused
 "./tests/test_osmnx.py" = [
-    "E402",   # allow imports not at top
-    "D103",   # allow missing function docstrings
-    "F841",   # allow unused local variables
-    "I001",   # allow unsorted imports
+    "E402",    # allow imports not at the top of the file
+    "D103",    # allow missing function docstrings
+    "F841",    # allow unused local variables
+    "I001",    # allow unsorted imports
     "PLR2004", # allow magic values in comparisons
 ]
 
