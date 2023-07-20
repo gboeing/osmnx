@@ -121,7 +121,7 @@ def orientation_entropy(Gu, num_bins=36, min_length=0, weight=None):
         undirected, unprojected graph with `bearing` attributes on each edge
     num_bins : int
         number of bins; for example, if `num_bins=36` is provided, then each
-        bin will represent 10° around the compass
+        bin will represent 10 degrees around the compass
     min_length : float
         ignore edges with `length` attributes less than `min_length`; useful
         to ignore the noise of many very short edges
@@ -148,8 +148,8 @@ def _extract_edge_bearings(Gu, min_length=0, weight=None):
     """
     Extract undirected graph's bidirectional edge bearings.
 
-    For example, if an edge has a bearing of 90° then we will record bearings
-    of both 90° and 270° for this edge.
+    For example, if an edge has a bearing of 90 degrees then we will record
+    bearings of both 90 degrees and 270 degrees for this edge.
 
     Parameters
     ----------
@@ -194,10 +194,11 @@ def _bearings_distribution(Gu, num_bins, min_length=0, weight=None):
     """
     Compute distribution of bearings across evenly spaced bins.
 
-    Prevents bin-edge effects around common values like 0° and 90° by
-    initially creating twice as many bins as desired, then merging them in
-    pairs. For example, if `num_bins=36` is provided, then each bin will
-    represent 10° around the compass, with the first bin representing 355°-5°.
+    Prevents bin-edge effects around common values like 0 degrees and 90
+    degrees by initially creating twice as many bins as desired, then merging
+    them in pairs. For example, if `num_bins=36` is provided, then each bin
+    will represent 10 degrees around the compass, with the first bin
+    representing 355 degrees to 5 degrees.
 
     Parameters
     ----------
@@ -225,7 +226,8 @@ def _bearings_distribution(Gu, num_bins, min_length=0, weight=None):
     bearings = _extract_edge_bearings(Gu, min_length, weight)
     count, bin_edges = np.histogram(bearings, bins=bins)
 
-    # move last bin to front, so eg 0.01° and 359.99° will be binned together
+    # move last bin to front, so eg 0.01 degrees and 359.99 degrees will be
+    # binned together
     count = np.roll(count, 1)
     bin_counts = count[::2] + count[1::2]
 
