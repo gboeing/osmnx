@@ -39,14 +39,16 @@ maintainers = [{name = "OSMnx contributors"}]
 name = "osmnx"
 readme = "README.md"
 requires-python = ">=3.8"  # match classifiers above and ruff target-version below
-urls.Documentation = "https://osmnx.readthedocs.io"
-urls.Repository = "https://github.com/gboeing/osmnx"
 
 [project.optional-dependencies]
 entropy = ["scipy>=1.5"]
 neighbors = ["scikit-learn>=0.23", "scipy>=1.5"]
 raster = ["gdal", "rasterio>=1.3"]
 visualization = ["matplotlib>=3.5"]
+
+[project.urls]
+Documentation = "https://osmnx.readthedocs.io"
+Repository = "https://github.com/gboeing/osmnx"
 
 [tool.black]
 line_length = 100
@@ -62,25 +64,27 @@ cache-dir = "~/.cache/ruff"
 exclude = ["build/*"]
 ignore = ["PLR091"] # ignore because we're already checking mccabe complexity
 line-length = 110  # black line length + 10%
-select = ["A",   # check python builtins being used as variables or parameters
-          "ARG", # check unused function arguments
-          "B",   # check common design problems
-          "C4",  # check proper comprehensions
-          "C9",  # check mccabe complexity
-          "D",   # check docstring conventions a la pydocstyle
-          "E",   # check code style conventions a la pycodestyle errors
-          "EM",  # check raw literals inside exception raising
-          "ERA", # eradicate commented-out code from python files
-          "F",   # check python source code for errors a la pyflakes
-          "I",   # check isort imports
-          "ISC", # check implicit string literal concatenation
-          "PGH", # check pygrep hooks
-          "PL",  # check code errors and smells a la pylint
-          "PT",  # check common pytest issues
-          "PTH", # check pathlib usage
-          "T20", # check for print statements
-          "UP",  # check outdated syntax a la pyupgrade
-          "W"]   # check code style conventions a la pycodestyle warnings
+select = [
+    "A",   # check python builtins being used as variables or parameters
+    "ARG", # check unused function arguments
+    "B",   # check common design problems a la bugbear
+    "C4",  # check proper comprehensions
+    "C9",  # check mccabe complexity
+    "D",   # check docstring conventions a la pydocstyle
+    "E",   # check code style conventions a la pycodestyle errors
+    "EM",  # check raw literals inside exception raising
+    "ERA", # check commented-out code from python files a la eradicate
+    "F",   # check python source code for errors a la pyflakes
+    "I",   # check isort imports
+    "ISC", # check implicit string literal concatenation
+    "PGH", # check pygrep hooks
+    "PL",  # check code errors and smells a la pylint
+    "PT",  # check common pytest issues
+    "PTH", # check pathlib usage
+    "T20", # check for print statements
+    "UP",  # check outdated syntax a la pyupgrade
+    "W",   # check code style conventions a la pycodestyle warnings
+]
 target-version = "py38"
 
 [tool.ruff.isort]
@@ -90,15 +94,14 @@ force-single-line = true
 max-complexity = 14
 
 [tool.ruff.per-file-ignores]
-"./docs/conf.py" = ["A001"]  # allow copyright variable for sphinx
-"./osmnx/__init__.py" = ["F401",  # allow API imports to go unused
-                         "F403"]  # allow import * from API
 "./osmnx/_api.py" = ["F401"]  # allow API imports to go unused
-"./tests/test_osmnx.py" = ["E402",  # allow imports not at top
-                           "D103",  # allow missing function docstrings
-                           "F841",  # allow unused local variables
-                           "I001",  # allow unsorted imports
-                           "PLR2004"]  # allow magic values in comparisons
+"./tests/test_osmnx.py" = [
+    "E402",    # allow imports not at the top of the file
+    "D103",    # allow missing function docstrings
+    "F841",    # allow unused local variables
+    "I001",    # allow unsorted imports
+    "PLR2004", # allow magic values in comparisons
+]
 
 [tool.ruff.pydocstyle]
 convention = "numpy"
