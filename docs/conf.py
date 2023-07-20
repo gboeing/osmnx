@@ -14,7 +14,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path().resolve().parent))
 
 author = "Geoff Boeing"
-copyright = "2016–2023, Geoff Boeing"
+copyright = "2016-2023, Geoff Boeing"  # noqa: A001
 project = "OSMnx"
 
 # dynamically load version from /osmnx/_version.py

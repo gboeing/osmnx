@@ -92,7 +92,6 @@ force-single-line = true
 max-complexity = 14
 
 [tool.ruff.per-file-ignores]
-"./docs/conf.py" = ["A001"]  # allow copyright variable for sphinx
 "./osmnx/__init__.py" = ["F401",  # allow API imports to go unused
                          "F403"]  # allow import * from API
 "./osmnx/_api.py" = ["F401"]  # allow API imports to go unused
