@@ -1,6 +1,6 @@
 # OSMnx tests
 
-First, ensure that you have installed the necessary [dependencies](../environments/tests/env-ci.yml) for the test suite. Then use the repository's [pre-commit hooks](../.pre-commit-config.yaml) and the scripts in this folder to:
+First, ensure that you have installed the necessary [dependencies](../tests/environments/env-ci.yml) for the test suite. Then use the repository's [pre-commit hooks](../.pre-commit-config.yaml) and the scripts in this folder to:
 
 - format code/docstrings to the project's style
 - lint the code
@@ -43,4 +43,4 @@ To package and release a new version, update `CHANGELOG.md` and edit the version
 bash ./tests/packaging.sh
 ```
 
-This will tag the repository with the new version number, upload the PyPI distribution, and update the conda-forge feedstock. Then, open a pull request at the [feedstock](https://github.com/conda-forge/osmnx-feedstock) to release on conda-forge. Finally, when the new version is available on conda-forge, update the [Docker image](../environments/docker) and the [examples gallery](https://github.com/gboeing/osmnx-examples) to use the new version.
+This will tag the repository with the new version number, upload the PyPI distribution, and update the conda-forge feedstock. Then, open a pull request at the [feedstock](https://github.com/conda-forge/osmnx-feedstock) to release on conda-forge. Finally, when the new version is available on conda-forge, update the [Docker image](../environments/docker) and the [OSMnx Examples](https://github.com/gboeing/osmnx-examples) gallery to use the new version.
