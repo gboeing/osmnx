@@ -23,10 +23,7 @@ Thanks for using OSMnx and for considering contributing to it by opening an issu
 
 - post your proposal on the [issue tracker](https://github.com/gboeing/osmnx/issues), and _provide all the information requested in the template_, so we can review it together (some proposals may not be a good fit for the project)
 - fork the repo, make your change, [test it](./tests), and submit a PR
+- adhere to the project's code and docstring standards by running its [pre-commit](.pre-commit-config.yaml) hooks
 - respond to code review
-- adhere to the following project standards
-  - `black` code style with max line length of 100
-  - `isort` sorted imports
-  - `numpy` style docstrings
 
 This project requires minimum Python and NumPy versions in accordance with [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html).
