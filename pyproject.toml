@@ -62,25 +62,27 @@ cache-dir = "~/.cache/ruff"
 exclude = ["build/*"]
 ignore = ["PLR091"] # ignore because we're already checking mccabe complexity
 line-length = 110  # black line length + 10%
-select = ["A",   # check python builtins being used as variables or parameters
-          "ARG", # check unused function arguments
-          "B",   # check common design problems
-          "C4",  # check proper comprehensions
-          "C9",  # check mccabe complexity
-          "D",   # check docstring conventions a la pydocstyle
-          "E",   # check code style conventions a la pycodestyle errors
-          "EM",  # check raw literals inside exception raising
-          "ERA", # eradicate commented-out code from python files
-          "F",   # check python source code for errors a la pyflakes
-          "I",   # check isort imports
-          "ISC", # check implicit string literal concatenation
-          "PGH", # check pygrep hooks
-          "PL",  # check code errors and smells a la pylint
-          "PT",  # check common pytest issues
-          "PTH", # check pathlib usage
-          "T20", # check for print statements
-          "UP",  # check outdated syntax a la pyupgrade
-          "W"]   # check code style conventions a la pycodestyle warnings
+select = [
+    "A",   # check python builtins being used as variables or parameters
+    "ARG", # check unused function arguments
+    "B",   # check common design problems a la bugbear
+    "C4",  # check proper comprehensions
+    "C9",  # check mccabe complexity
+    "D",   # check docstring conventions a la pydocstyle
+    "E",   # check code style conventions a la pycodestyle errors
+    "EM",  # check raw literals inside exception raising
+    "ERA", # check commented-out code from python files a la eradicate
+    "F",   # check python source code for errors a la pyflakes
+    "I",   # check isort imports
+    "ISC", # check implicit string literal concatenation
+    "PGH", # check pygrep hooks
+    "PL",  # check code errors and smells a la pylint
+    "PT",  # check common pytest issues
+    "PTH", # check pathlib usage
+    "T20", # check for print statements
+    "UP",  # check outdated syntax a la pyupgrade
+    "W",    # check code style conventions a la pycodestyle warnings
+]
 target-version = "py38"
 
 [tool.ruff.isort]
@@ -94,11 +96,13 @@ max-complexity = 14
 "./osmnx/__init__.py" = ["F401",  # allow API imports to go unused
                          "F403"]  # allow import * from API
 "./osmnx/_api.py" = ["F401"]  # allow API imports to go unused
-"./tests/test_osmnx.py" = ["E402",  # allow imports not at top
-                           "D103",  # allow missing function docstrings
-                           "F841",  # allow unused local variables
-                           "I001",  # allow unsorted imports
-                           "PLR2004"]  # allow magic values in comparisons
+"./tests/test_osmnx.py" = [
+    "E402",   # allow imports not at top
+    "D103",   # allow missing function docstrings
+    "F841",   # allow unused local variables
+    "I001",   # allow unsorted imports
+    "PLR2004", # allow magic values in comparisons
+]
 
 [tool.ruff.pydocstyle]
 convention = "numpy"
