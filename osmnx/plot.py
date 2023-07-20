@@ -691,7 +691,7 @@ def plot_orientation(
         undirected, unprojected graph with `bearing` attributes on each edge
     num_bins : int
         number of bins; for example, if `num_bins=36` is provided, then each
-        bin will represent 10° around the compass
+        bin will represent 10 degrees around the compass
     min_length : float
         ignore edges with `length` attributes less than `min_length`
     weight : string
@@ -742,7 +742,7 @@ def plot_orientation(
     bin_counts, bin_edges = bearing._bearings_distribution(Gu, num_bins, min_length, weight)
 
     # positions: where to center each bar. ignore the last bin edge, because
-    # it's the same as the first (i.e., 0° = 360°)
+    # it's the same as the first (i.e., 0 degrees = 360 degrees)
     positions = np.radians(bin_edges[:-1])
 
     # width: make bars fill the circumference without gaps or overlaps
