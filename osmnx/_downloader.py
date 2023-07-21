@@ -13,6 +13,8 @@ from urllib.parse import urlparse
 
 import numpy as np
 import requests
+from requests.exceptions import ConnectionError
+from requests.exceptions import JSONDecodeError
 
 from . import projection
 from . import settings
@@ -376,11 +378,13 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
         sc = response.status_code
         status = response.text.split("\n")[4]
         status_first_token = status.split(" ")[0]
-
-    except Exception:  # pragma: no cover
-        # if we cannot reach the status endpoint or parse its output, log an
-        # error and return default duration
+    except ConnectionError:  # pragma: no cover
+        # cannot reach status endpoint, log error and return default duration
         utils.log(f"Unable to query {url}, got status {sc}", level=lg.ERROR)
+        return default_duration
+    except (AttributeError, IndexError, ValueError):  # pragma: no cover
+        # cannot parse output, log error and return default duration
+        utils.log(f"Unable to parse {url} response: {response.text}", level=lg.ERROR)
         return default_duration
 
     try:
@@ -389,7 +393,7 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
         _ = int(status_first_token)  # number of available slots
         pause = 0
 
-    except Exception:  # pragma: no cover
+    except ValueError:  # pragma: no cover
         # if first token is 'Slot', it tells you when your slot will be free
         if status_first_token == "Slot":
             utc_time_str = status.split(" ")[3]
@@ -709,7 +713,7 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
         try:
             response_json = response.json()
 
-        except Exception as e:  # pragma: no cover
+        except JSONDecodeError as e:  # pragma: no cover
             if sc in {429, 504}:
                 # 429 is 'too many requests' and 504 is 'gateway timeout' from
                 # server overload: handle these by pausing then recursively
@@ -720,8 +724,8 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
 
             else:
                 # else, this was an unhandled status code, throw an exception
-                utils.log(f"{domain} returned {sc}", level=lg.ERROR)
-                msg = f"Server returned:\n{response} {response.reason}\n{response.text}"
+                msg = f"{domain} responded: {response} {response.reason} {response.text}"
+                utils.log(msg, level=lg.ERROR)
                 raise Exception(msg) from e
 
         _save_to_cache(prepared_url, response_json, sc)
@@ -787,7 +791,7 @@ def _overpass_request(data, pause=None, error_pause=60):
             if "remark" in response_json:
                 utils.log(f'Server remark: {response_json["remark"]!r}', level=lg.WARNING)
 
-        except Exception as e:  # pragma: no cover
+        except JSONDecodeError as e:  # pragma: no cover
             if sc in {429, 504}:
                 # 429 is 'too many requests' and 504 is 'gateway timeout' from
                 # server overload: handle these by pausing then recursively
@@ -799,8 +803,8 @@ def _overpass_request(data, pause=None, error_pause=60):
 
             else:
                 # else, this was an unhandled status code, throw an exception
-                utils.log(f"{domain} returned {sc}", level=lg.ERROR)
-                msg = f"Server returned\n{response} {response.reason}\n{response.text}"
+                msg = f"{domain} responded: {response} {response.reason} {response.text}"
+                utils.log(msg, level=lg.ERROR)
                 raise Exception(msg) from e
 
         _save_to_cache(prepared_url, response_json, sc)
