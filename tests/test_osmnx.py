@@ -248,7 +248,7 @@ def test_routing():
     # test non-numeric weight (should raise ValueError)
     try:
         route = ox.shortest_path(G, orig_node, dest_node, weight="highway")
-        raise AssertionError()
+        raise AssertionError
     except ValueError:
         pass
     # test missing weight (should raise warning)
