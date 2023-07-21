@@ -445,8 +445,7 @@ def _make_overpass_polygon_coord_strs(polygon):
     geometry_proj, crs_proj = projection.project_geometry(polygon)
     gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj)
     geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
-    polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
-    return polygon_coord_strs
+    return utils_geo._get_polygons_coordinates(geometry)
 
 
 def _create_overpass_query(polygon_coord_str, tags):
@@ -513,9 +512,7 @@ def _create_overpass_query(polygon_coord_str, tags):
 
     # finalize query and return
     components = "".join(components)
-    query = f"{overpass_settings};({components});out;"
-
-    return query
+    return f"{overpass_settings};({components});out;"
 
 
 def _osm_network_download(polygon, network_type, custom_filter):
@@ -642,8 +639,7 @@ def _retrieve_osm_element(query, by_osmid=False, limit=1, polygon_geojson=1):
             raise TypeError(msg)
 
     # request the URL, return the JSON
-    response_json = _nominatim_request(params=params, request_type=request_type)
-    return response_json
+    return _nominatim_request(params=params, request_type=request_type)
 
 
 def _nominatim_request(params, request_type="search", pause=1, error_pause=60):

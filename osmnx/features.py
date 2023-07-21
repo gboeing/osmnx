@@ -116,9 +116,7 @@ def features_from_bbox(north, south, east, west, tags):
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
     # create GeoDataFrame of features within this polygon
-    gdf = features_from_polygon(polygon, tags)
-
-    return gdf
+    return features_from_polygon(polygon, tags)
 
 
 def features_from_point(center_point, tags, dist=1000):
@@ -161,9 +159,7 @@ def features_from_point(center_point, tags, dist=1000):
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
     # create GeoDataFrame of features within this polygon
-    gdf = features_from_polygon(polygon, tags)
-
-    return gdf
+    return features_from_polygon(polygon, tags)
 
 
 def features_from_address(address, tags, dist=1000):
@@ -204,9 +200,7 @@ def features_from_address(address, tags, dist=1000):
     center_point = geocoder.geocode(query=address)
 
     # create GeoDataFrame of features around this point
-    gdf = features_from_point(center_point, tags, dist=dist)
-
-    return gdf
+    return features_from_point(center_point, tags, dist=dist)
 
 
 def features_from_place(query, tags, which_result=None, buffer_dist=None):
@@ -277,9 +271,7 @@ def features_from_place(query, tags, which_result=None, buffer_dist=None):
     utils.log("Constructed place geometry polygon(s) to query API")
 
     # create GeoDataFrame using this polygon(s) geometry
-    gdf = features_from_polygon(polygon, tags)
-
-    return gdf
+    return features_from_polygon(polygon, tags)
 
 
 def features_from_polygon(polygon, tags):
@@ -330,9 +322,7 @@ def features_from_polygon(polygon, tags):
     response_jsons = _downloader._osm_features_download(polygon, tags)
 
     # create GeoDataFrame from the downloaded data
-    gdf = _create_gdf(response_jsons, polygon, tags)
-
-    return gdf
+    return _create_gdf(response_jsons, polygon, tags)
 
 
 def features_from_xml(filepath, polygon=None, tags=None):
@@ -375,9 +365,7 @@ def features_from_xml(filepath, polygon=None, tags=None):
     response_jsons = [osm_xml._overpass_json_from_file(filepath)]
 
     # create GeoDataFrame using this response JSON
-    gdf = _create_gdf(response_jsons, polygon=polygon, tags=tags)
-
-    return gdf
+    return _create_gdf(response_jsons, polygon=polygon, tags=tags)
 
 
 def _create_gdf(response_jsons, polygon, tags):
@@ -520,8 +508,7 @@ def _parse_node_to_coords(element):
         dict of latitude/longitude coordinates
     """
     # return the coordinate of a single node element
-    coords = {"lat": element["lat"], "lon": element["lon"]}
-    return coords
+    return {"lat": element["lat"], "lon": element["lon"]}
 
 
 def _parse_node_to_point(element):

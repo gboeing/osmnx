@@ -214,5 +214,4 @@ def _make_folium_polyline(geom, popup_val=None, **kwargs):
         popup = folium.Popup(html=json.dumps(popup_val))
 
     # create a folium polyline with attributes
-    pl = folium.PolyLine(locations=locations, popup=popup, **kwargs)
-    return pl
+    return folium.PolyLine(locations=locations, popup=popup, **kwargs)

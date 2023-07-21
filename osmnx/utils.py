@@ -94,8 +94,7 @@ def ts(style="datetime", template=None):
             msg = f"unrecognized timestamp style {style!r}"
             raise ValueError(msg)
 
-    ts = template.format(dt.datetime.now())
-    return ts
+    return template.format(dt.datetime.now())
 
 
 def config(
