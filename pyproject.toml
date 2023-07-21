@@ -67,7 +67,7 @@ line-length = 110  # black line length + 10%
 select = [
     "A",   # check python builtins being used as variables or parameters
     "ARG", # check unused function arguments
-    "B",   # check common design problems a la bugbear
+    "B",   # check common design problems a la flake8-bugbear
     "C4",  # check proper comprehensions
     "C9",  # check mccabe complexity
     "D",   # check docstring conventions a la pydocstyle
@@ -78,6 +78,7 @@ select = [
     "I",   # check isort imports
     "ISC", # check implicit string literal concatenation
     "PGH", # check pygrep hooks
+    "PIE", # check misc lints a la flake8-pie
     "PL",  # check code errors and smells a la pylint
     "PT",  # check common pytest issues
     "PTH", # check pathlib usage
