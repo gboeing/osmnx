@@ -117,7 +117,8 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
     path = [endpoint, endpoint_successor]
 
     # for each successor of the endpoint's successor
-    for successor in G.successors(endpoint_successor):
+    for this_successor in G.successors(endpoint_successor):
+        successor = this_successor
         if successor not in path:
             # if this successor is already in the path, ignore it, otherwise add
             # it to the path
@@ -128,7 +129,8 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
 
                 # 99%+ of the time there will be only 1 successor: add to path
                 if len(successors) == 1:
-                    path.append(successors[0])
+                    successor = successors[0]
+                    path.append(successor)
 
                 # handle relatively rare cases or OSM digitization quirks
                 elif len(successors) == 0:
