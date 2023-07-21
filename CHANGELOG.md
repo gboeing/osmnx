@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- fix DNS resolution in Dask clusters
 - minor under-the-hood code clean-up
 - adopt NEP 29 policy for minimum required Python and NumPy versions
 
