@@ -331,12 +331,12 @@ def _config_dns(url):
         ip = _resolve_host_via_doh(hostname)
 
     # mutate socket.getaddrinfo to map hostname -> IP address
-    def _getaddrinfo(*args):
+    def _getaddrinfo(*args, **kwargs):
         if args[0] == hostname:
             utils.log(f"Resolved {hostname!r} to {ip!r}")
-            return _original_getaddrinfo(ip, *args[1:])
+            return _original_getaddrinfo(ip, *args[1:], **kwargs)
         else:
-            return _original_getaddrinfo(*args)
+            return _original_getaddrinfo(*args, **kwargs)
 
     socket.getaddrinfo = _getaddrinfo
 
