@@ -77,16 +77,16 @@ OSMnx's :code:`simplification` module automatically processes network topology f
 
 **Intersection consolidation** is important because many real-world street networks feature complex intersections and traffic circles, resulting in a cluster of graph nodes where there is really just one true intersection as we would think of it in transportation or urban design. Similarly, divided roads are often represented by separate centerline edges: the intersection of two divided roads thus creates 4 nodes, representing where each edge intersects a perpendicular edge, but these 4 nodes represent a single intersection in the real world. OSMnx can consolidate such complex intersections into a single node and optionally rebuild the graph's edge topology accordingly.
 
-Converting Graphs
-^^^^^^^^^^^^^^^^^
+Converting, Projecting, Saving
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 OSMnx can convert a MultiDiGraph to a `MultiGraph`_ if you prefer an undirected representation of the network, or to a `DiGraph`_ if you prefer a directed representation without any parallel edges.
 
 It can also convert a MultiDiGraph to/from GeoPandas node and edge `GeoDataFrames`_. This allows you to load arbitrary node/edge ShapeFiles or GeoPackage layers as GeoDataFrames then model them as a MultiDiGraph for graph analysis.
 
-You can easily project your graphs to different `coordinate reference systems`_ using the :code:`projection` module. If you're unsure which CRS you want to project to, OSMnx can automatically determine an appropriate UTM CRS for you.
+You can easily project your graphs to different coordinate reference systems using the :code:`projection` module. If you're unsure which `CRS`_ you want to project to, OSMnx can automatically determine an appropriate UTM CRS for you.
 
-You can save your OSMnx graph to disk as a GraphML file (to load into other network analysis software) or a GeoPackage (to load into other GIS software) using the :code:`io` module. Use the GraphML format whenever saving a graph for later work with OSMnx.
+Using the :code:`io` module, you can save your OSMnx graph to disk as a GraphML file (to load into other network analysis software) or a GeoPackage (to load into other GIS software). Use the GraphML format whenever saving a graph for later work with OSMnx.
 
 Working with Elevation
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -143,7 +143,7 @@ Frequently Asked Questions
 .. _MultiGraph: https://networkx.org/documentation/stable/reference/classes/multigraph.html
 .. _DiGraph: https://networkx.org/documentation/stable/reference/classes/digraph.html
 .. _GeoDataFrames: https://geopandas.org/en/stable/docs/reference/geodataframe.html
-.. _coordinate reference systems: https://en.wikipedia.org/wiki/Coordinate_reference_system
+.. _CRS: https://en.wikipedia.org/wiki/Coordinate_reference_system
 .. _Elevation API: https://developers.google.com/maps/documentation/elevation
 .. _Folium: https://python-visualization.github.io/folium/
 .. _Changelog: https://github.com/gboeing/osmnx/blob/main/CHANGELOG.md
