@@ -247,11 +247,9 @@ def test_routing():
     dest_node = ox.distance.nearest_nodes(G, dest_x, dest_y)[0]
 
     # test non-numeric weight (should raise ValueError)
-    try:
+    with pytest.raises(ValueError, match="contains non-numeric values"):
         route = ox.shortest_path(G, orig_node, dest_node, weight="highway")
-        raise AssertionError
-    except ValueError:
-        pass
+
     # test missing weight (should raise warning)
     route = ox.shortest_path(G, orig_node, dest_node, weight="time")
     # test good weight

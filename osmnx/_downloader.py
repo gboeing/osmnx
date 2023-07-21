@@ -1,12 +1,12 @@
 """Interact with the OSM APIs."""
 
+import datetime as dt
 import json
 import logging as lg
 import re
 import socket
 import time
 from collections import OrderedDict
-from datetime import datetime as dt
 from hashlib import sha1
 from pathlib import Path
 from urllib.parse import urlparse
@@ -20,6 +20,7 @@ from . import projection
 from . import settings
 from . import utils
 from . import utils_geo
+from ._errors import ResponseStatusCodeError
 
 # capture getaddrinfo function to use original later after mutating it
 _original_getaddrinfo = socket.getaddrinfo
@@ -279,6 +280,7 @@ def _resolve_host_via_doh(hostname):
         utils.log("User set `doh_url_template=None`, requesting host by name", level=lg.WARNING)
         return hostname
 
+    err_msg = f"Failed to resolve {hostname!r} IP via DoH, requesting host by name"
     try:
         response = requests.get(settings.doh_url_template.format(hostname=hostname))
         data = response.json()
@@ -286,13 +288,13 @@ def _resolve_host_via_doh(hostname):
             # status 0 means NOERROR, so return the IP address
             return data["Answer"][0]["data"]
         else:
-            raise requests.exceptions.RequestException
+            # if we cannot reach DoH server or cannot resolve host, return hostname itself
+            utils.log(err_msg, level=lg.ERROR)
+            return hostname
 
     # if we cannot reach DoH server or cannot resolve host, return hostname itself
     except requests.exceptions.RequestException:
-        utils.log(
-            f"Failed to resolve {hostname!r} IP via DoH, requesting host by name", level=lg.ERROR
-        )
+        utils.log(err_msg, level=lg.ERROR)
         return hostname
 
 
@@ -397,9 +399,11 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
         # if first token is 'Slot', it tells you when your slot will be free
         if status_first_token == "Slot":
             utc_time_str = status.split(" ")[3]
-            utc_time = dt.strptime(utc_time_str, "%Y-%m-%dT%H:%M:%SZ,")
-            pause = int(np.ceil((utc_time - dt.utcnow()).total_seconds()))
-            pause = max(pause, 1)
+            pattern = "%Y-%m-%dT%H:%M:%SZ,"
+            utc_time = dt.datetime.strptime(utc_time_str, pattern).astimezone(dt.timezone.utc)
+            utc_now = dt.datetime.now(tz=dt.timezone.utc)
+            seconds = int(np.ceil((utc_time - utc_now).total_seconds()))
+            pause = max(seconds, 1)
 
         # if first token is 'Currently', it is currently running a query so
         # check back in recursive_delay seconds
@@ -472,9 +476,9 @@ def _create_overpass_query(polygon_coord_str, tags):
     overpass_settings = _make_overpass_settings()
 
     # make sure every value in dict is bool, str, or list of str
-    error_msg = "tags must be a dict with values of bool, str, or list of str"
+    err_msg = "tags must be a dict with values of bool, str, or list of str"
     if not isinstance(tags, dict):  # pragma: no cover
-        raise TypeError(error_msg)
+        raise TypeError(err_msg)
 
     tags_dict = {}
     for key, value in tags.items():
@@ -486,11 +490,11 @@ def _create_overpass_query(polygon_coord_str, tags):
 
         elif isinstance(value, list):
             if not all(isinstance(s, str) for s in value):  # pragma: no cover
-                raise TypeError(error_msg)
+                raise TypeError(err_msg)
             tags_dict[key] = value
 
         else:  # pragma: no cover
-            raise TypeError(error_msg)
+            raise TypeError(err_msg)
 
     # convert the tags dict into a list of {tag:value} dicts
     tags_list = []
@@ -724,9 +728,9 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
 
             else:
                 # else, this was an unhandled status code, throw an exception
-                msg = f"{domain} responded: {response} {response.reason} {response.text}"
+                msg = f"{domain} responded: {sc} {response.reason} {response.text}"
                 utils.log(msg, level=lg.ERROR)
-                raise Exception(msg) from e
+                raise ResponseStatusCodeError(msg) from e
 
         _save_to_cache(prepared_url, response_json, sc)
         return response_json
@@ -803,9 +807,9 @@ def _overpass_request(data, pause=None, error_pause=60):
 
             else:
                 # else, this was an unhandled status code, throw an exception
-                msg = f"{domain} responded: {response} {response.reason} {response.text}"
+                msg = f"{domain} responded: {sc} {response.reason} {response.text}"
                 utils.log(msg, level=lg.ERROR)
-                raise Exception(msg) from e
+                raise ResponseStatusCodeError(msg) from e
 
         _save_to_cache(prepared_url, response_json, sc)
         return response_json

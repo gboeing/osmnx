@@ -1,6 +1,8 @@
 """Get node elevations and calculate edge grades."""
 
+import logging as lg
 import multiprocessing as mp
+import re
 import time
 from hashlib import sha1
 from pathlib import Path
@@ -14,6 +16,7 @@ import requests
 from . import _downloader
 from . import utils
 from . import utils_graph
+from ._errors import ResponseStatusCodeError
 
 # rasterio and gdal are optional dependencies for raster querying
 try:
@@ -185,25 +188,35 @@ def add_node_elevations_google(
         if cached_response_json is not None:
             response_json = cached_response_json
         else:
-            # request the elevations from the API
+            # request the elevations from the server
             utils.log(f"Requesting node elevations: {url}")
             time.sleep(pause_duration)
             response = requests.get(url)
+
+            # log the response size and domain
+            sc = response.status_code
+            size_kb = len(response.content) / 1000
+            domain = re.findall(r"(?s)//(.*?)/", url)[0]
+            utils.log(f"Downloaded {size_kb:,.1f}kB from {domain}")
+
+            # check the response status
             if response.status_code == HTTP_OK:
                 response_json = response.json()
                 _downloader._save_to_cache(url, response_json, response.status_code)
             else:
-                msg = f"Server responded with {response.status_code}: {response.reason} \n{response.json()}"
-                raise Exception(msg)
+                # else, this was an unhandled status code, throw an exception
+                msg = f"{domain} responded: {sc} {response.reason} {response.text}"
+                utils.log(msg, level=lg.ERROR)
+                raise ResponseStatusCodeError(msg)
 
         # append these elevation results to the list of all results
         results.extend(response_json["results"])
 
     # sanity check that all our vectors have the same number of elements
-    msg = f"Graph has {len(G)} nodes and we received {len(results)} results."
+    msg = f"Graph has {len(G)} nodes and we received {len(results)} results from server."
     if not (len(results) == len(G) == len(node_points)):
         err_msg = msg + f" \n{response_json}"
-        raise Exception(err_msg)
+        raise ValueError(err_msg)
     utils.log(msg)
 
     # add elevation as an attribute to the nodes
