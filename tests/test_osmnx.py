@@ -511,7 +511,7 @@ def test_graph_from_functions():
 
 def test_features():
     # geometries_from_bbox - bounding box query to return no data
-    with contextlib.suppress(ox._errors.EmptyOverpassResponse):
+    with contextlib.suppress(ox._errors.EmptyResponseError):
         gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
 
     # geometries_from_bbox - successful

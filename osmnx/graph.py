@@ -19,8 +19,8 @@ from . import truncate
 from . import utils
 from . import utils_geo
 from . import utils_graph
-from ._errors import CacheOnlyModeInterrupt
-from ._errors import EmptyOverpassResponse
+from ._errors import CacheOnlyInterruptError
+from ._errors import EmptyResponseError
 from ._version import __version__
 
 
@@ -591,12 +591,12 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     if settings.cache_only_mode:  # pragma: no cover
         # after consuming all response_jsons in loop, raise exception to catch
         msg = "Interrupted because `settings.cache_only_mode=True`"
-        raise CacheOnlyModeInterrupt(msg)
+        raise CacheOnlyInterruptError(msg)
 
     # ensure we got some node/way data back from the server request(s)
     if (len(nodes) == 0) and (len(paths) == 0):  # pragma: no cover
         msg = "No data elements in server response. Check query location/filters and log."
-        raise EmptyOverpassResponse(msg)
+        raise EmptyResponseError(msg)
 
     # create the MultiDiGraph and set its graph-level attributes
     metadata = {
