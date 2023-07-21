@@ -216,6 +216,7 @@ def _retrieve_from_cache(url, check_remark=False):
 
             utils.log(f"Retrieved response from cache file {cache_filepath!r}")
             return response_json
+    return None
 
 
 def _get_http_headers(user_agent=None, referer=None, accept_language=None):

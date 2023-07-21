@@ -200,11 +200,11 @@ def add_node_elevations_google(
         results.extend(response_json["results"])
 
     # sanity check that all our vectors have the same number of elements
+    msg = f"Graph has {len(G)} nodes and we received {len(results)} results."
     if not (len(results) == len(G) == len(node_points)):
-        msg = f"Graph has {len(G)} nodes but we received {len(results)} results. \n{response_json}"
-        raise Exception(msg)
-    else:
-        utils.log(f"Graph has {len(G)} nodes and we received {len(results)} results.")
+        err_msg = msg + f" \n{response_json}"
+        raise Exception(err_msg)
+    utils.log(msg)
 
     # add elevation as an attribute to the nodes
     df = pd.DataFrame(node_points, columns=["node_points"])

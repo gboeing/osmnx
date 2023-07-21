@@ -176,7 +176,7 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
         msg = f"Nominatim geocoder returned 0 results for query {query!r}"
         raise ValueError(msg)
 
-    elif by_osmid:
+    if by_osmid:
         # if searching by OSM ID, always take the first (ie, only) result
         result = results[0]
 
