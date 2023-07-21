@@ -758,10 +758,7 @@ def _is_path_reversed(path, reversed_values):
     -------
     bool
     """
-    if "oneway" in path and path["oneway"] in reversed_values:
-        return True
-    else:
-        return False
+    return "oneway" in path and path["oneway"] in reversed_values
 
 
 def _add_paths(G, paths, bidirectional=False):

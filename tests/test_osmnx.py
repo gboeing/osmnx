@@ -7,6 +7,7 @@ import matplotlib as mpl
 mpl.use("Agg")
 
 import bz2
+import contextlib
 import logging as lg
 import os
 import tempfile
@@ -512,10 +513,8 @@ def test_graph_from_functions():
 
 def test_features():
     # geometries_from_bbox - bounding box query to return no data
-    try:
+    with contextlib.suppress(ox._errors.EmptyOverpassResponse):
         gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
-    except ox._errors.EmptyOverpassResponse:
-        pass
 
     # geometries_from_bbox - successful
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)

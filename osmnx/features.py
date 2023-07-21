@@ -706,12 +706,12 @@ def _is_closed_way_a_polygon(element, polygon_features=_POLYGON_FEATURES):
                         is_polygon = True
 
                 # if the key is for a passlist i.e. specific tags should
-                # become Polygons
-                elif blocklist_or_passlist == "passlist":
-                    # if the value for that key in the element is in the
-                    # passlist -> Polygon
-                    if key_value in polygon_features_values:
-                        is_polygon = True
+                # become Polygons, and if the value for that key in the
+                # element is in the passlist -> Polygon
+                elif (blocklist_or_passlist == "passlist") and (
+                    key_value in polygon_features_values
+                ):
+                    is_polygon = True
 
     return is_polygon
 
