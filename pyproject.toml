@@ -68,6 +68,7 @@ select = [
     "A",   # check python builtins being used as variables or parameters
     "ARG", # check unused function arguments
     "B",   # check common design problems a la flake8-bugbear
+    "BLE", # check for blind exception catching
     "C4",  # check proper comprehensions
     "C9",  # check mccabe complexity
     "D",   # check docstring conventions a la pydocstyle
