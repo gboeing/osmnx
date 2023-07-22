@@ -200,7 +200,7 @@ def add_node_elevations_google(
             sc = response.status_code
             size_kb = len(response.content) / 1000
             domain = re.findall(r"(?s)//(.*?)/", url)[0]
-            utils.log(f"Downloaded {size_kb:,.1f}kB from {domain}")
+            utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r}")
 
             # check the response status
             if sc == HTTP_OK:
@@ -208,7 +208,7 @@ def add_node_elevations_google(
                 _downloader._save_to_cache(url, response_json, sc)
             else:
                 # else, this was an unhandled status code, throw an exception
-                msg = f"{domain} responded: {sc} {response.reason} {response.text}"
+                msg = f"{domain!r} responded: {sc} {response.reason} {response.text}"
                 utils.log(msg, level=lg.ERROR)
                 raise ResponseStatusCodeError(msg)
 
