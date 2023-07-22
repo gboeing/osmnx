@@ -183,7 +183,7 @@ def add_node_elevations_google(
         locations = "|".join(chunk)
         url = url_template.format(locations, api_key)
 
-        # check if this request is already in the cache (if global use_cache=True)
+        # check if this request is already in the cache
         cached_response_json = _downloader._retrieve_from_cache(url)
         if cached_response_json is not None:
             response_json = cached_response_json
@@ -200,9 +200,9 @@ def add_node_elevations_google(
             utils.log(f"Downloaded {size_kb:,.1f}kB from {domain}")
 
             # check the response status
-            if response.status_code == HTTP_OK:
+            if sc == HTTP_OK:
                 response_json = response.json()
-                _downloader._save_to_cache(url, response_json, response.status_code)
+                _downloader._save_to_cache(url, response_json, sc)
             else:
                 # else, this was an unhandled status code, throw an exception
                 msg = f"{domain} responded: {sc} {response.reason} {response.text}"
@@ -213,11 +213,11 @@ def add_node_elevations_google(
         results.extend(response_json["results"])
 
     # sanity check that all our vectors have the same number of elements
-    msg = f"Graph has {len(G)} nodes and we received {len(results)} results from server."
-    if not (len(results) == len(G) == len(node_points)):
-        err_msg = msg + f" \n{response_json}"
-        raise ValueError(err_msg)
+    msg = f"Graph has {len(G):,} nodes and we received {len(results):,} results from server."
     utils.log(msg)
+    if not (len(results) == len(G) == len(node_points)):
+        err_msg = f"{msg}\n{response.text}"
+        raise ValueError(err_msg)
 
     # add elevation as an attribute to the nodes
     df = pd.DataFrame(node_points, columns=["node_points"])
