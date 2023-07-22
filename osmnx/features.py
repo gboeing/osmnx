@@ -31,7 +31,7 @@ from . import osm_xml
 from . import settings
 from . import utils
 from . import utils_geo
-from ._errors import EmptyResponseError
+from ._errors import InsufficientResponseError
 
 # dict of tags to determine if closed ways should be polygons, based on JSON
 # from https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features
@@ -395,10 +395,8 @@ def _create_gdf(response_jsons, polygon, tags):
 
     # make sure we got data back from the server request(s)
     if elements_count == 0:
-        msg = (
-            "There are no data elements in the server response. Check log and query location/tags."
-        )
-        raise EmptyResponseError(msg)
+        msg = "No data elements in server response. Check log and query location/tags."
+        raise InsufficientResponseError(msg)
 
     # begin processing the elements retrieved from the server
     utils.log(f"Converting {elements_count} elements in JSON responses to features")

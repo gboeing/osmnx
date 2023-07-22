@@ -9,7 +9,7 @@
 - fix DNS resolution in Dask clusters (#1039)
 - introduce more descriptive exceptions: ResponseStatusCodeError and GraphSimplificationError (#1041)
 - replace CacheOnlyModeInterrupt exception with CacheOnlyInterruptError exception (#1041)
-- replace EmptyOverpassResponse exception with EmptyResponseError exception (#1041)
+- replace EmptyOverpassResponse exception with InsufficientResponseError exception (#1041)
 - minor under-the-hood code clean-up (#1036 #1037 #1038 #1041)
 
 ## 1.5.1 (2023-07-08)

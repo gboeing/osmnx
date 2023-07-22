@@ -112,8 +112,8 @@ requests_kwargs : dict
     verify, and proxies can be found in the requests package advanced docs.
     Default is `{}`.
 timeout : int
-    The timeout interval in seconds for the HTTP request and for API to use
-    while running the query. Default is `180`.
+    The timeout interval in seconds for HTTP requests, and (when applicable)
+    for API to use while running the query. Default is `180`.
 use_cache : bool
     If True, cache HTTP responses locally instead of calling API repeatedly
     for the same request. Default is `True`.

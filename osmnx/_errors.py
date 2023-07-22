@@ -17,8 +17,8 @@ class CacheOnlyInterruptError(InterruptedError):  # pragma: no cover
         Exception.__init__(self, *args, **kwargs)
 
 
-class EmptyResponseError(ValueError):  # pragma: no cover
-    """Exception for empty Overpass API response."""
+class InsufficientResponseError(ValueError):  # pragma: no cover
+    """Exception for empty or too few results in server response."""
 
     def __init__(self, *args, **kwargs):
         """Create exception."""

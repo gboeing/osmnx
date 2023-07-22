@@ -16,6 +16,7 @@ from . import _downloader
 from . import projection
 from . import settings
 from . import utils
+from ._errors import InsufficientResponseError
 
 
 def geocode(query):
@@ -51,7 +52,7 @@ def geocode(query):
         return point
     else:
         msg = f"Nominatim could not geocode query {query!r}"
-        raise ValueError(msg)
+        raise InsufficientResponseError(msg)
 
 
 def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
@@ -174,7 +175,7 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
     if not results:
         # if no results were returned, raise error
         msg = f"Nominatim geocoder returned 0 results for query {query!r}"
-        raise ValueError(msg)
+        raise InsufficientResponseError(msg)
 
     if by_osmid:
         # if searching by OSM ID, always take the first (ie, only) result
@@ -190,8 +191,8 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
 
     else:  # pragma: no cover
         # else, we got fewer results than which_result, raise error
-        msg = f"Nominatim geocoder only returned {len(results)} result(s) for query {query!r}"
-        raise ValueError(msg)
+        msg = f"Nominatim returned {len(results)} result(s) but which_result={which_result}"
+        raise InsufficientResponseError(msg)
 
     # if we got a non (Multi)Polygon geometry type (like a point), log warning
     geom_type = result["geojson"]["type"]
@@ -246,5 +247,5 @@ def _get_first_polygon(results, query):
             return result
 
     # if we never found a polygon, throw an error
-    msg = f"Nominatim could not geocode query {query!r} to polygonal boundaries"
-    raise ValueError(msg)
+    msg = f"Nominatim could not geocode query {query!r} to a geometry of type (Multi)Polygon"
+    raise TypeError(msg)

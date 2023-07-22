@@ -20,7 +20,7 @@ from . import utils
 from . import utils_geo
 from . import utils_graph
 from ._errors import CacheOnlyInterruptError
-from ._errors import EmptyResponseError
+from ._errors import InsufficientResponseError
 from ._version import __version__
 
 
@@ -596,7 +596,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     # ensure we got some node/way data back from the server request(s)
     if (len(nodes) == 0) and (len(paths) == 0):  # pragma: no cover
         msg = "No data elements in server response. Check query location/filters and log."
-        raise EmptyResponseError(msg)
+        raise InsufficientResponseError(msg)
 
     # create the MultiDiGraph and set its graph-level attributes
     metadata = {

@@ -1,4 +1,4 @@
-"""Get node elevations and calculate edge grades."""
+"""Add node elevations and calculate edge grades."""
 
 import logging as lg
 import multiprocessing as mp
@@ -14,8 +14,10 @@ import pandas as pd
 import requests
 
 from . import _downloader
+from . import settings
 from . import utils
 from . import utils_graph
+from ._errors import InsufficientResponseError
 from ._errors import ResponseStatusCodeError
 
 # rasterio and gdal are optional dependencies for raster querying
@@ -24,6 +26,8 @@ try:
     from osgeo import gdal
 except ImportError:  # pragma: no cover
     rasterio = gdal = None
+
+HTTP_OK = 200
 
 
 def _query_raster(nodes, filepath, band):
@@ -164,7 +168,6 @@ def add_node_elevations_google(
             "the `precision` parameter is deprecated and will be removed in a future release",
             stacklevel=2,
         )
-    HTTP_OK = 200
 
     # make a pandas series of all the nodes' coordinates as 'lat,lng'
     # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
@@ -191,7 +194,7 @@ def add_node_elevations_google(
             # request the elevations from the server
             utils.log(f"Requesting node elevations: {url}")
             time.sleep(pause_duration)
-            response = requests.get(url)
+            response = requests.get(url, timeout=settings.timeout)
 
             # log the response size and domain
             sc = response.status_code
@@ -217,7 +220,7 @@ def add_node_elevations_google(
     utils.log(msg)
     if not (len(results) == len(G) == len(node_points)):
         err_msg = f"{msg}\n{response.text}"
-        raise ValueError(err_msg)
+        raise InsufficientResponseError(err_msg)
 
     # add elevation as an attribute to the nodes
     df = pd.DataFrame(node_points, columns=["node_points"])

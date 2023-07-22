@@ -20,7 +20,10 @@ from . import projection
 from . import settings
 from . import utils
 from . import utils_geo
+from ._errors import InsufficientResponseError
 from ._errors import ResponseStatusCodeError
+
+HTTP_OK = 200
 
 # capture getaddrinfo function to use original later after mutating it
 _original_getaddrinfo = socket.getaddrinfo
@@ -282,7 +285,8 @@ def _resolve_host_via_doh(hostname):
 
     err_msg = f"Failed to resolve {hostname!r} IP via DoH, requesting host by name"
     try:
-        response = requests.get(settings.doh_url_template.format(hostname=hostname))
+        url = settings.doh_url_template.format(hostname=hostname)
+        response = requests.get(url, timeout=settings.timeout)
         data = response.json()
         if response.ok and data["Status"] == 0:
             # status 0 means NOERROR, so return the IP address
@@ -368,7 +372,7 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
     -------
     pause : int
     """
-    if not settings.overpass_rate_limit:  # pragma: no cover
+    if not settings.overpass_rate_limit:
         # if overpass rate limiting is False, then there is zero pause
         return 0
 
@@ -376,7 +380,9 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
 
     try:
         url = base_endpoint.rstrip("/") + "/status"
-        response = requests.get(url, headers=_get_http_headers(), **settings.requests_kwargs)
+        response = requests.get(
+            url, headers=_get_http_headers(), timeout=settings.timeout, **settings.requests_kwargs
+        )
         sc = response.status_code
         status = response.text.split("\n")[4]
         status_first_token = status.split(" ")[0]
@@ -712,23 +718,34 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
         # log the response size and domain
         size_kb = len(response.content) / 1000
         domain = re.findall(r"(?s)//(.*?)/", url)[0]
-        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain}")
+        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r}")
 
         try:
             response_json = response.json()
+            if "remark" in response_json:
+                utils.log(f'Server remark: {response_json["remark"]!r}', level=lg.WARNING)
 
         except JSONDecodeError as e:  # pragma: no cover
+            msg = f"{domain!r} responded: {sc} {response.reason} {response.text}"
+
+            # 429 is 'too many requests' and 504 is 'gateway timeout' from
+            # server overload: handle these by pausing then recursively
+            # re-trying until we get a valid response from the server
             if sc in {429, 504}:
-                # 429 is 'too many requests' and 504 is 'gateway timeout' from
-                # server overload: handle these by pausing then recursively
-                # re-trying until we get a valid response from the server
-                utils.log(f"{domain} returned {sc}: retry in {error_pause} secs", level=lg.WARNING)
+                utils.log(
+                    f"{domain!r} responded {sc} {response.reason}: we'll retry in {error_pause} secs",
+                    level=lg.WARNING,
+                )
                 time.sleep(error_pause)
                 response_json = _nominatim_request(params, request_type, pause, error_pause)
 
+            # elif we got an OK response, but cannot parse JSON, so throw exception
+            elif sc == HTTP_OK:
+                utils.log(msg, level=lg.ERROR)
+                raise InsufficientResponseError(msg) from e
+
+            # else, this was an unhandled status code, throw an exception
             else:
-                # else, this was an unhandled status code, throw an exception
-                msg = f"{domain} responded: {sc} {response.reason} {response.text}"
                 utils.log(msg, level=lg.ERROR)
                 raise ResponseStatusCodeError(msg) from e
 
@@ -788,7 +805,7 @@ def _overpass_request(data, pause=None, error_pause=60):
         # log the response size and domain
         size_kb = len(response.content) / 1000
         domain = re.findall(r"(?s)//(.*?)/", url)[0]
-        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain}")
+        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r}")
 
         try:
             response_json = response.json()
@@ -796,18 +813,27 @@ def _overpass_request(data, pause=None, error_pause=60):
                 utils.log(f'Server remark: {response_json["remark"]!r}', level=lg.WARNING)
 
         except JSONDecodeError as e:  # pragma: no cover
+            msg = f"{domain!r} responded: {sc} {response.reason} {response.text}"
+
+            # 429 is 'too many requests' and 504 is 'gateway timeout' from
+            # server overload: handle these by pausing then recursively
+            # re-trying until we get a valid response from the server
             if sc in {429, 504}:
-                # 429 is 'too many requests' and 504 is 'gateway timeout' from
-                # server overload: handle these by pausing then recursively
-                # re-trying until we get a valid response from the server
                 this_pause = error_pause + _get_pause(base_endpoint)
-                utils.log(f"{domain} returned {sc}: retry in {this_pause} secs", level=lg.WARNING)
+                utils.log(
+                    f"{domain!r} responded {sc} {response.reason}: we'll retry in {this_pause} secs",
+                    level=lg.WARNING,
+                )
                 time.sleep(this_pause)
                 response_json = _overpass_request(data, pause, error_pause)
 
+            # elif we got an OK response, but cannot parse JSON, so throw exception
+            elif sc == HTTP_OK:
+                utils.log(msg, level=lg.ERROR)
+                raise InsufficientResponseError(msg) from e
+
+            # else, this was an unhandled status code, throw an exception
             else:
-                # else, this was an unhandled status code, throw an exception
-                msg = f"{domain} responded: {sc} {response.reason} {response.text}"
                 utils.log(msg, level=lg.ERROR)
                 raise ResponseStatusCodeError(msg) from e
 
