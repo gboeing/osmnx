@@ -246,11 +246,9 @@ def test_routing():
     dest_node = ox.distance.nearest_nodes(G, dest_x, dest_y)[0]
 
     # test non-numeric weight (should raise ValueError)
-    try:
+    with pytest.raises(ValueError, match="contains non-numeric values"):
         route = ox.shortest_path(G, orig_node, dest_node, weight="highway")
-        raise AssertionError()
-    except ValueError:
-        pass
+
     # test missing weight (should raise warning)
     route = ox.shortest_path(G, orig_node, dest_node, weight="time")
     # test good weight
@@ -344,15 +342,32 @@ def test_find_nearest():
 
 
 def test_endpoints():
+    default_timeout = ox.settings.timeout
+    default_key = ox.settings.nominatim_key
+    default_nominatim_endpoint = ox.settings.nominatim_endpoint
+    default_overpass_endpoint = ox.settings.overpass_endpoint
+    default_overpass_rate_limit = ox.settings.overpass_rate_limit
+
+    # test good and bad DNS resolution
+    ox.settings.timeout = 1
     ip = ox._downloader._resolve_host_via_doh("overpass-api.de")
     ip = ox._downloader._resolve_host_via_doh("AAAAAAAAAAA")
-
     _doh_url_template_default = ox.settings.doh_url_template
     ox.settings.doh_url_template = "http://aaaaaa.hostdoesntexist.org/nothinguseful"
     ip = ox._downloader._resolve_host_via_doh("overpass-api.de")
     ox.settings.doh_url_template = None
     ip = ox._downloader._resolve_host_via_doh("overpass-api.de")
     ox.settings.doh_url_template = _doh_url_template_default
+
+    # Test changing the Overpass endpoint.
+    # This should fail because we didn't provide a valid endpoint
+    ox.settings.overpass_rate_limit = False
+    ox.settings.overpass_endpoint = "http://NOT_A_VALID_ENDPOINT/api/"
+    with pytest.raises(ConnectionError, match="Max retries exceeded with url"):
+        G = ox.graph_from_place(place1, network_type="all")
+
+    ox.settings.overpass_rate_limit = default_overpass_rate_limit
+    ox.settings.timeout = default_timeout
 
     params = OrderedDict()
     params["format"] = "json"
@@ -378,19 +393,9 @@ def test_endpoints():
     with pytest.raises(ValueError, match="Nominatim request_type must be"):
         response_json = ox._downloader._nominatim_request(params=params, request_type="xyz")
 
-    default_key = ox.settings.nominatim_key
-    default_nominatim_endpoint = ox.settings.nominatim_endpoint
-    default_overpass_endpoint = ox.settings.overpass_endpoint
-
-    # Searching on public nominatim should work even if a key was provided
+    # Searching on public nominatim should work even if a (bad) key was provided
     ox.settings.nominatim_key = "NOT_A_KEY"
     response_json = ox._downloader._nominatim_request(params=params, request_type="search")
-
-    # Test changing the endpoint.
-    # This should fail because we didn't provide a valid endpoint
-    ox.settings.overpass_endpoint = "http://NOT_A_VALID_ENDPOINT/api/"
-    with pytest.raises(ConnectionError, match="Max retries exceeded with url"):
-        G = ox.graph_from_place(place1, network_type="all")
 
     ox.settings.nominatim_key = default_key
     ox.settings.nominatim_endpoint = default_nominatim_endpoint
@@ -512,10 +517,8 @@ def test_graph_from_functions():
 
 def test_features():
     # geometries_from_bbox - bounding box query to return no data
-    try:
+    with pytest.raises(ox._errors.InsufficientResponseError):
         gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
-    except ox._errors.EmptyOverpassResponse:
-        pass
 
     # geometries_from_bbox - successful
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)

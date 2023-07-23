@@ -1,23 +1,29 @@
 """Interact with the OSM APIs."""
 
+import datetime as dt
 import json
 import logging as lg
 import re
 import socket
 import time
 from collections import OrderedDict
-from datetime import datetime as dt
 from hashlib import sha1
 from pathlib import Path
 from urllib.parse import urlparse
 
 import numpy as np
 import requests
+from requests.exceptions import ConnectionError
+from requests.exceptions import JSONDecodeError
 
 from . import projection
 from . import settings
 from . import utils
 from . import utils_geo
+from ._errors import InsufficientResponseError
+from ._errors import ResponseStatusCodeError
+
+HTTP_OK = 200
 
 # capture getaddrinfo function to use original later after mutating it
 _original_getaddrinfo = socket.getaddrinfo
@@ -216,6 +222,7 @@ def _retrieve_from_cache(url, check_remark=False):
 
             utils.log(f"Retrieved response from cache file {cache_filepath!r}")
             return response_json
+    return None
 
 
 def _get_http_headers(user_agent=None, referer=None, accept_language=None):
@@ -276,20 +283,22 @@ def _resolve_host_via_doh(hostname):
         utils.log("User set `doh_url_template=None`, requesting host by name", level=lg.WARNING)
         return hostname
 
+    err_msg = f"Failed to resolve {hostname!r} IP via DoH, requesting host by name"
     try:
-        response = requests.get(settings.doh_url_template.format(hostname=hostname))
+        url = settings.doh_url_template.format(hostname=hostname)
+        response = requests.get(url, timeout=settings.timeout)
         data = response.json()
         if response.ok and data["Status"] == 0:
             # status 0 means NOERROR, so return the IP address
             return data["Answer"][0]["data"]
         else:
-            raise requests.exceptions.RequestException
+            # if we cannot reach DoH server or cannot resolve host, return hostname itself
+            utils.log(err_msg, level=lg.ERROR)
+            return hostname
 
     # if we cannot reach DoH server or cannot resolve host, return hostname itself
     except requests.exceptions.RequestException:
-        utils.log(
-            f"Failed to resolve {hostname!r} IP via DoH, requesting host by name", level=lg.ERROR
-        )
+        utils.log(err_msg, level=lg.ERROR)
         return hostname
 
 
@@ -363,7 +372,7 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
     -------
     pause : int
     """
-    if not settings.overpass_rate_limit:  # pragma: no cover
+    if not settings.overpass_rate_limit:
         # if overpass rate limiting is False, then there is zero pause
         return 0
 
@@ -371,15 +380,19 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
 
     try:
         url = base_endpoint.rstrip("/") + "/status"
-        response = requests.get(url, headers=_get_http_headers(), **settings.requests_kwargs)
+        response = requests.get(
+            url, headers=_get_http_headers(), timeout=settings.timeout, **settings.requests_kwargs
+        )
         sc = response.status_code
         status = response.text.split("\n")[4]
         status_first_token = status.split(" ")[0]
-
-    except Exception:  # pragma: no cover
-        # if we cannot reach the status endpoint or parse its output, log an
-        # error and return default duration
+    except ConnectionError:  # pragma: no cover
+        # cannot reach status endpoint, log error and return default duration
         utils.log(f"Unable to query {url}, got status {sc}", level=lg.ERROR)
+        return default_duration
+    except (AttributeError, IndexError, ValueError):  # pragma: no cover
+        # cannot parse output, log error and return default duration
+        utils.log(f"Unable to parse {url} response: {response.text}", level=lg.ERROR)
         return default_duration
 
     try:
@@ -388,13 +401,15 @@ def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
         _ = int(status_first_token)  # number of available slots
         pause = 0
 
-    except Exception:  # pragma: no cover
+    except ValueError:  # pragma: no cover
         # if first token is 'Slot', it tells you when your slot will be free
         if status_first_token == "Slot":
             utc_time_str = status.split(" ")[3]
-            utc_time = dt.strptime(utc_time_str, "%Y-%m-%dT%H:%M:%SZ,")
-            pause = int(np.ceil((utc_time - dt.utcnow()).total_seconds()))
-            pause = max(pause, 1)
+            pattern = "%Y-%m-%dT%H:%M:%SZ,"
+            utc_time = dt.datetime.strptime(utc_time_str, pattern).astimezone(dt.timezone.utc)
+            utc_now = dt.datetime.now(tz=dt.timezone.utc)
+            seconds = int(np.ceil((utc_time - utc_now).total_seconds()))
+            pause = max(seconds, 1)
 
         # if first token is 'Currently', it is currently running a query so
         # check back in recursive_delay seconds
@@ -445,8 +460,7 @@ def _make_overpass_polygon_coord_strs(polygon):
     geometry_proj, crs_proj = projection.project_geometry(polygon)
     gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj)
     geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
-    polygon_coord_strs = utils_geo._get_polygons_coordinates(geometry)
-    return polygon_coord_strs
+    return utils_geo._get_polygons_coordinates(geometry)
 
 
 def _create_overpass_query(polygon_coord_str, tags):
@@ -468,9 +482,9 @@ def _create_overpass_query(polygon_coord_str, tags):
     overpass_settings = _make_overpass_settings()
 
     # make sure every value in dict is bool, str, or list of str
-    error_msg = "tags must be a dict with values of bool, str, or list of str"
+    err_msg = "tags must be a dict with values of bool, str, or list of str"
     if not isinstance(tags, dict):  # pragma: no cover
-        raise TypeError(error_msg)
+        raise TypeError(err_msg)
 
     tags_dict = {}
     for key, value in tags.items():
@@ -482,11 +496,11 @@ def _create_overpass_query(polygon_coord_str, tags):
 
         elif isinstance(value, list):
             if not all(isinstance(s, str) for s in value):  # pragma: no cover
-                raise TypeError(error_msg)
+                raise TypeError(err_msg)
             tags_dict[key] = value
 
         else:  # pragma: no cover
-            raise TypeError(error_msg)
+            raise TypeError(err_msg)
 
     # convert the tags dict into a list of {tag:value} dicts
     tags_list = []
@@ -513,9 +527,7 @@ def _create_overpass_query(polygon_coord_str, tags):
 
     # finalize query and return
     components = "".join(components)
-    query = f"{overpass_settings};({components});out;"
-
-    return query
+    return f"{overpass_settings};({components});out;"
 
 
 def _osm_network_download(polygon, network_type, custom_filter):
@@ -642,8 +654,7 @@ def _retrieve_osm_element(query, by_osmid=False, limit=1, polygon_geojson=1):
             raise TypeError(msg)
 
     # request the URL, return the JSON
-    response_json = _nominatim_request(params=params, request_type=request_type)
-    return response_json
+    return _nominatim_request(params=params, request_type=request_type)
 
 
 def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
@@ -707,25 +718,36 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
         # log the response size and domain
         size_kb = len(response.content) / 1000
         domain = re.findall(r"(?s)//(.*?)/", url)[0]
-        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain}")
+        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r}")
 
         try:
             response_json = response.json()
+            if "remark" in response_json:
+                utils.log(f'Server remark: {response_json["remark"]!r}', level=lg.WARNING)
 
-        except Exception as e:  # pragma: no cover
+        except JSONDecodeError as e:  # pragma: no cover
+            msg = f"{domain!r} responded: {sc} {response.reason} {response.text}"
+
+            # 429 is 'too many requests' and 504 is 'gateway timeout' from
+            # server overload: handle these by pausing then recursively
+            # re-trying until we get a valid response from the server
             if sc in {429, 504}:
-                # 429 is 'too many requests' and 504 is 'gateway timeout' from
-                # server overload: handle these by pausing then recursively
-                # re-trying until we get a valid response from the server
-                utils.log(f"{domain} returned {sc}: retry in {error_pause} secs", level=lg.WARNING)
+                utils.log(
+                    f"{domain!r} responded {sc} {response.reason}: we'll retry in {error_pause} secs",
+                    level=lg.WARNING,
+                )
                 time.sleep(error_pause)
                 response_json = _nominatim_request(params, request_type, pause, error_pause)
 
+            # elif we got an OK response, but cannot parse JSON, so throw exception
+            elif sc == HTTP_OK:
+                utils.log(msg, level=lg.ERROR)
+                raise InsufficientResponseError(msg) from e
+
+            # else, this was an unhandled status code, throw an exception
             else:
-                # else, this was an unhandled status code, throw an exception
-                utils.log(f"{domain} returned {sc}", level=lg.ERROR)
-                msg = f"Server returned:\n{response} {response.reason}\n{response.text}"
-                raise Exception(msg) from e
+                utils.log(msg, level=lg.ERROR)
+                raise ResponseStatusCodeError(msg) from e
 
         _save_to_cache(prepared_url, response_json, sc)
         return response_json
@@ -783,28 +805,37 @@ def _overpass_request(data, pause=None, error_pause=60):
         # log the response size and domain
         size_kb = len(response.content) / 1000
         domain = re.findall(r"(?s)//(.*?)/", url)[0]
-        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain}")
+        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r}")
 
         try:
             response_json = response.json()
             if "remark" in response_json:
                 utils.log(f'Server remark: {response_json["remark"]!r}', level=lg.WARNING)
 
-        except Exception as e:  # pragma: no cover
+        except JSONDecodeError as e:  # pragma: no cover
+            msg = f"{domain!r} responded: {sc} {response.reason} {response.text}"
+
+            # 429 is 'too many requests' and 504 is 'gateway timeout' from
+            # server overload: handle these by pausing then recursively
+            # re-trying until we get a valid response from the server
             if sc in {429, 504}:
-                # 429 is 'too many requests' and 504 is 'gateway timeout' from
-                # server overload: handle these by pausing then recursively
-                # re-trying until we get a valid response from the server
                 this_pause = error_pause + _get_pause(base_endpoint)
-                utils.log(f"{domain} returned {sc}: retry in {this_pause} secs", level=lg.WARNING)
+                utils.log(
+                    f"{domain!r} responded {sc} {response.reason}: we'll retry in {this_pause} secs",
+                    level=lg.WARNING,
+                )
                 time.sleep(this_pause)
                 response_json = _overpass_request(data, pause, error_pause)
 
+            # elif we got an OK response, but cannot parse JSON, so throw exception
+            elif sc == HTTP_OK:
+                utils.log(msg, level=lg.ERROR)
+                raise InsufficientResponseError(msg) from e
+
+            # else, this was an unhandled status code, throw an exception
             else:
-                # else, this was an unhandled status code, throw an exception
-                utils.log(f"{domain} returned {sc}", level=lg.ERROR)
-                msg = f"Server returned\n{response} {response.reason}\n{response.text}"
-                raise Exception(msg) from e
+                utils.log(msg, level=lg.ERROR)
+                raise ResponseStatusCodeError(msg) from e
 
         _save_to_cache(prepared_url, response_json, sc)
         return response_json

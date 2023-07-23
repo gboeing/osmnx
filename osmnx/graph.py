@@ -19,8 +19,8 @@ from . import truncate
 from . import utils
 from . import utils_geo
 from . import utils_graph
-from ._errors import CacheOnlyModeInterrupt
-from ._errors import EmptyOverpassResponse
+from ._errors import CacheOnlyInterruptError
+from ._errors import InsufficientResponseError
 from ._version import __version__
 
 
@@ -577,25 +577,26 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     # consume response_jsons generator to download data from server
     for response_json in response_jsons:
         response_count += 1
+
+        # if cache_only_mode, consume response_jsons then continue next loop
         if settings.cache_only_mode:  # pragma: no cover
-            # if cache_only_mode, consume response_jsons then continue loop
             continue
-        else:
-            # otherwise, extract nodes and paths from the downloaded OSM data
-            nodes_temp, paths_temp = _parse_nodes_paths(response_json)
-            nodes.update(nodes_temp)
-            paths.update(paths_temp)
+
+        # otherwise, extract nodes and paths from the downloaded OSM data
+        nodes_temp, paths_temp = _parse_nodes_paths(response_json)
+        nodes.update(nodes_temp)
+        paths.update(paths_temp)
 
     utils.log(f"Retrieved all data from API in {response_count} request(s)")
     if settings.cache_only_mode:  # pragma: no cover
         # after consuming all response_jsons in loop, raise exception to catch
         msg = "Interrupted because `settings.cache_only_mode=True`"
-        raise CacheOnlyModeInterrupt(msg)
+        raise CacheOnlyInterruptError(msg)
 
     # ensure we got some node/way data back from the server request(s)
     if (len(nodes) == 0) and (len(paths) == 0):  # pragma: no cover
         msg = "No data elements in server response. Check query location/filters and log."
-        raise EmptyOverpassResponse(msg)
+        raise InsufficientResponseError(msg)
 
     # create the MultiDiGraph and set its graph-level attributes
     metadata = {
@@ -758,10 +759,7 @@ def _is_path_reversed(path, reversed_values):
     -------
     bool
     """
-    if "oneway" in path and path["oneway"] in reversed_values:
-        return True
-    else:
-        return False
+    return "oneway" in path and path["oneway"] in reversed_values
 
 
 def _add_paths(G, paths, bidirectional=False):

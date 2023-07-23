@@ -31,7 +31,7 @@ from . import osm_xml
 from . import settings
 from . import utils
 from . import utils_geo
-from ._errors import EmptyOverpassResponse
+from ._errors import InsufficientResponseError
 
 # dict of tags to determine if closed ways should be polygons, based on JSON
 # from https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features
@@ -116,9 +116,7 @@ def features_from_bbox(north, south, east, west, tags):
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
     # create GeoDataFrame of features within this polygon
-    gdf = features_from_polygon(polygon, tags)
-
-    return gdf
+    return features_from_polygon(polygon, tags)
 
 
 def features_from_point(center_point, tags, dist=1000):
@@ -161,9 +159,7 @@ def features_from_point(center_point, tags, dist=1000):
     polygon = utils_geo.bbox_to_poly(north, south, east, west)
 
     # create GeoDataFrame of features within this polygon
-    gdf = features_from_polygon(polygon, tags)
-
-    return gdf
+    return features_from_polygon(polygon, tags)
 
 
 def features_from_address(address, tags, dist=1000):
@@ -204,9 +200,7 @@ def features_from_address(address, tags, dist=1000):
     center_point = geocoder.geocode(query=address)
 
     # create GeoDataFrame of features around this point
-    gdf = features_from_point(center_point, tags, dist=dist)
-
-    return gdf
+    return features_from_point(center_point, tags, dist=dist)
 
 
 def features_from_place(query, tags, which_result=None, buffer_dist=None):
@@ -277,9 +271,7 @@ def features_from_place(query, tags, which_result=None, buffer_dist=None):
     utils.log("Constructed place geometry polygon(s) to query API")
 
     # create GeoDataFrame using this polygon(s) geometry
-    gdf = features_from_polygon(polygon, tags)
-
-    return gdf
+    return features_from_polygon(polygon, tags)
 
 
 def features_from_polygon(polygon, tags):
@@ -330,9 +322,7 @@ def features_from_polygon(polygon, tags):
     response_jsons = _downloader._osm_features_download(polygon, tags)
 
     # create GeoDataFrame from the downloaded data
-    gdf = _create_gdf(response_jsons, polygon, tags)
-
-    return gdf
+    return _create_gdf(response_jsons, polygon, tags)
 
 
 def features_from_xml(filepath, polygon=None, tags=None):
@@ -375,9 +365,7 @@ def features_from_xml(filepath, polygon=None, tags=None):
     response_jsons = [osm_xml._overpass_json_from_file(filepath)]
 
     # create GeoDataFrame using this response JSON
-    gdf = _create_gdf(response_jsons, polygon=polygon, tags=tags)
-
-    return gdf
+    return _create_gdf(response_jsons, polygon=polygon, tags=tags)
 
 
 def _create_gdf(response_jsons, polygon, tags):
@@ -407,10 +395,8 @@ def _create_gdf(response_jsons, polygon, tags):
 
     # make sure we got data back from the server request(s)
     if elements_count == 0:
-        msg = (
-            "There are no data elements in the server response. Check log and query location/tags."
-        )
-        raise EmptyOverpassResponse(msg)
+        msg = "No data elements in server response. Check log and query location/tags."
+        raise InsufficientResponseError(msg)
 
     # begin processing the elements retrieved from the server
     utils.log(f"Converting {elements_count} elements in JSON responses to features")
@@ -520,8 +506,7 @@ def _parse_node_to_coords(element):
         dict of latitude/longitude coordinates
     """
     # return the coordinate of a single node element
-    coords = {"lat": element["lat"], "lon": element["lon"]}
-    return coords
+    return {"lat": element["lat"], "lon": element["lon"]}
 
 
 def _parse_node_to_point(element):
@@ -706,12 +691,12 @@ def _is_closed_way_a_polygon(element, polygon_features=_POLYGON_FEATURES):
                         is_polygon = True
 
                 # if the key is for a passlist i.e. specific tags should
-                # become Polygons
-                elif blocklist_or_passlist == "passlist":
-                    # if the value for that key in the element is in the
-                    # passlist -> Polygon
-                    if key_value in polygon_features_values:
-                        is_polygon = True
+                # become Polygons, and if the value for that key in the
+                # element is in the passlist -> Polygon
+                elif (blocklist_or_passlist == "passlist") and (
+                    key_value in polygon_features_values
+                ):
+                    is_polygon = True
 
     return is_polygon
 

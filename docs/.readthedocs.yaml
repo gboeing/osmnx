@@ -4,9 +4,6 @@ build:
   os: "ubuntu-22.04"
   tools:
     python: "3.11"
-  jobs:
-    pre_build:
-      - python -m sphinx -b linkcheck docs/ _build/linkcheck
 
 formats: all
 

@@ -1,6 +1,7 @@
 """Serialize graphs to/from files on disk."""
 
 import ast
+import contextlib
 from pathlib import Path
 from warnings import warn
 
@@ -449,10 +450,8 @@ def _convert_edge_attr_types(G, dtypes=None):
         # edge attributes might have a single value, or a list if simplified
         for attr, value in data.items():
             if value.startswith("[") and value.endswith("]"):
-                try:
+                with contextlib.suppress(SyntaxError, ValueError):
                     data[attr] = ast.literal_eval(value)
-                except (SyntaxError, ValueError):
-                    pass
 
         # next, convert attribute value types if attribute appears in dtypes
         for attr in data.keys() & dtypes.keys():
@@ -517,7 +516,7 @@ def _stringify_nonnumeric_cols(gdf):
         gdf with non-numeric columns stringified
     """
     # stringify every non-numeric column other than geometry column
-    for col in (c for c in gdf.columns if not c == "geometry"):
+    for col in (c for c in gdf.columns if c != "geometry"):
         if not pd.api.types.is_numeric_dtype(gdf[col]):
             gdf[col] = gdf[col].fillna("").astype(str)
 

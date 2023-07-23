@@ -68,7 +68,7 @@ def citation(style="bibtex"):
 
 def ts(style="datetime", template=None):
     """
-    Return current timestamp as a string.
+    Return current local timestamp as a string.
 
     Parameters
     ----------
@@ -81,7 +81,7 @@ def ts(style="datetime", template=None):
     Returns
     -------
     ts : string
-        timestamp string
+        local timestamp string
     """
     if template is None:
         if style == "datetime":
@@ -94,8 +94,7 @@ def ts(style="datetime", template=None):
             msg = f"unrecognized timestamp style {style!r}"
             raise ValueError(msg)
 
-    ts = template.format(dt.datetime.now())
-    return ts
+    return template.format(dt.datetime.now().astimezone())
 
 
 def config(

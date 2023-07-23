@@ -12,6 +12,7 @@ from shapely.geometry import Polygon
 from . import stats
 from . import utils
 from . import utils_graph
+from ._errors import GraphSimplificationError
 
 
 def _is_endpoint(G, node, strict=True):
@@ -57,7 +58,7 @@ def _is_endpoint(G, node, strict=True):
         return True
 
     # rule 3
-    elif not (n == 2 and (d == 2 or d == 4)):  # noqa: PLR2004
+    elif not ((n == 2) and (d in {2, 4})):  # noqa: PLR2004
         # else, if it does NOT have 2 neighbors AND either 2 or 4 directed
         # edges, it is an endpoint. either it has 1 or 3+ neighbors, in which
         # case it is a dead-end or an intersection of multiple streets or it has
@@ -117,7 +118,8 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
     path = [endpoint, endpoint_successor]
 
     # for each successor of the endpoint's successor
-    for successor in G.successors(endpoint_successor):
+    for this_successor in G.successors(endpoint_successor):
+        successor = this_successor
         if successor not in path:
             # if this successor is already in the path, ignore it, otherwise add
             # it to the path
@@ -128,7 +130,8 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
 
                 # 99%+ of the time there will be only 1 successor: add to path
                 if len(successors) == 1:
-                    path.append(successors[0])
+                    successor = successors[0]
+                    path.append(successor)
 
                 # handle relatively rare cases or OSM digitization quirks
                 elif len(successors) == 0:
@@ -149,7 +152,7 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
                     # been an endpoint because you can go in 2 new directions.
                     # this should never occur in practice
                     msg = f"Unexpected simplify pattern failed near {successor}"
-                    raise Exception(msg)
+                    raise GraphSimplificationError(msg)
 
             # if this successor is an endpoint, we've completed the path
             return path
@@ -255,7 +258,7 @@ def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
     """
     if "simplified" in G.graph and G.graph["simplified"]:  # pragma: no cover
         msg = "This graph has already been simplified, cannot simplify it again."
-        raise Exception(msg)
+        raise GraphSimplificationError(msg)
 
     utils.log("Begin topologically simplifying the graph...")
 
