@@ -8,8 +8,8 @@
 - introduce more descriptive exceptions: ResponseStatusCodeError and GraphSimplificationError (#1041)
 - replace CacheOnlyModeInterrupt exception with CacheOnlyInterruptError exception (#1041)
 - replace EmptyOverpassResponse exception with InsufficientResponseError exception (#1041)
-- refactor elevation module to move its downloading logic to \_downloader module (#1042)
-- refactor the \_downloader module and extract its Overpass API code into a new \_overpass module (#1043)
+- refactor elevation module (#1042 #1043)
+- refactor the \_downloader module and add new \_overpass and \_nominatim modules (#1043)
 - under-the-hood code clean-up (#1036 #1037 #1038)
 
 ## 1.5.1 (2023-07-08)
