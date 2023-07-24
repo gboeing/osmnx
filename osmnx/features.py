@@ -25,7 +25,7 @@ from shapely.geometry import Polygon
 from shapely.ops import linemerge
 from shapely.ops import polygonize
 
-from . import _downloader_overpass
+from . import _overpass
 from . import geocoder
 from . import osm_xml
 from . import settings
@@ -319,7 +319,7 @@ def features_from_polygon(polygon, tags):
         raise TypeError(msg)
 
     # download the data from OSM
-    response_jsons = _downloader_overpass._download_overpass_features(polygon, tags)
+    response_jsons = _overpass._download_overpass_features(polygon, tags)
 
     # create GeoDataFrame from the downloaded data
     return _create_gdf(response_jsons, polygon, tags)

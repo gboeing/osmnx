@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 import requests
 from requests.exceptions import JSONDecodeError
 
+from . import _overpass
 from . import settings
 from . import utils
 from ._errors import InsufficientResponseError
@@ -276,6 +277,41 @@ def _hostname_from_url(url):
     return urlparse(url).netloc.split(":")[0]
 
 
+def _parse_response(response):
+    """
+    Parse JSON from a requests response and log the details.
+
+    Parameters
+    ----------
+    response : requests.response
+        the response object
+
+    Returns
+    -------
+    response_json : dict
+    """
+    # log the response size and domain
+    domain = _hostname_from_url(response.url)
+    size_kb = len(response.content) / 1000
+    utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r} with code {response.status_code}")
+
+    # parse the response to JSON and log/raise exceptions
+    try:
+        response_json = response.json()
+    except JSONDecodeError as e:  # pragma: no cover
+        msg = f"{domain!r} responded: {response.status_code} {response.reason} {response.text}"
+        utils.log(msg, level=lg.ERROR)
+        if response.ok:
+            raise InsufficientResponseError(msg) from e
+        raise ResponseStatusCodeError(msg) from e
+
+    # log any remarks if they exist
+    if "remark" in response_json:  # pragma: no cover
+        utils.log(f'{domain!r} remarked: {response_json["remark"]!r}', level=lg.WARNING)
+
+    return response_json
+
+
 def _retrieve_nominatim_element(query, by_osmid=False, limit=1, polygon_geojson=1):
     """
     Retrieve an OSM element from the Nominatim API.
@@ -327,41 +363,6 @@ def _retrieve_nominatim_element(query, by_osmid=False, limit=1, polygon_geojson=
 
     # request the URL, return the JSON
     return _nominatim_request(params=params, request_type=request_type)
-
-
-def _parse_response(response):
-    """
-    Parse JSON from a requests response and log the details.
-
-    Parameters
-    ----------
-    response : requests.response
-        the response object
-
-    Returns
-    -------
-    response_json : dict
-    """
-    # log the response size and domain
-    domain = _hostname_from_url(response.url)
-    size_kb = len(response.content) / 1000
-    utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r} with code {response.status_code}")
-
-    # parse the response to JSON and log/raise exceptions
-    try:
-        response_json = response.json()
-    except JSONDecodeError as e:  # pragma: no cover
-        msg = f"{domain!r} responded: {response.status_code} {response.reason} {response.text}"
-        utils.log(msg, level=lg.ERROR)
-        if response.ok:
-            raise InsufficientResponseError(msg) from e
-        raise ResponseStatusCodeError(msg) from e
-
-    # log any remarks if they exist
-    if "remark" in response_json:  # pragma: no cover
-        utils.log(f'{domain!r} remarked: {response_json["remark"]!r}', level=lg.WARNING)
-
-    return response_json
 
 
 def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
@@ -420,6 +421,68 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
         utils.log(msg, level=lg.WARNING)
         time.sleep(error_pause)
         return _nominatim_request(params, request_type, pause, error_pause)
+
+    response_json = _parse_response(response)
+    _save_to_cache(prepared_url, response_json, response.status_code)
+    return response_json
+
+
+def _overpass_request(data, pause=None, error_pause=60):
+    """
+    Send a HTTP POST request to the Overpass API and return response.
+
+    Parameters
+    ----------
+    data : OrderedDict
+        key-value pairs of parameters
+    pause : float
+        how long to pause in seconds before request, if None, will query API
+        status endpoint to find when next slot is available
+    error_pause : float
+        how long to pause in seconds (in addition to `pause`) before re-trying
+        request if error
+
+    Returns
+    -------
+    response_json : dict
+    """
+    # resolve url to same IP even if there is server round-robin redirecting
+    _config_dns(settings.overpass_endpoint)
+
+    # prepare the Overpass API URL and see if request already exists in cache
+    url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
+    prepared_url = requests.Request("GET", url, params=data).prepare().url
+    cached_response_json = _retrieve_from_cache(prepared_url)
+    if cached_response_json is not None:
+        return cached_response_json
+
+    # pause then request this URL
+    if pause is None:
+        this_pause = _overpass._get_overpass_pause(settings.overpass_endpoint)
+    domain = _hostname_from_url(url)
+    utils.log(f"Pausing {this_pause} second(s) before making HTTP POST request to {domain!r}")
+    time.sleep(this_pause)
+
+    # transmit the HTTP POST request
+    utils.log(f"Post {prepared_url} with timeout={settings.timeout}")
+    response = requests.post(
+        url,
+        data=data,
+        timeout=settings.timeout,
+        headers=_get_http_headers(),
+        **settings.requests_kwargs,
+    )
+
+    # handle 429 and 504 errors by pausing then recursively re-trying request
+    if response.status_code in {429, 504}:  # pragma: no cover
+        this_pause = error_pause + _overpass._get_overpass_pause(settings.overpass_endpoint)
+        msg = (
+            f"{domain!r} responded {response.status_code} {response.reason}: "
+            f"we'll retry in {this_pause} secs"
+        )
+        utils.log(msg, level=lg.WARNING)
+        time.sleep(this_pause)
+        return _overpass_request(data, pause, error_pause)
 
     response_json = _parse_response(response)
     _save_to_cache(prepared_url, response_json, response.status_code)
