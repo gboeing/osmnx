@@ -1,7 +1,6 @@
 """Add node elevations and calculate edge grades."""
 
 import multiprocessing as mp
-import re
 from hashlib import sha1
 from pathlib import Path
 from warnings import warn
@@ -114,7 +113,7 @@ def add_node_elevations_google(
     G,
     api_key=None,
     max_locations_per_batch=350,
-    pause_duration=0,
+    pause=0,
     precision=None,
     url_template="https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}",
 ):  # pragma: no cover
@@ -139,7 +138,7 @@ def add_node_elevations_google(
         max number of coordinate pairs to submit in each API call (if this is
         too high, the server will reject the request because its character
         limit exceeds the max allowed)
-    pause_duration : float
+    pause : float
         time to pause between API calls, which can be increased if you get
         rate limited
     precision : int
@@ -169,7 +168,7 @@ def add_node_elevations_google(
         {node: f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)}
     )
     n_calls = int(np.ceil(len(node_points) / max_locations_per_batch))
-    domain = re.findall(r"(?s)//(.*?)/", url_template)[0]
+    domain = _downloader._hostname_from_url(url_template)
     utils.log(f"Requesting node elevations from {domain!r} in {n_calls} call(s)")
 
     # break the series of coordinates into chunks of size max_locations_per_batch
@@ -181,11 +180,11 @@ def add_node_elevations_google(
         url = url_template.format(locations, api_key)
 
         # download and append these elevation results to list of all results
-        response_json = _downloader._google_request(url, pause_duration)
+        response_json = _downloader._google_request(url, pause)
         results.extend(response_json["results"])
 
     # sanity check that all our vectors have the same number of elements
-    msg = f"Graph has {len(G):,} nodes and we received {len(results):,} results from server."
+    msg = f"Graph has {len(G):,} nodes and we received {len(results):,} results from {domain!r}"
     utils.log(msg)
     if not (len(results) == len(G) == len(node_points)):
         err_msg = f"{msg}\n{response_json}"
@@ -196,7 +195,7 @@ def add_node_elevations_google(
     df["elevation"] = [result["elevation"] for result in results]
     df["elevation"] = df["elevation"].round(precision)
     nx.set_node_attributes(G, name="elevation", values=df["elevation"].to_dict())
-    utils.log("Added elevation data from API to all nodes.")
+    utils.log(f"Added elevation data from {domain!r} to all nodes.")
 
     return G
 
