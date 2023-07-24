@@ -7,7 +7,7 @@ import networkx as nx
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
 
-from . import _downloader
+from . import _downloader_overpass
 from . import distance
 from . import geocoder
 from . import osm_xml
@@ -447,7 +447,9 @@ def graph_from_polygon(
         poly_buff, _ = projection.project_geometry(poly_proj_buff, crs=crs_utm, to_latlong=True)
 
         # download the network data from OSM within buffered polygon
-        response_jsons = _downloader._osm_network_download(poly_buff, network_type, custom_filter)
+        response_jsons = _downloader_overpass._download_overpass_network(
+            poly_buff, network_type, custom_filter
+        )
 
         # create buffered graph from the downloaded data
         bidirectional = network_type in settings.bidirectional_network_types
@@ -479,7 +481,9 @@ def graph_from_polygon(
     # if clean_periphery=False, just use the polygon as provided
     else:
         # download the network data from OSM
-        response_jsons = _downloader._osm_network_download(polygon, network_type, custom_filter)
+        response_jsons = _downloader_overpass._download_overpass_network(
+            polygon, network_type, custom_filter
+        )
 
         # create graph from the downloaded data
         bidirectional = network_type in settings.bidirectional_network_types

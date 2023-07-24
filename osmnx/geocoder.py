@@ -169,7 +169,7 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
     else:
         limit = which_result
 
-    results = _downloader._retrieve_osm_element(query, by_osmid=by_osmid, limit=limit)
+    results = _downloader._retrieve_nominatim_element(query, by_osmid=by_osmid, limit=limit)
 
     # choose the right result from the JSON response
     if not results:
