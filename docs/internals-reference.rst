@@ -99,10 +99,26 @@ osmnx.io module
     :private-members:
     :noindex:
 
+osmnx._nominatim module
+-----------------------
+
+.. automodule:: osmnx._nominatim
+    :members:
+    :private-members:
+    :noindex:
+
 osmnx.osm_xml module
 --------------------
 
 .. automodule:: osmnx.osm_xml
+    :members:
+    :private-members:
+    :noindex:
+
+osmnx._overpass module
+----------------------
+
+.. automodule:: osmnx._overpass
     :members:
     :private-members:
     :noindex:

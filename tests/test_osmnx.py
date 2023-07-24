@@ -379,11 +379,11 @@ def test_endpoints():
 
     # Bad Address - should return an empty response
     params["q"] = "AAAAAAAAAAA"
-    response_json = ox._downloader._nominatim_request(params=params, request_type="search")
+    response_json = ox._nominatim._nominatim_request(params=params, request_type="search")
 
     # Good Address - should return a valid response with a valid osm_id
     params["q"] = "Newcastle A186 Westgate Rd"
-    response_json = ox._downloader._nominatim_request(params=params, request_type="search")
+    response_json = ox._nominatim._nominatim_request(params=params, request_type="search")
 
     # Lookup
     params = OrderedDict()
@@ -391,15 +391,15 @@ def test_endpoints():
     params["address_details"] = 0
     params["osm_ids"] = "W68876073"
 
-    response_json = ox._downloader._nominatim_request(params=params, request_type="lookup")
+    response_json = ox._nominatim._nominatim_request(params=params, request_type="lookup")
 
     # Invalid nominatim query type
     with pytest.raises(ValueError, match="Nominatim request_type must be"):
-        response_json = ox._downloader._nominatim_request(params=params, request_type="xyz")
+        response_json = ox._nominatim._nominatim_request(params=params, request_type="xyz")
 
     # Searching on public nominatim should work even if a (bad) key was provided
     ox.settings.nominatim_key = "NOT_A_KEY"
-    response_json = ox._downloader._nominatim_request(params=params, request_type="search")
+    response_json = ox._nominatim._nominatim_request(params=params, request_type="search")
 
     ox.settings.nominatim_key = default_key
     ox.settings.nominatim_endpoint = default_nominatim_endpoint
