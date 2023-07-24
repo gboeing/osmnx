@@ -207,6 +207,10 @@ def test_elevation():
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
     rasters = list(Path("tests/input_data").glob("elevation*.tif"))
 
+    # add node elevations from Google (fails without API key)
+    with pytest.raises(ox._errors.InsufficientResponseError):
+        _ = ox.elevation.add_node_elevations_google(G, api_key="")
+
     # add node elevations from a single raster file (some nodes will be null)
     G = ox.elevation.add_node_elevations_raster(G, rasters[0], cpus=1)
 

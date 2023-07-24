@@ -23,8 +23,6 @@ from . import utils_geo
 from ._errors import InsufficientResponseError
 from ._errors import ResponseStatusCodeError
 
-HTTP_OK = 200
-
 # capture getaddrinfo function to use original later after mutating it
 _original_getaddrinfo = socket.getaddrinfo
 
@@ -114,7 +112,7 @@ def _get_osm_filter(network_type):
     return osm_filter
 
 
-def _save_to_cache(url, response_json, sc):
+def _save_to_cache(url, response_json, ok):
     """
     Save a HTTP response JSON object to a file in the cache folder.
 
@@ -122,7 +120,7 @@ def _save_to_cache(url, response_json, sc):
     If the request was sent to server via POST instead of GET, then URL should
     be a GET-style representation of request. Response is only saved to a
     cache file if settings.use_cache is True, response_json is not None, and
-    sc = 200.
+    ok is True.
 
     Users should always pass OrderedDicts instead of dicts of parameters into
     request functions, so the parameters remain in the same order each time,
@@ -136,17 +134,16 @@ def _save_to_cache(url, response_json, sc):
         the URL of the request
     response_json : dict
         the JSON response
-    sc : int
-        the response's HTTP status code
+    ok : bool
+        requests response.ok value
 
     Returns
     -------
     None
     """
-    HTTP_OK = 200
     if settings.use_cache:
-        if sc != HTTP_OK:
-            utils.log(f"Did not save to cache because status code is {sc}")
+        if not ok:
+            utils.log("Did not save to cache because response status is not OK")
 
         elif response_json is None:
             utils.log("Did not save to cache because response_json is None")
@@ -163,7 +160,7 @@ def _save_to_cache(url, response_json, sc):
 
             # dump to json, and save to file
             cache_filepath.write_text(json.dumps(response_json), encoding="utf-8")
-            utils.log(f"Saved response to cache file {cache_filepath!r}")
+            utils.log(f"Saved response to cache file {str(cache_filepath)!r}")
 
 
 def _url_in_cache(url):
@@ -217,10 +214,10 @@ def _retrieve_from_cache(url, check_remark=False):
             # return None if check_remark is True and there is a server
             # remark in the cached response
             if check_remark and "remark" in response_json:
-                utils.log(f"Found remark, so ignoring cache file {cache_filepath!r}")
+                utils.log(f"Found remark, so ignoring cache file {str(cache_filepath)!r}")
                 return None
 
-            utils.log(f"Retrieved response from cache file {cache_filepath!r}")
+            utils.log(f"Retrieved response from cache file {str(cache_filepath)!r}")
             return response_json
     return None
 
@@ -659,7 +656,7 @@ def _retrieve_osm_element(query, by_osmid=False, limit=1, polygon_geojson=1):
 
 def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
     """
-    Send a HTTP GET request to the Nominatim API and return JSON response.
+    Send a HTTP GET request to the Nominatim API and return response.
 
     Parameters
     ----------
@@ -723,7 +720,7 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
         try:
             response_json = response.json()
             if "remark" in response_json:
-                utils.log(f'Server remark: {response_json["remark"]!r}', level=lg.WARNING)
+                utils.log(f'{domain!r} remarked: {response_json["remark"]!r}', level=lg.WARNING)
 
         except JSONDecodeError as e:  # pragma: no cover
             msg = f"{domain!r} responded: {sc} {response.reason} {response.text}"
@@ -740,7 +737,7 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
                 response_json = _nominatim_request(params, request_type, pause, error_pause)
 
             # elif we got an OK response, but cannot parse JSON, so throw exception
-            elif sc == HTTP_OK:
+            elif response.ok:
                 utils.log(msg, level=lg.ERROR)
                 raise InsufficientResponseError(msg) from e
 
@@ -755,7 +752,7 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
 
 def _overpass_request(data, pause=None, error_pause=60):
     """
-    Send a HTTP POST request to the Overpass API and return JSON response.
+    Send a HTTP POST request to the Overpass API and return response.
 
     Parameters
     ----------
@@ -810,7 +807,7 @@ def _overpass_request(data, pause=None, error_pause=60):
         try:
             response_json = response.json()
             if "remark" in response_json:
-                utils.log(f'Server remark: {response_json["remark"]!r}', level=lg.WARNING)
+                utils.log(f'{domain!r} remarked: {response_json["remark"]!r}', level=lg.WARNING)
 
         except JSONDecodeError as e:  # pragma: no cover
             msg = f"{domain!r} responded: {sc} {response.reason} {response.text}"
@@ -828,7 +825,7 @@ def _overpass_request(data, pause=None, error_pause=60):
                 response_json = _overpass_request(data, pause, error_pause)
 
             # elif we got an OK response, but cannot parse JSON, so throw exception
-            elif sc == HTTP_OK:
+            elif response.ok:
                 utils.log(msg, level=lg.ERROR)
                 raise InsufficientResponseError(msg) from e
 
@@ -839,3 +836,49 @@ def _overpass_request(data, pause=None, error_pause=60):
 
         _save_to_cache(prepared_url, response_json, sc)
         return response_json
+
+
+def _google_request(url, pause_duration):
+    """
+    Send a HTTP GET request to Google Maps Elevation API and return response.
+
+    Parameters
+    ----------
+    url : string
+        URL for API endpoint populated with request data
+    pause_duration : float
+        how long to pause in seconds before request
+
+    Returns
+    -------
+    response_json : dict
+    """
+    # check if this request is already in the cache
+    cached_response_json = _retrieve_from_cache(url)
+    if cached_response_json is not None:
+        response_json = cached_response_json
+    else:
+        # request the elevations from the server
+        utils.log(f"Requesting node elevations from {url}")
+        time.sleep(pause_duration)
+        response = requests.get(url, timeout=settings.timeout)
+
+        # log the response size and domain
+        sc = response.status_code
+        size_kb = len(response.content) / 1000
+        domain = re.findall(r"(?s)//(.*?)/", url)[0]
+        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r}")
+
+        # check the response status
+        if response.ok:
+            response_json = response.json()
+            _save_to_cache(url, response_json, sc)
+            if "remark" in response_json:  # pragma: no cover
+                utils.log(f'{domain!r} remarked: {response_json["remark"]!r}', level=lg.WARNING)
+        else:  # pragma: no cover
+            # else, this was an unhandled status code, throw an exception
+            msg = f"{domain!r} responded: {sc} {response.reason} {response.text}"
+            utils.log(msg, level=lg.ERROR)
+            raise ResponseStatusCodeError(msg)
+
+    return response_json

@@ -1,16 +1,13 @@
 # Changelog
 
-## Unreleased
-
-- adopt NEP 29 policy for minimum required Python and NumPy versions
-
-## 1.6.0 (TBD)
+## 1.6.0 (Unreleased)
 
 - fix DNS resolution in Dask clusters (#1039)
 - introduce more descriptive exceptions: ResponseStatusCodeError and GraphSimplificationError (#1041)
 - replace CacheOnlyModeInterrupt exception with CacheOnlyInterruptError exception (#1041)
 - replace EmptyOverpassResponse exception with InsufficientResponseError exception (#1041)
-- minor under-the-hood code clean-up (#1036 #1037 #1038 #1041)
+- refactor elevation module to move its downloading logic to \_downloader module (#1042)
+- under-the-hood code clean-up (#1036 #1037 #1038 #1041 #1042)
 
 ## 1.5.1 (2023-07-08)
 
