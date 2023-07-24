@@ -1,6 +1,6 @@
-"""Add node elevations and calculate edge grades."""
-
+"""Add node elevations from raster files or web APIs, and calculate edge grades."""
 import multiprocessing as mp
+import time
 from hashlib import sha1
 from pathlib import Path
 from warnings import warn
@@ -8,8 +8,10 @@ from warnings import warn
 import networkx as nx
 import numpy as np
 import pandas as pd
+import requests
 
 from . import _downloader
+from . import settings
 from . import utils
 from . import utils_graph
 from ._errors import InsufficientResponseError
@@ -20,6 +22,56 @@ try:
     from osgeo import gdal
 except ImportError:  # pragma: no cover
     rasterio = gdal = None
+
+
+def add_edge_grades(G, add_absolute=True, precision=None):
+    """
+    Add `grade` attribute to each graph edge.
+
+    Vectorized function to calculate the directed grade (ie, rise over run)
+    for each edge in the graph and add it to the edge as an attribute. Nodes
+    must already have `elevation` attributes to use this function.
+
+    See also the `add_node_elevations_raster` and `add_node_elevations_google`
+    functions.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph with `elevation` node attribute
+    add_absolute : bool
+        if True, also add absolute value of grade as `grade_abs` attribute
+    precision : int
+        deprecated, do not use
+
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+        graph with edge `grade` (and optionally `grade_abs`) attributes
+    """
+    if precision is None:
+        precision = 3
+    else:
+        warn(
+            "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
+
+    elev_lookup = G.nodes(data="elevation")
+    u, v, k, lengths = zip(*G.edges(keys=True, data="length"))
+    uvk = tuple(zip(u, v, k))
+
+    # calculate edges' elevation changes from u to v then divide by lengths
+    elevs = np.array([(elev_lookup[u], elev_lookup[v]) for u, v, k in uvk])
+    grades = ((elevs[:, 1] - elevs[:, 0]) / np.array(lengths)).round(precision)
+    nx.set_edge_attributes(G, dict(zip(uvk, grades)), name="grade")
+
+    # optionally add grade absolute value to the edge attributes
+    if add_absolute:
+        nx.set_edge_attributes(G, dict(zip(uvk, np.abs(grades))), name="grade_abs")
+
+    utils.log("Added grade attributes to all edges.")
+    return G
 
 
 def _query_raster(nodes, filepath, band):
@@ -180,7 +232,7 @@ def add_node_elevations_google(
         url = url_template.format(locations, api_key)
 
         # download and append these elevation results to list of all results
-        response_json = _downloader._google_request(url, pause)
+        response_json = _elevation_request(url, pause)
         results.extend(response_json["results"])
 
     # sanity check that all our vectors have the same number of elements
@@ -200,51 +252,40 @@ def add_node_elevations_google(
     return G
 
 
-def add_edge_grades(G, add_absolute=True, precision=None):
+def _elevation_request(url, pause):
     """
-    Add `grade` attribute to each graph edge.
-
-    Vectorized function to calculate the directed grade (ie, rise over run)
-    for each edge in the graph and add it to the edge as an attribute. Nodes
-    must already have `elevation` attributes to use this function.
-
-    See also the `add_node_elevations_raster` and `add_node_elevations_google`
-    functions.
+    Send a HTTP GET request to Google Maps-style Elevation API.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph with `elevation` node attribute
-    add_absolute : bool
-        if True, also add absolute value of grade as `grade_abs` attribute
-    precision : int
-        deprecated, do not use
+    url : string
+        URL for API endpoint populated with request data
+    pause : float
+        how long to pause in seconds before request
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        graph with edge `grade` (and optionally `grade_abs`) attributes
+    response_json : dict
     """
-    if precision is None:
-        precision = 3
-    else:
-        warn(
-            "the `precision` parameter is deprecated and will be removed in a future release",
-            stacklevel=2,
-        )
+    # check if request already exists in cache
+    cached_response_json = _downloader._retrieve_from_cache(url)
+    if cached_response_json is not None:
+        return cached_response_json
 
-    elev_lookup = G.nodes(data="elevation")
-    u, v, k, lengths = zip(*G.edges(keys=True, data="length"))
-    uvk = tuple(zip(u, v, k))
+    # pause then request this URL
+    domain = _downloader._hostname_from_url(url)
+    utils.log(f"Pausing {pause} second(s) before making HTTP GET request to {domain!r}")
+    time.sleep(pause)
 
-    # calculate edges' elevation changes from u to v then divide by lengths
-    elevs = np.array([(elev_lookup[u], elev_lookup[v]) for u, v, k in uvk])
-    grades = ((elevs[:, 1] - elevs[:, 0]) / np.array(lengths)).round(precision)
-    nx.set_edge_attributes(G, dict(zip(uvk, grades)), name="grade")
+    # transmit the HTTP GET request
+    utils.log(f"Get {url} with timeout={settings.timeout}")
+    response = requests.get(
+        url,
+        timeout=settings.timeout,
+        headers=_downloader._get_http_headers(),
+        **settings.requests_kwargs,
+    )
 
-    # optionally add grade absolute value to the edge attributes
-    if add_absolute:
-        nx.set_edge_attributes(G, dict(zip(uvk, np.abs(grades))), name="grade_abs")
-
-    utils.log("Added grade attributes to all edges.")
-    return G
+    response_json = _downloader._parse_response(response)
+    _downloader._save_to_cache(url, response_json, response.status_code)
+    return response_json

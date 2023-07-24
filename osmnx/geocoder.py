@@ -12,7 +12,7 @@ from collections import OrderedDict
 import geopandas as gpd
 import pandas as pd
 
-from . import _downloader
+from . import _nominatim
 from . import projection
 from . import settings
 from . import utils
@@ -41,7 +41,7 @@ def geocode(query):
     params["limit"] = 1
     params["dedupe"] = 0  # prevent deduping to get precise number of results
     params["q"] = query
-    response_json = _downloader._nominatim_request(params=params)
+    response_json = _nominatim._nominatim_request(params=params)
 
     # if results were returned, parse lat and lng out of the result
     if response_json and "lat" in response_json[0] and "lon" in response_json[0]:
@@ -169,7 +169,7 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
     else:
         limit = which_result
 
-    results = _downloader._retrieve_nominatim_element(query, by_osmid=by_osmid, limit=limit)
+    results = _nominatim._download_nominatim_element(query, by_osmid=by_osmid, limit=limit)
 
     # choose the right result from the JSON response
     if not results:

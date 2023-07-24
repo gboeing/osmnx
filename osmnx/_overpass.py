@@ -316,7 +316,7 @@ def _download_overpass_network(polygon, network_type, custom_filter):
     # the '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
         query_str = f"{overpass_settings};(way{osm_filter}(poly:{polygon_coord_str!r});>;);out;"
-        yield _downloader._overpass_request(data={"data": query_str})
+        yield _overpass_request(data={"data": query_str})
 
 
 def _download_overpass_features(polygon, tags):
@@ -342,4 +342,66 @@ def _download_overpass_features(polygon, tags):
     # pass exterior coordinates of each polygon in list to API, one at a time
     for polygon_coord_str in polygon_coord_strs:
         query_str = _create_overpass_query(polygon_coord_str, tags)
-        yield _downloader._overpass_request(data={"data": query_str})
+        yield _overpass_request(data={"data": query_str})
+
+
+def _overpass_request(data, pause=None, error_pause=60):
+    """
+    Send a HTTP POST request to the Overpass API and return response.
+
+    Parameters
+    ----------
+    data : OrderedDict
+        key-value pairs of parameters
+    pause : float
+        how long to pause in seconds before request, if None, will query API
+        status endpoint to find when next slot is available
+    error_pause : float
+        how long to pause in seconds (in addition to `pause`) before re-trying
+        request if error
+
+    Returns
+    -------
+    response_json : dict
+    """
+    # resolve url to same IP even if there is server round-robin redirecting
+    _downloader._config_dns(settings.overpass_endpoint)
+
+    # prepare the Overpass API URL and see if request already exists in cache
+    url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
+    prepared_url = requests.Request("GET", url, params=data).prepare().url
+    cached_response_json = _downloader._retrieve_from_cache(prepared_url)
+    if cached_response_json is not None:
+        return cached_response_json
+
+    # pause then request this URL
+    if pause is None:
+        this_pause = _get_overpass_pause(settings.overpass_endpoint)
+    domain = _downloader._hostname_from_url(url)
+    utils.log(f"Pausing {this_pause} second(s) before making HTTP POST request to {domain!r}")
+    time.sleep(this_pause)
+
+    # transmit the HTTP POST request
+    utils.log(f"Post {prepared_url} with timeout={settings.timeout}")
+    response = requests.post(
+        url,
+        data=data,
+        timeout=settings.timeout,
+        headers=_downloader._get_http_headers(),
+        **settings.requests_kwargs,
+    )
+
+    # handle 429 and 504 errors by pausing then recursively re-trying request
+    if response.status_code in {429, 504}:  # pragma: no cover
+        this_pause = error_pause + _get_overpass_pause(settings.overpass_endpoint)
+        msg = (
+            f"{domain!r} responded {response.status_code} {response.reason}: "
+            f"we'll retry in {this_pause} secs"
+        )
+        utils.log(msg, level=lg.WARNING)
+        time.sleep(this_pause)
+        return _overpass_request(data, pause, error_pause)
+
+    response_json = _downloader._parse_response(response)
+    _downloader._save_to_cache(prepared_url, response_json, response.status_code)
+    return response_json
