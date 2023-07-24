@@ -4,8 +4,9 @@
 set -e
 
 # delete temp files and folders
-rm -r -f .coverage .pytest_cache .temp ./dist/ ./docs/_build osmnx/__pycache__ tests/__pycache__
+rm -r -f .pytest_cache .temp ./dist/ ./docs/_build osmnx/__pycache__ tests/__pycache__
 find . -type f -name "*.vrt" -delete
+find . -type f -name ".coverage*" -delete
 
 # lint
 pre-commit run --all-files
@@ -22,5 +23,6 @@ pre-commit run --all-files
 pytest --cov=./osmnx --cov-report=term-missing --verbose
 
 # delete temp files and folders
-rm -r -f .coverage .pytest_cache .temp ./dist/ ./docs/_build osmnx/__pycache__ tests/__pycache__
+rm -r -f .pytest_cache .temp ./dist/ ./docs/_build osmnx/__pycache__ tests/__pycache__
 find . -type f -name "*.vrt" -delete
+find . -type f -name ".coverage*" -delete
