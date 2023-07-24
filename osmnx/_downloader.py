@@ -3,7 +3,6 @@
 import datetime as dt
 import json
 import logging as lg
-import re
 import socket
 import time
 from collections import OrderedDict
@@ -142,10 +141,10 @@ def _save_to_cache(url, response_json, ok):
     None
     """
     if settings.use_cache:
-        if not ok:
-            utils.log("Did not save to cache because response status is not OK")
+        if not ok:  # pragma: no cover
+            utils.log("Did not save to cache because response status_code is not OK")
 
-        elif response_json is None:
+        elif response_json is None:  # pragma: no cover
             utils.log("Did not save to cache because response_json is None")
 
         else:
@@ -187,7 +186,7 @@ def _url_in_cache(url):
     return filepath if filepath.is_file() else None
 
 
-def _retrieve_from_cache(url, check_remark=False):
+def _retrieve_from_cache(url, check_remark=True):
     """
     Retrieve a HTTP response JSON object from the cache, if it exists.
 
@@ -213,8 +212,11 @@ def _retrieve_from_cache(url, check_remark=False):
 
             # return None if check_remark is True and there is a server
             # remark in the cached response
-            if check_remark and "remark" in response_json:
-                utils.log(f"Found remark, so ignoring cache file {str(cache_filepath)!r}")
+            if check_remark and "remark" in response_json:  # pragma: no cover
+                utils.log(
+                    f"Ignoring cache file {str(cache_filepath)!r} because "
+                    f"it contains a remark: {response_json['remark']!r}"
+                )
                 return None
 
             utils.log(f"Retrieved response from cache file {str(cache_filepath)!r}")
@@ -288,13 +290,13 @@ def _resolve_host_via_doh(hostname):
         if response.ok and data["Status"] == 0:
             # status 0 means NOERROR, so return the IP address
             return data["Answer"][0]["data"]
-        else:
+        else:  # pragma: no cover
             # if we cannot reach DoH server or cannot resolve host, return hostname itself
             utils.log(err_msg, level=lg.ERROR)
             return hostname
 
     # if we cannot reach DoH server or cannot resolve host, return hostname itself
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException:  # pragma: no cover
         utils.log(err_msg, level=lg.ERROR)
         return hostname
 
@@ -325,7 +327,7 @@ def _config_dns(url):
     -------
     None
     """
-    hostname = urlparse(url).netloc.split(":")[0]
+    hostname = _hostname_from_url(url)
     try:
         ip = socket.gethostbyname(hostname)
     except socket.gaierror:  # pragma: no cover
@@ -345,6 +347,23 @@ def _config_dns(url):
             return _original_getaddrinfo(*args, **kwargs)
 
     socket.getaddrinfo = _getaddrinfo
+
+
+def _hostname_from_url(url):
+    """
+    Extract the hostname (domain) from a URL.
+
+    Parameters
+    ----------
+    url : string
+        the url from which to extract the hostname
+
+    Returns
+    -------
+    hostname : string
+        the extracted hostname (domain)
+    """
+    return urlparse(url).netloc.split(":")[0]
 
 
 def _get_pause(base_endpoint, recursive_delay=5, default_duration=60):
@@ -654,6 +673,41 @@ def _retrieve_osm_element(query, by_osmid=False, limit=1, polygon_geojson=1):
     return _nominatim_request(params=params, request_type=request_type)
 
 
+def _parse_response(response):
+    """
+    Parse JSON from a requests response and log the details.
+
+    Parameters
+    ----------
+    response : requests.response
+        the response object
+
+    Returns
+    -------
+    response_json : dict
+    """
+    # log the response size and domain
+    domain = _hostname_from_url(response.url)
+    size_kb = len(response.content) / 1000
+    utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r} with code {response.status_code}")
+
+    # parse the response to JSON and log/raise exceptions
+    try:
+        response_json = response.json()
+    except JSONDecodeError as e:  # pragma: no cover
+        msg = f"{domain!r} responded: {response.status_code} {response.reason} {response.text}"
+        utils.log(msg, level=lg.ERROR)
+        if response.ok:
+            raise InsufficientResponseError(msg) from e
+        raise ResponseStatusCodeError(msg) from e
+
+    # log any remarks if they exist
+    if "remark" in response_json:  # pragma: no cover
+        utils.log(f'{domain!r} remarked: {response_json["remark"]!r}', level=lg.WARNING)
+
+    return response_json
+
+
 def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
     """
     Send a HTTP GET request to the Nominatim API and return response.
@@ -678,76 +732,42 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
         msg = 'Nominatim request_type must be "search", "reverse", or "lookup"'
         raise ValueError(msg)
 
-    # resolve url to same IP even if there is server round-robin redirecting
-    _config_dns(settings.nominatim_endpoint.rstrip("/"))
-
     # prepare Nominatim API URL and see if request already exists in cache
     url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
-
+    params["key"] = settings.nominatim_key
     prepared_url = requests.Request("GET", url, params=params).prepare().url
     cached_response_json = _retrieve_from_cache(prepared_url)
-
-    # add key after checking cache so the check is key independent
-    if settings.nominatim_key:
-        params["key"] = settings.nominatim_key
-
     if cached_response_json is not None:
-        # found response in the cache, return it instead of calling server
         return cached_response_json
 
-    else:
-        # if this URL is not already in the cache, pause, then request it
-        utils.log(f"Pausing {pause} seconds before making HTTP GET request")
-        time.sleep(pause)
+    # pause then request this URL
+    domain = _hostname_from_url(url)
+    utils.log(f"Pausing {pause} second(s) before making HTTP GET request to {domain!r}")
+    time.sleep(pause)
 
-        # transmit the HTTP GET request
-        utils.log(f"Get {prepared_url} with timeout={settings.timeout}")
-        headers = _get_http_headers()
-        response = requests.get(
-            url,
-            params=params,
-            timeout=settings.timeout,
-            headers=headers,
-            **settings.requests_kwargs,
+    # transmit the HTTP GET request
+    utils.log(f"Get {prepared_url} with timeout={settings.timeout}")
+    response = requests.get(
+        url,
+        params=params,
+        timeout=settings.timeout,
+        headers=_get_http_headers(),
+        **settings.requests_kwargs,
+    )
+
+    # handle 429 and 504 errors by pausing then recursively re-trying request
+    if response.status_code in {429, 504}:  # pragma: no cover
+        msg = (
+            f"{domain!r} responded {response.status_code} {response.reason}: "
+            f"we'll retry in {error_pause} secs"
         )
-        sc = response.status_code
+        utils.log(msg, level=lg.WARNING)
+        time.sleep(error_pause)
+        return _nominatim_request(params, request_type, pause, error_pause)
 
-        # log the response size and domain
-        size_kb = len(response.content) / 1000
-        domain = re.findall(r"(?s)//(.*?)/", url)[0]
-        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r}")
-
-        try:
-            response_json = response.json()
-            if "remark" in response_json:
-                utils.log(f'{domain!r} remarked: {response_json["remark"]!r}', level=lg.WARNING)
-
-        except JSONDecodeError as e:  # pragma: no cover
-            msg = f"{domain!r} responded: {sc} {response.reason} {response.text}"
-
-            # 429 is 'too many requests' and 504 is 'gateway timeout' from
-            # server overload: handle these by pausing then recursively
-            # re-trying until we get a valid response from the server
-            if sc in {429, 504}:
-                utils.log(
-                    f"{domain!r} responded {sc} {response.reason}: we'll retry in {error_pause} secs",
-                    level=lg.WARNING,
-                )
-                time.sleep(error_pause)
-                response_json = _nominatim_request(params, request_type, pause, error_pause)
-
-            # elif we got an OK response, but cannot parse JSON, so throw exception
-            elif response.ok:
-                utils.log(msg, level=lg.ERROR)
-                raise InsufficientResponseError(msg) from e
-
-            # else, this was an unhandled status code, throw an exception
-            else:
-                utils.log(msg, level=lg.ERROR)
-                raise ResponseStatusCodeError(msg) from e
-
-        _save_to_cache(prepared_url, response_json, sc)
-        return response_json
+    response_json = _parse_response(response)
+    _save_to_cache(prepared_url, response_json, response.status_code)
+    return response_json
 
 
 def _overpass_request(data, pause=None, error_pause=60):
@@ -769,76 +789,50 @@ def _overpass_request(data, pause=None, error_pause=60):
     -------
     response_json : dict
     """
-    base_endpoint = settings.overpass_endpoint
-
     # resolve url to same IP even if there is server round-robin redirecting
-    _config_dns(base_endpoint)
+    _config_dns(settings.overpass_endpoint)
 
-    # define the Overpass API URL, then construct a GET-style URL as a string to
-    # hash to look up/save to cache
-    url = base_endpoint.rstrip("/") + "/interpreter"
+    # prepare the Overpass API URL and see if request already exists in cache
+    url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
     prepared_url = requests.Request("GET", url, params=data).prepare().url
-    cached_response_json = _retrieve_from_cache(prepared_url, check_remark=True)
-
+    cached_response_json = _retrieve_from_cache(prepared_url)
     if cached_response_json is not None:
-        # found response in the cache, return it instead of calling server
         return cached_response_json
 
-    else:
-        # if this URL is not already in the cache, pause, then request it
-        if pause is None:
-            this_pause = _get_pause(base_endpoint)
-        utils.log(f"Pausing {this_pause} seconds before making HTTP POST request")
-        time.sleep(this_pause)
+    # pause then request this URL
+    if pause is None:
+        this_pause = _get_pause(settings.overpass_endpoint)
+    domain = _hostname_from_url(url)
+    utils.log(f"Pausing {this_pause} second(s) before making HTTP POST request to {domain!r}")
+    time.sleep(this_pause)
 
-        # transmit the HTTP POST request
-        utils.log(f"Post {prepared_url} with timeout={settings.timeout}")
-        headers = _get_http_headers()
-        response = requests.post(
-            url, data=data, timeout=settings.timeout, headers=headers, **settings.requests_kwargs
+    # transmit the HTTP POST request
+    utils.log(f"Post {prepared_url} with timeout={settings.timeout}")
+    response = requests.post(
+        url,
+        data=data,
+        timeout=settings.timeout,
+        headers=_get_http_headers(),
+        **settings.requests_kwargs,
+    )
+
+    # handle 429 and 504 errors by pausing then recursively re-trying request
+    if response.status_code in {429, 504}:  # pragma: no cover
+        this_pause = error_pause + _get_pause(settings.overpass_endpoint)
+        msg = (
+            f"{domain!r} responded {response.status_code} {response.reason}: "
+            f"we'll retry in {this_pause} secs"
         )
-        sc = response.status_code
+        utils.log(msg, level=lg.WARNING)
+        time.sleep(this_pause)
+        return _overpass_request(data, pause, error_pause)
 
-        # log the response size and domain
-        size_kb = len(response.content) / 1000
-        domain = re.findall(r"(?s)//(.*?)/", url)[0]
-        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r}")
-
-        try:
-            response_json = response.json()
-            if "remark" in response_json:
-                utils.log(f'{domain!r} remarked: {response_json["remark"]!r}', level=lg.WARNING)
-
-        except JSONDecodeError as e:  # pragma: no cover
-            msg = f"{domain!r} responded: {sc} {response.reason} {response.text}"
-
-            # 429 is 'too many requests' and 504 is 'gateway timeout' from
-            # server overload: handle these by pausing then recursively
-            # re-trying until we get a valid response from the server
-            if sc in {429, 504}:
-                this_pause = error_pause + _get_pause(base_endpoint)
-                utils.log(
-                    f"{domain!r} responded {sc} {response.reason}: we'll retry in {this_pause} secs",
-                    level=lg.WARNING,
-                )
-                time.sleep(this_pause)
-                response_json = _overpass_request(data, pause, error_pause)
-
-            # elif we got an OK response, but cannot parse JSON, so throw exception
-            elif response.ok:
-                utils.log(msg, level=lg.ERROR)
-                raise InsufficientResponseError(msg) from e
-
-            # else, this was an unhandled status code, throw an exception
-            else:
-                utils.log(msg, level=lg.ERROR)
-                raise ResponseStatusCodeError(msg) from e
-
-        _save_to_cache(prepared_url, response_json, sc)
-        return response_json
+    response_json = _parse_response(response)
+    _save_to_cache(prepared_url, response_json, response.status_code)
+    return response_json
 
 
-def _google_request(url, pause_duration):
+def _google_request(url, pause):
     """
     Send a HTTP GET request to Google Maps Elevation API and return response.
 
@@ -846,39 +840,29 @@ def _google_request(url, pause_duration):
     ----------
     url : string
         URL for API endpoint populated with request data
-    pause_duration : float
+    pause : float
         how long to pause in seconds before request
 
     Returns
     -------
     response_json : dict
     """
-    # check if this request is already in the cache
+    # check if request already exists in cache
     cached_response_json = _retrieve_from_cache(url)
     if cached_response_json is not None:
-        response_json = cached_response_json
-    else:
-        # request the elevations from the server
-        utils.log(f"Requesting node elevations from {url}")
-        time.sleep(pause_duration)
-        response = requests.get(url, timeout=settings.timeout)
+        return cached_response_json
 
-        # log the response size and domain
-        sc = response.status_code
-        size_kb = len(response.content) / 1000
-        domain = re.findall(r"(?s)//(.*?)/", url)[0]
-        utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r}")
+    # pause then request this URL
+    domain = _hostname_from_url(url)
+    utils.log(f"Pausing {pause} second(s) before making HTTP GET request to {domain!r}")
+    time.sleep(pause)
 
-        # check the response status
-        if response.ok:
-            response_json = response.json()
-            _save_to_cache(url, response_json, sc)
-            if "remark" in response_json:  # pragma: no cover
-                utils.log(f'{domain!r} remarked: {response_json["remark"]!r}', level=lg.WARNING)
-        else:  # pragma: no cover
-            # else, this was an unhandled status code, throw an exception
-            msg = f"{domain!r} responded: {sc} {response.reason} {response.text}"
-            utils.log(msg, level=lg.ERROR)
-            raise ResponseStatusCodeError(msg)
+    # transmit the HTTP GET request
+    utils.log(f"Get {url} with timeout={settings.timeout}")
+    response = requests.get(
+        url, timeout=settings.timeout, headers=_get_http_headers(), **settings.requests_kwargs
+    )
 
+    response_json = _parse_response(response)
+    _save_to_cache(url, response_json, response.status_code)
     return response_json
