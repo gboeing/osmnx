@@ -1,9 +1,7 @@
 """Add node elevations and calculate edge grades."""
 
-import logging as lg
 import multiprocessing as mp
 import re
-import time
 from hashlib import sha1
 from pathlib import Path
 from warnings import warn
@@ -11,14 +9,11 @@ from warnings import warn
 import networkx as nx
 import numpy as np
 import pandas as pd
-import requests
 
 from . import _downloader
-from . import settings
 from . import utils
 from . import utils_graph
 from ._errors import InsufficientResponseError
-from ._errors import ResponseStatusCodeError
 
 # rasterio and gdal are optional dependencies for raster querying
 try:
@@ -26,8 +21,6 @@ try:
     from osgeo import gdal
 except ImportError:  # pragma: no cover
     rasterio = gdal = None
-
-HTTP_OK = 200
 
 
 def _query_raster(nodes, filepath, band):
@@ -176,7 +169,8 @@ def add_node_elevations_google(
         {node: f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)}
     )
     n_calls = int(np.ceil(len(node_points) / max_locations_per_batch))
-    utils.log(f"Requesting node elevations from the API in {n_calls} calls")
+    domain = re.findall(r"(?s)//(.*?)/", url_template)[0]
+    utils.log(f"Requesting node elevations from {domain!r} in {n_calls} call(s)")
 
     # break the series of coordinates into chunks of size max_locations_per_batch
     # API format is locations=lat,lng|lat,lng|lat,lng|lat,lng...
@@ -186,40 +180,15 @@ def add_node_elevations_google(
         locations = "|".join(chunk)
         url = url_template.format(locations, api_key)
 
-        # check if this request is already in the cache
-        cached_response_json = _downloader._retrieve_from_cache(url)
-        if cached_response_json is not None:
-            response_json = cached_response_json
-        else:
-            # request the elevations from the server
-            utils.log(f"Requesting node elevations: {url}")
-            time.sleep(pause_duration)
-            response = requests.get(url, timeout=settings.timeout)
-
-            # log the response size and domain
-            sc = response.status_code
-            size_kb = len(response.content) / 1000
-            domain = re.findall(r"(?s)//(.*?)/", url)[0]
-            utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r}")
-
-            # check the response status
-            if sc == HTTP_OK:
-                response_json = response.json()
-                _downloader._save_to_cache(url, response_json, sc)
-            else:
-                # else, this was an unhandled status code, throw an exception
-                msg = f"{domain!r} responded: {sc} {response.reason} {response.text}"
-                utils.log(msg, level=lg.ERROR)
-                raise ResponseStatusCodeError(msg)
-
-        # append these elevation results to the list of all results
+        # download and append these elevation results to list of all results
+        response_json = _downloader._google_request(url, pause_duration)
         results.extend(response_json["results"])
 
     # sanity check that all our vectors have the same number of elements
     msg = f"Graph has {len(G):,} nodes and we received {len(results):,} results from server."
     utils.log(msg)
     if not (len(results) == len(G) == len(node_points)):
-        err_msg = f"{msg}\n{response.text}"
+        err_msg = f"{msg}\n{response_json}"
         raise InsufficientResponseError(err_msg)
 
     # add elevation as an attribute to the nodes
