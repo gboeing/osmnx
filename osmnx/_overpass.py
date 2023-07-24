@@ -298,7 +298,7 @@ def _download_overpass_network(polygon, network_type, custom_filter):
     network_type : string
         what type of street network to get if custom_filter is None
     custom_filter : string
-        a custom ways filter to be used instead of the network_type presets
+        a custom "ways" filter to be used instead of the network_type presets
 
     Yields
     ------
@@ -319,8 +319,8 @@ def _download_overpass_network(polygon, network_type, custom_filter):
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
     utils.log(f"Requesting data from API in {len(polygon_coord_strs)} request(s)")
 
-    # pass each polygon exterior coordinates in the list to the API, one at a
-    # time. The '>' makes it recurse so we get ways and the ways' nodes.
+    # pass exterior coordinates of each polygon in list to API, one at a time
+    # the '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
         query_str = f"{overpass_settings};(way{osm_filter}(poly:{polygon_coord_str!r});>;);out;"
         yield _downloader._overpass_request(data={"data": query_str})
@@ -337,13 +337,11 @@ def _download_overpass_features(polygon, tags):
     tags : dict
         dict of tags used for finding elements in the selected area
 
-    Returns
-    -------
-    response_jsons : list
-        list of JSON responses from the Overpass server
+    Yields
+    ------
+    response_json : dict
+        a generator of JSON responses from the Overpass server
     """
-    response_jsons = []
-
     # subdivide query polygon to get list of sub-divided polygon coord strings
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
     utils.log(f"Requesting data from API in {len(polygon_coord_strs)} request(s)")
@@ -351,11 +349,4 @@ def _download_overpass_features(polygon, tags):
     # pass exterior coordinates of each polygon in list to API, one at a time
     for polygon_coord_str in polygon_coord_strs:
         query_str = _create_overpass_query(polygon_coord_str, tags)
-        response_json = _downloader._overpass_request(data={"data": query_str})
-        response_jsons.append(response_json)
-
-    utils.log(
-        f"Got all features data within polygon from API in {len(polygon_coord_strs)} request(s)"
-    )
-
-    return response_jsons
+        yield _downloader._overpass_request(data={"data": query_str})

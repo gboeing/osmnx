@@ -31,6 +31,7 @@ from . import osm_xml
 from . import settings
 from . import utils
 from . import utils_geo
+from ._errors import CacheOnlyInterruptError
 from ._errors import InsufficientResponseError
 
 # dict of tags to determine if closed ways should be polygons, based on JSON
@@ -391,15 +392,14 @@ def _create_gdf(response_jsons, polygon, tags):
     gdf : geopandas.GeoDataFrame
         GeoDataFrame of features and their associated tags
     """
-    elements_count = sum(len(rj["elements"]) for rj in response_jsons)
-
-    # make sure we got data back from the server request(s)
-    if elements_count == 0:
-        msg = "No data elements in server response. Check log and query location/tags."
-        raise InsufficientResponseError(msg)
-
-    # begin processing the elements retrieved from the server
-    utils.log(f"Converting {elements_count} elements in JSON responses to features")
+    response_count = 0
+    if settings.cache_only_mode:
+        # if cache_only_mode, consume response_jsons then interrupt
+        for _ in response_jsons:
+            response_count += 1
+        utils.log(f"Retrieved all data from API in {response_count} request(s)")
+        msg = "Interrupted because `settings.cache_only_mode=True`"
+        raise CacheOnlyInterruptError(msg)
 
     # Dictionaries to hold nodes and complete geometries
     coords = {}
@@ -413,6 +413,8 @@ def _create_gdf(response_jsons, polygon, tags):
 
     # extract geometries from the downloaded osm data
     for response_json in response_jsons:
+        response_count += 1
+
         # Parses the JSON of OSM nodes, ways and (multipolygon) relations
         # to dictionaries of coordinates, Shapely Points, LineStrings,
         # Polygons and MultiPolygons
@@ -454,12 +456,17 @@ def _create_gdf(response_jsons, polygon, tags):
                 )
                 geometries[unique_id] = multipolygon
 
-    utils.log(f"{len(geometries)} geometries created in the dict")
+    utils.log(f"Retrieved all data from API in {response_count} request(s)")
+
+    # ensure we got some node/way data back from the server request(s)
+    if len(geometries) == 0:  # pragma: no cover
+        msg = "No data elements in server response. Check log and query location/tags."
+        raise InsufficientResponseError(msg)
 
     # remove untagged elements from the final dict of geometries
+    utils.log(f"{len(geometries)} geometries created in the dict")
     for untagged_element_id in untagged_element_ids:
         geometries.pop(untagged_element_id, None)
-
     utils.log(f"{len(untagged_element_ids)} untagged features removed")
 
     # create GeoDataFrame, ensure it has geometry, then set crs

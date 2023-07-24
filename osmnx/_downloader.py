@@ -293,7 +293,7 @@ def _parse_response(response):
     # log the response size and domain
     domain = _hostname_from_url(response.url)
     size_kb = len(response.content) / 1000
-    utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r} with code {response.status_code}")
+    utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r} with status {response.status_code}")
 
     # parse the response to JSON and log/raise exceptions
     try:
