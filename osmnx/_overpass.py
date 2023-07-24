@@ -2,7 +2,6 @@
 
 import datetime as dt
 import logging as lg
-import socket
 import time
 
 import numpy as np
@@ -14,9 +13,6 @@ from . import projection
 from . import settings
 from . import utils
 from . import utils_geo
-
-# capture getaddrinfo function to use original later after mutating it
-_original_getaddrinfo = socket.getaddrinfo
 
 
 def _get_osm_filter(network_type):
@@ -130,8 +126,6 @@ def _get_overpass_pause(base_endpoint, recursive_delay=5, default_duration=60):
         # if overpass rate limiting is False, then there is zero pause
         return 0
 
-    sc = None
-
     try:
         url = base_endpoint.rstrip("/") + "/status"
         response = requests.get(
@@ -140,12 +134,11 @@ def _get_overpass_pause(base_endpoint, recursive_delay=5, default_duration=60):
             timeout=settings.timeout,
             **settings.requests_kwargs,
         )
-        sc = response.status_code
         status = response.text.split("\n")[4]
         status_first_token = status.split(" ")[0]
     except ConnectionError:  # pragma: no cover
         # cannot reach status endpoint, log error and return default duration
-        utils.log(f"Unable to query {url}, got status {sc}", level=lg.ERROR)
+        utils.log(f"Unable to query {url}, got status {response.status_code}", level=lg.ERROR)
         return default_duration
     except (AttributeError, IndexError, ValueError):  # pragma: no cover
         # cannot parse output, log error and return default duration
@@ -222,14 +215,14 @@ def _make_overpass_polygon_coord_strs(polygon):
 
 def _create_overpass_query(polygon_coord_str, tags):
     """
-    Create an overpass query string based on passed tags.
+    Create an Overpass features query string based on passed tags.
 
     Parameters
     ----------
     polygon_coord_str : list
         list of lat lng coordinates
     tags : dict
-        dict of tags used for finding elements in the selected area
+        dict of tags used for finding elements in the search area
 
     Returns
     -------

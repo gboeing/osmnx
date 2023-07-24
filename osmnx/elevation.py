@@ -169,7 +169,7 @@ def add_node_elevations_google(
     )
     n_calls = int(np.ceil(len(node_points) / max_locations_per_batch))
     domain = _downloader._hostname_from_url(url_template)
-    utils.log(f"Requesting node elevations from {domain!r} in {n_calls} call(s)")
+    utils.log(f"Requesting node elevations from {domain!r} in {n_calls} request(s)")
 
     # break the series of coordinates into chunks of size max_locations_per_batch
     # API format is locations=lat,lng|lat,lng|lat,lng|lat,lng...
