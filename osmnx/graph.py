@@ -33,7 +33,7 @@ def graph_from_bbox(
     simplify=True,
     retain_all=False,
     truncate_by_edge=False,
-    clean_periphery=True,
+    clean_periphery=None,
     custom_filter=None,
 ):
     """
@@ -64,8 +64,7 @@ def graph_from_bbox(
         if True, retain nodes outside bounding box if at least one of node's
         neighbors is within the bounding box
     clean_periphery : bool
-        if True, buffer 500m to get a graph larger than requested, then
-        simplify, then truncate it to requested spatial boundaries
+        deprecated, do not use
     custom_filter : string
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
@@ -108,7 +107,7 @@ def graph_from_point(
     simplify=True,
     retain_all=False,
     truncate_by_edge=False,
-    clean_periphery=True,
+    clean_periphery=None,
     custom_filter=None,
 ):
     """
@@ -140,8 +139,7 @@ def graph_from_point(
         if True, retain nodes outside bounding box if at least one of node's
         neighbors is within the bounding box
     clean_periphery : bool,
-        if True, buffer 500m to get a graph larger than requested, then
-        simplify, then truncate it to requested spatial boundaries
+        deprecated, do not use
     custom_filter : string
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
@@ -198,7 +196,7 @@ def graph_from_address(
     retain_all=False,
     truncate_by_edge=False,
     return_coords=False,
-    clean_periphery=True,
+    clean_periphery=None,
     custom_filter=None,
 ):
     """
@@ -232,9 +230,8 @@ def graph_from_address(
         neighbors is within the bounding box
     return_coords : bool
         optionally also return the geocoded coordinates of the address
-    clean_periphery : bool,
-        if True, buffer 500m to get a graph larger than requested, then
-        simplify, then truncate it to requested spatial boundaries
+    clean_periphery : bool
+        deprecated, do not use
     custom_filter : string
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
@@ -282,7 +279,7 @@ def graph_from_place(
     truncate_by_edge=False,
     which_result=None,
     buffer_dist=None,
-    clean_periphery=True,
+    clean_periphery=None,
     custom_filter=None,
 ):
     """
@@ -324,8 +321,7 @@ def graph_from_place(
     buffer_dist : float
         deprecated, do not use
     clean_periphery : bool
-        if True, buffer 500m to get a graph larger than requested, then
-        simplify, then truncate it to requested spatial boundaries
+        deprecated, do not use
     custom_filter : string
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
@@ -388,7 +384,7 @@ def graph_from_polygon(
     simplify=True,
     retain_all=False,
     truncate_by_edge=False,
-    clean_periphery=True,
+    clean_periphery=None,
     custom_filter=None,
 ):
     """
@@ -414,8 +410,7 @@ def graph_from_polygon(
         if True, retain nodes outside boundary polygon if at least one of
         node's neighbors is within the polygon
     clean_periphery : bool
-        if True, buffer 500m to get a graph larger than requested, then
-        simplify, then truncate it to requested spatial boundaries
+        deprecated, do not use
     custom_filter : string
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
@@ -432,6 +427,15 @@ def graph_from_polygon(
     function to automatically make multiple requests: see that function's
     documentation for caveats.
     """
+    if clean_periphery is None:
+        clean_periphery = True
+    else:
+        warn(
+            "The clean_periphery argument has been deprecated and will be removed in "
+            "a future release. Future behavior will be as though clean_periphery=True.",
+            stacklevel=2,
+        )
+
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:  # pragma: no cover
