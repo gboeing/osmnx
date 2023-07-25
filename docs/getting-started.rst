@@ -59,7 +59,7 @@ Using the :code:`features` and :code:`graph` modules, as described below, you ca
 Urban Amenities
 ^^^^^^^^^^^^^^^
 
-Using OSMnx's :code:`features` module, you can search for and download any geospatial `features`_ (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap `Overpass`_ API as a GeoPandas GeoDataFrame. This uses OpenStreetMap `tags`_ to search for matching `elements`_.
+Using OSMnx's :code:`features` module, you can search for and download geospatial `features`_ (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap `Overpass`_ API as a GeoPandas GeoDataFrame. This uses OpenStreetMap `tags`_ to search for matching `elements`_.
 
 Modeling a Network
 ^^^^^^^^^^^^^^^^^^
