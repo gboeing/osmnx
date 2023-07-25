@@ -13,6 +13,7 @@ https://wiki.openstreetmap.org/wiki/Elements
 
 import logging as lg
 import warnings
+from warnings import warn
 
 import geopandas as gpd
 import pandas as pd
@@ -247,12 +248,19 @@ def features_from_place(query, tags, which_result=None, buffer_dist=None):
         which geocoding result to use. if None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one.
     buffer_dist : float
-        distance to buffer around the place geometry, in meters
+        deprecated, do not use
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
     """
+    if buffer_dist is not None:
+        warn(
+            "The buffer_dist argument as been deprecated and will be removed "
+            "in a future release. Buffer your query area directly, if desired.",
+            stacklevel=2,
+        )
+
     # create a GeoDataFrame with the spatial boundaries of the place(s)
     if isinstance(query, (str, dict)):
         # if it is a string (place name) or dict (structured place query),
