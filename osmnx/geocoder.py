@@ -8,6 +8,7 @@ https://nominatim.org/.
 
 import logging as lg
 from collections import OrderedDict
+from warnings import warn
 
 import geopandas as gpd
 import pandas as pd
@@ -89,13 +90,20 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
     by_osmid : bool
         if True, treat query as an OSM ID lookup rather than text search
     buffer_dist : float
-        distance to buffer around the place geometry, in meters
+        deprecated, do not use
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
         a GeoDataFrame with one row for each query
     """
+    if buffer_dist is not None:
+        warn(
+            "The buffer_dist argument as been deprecated and will be removed "
+            "in a future release. Buffer your results directly, if desired.",
+            stacklevel=2,
+        )
+
     if not isinstance(query, (str, dict, list)):  # pragma: no cover
         msg = "query must be a string or dict or list"
         raise TypeError(msg)

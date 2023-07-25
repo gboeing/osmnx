@@ -491,7 +491,7 @@ def test_graph_from_functions():
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
 
     # graph from list of places
-    G = ox.graph_from_place([place1], network_type="all", clean_periphery=False)
+    G = ox.graph_from_place([place1], network_type="all", buffer_dist=0, clean_periphery=False)
 
     # graph from polygon
     G = ox.graph_from_polygon(polygon, network_type="walk", truncate_by_edge=True, simplify=False)
@@ -536,7 +536,7 @@ def test_features():
 
     # geometries_from_place - includes test of list of places
     tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
-    gdf = ox.geometries_from_place(place1, tags=tags)
+    gdf = ox.geometries_from_place(place1, tags=tags, buffer_dist=0)
     gdf = ox.geometries_from_place([place1], tags=tags)
 
     # geometries_from_polygon
