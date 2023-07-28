@@ -64,8 +64,8 @@ cache-dir = "~/.cache/ruff"
 exclude = ["build/*"]
 ignore = [
     "PERF401", # ignore "use a list comprehension to create a transformed list"
-    "PLR091",  # ignore "unnecessary `else` after `return` statement"
-    "RET505",  # ignore complexity checks (we check mccabe elsewhere)
+    "PLR091",  # ignore complexity checks (we check mccabe elsewhere)
+    "RET505",  # ignore "unnecessary branch after return statement"
 ]
 line-length = 110  # black line length + 10%
 select = [

@@ -1,12 +1,12 @@
 # Changelog
 
-## 1.6.0 (Unreleased)
+## 1.6.0 (2023-07-28)
 
 - fix DNS resolution in Dask clusters (#1039)
 - improve memory efficiency during features GeoDataFrame creation (#1043)
 - handle the settings.cache_only_mode option in the features module (#1043)
-- deprecate the buffer_dist and clean_periphery function parameters throughout (#1044)
-- introduce more descriptive exceptions: ResponseStatusCodeError and GraphSimplificationError (#1041)
+- deprecate the buffer_dist and clean_periphery function parameters throughout package (#1044)
+- add more descriptive exceptions: ResponseStatusCodeError and GraphSimplificationError (#1041)
 - replace CacheOnlyModeInterrupt exception with CacheOnlyInterruptError exception (#1041)
 - replace EmptyOverpassResponse exception with InsufficientResponseError exception (#1041)
 - refactor elevation module (#1042 #1043)
