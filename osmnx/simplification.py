@@ -70,21 +70,12 @@ def _is_endpoint(G, node, strict=True):
     # rule 4
     elif not strict:
         # non-strict mode: do its incident edges have different OSM IDs?
-        osmids = []
-
-        # add all the edge OSM IDs for incoming edges
-        for u in G.predecessors(node):
-            for key in G[u][node]:
-                osmids.append(G.edges[u, node, key]["osmid"])
-
-        # add all the edge OSM IDs for outgoing edges
-        for v in G.successors(node):
-            for key in G[node][v]:
-                osmids.append(G.edges[node, v, key]["osmid"])
-
-        # if there is more than 1 OSM ID in the list of edge OSM IDs then it is
-        # an endpoint, if not, it isn't
-        return len(set(osmids)) > 1
+        # first collect all the OSM way IDs for incoming edges
+        # then collect all the OSM way IDs for outgoing edges
+        # if there is more than 1 OSM ID then it is an endpoint, otherwise not
+        incoming = [G.edges[u, node, k]["osmid"] for u in G.predecessors(node) for k in G[u][node]]
+        outgoing = [G.edges[node, v, k]["osmid"] for v in G.successors(node) for k in G[node][v]]
+        return len(set(incoming + outgoing)) > 1
 
     # if none of the preceding rules returned true, then it is not an endpoint
     else:

@@ -63,7 +63,6 @@ path = "osmnx/_version.py"
 cache-dir = "~/.cache/ruff"
 exclude = ["build/*"]
 ignore = [
-    "PERF401", # ignore "use a list comprehension to create a transformed list"
     "PLR091",  # ignore complexity checks (we check mccabe elsewhere)
     "RET505",  # ignore "unnecessary branch after return statement"
 ]
