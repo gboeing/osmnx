@@ -53,12 +53,12 @@ def _is_endpoint(G, node, strict=True):
         return True
 
     # rule 2
-    elif G.out_degree(node) == 0 or G.in_degree(node) == 0:  # noqa: RET505
+    if G.out_degree(node) == 0 or G.in_degree(node) == 0:
         # if node has no incoming edges or no outgoing edges, it is an endpoint
         return True
 
     # rule 3
-    elif not ((n == 2) and (d in {2, 4})):  # noqa: PLR2004
+    if not ((n == 2) and (d in {2, 4})):  # noqa: PLR2004
         # else, if it does NOT have 2 neighbors AND either 2 or 4 directed
         # edges, it is an endpoint. either it has 1 or 3+ neighbors, in which
         # case it is a dead-end or an intersection of multiple streets or it has
@@ -68,7 +68,7 @@ def _is_endpoint(G, node, strict=True):
         return True
 
     # rule 4
-    elif not strict:
+    if not strict:
         # non-strict mode: do its incident edges have different OSM IDs?
         # first collect all the OSM way IDs for incoming edges
         # then collect all the OSM way IDs for outgoing edges
@@ -77,9 +77,8 @@ def _is_endpoint(G, node, strict=True):
         outgoing = [G.edges[node, v, k]["osmid"] for v in G.successors(node) for k in G[node][v]]
         return len(set(incoming + outgoing)) > 1
 
-    # if none of the preceding rules returned true, then it is not an endpoint
-    else:
-        return False
+    # if none of the preceding rules passed, then it is not an endpoint
+    return False
 
 
 def _build_path(G, endpoint, endpoint_successor, endpoints):
