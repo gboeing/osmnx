@@ -196,17 +196,19 @@ def _resolve_host_via_doh(hostname):
         response = requests.get(url, timeout=settings.timeout)
         data = response.json()
 
-        # status 0 means NOERROR, so return the IP address
+    # if we cannot reach DoH server or resolve host, return hostname itself
+    except requests.exceptions.RequestException:  # pragma: no cover
+        utils.log(err_msg, level=lg.ERROR)
+        return hostname
+
+    # if there were no exceptions, return
+    else:
         if response.ok and data["Status"] == 0:
+            # status 0 means NOERROR, so return the IP address
             return data["Answer"][0]["data"]
 
         # otherwise, if we cannot reach DoH server or cannot resolve host
         # just return the hostname itself
-        utils.log(err_msg, level=lg.ERROR)
-        return hostname
-
-    # if we cannot reach DoH server or cannot resolve host, return hostname itself
-    except requests.exceptions.RequestException:  # pragma: no cover
         utils.log(err_msg, level=lg.ERROR)
         return hostname
 
