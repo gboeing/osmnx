@@ -51,9 +51,10 @@ def geocode(query):
         point = (lat, lng)
         utils.log(f"Geocoded {query!r} to {point}")
         return point
-    else:
-        msg = f"Nominatim could not geocode query {query!r}"
-        raise InsufficientResponseError(msg)
+
+    # otherwise we got no results back
+    msg = f"Nominatim could not geocode query {query!r}"
+    raise InsufficientResponseError(msg)
 
 
 def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):

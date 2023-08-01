@@ -62,10 +62,7 @@ path = "osmnx/_version.py"
 [tool.ruff]
 cache-dir = "~/.cache/ruff"
 exclude = ["build/*"]
-ignore = [
-    "PLR091",  # ignore complexity checks (we check mccabe elsewhere)
-    "RET505",  # ignore "unnecessary branch after return statement"
-]
+ignore = ["PLR091"]  # ignore complexity checks (we check mccabe elsewhere)
 line-length = 110  # black line length + 10%
 select = [
     "A",    # check python builtins being used as variables or parameters

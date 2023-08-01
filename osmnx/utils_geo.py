@@ -219,24 +219,24 @@ def round_geometry_coords(geom, precision):
     if isinstance(geom, Point):
         return _round_point_coords(geom, precision)
 
-    elif isinstance(geom, MultiPoint):
+    if isinstance(geom, MultiPoint):
         return _round_multipoint_coords(geom, precision)
 
-    elif isinstance(geom, LineString):
+    if isinstance(geom, LineString):
         return _round_linestring_coords(geom, precision)
 
-    elif isinstance(geom, MultiLineString):
+    if isinstance(geom, MultiLineString):
         return _round_multilinestring_coords(geom, precision)
 
-    elif isinstance(geom, Polygon):
+    if isinstance(geom, Polygon):
         return _round_polygon_coords(geom, precision)
 
-    elif isinstance(geom, MultiPolygon):
+    if isinstance(geom, MultiPolygon):
         return _round_multipolygon_coords(geom, precision)
 
-    else:  # pragma: no cover
-        msg = f"cannot round coordinates of unhandled geometry type: {type(geom)}"
-        raise TypeError(msg)
+    # otherwise
+    msg = f"cannot round coordinates of unhandled geometry type: {type(geom)}"
+    raise TypeError(msg)
 
 
 def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
@@ -466,8 +466,9 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
 
     if project_utm and return_crs:
         return north, south, east, west, crs_proj
-    else:
-        return north, south, east, west
+
+    # otherwise
+    return north, south, east, west
 
 
 def bbox_to_poly(north, south, east, west):

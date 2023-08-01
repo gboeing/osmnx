@@ -53,7 +53,7 @@ def _is_endpoint(G, node, strict=True):
         return True
 
     # rule 2
-    elif G.out_degree(node) == 0 or G.in_degree(node) == 0:
+    elif G.out_degree(node) == 0 or G.in_degree(node) == 0:  # noqa: RET505
         # if node has no incoming edges or no outgoing edges, it is an endpoint
         return True
 
@@ -130,14 +130,14 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
                         # we have come to the end of a self-looping edge, so
                         # add first node to end of path to close it and return
                         return path + [endpoint]
-                    else:  # pragma: no cover
-                        # this can happen due to OSM digitization error where
-                        # a one-way street turns into a two-way here, but
-                        # duplicate incoming one-way edges are present
-                        utils.log(
-                            f"Unexpected simplify pattern handled near {successor}", level=lg.WARN
-                        )
-                        return path
+
+                    # otherwise, this can happen due to OSM digitization error
+                    # where a one-way street turns into a two-way here, but
+                    # duplicate incoming one-way edges are present
+                    utils.log(
+                        f"Unexpected simplify pattern handled near {successor}", level=lg.WARN
+                    )
+                    return path
                 else:  # pragma: no cover
                     # if successor has >1 successors, then successor must have
                     # been an endpoint because you can go in 2 new directions.
@@ -422,14 +422,17 @@ def consolidate_intersections(
         if not G or not G.edges:
             # cannot rebuild a graph with no nodes or no edges, just return it
             return G
-        else:
-            return _consolidate_intersections_rebuild_graph(G, tolerance, reconnect_edges)
-    elif not G:
+
+        # otherwise
+        return _consolidate_intersections_rebuild_graph(G, tolerance, reconnect_edges)
+
+    # otherwise, if we're not rebuilding the graph
+    if not G:
         # if graph has no nodes, just return empty GeoSeries
         return gpd.GeoSeries(crs=G.graph["crs"])
-    else:
-        # return the centroids of the merged intersection polygons
-        return _merge_nodes_geometric(G, tolerance).centroid
+
+    # otherwise, return the centroids of the merged intersection polygons
+    return _merge_nodes_geometric(G, tolerance).centroid
 
 
 def _merge_nodes_geometric(G, tolerance):

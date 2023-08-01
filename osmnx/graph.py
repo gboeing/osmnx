@@ -267,8 +267,9 @@ def graph_from_address(
 
     if return_coords:
         return G, point
-    else:
-        return G
+
+    # otherwise
+    return G
 
 
 def graph_from_place(
@@ -731,7 +732,7 @@ def _is_path_one_way(path, bidirectional, oneway_values):
         return True
 
     # rule 2
-    elif bidirectional:
+    if bidirectional:
         # if this is a bi-directional network type, then nothing in it is
         # considered one-way. eg, if this is a walking network, this may very
         # well be a one-way street (as cars/bikes go), but in a walking-only
@@ -741,19 +742,18 @@ def _is_path_one_way(path, bidirectional, oneway_values):
         return False
 
     # rule 3
-    elif "oneway" in path and path["oneway"] in oneway_values:
+    if "oneway" in path and path["oneway"] in oneway_values:
         # if this path is tagged as one-way and if it is not a bi-directional
         # network type then we'll add the path in one direction only
         return True
 
     # rule 4
-    elif "junction" in path and path["junction"] == "roundabout":
+    if "junction" in path and path["junction"] == "roundabout":
         # roundabouts are also one-way but are not explicitly tagged as such
         return True
 
-    else:
-        # otherwise this path is not tagged as a one-way
-        return False
+    # otherwise, if no rule passed then this path is not tagged as a one-way
+    return False
 
 
 def _is_path_reversed(path, reversed_values):

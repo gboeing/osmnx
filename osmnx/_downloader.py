@@ -195,13 +195,15 @@ def _resolve_host_via_doh(hostname):
         url = settings.doh_url_template.format(hostname=hostname)
         response = requests.get(url, timeout=settings.timeout)
         data = response.json()
+
+        # status 0 means NOERROR, so return the IP address
         if response.ok and data["Status"] == 0:
-            # status 0 means NOERROR, so return the IP address
             return data["Answer"][0]["data"]
-        else:  # pragma: no cover
-            # if we cannot reach DoH server or cannot resolve host, return hostname itself
-            utils.log(err_msg, level=lg.ERROR)
-            return hostname
+
+        # otherwise, if we cannot reach DoH server or cannot resolve host
+        # just return the hostname itself
+        utils.log(err_msg, level=lg.ERROR)
+        return hostname
 
     # if we cannot reach DoH server or cannot resolve host, return hostname itself
     except requests.exceptions.RequestException:  # pragma: no cover
@@ -251,8 +253,9 @@ def _config_dns(url):
         if args[0] == hostname:
             utils.log(f"Resolved {hostname!r} to {ip!r}")
             return _original_getaddrinfo(ip, *args[1:], **kwargs)
-        else:
-            return _original_getaddrinfo(*args, **kwargs)
+
+        # otherwise
+        return _original_getaddrinfo(*args, **kwargs)
 
     socket.getaddrinfo = _getaddrinfo
 

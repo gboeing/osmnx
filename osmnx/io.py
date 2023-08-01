@@ -491,11 +491,13 @@ def _convert_bool_string(value):
     """
     if value in {"True", "False"}:
         return value == "True"
-    elif isinstance(value, bool):
+
+    if isinstance(value, bool):
         return value
-    else:  # pragma: no cover
-        msg = f"invalid literal for boolean: {value!r}"
-        raise ValueError(msg)
+
+    # otherwise the value is not a valid boolean
+    msg = f"invalid literal for boolean: {value!r}"
+    raise ValueError(msg)
 
 
 def _stringify_nonnumeric_cols(gdf):
