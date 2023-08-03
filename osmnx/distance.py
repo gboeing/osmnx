@@ -245,8 +245,9 @@ def nearest_nodes(G, X, Y, return_dist=False):
 
     if return_dist:
         return nn, dist
-    else:
-        return nn
+
+    # otherwise
+    return nn
 
 
 def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
@@ -349,8 +350,9 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
     if return_dist:
         return ne, dist
-    else:
-        return ne
+
+    # otherwise
+    return ne
 
 
 def _single_shortest_path(G, orig, dest, weight):
@@ -425,7 +427,7 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
         return _single_shortest_path(G, orig, dest, weight)
 
     # if both orig and dest are iterables, ensure they have same lengths
-    elif hasattr(orig, "__iter__") and hasattr(dest, "__iter__"):
+    if hasattr(orig, "__iter__") and hasattr(dest, "__iter__"):
         if len(orig) != len(dest):  # pragma: no cover
             msg = "orig and dest must contain same number of elements"
             raise ValueError(msg)
@@ -450,10 +452,9 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
 
         return paths
 
-    # if only one of orig or dest is iterable and the other is not
-    else:  # pragma: no cover
-        msg = "orig and dest must either both be iterable or neither must be iterable"
-        raise ValueError(msg)
+    # otherwise only one of orig or dest is iterable and the other is not
+    msg = "orig and dest must either both be iterable or neither must be iterable"
+    raise ValueError(msg)
 
 
 def k_shortest_paths(G, orig, dest, k, weight="length"):

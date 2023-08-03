@@ -53,12 +53,12 @@ def _is_endpoint(G, node, strict=True):
         return True
 
     # rule 2
-    elif G.out_degree(node) == 0 or G.in_degree(node) == 0:
+    if G.out_degree(node) == 0 or G.in_degree(node) == 0:
         # if node has no incoming edges or no outgoing edges, it is an endpoint
         return True
 
     # rule 3
-    elif not ((n == 2) and (d in {2, 4})):  # noqa: PLR2004
+    if not ((n == 2) and (d in {2, 4})):  # noqa: PLR2004
         # else, if it does NOT have 2 neighbors AND either 2 or 4 directed
         # edges, it is an endpoint. either it has 1 or 3+ neighbors, in which
         # case it is a dead-end or an intersection of multiple streets or it has
@@ -68,27 +68,17 @@ def _is_endpoint(G, node, strict=True):
         return True
 
     # rule 4
-    elif not strict:
+    if not strict:
         # non-strict mode: do its incident edges have different OSM IDs?
-        osmids = []
+        # first collect all the OSM way IDs for incoming edges
+        # then collect all the OSM way IDs for outgoing edges
+        # if there is more than 1 OSM ID then it is an endpoint, otherwise not
+        incoming = [G.edges[u, node, k]["osmid"] for u in G.predecessors(node) for k in G[u][node]]
+        outgoing = [G.edges[node, v, k]["osmid"] for v in G.successors(node) for k in G[node][v]]
+        return len(set(incoming + outgoing)) > 1
 
-        # add all the edge OSM IDs for incoming edges
-        for u in G.predecessors(node):
-            for key in G[u][node]:
-                osmids.append(G.edges[u, node, key]["osmid"])
-
-        # add all the edge OSM IDs for outgoing edges
-        for v in G.successors(node):
-            for key in G[node][v]:
-                osmids.append(G.edges[node, v, key]["osmid"])
-
-        # if there is more than 1 OSM ID in the list of edge OSM IDs then it is
-        # an endpoint, if not, it isn't
-        return len(set(osmids)) > 1
-
-    # if none of the preceding rules returned true, then it is not an endpoint
-    else:
-        return False
+    # if none of the preceding rules passed, then it is not an endpoint
+    return False
 
 
 def _build_path(G, endpoint, endpoint_successor, endpoints):
@@ -139,14 +129,13 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
                         # we have come to the end of a self-looping edge, so
                         # add first node to end of path to close it and return
                         return path + [endpoint]
-                    else:  # pragma: no cover
-                        # this can happen due to OSM digitization error where
-                        # a one-way street turns into a two-way here, but
-                        # duplicate incoming one-way edges are present
-                        utils.log(
-                            f"Unexpected simplify pattern handled near {successor}", level=lg.WARN
-                        )
-                        return path
+
+                    # otherwise, this can happen due to OSM digitization error
+                    # where a one-way street turns into a two-way here, but
+                    # duplicate incoming one-way edges are present
+                    msg = f"Unexpected simplify pattern handled near {successor}"
+                    utils.log(msg, level=lg.WARN)
+                    return path
                 else:  # pragma: no cover
                     # if successor has >1 successors, then successor must have
                     # been an endpoint because you can go in 2 new directions.
@@ -431,14 +420,17 @@ def consolidate_intersections(
         if not G or not G.edges:
             # cannot rebuild a graph with no nodes or no edges, just return it
             return G
-        else:
-            return _consolidate_intersections_rebuild_graph(G, tolerance, reconnect_edges)
-    elif not G:
+
+        # otherwise
+        return _consolidate_intersections_rebuild_graph(G, tolerance, reconnect_edges)
+
+    # otherwise, if we're not rebuilding the graph
+    if not G:
         # if graph has no nodes, just return empty GeoSeries
         return gpd.GeoSeries(crs=G.graph["crs"])
-    else:
-        # return the centroids of the merged intersection polygons
-        return _merge_nodes_geometric(G, tolerance).centroid
+
+    # otherwise, return the centroids of the merged intersection polygons
+    return _merge_nodes_geometric(G, tolerance).centroid
 
 
 def _merge_nodes_geometric(G, tolerance):

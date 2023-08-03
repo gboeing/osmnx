@@ -259,7 +259,7 @@ def _create_overpass_query(polygon_coord_str, tags):
             tags_list.append({key: value})
         else:
             for value_item in value:
-                tags_list.append({key: value_item})
+                tags_list.append({key: value_item})  # noqa: PERF401
 
     # add node/way/relation query components one at a time
     components = []
@@ -273,7 +273,7 @@ def _create_overpass_query(polygon_coord_str, tags):
                 tag_str = f"[{key!r}={value!r}](poly:{polygon_coord_str!r});(._;>;);"
 
             for kind in ("node", "way", "relation"):
-                components.append(f"({kind}{tag_str});")
+                components.append(f"({kind}{tag_str});")  # noqa: PERF401
 
     # finalize query and return
     components = "".join(components)

@@ -73,8 +73,9 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             def _make_geom(u, v, data, x=x_lookup, y=y_lookup):
                 if "geometry" in data:
                     return data["geometry"]
-                else:
-                    return LineString((Point((x[u], y[u])), Point((x[v], y[v]))))
+
+                # otherwise
+                return LineString((Point((x[u], y[u])), Point((x[v], y[v]))))
 
             geom = map(_make_geom, u, v, data)
             gdf_edges = gpd.GeoDataFrame(data, crs=crs, geometry=list(geom))
@@ -96,13 +97,16 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
 
     if nodes and edges:
         return gdf_nodes, gdf_edges
-    elif nodes:
+
+    if nodes:
         return gdf_nodes
-    elif edges:
+
+    if edges:
         return gdf_edges
-    else:  # pragma: no cover
-        msg = "you must request nodes or edges or both"
-        raise ValueError(msg)
+
+    # otherwise
+    msg = "you must request nodes or edges or both"
+    raise ValueError(msg)
 
 
 def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):

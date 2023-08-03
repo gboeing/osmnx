@@ -246,11 +246,11 @@ def _collapse_multiple_maxspeed_values(value, agg):
     if not isinstance(value, list):
         return value
 
-    else:
-        try:
-            # clean each value in list and convert to kph if it is mph then
-            # return a single aggregated value
-            values = [_clean_maxspeed(x) for x in value]
-            return int(agg(pd.Series(values).dropna()))
-        except ValueError:
-            return None
+    # otherwise, if it is a list, process it
+    try:
+        # clean each value in list and convert to kph if it is mph then
+        # return a single aggregated value
+        values = [_clean_maxspeed(x) for x in value]
+        return int(agg(pd.Series(values).dropna()))
+    except ValueError:
+        return None

@@ -22,6 +22,7 @@ import pandas as pd
 import pytest
 from requests.exceptions import ConnectionError
 from shapely import wkt
+from shapely.geometry import GeometryCollection
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
 from shapely.geometry import MultiPoint
@@ -53,7 +54,7 @@ polygon = wkt.loads(p)
 
 
 def test_logging():
-    # test OSMnx's logger
+    """Test the logger."""
     ox.log("test a fake default message")
     ox.log("test a fake debug", level=lg.DEBUG)
     ox.log("test a fake info", level=lg.INFO)
@@ -68,7 +69,7 @@ def test_logging():
 
 
 def test_coords_rounding():
-    # test the rounding of geometry coordinates
+    """Test the rounding of geometry coordinates."""
     precision = 3
 
     shape1 = Point(1.123456, 2.123456)
@@ -100,16 +101,24 @@ def test_coords_rounding():
     )
     shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
 
+    with pytest.raises(TypeError, match="cannot round coordinates of unhandled geometry type"):
+        ox.utils_geo.round_geometry_coords(GeometryCollection(), precision)
 
-def test_geocode_to_gdf():
-    # test loading spatial boundaries and plotting
+
+def test_geocoder():
+    """Test retrieving elements by place name and OSM ID."""
     city = ox.geocode_to_gdf("R2999176", by_osmid=True)
     city = ox.geocode_to_gdf(place1, which_result=1, buffer_dist=100)
     city = ox.geocode_to_gdf(place2)
     city_projected = ox.project_gdf(city, to_crs="epsg:3395")
 
+    # test geocoding a bad query to lat/lng: should raise exception
+    with pytest.raises(ox._errors.InsufficientResponseError):
+        _ = ox.geocode("!@#$%^&*")
+
 
 def test_stats():
+    """Test generating graph stats."""
     # create graph, add a new node, add bearings, project it
     G = ox.graph_from_place(place1, network_type="all")
     G.add_node(0, x=location_point[1], y=location_point[0])
@@ -147,6 +156,7 @@ def test_stats():
 
 
 def test_osm_xml():
+    """Test working with .osm XML data."""
     # test loading a graph from a local .osm xml file
     node_id = 53098262
     neighbor_ids = 53092170, 53060438, 53027353, 667744075
@@ -204,6 +214,7 @@ def test_osm_xml():
 
 
 def test_elevation():
+    """Test working with elevation data."""
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
     rasters = list(Path("tests/input_data").glob("elevation*.tif"))
 
@@ -224,6 +235,7 @@ def test_elevation():
 
 
 def test_routing():
+    """Test working with speed, travel time, and routing."""
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
 
     # give each edge speed and travel time attributes
@@ -242,6 +254,12 @@ def test_routing():
     assert ox.speed._clean_maxspeed("signal") is None
     assert ox.speed._clean_maxspeed("100;70") is None
 
+    # test collapsing multiple mph values to single kph value
+    assert ox.speed._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44
+
+    # test collapsing invalid values: should return None
+    assert ox.speed._collapse_multiple_maxspeed_values(["mph", "kph"], np.mean) is None
+
     orig_x = np.array([-122.404771])
     dest_x = np.array([-122.401429])
     orig_y = np.array([37.794302])
@@ -252,6 +270,11 @@ def test_routing():
     # test non-numeric weight (should raise ValueError)
     with pytest.raises(ValueError, match="contains non-numeric values"):
         route = ox.shortest_path(G, orig_node, dest_node, weight="highway")
+
+    # mismatch iterable and non-iterable orig/dest should raise ValueError
+    msg = "orig and dest must either both be iterable or neither must be iterable"
+    with pytest.raises(ValueError, match=msg):
+        route = ox.shortest_path(G, orig_node, [dest_node])
 
     # test missing weight (should raise warning)
     route = ox.shortest_path(G, orig_node, dest_node, weight="time")
@@ -292,6 +315,7 @@ def test_routing():
 
 
 def test_plots():
+    """Test visualization methods."""
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     Gp = ox.project_graph(G)
 
@@ -328,6 +352,7 @@ def test_plots():
 
 
 def test_find_nearest():
+    """Test nearest node/edge searching."""
     # get graph and x/y coords to search
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
     Gp = ox.project_graph(G)
@@ -346,6 +371,7 @@ def test_find_nearest():
 
 
 def test_endpoints():
+    """Test different API endpoints."""
     default_timeout = ox.settings.timeout
     default_key = ox.settings.nominatim_key
     default_nominatim_endpoint = ox.settings.nominatim_endpoint
@@ -407,6 +433,7 @@ def test_endpoints():
 
 
 def test_graph_save_load():
+    """Test saving/loading graphs to/from disk."""
     # save graph as shapefile and geopackage
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     ox.save_graph_shapefile(G, directed=True)
@@ -423,6 +450,12 @@ def test_graph_save_load():
     gdf_nodes2, gdf_edges2 = ox.graph_to_gdfs(G2)
     assert set(gdf_nodes1.index) == set(gdf_nodes2.index) == set(G.nodes) == set(G2.nodes)
     assert set(gdf_edges1.index) == set(gdf_edges2.index) == set(G.edges) == set(G2.edges)
+
+    # test code branches that should raise exceptions
+    with pytest.raises(ValueError, match="you must request nodes or edges or both"):
+        ox.graph_to_gdfs(G2, nodes=False, edges=False)
+    with pytest.raises(ValueError, match="invalid literal for boolean"):
+        ox.io._convert_bool_string("T")
 
     # create random boolean graph/node/edge attributes
     attr_name = "test_bool"
@@ -474,6 +507,7 @@ def test_graph_save_load():
 
 
 def test_graph_from_functions():
+    """Test downloading graphs from Overpass."""
     # graph from bounding box
     _ = ox.utils_geo.bbox_from_point(location_point, project_utm=True, return_crs=True)
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
@@ -520,6 +554,7 @@ def test_graph_from_functions():
 
 
 def test_features():
+    """Test downloading features from Overpass."""
     # geometries_from_bbox - bounding box query to return no data
     with pytest.raises(ox._errors.InsufficientResponseError):
         gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
