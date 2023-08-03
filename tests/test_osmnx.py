@@ -22,6 +22,7 @@ import pandas as pd
 import pytest
 from requests.exceptions import ConnectionError
 from shapely import wkt
+from shapely.geometry import GeometryCollection
 from shapely.geometry import LineString
 from shapely.geometry import MultiLineString
 from shapely.geometry import MultiPoint
@@ -99,6 +100,9 @@ def test_coords_rounding():
         ]
     )
     shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
+
+    with pytest.raises(TypeError, match="cannot round coordinates of unhandled geometry type"):
+        ox.utils_geo.round_geometry_coords(GeometryCollection(), precision)
 
 
 def test_geocode_to_gdf():
@@ -252,6 +256,11 @@ def test_routing():
     # test non-numeric weight (should raise ValueError)
     with pytest.raises(ValueError, match="contains non-numeric values"):
         route = ox.shortest_path(G, orig_node, dest_node, weight="highway")
+
+    # mismatch iterable and non-iterable orig/dest should raise ValueError
+    msg = "orig and dest must either both be iterable or neither must be iterable"
+    with pytest.raises(ValueError, match=msg):
+        route = ox.shortest_path(G, orig_node, [dest_node])
 
     # test missing weight (should raise warning)
     route = ox.shortest_path(G, orig_node, dest_node, weight="time")
@@ -423,6 +432,12 @@ def test_graph_save_load():
     gdf_nodes2, gdf_edges2 = ox.graph_to_gdfs(G2)
     assert set(gdf_nodes1.index) == set(gdf_nodes2.index) == set(G.nodes) == set(G2.nodes)
     assert set(gdf_edges1.index) == set(gdf_edges2.index) == set(G.edges) == set(G2.edges)
+
+    # test code branches that should raise exceptions
+    with pytest.raises(ValueError, match="you must request nodes or edges or both"):
+        ox.graph_to_gdfs(G2, nodes=False, edges=False)
+    with pytest.raises(ValueError, match="invalid literal for boolean"):
+        ox.io._convert_bool_string("T")
 
     # create random boolean graph/node/edge attributes
     attr_name = "test_bool"

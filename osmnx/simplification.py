@@ -133,9 +133,8 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
                     # otherwise, this can happen due to OSM digitization error
                     # where a one-way street turns into a two-way here, but
                     # duplicate incoming one-way edges are present
-                    utils.log(
-                        f"Unexpected simplify pattern handled near {successor}", level=lg.WARN
-                    )
+                    msg = f"Unexpected simplify pattern handled near {successor}"
+                    utils.log(msg, level=lg.WARN)
                     return path
                 else:  # pragma: no cover
                     # if successor has >1 successors, then successor must have
