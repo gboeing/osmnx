@@ -103,9 +103,7 @@ max-complexity = 14
 "./osmnx/_api.py" = ["F401"]  # allow API imports to go unused
 "./tests/test_osmnx.py" = [
     "E402",    # allow imports not at the top of the file
-    "D103",    # allow missing function docstrings
     "F841",    # allow unused local variables
-    "I001",    # allow unsorted imports
     "PLR2004", # allow magic values in comparisons
 ]
 
