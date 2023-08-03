@@ -105,12 +105,16 @@ def test_coords_rounding():
         ox.utils_geo.round_geometry_coords(GeometryCollection(), precision)
 
 
-def test_geocode_to_gdf():
+def test_geocoder():
     """Test retrieving elements by place name and OSM ID."""
     city = ox.geocode_to_gdf("R2999176", by_osmid=True)
     city = ox.geocode_to_gdf(place1, which_result=1, buffer_dist=100)
     city = ox.geocode_to_gdf(place2)
     city_projected = ox.project_gdf(city, to_crs="epsg:3395")
+
+    # test geocoding a bad query to lat/lng: should raise exception
+    with pytest.raises(ox._errors.InsufficientResponseError):
+        _ = ox.geocode("!@#$%^&*")
 
 
 def test_stats():
@@ -249,6 +253,12 @@ def test_routing():
     assert ox.speed._clean_maxspeed("60|100 mph") == pytest.approx(128.7472)
     assert ox.speed._clean_maxspeed("signal") is None
     assert ox.speed._clean_maxspeed("100;70") is None
+
+    # test collapsing multiple mph values to single kph value
+    assert ox.speed._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44
+
+    # test collapsing invalid values: should return None
+    assert ox.speed._collapse_multiple_maxspeed_values(["mph", "kph"], np.mean) is None
 
     orig_x = np.array([-122.404771])
     dest_x = np.array([-122.401429])
