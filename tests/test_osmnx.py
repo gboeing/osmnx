@@ -54,7 +54,7 @@ polygon = wkt.loads(p)
 
 
 def test_logging():
-    # test OSMnx's logger
+    """Test the logger."""
     ox.log("test a fake default message")
     ox.log("test a fake debug", level=lg.DEBUG)
     ox.log("test a fake info", level=lg.INFO)
@@ -69,7 +69,7 @@ def test_logging():
 
 
 def test_coords_rounding():
-    # test the rounding of geometry coordinates
+    """Test the rounding of geometry coordinates."""
     precision = 3
 
     shape1 = Point(1.123456, 2.123456)
@@ -106,7 +106,7 @@ def test_coords_rounding():
 
 
 def test_geocode_to_gdf():
-    # test loading spatial boundaries and plotting
+    """Test retrieving elements by place name and OSM ID."""
     city = ox.geocode_to_gdf("R2999176", by_osmid=True)
     city = ox.geocode_to_gdf(place1, which_result=1, buffer_dist=100)
     city = ox.geocode_to_gdf(place2)
@@ -114,6 +114,7 @@ def test_geocode_to_gdf():
 
 
 def test_stats():
+    """Test generating graph stats."""
     # create graph, add a new node, add bearings, project it
     G = ox.graph_from_place(place1, network_type="all")
     G.add_node(0, x=location_point[1], y=location_point[0])
@@ -151,6 +152,7 @@ def test_stats():
 
 
 def test_osm_xml():
+    """Test working with .osm XML data."""
     # test loading a graph from a local .osm xml file
     node_id = 53098262
     neighbor_ids = 53092170, 53060438, 53027353, 667744075
@@ -208,6 +210,7 @@ def test_osm_xml():
 
 
 def test_elevation():
+    """Test working with elevation data."""
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
     rasters = list(Path("tests/input_data").glob("elevation*.tif"))
 
@@ -228,6 +231,7 @@ def test_elevation():
 
 
 def test_routing():
+    """Test working with speed, travel time, and routing."""
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
 
     # give each edge speed and travel time attributes
@@ -301,6 +305,7 @@ def test_routing():
 
 
 def test_plots():
+    """Test visualization methods."""
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     Gp = ox.project_graph(G)
 
@@ -337,6 +342,7 @@ def test_plots():
 
 
 def test_find_nearest():
+    """Test nearest node/edge searching."""
     # get graph and x/y coords to search
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
     Gp = ox.project_graph(G)
@@ -355,6 +361,7 @@ def test_find_nearest():
 
 
 def test_endpoints():
+    """Test different API endpoints."""
     default_timeout = ox.settings.timeout
     default_key = ox.settings.nominatim_key
     default_nominatim_endpoint = ox.settings.nominatim_endpoint
@@ -416,6 +423,7 @@ def test_endpoints():
 
 
 def test_graph_save_load():
+    """Test saving/loading graphs to/from disk."""
     # save graph as shapefile and geopackage
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     ox.save_graph_shapefile(G, directed=True)
@@ -489,6 +497,7 @@ def test_graph_save_load():
 
 
 def test_graph_from_functions():
+    """Test downloading graphs from Overpass."""
     # graph from bounding box
     _ = ox.utils_geo.bbox_from_point(location_point, project_utm=True, return_crs=True)
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
@@ -535,6 +544,7 @@ def test_graph_from_functions():
 
 
 def test_features():
+    """Test downloading features from Overpass."""
     # geometries_from_bbox - bounding box query to return no data
     with pytest.raises(ox._errors.InsufficientResponseError):
         gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
