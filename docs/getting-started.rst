@@ -75,7 +75,7 @@ Topology Clean-Up
 
 The :code:`simplification` module automatically processes network topology from the original raw OpenStreetMap data such that nodes represent intersections/dead-ends and edges represent the street segments that link them. This takes two primary forms: graph simplification and intersection consolidation.
 
-**Graph simplification** cleans up the graph's topology so that nodes represent intersections or dead-ends and edges represent street segments. This is important because in OpenStreetMap raw data, ways comprise sets of straight-line segments between nodes: that is, nodes are vertices for streets' curving line geometries, not just intersections and dead-ends. By default, OSMnx simplifies this topology by discarding non-intersection/dead-end nodes while retaining the complete true edge geometry as an edge attribute.
+**Graph simplification** cleans up the graph's topology so that nodes represent intersections or dead-ends and edges represent street segments. This is important because in OpenStreetMap raw data, ways comprise sets of straight-line segments between nodes: that is, nodes are vertices for streets' curving line geometries, not just intersections and dead-ends. By default, OSMnx simplifies this topology by discarding non-intersection/dead-end nodes while retaining the complete true edge geometry as an edge attribute. When multiple OpenStreetMap ways are merged into a single graph edge, the ways' attribute values are collapsed into a single edge attribute value if they are all the same, or a list of unique values if any of them differ.
 
 **Intersection consolidation** is important because many real-world street networks feature complex intersections and traffic circles, resulting in a cluster of graph nodes where there is really just one true intersection as we would think of it in transportation or urban design. Similarly, divided roads are often represented by separate centerline edges: the intersection of two divided roads thus creates 4 nodes, representing where each edge intersects a perpendicular edge, but these 4 nodes represent a single intersection in the real world. OSMnx can consolidate such complex intersections into a single node and optionally rebuild the graph's edge topology accordingly.
 
@@ -84,7 +84,7 @@ Converting, Projecting, Saving
 
 OSMnx can convert a MultiDiGraph to a `MultiGraph`_ if you prefer an undirected representation of the network, or to a `DiGraph`_ if you prefer a directed representation without any parallel edges.
 
-It can also convert a MultiDiGraph to/from GeoPandas node and edge `GeoDataFrames`_. This allows you to load arbitrary node/edge ShapeFiles or GeoPackage layers as GeoDataFrames then model them as a MultiDiGraph for graph analysis.
+It can also convert a MultiDiGraph to/from GeoPandas node and edge `GeoDataFrames`_. The nodes GeoDataFrame is indexed by OSM ID and the edges GeoDataFrame is multi-indexed by :code:`u, v, key` just like a NetworkX edge. This allows you to load arbitrary node/edge ShapeFiles or GeoPackage layers as GeoDataFrames then model them as a MultiDiGraph for graph analysis.
 
 You can easily project your graphs to different coordinate reference systems using the :code:`projection` module. If you're unsure which `CRS`_ you want to project to, OSMnx can automatically determine an appropriate UTM CRS for you.
 
