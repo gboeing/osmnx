@@ -64,16 +64,16 @@ Using OSMnx's :code:`features` module, you can search for and download geospatia
 Modeling a Network
 ^^^^^^^^^^^^^^^^^^
 
-Using OSMnx's :code:`graph` module, you can retrieve any spatial network data (such as streets, paths, canals, etc) from the Overpass API and model them as NetworkX `MultiDiGraphs`_. MultiDiGraphs are nonplanar directed graphs with possible self-loops and parallel edges.
+Using OSMnx's :code:`graph` module, you can retrieve any spatial network data (such as streets, paths, rail, canals, etc) from the Overpass API and model them as NetworkX `MultiDiGraphs`_.
 
-Thus, a one-way street will be represented with a single directed edge from node *u* to node *v*, but a bidirectional street will be represented with two reciprocal directed edges (with identical geometries): one from node *u* to node *v* and another from *v* to *u*, to represent both possible directions of flow. Because these graphs are nonplanar, they correctly model the topology of interchanges, bridges, and tunnels. That is, edge crossings in a two-dimensional plane are not intersections in an OSMnx model unless they represent true junctions in the three-dimensional real world.
+MultiDiGraphs are nonplanar directed graphs with possible self-loops and parallel edges. Thus, a one-way street will be represented with a single directed edge from node *u* to node *v*, but a bidirectional street will be represented with two reciprocal directed edges (with identical geometries): one from node *u* to node *v* and another from *v* to *u*, to represent both possible directions of flow. Because these graphs are nonplanar, they correctly model the topology of interchanges, bridges, and tunnels. That is, edge crossings in a two-dimensional plane are not intersections in an OSMnx model unless they represent true junctions in the three-dimensional real world.
 
-Under the hood, OSMnx does several things to generate the best possible model. It initially creates a 500m-buffered graph before truncating it to your desired query area, to ensure accurate streets-per-node stats and to attenuate graph perimeter effects. It also simplifies the graph topology as discussed in the following section.
+The :code:`graph` module uses filters to query the Overpass API: you can either specify a built-in network type or provide your own custom filter with `Overpass QL`_. Refer to the :code:`graph` module's documentation for more details. Under the hood, OSMnx does several things to generate the best possible model. It initially creates a 500m-buffered graph before truncating it to your desired query area, to ensure accurate streets-per-node stats and to attenuate graph perimeter effects. It also simplifies the graph topology as discussed below.
 
 Topology Clean-Up
 ^^^^^^^^^^^^^^^^^
 
-The :code:`simplification` module automatically processes network topology from the original raw OpenStreetMap data such that nodes represent intersections/dead-ends and edges represent the street segments that link them. This takes two primary forms: graph simplification and intersection consolidation.
+The :code:`simplification` module automatically processes the network's topology from the original raw OpenStreetMap data, such that nodes represent intersections/dead-ends and edges represent the street segments that link them. This takes two primary forms: graph simplification and intersection consolidation.
 
 **Graph simplification** cleans up the graph's topology so that nodes represent intersections or dead-ends and edges represent street segments. This is important because in OpenStreetMap raw data, ways comprise sets of straight-line segments between nodes: that is, nodes are vertices for streets' curving line geometries, not just intersections and dead-ends. By default, OSMnx simplifies this topology by discarding non-intersection/dead-end nodes while retaining the complete true edge geometry as an edge attribute. When multiple OpenStreetMap ways are merged into a single graph edge, the ways' attribute values are collapsed into a single edge attribute value if they are all the same, or a list of unique values if any of them differ.
 
@@ -82,18 +82,16 @@ The :code:`simplification` module automatically processes network topology from 
 Converting, Projecting, Saving
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-OSMnx can convert a MultiDiGraph to a `MultiGraph`_ if you prefer an undirected representation of the network, or to a `DiGraph`_ if you prefer a directed representation without any parallel edges.
+OSMnx can convert a MultiDiGraph to a `MultiGraph`_ if you prefer an undirected representation of the network, or to a `DiGraph`_ if you prefer a directed representation without any parallel edges. It can also convert a MultiDiGraph to/from GeoPandas node and edge `GeoDataFrames`_. The nodes GeoDataFrame is indexed by OSM ID and the edges GeoDataFrame is multi-indexed by :code:`u, v, key` just like a NetworkX edge. This allows you to load arbitrary node/edge ShapeFiles or GeoPackage layers as GeoDataFrames then model them as a MultiDiGraph for graph analysis.
 
-It can also convert a MultiDiGraph to/from GeoPandas node and edge `GeoDataFrames`_. The nodes GeoDataFrame is indexed by OSM ID and the edges GeoDataFrame is multi-indexed by :code:`u, v, key` just like a NetworkX edge. This allows you to load arbitrary node/edge ShapeFiles or GeoPackage layers as GeoDataFrames then model them as a MultiDiGraph for graph analysis.
+You can easily project your graph to different coordinate reference systems using the :code:`projection` module. If you're unsure which `CRS`_ you want to project to, OSMnx can automatically determine an appropriate UTM CRS for you.
 
-You can easily project your graphs to different coordinate reference systems using the :code:`projection` module. If you're unsure which `CRS`_ you want to project to, OSMnx can automatically determine an appropriate UTM CRS for you.
-
-Using the :code:`io` module, you can save your OSMnx graph to disk as a GraphML file (to load into other network analysis software) or a GeoPackage (to load into other GIS software). Use the GraphML format whenever saving a graph for later work with OSMnx.
+Using the :code:`io` module, you can save your graph to disk as a GraphML file (to load into other network analysis software) or a GeoPackage (to load into other GIS software). Use the GraphML format whenever saving a graph for later work with OSMnx.
 
 Working with Elevation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Using the :code:`elevation` module, you can automatically attach elevations to the graph's nodes from a local raster file or a web service like the Google Maps `Elevation API`_. You can also calculate edge grades (i.e., rise-over-run).
+The :code:`elevation` module lets you automatically attach elevations to the graph's nodes from a local raster file or a web service like the Google Maps `Elevation API`_. You can also calculate edge grades (i.e., rise-over-run) and analyze the steepness of certain streets or routes.
 
 Network Statistics
 ^^^^^^^^^^^^^^^^^^
@@ -145,6 +143,7 @@ Frequently Asked Questions
 .. _MultiGraph: https://networkx.org/documentation/stable/reference/classes/multigraph.html
 .. _DiGraph: https://networkx.org/documentation/stable/reference/classes/digraph.html
 .. _GeoDataFrames: https://geopandas.org/en/stable/docs/reference/geodataframe.html
+.. _Overpass QL: https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
 .. _CRS: https://en.wikipedia.org/wiki/Coordinate_reference_system
 .. _Elevation API: https://developers.google.com/maps/documentation/elevation
 .. _Folium: https://python-visualization.github.io/folium/
