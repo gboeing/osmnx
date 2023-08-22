@@ -10,7 +10,7 @@ body:
     id: contributing
     attributes:
       label: Contributing guidelines
-      description: Before you proceed, read the [contributing guidelines](../../CONTRIBUTING.md) regarding where to ask usage questions and how to file a bug report.
+      description: Before you proceed, read the [contributing guidelines](../CONTRIBUTING.md) regarding where to ask usage questions and how to file a bug report.
       options:
         - label: I understand the contributing guidelines
           required: true
