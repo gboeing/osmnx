@@ -35,4 +35,4 @@ dependencies:
 
   # docs
   - furo
-  - sphinx=6 # pin to version from /docs/requirements.txt
+  - sphinx=7 # pin to version from /docs/requirements.txt

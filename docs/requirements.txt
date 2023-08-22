@@ -1,2 +1,2 @@
 furo
-sphinx == 6.*  # same value as needs_sphinx in /docs/conf.py
+sphinx == 7.*  # same value as needs_sphinx in /docs/conf.py

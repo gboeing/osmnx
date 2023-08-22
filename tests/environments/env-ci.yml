@@ -32,4 +32,4 @@ dependencies:
 
   # docs
   - furo
-  - sphinx
+  - sphinx=7
