@@ -481,8 +481,8 @@ def _is_same_geometry(ls1, ls2):
     # reverse the first LineString's coordinates' direction
     geom1_r = [tuple(reversed(coords)) for coords in ls1.xy]
 
-    # if first geometry matches second in either direction, return True
-    return geom1 == geom2 or geom1_r == geom2
+    # if second geometry matches first in either direction, return True
+    return geom2 in (geom1, geom1_r)
 
 
 def _update_edge_keys(G):

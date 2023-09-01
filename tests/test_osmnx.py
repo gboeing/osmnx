@@ -318,6 +318,7 @@ def test_plots():
     """Test visualization methods."""
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     Gp = ox.project_graph(G)
+    G = ox.project_graph(G, to_latlong=True)
 
     # test getting colors
     co = ox.plot.get_colors(n=5, return_hex=True)
