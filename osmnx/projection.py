@@ -66,7 +66,7 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     Parameters
     ----------
     geometry : shapely geometry
-        the geometry to project to a CRS
+        the geometry to be projected
     crs : string or pyproj.CRS
         the initial CRS of `geometry`. if None, it will be set to
         `settings.default_crs`
@@ -119,7 +119,7 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
         msg = "GeoDataFrame must have a valid CRS and cannot be empty"
         raise ValueError(msg)
 
-    # if to_latlong is True, project the gdf to lat-long (the default_crs)
+    # if to_latlong is True, project the gdf to the default_crs
     if to_latlong:
         to_crs = settings.default_crs
 
@@ -129,13 +129,13 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
             msg = "Geometries must be unprojected to calculate a UTM zone"
             raise ValueError(msg)
 
-        # calculate representative average lng/lat of all geometries in gdf
+        # calculate the "typical" lat-long across all geometries in gdf
         rp = gdf.representative_point()
-        to_crs = coords_to_utm_zone((rp.y.mean(), rp.x.mean()))
+        to_crs = coords_to_utm_zone((rp.y.median(), rp.x.median()))
 
     # project the gdf
     gdf_proj = gdf.to_crs(to_crs)
-    utils.log(f"Projected GeoDataFrame to {gdf_proj.crs}")
+    utils.log(f"Projected GeoDataFrame to {to_crs}")
     return gdf_proj
 
 
