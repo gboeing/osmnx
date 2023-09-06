@@ -1,7 +1,6 @@
 """Project a graph, GeoDataFrame, or geometry to a different CRS."""
 
 import geopandas as gpd
-import numpy as np
 
 from . import settings
 from . import utils
@@ -27,41 +26,14 @@ def is_projected(crs):
     return gpd.GeoSeries(crs=crs).crs.is_projected
 
 
-def coords_to_utm_zone(coords):
-    """
-    Return the CRS of the UTM zone that contains a (lat, lng) point.
-
-    The simple Universal Transverse Mercator coordinate system zone calculator
-    in this function works well for most latitudes, but ignores irregular zone
-    boundaries and may not work in extreme northern or southern locations.
-
-    Parameters
-    ----------
-    coords : tuple of floats
-        the (lat, lng) coordinates
-
-    Returns
-    -------
-    utm_crs : string
-        PROJ.4 string defining the CRS for this UTM zone
-    """
-    lat, lng = coords
-
-    # calculate UTM zone from lng, and whether it's south of equator from lat
-    zone = int(np.floor((lng + 180) / 6) + 1)
-    south = " +south" if lat < 0 else ""
-    return f"+proj=utm +zone={zone}{south} +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
-
-
 def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     """
     Project a Shapely geometry from its current CRS to another.
 
-    If `to_latlong` is `True`, this projects the geometry to the CRS defined
-    by `settings.default_crs`, otherwise it projects it to the CRS defined by
-    `to_crs`. If `to_crs` is `None`, it projects it to the CRS of the UTM zone
-    in which `geometry`'s approximate centroid lies, using the
-    `coords_to_utm_zone` function.
+    If `to_latlong` is `True`, this projects the GeoDataFrame to the CRS
+    defined by `settings.default_crs`, otherwise it projects it to the CRS
+    defined by `to_crs`. If `to_crs` is `None`, it projects it to the CRS of
+    an appropriate UTM zone given `geometry`'s bounds.
 
     Parameters
     ----------
@@ -94,11 +66,10 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
     """
     Project a GeoDataFrame from its current CRS to another.
 
-    If `to_latlong` is `True`, this projects the GeoDataFrame to the CRS defined
-    by `settings.default_crs`, otherwise it projects it to the CRS defined by
-    `to_crs`. If `to_crs` is `None`, it projects it to the CRS of the UTM zone
-    in which `gdf`'s approximate centroid lies, using the `coords_to_utm_zone`
-    function.
+    If `to_latlong` is `True`, this projects the GeoDataFrame to the CRS
+    defined by `settings.default_crs`, otherwise it projects it to the CRS
+    defined by `to_crs`. If `to_crs` is `None`, it projects it to the CRS of
+    an appropriate UTM zone given `gdf`'s bounds.
 
     Parameters
     ----------
@@ -125,17 +96,12 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
 
     # else if to_crs is None, project gdf to an appropriate UTM zone
     elif to_crs is None:
-        if is_projected(gdf.crs):  # pragma: no cover
-            msg = "Geometries must be unprojected to calculate a UTM zone"
-            raise ValueError(msg)
-
-        # calculate the "typical" lat-long across all geometries in gdf
-        rp = gdf.representative_point()
-        to_crs = coords_to_utm_zone((rp.y.median(), rp.x.median()))
+        to_crs = gdf.estimate_utm_crs()
 
     # project the gdf
     gdf_proj = gdf.to_crs(to_crs)
-    utils.log(f"Projected GeoDataFrame to {to_crs}")
+    crs_desc = f"{gdf_proj.crs.to_string()} / {gdf_proj.crs.name}"
+    utils.log(f"Projected GeoDataFrame to {crs_desc!r}")
     return gdf_proj
 
 
@@ -143,11 +109,10 @@ def project_graph(G, to_crs=None, to_latlong=False):
     """
     Project a graph from its current CRS to another.
 
-    If `to_latlong` is `True`, this projects the graph to the CRS defined by
-    `settings.default_crs`, otherwise it projects it to the CRS defined by
-    `to_crs`. If `to_crs` is `None`, it projects it to the CRS of the UTM zone
-    in which `G`'s approximate centroid lies, using the `coords_to_utm_zone`
-    function.
+    If `to_latlong` is `True`, this projects the GeoDataFrame to the CRS
+    defined by `settings.default_crs`, otherwise it projects it to the CRS
+    defined by `to_crs`. If `to_crs` is `None`, it projects it to the CRS of
+    an appropriate UTM zone given `G`'s bounds.
 
     Parameters
     ----------

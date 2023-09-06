@@ -2,9 +2,8 @@
 
 ## Unreleased
 
-- fix the projection module to correctly identify southern hemisphere UTM zones (#1057)
-- add a to_latlong parameter in the projection.project_graph function (#1057)
-- add projection.coords_to_utm_zone function for calculating UTM zones from points (#1057)
+- better automatic UTM handling in the projection module (#1059)
+- add to_latlong parameter to the projection.project_graph function (#1057)
 - under-the-hood code clean-up (#1047)
 
 ## 1.6.0 (2023-07-28)
