@@ -3,7 +3,7 @@
 ## Unreleased
 
 - better automatic UTM handling in the projection module (#1059)
-- add to_latlong parameter to the projection.project_graph function (#1057)
+- add to_latlong parameter to the projection.project_graph function for API consistency (#1057)
 - under-the-hood code clean-up (#1047)
 
 ## 1.6.0 (2023-07-28)
