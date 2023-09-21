@@ -20,7 +20,7 @@ from . import utils
 from ._errors import InsufficientResponseError
 
 
-def geocode(query):
+def geocode(query,location_json=False):
     """
     Geocode place names or addresses to (lat, lng) with the Nominatim API.
 
@@ -50,11 +50,12 @@ def geocode(query):
         lng = float(response_json[0]["lon"])
         point = (lat, lng)
         utils.log(f"Geocoded {query!r} to {point}")
+        if location_json:
+            return point,response_json
         return point
-
-    # otherwise we got no results back
-    msg = f"Nominatim could not geocode query {query!r}"
-    raise InsufficientResponseError(msg)
+    else:
+        msg = f"Nominatim could not geocode query {query!r}"
+        raise InsufficientResponseError(msg)
 
 
 def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
