@@ -14,7 +14,7 @@ from . import settings
 from . import utils
 from ._errors import InsufficientResponseError
 from ._errors import ResponseStatusCodeError
-
+import random
 # capture getaddrinfo function to use original later after mutating it
 _original_getaddrinfo = socket.getaddrinfo
 
@@ -150,8 +150,13 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     -------
     headers : dict
     """
+    user_agent_list=[settings.default_user_agent,
+                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
+                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36"]
     if user_agent is None:
-        user_agent = settings.default_user_agent
+        user_agent=user_agent_list[random.randint(0,len(user_agent_list))]
     if referer is None:
         referer = settings.default_referer
     if accept_language is None:
@@ -195,20 +200,16 @@ def _resolve_host_via_doh(hostname):
         url = settings.doh_url_template.format(hostname=hostname)
         response = requests.get(url, timeout=settings.timeout)
         data = response.json()
-
-    # if we cannot reach DoH server or resolve host, return hostname itself
-    except requests.exceptions.RequestException:  # pragma: no cover
-        utils.log(err_msg, level=lg.ERROR)
-        return hostname
-
-    # if there were no exceptions, return
-    else:
         if response.ok and data["Status"] == 0:
             # status 0 means NOERROR, so return the IP address
             return data["Answer"][0]["data"]
+        else:  # pragma: no cover
+            # if we cannot reach DoH server or cannot resolve host, return hostname itself
+            utils.log(err_msg, level=lg.ERROR)
+            return hostname
 
-        # otherwise, if we cannot reach DoH server or cannot resolve host
-        # just return the hostname itself
+    # if we cannot reach DoH server or cannot resolve host, return hostname itself
+    except requests.exceptions.RequestException:  # pragma: no cover
         utils.log(err_msg, level=lg.ERROR)
         return hostname
 
@@ -255,9 +256,8 @@ def _config_dns(url):
         if args[0] == hostname:
             utils.log(f"Resolved {hostname!r} to {ip!r}")
             return _original_getaddrinfo(ip, *args[1:], **kwargs)
-
-        # otherwise
-        return _original_getaddrinfo(*args, **kwargs)
+        else:
+            return _original_getaddrinfo(*args, **kwargs)
 
     socket.getaddrinfo = _getaddrinfo
 
