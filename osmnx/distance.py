@@ -9,6 +9,7 @@ from shapely.geometry import Point
 from shapely.strtree import STRtree
 
 from . import projection
+from . import routing
 from . import utils
 from . import utils_geo
 from . import utils_graph
@@ -351,3 +352,72 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
     # otherwise
     return ne
+
+
+def shortest_path(G, orig, dest, weight="length", cpus=1):
+    """
+    Do not use, deprecated.
+
+    The `shortest_path` function has moved to the `routing` module. Calling
+    it via the `distance` module will raise an error in a future release.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    orig : int or list
+        origin node ID, or a list of origin node IDs
+    dest : int or list
+        destination node ID, or a list of destination node IDs
+    weight : string
+        edge attribute to minimize when solving shortest path
+    cpus : int
+        how many CPU cores to use; if None, use all available
+
+    Returns
+    -------
+    path : list
+        list of node IDs constituting the shortest path, or, if orig and dest
+        are lists, then a list of path lists
+    """
+    warn(
+        "The `shortest_path` function has moved to the `routing` module. "
+        "Calling it via the `distance` module will raise an error in a future release.",
+        stacklevel=2,
+    )
+    return routing.shortest_path(G, orig, dest, weight, cpus)
+
+
+def k_shortest_paths(G, orig, dest, k, weight="length"):
+    """
+    Do not use, deprecated.
+
+    The `k_shortest_path` function has moved to the `routing` module. Calling
+    it via the `distance` module will raise an error in a future release.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    orig : int
+        origin node ID
+    dest : int
+        destination node ID
+    k : int
+        number of shortest paths to solve
+    weight : string
+        edge attribute to minimize when solving shortest paths. default is
+        edge length in meters.
+
+    Yields
+    ------
+    path : list
+        a generator of `k` shortest paths ordered by total weight. each path
+        is a list of node IDs.
+    """
+    warn(
+        "The `k_shortest_paths` function has moved to the `routing` module. "
+        "Calling it via the `distance` module will raise an error in a future release.",
+        stacklevel=2,
+    )
+    return routing.k_shortest_paths(G, orig, dest, k, weight)
