@@ -52,35 +52,36 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
     if not (hasattr(orig, "__iter__") or hasattr(dest, "__iter__")):
         return _single_shortest_path(G, orig, dest, weight)
 
-    # if both orig and dest are iterables, ensure they have same lengths
-    if hasattr(orig, "__iter__") and hasattr(dest, "__iter__"):
-        if len(orig) != len(dest):  # pragma: no cover
-            msg = "orig and dest must contain same number of elements"
-            raise ValueError(msg)
+    # if only 1 of orig or dest is iterable and the other is not, raise error
+    if not (hasattr(orig, "__iter__") and hasattr(dest, "__iter__")):
+        msg = "orig and dest must either both be iterable or neither must be iterable"
+        raise ValueError(msg)
 
-        if cpus is None:
-            cpus = mp.cpu_count()
-        cpus = min(cpus, mp.cpu_count())
-        utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")
+    # if both orig and dest are iterable, ensure they have same lengths
+    if len(orig) != len(dest):  # pragma: no cover
+        msg = "orig and dest must be of equal length"
+        raise ValueError(msg)
 
-        # if single-threading, calculate each shortest path one at a time
-        if cpus == 1:
-            paths = [_single_shortest_path(G, o, d, weight) for o, d in zip(orig, dest)]
+    # determine how many cpu cores to use
+    if cpus is None:
+        cpus = mp.cpu_count()
+    cpus = min(cpus, mp.cpu_count())
+    utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")
 
-        # if multi-threading, calculate shortest paths in parallel
-        else:
-            args = ((G, o, d, weight) for o, d in zip(orig, dest))
-            pool = mp.Pool(cpus)
-            sma = pool.starmap_async(_single_shortest_path, args)
-            paths = sma.get()
-            pool.close()
-            pool.join()
+    # if single-threading, calculate each shortest path one at a time
+    if cpus == 1:
+        paths = [_single_shortest_path(G, o, d, weight) for o, d in zip(orig, dest)]
 
-        return paths
+    # if multi-threading, calculate shortest paths in parallel
+    else:
+        args = ((G, o, d, weight) for o, d in zip(orig, dest))
+        pool = mp.Pool(cpus)
+        sma = pool.starmap_async(_single_shortest_path, args)
+        paths = sma.get()
+        pool.close()
+        pool.join()
 
-    # otherwise only one of orig or dest is iterable and the other is not
-    msg = "orig and dest must either both be iterable or neither must be iterable"
-    raise ValueError(msg)
+    return paths
 
 
 def k_shortest_paths(G, orig, dest, k, weight="length"):
