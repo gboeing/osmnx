@@ -392,7 +392,7 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
     """
     Do not use, deprecated.
 
-    The `k_shortest_path` function has moved to the `routing` module. Calling
+    The `k_shortest_paths` function has moved to the `routing` module. Calling
     it via the `distance` module will raise an error in a future release.
 
     Parameters
