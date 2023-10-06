@@ -17,7 +17,7 @@ from ._errors import GraphSimplificationError
 
 def _is_endpoint(G, node, strict=True):
     """
-    Is node a true endpoint of an edge.
+    Determine if a node is a true endpoint of an edge.
 
     Return True if the node is a "real" endpoint of an edge in the network,
     otherwise False. OSM data includes lots of nodes that exist only as points
@@ -140,7 +140,7 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
                     # if successor has >1 successors, then successor must have
                     # been an endpoint because you can go in 2 new directions.
                     # this should never occur in practice
-                    msg = f"Unexpected simplify pattern failed near {successor}"
+                    msg = f"Impossible simplify pattern failed near {successor}"
                     raise GraphSimplificationError(msg)
 
             # if this successor is an endpoint, we've completed the path
@@ -187,7 +187,7 @@ def _get_paths_to_simplify(G, strict=True):
 
 def _remove_rings(G):
     """
-    Remove self-contained rings from graph.
+    Remove all self-contained rings from a graph.
 
     This identifies any connected components that form a self-contained ring
     without any endpoints, and removes them from the graph.
@@ -334,7 +334,7 @@ def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
     if remove_rings:
         G = _remove_rings(G)
 
-    # mark graph as having been simplified
+    # mark the graph as having been simplified
     G.graph["simplified"] = True
 
     msg = (
@@ -455,7 +455,6 @@ def _merge_nodes_geometric(G, tolerance):
 
     # if only a single node results, make it iterable to convert to GeoSeries
     merged = MultiPolygon([merged]) if isinstance(merged, Polygon) else merged
-
     return gpd.GeoSeries(merged.geoms, crs=G.graph["crs"])
 
 
