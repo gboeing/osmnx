@@ -17,7 +17,9 @@ Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, an
 
 ## Getting Started
 
-Read the [Getting Started](https://osmnx.readthedocs.io/en/stable/getting-started.html) guide for an introduction to the package and FAQ, then work through the [OSMnx Examples](https://github.com/gboeing/osmnx-examples) gallery for step-by-step tutorials and sample code.
+First read the [Getting Started](https://osmnx.readthedocs.io/en/stable/getting-started.html) guide for an introduction to the package and FAQ.
+
+Then work through the [OSMnx Examples](https://github.com/gboeing/osmnx-examples) gallery for step-by-step tutorials and sample code.
 
 ## Installation
 
