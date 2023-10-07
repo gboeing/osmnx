@@ -153,7 +153,7 @@ def save_graph_xml(
     None
     """
     warn(
-        "The save_graph_xml has moved from the osm_xml module to the io module. "
+        "The save_graph_xml function has moved from the osm_xml module to the io module. "
         " osm_xml.save_graph_xml has been deprecated and will be removed in a "
         " future release. Access the function via the io module instead.",
         stacklevel=2,
