@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- refactor the distance module and add a new routing module (#1063)
+- move shortest_path and k_shortest_path functions to new routing module, with deprecation warning (#1063)
+- rename great_circle_vec and euclidean_dist_vec functions to great_circle and euclidean, with deprecation warning (#1063)
 - better automatic UTM handling in the projection module (#1059)
 - add to_latlong parameter to the projection.project_graph function for API consistency (#1057)
 - under-the-hood code clean-up (#1047)

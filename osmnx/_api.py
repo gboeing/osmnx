@@ -2,10 +2,8 @@
 
 from .bearing import add_edge_bearings
 from .bearing import orientation_entropy
-from .distance import k_shortest_paths
 from .distance import nearest_edges
 from .distance import nearest_nodes
-from .distance import shortest_path
 from .elevation import add_edge_grades
 from .elevation import add_node_elevations_google
 from .elevation import add_node_elevations_raster
@@ -44,6 +42,8 @@ from .plot import plot_graph_routes
 from .plot import plot_orientation
 from .projection import project_gdf
 from .projection import project_graph
+from .routing import k_shortest_paths
+from .routing import shortest_path
 from .simplification import consolidate_intersections
 from .simplification import simplify_graph
 from .speed import add_edge_speeds

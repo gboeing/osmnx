@@ -4,7 +4,7 @@ import datetime as dt
 import logging as lg
 import os
 import sys
-import unicodedata
+import unicodedata as ud
 from contextlib import redirect_stdout
 from pathlib import Path
 from warnings import warn
@@ -300,10 +300,8 @@ def log(message, level=None, name=None, filename=None):
         # prepend timestamp
         message = f"{ts()} {message}"
 
-        # convert to ascii so it doesn't break windows terminals
-        message = (
-            unicodedata.normalize("NFKD", str(message)).encode("ascii", errors="replace").decode()
-        )
+        # convert to ascii so it works in windows command prompts
+        message = ud.normalize("NFKD", message).encode("ascii", errors="replace").decode()
 
         # print explicitly to terminal in case jupyter notebook is the stdout
         if getattr(sys.stdout, "_original_stdstream_copy", None) is not None:
