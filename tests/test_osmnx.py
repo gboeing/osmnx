@@ -280,6 +280,7 @@ def test_routing():
     route = ox.shortest_path(G, orig_node, dest_node, weight="time")
     # test good weight
     route = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
+    route = ox.distance.shortest_path(G, orig_node, dest_node, weight="travel_time")
 
     route_edges = ox.utils_graph.route_to_gdf(G, route, "travel_time")
     attributes = ox.utils_graph.get_route_edge_attributes(G, route)
@@ -299,6 +300,7 @@ def test_routing():
 
     # test k shortest paths
     routes = ox.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
+    routes = ox.distance.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
     fig, ax = ox.plot_graph_routes(G, list(routes))
 
     # test great circle and euclidean distance calculators
