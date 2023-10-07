@@ -1,6 +1,6 @@
 """Test suite for the package."""
 
-# use agg backend so you don't need a display on ci
+# use agg backend so you don't need a display on CI
 # do this first before pyplot is imported by anything
 import matplotlib as mpl
 
@@ -300,6 +300,10 @@ def test_routing():
     # test k shortest paths
     routes = ox.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
     fig, ax = ox.plot_graph_routes(G, list(routes))
+
+    # test great circle and euclidean distance calculators
+    assert ox.distance.great_circle_vec(0, 0, 1, 1) == pytest.approx(157249.6034105)
+    assert ox.distance.euclidean_dist_vec(0, 0, 1, 1) == pytest.approx(1.4142135)
 
     # test folium with keyword arguments to pass to folium.PolyLine
     gm = ox.plot_graph_folium(G, popup_attribute="name", color="#333333", weight=5, opacity=0.7)

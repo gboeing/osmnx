@@ -29,7 +29,7 @@ except ImportError:  # pragma: no cover
 EARTH_RADIUS_M = 6_371_009
 
 
-def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
+def great_circle(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     """
     Calculate great-circle distances between pairs of points.
 
@@ -73,7 +73,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     return arc * earth_radius
 
 
-def euclidean_dist_vec(y1, x1, y2, x2):
+def euclidean(y1, x1, y2, x2):
     """
     Calculate Euclidean distances between pairs of points.
 
@@ -99,6 +99,72 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     """
     # pythagorean theorem
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+
+
+def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
+    """
+    Do not use, deprecated.
+
+    The `great_circle_vec` function has been renamed `great_circle`. Calling
+    `great_circle_vec` will raise an error in a future release.
+
+    Parameters
+    ----------
+    lat1 : float or numpy.array of float
+        first point's latitude coordinate
+    lng1 : float or numpy.array of float
+        first point's longitude coordinate
+    lat2 : float or numpy.array of float
+        second point's latitude coordinate
+    lng2 : float or numpy.array of float
+        second point's longitude coordinate
+    earth_radius : float
+        earth's radius in units in which distance will be returned (default is
+        meters)
+
+    Returns
+    -------
+    dist : float or numpy.array of float
+        distance from each (lat1, lng1) to each (lat2, lng2) in units of
+        earth_radius
+    """
+    warn(
+        "The `great_circle_vec` function has been renamed `great_circle`. Calling "
+        "`great_circle_vec` will raise an error in a future release.",
+        stacklevel=2,
+    )
+    return great_circle(lat1, lng1, lat2, lng2, earth_radius)
+
+
+def euclidean_dist_vec(y1, x1, y2, x2):
+    """
+    Do not use, deprecated.
+
+    The `euclidean_dist_vec` function has been renamed `euclidean`. Calling
+    `euclidean_dist_vec` will raise an error in a future release.
+
+    Parameters
+    ----------
+    y1 : float or numpy.array of float
+        first point's y coordinate
+    x1 : float or numpy.array of float
+        first point's x coordinate
+    y2 : float or numpy.array of float
+        second point's y coordinate
+    x2 : float or numpy.array of float
+        second point's x coordinate
+
+    Returns
+    -------
+    dist : float or numpy.array of float
+        distance from each (x1, y1) to each (x2, y2) in coordinates' units
+    """
+    warn(
+        "The `euclidean_dist_vec` function has been renamed `euclidean`. Calling "
+        "`euclidean_dist_vec` will raise an error in a future release.",
+        stacklevel=2,
+    )
+    return euclidean(y1, x1, y2, x2)
 
 
 def add_edge_lengths(G, precision=None, edges=None):
@@ -162,7 +228,7 @@ def add_edge_lengths(G, precision=None, edges=None):
         raise ValueError(msg) from e
 
     # calculate great circle distances, round, and fill nulls with zeros
-    dists = great_circle_vec(c[:, 0], c[:, 1], c[:, 2], c[:, 3]).round(precision)
+    dists = great_circle(c[:, 0], c[:, 1], c[:, 2], c[:, 3]).round(precision)
     dists[np.isnan(dists)] = 0
     nx.set_edge_attributes(G, values=dict(zip(uvk, dists)), name="length")
 
