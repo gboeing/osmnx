@@ -308,8 +308,16 @@ def log(message, level=None, name=None, filename=None):
             # redirect captured pipe back to original
             os.dup2(sys.stdout._original_stdstream_copy, sys.__stdout__.fileno())
             sys.stdout._original_stdstream_copy = None
-        with redirect_stdout(sys.__stdout__):
-            print(message, file=sys.__stdout__, flush=True)
+
+        # handle pytest on Windows raising OSError from sys.__stdout__
+        try:
+            with redirect_stdout(sys.__stdout__):
+                print(message, file=sys.__stdout__, flush=True)
+        except OSError as ose:
+            if "[WinError 6]" in str(ose):
+                print(message, flush=True)  # noqa: T201
+            else:
+                raise OSError from ose
 
 
 def _get_logger(level, name, filename):
