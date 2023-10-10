@@ -297,27 +297,21 @@ def log(message, level=None, name=None, filename=None):
 
     # if logging to console (terminal window) is turned on
     if settings.log_console:
-        # prepend timestamp
+        # prepend timestamp then convert to ascii for windows command prompts
         message = f"{ts()} {message}"
-
-        # convert to ascii so it works in windows command prompts
         message = ud.normalize("NFKD", message).encode("ascii", errors="replace").decode()
 
-        # print explicitly to terminal in case jupyter notebook is the stdout
-        if getattr(sys.stdout, "_original_stdstream_copy", None) is not None:
-            # redirect captured pipe back to original
-            os.dup2(sys.stdout._original_stdstream_copy, sys.__stdout__.fileno())
-            sys.stdout._original_stdstream_copy = None
-
-        # handle pytest on Windows raising OSError from sys.__stdout__
         try:
+            # print explicitly to terminal in case jupyter notebook is the stdout
+            if getattr(sys.stdout, "_original_stdstream_copy", None) is not None:
+                # redirect jupyter-captured pipe back to original
+                os.dup2(sys.stdout._original_stdstream_copy, sys.__stdout__.fileno())
+                sys.stdout._original_stdstream_copy = None
             with redirect_stdout(sys.__stdout__):
-                print(message, file=sys.__stdout__, flush=True)
-        except OSError as ose:
-            if "[WinError 6]" in str(ose):
-                print(message, flush=True)  # noqa: T201
-            else:
-                raise OSError from ose
+                print("message", file=sys.__stdout__, flush=True)
+        except OSError:
+            # handle pytest on Windows raising OSError from sys.__stdout__
+            print(message, flush=True)  # noqa: T201
 
 
 def _get_logger(level, name, filename):
