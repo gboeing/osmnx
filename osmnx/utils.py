@@ -297,14 +297,14 @@ def log(message, level=None, name=None, filename=None):
 
     # if logging to console (terminal window) is turned on
     if settings.log_console:
-        # prepend timestamp then convert to ascii for windows command prompts
+        # prepend timestamp then convert to ASCII for Windows command prompts
         message = f"{ts()} {message}"
         message = ud.normalize("NFKD", message).encode("ascii", errors="replace").decode()
 
         try:
-            # print explicitly to terminal in case jupyter notebook is the stdout
+            # print explicitly to terminal in case Jupyter has captured stdout
             if getattr(sys.stdout, "_original_stdstream_copy", None) is not None:
-                # redirect jupyter-captured pipe back to original
+                # redirect the Jupyter-captured pipe back to original
                 os.dup2(sys.stdout._original_stdstream_copy, sys.__stdout__.fileno())
                 sys.stdout._original_stdstream_copy = None
             with redirect_stdout(sys.__stdout__):
