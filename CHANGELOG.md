@@ -7,6 +7,7 @@
 - rename great_circle_vec and euclidean_dist_vec functions to great_circle and euclidean, with deprecation warning (#1063)
 - improve automatic UTM handling in the projection module (#1059)
 - add to_latlong parameter to the projection.project_graph function for API consistency (#1057)
+- workaround for pytest issue with printing to terminal window on Windows (#1064)
 - under-the-hood code clean-up (#1047)
 
 ## 1.6.0 (2023-07-28)
