@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.7.0
 
 - refactor the distance module and add a new routing module (#1063)
 - move shortest_path and k_shortest_paths functions to new routing module, with deprecation warning (#1063)
