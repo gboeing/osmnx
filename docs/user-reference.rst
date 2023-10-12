@@ -29,22 +29,10 @@ osmnx.features module
 .. automodule:: osmnx.features
     :members:
 
-osmnx.folium module
--------------------
-
-.. automodule:: osmnx.folium
-    :members:
-
 osmnx.geocoder module
 ---------------------
 
 .. automodule:: osmnx.geocoder
-    :members:
-
-osmnx.geometries module
------------------------
-
-.. automodule:: osmnx.geometries
     :members:
 
 osmnx.graph module
@@ -59,12 +47,6 @@ osmnx.io module
 .. automodule:: osmnx.io
     :members:
 
-osmnx.osm_xml module
---------------------
-
-.. automodule:: osmnx.osm_xml
-    :members:
-
 osmnx.plot module
 -----------------
 
@@ -75,6 +57,12 @@ osmnx.projection module
 -----------------------
 
 .. automodule:: osmnx.projection
+    :members:
+
+osmnx.routing module
+-----------------------
+
+.. automodule:: osmnx.routing
     :members:
 
 osmnx.settings module

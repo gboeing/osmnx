@@ -139,6 +139,14 @@ osmnx.projection module
     :private-members:
     :noindex:
 
+osmnx.routing module
+-----------------------
+
+.. automodule:: osmnx.routing
+    :members:
+    :private-members:
+    :noindex:
+
 osmnx.settings module
 ---------------------
 
