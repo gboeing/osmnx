@@ -3,7 +3,7 @@
 ## 1.7.0 (2023-10-11)
 
 - improve automatic UTM handling in the projection module (#1059)
-- add to_latlong parameter to the projection.project_graph function for API consistency (#1057)
+- add a to_latlong parameter to the projection.project_graph function for API consistency (#1057)
 - workaround for pytest issue with printing to terminal window on Windows (#1064)
 - refactor the distance module and add a new routing module (#1063)
 - move shortest_path and k_shortest_paths functions to new routing module, with deprecation warning (#1063)
