@@ -190,12 +190,12 @@ def load_graphml(
     to properly handle "True"/"False" string literals as True/False booleans:
     `ox.load_graphml(fp, node_dtypes={my_attr: ox.io._convert_bool_string})`.
 
+    If you manually configured the `all_oneway=True` setting, you may need to
+    manually specify here that edge `oneway` attributes should be type `str`.
+
     Note that you must pass one and only one of `filepath` or `graphml_str`.
     If passing `graphml_str`, you may need to decode the bytes read from your
     file before converting to string to pass to this function.
-
-    If you manually configured the `all_oneway=True` setting, you may need to
-    manually specify here that edge `oneway` attributes should be type `str`.
 
     Parameters
     ----------
@@ -256,13 +256,18 @@ def load_graphml(
     if edge_dtypes is not None:
         default_edge_dtypes.update(edge_dtypes)
 
-    # load graphml from file on disk or from a string
     if filepath is not None:
-        source = data = filepath
+        # read the graphml file from disk
+        source = filepath
+        G = nx.read_graphml(
+            Path(filepath), node_type=default_node_dtypes["osmid"], force_multigraph=True
+        )
     else:
+        # parse the graphml string
         source = "string"
-        data = graphml_str
-    G = nx.parse_graphml(data, node_type=default_node_dtypes["osmid"], force_multigraph=True)
+        G = nx.parse_graphml(
+            graphml_str, node_type=default_node_dtypes["osmid"], force_multigraph=True
+        )
 
     # convert graph/node/edge attribute data types
     utils.log("Converting node, edge, and graph-level attribute data types")
