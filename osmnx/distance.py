@@ -29,7 +29,7 @@ except ImportError:  # pragma: no cover
 EARTH_RADIUS_M = 6_371_009
 
 
-def great_circle(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
+def great_circle(lat1, lon1, lat2, lon2, earth_radius=EARTH_RADIUS_M):
     """
     Calculate great-circle distances between pairs of points.
 
@@ -41,11 +41,11 @@ def great_circle(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     ----------
     lat1 : float or numpy.array of float
         first point's latitude coordinate
-    lng1 : float or numpy.array of float
+    lon1 : float or numpy.array of float
         first point's longitude coordinate
     lat2 : float or numpy.array of float
         second point's latitude coordinate
-    lng2 : float or numpy.array of float
+    lon2 : float or numpy.array of float
         second point's longitude coordinate
     earth_radius : float
         earth's radius in units in which distance will be returned (default is
@@ -54,15 +54,15 @@ def great_circle(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     Returns
     -------
     dist : float or numpy.array of float
-        distance from each (lat1, lng1) to each (lat2, lng2) in units of
+        distance from each (lat1, lon1) to each (lat2, lon2) in units of
         earth_radius
     """
     y1 = np.deg2rad(lat1)
     y2 = np.deg2rad(lat2)
     dy = y2 - y1
 
-    x1 = np.deg2rad(lng1)
-    x2 = np.deg2rad(lng2)
+    x1 = np.deg2rad(lon1)
+    x2 = np.deg2rad(lon2)
     dx = x2 - x1
 
     h = np.sin(dy / 2) ** 2 + np.cos(y1) * np.cos(y2) * np.sin(dx / 2) ** 2
@@ -294,7 +294,7 @@ def nearest_nodes(G, X, Y, return_dist=False):
         if BallTree is None:  # pragma: no cover
             msg = "scikit-learn must be installed to search an unprojected graph"
             raise ImportError(msg)
-        # haversine requires lat, lng coords in radians
+        # haversine requires lat, lon coords in radians
         nodes_rad = np.deg2rad(nodes[["y", "x"]])
         points_rad = np.deg2rad(np.array([Y, X]).T)
         dist, pos = BallTree(nodes_rad, metric="haversine").query(points_rad, k=1)
@@ -399,7 +399,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
             if BallTree is None:  # pragma: no cover
                 msg = "scikit-learn must be installed to search an unprojected graph"
                 raise ImportError(msg)
-            # haversine requires lat, lng coords in radians
+            # haversine requires lat, lon coords in radians
             vertices_rad = np.deg2rad(vertices[["y", "x"]])
             points_rad = np.deg2rad(np.array([Y, X]).T)
             dist, pos = BallTree(vertices_rad, metric="haversine").query(points_rad, k=1)

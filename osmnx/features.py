@@ -134,7 +134,7 @@ def features_from_point(center_point, tags, dist=1000):
     Parameters
     ----------
     center_point : tuple
-        the (lat, lng) center point around which to get the features
+        the (lat, lon) center point around which to get the features
     tags : dict
         Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -198,7 +198,7 @@ def features_from_address(address, tags, dist=1000):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    # geocode the address string to a (lat, lng) point
+    # geocode the address string to a (lat, lon) point
     center_point = geocoder.geocode(query=address)
 
     # create GeoDataFrame of features around this point
