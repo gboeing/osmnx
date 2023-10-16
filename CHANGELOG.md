@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- refer to latitude and longitude parameters as lat and lon consistently across package (#1068)
+- refer to latitude and longitude parameters as lat and lon consistently across package (#1068 #1069)
 
 ## 1.7.0 (2023-10-11)
 
