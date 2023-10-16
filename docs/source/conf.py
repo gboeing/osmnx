@@ -10,15 +10,15 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 import sys
 from pathlib import Path
 
-# go up one level from /docs/ to the package root
-sys.path.insert(0, str(Path().resolve().parent))
+# go up two levels from /docs/source to the package root
+sys.path.insert(0, str(Path().resolve().parent.parent))
 
 author = "Geoff Boeing"
 copyright = "2016-2023, Geoff Boeing"  # noqa: A001
 project = "OSMnx"
 
 # dynamically load version from /osmnx/_version.py
-with Path.open(Path("../osmnx/_version.py")) as f:
+with Path.open(Path("../../osmnx/_version.py")) as f:
     version = release = f.read().split(" = ")[1].replace('"', "")
 
 # mock import all required + optional dependency packages because readthedocs
