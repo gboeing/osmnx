@@ -52,9 +52,9 @@ You can configure OSMnx using the :code:`settings` module. Here you can adjust l
 Geocoding and Querying
 ^^^^^^^^^^^^^^^^^^^^^^
 
-OSMnx geocodes place names and addresses with the OpenStreetMap `Nominatim`_ API. You can use the :code:`geocoder` module to geocode place names or addresses to lat-lng coordinates. Or, you can retrieve place boundaries or any other OpenStreetMap elements by name or ID.
+OSMnx geocodes place names and addresses with the OpenStreetMap `Nominatim`_ API. You can use the :code:`geocoder` module to geocode place names or addresses to lat-lon coordinates. Or, you can retrieve place boundaries or any other OpenStreetMap elements by name or ID.
 
-Using the :code:`features` and :code:`graph` modules, as described below, you can download data by lat-lng point, address, bounding box, bounding polygon, or place name (e.g., neighborhood, city, county, etc).
+Using the :code:`features` and :code:`graph` modules, as described below, you can download data by lat-lon point, address, bounding box, bounding polygon, or place name (e.g., neighborhood, city, county, etc).
 
 Urban Amenities
 ^^^^^^^^^^^^^^^

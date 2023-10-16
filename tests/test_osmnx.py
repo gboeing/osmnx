@@ -112,7 +112,7 @@ def test_geocoder():
     city = ox.geocode_to_gdf(place2)
     city_projected = ox.project_gdf(city, to_crs="epsg:3395")
 
-    # test geocoding a bad query to lat/lng: should raise exception
+    # test geocoding a bad query: should raise exception
     with pytest.raises(ox._errors.InsufficientResponseError):
         _ = ox.geocode("!@#$%^&*")
 
