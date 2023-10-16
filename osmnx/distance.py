@@ -59,13 +59,13 @@ def great_circle(lat1, lon1, lat2, lon2, earth_radius=EARTH_RADIUS_M):
     """
     y1 = np.deg2rad(lat1)
     y2 = np.deg2rad(lat2)
-    dy = y2 - y1
+    delta_y = y2 - y1
 
     x1 = np.deg2rad(lon1)
     x2 = np.deg2rad(lon2)
-    dx = x2 - x1
+    delta_x = x2 - x1
 
-    h = np.sin(dy / 2) ** 2 + np.cos(y1) * np.cos(y2) * np.sin(dx / 2) ** 2
+    h = np.sin(delta_y / 2) ** 2 + np.cos(y1) * np.cos(y2) * np.sin(delta_x / 2) ** 2
     h = np.minimum(1, h)  # protect against floating point errors
     arc = 2 * np.arcsin(np.sqrt(h))
 

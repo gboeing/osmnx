@@ -40,14 +40,14 @@ def calculate_bearing(lat1, lon1, lat2, lon2):
     bearing : float or numpy.array of float
         the bearing(s) in decimal degrees
     """
-    # get the latitudes and the difference in longitudes, in radians
+    # get the latitudes and the difference in longitudes, all in radians
     lat1 = np.radians(lat1)
     lat2 = np.radians(lat2)
-    d_lon = np.radians(lon2 - lon1)
+    delta_lon = np.radians(lon2 - lon1)
 
     # calculate initial bearing from -180 degrees to +180 degrees
-    y = np.sin(d_lon) * np.cos(lat2)
-    x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(d_lon)
+    y = np.sin(delta_lon) * np.cos(lat2)
+    x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(delta_lon)
     initial_bearing = np.degrees(np.arctan2(y, x))
 
     # normalize to 0-360 degrees to get compass bearing
