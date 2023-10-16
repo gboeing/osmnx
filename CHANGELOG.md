@@ -2,7 +2,6 @@
 
 ## Unreleased
 
-- deprecate precision parameter in io.save_graph_xml for consistency with rest of package (#1068)
 - refer to latitude and longitude parameters as lat and lon consistently across package (#1068)
 
 ## 1.7.0 (2023-10-11)
