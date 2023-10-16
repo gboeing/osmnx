@@ -105,7 +105,7 @@ Routing
 
 The :code:`speed` module can impute missing speeds to the graph edges. This imputation can obviously be imprecise, and the user can override it by passing in arguments that define local speed limits. It can also calculate free-flow travel times for each edge.
 
-The :code:`distance` module can find the nearest node(s) or edge(s) to coordinates using a fast spatial index. It can also solve shortest paths for network routing, parallelized with multiprocessing, using different weights (e.g., distance, travel time, elevation change, etc).
+The :code:`distance` module can find the nearest node(s) or edge(s) to coordinates using a fast spatial index. The :code:`routing` module can solve shortest paths for network routing, parallelized with multiprocessing, using different weights (e.g., distance, travel time, elevation change, etc).
 
 Visualization
 ^^^^^^^^^^^^^
