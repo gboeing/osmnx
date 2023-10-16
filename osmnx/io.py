@@ -290,7 +290,7 @@ def save_graph_xml(
     merge_edges=True,
     edge_tag_aggs=None,
     api_version=0.6,
-    precision=None,
+    precision=6,
 ):
     """
     Save graph to disk as an OSM-formatted XML .osm file.
@@ -359,19 +359,12 @@ def save_graph_xml(
     api_version : float
         OpenStreetMap API version to write to the XML file header
     precision : int
-        do not use, deprecated
+        number of decimal places to round latitude and longitude values
 
     Returns
     -------
     None
     """
-    if precision is None:
-        precision = 6
-    else:
-        warn(
-            "the `precision` parameter is deprecated and will be removed in a future release",
-            stacklevel=2,
-        )
     osm_xml._save_graph_xml(
         data,
         filepath,
