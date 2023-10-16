@@ -195,7 +195,7 @@ def _make_overpass_polygon_coord_strs(polygon):
     Subdivide query polygon and return list of coordinate strings.
 
     Project to utm, divide polygon up into sub-polygons if area exceeds a
-    max size (in meters), project back to lat-lng, then get a list of
+    max size (in meters), project back to lat-lon, then get a list of
     polygon(s) exterior coordinates
 
     Parameters
@@ -220,7 +220,7 @@ def _create_overpass_query(polygon_coord_str, tags):
     Parameters
     ----------
     polygon_coord_str : list
-        list of lat lng coordinates
+        list of lat lon coordinates
     tags : dict
         dict of tags used for finding elements in the search area
 

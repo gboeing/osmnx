@@ -185,7 +185,7 @@ def test_osm_xml():
     ox.save_graph_xml(G, merge_edges=False, filepath=Path(ox.settings.data_folder) / "graph.osm")
 
     # test osm xml output merge edges
-    ox.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")])
+    ox.io.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")], precision=5)
 
     # test osm xml output from gdfs
     nodes, edges = ox.graph_to_gdfs(G)

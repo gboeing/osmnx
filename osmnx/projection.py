@@ -135,7 +135,7 @@ def project_graph(G, to_crs=None, to_latlong=False):
     # STEP 1: PROJECT THE NODES
     gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False)
 
-    # create new lat/lng columns to preserve lat/lng for later reference if
+    # create new lat/lon columns to preserve lat/lon for later reference if
     # cols do not already exist (ie, don't overwrite in later re-projections)
     if "lon" not in gdf_nodes.columns or "lat" not in gdf_nodes.columns:
         gdf_nodes["lon"] = gdf_nodes["x"]

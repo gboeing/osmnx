@@ -177,7 +177,7 @@ def _plot_folium(gdf, m, popup_attribute, tiles, zoom, fit_bounds, **kwargs):
         pl.add_to(m)
 
     # if fit_bounds is True, fit the map to the bounds of the route by passing
-    # list of lat-lng points as [southwest, northeast]
+    # list of lat-lon points as [southwest, northeast]
     if fit_bounds and isinstance(m, folium.Map):
         tb = gdf.total_bounds
         m.fit_bounds([(tb[1], tb[0]), (tb[3], tb[2])])
@@ -203,8 +203,8 @@ def _make_folium_polyline(geom, popup_val=None, **kwargs):
     pl : folium.PolyLine
     """
     # locations is a list of points for the polyline folium takes coords in
-    # lat,lng but geopandas provides them in lng,lat so we must reverse them
-    locations = [(lat, lng) for lng, lat in geom.coords]
+    # lat,lon but geopandas provides them in lon,lat so we must reverse them
+    locations = [(lat, lon) for lon, lat in geom.coords]
 
     # create popup if popup_val is not None
     if popup_val is None:

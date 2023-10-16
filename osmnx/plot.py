@@ -477,8 +477,8 @@ def plot_figure_ground(
     # if G was passed in, plot it centered on its node centroid
     if G is not None:
         gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=True)
-        lnglat_point = gdf_nodes.unary_union.centroid.coords[0]
-        point = tuple(reversed(lnglat_point))
+        lonlat_point = gdf_nodes.unary_union.centroid.coords[0]
+        point = tuple(reversed(lonlat_point))
 
     # otherwise get network by address or point (whichever was passed) using a
     # dist multiplier to ensure we get more than enough network. simplify in
@@ -505,7 +505,7 @@ def plot_figure_ground(
         )
         G = simplification.simplify_graph(G, strict=False)
     else:  # pragma: no cover
-        msg = "You must pass an address or lat-lng point or graph."
+        msg = "You must pass an address or lat-lon point or graph."
         raise ValueError(msg)
 
     # we need an undirected graph to find every edge incident on a node

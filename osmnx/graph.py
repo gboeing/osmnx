@@ -111,7 +111,7 @@ def graph_from_point(
     custom_filter=None,
 ):
     """
-    Download and create a graph within some distance of a (lat, lng) point.
+    Download and create a graph within some distance of a (lat, lon) point.
 
     You can use the `settings` module to retrieve a snapshot of historical OSM
     data as of a certain date, or to configure the Overpass server timeout,
@@ -120,7 +120,7 @@ def graph_from_point(
     Parameters
     ----------
     center_point : tuple
-        the (lat, lng) center point around which to construct the graph
+        the (lat, lon) center point around which to construct the graph
     dist : int
         retain only those nodes within this many meters of the center of the
         graph, with distance determined according to dist_type argument
@@ -240,7 +240,7 @@ def graph_from_address(
 
     Returns
     -------
-    networkx.MultiDiGraph or optionally (networkx.MultiDiGraph, (lat, lng))
+    networkx.MultiDiGraph or optionally (networkx.MultiDiGraph, (lat, lon))
 
     Notes
     -----
@@ -248,7 +248,7 @@ def graph_from_address(
     function to automatically make multiple requests: see that function's
     documentation for caveats.
     """
-    # geocode the address string to a (lat, lng) point
+    # geocode the address string to a (lat, lon) point
     point = geocoder.geocode(query=address)
 
     # then create a graph from this point

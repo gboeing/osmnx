@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- refer to latitude and longitude parameters as lat and lon consistently across package (#1068)
+
 ## 1.7.0 (2023-10-11)
 
 - improve automatic UTM handling in the projection module (#1059)
