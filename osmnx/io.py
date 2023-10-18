@@ -419,8 +419,25 @@ def _convert_node_attr_types(G, dtypes=None):
     Returns
     -------
     G : networkx.MultiDiGraph
+    
+    Modified to include detection of list, dict, and set type
+    node attribute strings and handle their translation into
+    python objects of the correct type.
     """
     for _, data in G.nodes(data=True):
+        # first, eval stringified lists, dicts or sets to convert them to objects
+        # edge attributes might have a single value, or a list if simplified
+        for attr, value in data.items():
+            # check for stringified lists
+            if value.startswith("[") and value.endswith("]"):
+                with contextlib.suppress(SyntaxError, ValueError):
+                    data[attr] = ast.literal_eval(value)
+            # check for stringified dicts or sets: both can be converted
+            # to python objects using ast.literal_eval()
+            if value.startswith("{") and value.endswith("}"):
+                with contextlib.suppress(SyntaxError, ValueError):
+                    data[attr] = ast.literal_eval(value)
+    
         for attr in data.keys() & dtypes.keys():
             data[attr] = dtypes[attr](data[attr])
     return G
@@ -440,16 +457,26 @@ def _convert_edge_attr_types(G, dtypes=None):
     Returns
     -------
     G : networkx.MultiDiGraph
+    
+    Modified to include detection of list, dict, and set type
+    node attribute strings and handle their translation into
+    python objects of the correct type.
     """
     # for each edge in the graph, eval attribute value lists and convert types
     for _, _, data in G.edges(data=True, keys=False):
         # remove extraneous "id" attribute added by graphml saving
         data.pop("id", None)
 
-        # first, eval stringified lists to convert them to list objects
+        # first, eval stringified lists, dicts or sets to convert them to objects
         # edge attributes might have a single value, or a list if simplified
         for attr, value in data.items():
+            # check for stringified lists
             if value.startswith("[") and value.endswith("]"):
+                with contextlib.suppress(SyntaxError, ValueError):
+                    data[attr] = ast.literal_eval(value)
+            # check for stringified dicts or sets: both can be converted
+            # to python objects using ast.literal_eval()
+            if value.startswith("{") and value.endswith("}"):
                 with contextlib.suppress(SyntaxError, ValueError):
                     data[attr] = ast.literal_eval(value)
 
