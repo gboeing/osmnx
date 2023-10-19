@@ -425,7 +425,7 @@ def _convert_node_attr_types(G, dtypes=None):
         # edge attributes might have a single value, or a list if simplified
         for attr, value in data.items():
             # check for stringified lists
-            if ((value.startswith("[") and value.endswith("]")) 
+            if ((value.startswith("[") and value.endswith("]"))
                 or (value.startswith("{") and value.endswith("}"))):
                 with contextlib.suppress(SyntaxError, ValueError):
                     data[attr] = ast.literal_eval(value)
@@ -458,7 +458,7 @@ def _convert_edge_attr_types(G, dtypes=None):
         # first, eval stringified lists, dicts or sets to convert them to objects
         # edge attributes might have a single value, or a list if simplified
         for attr, value in data.items():
-            if ((value.startswith("[") and value.endswith("]")) 
+            if ((value.startswith("[") and value.endswith("]"))
                 or (value.startswith("{") and value.endswith("}"))):
                 with contextlib.suppress(SyntaxError, ValueError):
                     data[attr] = ast.literal_eval(value)
