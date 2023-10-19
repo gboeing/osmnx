@@ -422,7 +422,7 @@ def _convert_node_attr_types(G, dtypes=None):
     """
     for _, data in G.nodes(data=True):
         # first, eval stringified lists, dicts or sets to convert them to objects
-        # edge attributes might have a single value, or a list if simplified
+        # node attributes might have a single value, or a list if simplified
         for attr, value in data.items():
             # check for stringified lists
             if (value.startswith("[") and value.endswith("]")) or (
