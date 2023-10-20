@@ -474,6 +474,25 @@ def test_graph_save_load():
     edge_attrs = {n: bool(b) for n, b in zip(G.edges, bools)}
     nx.set_edge_attributes(G, edge_attrs, attr_name)
 
+    # create list, set, and dict attributes for nodes and edges
+    rand_ints_nodes = np.random.randint(0, 10, len(G.nodes))
+    rand_ints_edges = np.random.randint(0, 10, len(G.edges))
+    list_name = "test_list"
+    list_node_attrs = {n: [n, r] for n, r in zip(G.nodes, rand_ints_nodes)}
+    nx.set_node_attributes(G, list_node_attrs, list_name)
+    list_edge_attrs = {e: [e, r] for e, r in zip(G.edges, rand_ints_edges)}
+    nx.set_edge_attributes(G, list_edge_attrs, list_name)
+    set_name = "test_set"
+    set_node_attrs = {n: {n, r} for n, r in zip(G.nodes, rand_ints_nodes)}
+    nx.set_node_attributes(G, set_node_attrs, set_name)
+    set_edge_attrs = {e: {e, r} for e, r in zip(G.edges, rand_ints_edges)}
+    nx.set_edge_attributes(G, set_edge_attrs, set_name)
+    dict_name = "test_dict"
+    dict_node_attrs = {n: {n: r} for n, r in zip(G.nodes, rand_ints_nodes)}
+    nx.set_node_attributes(G, dict_node_attrs, dict_name)
+    dict_edge_attrs = {e: {e: r} for e, r in zip(G.edges, rand_ints_edges)}
+    nx.set_edge_attributes(G, dict_edge_attrs, dict_name)
+
     # save/load graph as graphml file
     ox.save_graphml(G, gephi=True)
     ox.save_graphml(G, gephi=False)
