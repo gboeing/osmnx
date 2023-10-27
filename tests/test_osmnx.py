@@ -441,6 +441,8 @@ def test_endpoints():
 
 def test_graph_save_load():
     """Test saving/loading graphs to/from disk."""
+    fp = Path(ox.settings.data_folder) / "graph.graphml"
+
     # save graph as shapefile and geopackage
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     ox.save_graph_shapefile(G, directed=True)
@@ -477,29 +479,25 @@ def test_graph_save_load():
     # create list, set, and dict attributes for nodes and edges
     rand_ints_nodes = np.random.randint(0, 10, len(G.nodes))
     rand_ints_edges = np.random.randint(0, 10, len(G.edges))
-    list_name = "test_list"
     list_node_attrs = {n: [n, r] for n, r in zip(G.nodes, rand_ints_nodes)}
-    nx.set_node_attributes(G, list_node_attrs, list_name)
+    nx.set_node_attributes(G, list_node_attrs, "test_list")
     list_edge_attrs = {e: [e, r] for e, r in zip(G.edges, rand_ints_edges)}
-    nx.set_edge_attributes(G, list_edge_attrs, list_name)
-    set_name = "test_set"
+    nx.set_edge_attributes(G, list_edge_attrs, "test_list")
     set_node_attrs = {n: {n, r} for n, r in zip(G.nodes, rand_ints_nodes)}
-    nx.set_node_attributes(G, set_node_attrs, set_name)
+    nx.set_node_attributes(G, set_node_attrs, "test_set")
     set_edge_attrs = {e: {e, r} for e, r in zip(G.edges, rand_ints_edges)}
-    nx.set_edge_attributes(G, set_edge_attrs, set_name)
-    dict_name = "test_dict"
+    nx.set_edge_attributes(G, set_edge_attrs, "test_set")
     dict_node_attrs = {n: {n: r} for n, r in zip(G.nodes, rand_ints_nodes)}
-    nx.set_node_attributes(G, dict_node_attrs, dict_name)
+    nx.set_node_attributes(G, dict_node_attrs, "test_dict")
     dict_edge_attrs = {e: {e: r} for e, r in zip(G.edges, rand_ints_edges)}
-    nx.set_edge_attributes(G, dict_edge_attrs, dict_name)
+    nx.set_edge_attributes(G, dict_edge_attrs, "test_dict")
 
     # save/load graph as graphml file
     ox.save_graphml(G, gephi=True)
     ox.save_graphml(G, gephi=False)
-    ox.save_graphml(G, gephi=False, filepath=Path(ox.settings.data_folder) / "graph.graphml")
-    filepath = Path(ox.settings.data_folder) / "graph.graphml"
+    ox.save_graphml(G, gephi=False, filepath=fp)
     G2 = ox.load_graphml(
-        filepath,
+        fp,
         graph_dtypes={attr_name: ox.io._convert_bool_string},
         node_dtypes={attr_name: ox.io._convert_bool_string},
         edge_dtypes={attr_name: ox.io._convert_bool_string},
@@ -524,7 +522,7 @@ def test_graph_save_load():
     # test custom data types
     nd = {"osmid": str}
     ed = {"length": str, "osmid": float}
-    G2 = ox.load_graphml(filepath, node_dtypes=nd, edge_dtypes=ed)
+    G2 = ox.load_graphml(fp, node_dtypes=nd, edge_dtypes=ed)
 
     # test loading graphml from a file stream
     file_bytes = Path.open(Path("tests/input_data/short.graphml"), "rb").read()
