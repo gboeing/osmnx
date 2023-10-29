@@ -1,4 +1,11 @@
-"""Download and create graphs from OpenStreetMap data."""
+"""
+Download and create graphs from OpenStreetMap data.
+
+This module uses filters to query the Overpass API: you can either specify a
+built-in network type or provide your own custom filter with Overpass QL.
+
+Refer to the Getting Started guide for usage limitations.
+"""
 
 import itertools
 from warnings import warn

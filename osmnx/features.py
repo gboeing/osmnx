@@ -9,6 +9,8 @@ only) by passing a dictionary of desired OSM tags.
 
 For more details, see https://wiki.openstreetmap.org/wiki/Map_features and
 https://wiki.openstreetmap.org/wiki/Elements
+
+Refer to the Getting Started guide for usage limitations.
 """
 
 import logging as lg

@@ -31,4 +31,4 @@ If you have any trouble, consult the [User Reference](https://osmnx.readthedocs.
 
 ## License
 
-OSMnx is open source and licensed under the MIT license. OpenStreetMap's open data [license](https://www.openstreetmap.org/copyright/) requires that derivative works provide proper attribution.
+OSMnx is open source and licensed under the MIT license. OpenStreetMap's open data [license](https://www.openstreetmap.org/copyright/) requires that derivative works provide proper attribution. Refer to the [Getting Started](https://osmnx.readthedocs.io/en/stable/getting-started.html) guide for usage limitations.

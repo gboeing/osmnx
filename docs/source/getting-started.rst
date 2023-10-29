@@ -47,7 +47,7 @@ The `OSMnx Examples`_ gallery contains tutorials and demonstrations of all these
 Configuration
 ^^^^^^^^^^^^^
 
-You can configure OSMnx using the :code:`settings` module. Here you can adjust logging behavior, caching, server endpoints, and more. You can also configure OSMnx to retrieve historical snapshots of OpenStreetMap data as of a certain date.
+You can configure OSMnx using the :code:`settings` module. Here you can adjust logging behavior, caching, server endpoints, and more. You can also configure OSMnx to retrieve historical snapshots of OpenStreetMap data as of a certain date. Refer to the FAQ below for server usage limitations.
 
 Geocoding and Querying
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -130,6 +130,8 @@ Frequently Asked Questions
 
 *I have a usage question.* Please ask it on `StackOverflow`_.
 
+*Are there any usage limitations?* Yes. Refer to the `Nominatim Usage Policy`_ and `Overpass Commons`_ documentation for usage limitations and restrictions that you must adhere to at all times. If you use an alternative Nominatim/Overpass instance, ensure you understand and obey their usage policies. If you need to exceed these limitations, consider installing your own hosted instance and setting OSMnx to use it.
+
 .. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
 .. _GeoPandas: https://geopandas.org
 .. _NetworkX: https://networkx.org
@@ -150,3 +152,5 @@ Frequently Asked Questions
 .. _Changelog: https://github.com/gboeing/osmnx/blob/main/CHANGELOG.md
 .. _projects: https://geoffboeing.com/2018/03/osmnx-features-roundup
 .. _StackOverflow: https://stackoverflow.com/search?q=osmnx
+.. _Nominatim Usage Policy: https://operations.osmfoundation.org/policies/nominatim/
+.. _Overpass Commons: https://dev.overpass-api.de/overpass-doc/en/preface/commons.html
