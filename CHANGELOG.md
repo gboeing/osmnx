@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.7.1 (2023-10-29)
 
 - fix references to latitude and longitude parameters as lat and lon consistently across package (#1068 #1069)
 - fix handling dict and set attribute types when reloading GraphML files (#1075 #1077)
