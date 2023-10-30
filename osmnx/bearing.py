@@ -15,24 +15,24 @@ except ImportError:  # pragma: no cover
     scipy = None
 
 
-def calculate_bearing(lat1, lng1, lat2, lng2):
+def calculate_bearing(lat1, lon1, lat2, lon2):
     """
-    Calculate the compass bearing(s) between pairs of lat-lng points.
+    Calculate the compass bearing(s) between pairs of lat-lon points.
 
     Vectorized function to calculate initial bearings between two points'
     coordinates or between arrays of points' coordinates. Expects coordinates
     in decimal degrees. Bearing represents the clockwise angle in degrees
-    between north and the geodesic line from (lat1, lng1) to (lat2, lng2).
+    between north and the geodesic line from (lat1, lon1) to (lat2, lon2).
 
     Parameters
     ----------
     lat1 : float or numpy.array of float
         first point's latitude coordinate
-    lng1 : float or numpy.array of float
+    lon1 : float or numpy.array of float
         first point's longitude coordinate
     lat2 : float or numpy.array of float
         second point's latitude coordinate
-    lng2 : float or numpy.array of float
+    lon2 : float or numpy.array of float
         second point's longitude coordinate
 
     Returns
@@ -40,14 +40,14 @@ def calculate_bearing(lat1, lng1, lat2, lng2):
     bearing : float or numpy.array of float
         the bearing(s) in decimal degrees
     """
-    # get the latitudes and the difference in longitudes, in radians
+    # get the latitudes and the difference in longitudes, all in radians
     lat1 = np.radians(lat1)
     lat2 = np.radians(lat2)
-    d_lng = np.radians(lng2 - lng1)
+    delta_lon = np.radians(lon2 - lon1)
 
     # calculate initial bearing from -180 degrees to +180 degrees
-    y = np.sin(d_lng) * np.cos(lat2)
-    x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(d_lng)
+    y = np.sin(delta_lon) * np.cos(lat2)
+    x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(delta_lon)
     initial_bearing = np.degrees(np.arctan2(y, x))
 
     # normalize to 0-360 degrees to get compass bearing

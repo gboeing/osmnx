@@ -7,9 +7,9 @@
 FROM jupyter/base-notebook
 LABEL maintainer="Geoff Boeing <boeing@usc.edu>"
 LABEL url="https://osmnx.readthedocs.io"
-LABEL description="OSMnx is a Python package to download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap."
+LABEL description="OSMnx is a Python package to easily download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap."
 
-COPY requirements.txt /tmp/
+COPY --chmod=0755 requirements.txt /tmp
 
 # install packages in one RUN to keep image tidy
 RUN mamba update --yes -c conda-forge --strict-channel-priority --no-banner -n base mamba && \
@@ -23,7 +23,7 @@ RUN mamba update --yes -c conda-forge --strict-channel-priority --no-banner -n b
     ipython -c "import osmnx; print('OSMnx version', osmnx.__version__)"
 
 # copy default jupyterlab settings, then set jupyter working directory to map to mounted volume
-COPY overrides.json /opt/conda/share/jupyter/lab/settings/
+COPY --chmod=0755 overrides.json /opt/conda/share/jupyter/lab/settings/
 WORKDIR /home/jovyan/work
 
 # set default command to launch when container is run

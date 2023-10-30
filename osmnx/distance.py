@@ -1,7 +1,5 @@
-"""Calculate distances and shortest paths and find nearest node/edge(s) to point(s)."""
+"""Calculate distances and find nearest node/edge(s) to point(s)."""
 
-import itertools
-import multiprocessing as mp
 from warnings import warn
 
 import networkx as nx
@@ -11,6 +9,7 @@ from shapely.geometry import Point
 from shapely.strtree import STRtree
 
 from . import projection
+from . import routing
 from . import utils
 from . import utils_geo
 from . import utils_graph
@@ -30,7 +29,7 @@ except ImportError:  # pragma: no cover
 EARTH_RADIUS_M = 6_371_009
 
 
-def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
+def great_circle(lat1, lon1, lat2, lon2, earth_radius=EARTH_RADIUS_M):
     """
     Calculate great-circle distances between pairs of points.
 
@@ -42,11 +41,11 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     ----------
     lat1 : float or numpy.array of float
         first point's latitude coordinate
-    lng1 : float or numpy.array of float
+    lon1 : float or numpy.array of float
         first point's longitude coordinate
     lat2 : float or numpy.array of float
         second point's latitude coordinate
-    lng2 : float or numpy.array of float
+    lon2 : float or numpy.array of float
         second point's longitude coordinate
     earth_radius : float
         earth's radius in units in which distance will be returned (default is
@@ -55,18 +54,18 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     Returns
     -------
     dist : float or numpy.array of float
-        distance from each (lat1, lng1) to each (lat2, lng2) in units of
+        distance from each (lat1, lon1) to each (lat2, lon2) in units of
         earth_radius
     """
     y1 = np.deg2rad(lat1)
     y2 = np.deg2rad(lat2)
-    dy = y2 - y1
+    delta_y = y2 - y1
 
-    x1 = np.deg2rad(lng1)
-    x2 = np.deg2rad(lng2)
-    dx = x2 - x1
+    x1 = np.deg2rad(lon1)
+    x2 = np.deg2rad(lon2)
+    delta_x = x2 - x1
 
-    h = np.sin(dy / 2) ** 2 + np.cos(y1) * np.cos(y2) * np.sin(dx / 2) ** 2
+    h = np.sin(delta_y / 2) ** 2 + np.cos(y1) * np.cos(y2) * np.sin(delta_x / 2) ** 2
     h = np.minimum(1, h)  # protect against floating point errors
     arc = 2 * np.arcsin(np.sqrt(h))
 
@@ -74,7 +73,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     return arc * earth_radius
 
 
-def euclidean_dist_vec(y1, x1, y2, x2):
+def euclidean(y1, x1, y2, x2):
     """
     Calculate Euclidean distances between pairs of points.
 
@@ -100,6 +99,72 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     """
     # pythagorean theorem
     return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+
+
+def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
+    """
+    Do not use, deprecated.
+
+    The `great_circle_vec` function has been renamed `great_circle`. Calling
+    `great_circle_vec` will raise an error in a future release.
+
+    Parameters
+    ----------
+    lat1 : float or numpy.array of float
+        first point's latitude coordinate
+    lng1 : float or numpy.array of float
+        first point's longitude coordinate
+    lat2 : float or numpy.array of float
+        second point's latitude coordinate
+    lng2 : float or numpy.array of float
+        second point's longitude coordinate
+    earth_radius : float
+        earth's radius in units in which distance will be returned (default is
+        meters)
+
+    Returns
+    -------
+    dist : float or numpy.array of float
+        distance from each (lat1, lng1) to each (lat2, lng2) in units of
+        earth_radius
+    """
+    warn(
+        "The `great_circle_vec` function has been renamed `great_circle`. Calling "
+        "`great_circle_vec` will raise an error in a future release.",
+        stacklevel=2,
+    )
+    return great_circle(lat1, lng1, lat2, lng2, earth_radius)
+
+
+def euclidean_dist_vec(y1, x1, y2, x2):
+    """
+    Do not use, deprecated.
+
+    The `euclidean_dist_vec` function has been renamed `euclidean`. Calling
+    `euclidean_dist_vec` will raise an error in a future release.
+
+    Parameters
+    ----------
+    y1 : float or numpy.array of float
+        first point's y coordinate
+    x1 : float or numpy.array of float
+        first point's x coordinate
+    y2 : float or numpy.array of float
+        second point's y coordinate
+    x2 : float or numpy.array of float
+        second point's x coordinate
+
+    Returns
+    -------
+    dist : float or numpy.array of float
+        distance from each (x1, y1) to each (x2, y2) in coordinates' units
+    """
+    warn(
+        "The `euclidean_dist_vec` function has been renamed `euclidean`. Calling "
+        "`euclidean_dist_vec` will raise an error in a future release.",
+        stacklevel=2,
+    )
+    return euclidean(y1, x1, y2, x2)
 
 
 def add_edge_lengths(G, precision=None, edges=None):
@@ -163,7 +228,7 @@ def add_edge_lengths(G, precision=None, edges=None):
         raise ValueError(msg) from e
 
     # calculate great circle distances, round, and fill nulls with zeros
-    dists = great_circle_vec(c[:, 0], c[:, 1], c[:, 2], c[:, 3]).round(precision)
+    dists = great_circle(c[:, 0], c[:, 1], c[:, 2], c[:, 3]).round(precision)
     dists[np.isnan(dists)] = 0
     nx.set_edge_attributes(G, values=dict(zip(uvk, dists)), name="length")
 
@@ -229,7 +294,7 @@ def nearest_nodes(G, X, Y, return_dist=False):
         if BallTree is None:  # pragma: no cover
             msg = "scikit-learn must be installed to search an unprojected graph"
             raise ImportError(msg)
-        # haversine requires lat, lng coords in radians
+        # haversine requires lat, lon coords in radians
         nodes_rad = np.deg2rad(nodes[["y", "x"]])
         points_rad = np.deg2rad(np.array([Y, X]).T)
         dist, pos = BallTree(nodes_rad, metric="haversine").query(points_rad, k=1)
@@ -334,7 +399,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
             if BallTree is None:  # pragma: no cover
                 msg = "scikit-learn must be installed to search an unprojected graph"
                 raise ImportError(msg)
-            # haversine requires lat, lng coords in radians
+            # haversine requires lat, lon coords in radians
             vertices_rad = np.deg2rad(vertices[["y", "x"]])
             points_rad = np.deg2rad(np.array([Y, X]).T)
             dist, pos = BallTree(vertices_rad, metric="haversine").query(points_rad, k=1)
@@ -355,51 +420,12 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     return ne
 
 
-def _single_shortest_path(G, orig, dest, weight):
-    """
-    Solve the shortest path from an origin node to a destination node.
-
-    This function is a convenience wrapper around networkx.shortest_path, with
-    exception handling for unsolvable paths. It uses Dijkstra's algorithm.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    orig : int
-        origin node ID
-    dest : int
-        destination node ID
-    weight : string
-        edge attribute to minimize when solving shortest path
-
-    Returns
-    -------
-    path : list
-        list of node IDs constituting the shortest path
-    """
-    try:
-        return nx.shortest_path(G, orig, dest, weight=weight, method="dijkstra")
-    except nx.exception.NetworkXNoPath:  # pragma: no cover
-        utils.log(f"Cannot solve path from {orig} to {dest}")
-        return None
-
-
 def shortest_path(G, orig, dest, weight="length", cpus=1):
     """
-    Solve shortest path from origin node(s) to destination node(s).
+    Do not use, deprecated.
 
-    Uses Dijkstra's algorithm. If `orig` and `dest` are single node IDs, this
-    will return a list of the nodes constituting the shortest path between
-    them. If `orig` and `dest` are lists of node IDs, this will return a list
-    of lists of the nodes constituting the shortest path between each
-    origin-destination pair. If a path cannot be solved, this will return None
-    for that path. You can parallelize solving multiple paths with the `cpus`
-    parameter, but be careful to not exceed your available RAM.
-
-    See also `k_shortest_paths` to solve multiple shortest paths between a
-    single origin and destination. For additional functionality or different
-    solver algorithms, use NetworkX directly.
+    The `shortest_path` function has moved to the `routing` module. Calling
+    it via the `distance` module will raise an error in a future release.
 
     Parameters
     ----------
@@ -420,49 +446,20 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
         list of node IDs constituting the shortest path, or, if orig and dest
         are lists, then a list of path lists
     """
-    _verify_edge_attribute(G, weight)
-
-    # if neither orig nor dest is iterable, just return the shortest path
-    if not (hasattr(orig, "__iter__") or hasattr(dest, "__iter__")):
-        return _single_shortest_path(G, orig, dest, weight)
-
-    # if both orig and dest are iterables, ensure they have same lengths
-    if hasattr(orig, "__iter__") and hasattr(dest, "__iter__"):
-        if len(orig) != len(dest):  # pragma: no cover
-            msg = "orig and dest must contain same number of elements"
-            raise ValueError(msg)
-
-        if cpus is None:
-            cpus = mp.cpu_count()
-        cpus = min(cpus, mp.cpu_count())
-        utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")
-
-        # if single-threading, calculate each shortest path one at a time
-        if cpus == 1:
-            paths = [_single_shortest_path(G, o, d, weight) for o, d in zip(orig, dest)]
-
-        # if multi-threading, calculate shortest paths in parallel
-        else:
-            args = ((G, o, d, weight) for o, d in zip(orig, dest))
-            pool = mp.Pool(cpus)
-            sma = pool.starmap_async(_single_shortest_path, args)
-            paths = sma.get()
-            pool.close()
-            pool.join()
-
-        return paths
-
-    # otherwise only one of orig or dest is iterable and the other is not
-    msg = "orig and dest must either both be iterable or neither must be iterable"
-    raise ValueError(msg)
+    warn(
+        "The `shortest_path` function has moved to the `routing` module. "
+        "Calling it via the `distance` module will raise an error in a future release.",
+        stacklevel=2,
+    )
+    return routing.shortest_path(G, orig, dest, weight, cpus)
 
 
 def k_shortest_paths(G, orig, dest, k, weight="length"):
     """
-    Solve `k` shortest paths from an origin node to a destination node.
+    Do not use, deprecated.
 
-    Uses Yen's algorithm. See also `shortest_path` to solve just the one
-    shortest path.
+    The `k_shortest_paths` function has moved to the `routing` module. Calling
+    it via the `distance` module will raise an error in a future release.
 
     Parameters
     ----------
@@ -484,34 +481,9 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
         a generator of `k` shortest paths ordered by total weight. each path
         is a list of node IDs.
     """
-    _verify_edge_attribute(G, weight)
-    paths_gen = nx.shortest_simple_paths(utils_graph.get_digraph(G, weight), orig, dest, weight)
-    yield from itertools.islice(paths_gen, 0, k)
-
-
-def _verify_edge_attribute(G, attr):
-    """
-    Verify attribute values are numeric and non-null across graph edges.
-
-    Raises a `ValueError` if attribute contains non-numeric values and raises
-    a warning if attribute is missing or null on any edges.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    attr : string
-        edge attribute to verify
-
-    Returns
-    -------
-    None
-    """
-    try:
-        values = np.array(tuple(G.edges(data=attr)))[:, 2]
-        values_float = values.astype(float)
-        if np.isnan(values_float).any():
-            warn(f"The attribute {attr!r} is missing or null on some edges.", stacklevel=2)
-    except ValueError as e:
-        msg = f"The edge attribute {attr!r} contains non-numeric values."
-        raise ValueError(msg) from e
+    warn(
+        "The `k_shortest_paths` function has moved to the `routing` module. "
+        "Calling it via the `distance` module will raise an error in a future release.",
+        stacklevel=2,
+    )
+    return routing.k_shortest_paths(G, orig, dest, k, weight)

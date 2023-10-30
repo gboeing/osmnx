@@ -244,9 +244,9 @@ def circuity_avg(Gu):
     # calculate straight-line distances as euclidean distances if projected or
     # great-circle distances if unprojected
     if projection.is_projected(Gu.graph["crs"]):
-        sl_dists = distance.euclidean_dist_vec(y1=y1, x1=x1, y2=y2, x2=x2)
+        sl_dists = distance.euclidean(y1=y1, x1=x1, y2=y2, x2=x2)
     else:
-        sl_dists = distance.great_circle_vec(lat1=y1, lng1=x1, lat2=y2, lng2=x2)
+        sl_dists = distance.great_circle(lat1=y1, lon1=x1, lat2=y2, lon2=x2)
 
     # return the ratio, handling possible division by zero
     sl_dists_total = sl_dists[~np.isnan(sl_dists)].sum()

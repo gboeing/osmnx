@@ -213,7 +213,7 @@ def add_node_elevations_google(
             stacklevel=2,
         )
 
-    # make a pandas series of all the nodes' coordinates as 'lat,lng'
+    # make a pandas series of all the nodes' coordinates as 'lat,lon'
     # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
     # in more locations per API call
     node_points = pd.Series(
@@ -224,7 +224,7 @@ def add_node_elevations_google(
     utils.log(f"Requesting node elevations from {domain!r} in {n_calls} request(s)")
 
     # break the series of coordinates into chunks of size max_locations_per_batch
-    # API format is locations=lat,lng|lat,lng|lat,lng|lat,lng...
+    # API format is locations=lat,lon|lat,lon|lat,lon|lat,lon...
     results = []
     for i in range(0, len(node_points), max_locations_per_batch):
         chunk = node_points.iloc[i : i + max_locations_per_batch]

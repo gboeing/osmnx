@@ -47,14 +47,14 @@ The `OSMnx Examples`_ gallery contains tutorials and demonstrations of all these
 Configuration
 ^^^^^^^^^^^^^
 
-You can configure OSMnx using the :code:`settings` module. Here you can adjust logging behavior, caching, server endpoints, and more. You can also configure OSMnx to retrieve historical snapshots of OpenStreetMap data as of a certain date.
+You can configure OSMnx using the :code:`settings` module. Here you can adjust logging behavior, caching, server endpoints, and more. You can also configure OSMnx to retrieve historical snapshots of OpenStreetMap data as of a certain date. Refer to the FAQ below for server usage limitations.
 
 Geocoding and Querying
 ^^^^^^^^^^^^^^^^^^^^^^
 
-OSMnx geocodes place names and addresses with the OpenStreetMap `Nominatim`_ API. You can use the :code:`geocoder` module to geocode place names or addresses to lat-lng coordinates. Or, you can retrieve place boundaries or any other OpenStreetMap elements by name or ID.
+OSMnx geocodes place names and addresses with the OpenStreetMap `Nominatim`_ API. You can use the :code:`geocoder` module to geocode place names or addresses to lat-lon coordinates. Or, you can retrieve place boundaries or any other OpenStreetMap elements by name or ID.
 
-Using the :code:`features` and :code:`graph` modules, as described below, you can download data by lat-lng point, address, bounding box, bounding polygon, or place name (e.g., neighborhood, city, county, etc).
+Using the :code:`features` and :code:`graph` modules, as described below, you can download data by lat-lon point, address, bounding box, bounding polygon, or place name (e.g., neighborhood, city, county, etc).
 
 Urban Amenities
 ^^^^^^^^^^^^^^^
@@ -105,7 +105,7 @@ Routing
 
 The :code:`speed` module can impute missing speeds to the graph edges. This imputation can obviously be imprecise, and the user can override it by passing in arguments that define local speed limits. It can also calculate free-flow travel times for each edge.
 
-The :code:`distance` module can find the nearest node(s) or edge(s) to coordinates using a fast spatial index. It can also solve shortest paths for network routing, parallelized with multiprocessing, using different weights (e.g., distance, travel time, elevation change, etc).
+The :code:`distance` module can find the nearest node(s) or edge(s) to coordinates using a fast spatial index. The :code:`routing` module can solve shortest paths for network routing, parallelized with multiprocessing, using different weights (e.g., distance, travel time, elevation change, etc).
 
 Visualization
 ^^^^^^^^^^^^^
@@ -130,6 +130,8 @@ Frequently Asked Questions
 
 *I have a usage question.* Please ask it on `StackOverflow`_.
 
+*Are there any usage limitations?* Yes. Refer to the `Nominatim Usage Policy`_ and `Overpass Commons`_ documentation for usage limitations and restrictions that you must adhere to at all times. If you use an alternative Nominatim/Overpass instance, ensure you understand and obey their usage policies. If you need to exceed these limitations, consider installing your own hosted instance and setting OSMnx to use it.
+
 .. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
 .. _GeoPandas: https://geopandas.org
 .. _NetworkX: https://networkx.org
@@ -150,3 +152,5 @@ Frequently Asked Questions
 .. _Changelog: https://github.com/gboeing/osmnx/blob/main/CHANGELOG.md
 .. _projects: https://geoffboeing.com/2018/03/osmnx-features-roundup
 .. _StackOverflow: https://stackoverflow.com/search?q=osmnx
+.. _Nominatim Usage Policy: https://operations.osmfoundation.org/policies/nominatim/
+.. _Overpass Commons: https://dev.overpass-api.de/overpass-doc/en/preface/commons.html

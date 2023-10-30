@@ -1,9 +1,18 @@
 # Changelog
 
-## Unreleased
+## 1.7.1 (2023-10-29)
 
-- better automatic UTM handling in the projection module (#1059)
-- add to_latlong parameter to the projection.project_graph function for API consistency (#1057)
+- fix references to latitude and longitude parameters as lat and lon consistently across package (#1068 #1069)
+- fix handling dict and set attribute types when reloading GraphML files (#1075 #1077)
+
+## 1.7.0 (2023-10-11)
+
+- improve automatic UTM handling in the projection module (#1059)
+- add a to_latlong parameter to the projection.project_graph function for API consistency (#1057)
+- workaround for pytest issue with printing to terminal window on Windows (#1064)
+- refactor the distance module and add a new routing module (#1063)
+- move shortest_path and k_shortest_paths functions to new routing module, with deprecation warning (#1063)
+- rename great_circle_vec and euclidean_dist_vec functions to great_circle and euclidean, with deprecation warning (#1063)
 - under-the-hood code clean-up (#1047)
 
 ## 1.6.0 (2023-07-28)

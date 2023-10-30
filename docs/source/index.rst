@@ -1,7 +1,7 @@
 OSMnx |version|
 ===============
 
-**OSMnx** is a Python package to download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap. You can download and model walking, driving, or biking networks with a single line of code then easily analyze and visualize them. You can just as easily work with urban amenities/points of interest, building footprints, transit stops, elevation data, street orientations, speed/travel time, and routing.
+**OSMnx** is a Python package to easily download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap. You can download and model walking, driving, or biking networks with a single line of code then analyze and visualize them. You can just as easily work with urban amenities/points of interest, building footprints, transit stops, elevation data, street orientations, speed/travel time, and routing.
 
 Citation
 --------
@@ -16,7 +16,9 @@ Boeing, G. 2017. `OSMnx: New Methods for Acquiring, Constructing, Analyzing, and
 Getting Started
 ---------------
 
-Read the :doc:`getting-started` guide for an introduction to the package and FAQ, then work through the `OSMnx Examples`_ gallery for step-by-step tutorials and sample code.
+First read the :doc:`getting-started` guide for an introduction to the package and FAQ.
+
+Then work through the `OSMnx Examples`_ gallery for step-by-step tutorials and sample code.
 
 .. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
 
@@ -38,7 +40,7 @@ If you have any trouble, consult the :doc:`user-reference`. The OSMnx repository
 License
 -------
 
-OSMnx is open source and licensed under the MIT license. OpenStreetMap's open data `license`_ requires that derivative works provide proper attribution.
+OSMnx is open source and licensed under the MIT license. OpenStreetMap's open data `license`_ requires that derivative works provide proper attribution. Refer to the :doc:`getting-started` guide for usage limitations.
 
 .. _license: https://www.openstreetmap.org/copyright
 

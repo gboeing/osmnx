@@ -1,6 +1,6 @@
 """Test suite for the package."""
 
-# use agg backend so you don't need a display on ci
+# use agg backend so you don't need a display on CI
 # do this first before pyplot is imported by anything
 import matplotlib as mpl
 
@@ -112,7 +112,7 @@ def test_geocoder():
     city = ox.geocode_to_gdf(place2)
     city_projected = ox.project_gdf(city, to_crs="epsg:3395")
 
-    # test geocoding a bad query to lat/lng: should raise exception
+    # test geocoding a bad query: should raise exception
     with pytest.raises(ox._errors.InsufficientResponseError):
         _ = ox.geocode("!@#$%^&*")
 
@@ -185,7 +185,7 @@ def test_osm_xml():
     ox.save_graph_xml(G, merge_edges=False, filepath=Path(ox.settings.data_folder) / "graph.osm")
 
     # test osm xml output merge edges
-    ox.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")])
+    ox.io.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")], precision=5)
 
     # test osm xml output from gdfs
     nodes, edges = ox.graph_to_gdfs(G)
@@ -280,6 +280,7 @@ def test_routing():
     route = ox.shortest_path(G, orig_node, dest_node, weight="time")
     # test good weight
     route = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
+    route = ox.distance.shortest_path(G, orig_node, dest_node, weight="travel_time")
 
     route_edges = ox.utils_graph.route_to_gdf(G, route, "travel_time")
     attributes = ox.utils_graph.get_route_edge_attributes(G, route)
@@ -299,7 +300,12 @@ def test_routing():
 
     # test k shortest paths
     routes = ox.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
+    routes = ox.distance.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
     fig, ax = ox.plot_graph_routes(G, list(routes))
+
+    # test great circle and euclidean distance calculators
+    assert ox.distance.great_circle_vec(0, 0, 1, 1) == pytest.approx(157249.6034105)
+    assert ox.distance.euclidean_dist_vec(0, 0, 1, 1) == pytest.approx(1.4142135)
 
     # test folium with keyword arguments to pass to folium.PolyLine
     gm = ox.plot_graph_folium(G, popup_attribute="name", color="#333333", weight=5, opacity=0.7)
@@ -435,6 +441,8 @@ def test_endpoints():
 
 def test_graph_save_load():
     """Test saving/loading graphs to/from disk."""
+    fp = Path(ox.settings.data_folder) / "graph.graphml"
+
     # save graph as shapefile and geopackage
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     ox.save_graph_shapefile(G, directed=True)
@@ -468,13 +476,28 @@ def test_graph_save_load():
     edge_attrs = {n: bool(b) for n, b in zip(G.edges, bools)}
     nx.set_edge_attributes(G, edge_attrs, attr_name)
 
+    # create list, set, and dict attributes for nodes and edges
+    rand_ints_nodes = np.random.randint(0, 10, len(G.nodes))
+    rand_ints_edges = np.random.randint(0, 10, len(G.edges))
+    list_node_attrs = {n: [n, r] for n, r in zip(G.nodes, rand_ints_nodes)}
+    nx.set_node_attributes(G, list_node_attrs, "test_list")
+    list_edge_attrs = {e: [e, r] for e, r in zip(G.edges, rand_ints_edges)}
+    nx.set_edge_attributes(G, list_edge_attrs, "test_list")
+    set_node_attrs = {n: {n, r} for n, r in zip(G.nodes, rand_ints_nodes)}
+    nx.set_node_attributes(G, set_node_attrs, "test_set")
+    set_edge_attrs = {e: {e, r} for e, r in zip(G.edges, rand_ints_edges)}
+    nx.set_edge_attributes(G, set_edge_attrs, "test_set")
+    dict_node_attrs = {n: {n: r} for n, r in zip(G.nodes, rand_ints_nodes)}
+    nx.set_node_attributes(G, dict_node_attrs, "test_dict")
+    dict_edge_attrs = {e: {e: r} for e, r in zip(G.edges, rand_ints_edges)}
+    nx.set_edge_attributes(G, dict_edge_attrs, "test_dict")
+
     # save/load graph as graphml file
     ox.save_graphml(G, gephi=True)
     ox.save_graphml(G, gephi=False)
-    ox.save_graphml(G, gephi=False, filepath=Path(ox.settings.data_folder) / "graph.graphml")
-    filepath = Path(ox.settings.data_folder) / "graph.graphml"
+    ox.save_graphml(G, gephi=False, filepath=fp)
     G2 = ox.load_graphml(
-        filepath,
+        fp,
         graph_dtypes={attr_name: ox.io._convert_bool_string},
         node_dtypes={attr_name: ox.io._convert_bool_string},
         edge_dtypes={attr_name: ox.io._convert_bool_string},
@@ -499,7 +522,7 @@ def test_graph_save_load():
     # test custom data types
     nd = {"osmid": str}
     ed = {"length": str, "osmid": float}
-    G2 = ox.load_graphml(filepath, node_dtypes=nd, edge_dtypes=ed)
+    G2 = ox.load_graphml(fp, node_dtypes=nd, edge_dtypes=ed)
 
     # test loading graphml from a file stream
     file_bytes = Path.open(Path("tests/input_data/short.graphml"), "rb").read()

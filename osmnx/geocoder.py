@@ -22,7 +22,7 @@ from ._errors import InsufficientResponseError
 
 def geocode(query,location_json=False):
     """
-    Geocode place names or addresses to (lat, lng) with the Nominatim API.
+    Geocode place names or addresses to (lat, lon) with the Nominatim API.
 
     This geocodes the query via the Nominatim "search" endpoint.
 
@@ -34,7 +34,7 @@ def geocode(query,location_json=False):
     Returns
     -------
     point : tuple
-        the (lat, lng) coordinates returned by the geocoder
+        the (lat, lon) coordinates returned by the geocoder
     """
     # define the parameters
     params = OrderedDict()
@@ -44,11 +44,11 @@ def geocode(query,location_json=False):
     params["q"] = query
     response_json = _nominatim._nominatim_request(params=params)
 
-    # if results were returned, parse lat and lng out of the result
+    # if results were returned, parse lat and lon out of the result
     if response_json and "lat" in response_json[0] and "lon" in response_json[0]:
         lat = float(response_json[0]["lat"])
-        lng = float(response_json[0]["lon"])
-        point = (lat, lng)
+        lon = float(response_json[0]["lon"])
+        point = (lat, lon)
         utils.log(f"Geocoded {query!r} to {point}")
         if location_json:
             return point,response_json
@@ -142,7 +142,7 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
     gdf = gdf.set_crs(settings.default_crs)
 
     # if buffer_dist was passed in, project the geometry to UTM, buffer it in
-    # meters, then project it back to lat-lng
+    # meters, then project it back to lat-lon
     if buffer_dist is not None and len(gdf) > 0:
         gdf_utm = projection.project_gdf(gdf)
         gdf_utm["geometry"] = gdf_utm["geometry"].buffer(buffer_dist)
