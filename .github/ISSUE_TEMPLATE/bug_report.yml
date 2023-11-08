@@ -37,7 +37,7 @@ body:
     id: os_python
     attributes:
       label: What operating system and Python version are you using?
-      placeholder: e.g., Windows 11/Python 3.11
+      placeholder: e.g., Windows 11/Python 3.12
     validations:
       required: true
 
