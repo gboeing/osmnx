@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- formally support Python 3.12
+
 ## 1.7.1 (2023-10-29)
 
 - fix references to latitude and longitude parameters as lat and lon consistently across package (#1068 #1069)
