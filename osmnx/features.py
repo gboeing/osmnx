@@ -336,7 +336,7 @@ def features_from_polygon(polygon, tags):
     return _create_gdf(response_jsons, polygon, tags)
 
 
-def features_from_xml(filepath, polygon=None, tags=None):
+def features_from_xml(filepath, polygon=None, tags=None, encoding="utf-8"):
     """
     Create a GeoDataFrame of OSM features in an OSM-formatted XML file.
 
@@ -367,13 +367,15 @@ def features_from_xml(filepath, polygon=None, tags=None):
         the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
+    encoding : string
+        the XML file's character encoding
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [osm_xml._overpass_json_from_file(filepath)]
+    response_jsons = [osm_xml._overpass_json_from_file(filepath, encoding)]
 
     # create GeoDataFrame using this response JSON
     return _create_gdf(response_jsons, polygon=polygon, tags=tags)
