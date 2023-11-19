@@ -530,7 +530,9 @@ def graph_from_polygon(
     return G
 
 
-def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=False):
+def graph_from_xml(
+    filepath, bidirectional=False, simplify=True, retain_all=False, encoding="utf-8"
+):
     """
     Create a graph from data in a .osm formatted XML file.
 
@@ -550,13 +552,15 @@ def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=Fals
     retain_all : bool
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
+    encoding : string
+        the XML file's character encoding
 
     Returns
     -------
     G : networkx.MultiDiGraph
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [osm_xml._overpass_json_from_file(filepath)]
+    response_jsons = [osm_xml._overpass_json_from_file(filepath, encoding)]
 
     # create graph using this response JSON
     G = _create_graph(response_jsons, bidirectional=bidirectional, retain_all=retain_all)
