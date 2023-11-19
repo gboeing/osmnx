@@ -201,6 +201,7 @@ def _make_overpass_polygon_coord_strs(polygon):
     Parameters
     ----------
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
+        polygon to convert to exterior coordinate strings
 
     Returns
     -------
