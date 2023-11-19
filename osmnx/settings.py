@@ -161,7 +161,7 @@ overpass_settings = "[out:json][timeout:{timeout}]{maxsize}"
 requests_kwargs = {}
 timeout = 180
 use_cache = True
-useful_tags_node = ["ref", "highway"]
+useful_tags_node = ["ref", "highway", "name", "public_transport", "bus", "trolleybus", "tram", "subway"]
 useful_tags_way = [
     "bridge",
     "tunnel",
@@ -179,3 +179,13 @@ useful_tags_way = [
     "est_width",
     "junction",
 ]
+useful_tags_relation = [
+    "from",
+    "to",
+    "name",
+    "ref",
+    "route",
+    "colour"
+]
+stop_tag_names = ["stop_entry_only", "stop", "stop_exit_only"]
+platform_tag_names = ["platform_entry_only", "platform", "platform_exit_only"]

@@ -231,7 +231,7 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
     gdf = gpd.GeoDataFrame.from_features([feature])
     cols = ["lat", "lon", "bbox_north", "bbox_south", "bbox_east", "bbox_west"]
     gdf[cols] = gdf[cols].astype(float)
-    return gdf
+    return gdf  
 
 
 def _get_first_polygon(results, query):

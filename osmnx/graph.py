@@ -8,6 +8,7 @@ Refer to the Getting Started guide for usage limitations.
 """
 
 import itertools
+from collections import defaultdict
 from warnings import warn
 
 import networkx as nx
@@ -372,7 +373,7 @@ def graph_from_place(
     utils.log("Constructed place geometry polygon(s) to query API")
 
     # create graph using this polygon(s) geometry
-    G = graph_from_polygon(
+    G, routes, stops, paths_routes = graph_from_polygon(
         polygon,
         network_type=network_type,
         simplify=simplify,
@@ -383,7 +384,7 @@ def graph_from_place(
     )
 
     utils.log(f"graph_from_place returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
-    return G
+    return G, routes, stops, paths_routes
 
 
 def graph_from_polygon(
@@ -472,24 +473,26 @@ def graph_from_polygon(
 
         # create buffered graph from the downloaded data
         bidirectional = network_type in settings.bidirectional_network_types
-        G_buff = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
+        G_buff, routes, stops, paths_routes = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
 
         # truncate buffered graph to the buffered polygon and retain_all for
         # now. needed because overpass returns entire ways that also include
         # nodes outside the poly if the way (that is, a way with a single OSM
         # ID) has a node inside the poly at some point.
-        G_buff = truncate.truncate_graph_polygon(G_buff, poly_buff, True, truncate_by_edge)
+        G_buff, routes, stops = truncate.truncate_graph_polygon(G_buff, routes, stops, poly_buff, True, truncate_by_edge)
 
         # simplify the graph topology
         if simplify:
-            G_buff = simplification.simplify_graph(G_buff)
+            G_buff = simplification.simplify_graph(G_buff, stops, paths_routes)
 
         # truncate graph by original polygon to return graph within polygon
         # caller wants. don't simplify again: this allows us to retain
         # intersections along the street that may now only connect 2 street
         # segments in the network, but in reality also connect to an
         # intersection just outside the polygon
-        G = truncate.truncate_graph_polygon(G_buff, polygon, retain_all, truncate_by_edge)
+        G, routes, stops = truncate.truncate_graph_polygon(G_buff, routes, stops, polygon, retain_all, truncate_by_edge)
+        
+        # G = truncate.truncate_graph_stops(G, stops, retain_all)
 
         # count how many physical streets in buffered graph connect to each
         # intersection in un-buffered graph, to retain true counts for each
@@ -504,16 +507,18 @@ def graph_from_polygon(
 
         # create graph from the downloaded data
         bidirectional = network_type in settings.bidirectional_network_types
-        G = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
+        G, routes, stops, paths_routes = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
 
         # truncate the graph to the extent of the polygon
-        G = truncate.truncate_graph_polygon(G, polygon, retain_all, truncate_by_edge)
+        G, routes, stops = truncate.truncate_graph_polygon(G, polygon, retain_all, truncate_by_edgetruncate_stops_routes=True)
 
         # simplify the graph topology after truncation. don't truncate after
         # simplifying or you may have simplified out to an endpoint beyond the
         # truncation distance, which would strip out the entire edge
         if simplify:
-            G = simplification.simplify_graph(G)
+            G = simplification.simplify_graph(G, stops, paths_routes)
+            
+        G = truncate.truncate_graph_stops(G, stops, retain_all)
 
         # count how many physical streets connect to each intersection/deadend
         # note this will be somewhat inaccurate due to periphery effects, so
@@ -527,7 +532,7 @@ def graph_from_polygon(
         )
 
     utils.log(f"graph_from_polygon returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
-    return G
+    return G, routes, stops, paths_routes
 
 
 def graph_from_xml(filepath, bidirectional=False, simplify=True, retain_all=False):
@@ -594,6 +599,9 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     response_count = 0
     nodes = {}
     paths = {}
+    routes = {}
+    stops = {}
+    paths_routes = {}
 
     # consume response_jsons generator to download data from server
     for response_json in response_jsons:
@@ -604,9 +612,13 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
             continue
 
         # otherwise, extract nodes and paths from the downloaded OSM data
-        nodes_temp, paths_temp = _parse_nodes_paths(response_json)
+        nodes_temp, paths_temp, routes_temp, stops_temp, paths_routes_temp = _parse_nodes_paths(response_json)
         nodes.update(nodes_temp)
         paths.update(paths_temp)
+        routes.update(routes_temp)
+        stops.update(stops_temp)
+        paths_routes.update(paths_routes_temp)
+        
 
     utils.log(f"Retrieved all data from API in {response_count} request(s)")
     if settings.cache_only_mode:  # pragma: no cover
@@ -642,7 +654,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     if len(G.edges) > 0:
         G = distance.add_edge_lengths(G)
 
-    return G
+    return G, routes, stops, paths_routes
 
 
 def _convert_node(element):
@@ -691,9 +703,53 @@ def _convert_path(element):
     return path
 
 
+def _convert_route(element):
+    """
+    Returns attributes for route and stops in this route
+
+    Parameters
+    ----------
+    element : dict
+        an OSM relation element
+
+    Returns
+    -------
+    route, stops : tuple of dicts
+    """
+    route = {"osmid": element["id"], "stops": []}
+    stops = {}
+    platforms = {}
+    paths= {}
+    order = 0
+        
+    for member in element["members"]:
+        if "role" in member and member["role"] in settings.platform_tag_names:
+            platforms[member["ref"]] = element["id"]
+        elif member["type"] == "node" and "role" in member:
+            if member["role"] in settings.stop_tag_names:
+                stops[member["ref"]] = element["id"]
+                route["stops"].append({"order": order, 
+                                       "osmid": member["ref"], 
+                                       "role": member["role"]
+                                       })
+                order += 1
+            # else:
+            #     route["platforms"].append({"order": i, 
+            #                                "osmid": member["ref"], 
+            #                                "role": member["role"]
+            #                                })
+        elif member["type"] == "way":
+            paths[member["ref"]] = element["id"]
+
+    if "tags" in element:
+        route["tags"] = element["tags"]                     
+
+    return route, stops, platforms, paths
+
+
 def _parse_nodes_paths(response_json):
     """
-    Construct dicts of nodes and paths from an Overpass response.
+    Construct dicts of nodes, paths, routes and stops from an Overpass response.
 
     Parameters
     ----------
@@ -702,18 +758,41 @@ def _parse_nodes_paths(response_json):
 
     Returns
     -------
-    nodes, paths : tuple of dicts
+    nodes, paths, routes, stops : tuple of dicts
         dicts' keys = osmid and values = dict of attributes
     """
     nodes = {}
     paths = {}
+    routes = {}
+    stops = defaultdict(set)
+    platforms = defaultdict(set)
+    paths_routs = defaultdict(set)
     for element in response_json["elements"]:
         if element["type"] == "node":
             nodes[element["id"]] = _convert_node(element)
         elif element["type"] == "way":
             paths[element["id"]] = _convert_path(element)
-
-    return nodes, paths
+        elif element["type"] == "relation":
+            routes[element["id"]], stops_in_route, plathforms_in_route, paths_in_route = _convert_route(element) 
+            for stop_id, route_id in stops_in_route.items():
+                stops[stop_id].add(route_id)
+            for platform_id, route_id in plathforms_in_route.items():
+                platforms[platform_id].add(route_id)
+            for path_id, route_id in paths_in_route.items():
+                paths_routs[path_id].add(route_id)
+                
+    for platform_id in platforms.keys():
+        if platform_id in nodes:
+            del nodes[platform_id]
+        elif platform_id in paths:
+            for node_id in paths[platform_id]["nodes"]:
+                if node_id in nodes:
+                    del nodes[node_id]
+            del paths[platform_id]
+    
+    for stop_id, route_ids in stops.items():
+        nodes[stop_id]["routes"] = route_ids 
+    return nodes, paths, routes, stops, paths_routs
 
 
 def _is_path_one_way(path, bidirectional, oneway_values):

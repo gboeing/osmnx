@@ -1,6 +1,7 @@
 """Simplify, correct, and consolidate network topology."""
 
 import logging as lg
+from collections import deque
 
 import geopandas as gpd
 import networkx as nx
@@ -81,7 +82,16 @@ def _is_endpoint(G, node, strict=True):
     return False
 
 
-def _build_path(G, endpoint, endpoint_successor, endpoints):
+def _is_path_continuation(G, paths_routes, node, successor, prev_route_ids):
+    route_ids = set()
+    for way in G[node][successor].values():
+        route_ids |= paths_routes[way["osmid"]]
+    if len(route_ids & prev_route_ids) > 0:
+        return True
+    return False
+
+
+def _build_path(G, endpoint, endpoint_successor, endpoints, paths_routes):
     """
     Build a path of nodes from one endpoint node to next endpoint node.
 
@@ -105,53 +115,33 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
         subsequently
     """
     # start building path from endpoint node through its successor
+    paths = []
     path = [endpoint, endpoint_successor]
-
-    # for each successor of the endpoint's successor
-    for this_successor in G.successors(endpoint_successor):
-        successor = this_successor
-        if successor not in path:
-            # if this successor is already in the path, ignore it, otherwise add
-            # it to the path
-            path.append(successor)
-            while successor not in endpoints:
-                # find successors (of current successor) not in path
-                successors = [n for n in G.successors(successor) if n not in path]
-
-                # 99%+ of the time there will be only 1 successor: add to path
-                if len(successors) == 1:
-                    successor = successors[0]
-                    path.append(successor)
-
-                # handle relatively rare cases or OSM digitization quirks
-                elif len(successors) == 0:
-                    if endpoint in G.successors(successor):
-                        # we have come to the end of a self-looping edge, so
-                        # add first node to end of path to close it and return
-                        return path + [endpoint]
-
-                    # otherwise, this can happen due to OSM digitization error
-                    # where a one-way street turns into a two-way here, but
-                    # duplicate incoming one-way edges are present
-                    msg = f"Unexpected simplify pattern handled near {successor}"
-                    utils.log(msg, level=lg.WARN)
-                    return path
-                else:  # pragma: no cover
-                    # if successor has >1 successors, then successor must have
-                    # been an endpoint because you can go in 2 new directions.
-                    # this should never occur in practice
-                    msg = f"Impossible simplify pattern failed near {successor}"
-                    raise GraphSimplificationError(msg)
-
-            # if this successor is an endpoint, we've completed the path
-            return path
-
-    # if endpoint_successor has no successors not already in the path, return
-    # the current path: this is usually due to a digitization quirk on OSM
-    return path
+    queue = deque()
+    route_ids = set()
+    for way in G[endpoint][endpoint_successor].values():
+        route_ids |= paths_routes[way["osmid"]]
+    queue.append((endpoint_successor, path, route_ids))
+    # if successor not in path:
+        # if this successor is already in the path, ignore it, otherwise add
+        # it to the path
+    while len(queue) != 0:
+        node, path, route_ids = queue.popleft()
+        for successor in G.successors(node):
+            new_path = path.copy()
+            new_route_ids = route_ids.copy()
+            if successor in endpoints and _is_path_continuation(G, paths_routes, node, successor, route_ids):
+                new_path.append(successor)
+                paths.append(new_path)
+            elif successor not in path and _is_path_continuation(G, paths_routes, node, successor, route_ids):
+                new_path.append(successor)
+                for way in G[node][successor].values():
+                    new_route_ids |= paths_routes[way["osmid"]]
+                queue.append((successor, new_path, new_route_ids))                      
+    return paths
 
 
-def _get_paths_to_simplify(G, strict=True):
+def _get_paths_to_simplify(G, stops, paths_routes, strict=True):
     """
     Generate all the paths to be simplified between endpoint nodes.
 
@@ -172,8 +162,11 @@ def _get_paths_to_simplify(G, strict=True):
         a generator of paths to simplify
     """
     # first identify all the nodes that are endpoints
-    endpoints = {n for n in G.nodes if _is_endpoint(G, n, strict=strict)}
+    # endpoints = {n for n in G.nodes if _is_endpoint(G, n, strict=strict)}
+    endpoints = stops.keys()
     utils.log(f"Identified {len(endpoints):,} edge endpoints")
+    
+    paths = []
 
     # for each endpoint node, look at each of its successor nodes
     for endpoint in endpoints:
@@ -182,7 +175,10 @@ def _get_paths_to_simplify(G, strict=True):
                 # if endpoint node's successor is not an endpoint, build path
                 # from the endpoint node, through the successor, and on to the
                 # next endpoint node
-                yield _build_path(G, endpoint, successor, endpoints)
+                # yield _build_path(G, endpoint, successor, endpoints)
+                paths.extend(_build_path(G, endpoint, successor, endpoints, paths_routes))
+                
+    return paths
 
 
 def _remove_rings(G):
@@ -210,7 +206,7 @@ def _remove_rings(G):
     return G
 
 
-def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
+def simplify_graph(G, stops, paths_routes, strict=True, remove_rings=True, track_merged=False):
     """
     Simplify a graph's topology by removing interstitial nodes.
 
@@ -262,7 +258,7 @@ def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
     all_edges_to_add = []
 
     # generate each path that needs to be simplified
-    for path in _get_paths_to_simplify(G, strict=strict):
+    for path in _get_paths_to_simplify(G, stops, paths_routes, strict=strict):
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
         merged_edges = []
@@ -284,7 +280,14 @@ def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
             # We can't assume that there exists an edge from u to v
             # with key=0, so we get a list of all edges from u to v
             # and just take the first one.
-            edge_data = list(G.get_edge_data(u, v).values())[0]
+            try:
+                edge_data = list(G.get_edge_data(u, v).values())[0]
+            except AttributeError:
+                print(f"{u} {v}")
+                print()
+                for u1, v1 in zip(path[:-1], path[1:]):
+                    print(f"{u1} {v1}")
+                raise AttributeError()
             for attr in edge_data:
                 if attr in path_attributes:
                     # if this key already exists in the dict, append it to the

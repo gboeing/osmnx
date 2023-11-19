@@ -1,5 +1,6 @@
 """Truncate graph by distance, bounding box, or polygon."""
-
+from collections import defaultdict
+from copy import deepcopy
 import networkx as nx
 
 from . import utils
@@ -119,7 +120,7 @@ def truncate_graph_bbox(
 
 
 def truncate_graph_polygon(
-    G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.05, min_num=3
+    G, routes, stops, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.05, min_num=3
 ):
     """
     Remove every node in graph that falls outside a (Multi)Polygon.
@@ -174,7 +175,7 @@ def truncate_graph_polygon(
             # mark this node for removal
             neighbors = set(G.successors(node)) | set(G.predecessors(node))
             if neighbors.issubset(nodes_outside_poly):
-                nodes_to_remove.add(node)
+                nodes_to_remove.add(node)            
     else:
         nodes_to_remove = nodes_outside_poly
 
@@ -182,6 +183,66 @@ def truncate_graph_polygon(
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
     G.remove_nodes_from(nodes_to_remove)
+                
+    stops, route_stops_to_remove = _truncate_stops(stops, nodes_to_remove)    
+    routes = _truncate_routes(routes, route_stops_to_remove)  
+            
+    utils.log(f"Removed {len(nodes_to_remove):,} nodes outside polygon")
+
+    if not retain_all:
+        # remove any isolated nodes and retain only the largest component
+        G = utils_graph.remove_isolated_nodes(G)
+        G = utils_graph.get_largest_component(G)
+
+    utils.log("Truncated graph by polygon")
+    return G, routes, stops
+
+
+def truncate_graph_stops(
+    G, stops, retain_all=False
+):
+    """
+    Remove every node in graph that falls outside a (Multi)Polygon.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        input graph
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
+        only retain nodes in graph that lie within this geometry
+    retain_all : bool
+        if True, return the entire graph even if it is not connected.
+        otherwise, retain only the largest weakly connected component.
+    truncate_by_edge : bool
+        if True, retain nodes outside boundary polygon if at least one of
+        node's neighbors is within the polygon
+    quadrat_width : numeric
+        passed on to intersect_index_quadrats: the linear length (in degrees)
+        of the quadrats with which to cut up the geometry (default = 0.05,
+        approx 4km at NYC's latitude)
+    min_num : int
+        passed on to intersect_index_quadrats: the minimum number of linear
+        quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4
+        squares)
+
+    Returns
+    -------
+    G : networkx.MultiDiGraph
+        the truncated graph
+    """
+    utils.log("Identifying all nodes that are not stops")
+
+    # first identify all nodes whose point geometries
+    gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
+    
+    gs_nodes_not_stops = gs_nodes[~gs_nodes.index.isin(stops)]
+    nodes_to_remove = set(gs_nodes_not_stops.index)
+
+    # now remove from the graph all those nodes that lie outside the polygon
+    # make a copy to not mutate original graph object caller passed in
+    G = G.copy()
+    G.remove_nodes_from(nodes_to_remove)
+            
     utils.log(f"Removed {len(nodes_to_remove):,} nodes outside polygon")
 
     if not retain_all:
@@ -191,3 +252,24 @@ def truncate_graph_polygon(
 
     utils.log("Truncated graph by polygon")
     return G
+
+
+def _truncate_stops(stops, nodes_to_remove):
+    route_stops = defaultdict(list)
+    for node in nodes_to_remove:
+        if node in stops:
+            routes = stops.pop(node)
+            for route in routes:
+                route_stops[route].append(node)
+    return stops, route_stops
+
+
+def _truncate_routes(routes, route_stops_to_remove):
+    for route_id, nodes in route_stops_to_remove.items():
+        stops = routes[route_id]["stops"]
+        stops_new = []
+        for stop in stops:
+            if stop["osmid"] not in nodes:
+                stops_new.append(stop)
+        routes[route_id]["stops"] = stops_new
+    return routes

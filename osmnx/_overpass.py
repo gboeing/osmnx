@@ -36,60 +36,74 @@ def _get_osm_filter(network_type):
     # driving: filter out un-drivable roads, service roads, private ways, and
     # anything specifying motor=no. also filter out any non-service roads that
     # are tagged as providing certain services
-    filters["drive"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
-        f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|service|"
-        f'steps|track"]'
-        f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
-        f'["service"!~"alley|driveway|emergency_access|parking|parking_aisle|private"]'
-    )
+    
+    # filters["drive"] = (
+    #     f'["highway"]["area"!~"yes"]{settings.default_access}'
+    #     f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
+    #     f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|service|"
+    #     f'steps|track"]'
+    #     f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
+    #     f'["service"!~"alley|driveway|emergency_access|parking|parking_aisle|private"]'
+    # )
 
     # drive+service: allow ways tagged 'service' but filter out certain types
-    filters["drive_service"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
-        f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|steps|"
-        f'track"]'
-        f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
-        f'["service"!~"emergency_access|parking|parking_aisle|private"]'
-    )
+    
+    # filters["drive_service"] = (
+    #     f'["highway"]["area"!~"yes"]{settings.default_access}'
+    #     f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
+    #     f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|steps|"
+    #     f'track"]'
+    #     f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
+    #     f'["service"!~"emergency_access|parking|parking_aisle|private"]'
+    # )
 
     # walking: filter out cycle ways, motor ways, private ways, and anything
     # specifying foot=no. allow service roads, permitting things like parking
     # lot lanes, alleys, etc that you *can* walk on even if they're not
     # exactly pleasant walks. some cycleways may allow pedestrians, but this
     # filter ignores such cycleways.
-    filters["walk"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bus_guideway|construction|cycleway|motor|no|planned|platform|'
-        f'proposed|raceway|razed"]'
-        f'["foot"!~"no"]["service"!~"private"]'
-    )
+    
+    # filters["walk"] = (
+    #     f'["highway"]["area"!~"yes"]{settings.default_access}'
+    #     f'["highway"!~"abandoned|bus_guideway|construction|cycleway|motor|no|planned|platform|'
+    #     f'proposed|raceway|razed"]'
+    #     f'["foot"!~"no"]["service"!~"private"]'
+    # )
 
     # biking: filter out foot ways, motor ways, private ways, and anything
     # specifying biking=no
-    filters["bike"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bus_guideway|construction|corridor|elevator|escalator|footway|'
-        f'motor|no|planned|platform|proposed|raceway|razed|steps"]'
-        f'["bicycle"!~"no"]["service"!~"private"]'
-    )
+    
+    # filters["bike"] = (
+    #     f'["highway"]["area"!~"yes"]{settings.default_access}'
+    #     f'["highway"!~"abandoned|bus_guideway|construction|corridor|elevator|escalator|footway|'
+    #     f'motor|no|planned|platform|proposed|raceway|razed|steps"]'
+    #     f'["bicycle"!~"no"]["service"!~"private"]'
+    # )
 
     # to download all ways, just filter out everything not currently in use or
     # that is private-access only
-    filters["all"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|construction|no|planned|platform|proposed|raceway|razed"]'
-        f'["service"!~"private"]'
-    )
+    
+    # filters["all"] = (
+    #     f'["highway"]["area"!~"yes"]{settings.default_access}'
+    #     f'["highway"!~"abandoned|construction|no|planned|platform|proposed|raceway|razed"]'
+    #     f'["service"!~"private"]'
+    # )
 
     # to download all ways, including private-access ones, just filter out
     # everything not currently in use
-    filters["all_private"] = (
-        '["highway"]["area"!~"yes"]["highway"!~"abandoned|construction|no|planned|platform|'
-        'proposed|raceway|razed"]'
-    )
+    
+    # filters["all_private"] = (
+    #     '["highway"]["area"!~"yes"]["highway"!~"abandoned|construction|no|planned|platform|'
+    #     'proposed|raceway|razed"]'
+    # )
+    
+    filters["all"] = ('["route"~"bus|trolleybus|tram|subway"]["tourism"!="yes"]')
+    
+    filters["bus"] = ('["route"~"bus|trolleybus"]["tourism"!="yes"]')
+    
+    filters["tram"] = ('["route"~"tram"]["tourism"!="yes"]')
+    
+    filters["subway"] = ('["route"~"subway"]["tourism"!="yes"]')
 
     if network_type in filters:
         osm_filter = filters[network_type]
@@ -300,10 +314,7 @@ def _download_overpass_network(polygon, network_type, custom_filter):
     """
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type, if provided, otherwise use custom_filter
-    if custom_filter is not None:
-        osm_filter = custom_filter
-    else:
-        osm_filter = _get_osm_filter(network_type)
+    osm_filter = _get_osm_filter(network_type)
 
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
@@ -315,7 +326,7 @@ def _download_overpass_network(polygon, network_type, custom_filter):
     # pass exterior coordinates of each polygon in list to API, one at a time
     # the '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
-        query_str = f"{overpass_settings};(way{osm_filter}(poly:{polygon_coord_str!r});>;);out;"
+        query_str = f"{overpass_settings};(relation{osm_filter}(poly:{polygon_coord_str!r});>;);out;"
         yield _overpass_request(data={"data": query_str})
 
 
