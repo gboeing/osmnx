@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- formally support Python 3.12
-- fix Windows-specific character encoding issues when reading XML files
+- formally support Python 3.12 (#1082)
+- fix Windows-specific character encoding issue when reading XML files (#1084)
 
 ## 1.7.1 (2023-10-29)
 
