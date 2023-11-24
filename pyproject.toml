@@ -49,10 +49,8 @@ visualization = ["matplotlib>=3.5"]
 
 [project.urls]
 Documentation = "https://osmnx.readthedocs.io"
+Gallery = "https://github.com/gboeing/osmnx-examples"
 Repository = "https://github.com/gboeing/osmnx"
-
-[tool.black]
-line_length = 100
 
 [tool.hatch.build]
 packages = ["osmnx"]
@@ -63,9 +61,12 @@ path = "osmnx/_version.py"
 [tool.ruff]
 cache-dir = "~/.cache/ruff"
 exclude = ["build/*"]
-ignore = ["PLR091"]  # ignore complexity checks (we check mccabe elsewhere)
-line-length = 110  # black line length + 10%
-select = [
+line-length = 100
+target-version = "py38"
+
+[tool.ruff.lint]
+extend-ignore = ["PLR091"]  # ignore PLR complexity checks (we check mccabe with C9)
+extend-select = [
     "A",    # check python builtins being used as variables or parameters
     "ARG",  # check unused function arguments
     "B",    # check common design problems a la flake8-bugbear
@@ -73,13 +74,13 @@ select = [
     "C4",   # check proper comprehensions
     "C9",   # check mccabe complexity
     "D",    # check docstring conventions a la pydocstyle
+    "D417", # check missing arguments in docstrings (disabled by default for numpy convention)
     "DTZ",  # check unsafe naive datetime use a la flake8-datetimez
     "E",    # check code style conventions a la pycodestyle errors
     "EM",   # check raw literals inside exception raising
     "ERA",  # check commented-out code from python files a la eradicate
     "F",    # check python source code for errors a la pyflakes
     "I",    # check isort imports
-    "ISC",  # check implicit string literal concatenation
     "PERF", # check performance anti-patterns a la perflint
     "PGH",  # check pygrep hooks
     "PIE",  # check misc lints a la flake8-pie
@@ -92,13 +93,18 @@ select = [
     "UP",   # check outdated syntax a la pyupgrade
     "W",    # check code style conventions a la pycodestyle warnings
 ]
-target-version = "py38"
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 force-single-line = true
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 14
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 110  # line length + 10% since it isn't a hard upper bound
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 [tool.ruff.per-file-ignores]
 "./osmnx/_api.py" = ["F401"]  # allow API imports to go unused
@@ -107,6 +113,3 @@ max-complexity = 14
     "F841",    # allow unused local variables
     "PLR2004", # allow magic values in comparisons
 ]
-
-[tool.ruff.pydocstyle]
-convention = "numpy"
