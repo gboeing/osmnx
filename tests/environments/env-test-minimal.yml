@@ -25,7 +25,6 @@ dependencies:
   - scipy=1.5
 
   # linting/testing
-  - black=23
   - hatch
   - pre-commit
   - pytest
