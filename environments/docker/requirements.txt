@@ -31,7 +31,6 @@ pip
 twine
 
 # linting/testing
-black
 nbdime
 nbqa
 pre-commit

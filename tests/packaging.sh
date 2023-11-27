@@ -22,7 +22,7 @@ VERSION=$(hatch version)
 rm -rf ./dist
 hatch build --clean
 twine check --strict ./dist/*
-SHA=$(openssl dgst -sha256 -r "./dist/$PACKAGE-$VERSION.tar.gz"  | awk '{print $1}')
+SHA=$(openssl dgst -sha256 -r "./dist/$PACKAGE-$VERSION.tar.gz" | awk '{print $1}')
 
 # rerender the conda-forge feedstock
 cd ../$PACKAGE-feedstock

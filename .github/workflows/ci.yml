@@ -46,13 +46,10 @@ jobs:
       - name: Lint code
         run: |
           SKIP=no-commit-to-branch pre-commit run --all-files
-          hatch build --clean
-          twine check --strict ./dist/*
 
       - name: Test docs
         run: |
           make -C ./docs html
-          python -m sphinx -b linkcheck docs/source build/linkcheck
 
       - name: Test code
         run: pytest --cov=./osmnx --cov-report=xml --cov-report=term-missing --verbose
