@@ -149,7 +149,7 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
         # divide nodes into equal-sized chunks for multiprocessing
         size = int(np.ceil(len(nodes) / cpus))
         args = ((nodes.iloc[i : i + size], filepath, band) for i in range(0, len(nodes), size))
-        with mp.Pool(cpus) as pool:
+        with mp.get_context("spawn").Pool(cpus) as pool:
             results = pool.starmap_async(_query_raster, args).get()
         elevs = {k: v for kv in results for k, v in kv}
 
