@@ -505,10 +505,11 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     # STEP 2
     # attach each node to its cluster of merged nodes. first get the original
     # graph's node points then spatial join to give each node the label of
-    # cluster it's within
+    # cluster it's within. make cluster labels type string.
     node_points = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
     gdf = gpd.sjoin(node_points, node_clusters, how="left", predicate="within")
     gdf = gdf.drop(columns="geometry").rename(columns={"index_right": "cluster"})
+    gdf["cluster"] = gdf["cluster"].astype(str)
 
     # STEP 3
     # if a cluster contains multiple components (i.e., it's not connected)
