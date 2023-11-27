@@ -258,7 +258,7 @@ def features_from_place(query, tags, which_result=None, buffer_dist=None):
     """
     if buffer_dist is not None:
         warn(
-            "The buffer_dist argument as been deprecated and will be removed "
+            "The buffer_dist argument has been deprecated and will be removed "
             "in a future release. Buffer your query area directly, if desired.",
             stacklevel=2,
         )

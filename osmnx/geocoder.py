@@ -100,7 +100,7 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
     """
     if buffer_dist is not None:
         warn(
-            "The buffer_dist argument as been deprecated and will be removed "
+            "The buffer_dist argument has been deprecated and will be removed "
             "in a future release. Buffer your results directly, if desired.",
             stacklevel=2,
         )
