@@ -219,7 +219,13 @@ def test_elevation():
 
     # add node elevations from Google (fails without API key)
     with pytest.raises(ox._errors.InsufficientResponseError):
-        _ = ox.elevation.add_node_elevations_google(G, api_key="")
+        _ = ox.elevation.add_node_elevations_google(
+            G,
+            api_key="",
+            max_locations_per_batch=350,
+            precision=2,
+            url_template=ox.settings.elevation_url_template,
+        )
 
     # add node elevations from Open Topo Data (works without API key)
     ox.settings.elevation_url_template = (

@@ -261,7 +261,7 @@ def add_node_elevations_google(
     # sanity check that all our vectors have the same number of elements
     msg = f"Graph has {len(G):,} nodes and we received {len(results):,} results from {domain!r}"
     utils.log(msg)
-    if not (len(results) == len(G) == len(node_points)):
+    if not (len(results) == len(G) == len(node_points)):  # pragma: no cover
         err_msg = f"{msg}\n{response_json}"
         raise InsufficientResponseError(err_msg)
 
