@@ -44,12 +44,10 @@ jobs:
           conda info --all
 
       - name: Lint code
-        run: |
-          SKIP=no-commit-to-branch pre-commit run --all-files
+        run: SKIP=no-commit-to-branch pre-commit run --all-files
 
       - name: Test docs
-        run: |
-          make -C ./docs html
+        run: make -C ./docs html
 
       - name: Test code
         run: pytest --cov=./osmnx --cov-report=xml --cov-report=term-missing --verbose
