@@ -216,16 +216,29 @@ def test_osm_xml():
 def test_elevation():
     """Test working with elevation data."""
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
-    rasters = list(Path("tests/input_data").glob("elevation*.tif"))
 
     # add node elevations from Google (fails without API key)
     with pytest.raises(ox._errors.InsufficientResponseError):
-        _ = ox.elevation.add_node_elevations_google(G, api_key="")
+        _ = ox.elevation.add_node_elevations_google(
+            G,
+            api_key="",
+            max_locations_per_batch=350,
+            precision=2,
+            url_template=ox.settings.elevation_url_template,
+        )
+
+    # add node elevations from Open Topo Data (works without API key)
+    ox.settings.elevation_url_template = (
+        "https://api.opentopodata.org/v1/aster30m?locations={locations}&key={key}"
+    )
+    _ = ox.elevation.add_node_elevations_google(G, batch_size=100, pause=0.01)
 
     # add node elevations from a single raster file (some nodes will be null)
+    rasters = list(Path("tests/input_data").glob("elevation*.tif"))
     G = ox.elevation.add_node_elevations_raster(G, rasters[0], cpus=1)
+    assert pd.notnull(pd.Series(dict(G.nodes(data="elevation")))).any()
 
-    # add node elevations from multiple raster files
+    # add node elevations from multiple raster files (no nodes should be null)
     G = ox.elevation.add_node_elevations_raster(G, rasters)
     assert pd.notnull(pd.Series(dict(G.nodes(data="elevation")))).all()
 

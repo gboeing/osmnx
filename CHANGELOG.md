@@ -4,6 +4,8 @@
 
 - formally support Python 3.12 (#1082)
 - fix Windows-specific character encoding issue when reading XML files (#1084)
+- rename add_node_elevations_google function's max_locations_per_batch parameter, with deprecation warning (#1088)
+- move add_node_elevations_google function's url_template parameter to settings module, with deprecation warning (#1088)
 
 ## 1.7.1 (2023-10-29)
 
