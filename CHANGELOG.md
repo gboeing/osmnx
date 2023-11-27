@@ -4,7 +4,8 @@
 
 - formally support Python 3.12 (#1082)
 - fix Windows-specific character encoding issue when reading XML files (#1084)
-- resolve pandas and gdal future warnings
+- resolve pandas and gdal future warnings (#1089)
+- use spawn instead of fork for multiprocessing to resolve Python 3.12 deprecation warning (#1089)
 - rename add_node_elevations_google function's max_locations_per_batch parameter, with deprecation warning (#1088)
 - move add_node_elevations_google function's url_template parameter to settings module, with deprecation warning (#1088)
 
