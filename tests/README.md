@@ -7,7 +7,7 @@ First, ensure that you have installed the necessary [dependencies](../tests/envi
 - lint the docstrings
 - run tests and coverage
 
-You can read more about the project's standards and code/docstring style in the [contributing guidelines](../CONTRIBUTING.md).
+You can read more about the project's standards in the [contributing guidelines](../CONTRIBUTING.md).
 
 ## Code format
 
