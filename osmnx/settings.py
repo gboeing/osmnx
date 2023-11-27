@@ -48,6 +48,12 @@ doh_url_template : string
     Endpoint to resolve DNS-over-HTTPS if local DNS resolution fails. Set to
     None to disable DoH, but see `downloader._config_dns` documentation for
     caveats. Default is: `"https://8.8.8.8/resolve?name={hostname}"`
+elevation_url_template : string
+    Endpoint of the Google Maps Elevation API (or equivalent), containing
+    exactly two parameters: `locations` and `key`. Default is:
+    `"https://maps.googleapis.com/maps/api/elevation/json?locations={locations}&key={key}"`
+    One example of an alternative equivalent would be Open Topo Data:
+    `"https://api.opentopodata.org/v1/aster30m?locations={locations}&key={key}"`
 imgs_folder : string or pathlib.Path
     Path to folder in which to save plotted images by default. Default is
     `"./images"`.
@@ -92,7 +98,7 @@ osm_xml_way_tags : list
     Edge tags for for saving .osm XML files with `save_graph_xml` function.
     Default is `["highway", "lanes", "maxspeed", "name", "oneway"]`.
 overpass_endpoint : string
-    The base API url to use for overpass queries. Default is
+    The base API url to use for Overpass queries. Default is
     `"https://overpass-api.de/api"`.
 overpass_rate_limit : bool
     If True, check the Overpass server status endpoint for how long to
@@ -140,6 +146,9 @@ default_crs = "epsg:4326"
 default_referer = "OSMnx Python package (https://github.com/gboeing/osmnx)"
 default_user_agent = "OSMnx Python package (https://github.com/gboeing/osmnx)"
 doh_url_template = "https://8.8.8.8/resolve?name={hostname}"
+elevation_url_template = (
+    "https://maps.googleapis.com/maps/api/elevation/json?locations={locations}&key={key}"
+)
 imgs_folder = "./images"
 log_console = False
 log_file = False

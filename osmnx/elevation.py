@@ -164,18 +164,19 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
 def add_node_elevations_google(
     G,
     api_key=None,
-    max_locations_per_batch=350,
+    batch_size=350,
     pause=0,
+    max_locations_per_batch=None,
     precision=None,
-    url_template="https://maps.googleapis.com/maps/api/elevation/json?locations={}&key={}",
-):  # pragma: no cover
+    url_template=None,
+):
     """
-    Add `elevation` (meters) attribute to each node using a web service.
+    Add an `elevation` (meters) attribute to each node using a web service.
 
     By default, this uses the Google Maps Elevation API but you can optionally
     use an equivalent API with the same interface and response format, such as
-    Open Topo Data. The Google Maps Elevation API requires an API key but
-    other providers may not.
+    Open Topo Data, via the `settings` module's `elevation_url_template`. The
+    Google Maps Elevation API requires an API key but other providers may not.
 
     For a free local alternative see the `add_node_elevations_raster`
     function. See also the `add_edge_grades` function.
@@ -186,30 +187,49 @@ def add_node_elevations_google(
         input graph
     api_key : string
         a valid API key, can be None if the API does not require a key
-    max_locations_per_batch : int
+    batch_size : int
         max number of coordinate pairs to submit in each API call (if this is
         too high, the server will reject the request because its character
         limit exceeds the max allowed)
     pause : float
         time to pause between API calls, which can be increased if you get
         rate limited
+    max_locations_per_batch : int
+        deprecated, do not use
     precision : int
         deprecated, do not use
     url_template : string
-        a URL string template for the API endpoint, containing exactly two
-        parameters: `locations` and `key`; for example, for Open Topo Data:
-        `"https://api.opentopodata.org/v1/aster30m?locations={}&key={}"`
+        deprecated, do not use
 
     Returns
     -------
     G : networkx.MultiDiGraph
         graph with node elevation attributes
     """
+    if max_locations_per_batch is None:
+        max_locations_per_batch = batch_size
+    else:
+        warn(
+            "the `max_locations_per_batch` parameter is deprecated and will be "
+            "removed in a future release, use the `batch_size` parameter instead",
+            stacklevel=2,
+        )
+
     if precision is None:
         precision = 3
     else:
         warn(
             "the `precision` parameter is deprecated and will be removed in a future release",
+            stacklevel=2,
+        )
+
+    if url_template is None:
+        url_template = settings.elevation_url_template
+    else:
+        warn(
+            "the `url_template` parameter is deprecated and will be removed "
+            "in a future release, configure the `settings` module's "
+            "`elevation_url_template` instead",
             stacklevel=2,
         )
 
@@ -223,17 +243,20 @@ def add_node_elevations_google(
     domain = _downloader._hostname_from_url(url_template)
     utils.log(f"Requesting node elevations from {domain!r} in {n_calls} request(s)")
 
-    # break the series of coordinates into chunks of size max_locations_per_batch
+    # break the series of coordinates into chunks of max_locations_per_batch
     # API format is locations=lat,lon|lat,lon|lat,lon|lat,lon...
     results = []
     for i in range(0, len(node_points), max_locations_per_batch):
         chunk = node_points.iloc[i : i + max_locations_per_batch]
         locations = "|".join(chunk)
-        url = url_template.format(locations, api_key)
+        url = url_template.format(locations=locations, key=api_key)
 
         # download and append these elevation results to list of all results
         response_json = _elevation_request(url, pause)
-        results.extend(response_json["results"])
+        if "results" in response_json and len(response_json["results"]) > 0:
+            results.extend(response_json["results"])
+        else:
+            raise InsufficientResponseError(str(response_json))
 
     # sanity check that all our vectors have the same number of elements
     msg = f"Graph has {len(G):,} nodes and we received {len(results):,} results from {domain!r}"
