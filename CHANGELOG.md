@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.8.0 (2023-11-30)
 
 - formally support Python 3.12 (#1082)
 - fix Windows-specific character encoding issue when reading XML files (#1084)
