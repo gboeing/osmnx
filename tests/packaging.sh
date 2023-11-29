@@ -19,6 +19,7 @@ mamba update conda-smithy --yes --no-banner
 rm -rf ./docs/build
 make -C ./docs html
 python -m sphinx -b linkcheck docs/source build/linkcheck
+rm -rf ./docs/build
 
 # get the current package version number
 VERSION=$(hatch version)
