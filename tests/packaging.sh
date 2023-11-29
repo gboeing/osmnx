@@ -15,6 +15,11 @@ conda deactivate
 conda activate ox
 mamba update conda-smithy --yes --no-banner
 
+# test the docs build and validate that all their links are live
+rm -rf ./docs/build
+make -C ./docs html
+python -m sphinx -b linkcheck docs/source build/linkcheck
+
 # get the current package version number
 VERSION=$(hatch version)
 
