@@ -18,7 +18,7 @@ mamba update conda-smithy --yes --no-banner
 # test the docs build and validate that all their links are live
 rm -rf ./docs/build
 make -C ./docs html
-python -m sphinx -b linkcheck docs/source build/linkcheck
+python -m sphinx -b linkcheck ./docs/source ./docs/build/linkcheck
 rm -rf ./docs/build
 
 # get the current package version number

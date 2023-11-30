@@ -47,7 +47,7 @@ jobs:
       - name: Test docs
         run: |
           make -C ./docs html
-          python -m sphinx -b linkcheck docs/source build/linkcheck
+          python -m sphinx -b linkcheck ./docs/source ./docs/build/linkcheck
 
       - name: Test code
         run: pytest --cov=./osmnx --cov-report=term-missing --verbose
