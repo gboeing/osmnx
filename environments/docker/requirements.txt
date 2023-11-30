@@ -1,6 +1,6 @@
 # basics
 osmnx
-python == 3.12.*
+python == 3.11.*
 
 # helpful
 beautifulsoup4
