@@ -49,8 +49,8 @@ visualization = ["matplotlib>=3.5"]
 
 [project.urls]
 Documentation = "https://osmnx.readthedocs.io"
-Gallery = "https://github.com/gboeing/osmnx-examples"
 Repository = "https://github.com/gboeing/osmnx"
+"Examples Gallery" = "https://github.com/gboeing/osmnx-examples"
 
 [tool.hatch.build]
 packages = ["osmnx"]
