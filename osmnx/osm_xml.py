@@ -420,6 +420,7 @@ def _append_nodes_as_edge_attrs(xml_edge, sample_edge, all_edges_df):
         ET.SubElement(xml_edge, "nd", attrib={"ref": sample_edge["v"]})
     else:
         # topological sort
+        all_edges_df = all_edges_df.reset_index()
         try:
             ordered_nodes = _get_unique_nodes_ordered_from_way(all_edges_df)
         except nx.NetworkXUnfeasible:
@@ -516,7 +517,6 @@ def _get_unique_nodes_ordered_from_way(df_way_edges):
         design schema.
     """
     G = nx.MultiDiGraph()
-    df_way_edges.reset_index(inplace=True)  # noqa: PD002
     all_nodes = list(df_way_edges["u"].to_numpy()) + list(df_way_edges["v"].to_numpy())
 
     G.add_nodes_from(all_nodes)
