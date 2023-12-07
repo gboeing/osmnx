@@ -70,17 +70,21 @@ extend-select = [
     "A",    # check python builtins being used as variables or parameters
     "ARG",  # check unused function arguments
     "B",    # check common design problems a la flake8-bugbear
-    "BLE",  # check for blind exception catching
+    "BLE",  # check blind exception catching
     "C4",   # check proper comprehensions
     "C9",   # check mccabe complexity
     "D",    # check docstring conventions a la pydocstyle
-    "D417", # check missing arguments in docstrings (disabled by default for numpy convention)
+    "D417", # check missing args in docstrings (disabled by default for numpy convention)
     "DTZ",  # check unsafe naive datetime use a la flake8-datetimez
     "E",    # check code style conventions a la pycodestyle errors
     "EM",   # check raw literals inside exception raising
     "ERA",  # check commented-out code from python files a la eradicate
     "F",    # check python source code for errors a la pyflakes
+    "FIX",  # check temporary developer notes a la flake8-fixme
+   #"FURB", # check code improvements a la refurb (preview)
+    "G",    # check logging string formatting a la flake8-logging-format
     "I",    # check isort imports
+   #"LOG",  # check logging module usage a la flake8-logging (preview)
     "PERF", # check performance anti-patterns a la perflint
     "PGH",  # check pygrep hooks
     "PIE",  # check misc lints a la flake8-pie
@@ -88,7 +92,9 @@ extend-select = [
     "PT",   # check common pytest issues
     "PTH",  # check pathlib usage
     "RET",  # check return statements a la flake8-return
-    "T20",  # check for print statements
+    "RSE",  # check exception raise statements via flake8-raise
+    "SIM",  # check code simplicity a la flake8-simplify
+    "T20",  # check print statements
     "TRY",  # check exception handling anti-patterns a la tryceratops
     "UP",   # check outdated syntax a la pyupgrade
     "W",    # check code style conventions a la pycodestyle warnings
