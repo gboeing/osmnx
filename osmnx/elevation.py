@@ -265,10 +265,10 @@ def add_node_elevations_google(
         raise InsufficientResponseError(err_msg)
 
     # add elevation as an attribute to the nodes
-    df = pd.DataFrame(node_points, columns=["node_points"])
-    df["elevation"] = [result["elevation"] for result in results]
-    df["elevation"] = df["elevation"].round(precision)
-    nx.set_node_attributes(G, name="elevation", values=df["elevation"].to_dict())
+    df_elev = pd.DataFrame(node_points, columns=["node_points"])
+    df_elev["elevation"] = [result["elevation"] for result in results]
+    df_elev["elevation"] = df_elev["elevation"].round(precision)
+    nx.set_node_attributes(G, name="elevation", values=df_elev["elevation"].to_dict())
     utils.log(f"Added elevation data from {domain!r} to all nodes.")
 
     return G

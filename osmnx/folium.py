@@ -168,7 +168,7 @@ def _plot_folium(gdf, m, popup_attribute, tiles, zoom, fit_bounds, **kwargs):
     attrs = ["geometry"] if popup_attribute is None else ["geometry", popup_attribute]
 
     # add each edge to the map
-    for vals in gdf[attrs].values:
+    for vals in gdf[attrs].to_numpy():
         params = dict(zip(["geom", "popup_val"], vals))
         pl = _make_folium_polyline(**params, **kwargs)
         pl.add_to(m)

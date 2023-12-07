@@ -192,8 +192,8 @@ def test_osm_xml():
     ox.osm_xml.save_graph_xml([nodes, edges])
 
     # test ordered nodes from way
-    df = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
-    ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(df)
+    df_uv = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
+    ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(df_uv)
     assert ordered_nodes == [2, 3, 10, 5, 8]
 
     # test roundabout handling
@@ -236,11 +236,11 @@ def test_elevation():
     # add node elevations from a single raster file (some nodes will be null)
     rasters = list(Path("tests/input_data").glob("elevation*.tif"))
     G = ox.elevation.add_node_elevations_raster(G, rasters[0], cpus=1)
-    assert pd.notnull(pd.Series(dict(G.nodes(data="elevation")))).any()
+    assert pd.notna(pd.Series(dict(G.nodes(data="elevation")))).any()
 
     # add node elevations from multiple raster files (no nodes should be null)
     G = ox.elevation.add_node_elevations_raster(G, rasters)
-    assert pd.notnull(pd.Series(dict(G.nodes(data="elevation")))).all()
+    assert pd.notna(pd.Series(dict(G.nodes(data="elevation")))).all()
 
     # add edge grades and their absolute values
     G = ox.add_edge_grades(G, add_absolute=True)
@@ -377,8 +377,8 @@ def test_find_nearest():
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
     Gp = ox.project_graph(G)
     points = ox.utils_geo.sample_points(ox.get_undirected(Gp), 5)
-    X = points.x.values
-    Y = points.y.values
+    X = points.x.to_numpy()
+    Y = points.y.to_numpy()
 
     # get nearest nodes
     nn0, dist0 = ox.distance.nearest_nodes(G, X[0], Y[0], return_dist=True)
@@ -629,5 +629,5 @@ def test_features():
         os.close(handle)
     for filename in ("tests/input_data/West-Oakland.osm.bz2", temp_filename):
         gdf = ox.geometries_from_xml(filename)
-        assert "Willow Street" in gdf["name"].values
+        assert "Willow Street" in gdf["name"].to_numpy()
     Path.unlink(Path(temp_filename))

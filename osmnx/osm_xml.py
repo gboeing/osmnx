@@ -275,7 +275,7 @@ def _save_graph_xml(
     # misc. string replacements to meet OSM XML spec
     if "oneway" in gdf_edges.columns:
         # fill blank oneway tags with default (False)
-        gdf_edges.loc[pd.isnull(gdf_edges["oneway"]), "oneway"] = oneway
+        gdf_edges.loc[pd.isna(gdf_edges["oneway"]), "oneway"] = oneway
         gdf_edges.loc[:, "oneway"] = gdf_edges["oneway"].astype(str)
         gdf_edges.loc[:, "oneway"] = (
             gdf_edges["oneway"].str.replace("False", "no").replace("True", "yes")

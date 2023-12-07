@@ -834,14 +834,14 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
         normalizer = colors.Normalize(full_min, full_max)
         scalar_mapper = cm.ScalarMappable(normalizer, colormaps[cmap])
         color_series = vals.map(scalar_mapper.to_rgba)
-        color_series.loc[pd.isnull(vals)] = na_color
+        color_series.loc[pd.isna(vals)] = na_color
 
     else:
         # otherwise, bin values then assign colors to bins
         cut_func = pd.qcut if equal_size else pd.cut
         bins = cut_func(vals, num_bins, labels=range(num_bins))
         bin_colors = get_colors(num_bins, cmap, start, stop)
-        color_list = [bin_colors[b] if pd.notnull(b) else na_color for b in bins]
+        color_list = [bin_colors[b] if pd.notna(b) else na_color for b in bins]
         color_series = pd.Series(color_list, index=bins.index)
 
     return color_series

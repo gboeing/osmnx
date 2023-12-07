@@ -111,7 +111,7 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
 
     # all speeds will be null if edges had no preexisting maxspeed data and
     # caller did not pass in hwy_speeds or fallback arguments
-    if pd.isnull(speed_kph).all():
+    if pd.isna(speed_kph).all():
         msg = (
             "this graph's edges have no preexisting `maxspeed` attribute "
             "values so you must pass `hwy_speeds` or `fallback` arguments."
@@ -119,7 +119,7 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
         raise ValueError(msg)
 
     # add speed kph attribute to graph edges
-    edges["speed_kph"] = speed_kph.round(precision).values
+    edges["speed_kph"] = speed_kph.round(precision).to_numpy()
     nx.set_edge_attributes(G, values=edges["speed_kph"], name="speed_kph")
 
     return G
@@ -162,7 +162,7 @@ def add_edge_travel_times(G, precision=None):
         raise KeyError(msg)
 
     # verify edge length and speed_kph attributes contain no nulls
-    if pd.isnull(edges["length"]).any() or pd.isnull(edges["speed_kph"]).any():  # pragma: no cover
+    if pd.isna(edges["length"]).any() or pd.isna(edges["speed_kph"]).any():  # pragma: no cover
         msg = "edge `length` and `speed_kph` values must be non-null."
         raise ValueError(msg)
 
@@ -174,7 +174,7 @@ def add_edge_travel_times(G, precision=None):
     travel_time = distance_km / speed_km_sec
 
     # add travel time attribute to graph edges
-    edges["travel_time"] = travel_time.round(precision).values
+    edges["travel_time"] = travel_time.round(precision).to_numpy()
     nx.set_edge_attributes(G, values=edges["travel_time"], name="travel_time")
 
     return G
