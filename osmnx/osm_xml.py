@@ -517,10 +517,10 @@ def _get_unique_nodes_ordered_from_way(df_way_edges):
     """
     G = nx.MultiDiGraph()
     df_way_edges.reset_index(inplace=True)  # noqa: PD002
-    all_nodes = list(df_way_edges["u"].values) + list(df_way_edges["v"].values)
+    all_nodes = list(df_way_edges["u"].to_numpy()) + list(df_way_edges["v"].to_numpy())
 
     G.add_nodes_from(all_nodes)
-    G.add_edges_from(df_way_edges[["u", "v"]].values)
+    G.add_edges_from(df_way_edges[["u", "v"]].to_numpy())
 
     # copy nodes into new graph
     H = utils_graph.get_largest_component(G, strongly=False)
