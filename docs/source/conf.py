@@ -10,8 +10,9 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 import sys
 from pathlib import Path
 
-# go up two levels from /docs/source to the package root
-sys.path.insert(0, str(Path().resolve().parent.parent))
+# go up two levels from current working dir (/docs/source) to package root
+pkg_root_path = str(Path.cwd().parent.parent)
+sys.path.insert(0, pkg_root_path)
 
 author = "Geoff Boeing"
 copyright = "2016-2023, Geoff Boeing"  # noqa: A001
