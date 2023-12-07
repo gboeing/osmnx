@@ -516,7 +516,7 @@ def _get_unique_nodes_ordered_from_way(df_way_edges):
         design schema.
     """
     G = nx.MultiDiGraph()
-    df_way_edges.reset_index(inplace=True)
+    df_way_edges.reset_index(inplace=True)  # noqa: PD002
     all_nodes = list(df_way_edges["u"].values) + list(df_way_edges["v"].values)
 
     G.add_nodes_from(all_nodes)

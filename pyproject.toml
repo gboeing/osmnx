@@ -85,6 +85,7 @@ extend-select = [
     "G",    # check logging string formatting a la flake8-logging-format
     "I",    # check isort imports
    #"LOG",  # check logging module usage a la flake8-logging (preview)
+    "PD",   # check pandas linting a la pandas-vet
     "PERF", # check performance anti-patterns a la perflint
     "PGH",  # check pygrep hooks
     "PIE",  # check misc lints a la flake8-pie
@@ -94,7 +95,7 @@ extend-select = [
     "RET",  # check return statements a la flake8-return
     "RSE",  # check exception raise statements via flake8-raise
     "SIM",  # check code simplicity a la flake8-simplify
-    "T20",  # check print statements
+    "T20",  # check for any print statements
     "TRY",  # check exception handling anti-patterns a la tryceratops
     "UP",   # check outdated syntax a la pyupgrade
     "W",    # check code style conventions a la pycodestyle warnings
