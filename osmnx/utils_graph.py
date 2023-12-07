@@ -54,7 +54,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         else:
             gdf_nodes = gpd.GeoDataFrame(data, index=nodes)
 
-        gdf_nodes.index.rename("osmid", inplace=True)
+        gdf_nodes.index = gdf_nodes.index.rename("osmid")
         utils.log("Created nodes GeoDataFrame from graph")
 
     if edges:
@@ -91,7 +91,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         gdf_edges["u"] = u
         gdf_edges["v"] = v
         gdf_edges["key"] = k
-        gdf_edges.set_index(["u", "v", "key"], inplace=True)
+        gdf_edges = gdf_edges.set_index(["u", "v", "key"])
 
         utils.log("Created edges GeoDataFrame from graph")
 

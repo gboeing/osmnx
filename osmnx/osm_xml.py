@@ -253,7 +253,7 @@ def _save_graph_xml(
         )
 
     # rename columns per osm specification
-    gdf_nodes.rename(columns={"x": "lon", "y": "lat"}, inplace=True)
+    gdf_nodes = gdf_nodes.rename(columns={"x": "lon", "y": "lat"})
     gdf_nodes["lon"] = gdf_nodes["lon"].round(precision)
     gdf_nodes["lat"] = gdf_nodes["lat"].round(precision)
     gdf_nodes = gdf_nodes.reset_index().rename(columns={"osmid": "id"})
@@ -464,7 +464,7 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
     root : ElementTree.Element
         XML tree with edges appended
     """
-    gdf_edges.reset_index(inplace=True)
+    gdf_edges = gdf_edges.reset_index()
     if merge_edges:
         for _, all_way_edges in gdf_edges.groupby("id"):
             first = all_way_edges.iloc[0].dropna().astype(str)
