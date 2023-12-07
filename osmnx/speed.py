@@ -89,10 +89,7 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
 
     # if user provided hwy_speeds, use them as default values, otherwise
     # initialize an empty series to populate with values
-    if hwy_speeds is None:
-        hwy_speed_avg = pd.Series(dtype=float)
-    else:
-        hwy_speed_avg = pd.Series(hwy_speeds).dropna()
+    hwy_speed_avg = pd.Series(dtype=float) if hwy_speeds is None else pd.Series(hwy_speeds).dropna()
 
     # for each highway type that caller did not provide in hwy_speeds, impute
     # speed of type by taking the mean of the preexisting speed values of that

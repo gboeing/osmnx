@@ -1,4 +1,5 @@
 """Read/write .osm formatted XML files."""
+
 import bz2
 import xml.sax
 from pathlib import Path
@@ -232,10 +233,7 @@ def _save_graph_xml(
     None
     """
     # default filepath if none was provided
-    if filepath is None:
-        filepath = Path(settings.data_folder) / "graph.osm"
-    else:
-        filepath = Path(filepath)
+    filepath = Path(settings.data_folder) / "graph.osm" if filepath is None else Path(filepath)
 
     # if save folder does not already exist, create it
     filepath.parent.mkdir(parents=True, exist_ok=True)

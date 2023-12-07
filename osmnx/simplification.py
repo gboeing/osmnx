@@ -134,7 +134,7 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
                     # where a one-way street turns into a two-way here, but
                     # duplicate incoming one-way edges are present
                     msg = f"Unexpected simplify pattern handled near {successor}"
-                    utils.log(msg, level=lg.WARN)
+                    utils.log(msg, level=lg.WARNING)
                     return path
                 else:  # pragma: no cover
                     # if successor has >1 successors, then successor must have

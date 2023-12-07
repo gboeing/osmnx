@@ -183,10 +183,7 @@ def _make_overpass_settings():
     -------
     string
     """
-    if settings.memory is None:
-        maxsize = ""
-    else:
-        maxsize = f"[maxsize:{settings.memory}]"
+    maxsize = "" if settings.memory is None else f"[maxsize:{settings.memory}]"
     return settings.overpass_settings.format(timeout=settings.timeout, maxsize=maxsize)
 
 
@@ -301,10 +298,7 @@ def _download_overpass_network(polygon, network_type, custom_filter):
     """
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type, if provided, otherwise use custom_filter
-    if custom_filter is not None:
-        osm_filter = custom_filter
-    else:
-        osm_filter = _get_osm_filter(network_type)
+    osm_filter = custom_filter if custom_filter is not None else _get_osm_filter(network_type)
 
     # create overpass settings string
     overpass_settings = _make_overpass_settings()

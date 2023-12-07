@@ -42,7 +42,7 @@ def streets_per_node(G):
     """
     spn = dict(nx.get_node_attributes(G, "street_count"))
     if set(spn) != set(G.nodes):
-        utils.log("Graph nodes changed since `street_count`s were calculated", level=lg.WARN)
+        utils.log("Graph nodes changed since `street_count`s were calculated", level=lg.WARNING)
     return spn
 
 

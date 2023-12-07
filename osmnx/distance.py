@@ -210,10 +210,7 @@ def add_edge_lengths(G, precision=None, edges=None):
             stacklevel=2,
         )
 
-    if edges is None:
-        uvk = tuple(G.edges)
-    else:
-        uvk = edges
+    uvk = tuple(G.edges) if edges is None else edges
 
     # extract edge IDs and corresponding coordinates from their nodes
     x = G.nodes(data="x")

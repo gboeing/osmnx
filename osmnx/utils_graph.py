@@ -482,7 +482,7 @@ def _is_same_geometry(ls1, ls2):
     geom1_r = [tuple(reversed(coords)) for coords in ls1.xy]
 
     # if second geometry matches first in either direction, return True
-    return geom2 in (geom1, geom1_r)
+    return geom2 in (geom1, geom1_r)  # noqa: PLR6201
 
 
 def _update_edge_keys(G):

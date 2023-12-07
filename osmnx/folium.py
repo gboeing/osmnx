@@ -165,10 +165,7 @@ def _plot_folium(gdf, m, popup_attribute, tiles, zoom, fit_bounds, **kwargs):
         m = folium.Map(location=centroid, zoom_start=zoom, tiles=tiles)
 
     # identify the geometry and popup columns
-    if popup_attribute is None:
-        attrs = ["geometry"]
-    else:
-        attrs = ["geometry", popup_attribute]
+    attrs = ["geometry"] if popup_attribute is None else ["geometry", popup_attribute]
 
     # add each edge to the map
     for vals in gdf[attrs].values:
@@ -207,11 +204,8 @@ def _make_folium_polyline(geom, popup_val=None, **kwargs):
     locations = [(lat, lon) for lon, lat in geom.coords]
 
     # create popup if popup_val is not None
-    if popup_val is None:
-        popup = None
-    else:
-        # folium doesn't interpret html, so can't do newlines without iframe
-        popup = folium.Popup(html=json.dumps(popup_val))
+    # folium doesn't interpret html, so can't do newlines without iframe
+    popup = None if popup_val is None else folium.Popup(html=json.dumps(popup_val))
 
     # create a folium polyline with attributes
     return folium.PolyLine(locations=locations, popup=popup, **kwargs)

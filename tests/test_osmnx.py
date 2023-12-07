@@ -174,7 +174,7 @@ def test_osm_xml():
             edge_key = (node_id, neighbor_id, 0)
             assert neighbor_id in G.nodes
             assert edge_key in G.edges
-            assert G.edges[edge_key]["name"] in ("8th Street", "Willow Street")
+            assert G.edges[edge_key]["name"] in {"8th Street", "Willow Street"}
 
     Path.unlink(Path(temp_filename))
 

@@ -540,9 +540,7 @@ def plot_figure_ground(
                         et_flat.append(et)
 
                 # lookup corresponding width for each edge type in flat list
-                edge_widths = [
-                    street_widths[et] if et in street_widths else default_width for et in et_flat
-                ]
+                edge_widths = [street_widths.get(et, default_width) for et in et_flat]
 
                 # node diameter should equal largest edge width to make joints
                 # perfectly smooth. alternatively use min(?) to prevent
@@ -748,14 +746,10 @@ def plot_orientation(
     # width: make bars fill the circumference without gaps or overlaps
     width = 2 * np.pi / num_bins
 
-    # radius: how long to make each bar
+    # radius: how long to make each bar. set bar length so either the bar area
+    # (ie, via sqrt) or the bar height is proportional to the bin's frequency
     bin_frequency = bin_counts / bin_counts.sum()
-    if area:
-        # set bar length so area is proportional to frequency
-        radius = np.sqrt(bin_frequency)
-    else:
-        # set bar length so height is proportional to frequency
-        radius = bin_frequency
+    radius = np.sqrt(bin_frequency) if area else bin_frequency
 
     # create ax (if necessary) then set N at top and go clockwise
     if ax is None:
@@ -885,10 +879,7 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
 
     if save:
         # default filepath, if none provided
-        if filepath is None:
-            filepath = Path(settings.imgs_folder) / "image.png"
-        else:
-            filepath = Path(filepath)
+        filepath = Path(settings.imgs_folder) / "image.png" if filepath is None else Path(filepath)
 
         # if save folder does not already exist, create it
         filepath.parent.mkdir(parents=True, exist_ok=True)
