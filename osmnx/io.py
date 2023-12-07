@@ -38,10 +38,7 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
     None
     """
     # default filepath if none was provided
-    if filepath is None:
-        filepath = Path(settings.data_folder) / "graph.gpkg"
-    else:
-        filepath = Path(filepath)
+    filepath = Path(settings.data_folder) / "graph.gpkg" if filepath is None else Path(filepath)
 
     # if save folder does not already exist, create it
     filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -94,10 +91,9 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     )
 
     # default filepath if none was provided
-    if filepath is None:
-        filepath = Path(settings.data_folder) / "graph_shapefile"
-    else:
-        filepath = Path(filepath)
+    filepath = (
+        Path(settings.data_folder) / "graph_shapefile" if filepath is None else Path(filepath)
+    )
 
     # if save folder does not already exist, create it (shapefiles
     # get saved as set of files)
@@ -141,10 +137,7 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
     None
     """
     # default filepath if none was provided
-    if filepath is None:
-        filepath = Path(settings.data_folder) / "graph.graphml"
-    else:
-        filepath = Path(filepath)
+    filepath = Path(settings.data_folder) / "graph.graphml" if filepath is None else Path(filepath)
 
     # if save folder does not already exist, create it
     filepath.parent.mkdir(parents=True, exist_ok=True)

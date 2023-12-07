@@ -1,4 +1,5 @@
 """Read/write .osm formatted XML files."""
+
 import bz2
 import xml.sax
 from pathlib import Path
@@ -232,10 +233,7 @@ def _save_graph_xml(
     None
     """
     # default filepath if none was provided
-    if filepath is None:
-        filepath = Path(settings.data_folder) / "graph.osm"
-    else:
-        filepath = Path(filepath)
+    filepath = Path(settings.data_folder) / "graph.osm" if filepath is None else Path(filepath)
 
     # if save folder does not already exist, create it
     filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -255,7 +253,7 @@ def _save_graph_xml(
         )
 
     # rename columns per osm specification
-    gdf_nodes.rename(columns={"x": "lon", "y": "lat"}, inplace=True)
+    gdf_nodes = gdf_nodes.rename(columns={"x": "lon", "y": "lat"})
     gdf_nodes["lon"] = gdf_nodes["lon"].round(precision)
     gdf_nodes["lat"] = gdf_nodes["lat"].round(precision)
     gdf_nodes = gdf_nodes.reset_index().rename(columns={"osmid": "id"})
@@ -277,7 +275,7 @@ def _save_graph_xml(
     # misc. string replacements to meet OSM XML spec
     if "oneway" in gdf_edges.columns:
         # fill blank oneway tags with default (False)
-        gdf_edges.loc[pd.isnull(gdf_edges["oneway"]), "oneway"] = oneway
+        gdf_edges.loc[pd.isna(gdf_edges["oneway"]), "oneway"] = oneway
         gdf_edges.loc[:, "oneway"] = gdf_edges["oneway"].astype(str)
         gdf_edges.loc[:, "oneway"] = (
             gdf_edges["oneway"].str.replace("False", "no").replace("True", "yes")
@@ -466,7 +464,7 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
     root : ElementTree.Element
         XML tree with edges appended
     """
-    gdf_edges.reset_index(inplace=True)
+    gdf_edges = gdf_edges.reset_index()
     if merge_edges:
         for _, all_way_edges in gdf_edges.groupby("id"):
             first = all_way_edges.iloc[0].dropna().astype(str)
@@ -518,11 +516,11 @@ def _get_unique_nodes_ordered_from_way(df_way_edges):
         design schema.
     """
     G = nx.MultiDiGraph()
-    df_way_edges.reset_index(inplace=True)
-    all_nodes = list(df_way_edges["u"].values) + list(df_way_edges["v"].values)
+    df_way_edges.reset_index(inplace=True)  # noqa: PD002
+    all_nodes = list(df_way_edges["u"].to_numpy()) + list(df_way_edges["v"].to_numpy())
 
     G.add_nodes_from(all_nodes)
-    G.add_edges_from(df_way_edges[["u", "v"]].values)
+    G.add_edges_from(df_way_edges[["u", "v"]].to_numpy())
 
     # copy nodes into new graph
     H = utils_graph.get_largest_component(G, strongly=False)

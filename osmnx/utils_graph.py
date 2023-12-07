@@ -54,7 +54,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         else:
             gdf_nodes = gpd.GeoDataFrame(data, index=nodes)
 
-        gdf_nodes.index.rename("osmid", inplace=True)
+        gdf_nodes.index = gdf_nodes.index.rename("osmid")
         utils.log("Created nodes GeoDataFrame from graph")
 
     if edges:
@@ -91,7 +91,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
         gdf_edges["u"] = u
         gdf_edges["v"] = v
         gdf_edges["key"] = k
-        gdf_edges.set_index(["u", "v", "key"], inplace=True)
+        gdf_edges = gdf_edges.set_index(["u", "v", "key"])
 
         utils.log("Created edges GeoDataFrame from graph")
 
@@ -170,9 +170,9 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     # add edges and their attributes to graph, but filter out null attribute
     # values so that edges only get attributes with non-null values
     attr_names = gdf_edges.columns.to_list()
-    for (u, v, k), attr_vals in zip(gdf_edges.index, gdf_edges.values):
+    for (u, v, k), attr_vals in zip(gdf_edges.index, gdf_edges.to_numpy()):
         data_all = zip(attr_names, attr_vals)
-        data = {name: val for name, val in data_all if isinstance(val, list) or pd.notnull(val)}
+        data = {name: val for name, val in data_all if isinstance(val, list) or pd.notna(val)}
         G.add_edge(u, v, key=k, **data)
 
     # add any nodes with no incident edges, since they wouldn't be added above
@@ -482,7 +482,7 @@ def _is_same_geometry(ls1, ls2):
     geom1_r = [tuple(reversed(coords)) for coords in ls1.xy]
 
     # if second geometry matches first in either direction, return True
-    return geom2 in (geom1, geom1_r)
+    return geom2 in (geom1, geom1_r)  # noqa: PLR6201
 
 
 def _update_edge_keys(G):

@@ -173,10 +173,7 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
     gdf : geopandas.GeoDataFrame
         a GeoDataFrame with one row containing the result of geocoding
     """
-    if which_result is None:
-        limit = 50
-    else:
-        limit = which_result
+    limit = 50 if which_result is None else which_result
 
     results = _nominatim._download_nominatim_element(query, by_osmid=by_osmid, limit=limit)
 

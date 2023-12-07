@@ -1,4 +1,5 @@
 """Add node elevations from raster files or web APIs, and calculate edge grades."""
+
 import multiprocessing as mp
 import time
 from hashlib import sha1
@@ -94,7 +95,7 @@ def _query_raster(nodes, filepath, band):
     """
     # must open raster file here: cannot pickle it to pass in multiprocessing
     with rasterio.open(filepath) as raster:
-        values = np.array(tuple(raster.sample(nodes.values, band)), dtype=float).squeeze()
+        values = np.array(tuple(raster.sample(nodes.to_numpy(), band)), dtype=float).squeeze()
         values[values == raster.nodata] = np.nan
         return zip(nodes.index, values)
 
@@ -264,10 +265,10 @@ def add_node_elevations_google(
         raise InsufficientResponseError(err_msg)
 
     # add elevation as an attribute to the nodes
-    df = pd.DataFrame(node_points, columns=["node_points"])
-    df["elevation"] = [result["elevation"] for result in results]
-    df["elevation"] = df["elevation"].round(precision)
-    nx.set_node_attributes(G, name="elevation", values=df["elevation"].to_dict())
+    df_elev = pd.DataFrame(node_points, columns=["node_points"])
+    df_elev["elevation"] = [result["elevation"] for result in results]
+    df_elev["elevation"] = df_elev["elevation"].round(precision)
+    nx.set_node_attributes(G, name="elevation", values=df_elev["elevation"].to_dict())
     utils.log(f"Added elevation data from {domain!r} to all nodes.")
 
     return G

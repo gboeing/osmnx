@@ -1031,7 +1031,7 @@ def _filter_gdf_by_polygon_and_tags(gdf, polygon, tags):
         gdf = gdf[polygon_filter & combined_tag_filter].copy()
 
         # remove columns of all nulls (created by discarded component features)
-        gdf.dropna(axis="columns", how="all", inplace=True)
+        gdf = gdf.dropna(axis="columns", how="all")
 
     # multi-index gdf by element_type and osmid then return
     idx_cols = ["element_type", "osmid"]

@@ -540,9 +540,7 @@ def plot_figure_ground(
                         et_flat.append(et)
 
                 # lookup corresponding width for each edge type in flat list
-                edge_widths = [
-                    street_widths[et] if et in street_widths else default_width for et in et_flat
-                ]
+                edge_widths = [street_widths.get(et, default_width) for et in et_flat]
 
                 # node diameter should equal largest edge width to make joints
                 # perfectly smooth. alternatively use min(?) to prevent
@@ -748,14 +746,10 @@ def plot_orientation(
     # width: make bars fill the circumference without gaps or overlaps
     width = 2 * np.pi / num_bins
 
-    # radius: how long to make each bar
+    # radius: how long to make each bar. set bar length so either the bar area
+    # (ie, via sqrt) or the bar height is proportional to the bin's frequency
     bin_frequency = bin_counts / bin_counts.sum()
-    if area:
-        # set bar length so area is proportional to frequency
-        radius = np.sqrt(bin_frequency)
-    else:
-        # set bar length so height is proportional to frequency
-        radius = bin_frequency
+    radius = np.sqrt(bin_frequency) if area else bin_frequency
 
     # create ax (if necessary) then set N at top and go clockwise
     if ax is None:
@@ -840,14 +834,14 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
         normalizer = colors.Normalize(full_min, full_max)
         scalar_mapper = cm.ScalarMappable(normalizer, colormaps[cmap])
         color_series = vals.map(scalar_mapper.to_rgba)
-        color_series.loc[pd.isnull(vals)] = na_color
+        color_series.loc[pd.isna(vals)] = na_color
 
     else:
         # otherwise, bin values then assign colors to bins
         cut_func = pd.qcut if equal_size else pd.cut
         bins = cut_func(vals, num_bins, labels=range(num_bins))
         bin_colors = get_colors(num_bins, cmap, start, stop)
-        color_list = [bin_colors[b] if pd.notnull(b) else na_color for b in bins]
+        color_list = [bin_colors[b] if pd.notna(b) else na_color for b in bins]
         color_series = pd.Series(color_list, index=bins.index)
 
     return color_series
@@ -885,10 +879,7 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
 
     if save:
         # default filepath, if none provided
-        if filepath is None:
-            filepath = Path(settings.imgs_folder) / "image.png"
-        else:
-            filepath = Path(filepath)
+        filepath = Path(settings.imgs_folder) / "image.png" if filepath is None else Path(filepath)
 
         # if save folder does not already exist, create it
         filepath.parent.mkdir(parents=True, exist_ok=True)

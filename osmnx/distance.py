@@ -210,10 +210,7 @@ def add_edge_lengths(G, precision=None, edges=None):
             stacklevel=2,
         )
 
-    if edges is None:
-        uvk = tuple(G.edges)
-    else:
-        uvk = edges
+    uvk = tuple(G.edges) if edges is None else edges
 
     # extract edge IDs and corresponding coordinates from their nodes
     x = G.nodes(data="x")
@@ -381,7 +378,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
         # interpolate points along edges to index with k-d tree or ball tree
         uvk_xy = []
-        for uvk, geom in zip(geoms.index, geoms.values):
+        for uvk, geom in zip(geoms.index, geoms.to_numpy()):
             uvk_xy.extend((uvk, xy) for xy in utils_geo.interpolate_points(geom, interpolate))
         labels, xy = zip(*uvk_xy)
         vertices = pd.DataFrame(xy, index=labels, columns=["x", "y"])

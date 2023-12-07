@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- under-the-hood code clean-up (#1092)
+
 ## 1.8.0 (2023-11-30)
 
 - formally support Python 3.12 (#1082)
