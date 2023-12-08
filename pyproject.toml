@@ -112,11 +112,3 @@ max-line-length = 110  # line length + 10% since it isn't a hard upper bound
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
-
-[tool.ruff.per-file-ignores]
-"./osmnx/_api.py" = ["F401"]  # allow API imports to go unused
-"./tests/test_osmnx.py" = [
-    "E402",    # allow imports not at the top of the file
-    "F841",    # allow unused local variables
-    "PLR2004", # allow magic values in comparisons
-]

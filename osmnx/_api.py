@@ -1,3 +1,4 @@
+# ruff: noqa: F401
 """Expose most common parts of public API directly in package namespace."""
 
 from .bearing import add_edge_bearings

@@ -1,3 +1,4 @@
+# ruff: noqa: E402 F841 PLR2004
 """Test suite for the package."""
 
 # use agg backend so you don't need a display on CI
