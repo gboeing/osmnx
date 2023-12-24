@@ -24,12 +24,11 @@ dependencies:
   - scikit-learn=0.23
   - scipy=1.5
 
-  # linting/testing
+  # testing
   - hatch
   - pre-commit
   - pytest
   - pytest-cov
-  - ruff
   - twine
 
   # docs

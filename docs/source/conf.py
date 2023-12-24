@@ -46,9 +46,9 @@ language = "en"
 needs_sphinx = "7"  # same value as pinned in /docs/requirements.txt
 root_doc = "index"
 source_suffix = ".rst"
-templates_path = []
+templates_path: list = []
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-html_static_path = []
+html_static_path: list = []
 html_theme = "furo"
