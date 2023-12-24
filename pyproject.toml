@@ -58,6 +58,15 @@ packages = ["osmnx"]
 [tool.hatch.version]
 path = "osmnx/_version.py"
 
+[tool.mypy]
+disable_error_code = ["attr-defined"]
+disallow_untyped_defs = false
+ignore_missing_imports = true
+no_implicit_optional = false
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+
 [tool.ruff]
 cache-dir = "~/.cache/ruff"
 exclude = ["build/*"]
