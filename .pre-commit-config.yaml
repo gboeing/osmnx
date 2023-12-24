@@ -29,8 +29,15 @@ repos:
       - id: prettier
         types_or: [markdown, yaml]
 
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v1.8.0"
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests]
+        args: [--ignore-missing-imports]
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.1.7"
+    rev: "v0.1.9"
     hooks:
       - id: ruff
         args: [--fix]
