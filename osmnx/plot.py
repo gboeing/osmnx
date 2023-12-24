@@ -22,7 +22,7 @@ try:
     from matplotlib import colormaps
     from matplotlib import colors
 except ImportError:  # pragma: no cover
-    cm = colors = plt = colormaps = None  # type: ignore[assignment]
+    cm = colors = plt = colormaps = None
 
 
 def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=False):

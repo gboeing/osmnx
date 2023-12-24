@@ -12,7 +12,7 @@ from warnings import warn
 from . import settings
 
 
-def citation(style: str = "bibtex"):
+def citation(style: str = "bibtex") -> None:
     """
     Print the OSMnx package's citation information.
 
@@ -66,7 +66,7 @@ def citation(style: str = "bibtex"):
     print(msg)  # noqa: T201
 
 
-def ts(style: str = "datetime", template: str = None):
+def ts(style: str = "datetime", template: str = None) -> str:
     """
     Return current local timestamp as a string.
 
@@ -252,7 +252,7 @@ def config(
     settings.requests_kwargs = requests_kwargs
 
 
-def log(message: str, level: int = None, name: str = None, filename: str = None):
+def log(message: str, level: int = None, name: str = None, filename: str = None) -> None:
     """
     Write a message to the logger.
 
@@ -314,7 +314,7 @@ def log(message: str, level: int = None, name: str = None, filename: str = None)
             print(message, flush=True)  # noqa: T201
 
 
-def _get_logger(level: int, name: str, filename: str):
+def _get_logger(level: int, name: str, filename: str) -> lg.Logger:
     """
     Create a logger or return the current one if already instantiated.
 
@@ -329,7 +329,7 @@ def _get_logger(level: int, name: str, filename: str):
 
     Returns
     -------
-    logger : logging.logger
+    logger : logging.Logger
     """
     logger = lg.getLogger(name)
 
