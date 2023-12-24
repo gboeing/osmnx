@@ -3,7 +3,7 @@
 ## Unreleased
 
 - fix a bug arising from the save_graph_xml function (#1093)
-- under-the-hood code clean-up (#1092)
+- under-the-hood code clean-up (#1092 #1099)
 
 ## 1.8.0 (2023-11-30)
 
