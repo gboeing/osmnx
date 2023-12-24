@@ -1,21 +1,13 @@
 """Truncate graph by distance, bounding box, or polygon."""
 
 import networkx as nx
-from shapely.geometry import MultiPolygon
-from shapely.geometry import Polygon
 
 from . import utils
 from . import utils_geo
 from . import utils_graph
 
 
-def truncate_graph_dist(
-    G: nx.MultiDiGraph,
-    source_node: int,
-    max_dist: int = 1000,
-    weight: str = "length",
-    retain_all: bool = False,
-) -> nx.MultiDiGraph:
+def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_all=False):
     """
     Remove every node farther than some network distance from source_node.
 
@@ -66,16 +58,16 @@ def truncate_graph_dist(
 
 
 def truncate_graph_bbox(
-    G: nx.MultiDiGraph,
-    north: float,
-    south: float,
-    east: float,
-    west: float,
-    truncate_by_edge: bool = False,
-    retain_all: bool = False,
-    quadrat_width: float = 0.05,
-    min_num: int = 3,
-) -> nx.MultiDiGraph:
+    G,
+    north,
+    south,
+    east,
+    west,
+    truncate_by_edge=False,
+    retain_all=False,
+    quadrat_width=0.05,
+    min_num=3,
+):
     """
     Remove every node in graph that falls outside a bounding box.
 
@@ -127,13 +119,8 @@ def truncate_graph_bbox(
 
 
 def truncate_graph_polygon(
-    G: nx.MultiDiGraph,
-    polygon: MultiPolygon | Polygon,
-    retain_all: bool = False,
-    truncate_by_edge: bool = False,
-    quadrat_width: float = 0.05,
-    min_num: int = 3,
-) -> nx.MultiDiGraph:
+    G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.05, min_num=3
+):
     """
     Remove every node in graph that falls outside a (Multi)Polygon.
 
