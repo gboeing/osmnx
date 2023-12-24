@@ -69,6 +69,23 @@ def test_logging():
     ox.ts(style="time")
 
 
+def test_exceptions():
+    """Test the custom errors."""
+    message = "testing exception"
+
+    with pytest.raises(ox._errors.ResponseStatusCodeError):
+        raise ox._errors.ResponseStatusCodeError(message)
+
+    with pytest.raises(ox._errors.CacheOnlyInterruptError):
+        raise ox._errors.CacheOnlyInterruptError(message)
+
+    with pytest.raises(ox._errors.InsufficientResponseError):
+        raise ox._errors.InsufficientResponseError(message)
+
+    with pytest.raises(ox._errors.GraphSimplificationError):
+        raise ox._errors.GraphSimplificationError(message)
+
+
 def test_coords_rounding():
     """Test the rounding of geometry coordinates."""
     precision = 3
