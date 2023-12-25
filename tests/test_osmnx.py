@@ -408,7 +408,7 @@ def test_find_nearest():
     ne2 = ox.distance.nearest_edges(G, X[0], Y[0], interpolate=50, return_dist=True)
 
 
-def test_endpoints():
+def test_api_endpoints():
     """Test different API endpoints."""
     default_timeout = ox.settings.timeout
     default_key = ox.settings.nominatim_key
@@ -563,6 +563,11 @@ def test_graph_save_load():
 
 def test_graph_from_functions():
     """Test downloading graphs from Overpass."""
+    # test subdividing a large geometry (raises a UserWarning)
+    bbox = ox.utils_geo.bbox_from_point((0, 0), dist=1e5, project_utm=True)
+    poly = ox.utils_geo.bbox_to_poly(*bbox)
+    _ = ox.utils_geo._consolidate_subdivide_geometry(poly)
+
     # graph from bounding box
     _ = ox.utils_geo.bbox_from_point(location_point, project_utm=True, return_crs=True)
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)

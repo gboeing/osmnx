@@ -274,6 +274,17 @@ def _consolidate_subdivide_geometry(geometry):
     ):
         geometry = geometry.convex_hull
 
+    # warn user if they passed a geometry with area much larger than max size
+    ratio = int(geometry.area / mqas)
+    warning_threshold = 10
+    if ratio > warning_threshold:
+        msg = (
+            f"This area is {ratio:,} times your configured Overpass max query "
+            "area size. It will automatically be divided up into multiple "
+            "sub-queries accordingly. This may take a long time."
+        )
+        warn(msg, stacklevel=2)
+
     # if geometry area exceeds max size, subdivide it into smaller subpolygons
     # that are no greater than settings.max_query_area_size in size
     if geometry.area > mqas:
