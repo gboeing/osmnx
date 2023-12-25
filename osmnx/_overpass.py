@@ -202,31 +202,25 @@ def _make_overpass_polygon_coord_strs(polygon):
 
     Returns
     -------
-    polygon_coord_strs : list
-        list of exterior coordinate strings for smaller sub-divided polygons
+    coord_strs : list
+        list of strings of exterior coordinates of polygon(s)
     """
-    geometry_proj, crs_proj = projection.project_geometry(polygon)
-    gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj)
-    geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
+    # first subdivide the polygon if its area exceeds max size
+    # this results in a multipolygon of 1+ constituent polygons
+    poly_proj, crs_proj = projection.project_geometry(polygon)
+    multi_poly_proj = utils_geo._consolidate_subdivide_geometry(poly_proj)
+    multi_poly, _ = projection.project_geometry(multi_poly_proj, crs=crs_proj, to_latlong=True)
 
-    # extract geometry's exterior coords
-    polygons_coords = []
-    for polygon in geometry.geoms:
-        x, y = polygon.exterior.xy
-        polygons_coords.append(list(zip(x, y)))
+    # then extract each's exterior coords to the string format Overpass
+    # expects, rounding lats and lons to 6 decimals (ie, ~100 mm) so we
+    # can hash and cache URL strings consistently
+    coord_strs = []
+    for geom in multi_poly.geoms:
+        x, y = geom.exterior.xy
+        coord_list = [f'{xy[1]:.6f}{" "}{xy[0]:.6f}' for xy in zip(x, y)]
+        coord_strs.append(" ".join(coord_list))
 
-    # convert exterior coords to the string format the API expects
-    polygon_coord_strs = []
-    for coords in polygons_coords:
-        s = ""
-        separator = " "
-        for coord in list(coords):
-            # round floating point lats and longs to 6 decimals (ie, ~100 mm)
-            # so we can hash and cache strings consistently
-            s = f"{s}{separator}{coord[1]:.6f}{separator}{coord[0]:.6f}"
-        polygon_coord_strs.append(s.strip(separator))
-
-    return polygon_coord_strs
+    return coord_strs
 
 
 def _create_overpass_query(polygon_coord_str, tags):
