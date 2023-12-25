@@ -15,7 +15,7 @@ pkg_root_path = str(Path.cwd().parent.parent)
 sys.path.insert(0, pkg_root_path)
 
 author = "Geoff Boeing"
-copyright = "2016-2023, Geoff Boeing"  # noqa: A001
+copyright = "2016-2024, Geoff Boeing"  # noqa: A001
 project = "OSMnx"
 
 # dynamically load version from /osmnx/_version.py
