@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.8.1 (2023-12-31)
 
 - fix a bug arising from the save_graph_xml function (#1093)
 - warn user if their query area is significantly larger than max query area size (#1101)
