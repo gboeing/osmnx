@@ -1,7 +1,7 @@
 """Truncate graph by distance, bounding box, or polygon."""
 
-from warnings import warn
 from typing import Union
+from warnings import warn
 
 import networkx as nx
 from shapely.geometry import MultiPolygon
@@ -75,7 +75,7 @@ def truncate_graph_bbox(
     truncate_by_edge: bool = False,
     retain_all: bool = False,
     quadrat_width: float = None,
-    min_num: int = None
+    min_num: int = None,
 ) -> nx.MultiDiGraph:
     """
     Remove every node in graph that falls outside a bounding box.
