@@ -109,7 +109,9 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     raise ValueError(msg)
 
 
-def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
+def graph_from_gdfs(
+    gdf_nodes: gpd.GeoDataFrame, gdf_edges: gpd.GeoDataFrame, graph_attrs: dict = None
+) -> nx.MultiDiGraph:
     """
     Convert node and edge GeoDataFrames to a MultiDiGraph.
 
@@ -186,7 +188,7 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     return G
 
 
-def route_to_gdf(G, route, weight="length"):
+def route_to_gdf(G: nx.MultiDiGraph, route: list, weight: str = "length") -> gpd.GeoDataFrame:
     """
     Return a GeoDataFrame of the edges in a path, in order.
 
@@ -209,7 +211,7 @@ def route_to_gdf(G, route, weight="length"):
     return graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
 
 
-def get_route_edge_attributes(
+def get_route_edge_attributes(  # type: ignore[no-untyped-def]
     G, route, attribute=None, minimize_key="length", retrieve_default=None
 ):
     """
@@ -255,7 +257,7 @@ def get_route_edge_attributes(
     return attribute_values
 
 
-def remove_isolated_nodes(G):
+def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     """
     Remove from a graph all nodes that have no incident edges.
 
@@ -279,7 +281,7 @@ def remove_isolated_nodes(G):
     return G
 
 
-def get_largest_component(G, strongly=False):
+def get_largest_component(G: nx.MultiDiGraph, strongly: bool = False) -> nx.MultiDiGraph:
     """
     Get subgraph of G's largest weakly/strongly connected component.
 
@@ -317,7 +319,7 @@ def get_largest_component(G, strongly=False):
     return G
 
 
-def get_digraph(G, weight="length"):
+def get_digraph(G: nx.MultiDiGraph, weight: str = "length") -> nx.DiGraph:
     """
     Convert MultiDiGraph to DiGraph.
 
@@ -337,7 +339,7 @@ def get_digraph(G, weight="length"):
     """
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
-    to_remove = []
+    to_remove: list = []
 
     # identify all the parallel edges in the MultiDiGraph
     parallels = ((u, v) for u, v in G.edges(keys=False) if len(G.get_edge_data(u, v)) > 1)
@@ -354,7 +356,7 @@ def get_digraph(G, weight="length"):
     return nx.DiGraph(G)
 
 
-def get_undirected(G):
+def get_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
     """
     Convert MultiDiGraph to undirected MultiGraph.
 
@@ -417,7 +419,7 @@ def get_undirected(G):
     return H
 
 
-def _is_duplicate_edge(data1, data2):
+def _is_duplicate_edge(data1: dict, data2: dict) -> bool:
     """
     Check if two graph edge data dicts have the same osmid and geometry.
 
@@ -457,7 +459,7 @@ def _is_duplicate_edge(data1, data2):
     return is_dupe
 
 
-def _is_same_geometry(ls1, ls2):
+def _is_same_geometry(ls1: LineString, ls2: LineString) -> bool:
     """
     Determine if two LineString geometries are the same (in either direction).
 
@@ -485,7 +487,7 @@ def _is_same_geometry(ls1, ls2):
     return geom2 in (geom1, geom1_r)  # noqa: PLR6201
 
 
-def _update_edge_keys(G):
+def _update_edge_keys(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     """
     Increment key of one edge of parallel edges that differ in geometry.
 
