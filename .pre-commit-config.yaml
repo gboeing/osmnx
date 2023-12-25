@@ -40,4 +40,4 @@ repos:
     rev: "v1.8.0"
     hooks:
       - id: mypy
-        additional_dependencies: [pandas-stubs, types-networkx, types-requests]
+        additional_dependencies: [pandas-stubs, types-requests]
