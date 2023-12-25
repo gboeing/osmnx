@@ -274,7 +274,8 @@ def _consolidate_subdivide_geometry(geometry):
     ):
         geometry = geometry.convex_hull
 
-    # if geometry area exceeds max size, subdivide it into smaller sub-polygons
+    # if geometry area exceeds max size, subdivide it into smaller subpolygons
+    # that are no greater than settings.max_query_area_size in size
     if geometry.area > mqas:
         geometry = _quadrat_cut_geometry(geometry, quadrat_width=np.sqrt(mqas))
 
