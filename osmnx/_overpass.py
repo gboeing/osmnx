@@ -193,7 +193,7 @@ def _make_overpass_polygon_coord_strs(polygon):
 
     Project to utm, divide polygon up into sub-polygons if area exceeds a
     max size (in meters), project back to lat-lon, then get a list of
-    polygon(s) exterior coordinates
+    polygon(s) exterior coordinates. Ignore interior ("holes") coordinates.
 
     Parameters
     ----------
@@ -208,7 +208,25 @@ def _make_overpass_polygon_coord_strs(polygon):
     geometry_proj, crs_proj = projection.project_geometry(polygon)
     gpcs = utils_geo._consolidate_subdivide_geometry(geometry_proj)
     geometry, _ = projection.project_geometry(gpcs, crs=crs_proj, to_latlong=True)
-    return utils_geo._get_polygons_coordinates(geometry)
+
+    # extract geometry's exterior coords
+    polygons_coords = []
+    for polygon in geometry.geoms:
+        x, y = polygon.exterior.xy
+        polygons_coords.append(list(zip(x, y)))
+
+    # convert exterior coords to the string format the API expects
+    polygon_coord_strs = []
+    for coords in polygons_coords:
+        s = ""
+        separator = " "
+        for coord in list(coords):
+            # round floating point lats and longs to 6 decimals (ie, ~100 mm)
+            # so we can hash and cache strings consistently
+            s = f"{s}{separator}{coord[1]:.6f}{separator}{coord[0]:.6f}"
+        polygon_coord_strs.append(s.strip(separator))
+
+    return polygon_coord_strs
 
 
 def _create_overpass_query(polygon_coord_str, tags):

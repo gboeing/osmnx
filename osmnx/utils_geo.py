@@ -30,8 +30,9 @@ def sample_points(G, n):
     Parameters
     ----------
     G : networkx.MultiGraph
-        graph to sample points from; should be undirected (to not oversample
-        bidirectional edges) and projected (for accurate point interpolation)
+        graph from which to sample points. should be undirected (to avoid
+        oversampling bidirectional edges) and projected (for accurate point
+        interpolation)
     n : int
         how many points to sample
 
@@ -42,7 +43,7 @@ def sample_points(G, n):
         which each point was drawn
     """
     if nx.is_directed(G):  # pragma: no cover
-        warn("graph should be undirected to not oversample bidirectional edges", stacklevel=2)
+        warn("graph should be undirected to avoid oversampling bidirectional edges", stacklevel=2)
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
     weights = gdf_edges["length"] / gdf_edges["length"].sum()
     idx = np.random.choice(gdf_edges.index, size=n, p=weights)
@@ -239,7 +240,7 @@ def round_geometry_coords(geom, precision):
     raise TypeError(msg)
 
 
-def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
+def _consolidate_subdivide_geometry(geometry):
     """
     Consolidate and subdivide some geometry.
 
@@ -255,37 +256,28 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
     Parameters
     ----------
     geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the geometry to consolidate and subdivide
-    max_query_area_size : int
-        maximum area for any part of the geometry in meters: any polygon
-        bigger than this will get divided up for multiple queries to API
-        (default 50km x 50km). if None, use settings.max_query_area_size
+        the projected (in meter units) geometry to consolidate and subdivide
 
     Returns
     -------
     geometry : shapely.geometry.MultiPolygon
     """
-    if max_query_area_size is None:
-        max_query_area_size = settings.max_query_area_size
-
-    # let the linear length of the quadrats (with which to subdivide the
-    # geometry) be the square root of max area size
-    quadrat_width = np.sqrt(max_query_area_size)
-
     if not isinstance(geometry, (Polygon, MultiPolygon)):  # pragma: no cover
         msg = "Geometry must be a shapely Polygon or MultiPolygon"
         raise TypeError(msg)
 
     # if geometry is either 1) a Polygon whose area exceeds the max size, or
     # 2) a MultiPolygon, then get the convex hull around the geometry
+    mqas = settings.max_query_area_size
     if isinstance(geometry, MultiPolygon) or (
-        isinstance(geometry, Polygon) and geometry.area > max_query_area_size
+        isinstance(geometry, Polygon) and geometry.area > mqas
     ):
         geometry = geometry.convex_hull
 
-    # if geometry area exceeds max size, subdivide it into smaller sub-polygons
-    if geometry.area > max_query_area_size:
-        geometry = _quadrat_cut_geometry(geometry, quadrat_width=quadrat_width)
+    # if geometry area exceeds max size, subdivide it into smaller subpolygons
+    # that are no greater than settings.max_query_area_size in size
+    if geometry.area > mqas:
+        geometry = _quadrat_cut_geometry(geometry, quadrat_width=np.sqrt(mqas))
 
     if isinstance(geometry, Polygon):
         geometry = MultiPolygon([geometry])
@@ -293,46 +285,7 @@ def _consolidate_subdivide_geometry(geometry, max_query_area_size=None):
     return geometry
 
 
-def _get_polygons_coordinates(geometry):
-    """
-    Extract exterior coordinates from polygon(s) to pass to OSM.
-
-    Ignore the interior ("holes") coordinates.
-
-    Parameters
-    ----------
-    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the geometry to extract exterior coordinates from
-
-    Returns
-    -------
-    polygon_coord_strs : list
-    """
-    if not isinstance(geometry, MultiPolygon):  # pragma: no cover
-        msg = "Geometry must be a shapely MultiPolygon"
-        raise TypeError(msg)
-
-    # extract geometry's exterior coords
-    polygons_coords = []
-    for polygon in geometry.geoms:
-        x, y = polygon.exterior.xy
-        polygons_coords.append(list(zip(x, y)))
-
-    # convert exterior coords to the string format the API expects
-    polygon_coord_strs = []
-    for coords in polygons_coords:
-        s = ""
-        separator = " "
-        for coord in list(coords):
-            # round floating point lats and longs to 6 decimals (ie, ~100 mm)
-            # so we can hash and cache strings consistently
-            s = f"{s}{separator}{coord[1]:.6f}{separator}{coord[0]:.6f}"
-        polygon_coord_strs.append(s.strip(separator))
-
-    return polygon_coord_strs
-
-
-def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3):
+def _quadrat_cut_geometry(geometry, quadrat_width):
     """
     Split a Polygon or MultiPolygon up into sub-polygons of a specified size.
 
@@ -340,17 +293,17 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3):
     ----------
     geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the geometry to split up into smaller sub-polygons
-    quadrat_width : numeric
-        the linear width of the quadrats with which to cut up the geometry (in
-        the units the geometry is in)
-    min_num : int
-        the minimum number of linear quadrat lines (e.g., min_num=3 would
-        produce a quadrat grid of 4 squares)
+    quadrat_width : float
+        width (in geometry's units) of quadrat squares with which to split up
+        the geometry
 
     Returns
     -------
     geometry : shapely.geometry.MultiPolygon
     """
+    # min number of dividing lines (3 produces a grid of 4 quadrat squares)
+    min_num = 3
+
     # create n evenly spaced points between the min and max x and y bounds
     west, south, east, north = geometry.bounds
     x_num = int(np.ceil((east - west) / quadrat_width) + 1)
@@ -365,7 +318,6 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3):
 
     # recursively split the geometry by each quadrat line
     geometries = [geometry]
-
     for line in lines:
         # split polygon by line if they intersect, otherwise just keep it
         split_geoms = [split(g, line).geoms if g.intersects(line) else [g] for g in geometries]
@@ -375,7 +327,7 @@ def _quadrat_cut_geometry(geometry, quadrat_width, min_num=3):
     return MultiPolygon(geometries)
 
 
-def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3):
+def _intersect_index_quadrats(geometries, polygon):
     """
     Identify geometries that intersect a (multi)polygon.
 
@@ -389,12 +341,6 @@ def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3
         the geometries to intersect with the polygon
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         the polygon to intersect with the geometries
-    quadrat_width : numeric
-        linear length (in polygon's units) of quadrat lines with which to cut
-        up the polygon (default = 0.05 degrees, approx 4km at NYC's latitude)
-    min_num : int
-        the minimum number of linear quadrat lines (e.g., min_num=3 would
-        produce a quadrat grid of 4 squares)
 
     Returns
     -------
@@ -405,14 +351,18 @@ def _intersect_index_quadrats(geometries, polygon, quadrat_width=0.05, min_num=3
     sindex = geometries.sindex
     utils.log(f"Created r-tree spatial index for {len(geometries):,} geometries")
 
-    # cut the polygon into chunks for spatial index intersecting
-    multipoly = _quadrat_cut_geometry(polygon, quadrat_width=quadrat_width, min_num=min_num)
-    geoms_in_poly = set()
+    # cut polygon into chunks for faster spatial index intersecting. specify a
+    # sensible quadrat_width to balance performance (eg, 0.1 degrees is approx
+    # 8 km at NYC's latitude) with either projected or unprojected coordinates
+    quadrat_width = max(0.1, np.sqrt(polygon.area) / 10)
+    multipoly = _quadrat_cut_geometry(polygon, quadrat_width)
+    utils.log(f"Accelerating r-tree with {len(multipoly.geoms)} quadrats")
 
     # loop through each chunk of the polygon to find intersecting geometries
+    # first find approximate matches with spatial index, then precise matches
+    # from those approximate ones
+    geoms_in_poly = set()
     for poly in multipoly.geoms:
-        # first find approximate matches with spatial index, then precise
-        # matches from those approximate ones
         poly_buff = poly.buffer(0)
         if poly_buff.is_valid and poly_buff.area > 0:
             possible_matches_iloc = sindex.intersection(poly_buff.bounds)
@@ -447,11 +397,11 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     tuple
         (north, south, east, west) or (north, south, east, west, crs_proj)
     """
-    earth_radius = 6_371_009  # meters
+    EARTH_RADIUS = 6_371_009  # meters
     lat, lon = point
 
-    delta_lat = (dist / earth_radius) * (180 / np.pi)
-    delta_lon = (dist / earth_radius) * (180 / np.pi) / np.cos(lat * np.pi / 180)
+    delta_lat = (dist / EARTH_RADIUS) * (180 / np.pi)
+    delta_lon = (dist / EARTH_RADIUS) * (180 / np.pi) / np.cos(lat * np.pi / 180)
     north = lat + delta_lat
     south = lat - delta_lat
     east = lon + delta_lon

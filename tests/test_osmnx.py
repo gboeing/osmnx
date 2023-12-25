@@ -573,7 +573,7 @@ def test_graph_from_functions():
 
     # truncate graph by bounding box
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=400)
-    G = ox.truncate.truncate_graph_bbox(G, north, south, east, west)
+    G = ox.truncate.truncate_graph_bbox(G, north, south, east, west, min_num=3)
     G = ox.utils_graph.get_largest_component(G, strongly=True)
 
     # graph from address
