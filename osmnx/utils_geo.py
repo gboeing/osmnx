@@ -284,45 +284,6 @@ def _consolidate_subdivide_geometry(geometry):
     return geometry
 
 
-def _get_polygons_coordinates(geometry):
-    """
-    Extract exterior coordinates from polygon(s) to pass to OSM.
-
-    Ignore the interior ("holes") coordinates.
-
-    Parameters
-    ----------
-    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the geometry to extract exterior coordinates from
-
-    Returns
-    -------
-    polygon_coord_strs : list
-    """
-    if not isinstance(geometry, MultiPolygon):  # pragma: no cover
-        msg = "Geometry must be a shapely MultiPolygon"
-        raise TypeError(msg)
-
-    # extract geometry's exterior coords
-    polygons_coords = []
-    for polygon in geometry.geoms:
-        x, y = polygon.exterior.xy
-        polygons_coords.append(list(zip(x, y)))
-
-    # convert exterior coords to the string format the API expects
-    polygon_coord_strs = []
-    for coords in polygons_coords:
-        s = ""
-        separator = " "
-        for coord in list(coords):
-            # round floating point lats and longs to 6 decimals (ie, ~100 mm)
-            # so we can hash and cache strings consistently
-            s = f"{s}{separator}{coord[1]:.6f}{separator}{coord[0]:.6f}"
-        polygon_coord_strs.append(s.strip(separator))
-
-    return polygon_coord_strs
-
-
 def _quadrat_cut_geometry(geometry, quadrat_width):
     """
     Split a Polygon or MultiPolygon up into sub-polygons of a specified size.
