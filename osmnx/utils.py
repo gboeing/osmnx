@@ -97,7 +97,7 @@ def ts(style: str = "datetime", template: str = None) -> str:
     return template.format(dt.datetime.now().astimezone())
 
 
-def config(
+def config(  # type: ignore[no-untyped-def]
     all_oneway=settings.all_oneway,
     bidirectional_network_types=settings.bidirectional_network_types,
     cache_folder=settings.cache_folder,
