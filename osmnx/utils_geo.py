@@ -1,7 +1,10 @@
 """Geospatial utility functions."""
 
+from typing import Generator
+from typing import Union
 from warnings import warn
 
+import geopandas as gpd
 import networkx as nx
 import numpy as np
 from shapely.geometry import LineString
@@ -18,7 +21,7 @@ from . import utils
 from . import utils_graph
 
 
-def sample_points(G, n):
+def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
     """
     Randomly sample points constrained to a spatial graph.
 
@@ -51,7 +54,7 @@ def sample_points(G, n):
     return lines.interpolate(np.random.rand(n), normalized=True)
 
 
-def interpolate_points(geom, dist):
+def interpolate_points(geom: LineString, dist: float) -> Generator:
     """
     Interpolate evenly spaced points along a LineString.
 
@@ -81,7 +84,7 @@ def interpolate_points(geom, dist):
         raise TypeError(msg)
 
 
-def _round_polygon_coords(p, precision):
+def _round_polygon_coords(p, precision):  # type: ignore[no-untyped-def]
     """
     Round the coordinates of a shapely Polygon to some decimal precision.
 
@@ -107,7 +110,7 @@ def _round_polygon_coords(p, precision):
     return Polygon(shell=shell, holes=holes).buffer(0)
 
 
-def _round_multipolygon_coords(mp, precision):
+def _round_multipolygon_coords(mp, precision):  # type: ignore[no-untyped-def]
     """
     Round the coordinates of a shapely MultiPolygon to some decimal precision.
 
@@ -125,7 +128,7 @@ def _round_multipolygon_coords(mp, precision):
     return MultiPolygon([_round_polygon_coords(p, precision) for p in mp.geoms])
 
 
-def _round_point_coords(pt, precision):
+def _round_point_coords(pt, precision):  # type: ignore[no-untyped-def]
     """
     Round the coordinates of a shapely Point to some decimal precision.
 
@@ -143,7 +146,7 @@ def _round_point_coords(pt, precision):
     return Point([round(x, precision) for x in pt.coords[0]])
 
 
-def _round_multipoint_coords(mpt, precision):
+def _round_multipoint_coords(mpt, precision):  # type: ignore[no-untyped-def]
     """
     Round the coordinates of a shapely MultiPoint to some decimal precision.
 
@@ -161,7 +164,7 @@ def _round_multipoint_coords(mpt, precision):
     return MultiPoint([_round_point_coords(pt, precision) for pt in mpt.geoms])
 
 
-def _round_linestring_coords(ls, precision):
+def _round_linestring_coords(ls, precision):  # type: ignore[no-untyped-def]
     """
     Round the coordinates of a shapely LineString to some decimal precision.
 
@@ -179,7 +182,7 @@ def _round_linestring_coords(ls, precision):
     return LineString([[round(x, precision) for x in c] for c in ls.coords])
 
 
-def _round_multilinestring_coords(mls, precision):
+def _round_multilinestring_coords(mls, precision):  # type: ignore[no-untyped-def]
     """
     Round the coordinates of a shapely MultiLineString to some decimal precision.
 
@@ -197,7 +200,7 @@ def _round_multilinestring_coords(mls, precision):
     return MultiLineString([_round_linestring_coords(ls, precision) for ls in mls.geoms])
 
 
-def round_geometry_coords(geom, precision):
+def round_geometry_coords(geom, precision):  # type: ignore[no-untyped-def]
     """
     Do not use: deprecated.
 
@@ -240,7 +243,7 @@ def round_geometry_coords(geom, precision):
     raise TypeError(msg)
 
 
-def _consolidate_subdivide_geometry(geometry):
+def _consolidate_subdivide_geometry(geometry: Union[MultiPolygon, Polygon]) -> MultiPolygon:
     """
     Consolidate and subdivide some geometry.
 
@@ -296,7 +299,9 @@ def _consolidate_subdivide_geometry(geometry):
     return geometry
 
 
-def _quadrat_cut_geometry(geometry, quadrat_width):
+def _quadrat_cut_geometry(
+    geometry: Union[MultiPolygon, Polygon], quadrat_width: float
+) -> MultiPolygon:
     """
     Split a Polygon or MultiPolygon up into sub-polygons of a specified size.
 
@@ -338,7 +343,9 @@ def _quadrat_cut_geometry(geometry, quadrat_width):
     return MultiPolygon(geometries)
 
 
-def _intersect_index_quadrats(geometries, polygon):
+def _intersect_index_quadrats(
+    geometries: gpd.GeoSeries, polygon: Union[MultiPolygon, Polygon]
+) -> set:
     """
     Identify geometries that intersect a (Multi)Polygon.
 
@@ -385,7 +392,9 @@ def _intersect_index_quadrats(geometries, polygon):
     return geoms_in_poly
 
 
-def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
+def bbox_from_point(
+    point: tuple, dist: float = 1000, project_utm: bool = False, return_crs: bool = False
+) -> tuple:
     """
     Create a bounding box around a (lat, lon) point.
 
@@ -396,7 +405,7 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     ----------
     point : tuple
         the (lat, lon) center point to create the bounding box around
-    dist : int
+    dist : float
         bounding box distance in meters from the center point
     project_utm : bool
         if True, return bounding box as UTM-projected coordinates
@@ -432,7 +441,7 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     return north, south, east, west
 
 
-def bbox_to_poly(north, south, east, west):
+def bbox_to_poly(north: float, south: float, east: float, west: float) -> Polygon:
     """
     Convert bounding box coordinates to shapely Polygon.
 
