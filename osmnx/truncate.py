@@ -1,5 +1,7 @@
 """Truncate graph by distance, bounding box, or polygon."""
 
+from warnings import warn
+
 import networkx as nx
 
 from . import utils
@@ -22,11 +24,10 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
         the node in the graph from which to measure network distances to other
         nodes
     max_dist : int
-        remove every node in the graph greater than this distance from the
+        remove every node in the graph that is greater than this distance from
         source_node (along the network)
     weight : string
-        how to weight the graph when measuring distance (default 'length' is
-        how many meters long the edge is)
+        graph edge attribute to use to measure distance
     retain_all : bool
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
@@ -65,8 +66,8 @@ def truncate_graph_bbox(
     west,
     truncate_by_edge=False,
     retain_all=False,
-    quadrat_width=0.05,
-    min_num=3,
+    quadrat_width=None,
+    min_num=None,
 ):
     """
     Remove every node in graph that falls outside a bounding box.
@@ -90,13 +91,9 @@ def truncate_graph_bbox(
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
     quadrat_width : float
-        passed on to intersect_index_quadrats: the linear length (in degrees) of
-        the quadrats with which to cut up the geometry (default = 0.05, approx
-        4km at NYC's latitude)
+        deprecated, do not use
     min_num : int
-        passed on to intersect_index_quadrats: the minimum number of linear
-        quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4
-        squares)
+        deprecated, do not use
 
     Returns
     -------
@@ -119,7 +116,7 @@ def truncate_graph_bbox(
 
 
 def truncate_graph_polygon(
-    G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=0.05, min_num=3
+    G, polygon, retain_all=False, truncate_by_edge=False, quadrat_width=None, min_num=None
 ):
     """
     Remove every node in graph that falls outside a (Multi)Polygon.
@@ -137,24 +134,27 @@ def truncate_graph_polygon(
         if True, retain nodes outside boundary polygon if at least one of
         node's neighbors is within the polygon
     quadrat_width : float
-        passed on to intersect_index_quadrats: the linear length (in degrees)
-        of the quadrats with which to cut up the geometry (default = 0.05,
-        approx 4km at NYC's latitude)
+        deprecated, do not use
     min_num : int
-        passed on to intersect_index_quadrats: the minimum number of linear
-        quadrat lines (e.g., min_num=3 would produce a quadrat grid of 4
-        squares)
+        deprecated, do not use
 
     Returns
     -------
     G : networkx.MultiDiGraph
         the truncated graph
     """
+    if quadrat_width is not None or min_num is not None:
+        warn(
+            "the `quadrat_width` and `min_num` parameters are deprecated and "
+            "will be removed in a future release",
+            stacklevel=2,
+        )
+
     utils.log("Identifying all nodes that lie outside the polygon...")
 
     # first identify all nodes whose point geometries lie within the polygon
     gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
-    to_keep = utils_geo._intersect_index_quadrats(gs_nodes, polygon, quadrat_width, min_num)
+    to_keep = utils_geo._intersect_index_quadrats(gs_nodes, polygon)
 
     if not to_keep:
         # no graph nodes within the polygon: can't create a graph from that
