@@ -1,7 +1,10 @@
 """Graph utility functions."""
 
+from __future__ import annotations
+
 import itertools
-from typing import Any
+from typing import Literal
+from typing import overload
 from warnings import warn
 
 import geopandas as gpd
@@ -13,13 +16,108 @@ from shapely.geometry import Point
 from . import utils
 
 
+# nodes and edges are both missing (therefore both default true)
+@overload
+def graph_to_gdfs(
+    G: nx.MultiDiGraph,
+    *,
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    ...
+
+
+# both present/True
+@overload
+def graph_to_gdfs(
+    G: nx.MultiDiGraph,
+    nodes: Literal[True],
+    edges: Literal[True],
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    ...
+
+
+# both present, nodes true, edges false
+@overload
+def graph_to_gdfs(
+    G: nx.MultiDiGraph,
+    nodes: Literal[True],
+    edges: Literal[False],
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> gpd.GeoDataFrame:
+    ...
+
+
+# both present, nodes false, edges true
+@overload
+def graph_to_gdfs(
+    G: nx.MultiDiGraph,
+    nodes: Literal[False],
+    edges: Literal[True],
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> gpd.GeoDataFrame:
+    ...
+
+
+# nodes missing (therefore default true), edges present/true
+@overload
+def graph_to_gdfs(
+    G: nx.MultiDiGraph,
+    *,
+    edges: Literal[True],
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    ...
+
+
+# nodes missing (therefore default true), edges present/false
+@overload
+def graph_to_gdfs(
+    G: nx.MultiDiGraph,
+    *,
+    edges: Literal[False],
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> gpd.GeoDataFrame:
+    ...
+
+
+# nodes present/true, edges missing (therefore default true)
+@overload
+def graph_to_gdfs(
+    G: nx.MultiDiGraph,
+    nodes: Literal[True],
+    edges: bool = True,
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    ...
+
+
+# nodes present/false, edges missing (therefore default true)
+@overload
+def graph_to_gdfs(
+    G: nx.MultiDiGraph,
+    nodes: Literal[False],
+    edges: bool = True,
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> gpd.GeoDataFrame:
+    ...
+
+
 def graph_to_gdfs(
     G: nx.MultiDiGraph,
     nodes: bool = True,
     edges: bool = True,
     node_geometry: bool = True,
     fill_edge_geometry: bool = True,
-) -> Any:
+) -> gpd.GeoDataFrame | tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
     Convert a MultiDiGraph to node and/or edge GeoDataFrames.
 
