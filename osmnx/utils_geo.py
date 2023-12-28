@@ -64,12 +64,12 @@ def interpolate_points(geom, dist):
         a LineString geometry
     dist : float
         spacing distance between interpolated points, in same units as `geom`.
-        smaller values generate more points.
+        smaller values accordingly generate more points.
 
     Yields
     ------
-    point : tuple of floats
-        a generator of (x, y) tuples of the interpolated points' coordinates
+    points : generator
+        tuples of (x, y) floats of the interpolated points' coordinates
     """
     if isinstance(geom, LineString):
         num_vert = max(round(geom.length / dist), 1)
