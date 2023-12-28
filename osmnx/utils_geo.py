@@ -1,7 +1,8 @@
 """Geospatial utility functions."""
 
+from __future__ import annotations
+
 from typing import Generator
-from typing import Union
 from warnings import warn
 
 import geopandas as gpd
@@ -243,7 +244,7 @@ def round_geometry_coords(geom, precision):  # type: ignore[no-untyped-def]
     raise TypeError(msg)
 
 
-def _consolidate_subdivide_geometry(geometry: Union[MultiPolygon, Polygon]) -> MultiPolygon:
+def _consolidate_subdivide_geometry(geometry: Polygon | MultiPolygon) -> MultiPolygon:
     """
     Consolidate and subdivide some geometry.
 
@@ -299,9 +300,7 @@ def _consolidate_subdivide_geometry(geometry: Union[MultiPolygon, Polygon]) -> M
     return geometry
 
 
-def _quadrat_cut_geometry(
-    geometry: Union[MultiPolygon, Polygon], quadrat_width: float
-) -> MultiPolygon:
+def _quadrat_cut_geometry(geometry: Polygon | MultiPolygon, quadrat_width: float) -> MultiPolygon:
     """
     Split a Polygon or MultiPolygon up into sub-polygons of a specified size.
 
@@ -343,9 +342,7 @@ def _quadrat_cut_geometry(
     return MultiPolygon(geometries)
 
 
-def _intersect_index_quadrats(
-    geometries: gpd.GeoSeries, polygon: Union[MultiPolygon, Polygon]
-) -> set:
+def _intersect_index_quadrats(geometries: gpd.GeoSeries, polygon: Polygon | MultiPolygon) -> set:
     """
     Identify geometries that intersect a (Multi)Polygon.
 

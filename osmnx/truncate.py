@@ -1,6 +1,7 @@
 """Truncate graph by distance, bounding box, or polygon."""
 
-from typing import Union
+from __future__ import annotations
+
 from warnings import warn
 
 import networkx as nx
@@ -125,7 +126,7 @@ def truncate_graph_bbox(
 
 def truncate_graph_polygon(
     G: nx.MultiDiGraph,
-    polygon: Union[Polygon, MultiPolygon],
+    polygon: Polygon | MultiPolygon,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
     quadrat_width: float = None,
