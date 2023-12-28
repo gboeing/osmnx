@@ -387,10 +387,10 @@ def _intersect_index_quadrats(geometries, polygon):
 
 def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     """
-    Create a bounding box from a (lat, lon) center point.
+    Create a bounding box around a (lat, lon) point.
 
-    Create a bounding box some distance in each direction (north, south, east,
-    and west) from the center point and optionally project it.
+    Create a bounding box some distance (in meters) in each direction (north,
+    south, east, and west) from the center point and optionally project it.
 
     Parameters
     ----------
@@ -408,11 +408,11 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     tuple
         (north, south, east, west) or (north, south, east, west, crs_proj)
     """
-    EARTH_RADIUS = 6_371_009  # meters
+    EARTH_RADIUS_M = 6_371_009  # meters
     lat, lon = point
 
-    delta_lat = (dist / EARTH_RADIUS) * (180 / np.pi)
-    delta_lon = (dist / EARTH_RADIUS) * (180 / np.pi) / np.cos(lat * np.pi / 180)
+    delta_lat = (dist / EARTH_RADIUS_M) * (180 / np.pi)
+    delta_lon = (dist / EARTH_RADIUS_M) * (180 / np.pi) / np.cos(lat * np.pi / 180)
     north = lat + delta_lat
     south = lat - delta_lat
     east = lon + delta_lon
