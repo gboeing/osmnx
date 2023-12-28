@@ -1,6 +1,7 @@
 """Graph utility functions."""
 
 import itertools
+from typing import Any
 from warnings import warn
 
 import geopandas as gpd
@@ -12,7 +13,13 @@ from shapely.geometry import Point
 from . import utils
 
 
-def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
+def graph_to_gdfs(
+    G: nx.MultiDiGraph,
+    nodes: bool = True,
+    edges: bool = True,
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> Any:
     """
     Convert a MultiDiGraph to node and/or edge GeoDataFrames.
 
@@ -70,7 +77,9 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             x_lookup = nx.get_node_attributes(G, "x")
             y_lookup = nx.get_node_attributes(G, "y")
 
-            def _make_edge_geometry(u, v, data, x=x_lookup, y=y_lookup):
+            def _make_edge_geometry(
+                u: int, v: int, data: dict, x: dict = x_lookup, y: dict = y_lookup
+            ) -> LineString:
                 if "geometry" in data:
                     return data["geometry"]
 

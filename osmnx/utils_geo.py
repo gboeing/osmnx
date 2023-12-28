@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Generator
+from collections.abc import Generator
 from warnings import warn
 
 import geopandas as gpd
