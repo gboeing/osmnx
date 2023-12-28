@@ -13,7 +13,6 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -39,7 +38,7 @@ license = {text = "MIT License"}
 maintainers = [{name = "OSMnx contributors"}]
 name = "osmnx"
 readme = "README.md"
-requires-python = ">=3.8"  # match classifiers above and ruff/mypy versions below
+requires-python = ">=3.9"  # match classifiers above and ruff/mypy versions below
 
 [project.optional-dependencies]
 entropy = ["scipy>=1.5"]
@@ -63,7 +62,7 @@ disable_error_code = ["attr-defined"]
 disallow_untyped_defs = false
 ignore_missing_imports = true
 implicit_optional = true
-python_version = "3.8"
+python_version = "3.9"
 warn_no_return = true
 warn_redundant_casts = true
 warn_return_any = true
@@ -73,7 +72,7 @@ warn_unused_configs = true
 cache-dir = "~/.cache/ruff"
 exclude = ["build/*"]
 line-length = 100
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.lint]
 extend-ignore = ["PLR091"]  # ignore PLR complexity checks (we check mccabe with C9)
