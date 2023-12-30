@@ -21,11 +21,10 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
     G : networkx.MultiDiGraph
         input graph
     source_node : int
-        the node in the graph from which to measure network distances to other
-        nodes
-    max_dist : int
-        remove every node in the graph that is greater than this distance from
-        source_node (along the network)
+        node in graph from which to measure network distances to other nodes
+    max_dist : float
+        remove every node in the graph that is greater than this distance (in
+        same units as `weight` attribute) along the network from `source_node`
     weight : string
         graph edge attribute to use to measure distance
     retain_all : bool
