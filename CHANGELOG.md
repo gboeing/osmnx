@@ -5,7 +5,7 @@
 - fix a bug arising from the save_graph_xml function (#1093)
 - warn user if their query area is significantly larger than max query area size (#1101)
 - refactor utils_geo module and deprecate quadrat_width and min_num function arguments (#1100)
-- under-the-hood code clean-up (#1092 #1099)
+- under-the-hood code clean-up (#1092 #1099 #1103)
 
 ## 1.8.0 (2023-11-30)
 
