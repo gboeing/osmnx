@@ -45,21 +45,21 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             msg = "graph contains no nodes"
             raise ValueError(msg)
 
-        nodes, data = zip(*G.nodes(data=True))
+        uvk, data = zip(*G.nodes(data=True))
 
         if node_geometry:
             # convert node x/y attributes to Points for geometry column
-            geom = (Point(d["x"], d["y"]) for d in data)
-            gdf_nodes = gpd.GeoDataFrame(data, index=nodes, crs=crs, geometry=list(geom))
+            node_geoms = (Point(d["x"], d["y"]) for d in data)
+            gdf_nodes = gpd.GeoDataFrame(data, index=uvk, crs=crs, geometry=list(node_geoms))
         else:
-            gdf_nodes = gpd.GeoDataFrame(data, index=nodes)
+            gdf_nodes = gpd.GeoDataFrame(data, index=uvk)
 
         gdf_nodes.index = gdf_nodes.index.rename("osmid")
         utils.log("Created nodes GeoDataFrame from graph")
 
     if edges:
         if not G.edges:  # pragma: no cover
-            msg = "graph contains no edges"
+            msg = "Graph contains no edges"
             raise ValueError(msg)
 
         u, v, k, data = zip(*G.edges(keys=True, data=True))
@@ -70,15 +70,15 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             x_lookup = nx.get_node_attributes(G, "x")
             y_lookup = nx.get_node_attributes(G, "y")
 
-            def _make_geom(u, v, data, x=x_lookup, y=y_lookup):
+            def _make_edge_geometry(u, v, data, x=x_lookup, y=y_lookup):
                 if "geometry" in data:
                     return data["geometry"]
 
                 # otherwise
                 return LineString((Point((x[u], y[u])), Point((x[v], y[v]))))
 
-            geom = map(_make_geom, u, v, data)
-            gdf_edges = gpd.GeoDataFrame(data, crs=crs, geometry=list(geom))
+            edge_geoms = map(_make_edge_geometry, u, v, data)
+            gdf_edges = gpd.GeoDataFrame(data, crs=crs, geometry=list(edge_geoms))
 
         else:
             gdf_edges = gpd.GeoDataFrame(data)
