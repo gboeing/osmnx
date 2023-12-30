@@ -64,12 +64,12 @@ def interpolate_points(geom, dist):
         a LineString geometry
     dist : float
         spacing distance between interpolated points, in same units as `geom`.
-        smaller values generate more points.
+        smaller values accordingly generate more points.
 
     Yields
     ------
-    point : tuple of floats
-        a generator of (x, y) tuples of the interpolated points' coordinates
+    points : generator
+        tuples of (x, y) floats of the interpolated points' coordinates
     """
     if isinstance(geom, LineString):
         num_vert = max(round(geom.length / dist), 1)
@@ -340,7 +340,7 @@ def _quadrat_cut_geometry(geometry, quadrat_width):
 
 def _intersect_index_quadrats(geometries, polygon):
     """
-    Identify geometries that intersect a (multi)polygon.
+    Identify geometries that intersect a (Multi)Polygon.
 
     Uses an r-tree spatial index and cuts polygon up into smaller sub-polygons
     for r-tree acceleration. Ensure that geometries and polygon are in the
@@ -356,11 +356,11 @@ def _intersect_index_quadrats(geometries, polygon):
     Returns
     -------
     geoms_in_poly : set
-        index labels of geometries that intersected polygon
+        set of the index labels of the geometries that intersected the polygon
     """
     # create an r-tree spatial index for the geometries
-    sindex = geometries.sindex
-    utils.log(f"Created r-tree spatial index for {len(geometries):,} geometries")
+    rtree = geometries.sindex
+    utils.log(f"Built r-tree spatial index for {len(geometries):,} geometries")
 
     # cut polygon into chunks for faster spatial index intersecting. specify a
     # sensible quadrat_width to balance performance (eg, 0.1 degrees is approx
@@ -376,7 +376,7 @@ def _intersect_index_quadrats(geometries, polygon):
     for poly in multipoly.geoms:
         poly_buff = poly.buffer(0)
         if poly_buff.is_valid and poly_buff.area > 0:
-            possible_matches_iloc = sindex.intersection(poly_buff.bounds)
+            possible_matches_iloc = rtree.intersection(poly_buff.bounds)
             possible_matches = geometries.iloc[list(possible_matches_iloc)]
             precise_matches = possible_matches[possible_matches.intersects(poly_buff)]
             geoms_in_poly.update(precise_matches.index)
@@ -387,10 +387,10 @@ def _intersect_index_quadrats(geometries, polygon):
 
 def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     """
-    Create a bounding box from a (lat, lon) center point.
+    Create a bounding box around a (lat, lon) point.
 
-    Create a bounding box some distance in each direction (north, south, east,
-    and west) from the center point and optionally project it.
+    Create a bounding box some distance (in meters) in each direction (north,
+    south, east, and west) from the center point and optionally project it.
 
     Parameters
     ----------
@@ -408,11 +408,11 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     tuple
         (north, south, east, west) or (north, south, east, west, crs_proj)
     """
-    EARTH_RADIUS = 6_371_009  # meters
+    EARTH_RADIUS_M = 6_371_009  # meters
     lat, lon = point
 
-    delta_lat = (dist / EARTH_RADIUS) * (180 / np.pi)
-    delta_lon = (dist / EARTH_RADIUS) * (180 / np.pi) / np.cos(lat * np.pi / 180)
+    delta_lat = (dist / EARTH_RADIUS_M) * (180 / np.pi)
+    delta_lon = (dist / EARTH_RADIUS_M) * (180 / np.pi) / np.cos(lat * np.pi / 180)
     north = lat + delta_lat
     south = lat - delta_lat
     east = lon + delta_lon
