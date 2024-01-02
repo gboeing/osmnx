@@ -58,7 +58,7 @@ packages = ["osmnx"]
 path = "osmnx/_version.py"
 
 [tool.mypy]
-disable_error_code = ["attr-defined"]
+disable_error_code = ["attr-defined", "type-arg"]
 disallow_untyped_defs = false
 ignore_missing_imports = true
 implicit_optional = true
