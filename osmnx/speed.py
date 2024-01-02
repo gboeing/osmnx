@@ -1,6 +1,9 @@
 """Calculate graph edge speeds and travel times."""
 
+from __future__ import annotations
+
 import re
+from typing import Callable
 from warnings import warn
 
 import networkx as nx
@@ -10,7 +13,13 @@ import pandas as pd
 from . import utils_graph
 
 
-def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.mean):
+def add_edge_speeds(
+    G: nx.MultiDiGraph,
+    hwy_speeds: dict = None,
+    fallback: float = None,
+    precision: int = None,
+    agg: Callable = np.mean,
+) -> nx.MultiDiGraph:
     """
     Add edge speeds (km per hour) to graph as new `speed_kph` edge attributes.
 
@@ -42,7 +51,7 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
         speed data. Any edges with highway type not in `hwy_speeds` will be
         assigned the mean preexisting speed value of all edges of that highway
         type.
-    fallback : numeric
+    fallback : float
         default speed value (km per hour) to assign to edges whose highway
         type did not appear in `hwy_speeds` and had no preexisting speed
         values on any edge
@@ -125,7 +134,7 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
     return G
 
 
-def add_edge_travel_times(G, precision=None):
+def add_edge_travel_times(G: nx.MultiDiGraph, precision: int = None) -> nx.MultiDiGraph:
     """
     Add edge travel time (seconds) to graph as new `travel_time` edge attributes.
 
@@ -180,7 +189,9 @@ def add_edge_travel_times(G, precision=None):
     return G
 
 
-def _clean_maxspeed(maxspeed, agg=np.mean, convert_mph=True):
+def _clean_maxspeed(
+    maxspeed: str, agg: Callable = np.mean, convert_mph: bool = True
+) -> float | None:
     """
     Clean a maxspeed string and convert mph to kph if necessary.
 
@@ -201,7 +212,8 @@ def _clean_maxspeed(maxspeed, agg=np.mean, convert_mph=True):
 
     Returns
     -------
-    clean_value : string
+    clean_value : float
+        clean value resulting from `agg` function
     """
     MILES_TO_KM = 1.60934
     # regex adapted from OSM wiki
@@ -211,33 +223,36 @@ def _clean_maxspeed(maxspeed, agg=np.mean, convert_mph=True):
         clean_values = []
         for value in values:
             match = re.match(pattern, value)
-            clean_value = float(match.group(1).replace(",", "."))
+            clean_value = float(match.group(1).replace(",", "."))  # type: ignore[union-attr]
             if convert_mph and "mph" in maxspeed.lower():
                 clean_value = clean_value * MILES_TO_KM
             clean_values.append(clean_value)
-        return agg(clean_values)
+        return float(agg(clean_values))
 
     except (ValueError, AttributeError):
         # if invalid input, return None
         return None
 
 
-def _collapse_multiple_maxspeed_values(value, agg):
+def _collapse_multiple_maxspeed_values(value: str | list[str], agg: Callable) -> int | str | None:
     """
     Collapse a list of maxspeed values to a single value.
 
+    Returns None if a ValueError is encountered.
+
     Parameters
     ----------
-    value : list or string
+    value : string or list
         an OSM way maxspeed value, or a list of them
     agg : function
         the aggregation function to reduce the list to a single value
 
     Returns
     -------
-    agg_value : int
-        an integer representation of the aggregated value in the list,
-        converted to kph if original value was in mph.
+    collapsed : int or str
+        if `value` was a string, it is just returned directly to the caller.
+        otherwise, the return is an integer representation of the aggregated
+        value in the list (converted to kph if original value was in mph).
     """
     # if this isn't a list, just return it right back to the caller
     if not isinstance(value, list):
