@@ -1,7 +1,10 @@
 """Calculate weighted shortest paths between graph nodes."""
 
+from __future__ import annotations
+
 import itertools
 import multiprocessing as mp
+from collections.abc import Generator
 from warnings import warn
 
 import networkx as nx
@@ -11,7 +14,13 @@ from . import utils
 from . import utils_graph
 
 
-def shortest_path(G, orig, dest, weight="length", cpus=1):
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int | list,
+    dest: int | list,
+    weight: str = "length",
+    cpus: int | None = 1,
+) -> list | None:
     """
     Solve shortest path from origin node(s) to destination node(s).
 
@@ -58,7 +67,7 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
         raise ValueError(msg)
 
     # if both orig and dest are iterable, ensure they have same lengths
-    if len(orig) != len(dest):  # pragma: no cover
+    if len(orig) != len(dest):  # type: ignore[arg-type]  # pragma: no cover
         msg = "orig and dest must be of equal length"
         raise ValueError(msg)
 
@@ -66,7 +75,7 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
     if cpus is None:
         cpus = mp.cpu_count()
     cpus = min(cpus, mp.cpu_count())
-    utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")
+    utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")  # type: ignore[arg-type]
 
     # if single-threading, calculate each shortest path one at a time
     if cpus == 1:
@@ -81,7 +90,9 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
     return paths
 
 
-def k_shortest_paths(G, orig, dest, k, weight="length"):
+def k_shortest_paths(
+    G: nx.MultiDiGraph, orig: int, dest: int, k: int, weight: str = "length"
+) -> Generator:
     """
     Solve `k` shortest paths from an origin node to a destination node.
 
@@ -104,7 +115,7 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
 
     Yields
     ------
-    path : list
+    path : generator
         a generator of `k` shortest paths ordered by total weight. each path
         is a list of node IDs.
     """
@@ -113,12 +124,13 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
     yield from itertools.islice(paths_gen, 0, k)
 
 
-def _single_shortest_path(G, orig, dest, weight):
+def _single_shortest_path(G: nx.MultiDiGraph, orig: int, dest: int, weight: str) -> list | None:
     """
     Solve the shortest path from an origin node to a destination node.
 
-    This function is a convenience wrapper around networkx.shortest_path, with
-    exception handling for unsolvable paths. It uses Dijkstra's algorithm.
+    This function uses Dijkstra's algorithm. It is a convenience wrapper
+    around networkx.shortest_path, with exception handling for unsolvable
+    paths. If the path is unsolvable, it returns None.
 
     Parameters
     ----------
@@ -137,13 +149,13 @@ def _single_shortest_path(G, orig, dest, weight):
         list of node IDs constituting the shortest path
     """
     try:
-        return nx.shortest_path(G, orig, dest, weight=weight, method="dijkstra")
+        return list(nx.shortest_path(G, orig, dest, weight=weight, method="dijkstra"))
     except nx.exception.NetworkXNoPath:  # pragma: no cover
         utils.log(f"Cannot solve path from {orig} to {dest}")
         return None
 
 
-def _verify_edge_attribute(G, attr):
+def _verify_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
     """
     Verify attribute values are numeric and non-null across graph edges.
 
