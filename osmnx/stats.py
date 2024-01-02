@@ -12,6 +12,8 @@ periphery of the graph.
 You can use NetworkX directly for additional topological network measures.
 """
 
+from __future__ import annotations
+
 import itertools
 import logging as lg
 from collections import Counter
@@ -26,7 +28,7 @@ from . import utils
 from . import utils_graph
 
 
-def streets_per_node(G):
+def streets_per_node(G: nx.MultiDiGraph) -> dict:
     """
     Count streets (undirected edges) incident on each node.
 
@@ -46,7 +48,7 @@ def streets_per_node(G):
     return spn
 
 
-def streets_per_node_avg(G):
+def streets_per_node_avg(G: nx.MultiDiGraph) -> float:
     """
     Calculate graph's average count of streets per node.
 
@@ -61,10 +63,10 @@ def streets_per_node_avg(G):
         average count of streets per node
     """
     spn_vals = streets_per_node(G).values()
-    return sum(spn_vals) / len(G.nodes)
+    return float(sum(spn_vals) / len(G.nodes))
 
 
-def streets_per_node_counts(G):
+def streets_per_node_counts(G: nx.MultiDiGraph) -> dict:
     """
     Calculate streets-per-node counts.
 
@@ -83,7 +85,7 @@ def streets_per_node_counts(G):
     return {i: spn_vals.count(i) for i in range(int(max(spn_vals)) + 1)}
 
 
-def streets_per_node_proportions(G):
+def streets_per_node_proportions(G: nx.MultiDiGraph) -> dict:
     """
     Calculate streets-per-node proportions.
 
@@ -103,7 +105,7 @@ def streets_per_node_proportions(G):
     return {i: count / n for i, count in spnc.items()}
 
 
-def intersection_count(G=None, min_streets=2):
+def intersection_count(G: nx.MultiDiGraph, min_streets: int = 2) -> int:
     """
     Count the intersections in a graph.
 
@@ -128,7 +130,7 @@ def intersection_count(G=None, min_streets=2):
     return sum(count >= min_streets and node in node_ids for node, count in spn.items())
 
 
-def street_segment_count(Gu):
+def street_segment_count(Gu: nx.MultiGraph) -> int:
     """
     Count the street segments in a graph.
 
@@ -148,7 +150,7 @@ def street_segment_count(Gu):
     return len(Gu.edges)
 
 
-def street_length_total(Gu):
+def street_length_total(Gu: nx.MultiGraph) -> float:
     """
     Calculate graph's total street segment length.
 
@@ -165,10 +167,10 @@ def street_length_total(Gu):
     if nx.is_directed(Gu):  # pragma: no cover
         msg = "`Gu` must be undirected"
         raise ValueError(msg)
-    return sum(d["length"] for u, v, d in Gu.edges(data=True))
+    return float(sum(d["length"] for u, v, d in Gu.edges(data=True)))
 
 
-def edge_length_total(G):
+def edge_length_total(G: nx.MultiDiGraph) -> float:
     """
     Calculate graph's total edge length.
 
@@ -182,10 +184,10 @@ def edge_length_total(G):
     length : float
         total length (meters) of edges in graph
     """
-    return sum(d["length"] for u, v, d in G.edges(data=True))
+    return float(sum(d["length"] for u, v, d in G.edges(data=True)))
 
 
-def self_loop_proportion(Gu):
+def self_loop_proportion(Gu: nx.MultiGraph) -> float:
     """
     Calculate percent of edges that are self-loops in a graph.
 
@@ -204,16 +206,17 @@ def self_loop_proportion(Gu):
     if nx.is_directed(Gu):  # pragma: no cover
         msg = "`Gu` must be undirected"
         raise ValueError(msg)
-    return sum(u == v for u, v, k in Gu.edges) / len(Gu.edges)
+    return float(sum(u == v for u, v, k in Gu.edges) / len(Gu.edges))
 
 
-def circuity_avg(Gu):
+def circuity_avg(Gu: nx.MultiGraph) -> float | None:
     """
     Calculate average street circuity using edges of undirected graph.
 
     Circuity is the sum of edge lengths divided by the sum of straight-line
     distances between edge endpoints. Calculates straight-line distance as
     euclidean distance if projected or great-circle distance if unprojected.
+    Returns None if the edge lengths sum to zero.
 
     Parameters
     ----------
@@ -251,12 +254,12 @@ def circuity_avg(Gu):
     # return the ratio, handling possible division by zero
     sl_dists_total = sl_dists[~np.isnan(sl_dists)].sum()
     try:
-        return edge_length_total(Gu) / sl_dists_total
+        return float(edge_length_total(Gu) / sl_dists_total)
     except ZeroDivisionError:
         return None
 
 
-def count_streets_per_node(G, nodes=None):
+def count_streets_per_node(G: nx.MultiDiGraph, nodes: list = None) -> dict:
     """
     Count how many physical street segments connect to each node in a graph.
 
@@ -307,7 +310,7 @@ def count_streets_per_node(G, nodes=None):
     return streets_per_node
 
 
-def basic_stats(G, area=None, clean_int_tol=None):
+def basic_stats(G: nx.MultiDiGraph, area: float = None, clean_int_tol: float = None) -> dict:
     """
     Calculate basic descriptive geometric and topological measures of a graph.
 
@@ -353,7 +356,7 @@ def basic_stats(G, area=None, clean_int_tol=None):
           - `streets_per_node_proportions` - see `streets_per_node_proportions` function documentation
     """
     Gu = utils_graph.get_undirected(G)
-    stats = {}
+    stats: dict = {}
 
     stats["n"] = len(G.nodes)
     stats["m"] = len(G.edges)
