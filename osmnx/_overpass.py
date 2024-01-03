@@ -298,8 +298,8 @@ def _create_overpass_query(polygon_coord_str: list, tags: dict) -> str:
                 components.append(f"({kind}{tag_str});")  # noqa: PERF401
 
     # finalize query and return
-    components = list("".join(components))
-    return f"{overpass_settings};({components});out;"
+    components_str = "".join(components)
+    return f"{overpass_settings};({components_str});out;"
 
 
 def _download_overpass_network(
@@ -337,8 +337,7 @@ def _download_overpass_network(
     # the '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
         query_str = f"{overpass_settings};(way{osm_filter}(poly:{polygon_coord_str!r});>;);out;"
-        data = OrderedDict(data={"data": query_str})
-        yield _overpass_request(data=data)
+        yield _overpass_request(OrderedDict(data=query_str))
 
 
 def _download_overpass_features(polygon: Polygon, tags: dict) -> Generator:
@@ -364,8 +363,7 @@ def _download_overpass_features(polygon: Polygon, tags: dict) -> Generator:
     # pass exterior coordinates of each polygon in list to API, one at a time
     for polygon_coord_str in polygon_coord_strs:
         query_str = _create_overpass_query(polygon_coord_str, tags)
-        data = OrderedDict(data={"data": query_str})
-        yield _overpass_request(data=data)
+        yield _overpass_request(OrderedDict(data=query_str))
 
 
 def _overpass_request(data: OrderedDict, pause: float = None, error_pause: float = 60) -> dict:
