@@ -1,5 +1,7 @@
 """Handle HTTP requests to web APIs."""
 
+from __future__ import annotations
+
 import json
 import logging as lg
 import socket
@@ -19,7 +21,7 @@ from ._errors import ResponseStatusCodeError
 _original_getaddrinfo = socket.getaddrinfo
 
 
-def _save_to_cache(url, response_json, ok):
+def _save_to_cache(url: str, response_json: dict, ok: bool) -> None:
     """
     Save a HTTP response JSON object to a file in the cache folder.
 
@@ -70,11 +72,12 @@ def _save_to_cache(url, response_json, ok):
             utils.log(f"Saved response to cache file {str(cache_filepath)!r}")
 
 
-def _url_in_cache(url):
+def _url_in_cache(url: str) -> Path | None:
     """
     Determine if a URL's response exists in the cache.
 
-    Calculates the checksum of url to determine the cache file's name.
+    Calculates the checksum of `url` to determine the cache file's name.
+    Returns None if it cannot be found in the cache.
 
     Parameters
     ----------
@@ -94,7 +97,7 @@ def _url_in_cache(url):
     return filepath if filepath.is_file() else None
 
 
-def _retrieve_from_cache(url, check_remark=True):
+def _retrieve_from_cache(url: str, check_remark: bool = True) -> dict | None:
     """
     Retrieve a HTTP response JSON object from the cache, if it exists.
 
@@ -102,7 +105,7 @@ def _retrieve_from_cache(url, check_remark=True):
     ----------
     url : string
         the URL of the request
-    check_remark : string
+    check_remark : bool
         if True, only return filepath if cached response does not have a
         remark key indicating a server warning
 
@@ -116,7 +119,7 @@ def _retrieve_from_cache(url, check_remark=True):
         # return cached response for this url if exists, otherwise return None
         cache_filepath = _url_in_cache(url)
         if cache_filepath is not None:
-            response_json = json.loads(cache_filepath.read_text(encoding="utf-8"))
+            response_json: dict = json.loads(cache_filepath.read_text(encoding="utf-8"))
 
             # return None if check_remark is True and there is a server
             # remark in the cached response
@@ -132,7 +135,9 @@ def _retrieve_from_cache(url, check_remark=True):
     return None
 
 
-def _get_http_headers(user_agent=None, referer=None, accept_language=None):
+def _get_http_headers(
+    user_agent: str = None, referer: str = None, accept_language: str = None
+) -> dict:
     """
     Update the default requests HTTP headers with OSMnx info.
 
@@ -157,14 +162,14 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     if accept_language is None:
         accept_language = settings.default_accept_language
 
-    headers = requests.utils.default_headers()
+    headers = dict(requests.utils.default_headers())
     headers.update(
         {"User-Agent": user_agent, "referer": referer, "Accept-Language": accept_language}
     )
     return headers
 
 
-def _resolve_host_via_doh(hostname):
+def _resolve_host_via_doh(hostname: str) -> str:
     """
     Resolve hostname to IP address via Google's public DNS-over-HTTPS API.
 
@@ -205,7 +210,8 @@ def _resolve_host_via_doh(hostname):
     else:
         if response.ok and data["Status"] == 0:
             # status 0 means NOERROR, so return the IP address
-            return data["Answer"][0]["data"]
+            ip_address: str = data["Answer"][0]["data"]
+            return ip_address
 
         # otherwise, if we cannot reach DoH server or cannot resolve host
         # just return the hostname itself
@@ -213,7 +219,7 @@ def _resolve_host_via_doh(hostname):
         return hostname
 
 
-def _config_dns(url):
+def _config_dns(url: str) -> None:
     """
     Force socket.getaddrinfo to use IP address instead of hostname.
 
@@ -251,7 +257,7 @@ def _config_dns(url):
         ip = _resolve_host_via_doh(hostname)
 
     # mutate socket.getaddrinfo to map hostname -> IP address
-    def _getaddrinfo(*args, **kwargs):
+    def _getaddrinfo(*args, **kwargs):  # type: ignore[no-untyped-def]
         if args[0] == hostname:
             utils.log(f"Resolved {hostname!r} to {ip!r}")
             return _original_getaddrinfo(ip, *args[1:], **kwargs)
@@ -262,7 +268,7 @@ def _config_dns(url):
     socket.getaddrinfo = _getaddrinfo
 
 
-def _hostname_from_url(url):
+def _hostname_from_url(url: str) -> str:
     """
     Extract the hostname (domain) from a URL.
 
@@ -279,7 +285,7 @@ def _hostname_from_url(url):
     return urlparse(url).netloc.split(":")[0]
 
 
-def _parse_response(response):
+def _parse_response(response: requests.Response) -> dict:
     """
     Parse JSON from a requests response and log the details.
 
@@ -299,7 +305,7 @@ def _parse_response(response):
 
     # parse the response to JSON and log/raise exceptions
     try:
-        response_json = response.json()
+        response_json: dict = response.json()
     except JSONDecodeError as e:  # pragma: no cover
         msg = f"{domain!r} responded: {response.status_code} {response.reason} {response.text}"
         utils.log(msg, level=lg.ERROR)
