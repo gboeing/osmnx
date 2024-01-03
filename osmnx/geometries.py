@@ -17,7 +17,7 @@ DEP_MSG = (
 )
 
 
-def geometries_from_bbox(north, south, east, west, tags):
+def geometries_from_bbox(north, south, east, west, tags):  # type: ignore[no-untyped-def]
     """
     Do not use: deprecated.
 
@@ -47,7 +47,7 @@ def geometries_from_bbox(north, south, east, west, tags):
     return features.features_from_bbox(north, south, east, west, tags)
 
 
-def geometries_from_point(center_point, tags, dist=1000):
+def geometries_from_point(center_point, tags, dist=1000):  # type: ignore[no-untyped-def]
     """
     Do not use: deprecated.
 
@@ -73,7 +73,7 @@ def geometries_from_point(center_point, tags, dist=1000):
     return features.features_from_point(center_point, tags, dist)
 
 
-def geometries_from_address(address, tags, dist=1000):
+def geometries_from_address(address, tags, dist=1000):  # type: ignore[no-untyped-def]
     """
     Do not use: deprecated.
 
@@ -99,7 +99,7 @@ def geometries_from_address(address, tags, dist=1000):
     return features.features_from_address(address, tags, dist)
 
 
-def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
+def geometries_from_place(query, tags, which_result=None, buffer_dist=None):  # type: ignore[no-untyped-def]
     """
     Do not use: deprecated.
 
@@ -127,7 +127,7 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     return features.features_from_place(query, tags, which_result, buffer_dist)
 
 
-def geometries_from_polygon(polygon, tags):
+def geometries_from_polygon(polygon, tags):  # type: ignore[no-untyped-def]
     """
     Do not use: deprecated.
 
@@ -151,7 +151,7 @@ def geometries_from_polygon(polygon, tags):
     return features.features_from_polygon(polygon, tags)
 
 
-def geometries_from_xml(filepath, polygon=None, tags=None):
+def geometries_from_xml(filepath, polygon=None, tags=None):  # type: ignore[no-untyped-def]
     """
     Do not use: deprecated.
 

@@ -19,7 +19,7 @@ except ImportError:  # pragma: no cover
     folium = None
 
 
-def plot_graph_folium(
+def plot_graph_folium(  # type: ignore[no-untyped-def]
     G,
     graph_map=None,
     popup_attribute=None,
@@ -70,7 +70,7 @@ def plot_graph_folium(
     return _plot_folium(gdf_edges, graph_map, popup_attribute, tiles, zoom, fit_bounds, **kwargs)
 
 
-def plot_route_folium(
+def plot_route_folium(  # type: ignore[no-untyped-def]
     G,
     route,
     route_map=None,
@@ -126,7 +126,7 @@ def plot_route_folium(
     return _plot_folium(gdf_edges, route_map, popup_attribute, tiles, zoom, fit_bounds, **kwargs)
 
 
-def _plot_folium(gdf, m, popup_attribute, tiles, zoom, fit_bounds, **kwargs):
+def _plot_folium(gdf, m, popup_attribute, tiles, zoom, fit_bounds, **kwargs):  # type: ignore[no-untyped-def]
     """
     Plot a GeoDataFrame of LineStrings on a folium map object.
 
@@ -182,7 +182,7 @@ def _plot_folium(gdf, m, popup_attribute, tiles, zoom, fit_bounds, **kwargs):
     return m
 
 
-def _make_folium_polyline(geom, popup_val=None, **kwargs):
+def _make_folium_polyline(geom, popup_val=None, **kwargs):  # type: ignore[no-untyped-def]
     """
     Turn LineString geometry into a folium PolyLine with attributes.
 
