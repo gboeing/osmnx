@@ -1,13 +1,17 @@
 """Project a graph, GeoDataFrame, or geometry to a different CRS."""
 
+from typing import Any
+
 import geopandas as gpd
+import networkx as nx
+from shapely import Geometry
 
 from . import settings
 from . import utils
 from . import utils_graph
 
 
-def is_projected(crs):
+def is_projected(crs: Any) -> bool:
     """
     Determine if a coordinate reference system is projected or not.
 
@@ -23,10 +27,12 @@ def is_projected(crs):
     projected : bool
         True if crs is projected, otherwise False
     """
-    return gpd.GeoSeries(crs=crs).crs.is_projected
+    return bool(gpd.GeoSeries(crs=crs).crs.is_projected)
 
 
-def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
+def project_geometry(
+    geometry: Geometry, crs: Any = None, to_crs: Any = None, to_latlong: bool = False
+) -> tuple[Geometry, Any]:
     """
     Project a Shapely geometry from its current CRS to another.
 
@@ -62,7 +68,9 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     return geometry_proj, gdf_proj.crs
 
 
-def project_gdf(gdf, to_crs=None, to_latlong=False):
+def project_gdf(
+    gdf: gpd.GeoDataFrame, to_crs: Any = None, to_latlong: bool = False
+) -> gpd.GeoDataFrame:
     """
     Project a GeoDataFrame from its current CRS to another.
 
@@ -105,7 +113,9 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
     return gdf_proj
 
 
-def project_graph(G, to_crs=None, to_latlong=False):
+def project_graph(
+    G: nx.MultiDiGraph, to_crs: Any = None, to_latlong: bool = False
+) -> nx.MultiDiGraph:
     """
     Project a graph from its current CRS to another.
 
