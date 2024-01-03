@@ -1,12 +1,19 @@
 """Tools to work with the Overpass API."""
 
+from __future__ import annotations
+
 import datetime as dt
 import logging as lg
 import time
+from collections import OrderedDict
+from collections.abc import Generator
+from typing import Any
 
 import numpy as np
 import requests
 from requests.exceptions import ConnectionError
+from shapely.geometry import MultiPolygon
+from shapely.geometry import Polygon
 
 from . import _downloader
 from . import projection
@@ -15,9 +22,9 @@ from . import utils
 from . import utils_geo
 
 
-def _get_osm_filter(network_type):
+def _get_network_filter(network_type: str) -> str:
     """
-    Create a filter to query OSM for the specified network type.
+    Create a filter to query Overpass for the specified network type.
 
     Parameters
     ----------
@@ -26,7 +33,8 @@ def _get_osm_filter(network_type):
 
     Returns
     -------
-    string
+    filtr : string
+        the Overpass query filter
     """
     # define built-in queries to send to the API. specifying way["highway"]
     # means that all ways returned must have a highway tag. the filters then
@@ -100,7 +108,9 @@ def _get_osm_filter(network_type):
     return osm_filter
 
 
-def _get_overpass_pause(base_endpoint, recursive_delay=5, default_duration=60):
+def _get_overpass_pause(
+    base_endpoint: str, recursive_delay: float = 5, default_duration: float = 60
+) -> float:
     """
     Retrieve a pause duration from the Overpass API status endpoint.
 
@@ -112,15 +122,16 @@ def _get_overpass_pause(base_endpoint, recursive_delay=5, default_duration=60):
     ----------
     base_endpoint : string
         base Overpass API url (without "/status" at the end)
-    recursive_delay : int
+    recursive_delay : float
         how long to wait between recursive calls if the server is currently
         running a query
-    default_duration : int
+    default_duration : float
         if fatal error, fall back on returning this value
 
     Returns
     -------
-    pause : int
+    pause : float
+        the current pause duration demanded by the Overpass status endpoint
     """
     if not settings.overpass_rate_limit:
         # if overpass rate limiting is False, then there is zero pause
@@ -149,7 +160,7 @@ def _get_overpass_pause(base_endpoint, recursive_delay=5, default_duration=60):
         # if first token is numeric, it's how many slots you have available,
         # no wait required
         _ = int(status_first_token)  # number of available slots
-        pause = 0
+        pause: float = 0
 
     except ValueError:  # pragma: no cover
         # if first token is 'Slot', it tells you when your slot will be free
@@ -175,19 +186,20 @@ def _get_overpass_pause(base_endpoint, recursive_delay=5, default_duration=60):
     return pause
 
 
-def _make_overpass_settings():
+def _make_overpass_settings() -> str:
     """
     Make settings string to send in Overpass query.
 
     Returns
     -------
-    string
+    overpass_settings: string
+        settings.overpass_settings string formatted with timeout and maxsize
     """
     maxsize = "" if settings.memory is None else f"[maxsize:{settings.memory}]"
     return settings.overpass_settings.format(timeout=settings.timeout, maxsize=maxsize)
 
 
-def _make_overpass_polygon_coord_strs(polygon):
+def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list:
     """
     Subdivide query polygon and return list of coordinate strings.
 
@@ -223,7 +235,7 @@ def _make_overpass_polygon_coord_strs(polygon):
     return coord_strs
 
 
-def _create_overpass_query(polygon_coord_str, tags):
+def _create_overpass_query(polygon_coord_str: list, tags: dict) -> str:
     """
     Create an Overpass features query string based on passed tags.
 
@@ -246,7 +258,7 @@ def _create_overpass_query(polygon_coord_str, tags):
     if not isinstance(tags, dict):  # pragma: no cover
         raise TypeError(err_msg)
 
-    tags_dict = {}
+    tags_dict: dict[Any] = {}
     for key, value in tags.items():
         if isinstance(value, bool):
             tags_dict[key] = value
@@ -286,11 +298,13 @@ def _create_overpass_query(polygon_coord_str, tags):
                 components.append(f"({kind}{tag_str});")  # noqa: PERF401
 
     # finalize query and return
-    components = "".join(components)
+    components = list("".join(components))
     return f"{overpass_settings};({components});out;"
 
 
-def _download_overpass_network(polygon, network_type, custom_filter):
+def _download_overpass_network(
+    polygon: Polygon | MultiPolygon, network_type: str, custom_filter: str
+) -> Generator:
     """
     Retrieve networked ways and nodes within boundary from the Overpass API.
 
@@ -305,12 +319,12 @@ def _download_overpass_network(polygon, network_type, custom_filter):
 
     Yields
     ------
-    response_json : dict
+    response_jsons : generator
         a generator of JSON responses from the Overpass server
     """
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type, if provided, otherwise use custom_filter
-    osm_filter = custom_filter if custom_filter is not None else _get_osm_filter(network_type)
+    osm_filter = custom_filter if custom_filter is not None else _get_network_filter(network_type)
 
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
@@ -323,10 +337,11 @@ def _download_overpass_network(polygon, network_type, custom_filter):
     # the '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
         query_str = f"{overpass_settings};(way{osm_filter}(poly:{polygon_coord_str!r});>;);out;"
-        yield _overpass_request(data={"data": query_str})
+        data = OrderedDict(data={"data": query_str})
+        yield _overpass_request(data=data)
 
 
-def _download_overpass_features(polygon, tags):
+def _download_overpass_features(polygon: Polygon, tags: dict) -> Generator:
     """
     Retrieve OSM features within boundary from the Overpass API.
 
@@ -339,7 +354,7 @@ def _download_overpass_features(polygon, tags):
 
     Yields
     ------
-    response_json : dict
+    response_jsons : generator
         a generator of JSON responses from the Overpass server
     """
     # subdivide query polygon to get list of sub-divided polygon coord strings
@@ -349,10 +364,11 @@ def _download_overpass_features(polygon, tags):
     # pass exterior coordinates of each polygon in list to API, one at a time
     for polygon_coord_str in polygon_coord_strs:
         query_str = _create_overpass_query(polygon_coord_str, tags)
-        yield _overpass_request(data={"data": query_str})
+        data = OrderedDict(data={"data": query_str})
+        yield _overpass_request(data=data)
 
 
-def _overpass_request(data, pause=None, error_pause=60):
+def _overpass_request(data: OrderedDict, pause: float = None, error_pause: float = 60) -> dict:
     """
     Send a HTTP POST request to the Overpass API and return response.
 
@@ -376,7 +392,7 @@ def _overpass_request(data, pause=None, error_pause=60):
 
     # prepare the Overpass API URL and see if request already exists in cache
     url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
-    prepared_url = requests.Request("GET", url, params=data).prepare().url
+    prepared_url = str(requests.Request("GET", url, params=data).prepare().url)
     cached_response_json = _downloader._retrieve_from_cache(prepared_url)
     if cached_response_json is not None:
         return cached_response_json
@@ -410,5 +426,5 @@ def _overpass_request(data, pause=None, error_pause=60):
         return _overpass_request(data, pause, error_pause)
 
     response_json = _downloader._parse_response(response)
-    _downloader._save_to_cache(prepared_url, response_json, response.status_code)
+    _downloader._save_to_cache(prepared_url, response_json, response.ok)
     return response_json
