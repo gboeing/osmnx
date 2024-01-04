@@ -1,5 +1,7 @@
 """Add node elevations from raster files or web APIs, and calculate edge grades."""
 
+from __future__ import annotations
+
 import multiprocessing as mp
 import time
 from hashlib import sha1
@@ -25,7 +27,9 @@ except ImportError:  # pragma: no cover
     rasterio = gdal = None
 
 
-def add_edge_grades(G, add_absolute=True, precision=None):
+def add_edge_grades(
+    G: nx.MultiDiGraph, add_absolute: bool = True, precision: int = None
+) -> nx.MultiDiGraph:
     """
     Add `grade` attribute to each graph edge.
 
@@ -75,7 +79,7 @@ def add_edge_grades(G, add_absolute=True, precision=None):
     return G
 
 
-def _query_raster(nodes, filepath, band):
+def _query_raster(nodes: pd.DataFrame, filepath: str | Path, band: int) -> zip:
     """
     Query a raster for values at coordinates in a DataFrame's x/y columns.
 
@@ -100,7 +104,12 @@ def _query_raster(nodes, filepath, band):
         return zip(nodes.index, values)
 
 
-def add_node_elevations_raster(G, filepath, band=1, cpus=None):
+def add_node_elevations_raster(
+    G: nx.MultiDiGraph,
+    filepath: str | Path | list[str | Path],
+    band: int = 1,
+    cpus: int | None = None,
+) -> nx.MultiDiGraph:
     """
     Add `elevation` attribute to each node from local raster file(s).
 
@@ -114,7 +123,7 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
     G : networkx.MultiDiGraph
         input graph, in same CRS as raster
     filepath : string or pathlib.Path or list of strings/Paths
-        path (or list of paths) to the raster file(s) to query
+        the path (or list of paths) to the raster file(s) to query
     band : int
         which raster band to query
     cpus : int
@@ -161,14 +170,14 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
 
 
 def add_node_elevations_google(
-    G,
-    api_key=None,
-    batch_size=350,
-    pause=0,
-    max_locations_per_batch=None,
-    precision=None,
-    url_template=None,
-):
+    G: nx.MultiDiGraph,
+    api_key: str | None = None,
+    batch_size: int = 350,
+    pause: float = 0,
+    max_locations_per_batch: int | None = None,
+    precision: int | None = None,
+    url_template: str | None = None,
+) -> nx.MultiDiGraph:
     """
     Add an `elevation` (meters) attribute to each node using a web service.
 
@@ -274,7 +283,7 @@ def add_node_elevations_google(
     return G
 
 
-def _elevation_request(url, pause):
+def _elevation_request(url: str, pause: float) -> dict:
     """
     Send a HTTP GET request to Google Maps-style Elevation API.
 
@@ -309,5 +318,5 @@ def _elevation_request(url, pause):
     )
 
     response_json = _downloader._parse_response(response)
-    _downloader._save_to_cache(url, response_json, response.status_code)
+    _downloader._save_to_cache(url, response_json, response.ok)
     return response_json
