@@ -1,5 +1,9 @@
 """Calculate distances and find nearest node/edge(s) to point(s)."""
 
+from __future__ import annotations
+
+from collections.abc import Iterable
+from typing import overload
 from warnings import warn
 
 import networkx as nx
@@ -29,7 +33,48 @@ except ImportError:  # pragma: no cover
 EARTH_RADIUS_M = 6_371_009
 
 
-def great_circle(lat1, lon1, lat2, lon2, earth_radius=EARTH_RADIUS_M):
+# if coords are all floats, return float
+@overload
+def great_circle(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    ...
+
+
+# if coords are all floats (and optional arg is provided), return float
+@overload
+def great_circle(lat1: float, lon1: float, lat2: float, lon2: float, earth_radius: float) -> float:
+    ...
+
+
+# if coords are all arrays, return array
+@overload
+def great_circle(
+    lat1: np.ndarray,
+    lon1: np.ndarray,
+    lat2: np.ndarray,
+    lon2: np.ndarray,
+) -> np.ndarray:
+    ...
+
+
+# if coords are all arrays (and optional arg is provided), return array
+@overload
+def great_circle(
+    lat1: np.ndarray,
+    lon1: np.ndarray,
+    lat2: np.ndarray,
+    lon2: np.ndarray,
+    earth_radius: float,
+) -> np.ndarray:
+    ...
+
+
+def great_circle(
+    lat1: float | np.ndarray,
+    lon1: float | np.ndarray,
+    lat2: float | np.ndarray,
+    lon2: float | np.ndarray,
+    earth_radius: float = EARTH_RADIUS_M,
+) -> float | np.ndarray:
     """
     Calculate great-circle distances between pairs of points.
 
@@ -70,10 +115,30 @@ def great_circle(lat1, lon1, lat2, lon2, earth_radius=EARTH_RADIUS_M):
     arc = 2 * np.arcsin(np.sqrt(h))
 
     # return distance in units of earth_radius
-    return arc * earth_radius
+    dist: float | np.ndarray = arc * earth_radius
+    return dist
 
 
-def euclidean(y1, x1, y2, x2):
+# if coords are all floats, return float
+@overload
+def euclidean(y1: float, x1: float, y2: float, x2: float) -> float:
+    ...
+
+
+# if coords are all arrays, return array
+@overload
+def euclidean(
+    y1: np.ndarray,
+    x1: np.ndarray,
+    y2: np.ndarray,
+    x2: np.ndarray,
+) -> np.ndarray:
+    ...
+
+
+def euclidean(
+    y1: float | np.ndarray, x1: float | np.ndarray, y2: float | np.ndarray, x2: float | np.ndarray
+) -> float | np.ndarray:
     """
     Calculate Euclidean distances between pairs of points.
 
@@ -98,10 +163,11 @@ def euclidean(y1, x1, y2, x2):
         distance from each (x1, y1) to each (x2, y2) in coordinates' units
     """
     # pythagorean theorem
-    return ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+    dist: float | np.ndarray = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+    return dist
 
 
-def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
+def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):  # type: ignore[no-untyped-def]
     """
     Do not use, deprecated.
 
@@ -136,7 +202,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     return great_circle(lat1, lng1, lat2, lng2, earth_radius)
 
 
-def euclidean_dist_vec(y1, x1, y2, x2):
+def euclidean_dist_vec(y1, x1, y2, x2):  # type: ignore[no-untyped-def]
     """
     Do not use, deprecated.
 
@@ -167,7 +233,9 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     return euclidean(y1, x1, y2, x2)
 
 
-def add_edge_lengths(G, precision=None, edges=None):
+def add_edge_lengths(
+    G: nx.MultiDiGraph, precision: int = None, edges: tuple = None
+) -> nx.MultiDiGraph:
     """
     Add `length` attribute (in meters) to each edge.
 
@@ -233,7 +301,9 @@ def add_edge_lengths(G, precision=None, edges=None):
     return G
 
 
-def nearest_nodes(G, X, Y, return_dist=False):
+def nearest_nodes(
+    G: nx.MultiDiGraph, X: float | Iterable, Y: float | Iterable, return_dist: bool = False
+) -> int | np.ndarray | tuple:
     """
     Find the nearest node to a point or to each of several points.
 
@@ -251,10 +321,10 @@ def nearest_nodes(G, X, Y, return_dist=False):
     ----------
     G : networkx.MultiDiGraph
         graph in which to find nearest nodes
-    X : float or list
+    X : float or iterable of floats
         points' x (longitude) coordinates, in same CRS/units as graph and
         containing no nulls
-    Y : float or list
+    Y : float or iterable of floats
         points' y (latitude) coordinates, in same CRS/units as graph and
         containing no nulls
     return_dist : bool
@@ -262,18 +332,23 @@ def nearest_nodes(G, X, Y, return_dist=False):
 
     Returns
     -------
-    nn or (nn, dist) : int/list or tuple
-        nearest node IDs or optionally a tuple where `dist` contains distances
-        between the points and their nearest nodes
+    nn or (nn, dist) : int or np.array or a tuple of ints/np.arrays
+        nearest node ID(s) or optionally a tuple of ID(s) and distance(s)
+        between each point and its nearest node
     """
     is_scalar = False
-    if not (hasattr(X, "__iter__") and hasattr(Y, "__iter__")):
-        # make coordinates arrays if user passed non-iterable values
-        is_scalar = True
-        X = np.array([X])
-        Y = np.array([Y])
 
-    if np.isnan(X).any() or np.isnan(Y).any():  # pragma: no cover
+    # make coordinates iterable if user passed non-iterable values
+    if not (hasattr(X, "__iter__") and hasattr(Y, "__iter__")):
+        is_scalar = True
+        X = [X]
+        Y = [Y]
+
+    # make coordinates arrays
+    X_arr = np.array(X)
+    Y_arr = np.array(Y)
+
+    if np.isnan(X_arr).any() or np.isnan(Y_arr).any():  # pragma: no cover
         msg = "`X` and `Y` cannot contain nulls"
         raise ValueError(msg)
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
@@ -283,8 +358,8 @@ def nearest_nodes(G, X, Y, return_dist=False):
         if cKDTree is None:  # pragma: no cover
             msg = "scipy must be installed to search a projected graph"
             raise ImportError(msg)
-        dist, pos = cKDTree(nodes).query(np.array([X, Y]).T, k=1)
-        nn = nodes.index[pos]
+        dist, pos = cKDTree(nodes).query(np.array([X_arr, Y_arr]).T, k=1)
+        nn: np.ndarray = nodes.index[pos].to_numpy()
 
     else:
         # if unprojected, use ball tree for haversine nearest-neighbor search
@@ -293,14 +368,12 @@ def nearest_nodes(G, X, Y, return_dist=False):
             raise ImportError(msg)
         # haversine requires lat, lon coords in radians
         nodes_rad = np.deg2rad(nodes[["y", "x"]])
-        points_rad = np.deg2rad(np.array([Y, X]).T)
+        points_rad = np.deg2rad(np.array([Y_arr, X_arr]).T)
         dist, pos = BallTree(nodes_rad, metric="haversine").query(points_rad, k=1)
         dist = dist[:, 0] * EARTH_RADIUS_M  # convert radians -> meters
-        nn = nodes.index[pos[:, 0]]
+        nn = nodes.index[pos[:, 0]].to_numpy()
 
     # convert results to correct types for return
-    nn = nn.tolist()
-    dist = dist.tolist()
     if is_scalar:
         nn = nn[0]
         dist = dist[0]
@@ -312,7 +385,13 @@ def nearest_nodes(G, X, Y, return_dist=False):
     return nn
 
 
-def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
+def nearest_edges(
+    G: nx.MultiDiGraph,
+    X: float | Iterable,
+    Y: float | Iterable,
+    interpolate: float = None,
+    return_dist: bool = False,
+) -> tuple | np.ndarray:
     """
     Find the nearest edge to a point or to each of several points.
 
@@ -326,10 +405,10 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     ----------
     G : networkx.MultiDiGraph
         graph in which to find nearest edges
-    X : float or list
+    X : float or iterable of floats
         points' x (longitude) coordinates, in same CRS/units as graph and
         containing no nulls
-    Y : float or list
+    Y : float or iterable of floats
         points' y (latitude) coordinates, in same CRS/units as graph and
         containing no nulls
     interpolate : float
@@ -339,18 +418,23 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
 
     Returns
     -------
-    ne or (ne, dist) : tuple or list
-        nearest edges as (u, v, key) or optionally a tuple where `dist`
-        contains distances between the points and their nearest edges
+    ne or (ne, dist) : tuple or np.array or a tuple of ints/np.arrays
+        nearest edge ID(s) (as `u`, `v`, `key` tuples) or optionally a tuple
+        of ID(s) and distance(s) between each point and its nearest edge
     """
     is_scalar = False
-    if not (hasattr(X, "__iter__") and hasattr(Y, "__iter__")):
-        # make coordinates arrays if user passed non-iterable values
-        is_scalar = True
-        X = np.array([X])
-        Y = np.array([Y])
 
-    if np.isnan(X).any() or np.isnan(Y).any():  # pragma: no cover
+    # make coordinates iterable if user passed non-iterable values
+    if not (hasattr(X, "__iter__") and hasattr(Y, "__iter__")):
+        is_scalar = True
+        X = [X]
+        Y = [Y]
+
+    # make coordinates arrays
+    X_arr = np.array(X)
+    Y_arr = np.array(Y)
+
+    if np.isnan(X_arr).any() or np.isnan(Y_arr).any():  # pragma: no cover
         msg = "`X` and `Y` cannot contain nulls"
         raise ValueError(msg)
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
@@ -361,13 +445,13 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         rtree = STRtree(geoms)
 
         # use the r-tree to find each point's nearest neighbor and distance
-        points = [Point(xy) for xy in zip(X, Y)]
+        points = [Point(xy) for xy in zip(X_arr, Y_arr)]
         pos, dist = rtree.query_nearest(points, all_matches=False, return_distance=True)
 
         # if user passed X/Y lists, the 2nd subarray contains geom indices
         if len(pos.shape) > 1:
             pos = pos[1]
-        ne = geoms.iloc[pos].index
+        ne: np.ndarray = geoms.iloc[pos].index.to_numpy()
 
     # otherwise, if interpolation distance was provided
     else:
@@ -377,7 +461,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
         )
 
         # interpolate points along edges to index with k-d tree or ball tree
-        uvk_xy = []
+        uvk_xy: list = []
         for uvk, geom in zip(geoms.index, geoms.to_numpy()):
             uvk_xy.extend((uvk, xy) for xy in utils_geo.interpolate_points(geom, interpolate))
         labels, xy = zip(*uvk_xy)
@@ -388,8 +472,8 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
             if cKDTree is None:  # pragma: no cover
                 msg = "scipy must be installed to search a projected graph"
                 raise ImportError(msg)
-            dist, pos = cKDTree(vertices).query(np.array([X, Y]).T, k=1)
-            ne = vertices.index[pos]
+            dist, pos = cKDTree(vertices).query(np.array([X_arr, Y_arr]).T, k=1)
+            ne = vertices.index[pos].to_numpy()
 
         else:
             # if unprojected, use ball tree for haversine nearest-neighbor search
@@ -398,14 +482,12 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
                 raise ImportError(msg)
             # haversine requires lat, lon coords in radians
             vertices_rad = np.deg2rad(vertices[["y", "x"]])
-            points_rad = np.deg2rad(np.array([Y, X]).T)
+            points_rad = np.deg2rad(np.array([Y_arr, X_arr]).T)
             dist, pos = BallTree(vertices_rad, metric="haversine").query(points_rad, k=1)
             dist = dist[:, 0] * EARTH_RADIUS_M  # convert radians -> meters
-            ne = vertices.index[pos[:, 0]]
+            ne = vertices.index[pos[:, 0]].to_numpy()
 
     # convert results to correct types for return
-    ne = list(ne)
-    dist = list(dist)
     if is_scalar:
         ne = ne[0]
         dist = dist[0]
@@ -417,7 +499,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     return ne
 
 
-def shortest_path(G, orig, dest, weight="length", cpus=1):
+def shortest_path(G, orig, dest, weight="length", cpus=1):  # type: ignore[no-untyped-def]
     """
     Do not use, deprecated.
 
@@ -451,7 +533,7 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
     return routing.shortest_path(G, orig, dest, weight, cpus)
 
 
-def k_shortest_paths(G, orig, dest, k, weight="length"):
+def k_shortest_paths(G, orig, dest, k, weight="length"):  # type: ignore[no-untyped-def]
     """
     Do not use, deprecated.
 
