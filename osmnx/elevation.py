@@ -171,12 +171,12 @@ def add_node_elevations_raster(
 
 def add_node_elevations_google(
     G: nx.MultiDiGraph,
-    api_key: str | None = None,
+    api_key: str = None,
     batch_size: int = 350,
     pause: float = 0,
-    max_locations_per_batch: int | None = None,
-    precision: int | None = None,
-    url_template: str | None = None,
+    max_locations_per_batch: int = None,
+    precision: int = None,
+    url_template: str = None,
 ) -> nx.MultiDiGraph:
     """
     Add an `elevation` (meters) attribute to each node using a web service.
