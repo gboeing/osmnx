@@ -5,6 +5,7 @@ from __future__ import annotations
 import itertools
 import multiprocessing as mp
 from collections.abc import Generator
+from collections.abc import Iterable
 from warnings import warn
 
 import networkx as nx
@@ -16,8 +17,8 @@ from . import utils_graph
 
 def shortest_path(
     G: nx.MultiDiGraph,
-    orig: int | list,
-    dest: int | list,
+    orig: int | Iterable,
+    dest: int | Iterable,
     weight: str = "length",
     cpus: int | None = 1,
 ) -> list | None:
@@ -40,10 +41,10 @@ def shortest_path(
     ----------
     G : networkx.MultiDiGraph
         input graph
-    orig : int or list
-        origin node ID, or a list of origin node IDs
-    dest : int or list
-        destination node ID, or a list of destination node IDs
+    orig : int or iterable of ints
+        origin node ID(s)
+    dest : int or iterable of ints
+        destination node ID(s)
     weight : string
         edge attribute to minimize when solving shortest path
     cpus : int
@@ -52,8 +53,8 @@ def shortest_path(
     Returns
     -------
     path : list
-        list of node IDs constituting the shortest path, or, if orig and dest
-        are lists, then a list of path lists
+        list of node IDs constituting the shortest path, or, if `orig` and
+        `dest` are both iterable, then a list of path lists
     """
     _verify_edge_attribute(G, weight)
 
