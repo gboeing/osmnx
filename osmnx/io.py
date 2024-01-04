@@ -1,10 +1,14 @@
 """Serialize graphs to/from files on disk."""
 
+from __future__ import annotations
+
 import ast
 import contextlib
+from collections.abc import Iterable
 from pathlib import Path
 from warnings import warn
 
+import geopandas as gpd
 import networkx as nx
 import pandas as pd
 from shapely import wkt
@@ -15,7 +19,12 @@ from . import utils
 from . import utils_graph
 
 
-def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
+def save_graph_geopackage(
+    G: nx.MultiDiGraph,
+    filepath: str | Path | None = None,
+    encoding: str = "utf-8",
+    directed: bool = False,
+) -> None:
     """
     Save graph nodes and edges to disk as layers in a GeoPackage file.
 
@@ -57,7 +66,7 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
     utils.log(f"Saved graph as GeoPackage at {filepath!r}")
 
 
-def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
+def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):  # type: ignore[no-untyped-def]
     """
     Do not use: deprecated. Use the save_graph_geopackage function instead.
 
@@ -115,7 +124,12 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     utils.log(f"Saved graph as shapefiles at {filepath!r}")
 
 
-def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
+def save_graphml(
+    G: nx.MultiDiGraph,
+    filepath: str | Path | None = None,
+    gephi: bool = False,
+    encoding: str = "utf-8",
+) -> None:
     """
     Save graph to disk as GraphML file.
 
@@ -170,8 +184,12 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
 
 
 def load_graphml(
-    filepath=None, graphml_str=None, node_dtypes=None, edge_dtypes=None, graph_dtypes=None
-):
+    filepath: str | Path | None = None,
+    graphml_str: str = None,
+    node_dtypes: dict = None,
+    edge_dtypes: dict = None,
+    graph_dtypes: dict = None,
+) -> nx.MultiDiGraph:
     """
     Load an OSMnx-saved GraphML file from disk or GraphML string.
 
@@ -273,18 +291,18 @@ def load_graphml(
 
 
 def save_graph_xml(
-    data,
-    filepath=None,
-    node_tags=settings.osm_xml_node_tags,
-    node_attrs=settings.osm_xml_node_attrs,
-    edge_tags=settings.osm_xml_way_tags,
-    edge_attrs=settings.osm_xml_way_attrs,
-    oneway=False,
-    merge_edges=True,
-    edge_tag_aggs=None,
-    api_version=0.6,
-    precision=6,
-):
+    data: nx.MultiDiGraph | Iterable,
+    filepath: str | Path | None = None,
+    node_tags: list = settings.osm_xml_node_tags,
+    node_attrs: list = settings.osm_xml_node_attrs,
+    edge_tags: list = settings.osm_xml_way_tags,
+    edge_attrs: list = settings.osm_xml_way_attrs,
+    oneway: bool = False,
+    merge_edges: bool = True,
+    edge_tag_aggs: list = None,
+    api_version: float = 0.6,
+    precision: int = 6,
+) -> None:
     """
     Save graph to disk as an OSM-formatted XML .osm file.
 
@@ -373,7 +391,7 @@ def save_graph_xml(
     )
 
 
-def _convert_graph_attr_types(G, dtypes=None):
+def _convert_graph_attr_types(G: nx.MultiDiGraph, dtypes: dict) -> nx.MultiDiGraph:
     """
     Convert graph-level attributes using a dict of data types.
 
@@ -398,7 +416,7 @@ def _convert_graph_attr_types(G, dtypes=None):
     return G
 
 
-def _convert_node_attr_types(G, dtypes=None):
+def _convert_node_attr_types(G: nx.MultiDiGraph, dtypes: dict) -> nx.MultiDiGraph:
     """
     Convert graph nodes' attributes using a dict of data types.
 
@@ -428,7 +446,7 @@ def _convert_node_attr_types(G, dtypes=None):
     return G
 
 
-def _convert_edge_attr_types(G, dtypes=None):
+def _convert_edge_attr_types(G: nx.MultiDiGraph, dtypes: dict) -> nx.MultiDiGraph:
     """
     Convert graph edges' attributes using a dict of data types.
 
@@ -474,7 +492,7 @@ def _convert_edge_attr_types(G, dtypes=None):
     return G
 
 
-def _convert_bool_string(value):
+def _convert_bool_string(value: str) -> bool:
     """
     Convert a "True" or "False" string literal to corresponding boolean type.
 
@@ -505,7 +523,7 @@ def _convert_bool_string(value):
     raise ValueError(msg)
 
 
-def _stringify_nonnumeric_cols(gdf):
+def _stringify_nonnumeric_cols(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """
     Make every non-numeric GeoDataFrame column (besides geometry) a string.
 
