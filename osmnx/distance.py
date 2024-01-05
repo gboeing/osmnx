@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import Literal
 from typing import overload
 from warnings import warn
 
@@ -301,6 +302,46 @@ def add_edge_lengths(
     return G
 
 
+# if X and Y are floats and return_dist is not provided (defaults False)
+@overload
+def nearest_nodes(G: nx.MultiDiGraph, X: float, Y: float) -> int:
+    ...
+
+
+# if X and Y are floats and return_dist is provided/False
+@overload
+def nearest_nodes(G: nx.MultiDiGraph, X: float, Y: float, return_dist: Literal[False]) -> int:
+    ...
+
+
+# if X and Y are floats and return_dist is provided/True
+@overload
+def nearest_nodes(G: nx.MultiDiGraph, X: float, Y: float, return_dist: Literal[True]) -> tuple:
+    ...
+
+
+# if X and Y are iterable and return_dist is not provided (defaults False)
+@overload
+def nearest_nodes(G: nx.MultiDiGraph, X: Iterable, Y: Iterable) -> np.ndarray:
+    ...
+
+
+# if X and Y are iterable and return_dist is provided/False
+@overload
+def nearest_nodes(
+    G: nx.MultiDiGraph, X: Iterable, Y: Iterable, return_dist: Literal[False]
+) -> np.ndarray:
+    ...
+
+
+# if X and Y are iterable and return_dist is provided/True
+@overload
+def nearest_nodes(
+    G: nx.MultiDiGraph, X: Iterable, Y: Iterable, return_dist: Literal[True]
+) -> tuple:
+    ...
+
+
 def nearest_nodes(
     G: nx.MultiDiGraph, X: float | Iterable, Y: float | Iterable, return_dist: bool = False
 ) -> int | np.ndarray | tuple:
@@ -332,7 +373,7 @@ def nearest_nodes(
 
     Returns
     -------
-    nn or (nn, dist) : int or np.array or a tuple of ints/np.arrays
+    nn or (nn, dist) : tuple or np.array or a tuple of (int/np.array, float/np.array)
         nearest node ID(s) or optionally a tuple of ID(s) and distance(s)
         between each point and its nearest node
     """
@@ -385,6 +426,46 @@ def nearest_nodes(
     return nn
 
 
+# if X and Y are floats and return_dist is not provided (defaults False)
+@overload
+def nearest_edges(G: nx.MultiDiGraph, X: float, Y: float) -> tuple:
+    ...
+
+
+# if X and Y are floats and return_dist is provided/False
+@overload
+def nearest_edges(G: nx.MultiDiGraph, X: float, Y: float, *, return_dist: Literal[False]) -> tuple:
+    ...
+
+
+# if X and Y are floats and return_dist is provided/True
+@overload
+def nearest_edges(G: nx.MultiDiGraph, X: float, Y: float, *, return_dist: Literal[True]) -> tuple:
+    ...
+
+
+# if X and Y are iterable and return_dist is not provided (defaults False)
+@overload
+def nearest_edges(G: nx.MultiDiGraph, X: Iterable, Y: Iterable) -> np.ndarray:
+    ...
+
+
+# if X and Y are iterable and return_dist is provided/False
+@overload
+def nearest_edges(
+    G: nx.MultiDiGraph, X: Iterable, Y: Iterable, *, return_dist: Literal[False]
+) -> np.ndarray:
+    ...
+
+
+# if X and Y are iterable and return_dist is provided/True
+@overload
+def nearest_edges(
+    G: nx.MultiDiGraph, X: Iterable, Y: Iterable, *, return_dist: Literal[True]
+) -> tuple:
+    ...
+
+
 def nearest_edges(
     G: nx.MultiDiGraph,
     X: float | Iterable,
@@ -418,7 +499,7 @@ def nearest_edges(
 
     Returns
     -------
-    ne or (ne, dist) : tuple or np.array or a tuple of ints/np.arrays
+    ne or (ne, dist) : tuple or np.array or a tuple of (int/np.array, float/np.array)
         nearest edge ID(s) (as `u`, `v`, `key` tuples) or optionally a tuple
         of ID(s) and distance(s) between each point and its nearest edge
     """
