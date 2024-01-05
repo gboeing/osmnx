@@ -892,7 +892,7 @@ def _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_
         for inner_polygon in inner_polygons:
             if inner_polygon.within(outer_polygon):
                 try:
-                    outer_polygon_diff = outer_polygon.difference(inner_polygon)
+                    outer_polygon_diff = outer_polygon_diff.difference(inner_polygon)
                 except TopologicalError:  # pragma: no cover
                     utils.log(
                         f"relation https://www.openstreetmap.org/relation/{element['id']} "
