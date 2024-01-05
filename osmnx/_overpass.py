@@ -303,7 +303,7 @@ def _create_overpass_query(polygon_coord_str: list, tags: dict) -> str:
 
 
 def _download_overpass_network(
-    polygon: Polygon | MultiPolygon, network_type: str, custom_filter: str
+    polygon: Polygon | MultiPolygon, network_type: str, custom_filter: str | None
 ) -> Generator:
     """
     Retrieve networked ways and nodes within boundary from the Overpass API.
