@@ -475,8 +475,6 @@ def test_api_endpoints() -> None:
 
 def test_graph_save_load() -> None:
     """Test saving/loading graphs to/from disk."""
-    fp: str | Path = Path(ox.settings.data_folder) / "graph.graphml"
-
     # save graph as shapefile and geopackage
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     ox.save_graph_shapefile(G, directed=True)
