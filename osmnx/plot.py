@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+from typing import Literal
+from typing import overload
 
 import geopandas as gpd
 import networkx as nx
@@ -230,7 +232,7 @@ def plot_graph(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axes
+        tuple of matplotlib (Figure, Axes)
     """
     _verify_mpl()
     max_node_size = max(node_size) if hasattr(node_size, "__iter__") else node_size
@@ -241,22 +243,17 @@ def plot_graph(
 
     # create fig, ax as needed
     utils.log("Begin plotting the graph...")
-    if ax is None:
-        fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor, frameon=False)
-        ax.set_facecolor(bgcolor)
-    else:
-        fig = ax.figure  # type: ignore[assignment]
+    fig, ax = _get_fig_ax(ax=ax, figsize=figsize, bgcolor=bgcolor, polar=False)
 
     if max_edge_lw > 0:
         # plot the edges' geometries
         gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
         ax = gdf_edges.plot(ax=ax, color=edge_color, lw=edge_linewidth, alpha=edge_alpha, zorder=1)
-        assert ax is not None
 
     if max_node_size > 0:
         # scatter plot the nodes' x/y coordinates
         gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
-        ax.scatter(
+        ax.scatter(  # type: ignore[union-attr]
             x=gdf_nodes["x"],
             y=gdf_nodes["y"],
             s=node_size,
@@ -278,7 +275,7 @@ def plot_graph(
         padding = 0.02  # pad 2% to not cut off peripheral nodes' circles
 
     # configure axes appearance, save/show figure as specified, and return
-    ax = _config_ax(ax, G.graph["crs"], bbox, padding)
+    ax = _config_ax(ax, G.graph["crs"], bbox, padding)  # type: ignore[arg-type]
     fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi)
     utils.log("Finished plotting the graph")
     return fig, ax
@@ -319,7 +316,7 @@ def plot_graph_route(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axes
+        tuple of matplotlib (Figure, Axes)
     """
     _verify_mpl()
     if ax is None:
@@ -388,7 +385,7 @@ def plot_graph_routes(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axes
+        tuple of matplotlib (Figure, Axes)
     """
     _verify_mpl()
 
@@ -493,7 +490,7 @@ def plot_figure_ground(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axes
+        tuple of matplotlib (Figure, Axes)
     """
     _verify_mpl()
     multiplier = 1.2
@@ -592,8 +589,7 @@ def plot_figure_ground(
         node_sizes = 0
 
     # define the view extents of the plotting figure
-    assert point is not None
-    bbox = utils_geo.bbox_from_point(point, dist, project_utm=False)
+    bbox = utils_geo.bbox_from_point(point, dist, project_utm=False)  # type: ignore[arg-type]
 
     # plot the figure
     overrides = {"bbox", "node_size", "node_color", "edge_linewidth"}
@@ -666,15 +662,10 @@ def plot_footprints(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axes
+        tuple of matplotlib (Figure, Axes)
     """
     _verify_mpl()
-
-    if ax is None:
-        fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor, frameon=False)
-        ax.set_facecolor(bgcolor)
-    else:
-        fig = ax.figure  # type: ignore[assignment]
+    fig, ax = _get_fig_ax(ax=ax, figsize=figsize, bgcolor=bgcolor, polar=False)
 
     # retain only Polygons and MultiPolygons, then plot
     gdf = gdf[gdf["geometry"].type.isin({"Polygon", "MultiPolygon"})]
@@ -689,8 +680,7 @@ def plot_footprints(
         north, south, east, west = bbox
 
     # configure axes appearance, save/show figure as specified, and return
-    assert ax is not None
-    ax = _config_ax(ax, gdf.crs, (north, south, east, west), 0)
+    ax = _config_ax(ax, gdf.crs, (north, south, east, west), 0)  # type: ignore[arg-type]
     fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi)
     return fig, ax
 
@@ -760,7 +750,7 @@ def plot_orientation(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axes
+        tuple of matplotlib (Figure, PolarAxes)
     """
     _verify_mpl()
 
@@ -790,11 +780,8 @@ def plot_orientation(
     bin_frequency = bin_counts / bin_counts.sum()
     radius = np.sqrt(bin_frequency) if area else bin_frequency
 
-    # create ax (if necessary) then set N at top and go clockwise
-    if ax is None:
-        fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "polar"})
-    else:
-        fig = ax.figure  # type: ignore[assignment]
+    # create PolarAxes (if not passed-in) then set N at top and go clockwise
+    fig, ax = _get_fig_ax(ax=ax, figsize=figsize, bgcolor=None, polar=True)
     ax.set_theta_zero_location("N")
     ax.set_theta_direction("clockwise")
     ax.set_ylim(top=radius.max())
@@ -1014,6 +1001,58 @@ def _config_ax(ax: Axes, crs: Any, bbox: tuple, padding: float) -> Axes:
         ax.set_aspect(1 / cos_lat)
 
     return ax
+
+
+# if polar = False, return Axes
+@overload
+def _get_fig_ax(
+    ax: Axes | None, figsize: tuple, bgcolor: str | None, polar: Literal[False]
+) -> tuple[Figure, Axes]:
+    ...
+
+
+# if polar = True, return PolarAxes
+@overload
+def _get_fig_ax(
+    ax: Axes | None, figsize: tuple, bgcolor: str | None, polar: Literal[True]
+) -> tuple[Figure, PolarAxes]:
+    ...
+
+
+def _get_fig_ax(
+    ax: Axes | None, figsize: tuple, bgcolor: str | None, polar: bool
+) -> tuple[Figure, Axes | PolarAxes]:
+    """
+    Generate a matplotlib Figure and (Polar)Axes or return existing ones.
+
+    Parameters
+    ----------
+    ax : matplotlib axes instance
+        if not None, plot on this pre-existing axes instance
+    figsize : tuple
+        if ax is None, create new figure with size (width, height)
+    bgcolor : string
+        background color of plot
+    polar : bool
+        if True, generate PolarAxes instead of Axes
+
+    Returns
+    -------
+    fig, ax : tuple
+        tuple of matplotlib (Figure, Axes) or (Figure, PolarAxes)
+    """
+    if ax is None:
+        if polar:
+            # make PolarAxes
+            fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "polar"})
+        else:
+            # make regular Axes
+            fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor, frameon=False)
+            ax.set_facecolor(bgcolor)
+    else:
+        fig = ax.figure  # type: ignore[assignment]
+
+    return fig, ax
 
 
 def _verify_mpl() -> None:
