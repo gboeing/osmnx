@@ -872,8 +872,10 @@ def _get_colors_by_value(
 
     else:
         # otherwise, bin values then assign colors to bins
-        cut_func = pd.qcut if equal_size else pd.cut
-        bins = cut_func(vals, num_bins, labels=range(num_bins))  # type: ignore[operator]
+        if equal_size:
+            bins = pd.qcut(vals, num_bins, labels=range(num_bins))
+        else:
+            bins = pd.cut(vals, num_bins, labels=range(num_bins))
         bin_colors = get_colors(num_bins, cmap, start, stop)
         color_list = [bin_colors[b] if pd.notna(b) else na_color for b in bins]
         color_series = pd.Series(color_list, index=bins.index)
