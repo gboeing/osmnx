@@ -126,7 +126,7 @@ def _round_multipolygon_coords(mp, precision):  # type: ignore[no-untyped-def]
     -------
     shapely.geometry.MultiPolygon
     """
-    return MultiPolygon([_round_polygon_coords(p, precision) for p in mp.geoms])
+    return MultiPolygon([_round_polygon_coords(p, precision) for p in mp.geoms])  # type: ignore[no-untyped-call]
 
 
 def _round_point_coords(pt, precision):  # type: ignore[no-untyped-def]
@@ -162,7 +162,7 @@ def _round_multipoint_coords(mpt, precision):  # type: ignore[no-untyped-def]
     -------
     shapely.geometry.MultiPoint
     """
-    return MultiPoint([_round_point_coords(pt, precision) for pt in mpt.geoms])
+    return MultiPoint([_round_point_coords(pt, precision) for pt in mpt.geoms])  # type: ignore[no-untyped-call]
 
 
 def _round_linestring_coords(ls, precision):  # type: ignore[no-untyped-def]
@@ -198,7 +198,7 @@ def _round_multilinestring_coords(mls, precision):  # type: ignore[no-untyped-de
     -------
     shapely.geometry.MultiLineString
     """
-    return MultiLineString([_round_linestring_coords(ls, precision) for ls in mls.geoms])
+    return MultiLineString([_round_linestring_coords(ls, precision) for ls in mls.geoms])  # type: ignore[no-untyped-call]
 
 
 def round_geometry_coords(geom, precision):  # type: ignore[no-untyped-def]
@@ -222,22 +222,22 @@ def round_geometry_coords(geom, precision):  # type: ignore[no-untyped-def]
     )
 
     if isinstance(geom, Point):
-        return _round_point_coords(geom, precision)
+        return _round_point_coords(geom, precision)  # type: ignore[no-untyped-call]
 
     if isinstance(geom, MultiPoint):
-        return _round_multipoint_coords(geom, precision)
+        return _round_multipoint_coords(geom, precision)  # type: ignore[no-untyped-call]
 
     if isinstance(geom, LineString):
-        return _round_linestring_coords(geom, precision)
+        return _round_linestring_coords(geom, precision)  # type: ignore[no-untyped-call]
 
     if isinstance(geom, MultiLineString):
-        return _round_multilinestring_coords(geom, precision)
+        return _round_multilinestring_coords(geom, precision)  # type: ignore[no-untyped-call]
 
     if isinstance(geom, Polygon):
-        return _round_polygon_coords(geom, precision)
+        return _round_polygon_coords(geom, precision)  # type: ignore[no-untyped-call]
 
     if isinstance(geom, MultiPolygon):
-        return _round_multipolygon_coords(geom, precision)
+        return _round_multipolygon_coords(geom, precision)  # type: ignore[no-untyped-call]
 
     # otherwise
     msg = f"cannot round coordinates of unhandled geometry type: {type(geom)}"
