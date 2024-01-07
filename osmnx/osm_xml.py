@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import bz2
 import xml.sax
+from collections.abc import Iterable
 from pathlib import Path
+from typing import TextIO
 from warnings import warn
 from xml.etree import ElementTree as ET
 
+import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -64,7 +67,7 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
             self.object["elements"].append(self._element)
 
 
-def _overpass_json_from_file(filepath, encoding):
+def _overpass_json_from_file(filepath: str | Path, encoding: str) -> dict:
     """
     Read OSM XML from file and return Overpass-like JSON.
 
@@ -77,11 +80,12 @@ def _overpass_json_from_file(filepath, encoding):
 
     Returns
     -------
-    OSMContentHandler object
+    object : dict
+        an _OSMContentHandler.object
     """
 
     # open the XML file, handling bz2 or regular XML
-    def _opener(filepath, encoding):
+    def _opener(filepath: Path, encoding: str) -> TextIO:
         if filepath.suffix == ".bz2":
             return bz2.open(filepath, mode="rt", encoding=encoding)
 
@@ -108,7 +112,7 @@ def _overpass_json_from_file(filepath, encoding):
         return handler.object
 
 
-def save_graph_xml(
+def save_graph_xml(  # type: ignore[no-untyped-def]
     data,
     filepath=None,
     node_tags=settings.osm_xml_node_tags,
@@ -179,18 +183,18 @@ def save_graph_xml(
 
 
 def _save_graph_xml(
-    data,
-    filepath=None,
-    node_tags=settings.osm_xml_node_tags,
-    node_attrs=settings.osm_xml_node_attrs,
-    edge_tags=settings.osm_xml_way_tags,
-    edge_attrs=settings.osm_xml_way_attrs,
-    oneway=False,
-    merge_edges=True,
-    edge_tag_aggs=None,
-    api_version=0.6,
-    precision=6,
-):
+    data: nx.MultiDiGraph | Iterable,
+    filepath: str | Path | None,
+    node_tags: list,
+    node_attrs: list,
+    edge_tags: list,
+    edge_attrs: list,
+    oneway: bool,
+    merge_edges: bool,
+    edge_tag_aggs: list | None,
+    api_version: float,
+    precision: int,
+) -> None:
     """
     Save graph to disk as an OSM-formatted UTF-8 encoded XML .osm file.
 
@@ -297,7 +301,9 @@ def _save_graph_xml(
     utils.log(f"Saved graph as .osm file at {filepath!r}")
 
 
-def _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags):
+def _append_nodes_xml_tree(
+    root: ET.Element, gdf_nodes: gpd.GeoDataFrame, node_attrs: list, node_tags: list
+) -> ET.Element:
     """
     Append nodes to an XML tree.
 
@@ -327,7 +333,9 @@ def _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags):
     return root
 
 
-def _create_way_for_each_edge(root, gdf_edges, edge_attrs, edge_tags):
+def _create_way_for_each_edge(
+    root: ET.Element, gdf_edges: gpd.GeoDataFrame, edge_attrs: list, edge_tags: list
+) -> None:
     """
     Append a new way to an empty XML tree graph for each edge in way.
 
@@ -347,6 +355,10 @@ def _create_way_for_each_edge(root, gdf_edges, edge_attrs, edge_tags):
         osm way attributes to include in output OSM XML
     edge_tags : list
         osm way tags to include in output OSM XML
+
+    Returns
+    -------
+    None
     """
     for _, row in gdf_edges.iterrows():
         row_str = row.dropna().astype(str)
@@ -358,13 +370,19 @@ def _create_way_for_each_edge(root, gdf_edges, edge_attrs, edge_tags):
                 ET.SubElement(edge, "tag", attrib={"k": tag, "v": row_str[tag]})
 
 
-def _append_merged_edge_attrs(xml_edge, sample_edge, all_edges_df, edge_tags, edge_tag_aggs):
+def _append_merged_edge_attrs(
+    xml_edge: ET.Element,
+    sample_edge: pd.Series,
+    all_edges_df: pd.DataFrame,
+    edge_tags: list,
+    edge_tag_aggs: list | None,
+) -> None:
     """
     Extract edge attributes and append to XML edge.
 
     Parameters
     ----------
-    xml_edge : ElementTree.SubElement
+    xml_edge : ElementTree.Element
         XML representation of an output graph edge
     sample_edge: pandas.Series
         sample row from the the dataframe of way edges
@@ -382,6 +400,9 @@ def _append_merged_edge_attrs(xml_edge, sample_edge, all_edges_df, edge_tags, ed
         component edges. Otherwise, the length attribute will simply reflect
         the length of the first edge associated with the way.
 
+    Returns
+    -------
+    None
     """
     if edge_tag_aggs is None:
         for tag in edge_tags:
@@ -404,18 +425,24 @@ def _append_merged_edge_attrs(xml_edge, sample_edge, all_edges_df, edge_tags, ed
                 )
 
 
-def _append_nodes_as_edge_attrs(xml_edge, sample_edge, all_edges_df):
+def _append_nodes_as_edge_attrs(
+    xml_edge: ET.Element, sample_edge: pd.Series, all_edges_df: pd.DataFrame
+) -> None:
     """
     Extract list of ordered nodes and append as attributes of XML edge.
 
     Parameters
     ----------
-    xml_edge : ElementTree.SubElement
+    xml_edge : ElementTree.Element
         XML representation of an output graph edge
     sample_edge: pandas.Series
         sample row from the the dataframe of way edges
     all_edges_df: pandas.DataFrame
         a dataframe with one row for each edge in an OSM way
+
+    Returns
+    -------
+    None
     """
     if len(all_edges_df) == 1:
         ET.SubElement(xml_edge, "nd", attrib={"ref": sample_edge["u"]})
@@ -433,7 +460,14 @@ def _append_nodes_as_edge_attrs(xml_edge, sample_edge, all_edges_df):
             ET.SubElement(xml_edge, "nd", attrib={"ref": str(node)})
 
 
-def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges):
+def _append_edges_xml_tree(
+    root: ET.Element,
+    gdf_edges: gpd.GeoDataFrame,
+    edge_attrs: list,
+    edge_tags: list,
+    edge_tag_aggs: list | None,
+    merge_edges: bool,
+) -> ET.Element:
     """
     Append edges to an XML tree.
 
@@ -494,7 +528,7 @@ def _append_edges_xml_tree(root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs
     return root
 
 
-def _get_unique_nodes_ordered_from_way(df_way_edges):
+def _get_unique_nodes_ordered_from_way(df_way_edges: pd.DataFrame) -> list:
     """
     Recover original node order from edges associated with a single OSM way.
 
