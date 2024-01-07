@@ -202,7 +202,7 @@ def graph_from_address(
     simplify=True,
     retain_all=False,
     truncate_by_edge=False,
-    return_coords=False,
+    return_coords=None,
     clean_periphery=None,
     custom_filter=None,
 ):
@@ -236,7 +236,7 @@ def graph_from_address(
         if True, retain nodes outside bounding box if at least one of node's
         neighbors is within the bounding box
     return_coords : bool
-        optionally also return the geocoded coordinates of the address
+        deprecated, do not use
     clean_periphery : bool
         deprecated, do not use
     custom_filter : string
@@ -255,6 +255,15 @@ def graph_from_address(
     function to automatically make multiple requests: see that function's
     documentation for caveats.
     """
+    if return_coords is None:
+        return_coords = False
+    else:
+        warn(
+            "The `return_coords` argument has been deprecated and will be removed in "
+            "a future release. Future behavior will be as though `return_coords=False`. "
+            "If you want the address's geocoded coordinates, use the `geocode` module.",
+            stacklevel=2,
+        )
     # geocode the address string to a (lat, lon) point
     point = geocoder.geocode(query=address)
 
