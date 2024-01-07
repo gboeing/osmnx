@@ -59,10 +59,11 @@ path = "osmnx/_version.py"
 
 [tool.mypy]
 disable_error_code = ["attr-defined", "type-arg"]
-disallow_untyped_defs = false
+disallow_untyped_defs = true
 ignore_missing_imports = true
 implicit_optional = true
 python_version = "3.9"
+strict = true
 warn_no_return = true
 warn_redundant_casts = true
 warn_return_any = true
