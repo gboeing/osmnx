@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import multiprocessing as mp
 import time
+from collections.abc import Iterable
 from hashlib import sha1
 from pathlib import Path
 from warnings import warn
@@ -106,14 +107,14 @@ def _query_raster(nodes: pd.DataFrame, filepath: str | Path, band: int) -> zip:
 
 def add_node_elevations_raster(
     G: nx.MultiDiGraph,
-    filepath: str | Path | list[str | Path],
+    filepath: str | Path | Iterable[str | Path],
     band: int = 1,
     cpus: int | None = None,
 ) -> nx.MultiDiGraph:
     """
     Add `elevation` attribute to each node from local raster file(s).
 
-    If `filepath` is a list of paths, this will generate a virtual raster
+    If `filepath` is an iterable of paths, this will generate a virtual raster
     composed of the files at those paths as an intermediate step.
 
     See also the `add_edge_grades` function.
@@ -122,8 +123,8 @@ def add_node_elevations_raster(
     ----------
     G : networkx.MultiDiGraph
         input graph, in same CRS as raster
-    filepath : string or pathlib.Path or list of strings/Paths
-        the path (or list of paths) to the raster file(s) to query
+    filepath : string or pathlib.Path or iterable of strings/Paths
+        the path(s) to the raster file(s) to query
     band : int
         which raster band to query
     cpus : int
@@ -143,8 +144,8 @@ def add_node_elevations_raster(
     cpus = min(cpus, mp.cpu_count())
     utils.log(f"Attaching elevations with {cpus} CPUs...")
 
-    # if a list of filepaths is passed, compose them all as a virtual raster
-    # use the sha1 hash of the filepaths list as the vrt filename
+    # if multiple filepaths are passed in, compose them as a virtual raster
+    # use the sha1 hash of the filepaths object as the vrt filename
     if not isinstance(filepath, (str, Path)):
         filepaths = [str(p) for p in filepath]
         sha = sha1(str(filepaths).encode("utf-8")).hexdigest()
