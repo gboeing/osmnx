@@ -499,7 +499,7 @@ def nearest_edges(
 
     Returns
     -------
-    ne or (ne, dist) : tuple or np.array or a tuple of (int/np.array, float/np.array)
+    ne or (ne, dist) : tuple or np.array or a tuple of (tuple/np.array, float/np.array)
         nearest edge ID(s) (as `u`, `v`, `key` tuples) or optionally a tuple
         of ID(s) and distance(s) between each point and its nearest edge
     """
