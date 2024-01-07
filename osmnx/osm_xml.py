@@ -1,5 +1,7 @@
 """Read/write .osm formatted XML files."""
 
+from __future__ import annotations
+
 import bz2
 import xml.sax
 from pathlib import Path
@@ -25,11 +27,11 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
     https://overpass-api.de
     """
 
-    def __init__(self):
-        self._element = None
-        self.object = {"elements": []}
+    def __init__(self) -> None:
+        self._element: dict | None = None
+        self.object: dict = {"elements": []}
 
-    def startElement(self, name, attrs):
+    def startElement(self, name: str, attrs: xml.sax.xmlreader.AttributesImpl) -> None:
         if name == "osm":
             self.object.update({k: v for k, v in attrs.items() if k in {"version", "generator"}})
 
@@ -47,17 +49,17 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
             )
 
         elif name == "tag":
-            self._element["tags"].update({attrs["k"]: attrs["v"]})
+            self._element["tags"].update({attrs["k"]: attrs["v"]})  # type: ignore[index]
 
         elif name == "nd":
-            self._element["nodes"].append(int(attrs["ref"]))
+            self._element["nodes"].append(int(attrs["ref"]))  # type: ignore[index]
 
         elif name == "member":
-            self._element["members"].append(
+            self._element["members"].append(  # type: ignore[index]
                 {k: (int(v) if k == "ref" else v) for k, v in attrs.items()}
             )
 
-    def endElement(self, name):
+    def endElement(self, name: str) -> None:
         if name in {"node", "way", "relation"}:
             self.object["elements"].append(self._element)
 
