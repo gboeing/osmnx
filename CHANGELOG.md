@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- fix a bug in the features module's polygon handling (#1104)
+
 ## 1.8.1 (2023-12-31)
 
 - fix a bug arising from the save_graph_xml function (#1093)
