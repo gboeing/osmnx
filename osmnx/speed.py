@@ -15,9 +15,9 @@ from . import utils_graph
 
 def add_edge_speeds(
     G: nx.MultiDiGraph,
-    hwy_speeds: dict = None,
-    fallback: float = None,
-    precision: int = None,
+    hwy_speeds: dict | None = None,
+    fallback: float | None = None,
+    precision: int | None = None,
     agg: Callable = np.mean,
 ) -> nx.MultiDiGraph:
     """
@@ -134,7 +134,7 @@ def add_edge_speeds(
     return G
 
 
-def add_edge_travel_times(G: nx.MultiDiGraph, precision: int = None) -> nx.MultiDiGraph:
+def add_edge_travel_times(G: nx.MultiDiGraph, precision: int | None = None) -> nx.MultiDiGraph:
     """
     Add edge travel time (seconds) to graph as new `travel_time` edge attributes.
 

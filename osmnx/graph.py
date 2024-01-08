@@ -44,8 +44,8 @@ def graph_from_bbox(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    clean_periphery: bool = None,
-    custom_filter: str = None,
+    clean_periphery: bool | None = None,
+    custom_filter: str | None = None,
 ) -> nx.MultiDiGraph:
     """
     Download and create a graph within some bounding box.
@@ -118,8 +118,8 @@ def graph_from_point(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    clean_periphery: bool = None,
-    custom_filter: str = None,
+    clean_periphery: bool | None = None,
+    custom_filter: str | None = None,
 ) -> nx.MultiDiGraph:
     """
     Download and create a graph within some distance of a (lat, lon) point.
@@ -206,9 +206,9 @@ def graph_from_address(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    return_coords: bool = None,
-    clean_periphery: bool = None,
-    custom_filter: str = None,
+    return_coords: bool | None = None,
+    clean_periphery: bool | None = None,
+    custom_filter: str | None = None,
 ) -> nx.MultiDiGraph | tuple:
     """
     Download and create a graph within some distance of an address.
@@ -298,10 +298,10 @@ def graph_from_place(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    which_result: int = None,
-    buffer_dist: float = None,
-    clean_periphery: bool = None,
-    custom_filter: str = None,
+    which_result: int | None = None,
+    buffer_dist: float | None = None,
+    clean_periphery: bool | None = None,
+    custom_filter: str | None = None,
 ) -> nx.MultiDiGraph:
     """
     Download and create a graph within the boundaries of some place(s).
@@ -405,8 +405,8 @@ def graph_from_polygon(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    clean_periphery: bool = None,
-    custom_filter: str = None,
+    clean_periphery: bool | None = None,
+    custom_filter: str | None = None,
 ) -> nx.MultiDiGraph:
     """
     Download and create a graph within the boundaries of a (multi)polygon.

@@ -185,10 +185,10 @@ def save_graphml(
 
 def load_graphml(
     filepath: str | Path | None = None,
-    graphml_str: str = None,
-    node_dtypes: dict = None,
-    edge_dtypes: dict = None,
-    graph_dtypes: dict = None,
+    graphml_str: str | None = None,
+    node_dtypes: dict | None = None,
+    edge_dtypes: dict | None = None,
+    graph_dtypes: dict | None = None,
 ) -> nx.MultiDiGraph:
     """
     Load an OSMnx-saved GraphML file from disk or GraphML string.
@@ -299,7 +299,7 @@ def save_graph_xml(
     edge_attrs: list = settings.osm_xml_way_attrs,
     oneway: bool = False,
     merge_edges: bool = True,
-    edge_tag_aggs: list = None,
+    edge_tag_aggs: list | None = None,
     api_version: float = 0.6,
     precision: int = 6,
 ) -> None:

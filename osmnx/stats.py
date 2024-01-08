@@ -259,7 +259,7 @@ def circuity_avg(Gu: nx.MultiGraph) -> float | None:
         return None
 
 
-def count_streets_per_node(G: nx.MultiDiGraph, nodes: list = None) -> dict:
+def count_streets_per_node(G: nx.MultiDiGraph, nodes: list | None = None) -> dict:
     """
     Count how many physical street segments connect to each node in a graph.
 
@@ -310,7 +310,9 @@ def count_streets_per_node(G: nx.MultiDiGraph, nodes: list = None) -> dict:
     return streets_per_node
 
 
-def basic_stats(G: nx.MultiDiGraph, area: float = None, clean_int_tol: float = None) -> dict:
+def basic_stats(
+    G: nx.MultiDiGraph, area: float | None = None, clean_int_tol: float | None = None
+) -> dict:
     """
     Calculate basic descriptive geometric and topological measures of a graph.
 

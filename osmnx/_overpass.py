@@ -366,7 +366,9 @@ def _download_overpass_features(polygon: Polygon, tags: dict) -> Generator:
         yield _overpass_request(OrderedDict(data=query_str))
 
 
-def _overpass_request(data: OrderedDict, pause: float = None, error_pause: float = 60) -> dict:
+def _overpass_request(
+    data: OrderedDict, pause: float | None = None, error_pause: float = 60
+) -> dict:
     """
     Send a HTTP POST request to the Overpass API and return response.
 

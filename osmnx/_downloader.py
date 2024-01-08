@@ -136,7 +136,7 @@ def _retrieve_from_cache(url: str, check_remark: bool = True) -> dict | None:
 
 
 def _get_http_headers(
-    user_agent: str = None, referer: str = None, accept_language: str = None
+    user_agent: str | None = None, referer: str | None = None, accept_language: str | None = None
 ) -> dict:
     """
     Update the default requests HTTP headers with OSMnx info.

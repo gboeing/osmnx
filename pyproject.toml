@@ -61,7 +61,6 @@ path = "osmnx/_version.py"
 cache_dir = "~/.cache/mypy"
 disable_error_code = ["type-arg"]
 ignore_missing_imports = true
-implicit_optional = true
 implicit_reexport = true
 python_version = "3.9"
 strict = true

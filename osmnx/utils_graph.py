@@ -217,7 +217,7 @@ def graph_to_gdfs(
 
 
 def graph_from_gdfs(
-    gdf_nodes: gpd.GeoDataFrame, gdf_edges: gpd.GeoDataFrame, graph_attrs: dict = None
+    gdf_nodes: gpd.GeoDataFrame, gdf_edges: gpd.GeoDataFrame, graph_attrs: dict | None = None
 ) -> nx.MultiDiGraph:
     """
     Convert node and edge GeoDataFrames to a MultiDiGraph.

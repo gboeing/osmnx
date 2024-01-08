@@ -62,9 +62,9 @@ def geocode(query: str) -> tuple:
 
 def geocode_to_gdf(
     query: str | dict | list[str | dict],
-    which_result: int = None,
+    which_result: int | None = None,
     by_osmid: bool = False,
-    buffer_dist: float = None,
+    buffer_dist: float | None = None,
 ) -> gpd.GeoDataFrame:
     """
     Retrieve OSM elements by place name or OSM ID with the Nominatim API.

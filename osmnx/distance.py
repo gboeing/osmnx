@@ -235,7 +235,7 @@ def euclidean_dist_vec(y1, x1, y2, x2):  # type: ignore[no-untyped-def]
 
 
 def add_edge_lengths(
-    G: nx.MultiDiGraph, precision: int = None, edges: tuple = None
+    G: nx.MultiDiGraph, precision: int | None = None, edges: tuple | None = None
 ) -> nx.MultiDiGraph:
     """
     Add `length` attribute (in meters) to each edge.
@@ -470,7 +470,7 @@ def nearest_edges(
     G: nx.MultiDiGraph,
     X: float | Iterable,
     Y: float | Iterable,
-    interpolate: float = None,
+    interpolate: float | None = None,
     return_dist: bool = False,
 ) -> tuple | np.ndarray:
     """

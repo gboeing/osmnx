@@ -1,4 +1,5 @@
 """Project a graph, GeoDataFrame, or geometry to a different CRS."""
+from __future__ import annotations
 
 from typing import Any
 
@@ -31,7 +32,7 @@ def is_projected(crs: Any) -> bool:
 
 
 def project_geometry(
-    geometry: Geometry, crs: Any = None, to_crs: Any = None, to_latlong: bool = False
+    geometry: Geometry, crs: Any | None = None, to_crs: Any | None = None, to_latlong: bool = False
 ) -> tuple[Geometry, Any]:
     """
     Project a Shapely geometry from its current CRS to another.
@@ -69,7 +70,7 @@ def project_geometry(
 
 
 def project_gdf(
-    gdf: gpd.GeoDataFrame, to_crs: Any = None, to_latlong: bool = False
+    gdf: gpd.GeoDataFrame, to_crs: Any | None = None, to_latlong: bool = False
 ) -> gpd.GeoDataFrame:
     """
     Project a GeoDataFrame from its current CRS to another.
@@ -114,7 +115,7 @@ def project_gdf(
 
 
 def project_graph(
-    G: nx.MultiDiGraph, to_crs: Any = None, to_latlong: bool = False
+    G: nx.MultiDiGraph, to_crs: Any | None = None, to_latlong: bool = False
 ) -> nx.MultiDiGraph:
     """
     Project a graph from its current CRS to another.

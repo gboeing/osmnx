@@ -75,8 +75,8 @@ def truncate_graph_bbox(
     west: float,
     truncate_by_edge: bool = False,
     retain_all: bool = False,
-    quadrat_width: float = None,
-    min_num: int = None,
+    quadrat_width: float | None = None,
+    min_num: int | None = None,
 ) -> nx.MultiDiGraph:
     """
     Remove every node in graph that falls outside a bounding box.
@@ -129,8 +129,8 @@ def truncate_graph_polygon(
     polygon: Polygon | MultiPolygon,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    quadrat_width: float = None,
-    min_num: int = None,
+    quadrat_width: float | None = None,
+    min_num: int | None = None,
 ) -> nx.MultiDiGraph:
     """
     Remove every node in graph that falls outside a (Multi)Polygon.

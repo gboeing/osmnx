@@ -214,7 +214,10 @@ def features_from_address(address: str, tags: dict, dist: float = 1000) -> gpd.G
 
 
 def features_from_place(
-    query: str | dict | list, tags: dict, which_result: int = None, buffer_dist: float = None
+    query: str | dict | list,
+    tags: dict,
+    which_result: int | None = None,
+    buffer_dist: float | None = None,
 ) -> gpd.GeoDataFrame:
     """
     Create GeoDataFrame of OSM features within boundaries of some place(s).
@@ -345,7 +348,10 @@ def features_from_polygon(polygon: Polygon | MultiPolygon, tags: dict) -> gpd.Ge
 
 
 def features_from_xml(
-    filepath: str | Path, polygon: Polygon = None, tags: dict = None, encoding: str = "utf-8"
+    filepath: str | Path,
+    polygon: Polygon | None = None,
+    tags: dict | None = None,
+    encoding: str = "utf-8",
 ) -> gpd.GeoDataFrame:
     """
     Create a GeoDataFrame of OSM features in an OSM-formatted XML file.

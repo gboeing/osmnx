@@ -84,7 +84,7 @@ def calculate_bearing(
     return bearing
 
 
-def add_edge_bearings(G: nx.MultiDiGraph, precision: int = None) -> nx.MultiDiGraph:
+def add_edge_bearings(G: nx.MultiDiGraph, precision: int | None = None) -> nx.MultiDiGraph:
     """
     Add compass `bearing` attributes to all graph edges.
 
@@ -134,7 +134,7 @@ def add_edge_bearings(G: nx.MultiDiGraph, precision: int = None) -> nx.MultiDiGr
 
 
 def orientation_entropy(
-    Gu: nx.MultiGraph, num_bins: int = 36, min_length: float = 0, weight: str = None
+    Gu: nx.MultiGraph, num_bins: int = 36, min_length: float = 0, weight: str | None = None
 ) -> float:
     """
     Calculate undirected graph's orientation entropy.
@@ -178,7 +178,7 @@ def orientation_entropy(
 
 
 def _extract_edge_bearings(
-    Gu: nx.MultiGraph, min_length: float = 0, weight: str = None
+    Gu: nx.MultiGraph, min_length: float = 0, weight: str | None = None
 ) -> np.ndarray:
     """
     Extract undirected graph's bidirectional edge bearings.
@@ -226,7 +226,7 @@ def _extract_edge_bearings(
 
 
 def _bearings_distribution(
-    Gu: nx.MultiGraph, num_bins: int, min_length: float = 0, weight: str = None
+    Gu: nx.MultiGraph, num_bins: int, min_length: float = 0, weight: str | None = None
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Compute distribution of bearings across evenly spaced bins.

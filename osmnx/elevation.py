@@ -29,7 +29,7 @@ except ImportError:  # pragma: no cover
 
 
 def add_edge_grades(
-    G: nx.MultiDiGraph, add_absolute: bool = True, precision: int = None
+    G: nx.MultiDiGraph, add_absolute: bool = True, precision: int | None = None
 ) -> nx.MultiDiGraph:
     """
     Add `grade` attribute to each graph edge.
@@ -172,12 +172,12 @@ def add_node_elevations_raster(
 
 def add_node_elevations_google(
     G: nx.MultiDiGraph,
-    api_key: str = None,
+    api_key: str | None = None,
     batch_size: int = 350,
     pause: float = 0,
-    max_locations_per_batch: int = None,
-    precision: int = None,
-    url_template: str = None,
+    max_locations_per_batch: int | None = None,
+    precision: int | None = None,
+    url_template: str | None = None,
 ) -> nx.MultiDiGraph:
     """
     Add an `elevation` (meters) attribute to each node using a web service.

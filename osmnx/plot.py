@@ -77,7 +77,7 @@ def get_colors(
 def get_node_colors_by_attr(
     G: nx.MultiDiGraph,
     attr: str,
-    num_bins: int = None,
+    num_bins: int | None = None,
     cmap: str = "viridis",
     start: float = 0,
     stop: float = 1,
@@ -121,7 +121,7 @@ def get_node_colors_by_attr(
 def get_edge_colors_by_attr(
     G: nx.MultiDiGraph,
     attr: str,
-    num_bins: int = None,
+    num_bins: int | None = None,
     cmap: str = "viridis",
     start: float = 0,
     stop: float = 1,
@@ -164,23 +164,23 @@ def get_edge_colors_by_attr(
 
 def plot_graph(
     G: nx.MultiDiGraph,
-    ax: Axes = None,
+    ax: Axes | None = None,
     figsize: tuple = (8, 8),
     bgcolor: str = "#111111",
     node_color: str | list = "w",
     node_size: int | list = 15,
-    node_alpha: float = None,
+    node_alpha: float | None = None,
     node_edgecolor: str | list = "none",
     node_zorder: int = 1,
     edge_color: str | list = "#999999",
     edge_linewidth: int | list = 1,
-    edge_alpha: float = None,
+    edge_alpha: float | None = None,
     show: bool = True,
     close: bool = False,
     save: bool = False,
     filepath: str | Path | None = None,
     dpi: int = 300,
-    bbox: tuple = None,
+    bbox: tuple | None = None,
 ) -> tuple:
     """
     Visualize a graph.
@@ -288,7 +288,7 @@ def plot_graph_route(
     route_linewidth: int = 4,
     route_alpha: float = 0.5,
     orig_dest_size: int = 100,
-    ax: Axes = None,
+    ax: Axes | None = None,
     **pg_kwargs: Any,
 ) -> tuple:
     """
@@ -446,12 +446,12 @@ def plot_graph_routes(
 
 
 def plot_figure_ground(
-    G: nx.MultiDiGraph = None,
-    address: str = None,
-    point: tuple = None,
+    G: nx.MultiDiGraph | None = None,
+    address: str | None = None,
+    point: tuple | None = None,
     dist: float = 805,
     network_type: str = "drive_service",
-    street_widths: dict = None,
+    street_widths: dict | None = None,
     default_width: int = 4,
     figsize: tuple = (8, 8),
     edge_color: str = "w",
@@ -609,14 +609,14 @@ def plot_figure_ground(
 
 def plot_footprints(
     gdf: gpd.GeoDataFrame,
-    ax: Axes = None,
+    ax: Axes | None = None,
     figsize: tuple = (8, 8),
     color: str = "orange",
     edge_color: str = "none",
     edge_linewidth: float = 0,
-    alpha: float = None,
+    alpha: float | None = None,
     bgcolor: str = "#111111",
-    bbox: tuple = None,
+    bbox: tuple | None = None,
     save: bool = False,
     show: bool = True,
     close: bool = False,
@@ -689,18 +689,18 @@ def plot_orientation(
     Gu: nx.MultiGraph,
     num_bins: int = 36,
     min_length: float = 0,
-    weight: str = None,
-    ax: PolarAxes = None,
+    weight: str | None = None,
+    ax: PolarAxes | None = None,
     figsize: tuple = (5, 5),
     area: bool = True,
     color: str = "#003366",
     edgecolor: str = "k",
     linewidth: float = 0.5,
     alpha: float = 0.7,
-    title: str = None,
+    title: str | None = None,
     title_y: float = 1.05,
-    title_font: dict = None,
-    xtick_font: dict = None,
+    title_font: dict | None = None,
+    xtick_font: dict | None = None,
 ) -> tuple:
     """
     Plot a polar histogram of a spatial network's bidirectional edge bearings.

@@ -1,4 +1,5 @@
 """General utility functions."""
+from __future__ import annotations
 
 import datetime as dt
 import logging as lg
@@ -66,7 +67,7 @@ def citation(style: str = "bibtex") -> None:
     print(msg)  # noqa: T201
 
 
-def ts(style: str = "datetime", template: str = None) -> str:
+def ts(style: str = "datetime", template: str | None = None) -> str:
     """
     Return current local timestamp as a string.
 
@@ -252,7 +253,9 @@ def config(  # type: ignore[no-untyped-def]
     settings.requests_kwargs = requests_kwargs
 
 
-def log(message: str, level: int = None, name: str = None, filename: str = None) -> None:
+def log(
+    message: str, level: int | None = None, name: str | None = None, filename: str | None = None
+) -> None:
     """
     Write a message to the logger.
 
