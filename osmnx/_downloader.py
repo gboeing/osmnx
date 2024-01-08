@@ -120,11 +120,15 @@ def _retrieve_from_cache(url: str, check_remark: bool = True) -> dict[Any, Any] 
         # return cached response for this url if exists, otherwise return None
         cache_filepath = _url_in_cache(url)
         if cache_filepath is not None:
-            response_json: dict[str, Any] = json.loads(cache_filepath.read_text(encoding="utf-8"))
+            response_json: dict[Any, Any] | list[Any] = json.loads(
+                cache_filepath.read_text(encoding="utf-8")
+            )
 
             # return None if check_remark is True and there is a server
             # remark in the cached response
-            if check_remark and "remark" in response_json:  # pragma: no cover
+            if (
+                check_remark and isinstance(response_json, dict) and "remark" in response_json
+            ):  # pragma: no cover
                 utils.log(
                     f"Ignoring cache file {str(cache_filepath)!r} because "
                     f"it contains a remark: {response_json['remark']!r}"
@@ -306,7 +310,7 @@ def _parse_response(response: requests.Response) -> dict[Any, Any] | list[Any]:
 
     # parse the response to JSON and log/raise exceptions
     try:
-        response_json: dict[str, Any] = response.json()
+        response_json: dict[Any, Any] | list[Any] = response.json()
     except JSONDecodeError as e:  # pragma: no cover
         msg = f"{domain!r} responded: {response.status_code} {response.reason} {response.text}"
         utils.log(msg, level=lg.ERROR)
@@ -315,7 +319,7 @@ def _parse_response(response: requests.Response) -> dict[Any, Any] | list[Any]:
         raise ResponseStatusCodeError(msg) from e
 
     # log any remarks if they exist
-    if "remark" in response_json:  # pragma: no cover
+    if isinstance(response_json, dict) and "remark" in response_json:  # pragma: no cover
         utils.log(f'{domain!r} remarked: {response_json["remark"]!r}', level=lg.WARNING)
 
     return response_json
