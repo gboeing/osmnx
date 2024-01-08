@@ -6,6 +6,7 @@ import itertools
 import multiprocessing as mp
 from collections.abc import Generator
 from collections.abc import Iterable
+from typing import Any
 from warnings import warn
 
 import networkx as nx
@@ -17,11 +18,11 @@ from . import utils_graph
 
 def shortest_path(
     G: nx.MultiDiGraph,
-    orig: int | Iterable,
-    dest: int | Iterable,
+    orig: int | Iterable[int],
+    dest: int | Iterable[int],
     weight: str = "length",
     cpus: int | None = 1,
-) -> list | None:
+) -> list[Any] | None:
     """
     Solve shortest path from origin node(s) to destination node(s).
 
@@ -93,7 +94,7 @@ def shortest_path(
 
 def k_shortest_paths(
     G: nx.MultiDiGraph, orig: int, dest: int, k: int, weight: str = "length"
-) -> Generator:
+) -> Generator[list[int], None, None]:
     """
     Solve `k` shortest paths from an origin node to a destination node.
 
@@ -125,7 +126,9 @@ def k_shortest_paths(
     yield from itertools.islice(paths_gen, 0, k)
 
 
-def _single_shortest_path(G: nx.MultiDiGraph, orig: int, dest: int, weight: str) -> list | None:
+def _single_shortest_path(
+    G: nx.MultiDiGraph, orig: int, dest: int, weight: str
+) -> list[int] | None:
     """
     Solve the shortest path from an origin node to a destination node.
 

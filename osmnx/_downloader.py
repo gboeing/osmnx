@@ -7,6 +7,7 @@ import logging as lg
 import socket
 from hashlib import sha1
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
 import requests
@@ -21,7 +22,7 @@ from ._errors import ResponseStatusCodeError
 _original_getaddrinfo = socket.getaddrinfo
 
 
-def _save_to_cache(url: str, response_json: dict, ok: bool) -> None:
+def _save_to_cache(url: str, response_json: dict[Any, Any] | list[Any], ok: bool) -> None:
     """
     Save a HTTP response JSON object to a file in the cache folder.
 
@@ -41,7 +42,7 @@ def _save_to_cache(url: str, response_json: dict, ok: bool) -> None:
     ----------
     url : string
         the URL of the request
-    response_json : dict
+    response_json : dict or list
         the JSON response
     ok : bool
         requests response.ok value
@@ -97,7 +98,7 @@ def _url_in_cache(url: str) -> Path | None:
     return filepath if filepath.is_file() else None
 
 
-def _retrieve_from_cache(url: str, check_remark: bool = True) -> dict | None:
+def _retrieve_from_cache(url: str, check_remark: bool = True) -> dict[Any, Any] | list[Any] | None:
     """
     Retrieve a HTTP response JSON object from the cache, if it exists.
 
@@ -111,7 +112,7 @@ def _retrieve_from_cache(url: str, check_remark: bool = True) -> dict | None:
 
     Returns
     -------
-    response_json : dict
+    response_json : dict or list
         cached response for url if it exists in the cache, otherwise None
     """
     # if the tool is configured to use the cache
@@ -119,7 +120,7 @@ def _retrieve_from_cache(url: str, check_remark: bool = True) -> dict | None:
         # return cached response for this url if exists, otherwise return None
         cache_filepath = _url_in_cache(url)
         if cache_filepath is not None:
-            response_json: dict = json.loads(cache_filepath.read_text(encoding="utf-8"))
+            response_json: dict[str, Any] = json.loads(cache_filepath.read_text(encoding="utf-8"))
 
             # return None if check_remark is True and there is a server
             # remark in the cached response
@@ -137,7 +138,7 @@ def _retrieve_from_cache(url: str, check_remark: bool = True) -> dict | None:
 
 def _get_http_headers(
     user_agent: str | None = None, referer: str | None = None, accept_language: str | None = None
-) -> dict:
+) -> dict[str, str]:
     """
     Update the default requests HTTP headers with OSMnx info.
 
@@ -285,7 +286,7 @@ def _hostname_from_url(url: str) -> str:
     return urlparse(url).netloc.split(":")[0]
 
 
-def _parse_response(response: requests.Response) -> dict:
+def _parse_response(response: requests.Response) -> dict[Any, Any] | list[Any]:
     """
     Parse JSON from a requests response and log the details.
 
@@ -296,7 +297,7 @@ def _parse_response(response: requests.Response) -> dict:
 
     Returns
     -------
-    response_json : dict
+    response_json : dict or list
     """
     # log the response size and domain
     domain = _hostname_from_url(response.url)
@@ -305,7 +306,7 @@ def _parse_response(response: requests.Response) -> dict:
 
     # parse the response to JSON and log/raise exceptions
     try:
-        response_json: dict = response.json()
+        response_json: dict[str, Any] = response.json()
     except JSONDecodeError as e:  # pragma: no cover
         msg = f"{domain!r} responded: {response.status_code} {response.reason} {response.text}"
         utils.log(msg, level=lg.ERROR)

@@ -199,7 +199,7 @@ def _make_overpass_settings() -> str:
     return settings.overpass_settings.format(timeout=settings.timeout, maxsize=maxsize)
 
 
-def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list:
+def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list[str]:
     """
     Subdivide query polygon and return list of coordinate strings.
 
@@ -235,14 +235,14 @@ def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list:
     return coord_strs
 
 
-def _create_overpass_query(polygon_coord_str: list, tags: dict) -> str:
+def _create_overpass_query(polygon_coord_str: str, tags: dict[str, bool | str | list[str]]) -> str:
     """
     Create an Overpass features query string based on passed tags.
 
     Parameters
     ----------
-    polygon_coord_str : list
-        list of lat lon coordinates
+    polygon_coord_str : st
+        string of lat lon coordinates
     tags : dict
         dict of tags used for finding elements in the search area
 
@@ -258,7 +258,7 @@ def _create_overpass_query(polygon_coord_str: list, tags: dict) -> str:
     if not isinstance(tags, dict):  # pragma: no cover
         raise TypeError(err_msg)
 
-    tags_dict: dict[Any] = {}
+    tags_dict: dict[str, bool | str | list[str]] = {}
     for key, value in tags.items():
         if isinstance(value, bool):
             tags_dict[key] = value
@@ -275,7 +275,7 @@ def _create_overpass_query(polygon_coord_str: list, tags: dict) -> str:
             raise TypeError(err_msg)
 
     # convert the tags dict into a list of {tag:value} dicts
-    tags_list = []
+    tags_list: list[dict[str, bool | str | list[str]]] = []
     for key, value in tags_dict.items():
         if isinstance(value, bool):
             tags_list.append({key: value})
@@ -304,7 +304,7 @@ def _create_overpass_query(polygon_coord_str: list, tags: dict) -> str:
 
 def _download_overpass_network(
     polygon: Polygon | MultiPolygon, network_type: str, custom_filter: str | None
-) -> Generator:
+) -> Generator[dict[Any, Any] | list[Any], None, None]:
     """
     Retrieve networked ways and nodes within boundary from the Overpass API.
 
@@ -340,7 +340,9 @@ def _download_overpass_network(
         yield _overpass_request(OrderedDict(data=query_str))
 
 
-def _download_overpass_features(polygon: Polygon, tags: dict) -> Generator:
+def _download_overpass_features(
+    polygon: Polygon, tags: dict[str, bool | str | list[str]]
+) -> Generator[dict[Any, Any] | list[Any], None, None]:
     """
     Retrieve OSM features within boundary from the Overpass API.
 
@@ -367,8 +369,8 @@ def _download_overpass_features(polygon: Polygon, tags: dict) -> Generator:
 
 
 def _overpass_request(
-    data: OrderedDict, pause: float | None = None, error_pause: float = 60
-) -> dict:
+    data: OrderedDict[str, Any], pause: float | None = None, error_pause: float = 60
+) -> dict[Any, Any] | list[Any]:
     """
     Send a HTTP POST request to the Overpass API and return response.
 
@@ -385,7 +387,7 @@ def _overpass_request(
 
     Returns
     -------
-    response_json : dict
+    response_json : dict or list
     """
     # resolve url to same IP even if there is server round-robin redirecting
     _downloader._config_dns(settings.overpass_endpoint)

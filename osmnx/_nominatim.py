@@ -15,8 +15,11 @@ from . import utils
 
 
 def _download_nominatim_element(
-    query: str | dict, by_osmid: bool = False, limit: int = 1, polygon_geojson: bool = True
-) -> dict:
+    query: str | dict[str, str],
+    by_osmid: bool = False,
+    limit: int = 1,
+    polygon_geojson: bool = True,
+) -> dict[Any, Any] | list[Any]:
     """
     Retrieve an OSM element from the Nominatim API.
 
@@ -33,11 +36,11 @@ def _download_nominatim_element(
 
     Returns
     -------
-    response_json : dict
+    response_json : dict or list
         JSON response from the Nominatim server
     """
     # define the parameters
-    params: OrderedDict[Any] = OrderedDict()
+    params: OrderedDict[str, Any] = OrderedDict()
     params["format"] = "json"
     params["polygon_geojson"] = int(polygon_geojson)
 
@@ -70,8 +73,11 @@ def _download_nominatim_element(
 
 
 def _nominatim_request(
-    params: OrderedDict, request_type: str = "search", pause: float = 1, error_pause: float = 60
-) -> dict:
+    params: OrderedDict[str, Any],
+    request_type: str = "search",
+    pause: float = 1,
+    error_pause: float = 60,
+) -> dict[Any, Any] | list[Any]:
     """
     Send a HTTP GET request to the Nominatim API and return response.
 
@@ -89,7 +95,7 @@ def _nominatim_request(
 
     Returns
     -------
-    response_json : dict
+    response_json : dict or list
     """
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
         msg = 'Nominatim request_type must be "search", "reverse", or "lookup"'

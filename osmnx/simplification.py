@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging as lg
 from collections.abc import Generator
+from typing import Any
 
 import geopandas as gpd
 import networkx as nx
@@ -84,7 +85,9 @@ def _is_endpoint(G: nx.MultiDiGraph, node: int, strict: bool = True) -> bool:
     return False
 
 
-def _build_path(G: nx.MultiDiGraph, endpoint: int, endpoint_successor: int, endpoints: set) -> list:
+def _build_path(
+    G: nx.MultiDiGraph, endpoint: int, endpoint_successor: int, endpoints: set[int]
+) -> list[int]:
     """
     Build a path of nodes from one endpoint node to next endpoint node.
 
@@ -154,7 +157,9 @@ def _build_path(G: nx.MultiDiGraph, endpoint: int, endpoint_successor: int, endp
     return path
 
 
-def _get_paths_to_simplify(G: nx.MultiDiGraph, strict: bool = True) -> Generator:
+def _get_paths_to_simplify(
+    G: nx.MultiDiGraph, strict: bool = True
+) -> Generator[list[int], None, None]:
     """
     Generate all the paths to be simplified between endpoint nodes.
 
@@ -271,7 +276,7 @@ def simplify_graph(
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
         merged_edges = []
-        path_attributes: dict = {}
+        path_attributes: dict[str, Any] = {}
         for u, v in zip(path[:-1], path[1:]):
             if track_merged:
                 # keep track of the edges that were merged

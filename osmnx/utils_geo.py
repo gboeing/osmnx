@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from typing import Any
 from warnings import warn
 
 import geopandas as gpd
@@ -55,7 +56,7 @@ def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
     return lines.interpolate(np.random.rand(n), normalized=True)
 
 
-def interpolate_points(geom: LineString, dist: float) -> Generator:
+def interpolate_points(geom: LineString, dist: float) -> Generator[tuple[float, float], None, None]:
     """
     Interpolate evenly spaced points along a LineString.
 
@@ -342,7 +343,9 @@ def _quadrat_cut_geometry(geometry: Polygon | MultiPolygon, quadrat_width: float
     return MultiPolygon(geometries)
 
 
-def _intersect_index_quadrats(geometries: gpd.GeoSeries, polygon: Polygon | MultiPolygon) -> set:
+def _intersect_index_quadrats(
+    geometries: gpd.GeoSeries, polygon: Polygon | MultiPolygon
+) -> set[Any]:
     """
     Identify geometries that intersect a (Multi)Polygon.
 
@@ -390,7 +393,10 @@ def _intersect_index_quadrats(geometries: gpd.GeoSeries, polygon: Polygon | Mult
 
 
 def bbox_from_point(
-    point: tuple, dist: float = 1000, project_utm: bool = False, return_crs: bool = False
+    point: tuple[float, float],
+    dist: float = 1000,
+    project_utm: bool = False,
+    return_crs: bool = False,
 ) -> tuple:
     """
     Create a bounding box around a (lat, lon) point.

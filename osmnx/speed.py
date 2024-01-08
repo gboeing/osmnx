@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 from typing import Callable
 from warnings import warn
 
@@ -15,10 +16,10 @@ from . import utils_graph
 
 def add_edge_speeds(
     G: nx.MultiDiGraph,
-    hwy_speeds: dict | None = None,
+    hwy_speeds: dict[str, float] | None = None,
     fallback: float | None = None,
     precision: int | None = None,
-    agg: Callable = np.mean,
+    agg: Callable[[Any], Any] = np.mean,
 ) -> nx.MultiDiGraph:
     """
     Add edge speeds (km per hour) to graph as new `speed_kph` edge attributes.
@@ -190,7 +191,7 @@ def add_edge_travel_times(G: nx.MultiDiGraph, precision: int | None = None) -> n
 
 
 def _clean_maxspeed(
-    maxspeed: str, agg: Callable = np.mean, convert_mph: bool = True
+    maxspeed: str, agg: Callable[[Any], Any] = np.mean, convert_mph: bool = True
 ) -> float | None:
     """
     Clean a maxspeed string and convert mph to kph if necessary.
@@ -234,7 +235,9 @@ def _clean_maxspeed(
         return None
 
 
-def _collapse_multiple_maxspeed_values(value: str | list[str], agg: Callable) -> int | str | None:
+def _collapse_multiple_maxspeed_values(
+    value: str | list[str], agg: Callable[[Any], Any]
+) -> int | str | None:
     """
     Collapse a list of maxspeed values to a single value.
 

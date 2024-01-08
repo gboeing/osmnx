@@ -23,7 +23,7 @@ from . import utils
 from ._errors import InsufficientResponseError
 
 
-def geocode(query: str) -> tuple:
+def geocode(query: str) -> tuple[float, float]:
     """
     Geocode place names or addresses to (lat, lon) with the Nominatim API.
 
@@ -40,7 +40,7 @@ def geocode(query: str) -> tuple:
         the (lat, lon) coordinates returned by the geocoder
     """
     # define the parameters
-    params: OrderedDict[Any] = OrderedDict()
+    params: OrderedDict[str, Any] = OrderedDict()
     params["format"] = "json"
     params["limit"] = 1
     params["dedupe"] = 0  # prevent deduping to get precise number of results
@@ -61,7 +61,7 @@ def geocode(query: str) -> tuple:
 
 
 def geocode_to_gdf(
-    query: str | dict | list[str | dict],
+    query: str | dict[str, str] | list[str | dict[str, str]],
     which_result: int | None = None,
     by_osmid: bool = False,
     buffer_dist: float | None = None,
@@ -161,7 +161,9 @@ def geocode_to_gdf(
     return gdf
 
 
-def _geocode_query_to_gdf(query: str | dict, which_result: int, by_osmid: bool) -> gpd.GeoDataFrame:
+def _geocode_query_to_gdf(
+    query: str | dict[str, str], which_result: int, by_osmid: bool
+) -> gpd.GeoDataFrame:
     """
     Geocode a single place query to a GeoDataFrame.
 
@@ -240,7 +242,7 @@ def _geocode_query_to_gdf(query: str | dict, which_result: int, by_osmid: bool) 
     return gdf
 
 
-def _get_first_polygon(results: list, query: str) -> dict:
+def _get_first_polygon(results: list[dict[str, Any]], query: str) -> dict[str, Any]:
     """
     Choose first result of geometry type (Multi)Polygon from list of results.
 
@@ -257,7 +259,7 @@ def _get_first_polygon(results: list, query: str) -> dict:
         the chosen result
     """
     polygon_types = {"Polygon", "MultiPolygon"}
-    result: dict
+
     for result in results:
         if "geojson" in result and result["geojson"]["type"] in polygon_types:
             return result

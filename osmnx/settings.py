@@ -136,9 +136,10 @@ from __future__ import annotations
 
 import logging as lg
 from pathlib import Path
+from typing import Any
 
 all_oneway: bool = False
-bidirectional_network_types: list = ["walk"]
+bidirectional_network_types: list[str] = ["walk"]
 cache_folder: str | Path = "./cache"
 cache_only_mode: bool = False
 data_folder: str | Path = "./data"
@@ -162,18 +163,27 @@ max_query_area_size: float = 50 * 1000 * 50 * 1000
 memory: int | None = None
 nominatim_endpoint: str = "https://nominatim.openstreetmap.org/"
 nominatim_key: str | None = None
-osm_xml_node_attrs: list = ["id", "timestamp", "uid", "user", "version", "changeset", "lat", "lon"]
-osm_xml_node_tags: list = ["highway"]
-osm_xml_way_attrs: list = ["id", "timestamp", "uid", "user", "version", "changeset"]
-osm_xml_way_tags: list = ["highway", "lanes", "maxspeed", "name", "oneway"]
+osm_xml_node_attrs: list[str] = [
+    "id",
+    "timestamp",
+    "uid",
+    "user",
+    "version",
+    "changeset",
+    "lat",
+    "lon",
+]
+osm_xml_node_tags: list[str] = ["highway"]
+osm_xml_way_attrs: list[str] = ["id", "timestamp", "uid", "user", "version", "changeset"]
+osm_xml_way_tags: list[str] = ["highway", "lanes", "maxspeed", "name", "oneway"]
 overpass_endpoint: str = "https://overpass-api.de/api"
 overpass_rate_limit: bool = True
 overpass_settings: str = "[out:json][timeout:{timeout}]{maxsize}"
-requests_kwargs: dict = {}
+requests_kwargs: dict[str, Any] = {}
 timeout: float = 180
 use_cache: bool = True
-useful_tags_node: list = ["ref", "highway"]
-useful_tags_way: list = [
+useful_tags_node: list[str] = ["ref", "highway"]
+useful_tags_way: list[str] = [
     "bridge",
     "tunnel",
     "oneway",

@@ -15,7 +15,6 @@ import os
 import tempfile
 from collections import OrderedDict
 from pathlib import Path
-from typing import Any
 from xml.etree import ElementTree as etree
 
 import folium
@@ -441,7 +440,7 @@ def test_api_endpoints() -> None:
     ox.settings.overpass_rate_limit = default_overpass_rate_limit
     ox.settings.timeout = default_timeout
 
-    params: OrderedDict[Any] = OrderedDict()
+    params: OrderedDict[str, int | str] = OrderedDict()
     params["format"] = "json"
     params["address_details"] = 0
 

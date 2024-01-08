@@ -7,6 +7,7 @@ import time
 from collections.abc import Iterable
 from hashlib import sha1
 from pathlib import Path
+from typing import Any
 from warnings import warn
 
 import networkx as nx
@@ -80,7 +81,7 @@ def add_edge_grades(
     return G
 
 
-def _query_raster(nodes: pd.DataFrame, filepath: str | Path, band: int) -> zip:
+def _query_raster(nodes: pd.DataFrame, filepath: str | Path, band: int) -> zip[Any]:
     """
     Query a raster for values at coordinates in a DataFrame's x/y columns.
 
@@ -262,7 +263,11 @@ def add_node_elevations_google(
 
         # download and append these elevation results to list of all results
         response_json = _elevation_request(url, pause)
-        if "results" in response_json and len(response_json["results"]) > 0:
+        if (
+            isinstance(response_json, dict)
+            and "results" in response_json
+            and len(response_json["results"]) > 0
+        ):
             results.extend(response_json["results"])
         else:
             raise InsufficientResponseError(str(response_json))
@@ -284,7 +289,7 @@ def add_node_elevations_google(
     return G
 
 
-def _elevation_request(url: str, pause: float) -> dict:
+def _elevation_request(url: str, pause: float) -> dict[Any, Any] | list[Any]:
     """
     Send a HTTP GET request to Google Maps-style Elevation API.
 
@@ -297,7 +302,7 @@ def _elevation_request(url: str, pause: float) -> dict:
 
     Returns
     -------
-    response_json : dict
+    response_json : dict or list
     """
     # check if request already exists in cache
     cached_response_json = _downloader._retrieve_from_cache(url)

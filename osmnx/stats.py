@@ -17,6 +17,7 @@ from __future__ import annotations
 import itertools
 import logging as lg
 from collections import Counter
+from typing import Any
 
 import networkx as nx
 import numpy as np
@@ -28,7 +29,7 @@ from . import utils
 from . import utils_graph
 
 
-def streets_per_node(G: nx.MultiDiGraph) -> dict:
+def streets_per_node(G: nx.MultiDiGraph) -> dict[str, int]:
     """
     Count streets (undirected edges) incident on each node.
 
@@ -66,7 +67,7 @@ def streets_per_node_avg(G: nx.MultiDiGraph) -> float:
     return float(sum(spn_vals) / len(G.nodes))
 
 
-def streets_per_node_counts(G: nx.MultiDiGraph) -> dict:
+def streets_per_node_counts(G: nx.MultiDiGraph) -> dict[int, int]:
     """
     Calculate streets-per-node counts.
 
@@ -85,7 +86,7 @@ def streets_per_node_counts(G: nx.MultiDiGraph) -> dict:
     return {i: spn_vals.count(i) for i in range(int(max(spn_vals)) + 1)}
 
 
-def streets_per_node_proportions(G: nx.MultiDiGraph) -> dict:
+def streets_per_node_proportions(G: nx.MultiDiGraph) -> dict[int, float]:
     """
     Calculate streets-per-node proportions.
 
@@ -259,7 +260,7 @@ def circuity_avg(Gu: nx.MultiGraph) -> float | None:
         return None
 
 
-def count_streets_per_node(G: nx.MultiDiGraph, nodes: list | None = None) -> dict:
+def count_streets_per_node(G: nx.MultiDiGraph, nodes: list[int] | None = None) -> dict[int, int]:
     """
     Count how many physical street segments connect to each node in a graph.
 
@@ -312,7 +313,7 @@ def count_streets_per_node(G: nx.MultiDiGraph, nodes: list | None = None) -> dic
 
 def basic_stats(
     G: nx.MultiDiGraph, area: float | None = None, clean_int_tol: float | None = None
-) -> dict:
+) -> dict[str, Any]:
     """
     Calculate basic descriptive geometric and topological measures of a graph.
 
@@ -358,7 +359,7 @@ def basic_stats(
           - `streets_per_node_proportions` - see `streets_per_node_proportions` function documentation
     """
     Gu = utils_graph.get_undirected(G)
-    stats: dict = {}
+    stats: dict[str, Any] = {}
 
     stats["n"] = len(G.nodes)
     stats["m"] = len(G.edges)

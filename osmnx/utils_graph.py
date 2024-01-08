@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+from typing import Any
 from typing import Literal
 from typing import overload
 from warnings import warn
@@ -176,7 +177,11 @@ def graph_to_gdfs(
             y_lookup = nx.get_node_attributes(G, "y")
 
             def _make_edge_geometry(
-                u: int, v: int, data: dict, x: dict = x_lookup, y: dict = y_lookup
+                u: int,
+                v: int,
+                data: dict[str, Any],
+                x: dict[int, float] = x_lookup,
+                y: dict[int, float] = y_lookup,
             ) -> LineString:
                 if "geometry" in data:
                     return data["geometry"]
@@ -217,7 +222,9 @@ def graph_to_gdfs(
 
 
 def graph_from_gdfs(
-    gdf_nodes: gpd.GeoDataFrame, gdf_edges: gpd.GeoDataFrame, graph_attrs: dict | None = None
+    gdf_nodes: gpd.GeoDataFrame,
+    gdf_edges: gpd.GeoDataFrame,
+    graph_attrs: dict[str, Any] | None = None,
 ) -> nx.MultiDiGraph:
     """
     Convert node and edge GeoDataFrames to a MultiDiGraph.
@@ -295,7 +302,7 @@ def graph_from_gdfs(
     return G
 
 
-def route_to_gdf(G: nx.MultiDiGraph, route: list, weight: str = "length") -> gpd.GeoDataFrame:
+def route_to_gdf(G: nx.MultiDiGraph, route: list[int], weight: str = "length") -> gpd.GeoDataFrame:
     """
     Return a GeoDataFrame of the edges in a path, in order.
 
@@ -446,7 +453,7 @@ def get_digraph(G: nx.MultiDiGraph, weight: str = "length") -> nx.DiGraph:
     """
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
-    to_remove: list = []
+    to_remove: list[tuple[int, int, int]] = []
 
     # identify all the parallel edges in the MultiDiGraph
     parallels = ((u, v) for u, v in G.edges(keys=False) if len(G.get_edge_data(u, v)) > 1)
@@ -526,7 +533,7 @@ def get_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
     return H
 
 
-def _is_duplicate_edge(data1: dict, data2: dict) -> bool:
+def _is_duplicate_edge(data1: dict[str, Any], data2: dict[str, Any]) -> bool:
     """
     Check if two graph edge data dicts have the same osmid and geometry.
 

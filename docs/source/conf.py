@@ -9,6 +9,7 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 import sys
 from pathlib import Path
+from typing import Any
 
 # go up two levels from current working dir (/docs/source) to package root
 pkg_root_path = str(Path.cwd().parent.parent)
@@ -46,9 +47,9 @@ language = "en"
 needs_sphinx = "7"  # same value as pinned in /docs/requirements.txt
 root_doc = "index"
 source_suffix = ".rst"
-templates_path: list = []
+templates_path: list[Any] = []
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-html_static_path: list = []
+html_static_path: list[Any] = []
 html_theme = "furo"
