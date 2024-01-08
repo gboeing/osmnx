@@ -285,7 +285,7 @@ def log(message: str, level: int = None, name: str = None, filename: str = None)
     if settings.log_file:
         # get the current logger (or create a new one, if none), then log
         # message at requested level
-        logger = _get_logger(level=level, name=name, filename=filename)
+        logger = _get_logger(name=name, filename=filename)
         if level == lg.DEBUG:
             logger.debug(message)
         elif level == lg.INFO:
@@ -305,8 +305,8 @@ def log(message: str, level: int = None, name: str = None, filename: str = None)
             # print explicitly to terminal in case Jupyter has captured stdout
             if getattr(sys.stdout, "_original_stdstream_copy", None) is not None:
                 # redirect the Jupyter-captured pipe back to original
-                os.dup2(sys.stdout._original_stdstream_copy, sys.__stdout__.fileno())
-                sys.stdout._original_stdstream_copy = None
+                os.dup2(sys.stdout._original_stdstream_copy, sys.__stdout__.fileno())  # type: ignore[attr-defined]
+                sys.stdout._original_stdstream_copy = None  # type: ignore[attr-defined]
             with redirect_stdout(sys.__stdout__):
                 print(message, file=sys.__stdout__, flush=True)
         except OSError:
@@ -314,14 +314,12 @@ def log(message: str, level: int = None, name: str = None, filename: str = None)
             print(message, flush=True)  # noqa: T201
 
 
-def _get_logger(level: int, name: str, filename: str) -> lg.Logger:
+def _get_logger(name: str, filename: str) -> lg.Logger:
     """
     Create a logger or return the current one if already instantiated.
 
     Parameters
     ----------
-    level : int
-        one of Python's logger.level constants
     name : string
         name of the logger
     filename : string
@@ -333,20 +331,17 @@ def _get_logger(level: int, name: str, filename: str) -> lg.Logger:
     """
     logger = lg.getLogger(name)
 
-    # if a logger with this name is not already set up
-    if not getattr(logger, "handler_set", None):
-        # get today's date and construct a log filename
-        log_filename = Path(settings.logs_folder) / f'{filename}_{ts(style="date")}.log'
-
-        # if the logs folder does not already exist, create it
-        log_filename.parent.mkdir(parents=True, exist_ok=True)
+    # if a logger with this name is not already set up with a handler
+    if not len(logger.handlers) > 0:
+        # make log filepath and create parent folder if it doesn't exist
+        filepath = Path(settings.logs_folder) / f'{filename}_{ts(style="date")}.log'
+        filepath.parent.mkdir(parents=True, exist_ok=True)
 
         # create file handler and log formatter and set them up
-        handler = lg.FileHandler(log_filename, encoding="utf-8")
-        formatter = lg.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
-        handler.setFormatter(formatter)
+        handler = lg.FileHandler(filepath, encoding="utf-8")
+        handler.setLevel(lg.DEBUG)
+        handler.setFormatter(lg.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
         logger.addHandler(handler)
-        logger.setLevel(level)
-        logger.handler_set = True
+        logger.setLevel(lg.DEBUG)
 
     return logger

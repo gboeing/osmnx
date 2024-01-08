@@ -36,7 +36,7 @@ from shapely.geometry import Polygon
 
 import osmnx as ox
 
-ox.config(log_console=True)
+ox.config(log_console=True)  # type: ignore[no-untyped-call]
 ox.settings.log_console = True
 ox.settings.log_file = True
 ox.settings.use_cache = True
@@ -303,24 +303,25 @@ def test_routing() -> None:
 
     # test non-numeric weight (should raise ValueError)
     with pytest.raises(ValueError, match="contains non-numeric values"):
-        route = ox.shortest_path(G, orig_node, dest_node, weight="highway")
+        route1 = ox.shortest_path(G, orig_node, dest_node, weight="highway")
 
     # mismatch iterable and non-iterable orig/dest should raise ValueError
     msg = "orig and dest must either both be iterable or neither must be iterable"
     with pytest.raises(ValueError, match=msg):
-        route = ox.shortest_path(G, orig_node, [dest_node])
+        route2 = ox.shortest_path(G, orig_node, [dest_node])
 
     # test missing weight (should raise warning)
-    route = ox.shortest_path(G, orig_node, dest_node, weight="time")
+    route3 = ox.shortest_path(G, orig_node, dest_node, weight="time")
     # test good weight
-    route = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
-    route = ox.distance.shortest_path(G, orig_node, dest_node, weight="travel_time")  # type: ignore[no-untyped-call]
+    route4 = ox.distance.shortest_path(G, orig_node, dest_node, weight="travel_time")  # type: ignore[no-untyped-call]
+    route5 = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
+    assert route5 is not None
 
-    route_edges = ox.utils_graph.route_to_gdf(G, route, "travel_time")
-    attributes = ox.utils_graph.get_route_edge_attributes(G, route)  # type: ignore[no-untyped-call]
-    attributes = ox.utils_graph.get_route_edge_attributes(G, route, "travel_time")  # type: ignore[no-untyped-call]
+    route_edges = ox.utils_graph.route_to_gdf(G, route5, "travel_time")
+    attributes = ox.utils_graph.get_route_edge_attributes(G, route5)  # type: ignore[no-untyped-call]
+    attributes = ox.utils_graph.get_route_edge_attributes(G, route5, "travel_time")  # type: ignore[no-untyped-call]
 
-    fig, ax = ox.plot_graph_route(G, route, save=True)
+    fig, ax = ox.plot_graph_route(G, route5, save=True)
 
     # test multiple origins-destinations
     n = 5
@@ -342,15 +343,15 @@ def test_routing() -> None:
     assert ox.distance.euclidean_dist_vec(0, 0, 1, 1) == pytest.approx(1.4142135)  # type: ignore[no-untyped-call]
 
     # test folium with keyword arguments to pass to folium.PolyLine
-    gm = ox.plot_graph_folium(G, popup_attribute="name", color="#333333", weight=5, opacity=0.7)
-    rm = ox.plot_route_folium(G, route, color="#cc0000", weight=5, opacity=0.7)
+    gm = ox.plot_graph_folium(G, popup_attribute="name", color="#333333", weight=5, opacity=0.7)  # type: ignore[no-untyped-call]
+    rm = ox.plot_route_folium(G, route5, color="#cc0000", weight=5, opacity=0.7)  # type: ignore[no-untyped-call]
 
     # test calling folium plotters with FeatureGroup instead of Map, and extra kwargs
     fg = folium.FeatureGroup(name="legend name", show=True)
-    gm = ox.plot_graph_folium(G, graph_map=fg)
+    gm = ox.plot_graph_folium(G, graph_map=fg)  # type: ignore[no-untyped-call]
     assert isinstance(gm, folium.FeatureGroup)
 
-    rm = ox.plot_route_folium(G, route, route_map=fg, tooltip="x")
+    rm = ox.plot_route_folium(G, route5, route_map=fg, tooltip="x")  # type: ignore[no-untyped-call]
     assert isinstance(rm, folium.FeatureGroup)
 
 
@@ -477,8 +478,8 @@ def test_graph_save_load() -> None:
     """Test saving/loading graphs to/from disk."""
     # save graph as shapefile and geopackage
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
-    ox.save_graph_shapefile(G, directed=True)
-    ox.save_graph_shapefile(G, filepath=Path(ox.settings.data_folder) / "graph_shapefile")
+    ox.save_graph_shapefile(G, directed=True)  # type: ignore[no-untyped-call]
+    ox.save_graph_shapefile(G, filepath=Path(ox.settings.data_folder) / "graph_shapefile")  # type: ignore[no-untyped-call]
     ox.save_graph_geopackage(G, directed=False)
 
     # save/load geopackage and convert graph to/from node/edge GeoDataFrames
@@ -618,33 +619,33 @@ def test_features() -> None:
     """Test downloading features from Overpass."""
     # geometries_from_bbox - bounding box query to return no data
     with pytest.raises(ox._errors.InsufficientResponseError):
-        gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
+        gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})  # type: ignore[no-untyped-call]
 
     # geometries_from_bbox - successful
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
     tags1 = {"landuse": True, "building": True, "highway": True}
-    gdf = ox.geometries_from_bbox(north, south, east, west, tags=tags1)
+    gdf = ox.geometries_from_bbox(north, south, east, west, tags=tags1)  # type: ignore[no-untyped-call]
     fig, ax = ox.plot_footprints(gdf)
     fig, ax = ox.plot_footprints(gdf, ax=ax, bbox=(10, 0, 10, 0))
 
     # geometries_from_point - tests multipolygon creation
-    gdf = ox.geometries_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)
+    gdf = ox.geometries_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)  # type: ignore[no-untyped-call]
 
     # geometries_from_place - includes test of list of places
     tags2 = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
-    gdf = ox.geometries_from_place(place1, tags=tags2, buffer_dist=0)
-    gdf = ox.geometries_from_place([place1], tags=tags2)
+    gdf = ox.geometries_from_place(place1, tags=tags2, buffer_dist=0)  # type: ignore[no-untyped-call]
+    gdf = ox.geometries_from_place([place1], tags=tags2)  # type: ignore[no-untyped-call]
 
     # geometries_from_polygon
     polygon = ox.geocode_to_gdf(place1).geometry.iloc[0]
-    ox.geometries_from_polygon(polygon, tags2)
+    ox.geometries_from_polygon(polygon, tags2)  # type: ignore[no-untyped-call]
 
     # geometries_from_address - includes testing overpass settings and snapshot from 2019
     ox.settings.overpass_settings = '[out:json][timeout:200][date:"2019-10-28T19:20:00Z"]'
-    gdf = ox.geometries_from_address(address, tags=tags2)
+    gdf = ox.geometries_from_address(address, tags=tags2)  # type: ignore[no-untyped-call]
 
     # geometries_from_xml - tests error handling of clipped XMLs with incomplete geometry
-    gdf = ox.geometries_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")
+    gdf = ox.geometries_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")  # type: ignore[no-untyped-call]
 
     # test loading a geodataframe from a local .osm xml file
     with bz2.BZ2File("tests/input_data/West-Oakland.osm.bz2") as f:
@@ -652,6 +653,6 @@ def test_features() -> None:
         os.write(handle, f.read())
         os.close(handle)
     for filename in ("tests/input_data/West-Oakland.osm.bz2", temp_filename):
-        gdf = ox.geometries_from_xml(filename)
+        gdf = ox.geometries_from_xml(filename)  # type: ignore[no-untyped-call]
         assert "Willow Street" in gdf["name"].to_numpy()
     Path.unlink(Path(temp_filename))

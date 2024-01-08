@@ -43,7 +43,7 @@ from ._errors import InsufficientResponseError
 
 # dict of tags to determine if closed ways should be polygons, based on JSON
 # from https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features
-_POLYGON_FEATURES = {
+_POLYGON_FEATURES: dict[str, dict[str, str | list[str]]] = {
     "building": {"polygon": "all"},
     "highway": {"polygon": "passlist", "values": ["services", "rest_area", "escape", "elevator"]},
     "natural": {
@@ -700,10 +700,10 @@ def _is_closed_way_a_polygon(element: dict) -> bool:
 
                 # Determine if the key is for a blocklist or passlist in
                 # _POLYGON_FEATURES dict
-                blocklist_or_passlist = _POLYGON_FEATURES.get(key).get("polygon")
+                blocklist_or_passlist = _POLYGON_FEATURES[key].get("polygon")
 
                 # Get values for the key from the _POLYGON_FEATURES dict
-                polygon_features_values = _POLYGON_FEATURES.get(key).get("values")
+                polygon_features_values = _POLYGON_FEATURES[key].get("values")
 
                 # if all features with that key should be polygons -> Polygon
                 if blocklist_or_passlist == "all":
@@ -714,14 +714,14 @@ def _is_closed_way_a_polygon(element: dict) -> bool:
                 elif blocklist_or_passlist == "blocklist":
                     # if the value for that key in the element is not in
                     # the blocklist -> Polygon
-                    if key_value not in polygon_features_values:
+                    if key_value not in polygon_features_values:  # type: ignore[operator]
                         is_polygon = True
 
                 # if the key is for a passlist i.e. specific tags should
                 # become Polygons, and if the value for that key in the
                 # element is in the passlist -> Polygon
                 elif (blocklist_or_passlist == "passlist") and (
-                    key_value in polygon_features_values
+                    key_value in polygon_features_values  # type: ignore[operator]
                 ):
                     is_polygon = True
 

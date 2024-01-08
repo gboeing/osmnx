@@ -178,7 +178,7 @@ def plot_graph(
     show: bool = True,
     close: bool = False,
     save: bool = False,
-    filepath: str = None,
+    filepath: str | Path | None = None,
     dpi: int = 300,
     bbox: tuple = None,
 ) -> tuple:
@@ -220,7 +220,7 @@ def plot_graph(
         if True, call pyplot.close() to close the figure
     save : bool
         if True, save the figure to disk at filepath
-    filepath : string
+    filepath : string or pathlib.Path
         if save is True, the path to the file. file format determined from
         extension. if None, use settings.imgs_folder/image.png
     dpi : int
@@ -620,7 +620,7 @@ def plot_footprints(
     save: bool = False,
     show: bool = True,
     close: bool = False,
-    filepath: str = None,
+    filepath: str | Path | None = None,
     dpi: int = 600,
 ) -> tuple:
     """
@@ -653,7 +653,7 @@ def plot_footprints(
         if True, call pyplot.show() to show the figure
     close : bool
         if True, call pyplot.close() to close the figure
-    filepath : string
+    filepath : string or pathlib.Path
         if save is True, the path to the file. file format determined from
         extension. if None, use settings.imgs_folder/image.png
     dpi : int
@@ -889,7 +889,7 @@ def _save_and_show(
     save: bool = False,
     show: bool = True,
     close: bool = True,
-    filepath: str = None,
+    filepath: str | Path | None = None,
     dpi: int = 300,
 ) -> tuple:
     """
