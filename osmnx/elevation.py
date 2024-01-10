@@ -263,11 +263,7 @@ def add_node_elevations_google(
 
         # download and append these elevation results to list of all results
         response_json = _elevation_request(url, pause)
-        if (
-            isinstance(response_json, dict)
-            and "results" in response_json
-            and len(response_json["results"]) > 0
-        ):
+        if "results" in response_json and len(response_json["results"]) > 0:
             results.extend(response_json["results"])
         else:
             raise InsufficientResponseError(str(response_json))
@@ -289,7 +285,7 @@ def add_node_elevations_google(
     return G
 
 
-def _elevation_request(url: str, pause: float) -> dict[Any, Any] | list[Any]:
+def _elevation_request(url: str, pause: float) -> dict[Any, Any]:
     """
     Send a HTTP GET request to Google Maps-style Elevation API.
 
@@ -302,10 +298,10 @@ def _elevation_request(url: str, pause: float) -> dict[Any, Any] | list[Any]:
 
     Returns
     -------
-    response_json : dict or list
+    response_json : dict
     """
     # check if request already exists in cache
-    cached_response_json = _downloader._retrieve_from_cache(url)
+    cached_response_json: dict[Any, Any] | None = _downloader._retrieve_from_cache(url)  # type: ignore[assignment]
     if cached_response_json is not None:
         return cached_response_json
 
@@ -323,6 +319,6 @@ def _elevation_request(url: str, pause: float) -> dict[Any, Any] | list[Any]:
         **settings.requests_kwargs,
     )
 
-    response_json = _downloader._parse_response(response)
+    response_json: dict[Any, Any] = _downloader._parse_response(response)  # type: ignore[assignment]
     _downloader._save_to_cache(url, response_json, response.ok)
     return response_json

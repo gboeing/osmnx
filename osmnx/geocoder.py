@@ -45,7 +45,7 @@ def geocode(query: str) -> tuple[float, float]:
     params["limit"] = 1
     params["dedupe"] = 0  # prevent deduping to get precise number of results
     params["q"] = query
-    response_json = _nominatim._nominatim_request(params=params)
+    response_json: list[dict[str, Any]] = _nominatim._nominatim_request(params=params)
 
     # if results were returned, parse lat and lon out of the result
     if response_json and "lat" in response_json[0] and "lon" in response_json[0]:

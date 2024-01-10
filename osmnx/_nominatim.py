@@ -19,7 +19,7 @@ def _download_nominatim_element(
     by_osmid: bool = False,
     limit: int = 1,
     polygon_geojson: bool = True,
-) -> dict[Any, Any] | list[Any]:
+) -> list[dict[str, Any]]:
     """
     Retrieve an OSM element from the Nominatim API.
 
@@ -36,7 +36,7 @@ def _download_nominatim_element(
 
     Returns
     -------
-    response_json : dict or list
+    response_json : list
         JSON response from the Nominatim server
     """
     # define the parameters
@@ -77,7 +77,7 @@ def _nominatim_request(
     request_type: str = "search",
     pause: float = 1,
     error_pause: float = 60,
-) -> dict[Any, Any] | list[Any]:
+) -> list[dict[str, Any]]:
     """
     Send a HTTP GET request to the Nominatim API and return response.
 
@@ -95,7 +95,7 @@ def _nominatim_request(
 
     Returns
     -------
-    response_json : dict or list
+    response_json : list
     """
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
         msg = 'Nominatim request_type must be "search", "reverse", or "lookup"'
@@ -106,7 +106,10 @@ def _nominatim_request(
     params["key"] = settings.nominatim_key
     prepared_url = str(requests.Request("GET", url, params=params).prepare().url)
 
-    if (cached_response_json := _downloader._retrieve_from_cache(prepared_url)) is not None:
+    cached_response_json: list[dict[str, Any]] | None = _downloader._retrieve_from_cache(
+        prepared_url
+    )  # type: ignore[assignment]
+    if cached_response_json is not None:
         return cached_response_json
 
     # pause then request this URL
@@ -134,6 +137,6 @@ def _nominatim_request(
         time.sleep(error_pause)
         return _nominatim_request(params, request_type, pause, error_pause)
 
-    response_json = _downloader._parse_response(response)
+    response_json: list[dict[str, Any]] = _downloader._parse_response(response)  # type: ignore[assignment]
     _downloader._save_to_cache(prepared_url, response_json, response.ok)
     return response_json

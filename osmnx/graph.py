@@ -10,6 +10,7 @@ Refer to the Getting Started guide for usage limitations.
 from __future__ import annotations
 
 import itertools
+from collections.abc import Generator
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -480,9 +481,9 @@ def graph_from_polygon(
         poly_buff, _ = projection.project_geometry(poly_proj_buff, crs=crs_utm, to_latlong=True)
 
         # download the network data from OSM within buffered polygon
-        response_jsons = _overpass._download_overpass_network(
-            poly_buff, network_type, custom_filter
-        )
+        response_jsons: Generator[
+            dict[Any, Any], None, None
+        ] = _overpass._download_overpass_network(poly_buff, network_type, custom_filter)
 
         # create buffered graph from the downloaded data
         bidirectional = network_type in settings.bidirectional_network_types
@@ -592,7 +593,7 @@ def graph_from_xml(
 
 
 def _create_graph(
-    response_jsons: Iterable[dict[Any, Any] | list[Any]],
+    response_jsons: Iterable[dict[Any, Any]],
     retain_all: bool = False,
     bidirectional: bool = False,
 ) -> nx.MultiDiGraph:
@@ -631,7 +632,7 @@ def _create_graph(
             continue
 
         # otherwise, extract nodes and paths from the downloaded OSM data
-        nodes_temp, paths_temp = _parse_nodes_paths(response_json)  # type: ignore[arg-type]
+        nodes_temp, paths_temp = _parse_nodes_paths(response_json)
         nodes.update(nodes_temp)
         paths.update(paths_temp)
 

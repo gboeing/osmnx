@@ -304,7 +304,7 @@ def _create_overpass_query(polygon_coord_str: str, tags: dict[str, bool | str | 
 
 def _download_overpass_network(
     polygon: Polygon | MultiPolygon, network_type: str, custom_filter: str | None
-) -> Generator[dict[Any, Any] | list[Any], None, None]:
+) -> Generator[dict[Any, Any], None, None]:
     """
     Retrieve networked ways and nodes within boundary from the Overpass API.
 
@@ -342,7 +342,7 @@ def _download_overpass_network(
 
 def _download_overpass_features(
     polygon: Polygon, tags: dict[str, bool | str | list[str]]
-) -> Generator[dict[Any, Any] | list[Any], None, None]:
+) -> Generator[dict[Any, Any], None, None]:
     """
     Retrieve OSM features within boundary from the Overpass API.
 
@@ -370,7 +370,7 @@ def _download_overpass_features(
 
 def _overpass_request(
     data: OrderedDict[str, Any], pause: float | None = None, error_pause: float = 60
-) -> dict[Any, Any] | list[Any]:
+) -> dict[Any, Any]:
     """
     Send a HTTP POST request to the Overpass API and return response.
 
@@ -395,7 +395,7 @@ def _overpass_request(
     # prepare the Overpass API URL and see if request already exists in cache
     url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
     prepared_url = str(requests.Request("GET", url, params=data).prepare().url)
-    cached_response_json = _downloader._retrieve_from_cache(prepared_url)
+    cached_response_json: dict[Any, Any] | None = _downloader._retrieve_from_cache(prepared_url)  # type: ignore[assignment]
     if cached_response_json is not None:
         return cached_response_json
 
@@ -427,6 +427,6 @@ def _overpass_request(
         time.sleep(this_pause)
         return _overpass_request(data, pause, error_pause)
 
-    response_json = _downloader._parse_response(response)
+    response_json: dict[Any, Any] = _downloader._parse_response(response)  # type: ignore[assignment]
     _downloader._save_to_cache(prepared_url, response_json, response.ok)
     return response_json

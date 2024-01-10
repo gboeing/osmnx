@@ -290,7 +290,7 @@ def _hostname_from_url(url: str) -> str:
     return urlparse(url).netloc.split(":")[0]
 
 
-def _parse_response(response: requests.Response) -> dict[Any, Any] | list[Any]:
+def _parse_response(response: requests.Response) -> dict[Any, Any] | list[dict[str, Any]]:
     """
     Parse JSON from a requests response and log the details.
 
@@ -302,6 +302,8 @@ def _parse_response(response: requests.Response) -> dict[Any, Any] | list[Any]:
     Returns
     -------
     response_json : dict or list
+        Value will be a dict if the response is from the Google or Overpass
+        APIs, and a list if the response is from the Nominatim API.
     """
     # log the response size and domain
     domain = _hostname_from_url(response.url)
