@@ -12,6 +12,7 @@ from __future__ import annotations
 import itertools
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 from warnings import warn
 
 import networkx as nx
@@ -209,7 +210,7 @@ def graph_from_address(
     return_coords: bool | None = None,
     clean_periphery: bool | None = None,
     custom_filter: str | None = None,
-) -> nx.MultiDiGraph | tuple:
+) -> nx.MultiDiGraph | tuple[nx.MultiDiGraph, tuple[float, float]]:
     """
     Download and create a graph within some distance of an address.
 
@@ -293,7 +294,7 @@ def graph_from_address(
 
 
 def graph_from_place(
-    query: str | dict | list[str | dict],
+    query: str | dict[str, str] | list[str | dict[str, str]],
     network_type: str = "all_private",
     simplify: bool = True,
     retain_all: bool = False,
@@ -591,7 +592,9 @@ def graph_from_xml(
 
 
 def _create_graph(
-    response_jsons: Iterable, retain_all: bool = False, bidirectional: bool = False
+    response_jsons: Iterable[dict[Any, Any] | list[Any]],
+    retain_all: bool = False,
+    bidirectional: bool = False,
 ) -> nx.MultiDiGraph:
     """
     Create a networkx MultiDiGraph from Overpass API responses.
@@ -614,11 +617,12 @@ def _create_graph(
     -------
     G : networkx.MultiDiGraph
     """
-    response_count = 0
-    nodes = {}
-    paths = {}
+    # each dict's keys are OSM IDs and values are dicts of attributes
+    nodes: dict[int, dict[str, Any]] = {}
+    paths: dict[int, dict[str, Any]] = {}
 
     # consume response_jsons generator to download data from server
+    response_count = 0
     for response_json in response_jsons:
         response_count += 1
 
@@ -627,7 +631,7 @@ def _create_graph(
             continue
 
         # otherwise, extract nodes and paths from the downloaded OSM data
-        nodes_temp, paths_temp = _parse_nodes_paths(response_json)
+        nodes_temp, paths_temp = _parse_nodes_paths(response_json)  # type: ignore[arg-type]
         nodes.update(nodes_temp)
         paths.update(paths_temp)
 
@@ -668,7 +672,7 @@ def _create_graph(
     return G
 
 
-def _convert_node(element: dict) -> dict:
+def _convert_node(element: dict[str, Any]) -> dict[str, Any]:
     """
     Convert an OSM node element into the format for a networkx node.
 
@@ -689,7 +693,7 @@ def _convert_node(element: dict) -> dict:
     return node
 
 
-def _convert_path(element: dict) -> dict:
+def _convert_path(element: dict[str, Any]) -> dict[str, Any]:
     """
     Convert an OSM way element into the format for a networkx path.
 
@@ -714,7 +718,9 @@ def _convert_path(element: dict) -> dict:
     return path
 
 
-def _parse_nodes_paths(response_json: dict) -> tuple:
+def _parse_nodes_paths(
+    response_json: dict[Any, Any],
+) -> tuple[dict[int, dict[str, Any]], dict[int, dict[str, Any]]]:
     """
     Construct dicts of nodes and paths from an Overpass response.
 
@@ -739,7 +745,7 @@ def _parse_nodes_paths(response_json: dict) -> tuple:
     return nodes, paths
 
 
-def _is_path_one_way(path: dict, bidirectional: bool, oneway_values: set) -> bool:
+def _is_path_one_way(path: dict[str, Any], bidirectional: bool, oneway_values: set[str]) -> bool:
     """
     Determine if a path of nodes allows travel in only one direction.
 
@@ -786,7 +792,7 @@ def _is_path_one_way(path: dict, bidirectional: bool, oneway_values: set) -> boo
     return False
 
 
-def _is_path_reversed(path: dict, reversed_values: set) -> bool:
+def _is_path_reversed(path: dict[str, Any], reversed_values: set[str]) -> bool:
     """
     Determine if the order of nodes in a path should be reversed.
 
@@ -805,7 +811,9 @@ def _is_path_reversed(path: dict, reversed_values: set) -> bool:
     return "oneway" in path and path["oneway"] in reversed_values
 
 
-def _add_paths(G: nx.MultiDiGraph, paths: Iterable, bidirectional: bool = False) -> None:
+def _add_paths(
+    G: nx.MultiDiGraph, paths: Iterable[dict[str, Any]], bidirectional: bool = False
+) -> None:
     """
     Add a list of paths to the graph as edges.
 

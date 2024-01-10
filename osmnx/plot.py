@@ -589,7 +589,7 @@ def plot_figure_ground(
         node_sizes = 0
 
     # define the view extents of the plotting figure
-    bbox = utils_geo.bbox_from_point(point, dist, project_utm=False)  # type: ignore[arg-type]
+    bbox = utils_geo.bbox_from_point(point, dist, project_utm=False)
 
     # plot the figure
     overrides = {"bbox", "node_size", "node_color", "edge_linewidth"}

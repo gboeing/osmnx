@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from typing import Any
+from typing import Literal
+from typing import overload
 from warnings import warn
 
 import geopandas as gpd
@@ -392,12 +394,152 @@ def _intersect_index_quadrats(
     return geoms_in_poly
 
 
+# dist missing, project_utm missing/False, return_crs missing/False
+@overload
+def bbox_from_point(point: tuple[float, float]) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist missing, project_utm missing/False, return_crs present/True
+@overload
+def bbox_from_point(
+    point: tuple[float, float], *, return_crs: Literal[True]
+) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist missing, project_utm missing/False, return_crs present/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float], *, return_crs: Literal[False]
+) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist missing, project_utm present/True, return_crs missing/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float], *, project_utm: Literal[True]
+) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist missing, project_utm present/True, return_crs present/True
+@overload
+def bbox_from_point(
+    point: tuple[float, float], *, project_utm: Literal[True], return_crs: Literal[True]
+) -> tuple[float, float, float, float, float]:
+    ...
+
+
+# dist missing, project_utm present/True, return_crs present/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float], *, project_utm: Literal[True], return_crs: Literal[False]
+) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist missing, project_utm present/False, return_crs missing/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float], *, project_utm: Literal[False]
+) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist missing, project_utm present/False, return_crs present/True
+@overload
+def bbox_from_point(
+    point: tuple[float, float], *, project_utm: Literal[False], return_crs: Literal[True]
+) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist missing, project_utm present/False, return_crs present/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float], *, project_utm: Literal[False], return_crs: Literal[False]
+) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist present, project_utm missing/False, return_crs missing/False
+@overload
+def bbox_from_point(point: tuple[float, float], dist: float) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist present, project_utm missing/False, return_crs present/True
+@overload
+def bbox_from_point(
+    point: tuple[float, float], dist: float, *, return_crs: Literal[True]
+) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist present, project_utm missing/False, return_crs present/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float], dist: float, *, return_crs: Literal[False]
+) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist present, project_utm present/True, return_crs missing/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float], dist: float, project_utm: Literal[True]
+) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist present, project_utm present/True, return_crs present/True
+@overload
+def bbox_from_point(
+    point: tuple[float, float], dist: float, project_utm: Literal[True], return_crs: Literal[True]
+) -> tuple[float, float, float, float, float]:
+    ...
+
+
+# dist present, project_utm present/True, return_crs present/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float], dist: float, project_utm: Literal[True], return_crs: Literal[False]
+) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist present, project_utm present/False, return_crs missing/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float], dist: float, project_utm: Literal[False]
+) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist present, project_utm present/False, return_crs present/True
+@overload
+def bbox_from_point(
+    point: tuple[float, float], dist: float, project_utm: Literal[False], return_crs: Literal[True]
+) -> tuple[float, float, float, float]:
+    ...
+
+
+# dist present, project_utm present/False, return_crs present/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float], dist: float, project_utm: Literal[False], return_crs: Literal[False]
+) -> tuple[float, float, float, float]:
+    ...
+
+
 def bbox_from_point(
     point: tuple[float, float],
     dist: float = 1000,
     project_utm: bool = False,
     return_crs: bool = False,
-) -> tuple:
+) -> tuple[float, float, float, float] | tuple[float, float, float, float, float]:
     """
     Create a bounding box around a (lat, lon) point.
 

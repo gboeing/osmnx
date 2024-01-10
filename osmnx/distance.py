@@ -10,6 +10,7 @@ from warnings import warn
 import networkx as nx
 import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 from shapely.geometry import Point
 from shapely.strtree import STRtree
 
@@ -49,33 +50,33 @@ def great_circle(lat1: float, lon1: float, lat2: float, lon2: float, earth_radiu
 # if coords are all arrays, return array
 @overload
 def great_circle(
-    lat1: np.ndarray,
-    lon1: np.ndarray,
-    lat2: np.ndarray,
-    lon2: np.ndarray,
-) -> np.ndarray:
+    lat1: NDArray[np.float64],
+    lon1: NDArray[np.float64],
+    lat2: NDArray[np.float64],
+    lon2: NDArray[np.float64],
+) -> NDArray[np.float64]:
     ...
 
 
 # if coords are all arrays (and optional arg is provided), return array
 @overload
 def great_circle(
-    lat1: np.ndarray,
-    lon1: np.ndarray,
-    lat2: np.ndarray,
-    lon2: np.ndarray,
+    lat1: NDArray[np.float64],
+    lon1: NDArray[np.float64],
+    lat2: NDArray[np.float64],
+    lon2: NDArray[np.float64],
     earth_radius: float,
-) -> np.ndarray:
+) -> NDArray[np.float64]:
     ...
 
 
 def great_circle(
-    lat1: float | np.ndarray,
-    lon1: float | np.ndarray,
-    lat2: float | np.ndarray,
-    lon2: float | np.ndarray,
+    lat1: float | NDArray[np.float64],
+    lon1: float | NDArray[np.float64],
+    lat2: float | NDArray[np.float64],
+    lon2: float | NDArray[np.float64],
     earth_radius: float = EARTH_RADIUS_M,
-) -> float | np.ndarray:
+) -> float | NDArray[np.float64]:
     """
     Calculate great-circle distances between pairs of points.
 
@@ -116,7 +117,7 @@ def great_circle(
     arc = 2 * np.arcsin(np.sqrt(h))
 
     # return distance in units of earth_radius
-    dist: float | np.ndarray = arc * earth_radius
+    dist: float | NDArray[np.float64] = arc * earth_radius
     return dist
 
 
@@ -129,17 +130,20 @@ def euclidean(y1: float, x1: float, y2: float, x2: float) -> float:
 # if coords are all arrays, return array
 @overload
 def euclidean(
-    y1: np.ndarray,
-    x1: np.ndarray,
-    y2: np.ndarray,
-    x2: np.ndarray,
-) -> np.ndarray:
+    y1: NDArray[np.float64],
+    x1: NDArray[np.float64],
+    y2: NDArray[np.float64],
+    x2: NDArray[np.float64],
+) -> NDArray[np.float64]:
     ...
 
 
 def euclidean(
-    y1: float | np.ndarray, x1: float | np.ndarray, y2: float | np.ndarray, x2: float | np.ndarray
-) -> float | np.ndarray:
+    y1: float | NDArray[np.float64],
+    x1: float | NDArray[np.float64],
+    y2: float | NDArray[np.float64],
+    x2: float | NDArray[np.float64],
+) -> float | NDArray[np.float64]:
     """
     Calculate Euclidean distances between pairs of points.
 
@@ -164,7 +168,7 @@ def euclidean(
         distance from each (x1, y1) to each (x2, y2) in coordinates' units
     """
     # pythagorean theorem
-    dist: float | np.ndarray = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+    dist: float | NDArray[np.float64] = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
     return dist
 
 
@@ -235,7 +239,7 @@ def euclidean_dist_vec(y1, x1, y2, x2):  # type: ignore[no-untyped-def]
 
 
 def add_edge_lengths(
-    G: nx.MultiDiGraph, precision: int | None = None, edges: tuple | None = None
+    G: nx.MultiDiGraph, precision: int | None = None, edges: tuple[int, int, int] | None = None
 ) -> nx.MultiDiGraph:
     """
     Add `length` attribute (in meters) to each edge.
@@ -316,35 +320,40 @@ def nearest_nodes(G: nx.MultiDiGraph, X: float, Y: float, return_dist: Literal[F
 
 # if X and Y are floats and return_dist is provided/True
 @overload
-def nearest_nodes(G: nx.MultiDiGraph, X: float, Y: float, return_dist: Literal[True]) -> tuple:
+def nearest_nodes(
+    G: nx.MultiDiGraph, X: float, Y: float, return_dist: Literal[True]
+) -> tuple[NDArray[np.int64], NDArray[np.float64]]:
     ...
 
 
 # if X and Y are iterable and return_dist is not provided (defaults False)
 @overload
-def nearest_nodes(G: nx.MultiDiGraph, X: Iterable, Y: Iterable) -> np.ndarray:
+def nearest_nodes(G: nx.MultiDiGraph, X: Iterable[float], Y: Iterable[float]) -> NDArray[np.int64]:
     ...
 
 
 # if X and Y are iterable and return_dist is provided/False
 @overload
 def nearest_nodes(
-    G: nx.MultiDiGraph, X: Iterable, Y: Iterable, return_dist: Literal[False]
-) -> np.ndarray:
+    G: nx.MultiDiGraph, X: Iterable[float], Y: Iterable[float], return_dist: Literal[False]
+) -> NDArray[np.int64]:
     ...
 
 
 # if X and Y are iterable and return_dist is provided/True
 @overload
 def nearest_nodes(
-    G: nx.MultiDiGraph, X: Iterable, Y: Iterable, return_dist: Literal[True]
-) -> tuple:
+    G: nx.MultiDiGraph, X: Iterable[float], Y: Iterable[float], return_dist: Literal[True]
+) -> tuple[NDArray[np.int64], NDArray[np.float64]]:
     ...
 
 
 def nearest_nodes(
-    G: nx.MultiDiGraph, X: float | Iterable, Y: float | Iterable, return_dist: bool = False
-) -> int | np.ndarray | tuple:
+    G: nx.MultiDiGraph,
+    X: float | Iterable[float],
+    Y: float | Iterable[float],
+    return_dist: bool = False,
+) -> int | NDArray[np.int64] | tuple[int, float] | tuple[NDArray[np.int64], NDArray[np.float64]]:
     """
     Find the nearest node to a point or to each of several points.
 
@@ -377,17 +386,15 @@ def nearest_nodes(
         nearest node ID(s) or optionally a tuple of ID(s) and distance(s)
         between each point and its nearest node
     """
-    is_scalar = False
-
-    # make coordinates iterable if user passed non-iterable values
+    # make coordinates arrays whether user passed iterable values or not
     if not (hasattr(X, "__iter__") and hasattr(Y, "__iter__")):
         is_scalar = True
-        X = [X]
-        Y = [Y]
-
-    # make coordinates arrays
-    X_arr = np.array(X)
-    Y_arr = np.array(Y)
+        X_arr = np.array([X])
+        Y_arr = np.array([Y])
+    else:
+        is_scalar = False
+        X_arr = np.array(X)
+        Y_arr = np.array(Y)
 
     if np.isnan(X_arr).any() or np.isnan(Y_arr).any():  # pragma: no cover
         msg = "`X` and `Y` cannot contain nulls"
@@ -400,7 +407,7 @@ def nearest_nodes(
             msg = "scipy must be installed to search a projected graph"
             raise ImportError(msg)
         dist, pos = cKDTree(nodes).query(np.array([X_arr, Y_arr]).T, k=1)
-        nn: np.ndarray = nodes.index[pos].to_numpy()
+        nn: NDArray[np.int64] = nodes.index[pos].to_numpy()
 
     else:
         # if unprojected, use ball tree for haversine nearest-neighbor search
@@ -428,51 +435,62 @@ def nearest_nodes(
 
 # if X and Y are floats and return_dist is not provided (defaults False)
 @overload
-def nearest_edges(G: nx.MultiDiGraph, X: float, Y: float) -> tuple:
+def nearest_edges(G: nx.MultiDiGraph, X: float, Y: float) -> tuple[int, int, int]:
     ...
 
 
 # if X and Y are floats and return_dist is provided/False
 @overload
-def nearest_edges(G: nx.MultiDiGraph, X: float, Y: float, *, return_dist: Literal[False]) -> tuple:
+def nearest_edges(
+    G: nx.MultiDiGraph, X: float, Y: float, *, return_dist: Literal[False]
+) -> tuple[int, int, int]:
     ...
 
 
 # if X and Y are floats and return_dist is provided/True
 @overload
-def nearest_edges(G: nx.MultiDiGraph, X: float, Y: float, *, return_dist: Literal[True]) -> tuple:
+def nearest_edges(
+    G: nx.MultiDiGraph, X: float, Y: float, *, return_dist: Literal[True]
+) -> tuple[tuple[int, int, int], float]:
     ...
 
 
 # if X and Y are iterable and return_dist is not provided (defaults False)
 @overload
-def nearest_edges(G: nx.MultiDiGraph, X: Iterable, Y: Iterable) -> np.ndarray:
+def nearest_edges(
+    G: nx.MultiDiGraph, X: Iterable[float], Y: Iterable[float]
+) -> NDArray[np.object_]:
     ...
 
 
 # if X and Y are iterable and return_dist is provided/False
 @overload
 def nearest_edges(
-    G: nx.MultiDiGraph, X: Iterable, Y: Iterable, *, return_dist: Literal[False]
-) -> np.ndarray:
+    G: nx.MultiDiGraph, X: Iterable[float], Y: Iterable[float], *, return_dist: Literal[False]
+) -> NDArray[np.object_]:
     ...
 
 
 # if X and Y are iterable and return_dist is provided/True
 @overload
 def nearest_edges(
-    G: nx.MultiDiGraph, X: Iterable, Y: Iterable, *, return_dist: Literal[True]
-) -> tuple:
+    G: nx.MultiDiGraph, X: Iterable[float], Y: Iterable[float], *, return_dist: Literal[True]
+) -> tuple[NDArray[np.object_], NDArray[np.float64]]:
     ...
 
 
 def nearest_edges(
     G: nx.MultiDiGraph,
-    X: float | Iterable,
-    Y: float | Iterable,
+    X: float | Iterable[float],
+    Y: float | Iterable[float],
     interpolate: float | None = None,
     return_dist: bool = False,
-) -> tuple | np.ndarray:
+) -> (
+    tuple[int, int, int]
+    | NDArray[np.object_]
+    | tuple[tuple[int, int, int], float]
+    | tuple[NDArray[np.object_], NDArray[np.float64]]
+):
     """
     Find the nearest edge to a point or to each of several points.
 
@@ -503,17 +521,15 @@ def nearest_edges(
         nearest edge ID(s) (as `u`, `v`, `key` tuples) or optionally a tuple
         of ID(s) and distance(s) between each point and its nearest edge
     """
-    is_scalar = False
-
-    # make coordinates iterable if user passed non-iterable values
+    # make coordinates arrays whether user passed iterable values or not
     if not (hasattr(X, "__iter__") and hasattr(Y, "__iter__")):
         is_scalar = True
-        X = [X]
-        Y = [Y]
-
-    # make coordinates arrays
-    X_arr = np.array(X)
-    Y_arr = np.array(Y)
+        X_arr = np.array([X])
+        Y_arr = np.array([Y])
+    else:
+        is_scalar = False
+        X_arr = np.array(X)
+        Y_arr = np.array(Y)
 
     if np.isnan(X_arr).any() or np.isnan(Y_arr).any():  # pragma: no cover
         msg = "`X` and `Y` cannot contain nulls"
@@ -532,7 +548,7 @@ def nearest_edges(
         # if user passed X/Y lists, the 2nd subarray contains geom indices
         if len(pos.shape) > 1:
             pos = pos[1]
-        ne: np.ndarray = geoms.iloc[pos].index.to_numpy()
+        ne: NDArray[np.object_] = geoms.iloc[pos].index.to_numpy()
 
     # otherwise, if interpolation distance was provided
     else:
@@ -542,7 +558,7 @@ def nearest_edges(
         )
 
         # interpolate points along edges to index with k-d tree or ball tree
-        uvk_xy: list = []
+        uvk_xy: list = []  # type: ignore[type-arg]
         for uvk, geom in zip(geoms.index, geoms.to_numpy()):
             uvk_xy.extend((uvk, xy) for xy in utils_geo.interpolate_points(geom, interpolate))
         labels, xy = zip(*uvk_xy)

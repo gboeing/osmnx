@@ -6,6 +6,7 @@ from warnings import warn
 
 import networkx as nx
 import numpy as np
+from numpy.typing import NDArray
 
 from . import plot
 from . import projection
@@ -31,20 +32,20 @@ def calculate_bearing(
 # if coords are all arrays, return array
 @overload
 def calculate_bearing(
-    lat1: np.ndarray,
-    lon1: np.ndarray,
-    lat2: np.ndarray,
-    lon2: np.ndarray,
-) -> np.ndarray:
+    lat1: NDArray[np.float64],
+    lon1: NDArray[np.float64],
+    lat2: NDArray[np.float64],
+    lon2: NDArray[np.float64],
+) -> NDArray[np.float64]:
     ...
 
 
 def calculate_bearing(
-    lat1: float | np.ndarray,
-    lon1: float | np.ndarray,
-    lat2: float | np.ndarray,
-    lon2: float | np.ndarray,
-) -> float | np.ndarray:
+    lat1: float | NDArray[np.float64],
+    lon1: float | NDArray[np.float64],
+    lat2: float | NDArray[np.float64],
+    lon2: float | NDArray[np.float64],
+) -> float | NDArray[np.float64]:
     """
     Calculate the compass bearing(s) between pairs of lat-lon points.
 
@@ -80,7 +81,7 @@ def calculate_bearing(
     initial_bearing = np.degrees(np.arctan2(y, x))
 
     # normalize to 0-360 degrees to get compass bearing
-    bearing: float | np.ndarray = initial_bearing % 360
+    bearing: float | NDArray[np.float64] = initial_bearing % 360
     return bearing
 
 
@@ -179,7 +180,7 @@ def orientation_entropy(
 
 def _extract_edge_bearings(
     Gu: nx.MultiGraph, min_length: float = 0, weight: str | None = None
-) -> np.ndarray:
+) -> NDArray[np.float64]:
     """
     Extract undirected graph's bidirectional edge bearings.
 
@@ -201,7 +202,7 @@ def _extract_edge_bearings(
 
     Returns
     -------
-    bearings : numpy.array
+    bearings : numpy.array of float
         the graph's bidirectional edge bearings
     """
     if nx.is_directed(Gu) or projection.is_projected(Gu.graph["crs"]):  # pragma: no cover
@@ -227,7 +228,7 @@ def _extract_edge_bearings(
 
 def _bearings_distribution(
     Gu: nx.MultiGraph, num_bins: int, min_length: float = 0, weight: str | None = None
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     """
     Compute distribution of bearings across evenly spaced bins.
 
@@ -254,7 +255,7 @@ def _bearings_distribution(
 
     Returns
     -------
-    bin_counts, bin_edges : tuple of numpy.array
+    bin_counts, bin_edges : tuple of numpy.array of float
         counts of bearings per bin and the bins edges
     """
     n = num_bins * 2

@@ -19,6 +19,7 @@ import logging as lg
 import warnings
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 from warnings import warn
 
 import geopandas as gpd
@@ -84,7 +85,7 @@ _POLYGON_FEATURES: dict[str, dict[str, str | list[str]]] = {
 
 
 def features_from_bbox(
-    north: float, south: float, east: float, west: float, tags: dict
+    north: float, south: float, east: float, west: float, tags: dict[str, bool | str | list[str]]
 ) -> gpd.GeoDataFrame:
     """
     Create a GeoDataFrame of OSM features within a N, S, E, W bounding box.
@@ -129,7 +130,9 @@ def features_from_bbox(
     return features_from_polygon(polygon, tags)
 
 
-def features_from_point(center_point: tuple, tags: dict, dist: float = 1000) -> gpd.GeoDataFrame:
+def features_from_point(
+    center_point: tuple[float, float], tags: dict[str, bool | str | list[str]], dist: float = 1000
+) -> gpd.GeoDataFrame:
     """
     Create GeoDataFrame of OSM features within some distance N, S, E, W of a point.
 
@@ -172,7 +175,9 @@ def features_from_point(center_point: tuple, tags: dict, dist: float = 1000) -> 
     return features_from_polygon(polygon, tags)
 
 
-def features_from_address(address: str, tags: dict, dist: float = 1000) -> gpd.GeoDataFrame:
+def features_from_address(
+    address: str, tags: dict[str, bool | str | list[str]], dist: float = 1000
+) -> gpd.GeoDataFrame:
     """
     Create GeoDataFrame of OSM features within some distance N, S, E, W of address.
 
@@ -214,8 +219,8 @@ def features_from_address(address: str, tags: dict, dist: float = 1000) -> gpd.G
 
 
 def features_from_place(
-    query: str | dict | list,
-    tags: dict,
+    query: str | dict[str, str] | list[str | dict[str, str]],
+    tags: dict[str, bool | str | list[str]],
     which_result: int | None = None,
     buffer_dist: float | None = None,
 ) -> gpd.GeoDataFrame:
@@ -296,7 +301,9 @@ def features_from_place(
     return features_from_polygon(polygon, tags)
 
 
-def features_from_polygon(polygon: Polygon | MultiPolygon, tags: dict) -> gpd.GeoDataFrame:
+def features_from_polygon(
+    polygon: Polygon | MultiPolygon, tags: dict[str, bool | str | list[str]]
+) -> gpd.GeoDataFrame:
     """
     Create GeoDataFrame of OSM features within boundaries of a (multi)polygon.
 
@@ -350,7 +357,7 @@ def features_from_polygon(polygon: Polygon | MultiPolygon, tags: dict) -> gpd.Ge
 def features_from_xml(
     filepath: str | Path,
     polygon: Polygon | None = None,
-    tags: dict | None = None,
+    tags: dict[str, bool | str | list[str]] | None = None,
     encoding: str = "utf-8",
 ) -> gpd.GeoDataFrame:
     """
@@ -397,7 +404,11 @@ def features_from_xml(
     return _create_gdf(response_jsons, polygon=polygon, tags=tags)
 
 
-def _create_gdf(response_jsons: Iterable, polygon: Polygon, tags: dict | None) -> gpd.GeoDataFrame:
+def _create_gdf(
+    response_jsons: Iterable[dict[Any, Any] | list[Any]],
+    polygon: Polygon,
+    tags: dict[str, bool | str | list[str]] | None,
+) -> gpd.GeoDataFrame:
     """
     Parse JSON responses from the Overpass API to a GeoDataFrame.
 
@@ -446,7 +457,7 @@ def _create_gdf(response_jsons: Iterable, polygon: Polygon, tags: dict | None) -
         # Parses the JSON of OSM nodes, ways and (multipolygon) relations
         # to dictionaries of coordinates, Shapely Points, LineStrings,
         # Polygons and MultiPolygons
-        for element in response_json["elements"]:
+        for element in response_json["elements"]:  # type: ignore[call-overload]
             # id numbers are only unique within element types
             # create unique id from combination of type and id
             unique_id = f"{element['type']}/{element['id']}"
@@ -524,7 +535,7 @@ def _create_gdf(response_jsons: Iterable, polygon: Polygon, tags: dict | None) -
     return gdf
 
 
-def _parse_node_to_coords(element: dict) -> dict:
+def _parse_node_to_coords(element: dict[str, Any]) -> dict[str, Any]:
     """
     Parse coordinates from a node in the overpass response.
 
@@ -544,7 +555,7 @@ def _parse_node_to_coords(element: dict) -> dict:
     return {"lat": element["lat"], "lon": element["lon"]}
 
 
-def _parse_node_to_point(element: dict) -> dict:
+def _parse_node_to_point(element: dict[str, Any]) -> dict[str, Any]:
     """
     Parse point from a tagged node in the overpass response.
 
@@ -572,7 +583,9 @@ def _parse_node_to_point(element: dict) -> dict:
     return point
 
 
-def _parse_way_to_linestring_or_polygon(element: dict, coords: dict) -> dict:
+def _parse_way_to_linestring_or_polygon(
+    element: dict[str, Any], coords: dict[int, Any]
+) -> dict[str, Any]:
     """
     Parse open LineString, closed LineString or Polygon from OSM 'way'.
 
@@ -653,7 +666,7 @@ def _parse_way_to_linestring_or_polygon(element: dict, coords: dict) -> dict:
     return linestring_or_polygon
 
 
-def _is_closed_way_a_polygon(element: dict) -> bool:
+def _is_closed_way_a_polygon(element: dict[str, Any]) -> bool:
     """
     Determine whether a closed OSM way represents a Polygon, not a LineString.
 
@@ -734,7 +747,9 @@ def _is_closed_way_a_polygon(element: dict) -> bool:
     return is_polygon
 
 
-def _parse_relation_to_multipolygon(element: dict, geometries: dict) -> dict:
+def _parse_relation_to_multipolygon(
+    element: dict[str, Any], geometries: dict[str, Any]
+) -> dict[str, Any]:
     """
     Parse multipolygon from OSM relation (type:MultiPolygon).
 
@@ -794,7 +809,9 @@ def _parse_relation_to_multipolygon(element: dict, geometries: dict) -> dict:
     return multipolygon
 
 
-def _assemble_multipolygon_component_polygons(element: dict, geometries: dict) -> MultiPolygon:
+def _assemble_multipolygon_component_polygons(
+    element: dict[str, Any], geometries: dict[str, Any]
+) -> MultiPolygon:
     """
     Assemble a MultiPolygon from its component LineStrings and Polygons.
 
@@ -877,7 +894,7 @@ def _assemble_multipolygon_component_polygons(element: dict, geometries: dict) -
 
 
 def _subtract_inner_polygons_from_outer_polygons(
-    element: dict, outer_polygons: list, inner_polygons: list
+    element: dict[str, Any], outer_polygons: list[Polygon], inner_polygons: list[Polygon]
 ) -> Polygon | MultiPolygon:
     """
     Subtract inner polygons from outer polygons.
@@ -985,7 +1002,7 @@ def _buffer_invalid_geometries(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
 
 def _filter_gdf_by_polygon_and_tags(
-    gdf: gpd.GeoDataFrame, polygon: Polygon, tags: dict | None
+    gdf: gpd.GeoDataFrame, polygon: Polygon, tags: dict[str, bool | str | list[str]] | None
 ) -> gpd.GeoDataFrame:
     """
     Filter the GeoDataFrame to the requested bounding polygon and tags.

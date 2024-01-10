@@ -6,6 +6,7 @@ import ast
 import contextlib
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 from warnings import warn
 
 import geopandas as gpd
@@ -186,9 +187,9 @@ def save_graphml(
 def load_graphml(
     filepath: str | Path | None = None,
     graphml_str: str | None = None,
-    node_dtypes: dict | None = None,
-    edge_dtypes: dict | None = None,
-    graph_dtypes: dict | None = None,
+    node_dtypes: dict[str, Any] | None = None,
+    edge_dtypes: dict[str, Any] | None = None,
+    graph_dtypes: dict[str, Any] | None = None,
 ) -> nx.MultiDiGraph:
     """
     Load an OSMnx-saved GraphML file from disk or GraphML string.
@@ -291,15 +292,15 @@ def load_graphml(
 
 
 def save_graph_xml(
-    data: nx.MultiDiGraph | Iterable,
+    data: nx.MultiDiGraph | Iterable[gpd.GeoDataFrame],
     filepath: str | Path | None = None,
-    node_tags: list = settings.osm_xml_node_tags,
-    node_attrs: list = settings.osm_xml_node_attrs,
-    edge_tags: list = settings.osm_xml_way_tags,
-    edge_attrs: list = settings.osm_xml_way_attrs,
+    node_tags: list[str] = settings.osm_xml_node_tags,
+    node_attrs: list[str] = settings.osm_xml_node_attrs,
+    edge_tags: list[str] = settings.osm_xml_way_tags,
+    edge_attrs: list[str] = settings.osm_xml_way_attrs,
     oneway: bool = False,
     merge_edges: bool = True,
-    edge_tag_aggs: list | None = None,
+    edge_tag_aggs: list[tuple[str, str]] | None = None,
     api_version: float = 0.6,
     precision: int = 6,
 ) -> None:
@@ -391,7 +392,7 @@ def save_graph_xml(
     )
 
 
-def _convert_graph_attr_types(G: nx.MultiDiGraph, dtypes: dict) -> nx.MultiDiGraph:
+def _convert_graph_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.MultiDiGraph:
     """
     Convert graph-level attributes using a dict of data types.
 
@@ -416,7 +417,7 @@ def _convert_graph_attr_types(G: nx.MultiDiGraph, dtypes: dict) -> nx.MultiDiGra
     return G
 
 
-def _convert_node_attr_types(G: nx.MultiDiGraph, dtypes: dict) -> nx.MultiDiGraph:
+def _convert_node_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.MultiDiGraph:
     """
     Convert graph nodes' attributes using a dict of data types.
 
@@ -446,7 +447,7 @@ def _convert_node_attr_types(G: nx.MultiDiGraph, dtypes: dict) -> nx.MultiDiGrap
     return G
 
 
-def _convert_edge_attr_types(G: nx.MultiDiGraph, dtypes: dict) -> nx.MultiDiGraph:
+def _convert_edge_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.MultiDiGraph:
     """
     Convert graph edges' attributes using a dict of data types.
 
