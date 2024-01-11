@@ -294,7 +294,7 @@ def _hostname_from_url(url: str) -> str:
     return urlparse(url).netloc.split(":")[0]
 
 
-def _parse_response(response: requests.Response) -> dict[Any, Any] | list[dict[str, Any]]:
+def _parse_response(response: requests.Response) -> dict[str, Any] | list[dict[str, Any]]:
     """
     Parse JSON from a requests response and log the details.
 

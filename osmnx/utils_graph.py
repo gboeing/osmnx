@@ -343,7 +343,7 @@ def get_route_edge_attributes(  # type: ignore[no-untyped-def]
         deprecated
     minimize_key : string
         deprecated
-    retrieve_default : Callable[Tuple[Any, Any], Any]
+    retrieve_default : function
         deprecated
 
     Returns

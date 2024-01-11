@@ -68,7 +68,7 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
             self.object["elements"].append(self._element)
 
 
-def _overpass_json_from_file(filepath: str | Path, encoding: str) -> dict[Any, Any]:
+def _overpass_json_from_file(filepath: str | Path, encoding: str) -> dict[str, Any]:
     """
     Read OSM XML from file and return Overpass-like JSON.
 

@@ -81,7 +81,7 @@ def add_edge_grades(
     return G
 
 
-def _query_raster(nodes: pd.DataFrame, filepath: str | Path, band: int) -> zip[Any]:
+def _query_raster(nodes: pd.DataFrame, filepath: str | Path, band: int) -> zip[tuple[int, Any]]:
     """
     Query a raster for values at coordinates in a DataFrame's x/y columns.
 
@@ -285,7 +285,7 @@ def add_node_elevations_google(
     return G
 
 
-def _elevation_request(url: str, pause: float) -> dict[Any, Any]:
+def _elevation_request(url: str, pause: float) -> dict[str, Any]:
     """
     Send a HTTP GET request to Google Maps-style Elevation API.
 

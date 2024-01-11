@@ -300,14 +300,19 @@ def test_routing() -> None:
     orig_node = ox.distance.nearest_nodes(G, orig_x, orig_y)[0]
     dest_node = ox.distance.nearest_nodes(G, dest_x, dest_y)[0]
 
-    # test non-numeric weight (should raise ValueError)
+    # test non-numeric weight, should raise ValueError
     with pytest.raises(ValueError, match="contains non-numeric values"):
         route1 = ox.shortest_path(G, orig_node, dest_node, weight="highway")
 
-    # mismatch iterable and non-iterable orig/dest should raise ValueError
+    # mismatch iterable and non-iterable orig/dest, should raise TypeError
     msg = "orig and dest must either both be iterable or neither must be iterable"
-    with pytest.raises(ValueError, match=msg):
+    with pytest.raises(TypeError, match=msg):
         route2 = ox.shortest_path(G, orig_node, [dest_node])
+
+    # mismatch lengths of orig/dest, should raise ValueError
+    msg = "orig and dest must be of equal length"
+    with pytest.raises(ValueError, match=msg):
+        route2 = ox.shortest_path(G, [orig_node] * 2, [dest_node] * 3)
 
     # test missing weight (should raise warning)
     route3 = ox.shortest_path(G, orig_node, dest_node, weight="time")

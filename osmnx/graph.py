@@ -482,7 +482,7 @@ def graph_from_polygon(
 
         # download the network data from OSM within buffered polygon
         response_jsons: Generator[
-            dict[Any, Any], None, None
+            dict[str, Any], None, None
         ] = _overpass._download_overpass_network(poly_buff, network_type, custom_filter)
 
         # create buffered graph from the downloaded data

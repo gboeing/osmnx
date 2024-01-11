@@ -304,7 +304,7 @@ def _create_overpass_query(polygon_coord_str: str, tags: dict[str, bool | str | 
 
 def _download_overpass_network(
     polygon: Polygon | MultiPolygon, network_type: str, custom_filter: str | None
-) -> Generator[dict[Any, Any], None, None]:
+) -> Generator[dict[str, Any], None, None]:
     """
     Retrieve networked ways and nodes within boundary from the Overpass API.
 
@@ -342,7 +342,7 @@ def _download_overpass_network(
 
 def _download_overpass_features(
     polygon: Polygon, tags: dict[str, bool | str | list[str]]
-) -> Generator[dict[Any, Any], None, None]:
+) -> Generator[dict[str, Any], None, None]:
     """
     Retrieve OSM features within some boundary polygon from the Overpass API.
 
@@ -370,7 +370,7 @@ def _download_overpass_features(
 
 def _overpass_request(
     data: OrderedDict[str, Any], pause: float | None = None, error_pause: float = 60
-) -> dict[Any, Any]:
+) -> dict[str, Any]:
     """
     Send a HTTP POST request to the Overpass API and return response.
 
