@@ -607,7 +607,7 @@ def _create_graph(
     Parameters
     ----------
     response_jsons : iterable
-        iterable of dicts of JSON responses from from the Overpass API
+        iterable of dicts of JSON responses from the Overpass API
     retain_all : bool
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
