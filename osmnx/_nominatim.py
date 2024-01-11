@@ -31,7 +31,7 @@ def _download_nominatim_element(
         if True, treat query as an OSM ID lookup rather than text search
     limit : int
         max number of results to return
-    polygon_geojson : int
+    polygon_geojson : bool
         whether to retrieve the place's geometry from the API
 
     Returns
