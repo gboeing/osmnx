@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
@@ -360,9 +361,9 @@ def plot_graph_route(
 
 def plot_graph_routes(
     G: nx.MultiDiGraph,
-    routes: Sequence[list[int]],
-    route_colors: str | Sequence[str] = "r",
-    route_linewidths: float | Sequence[float] = 4,
+    routes: Iterable[list[int]],
+    route_colors: str | Iterable[str] = "r",
+    route_linewidths: float | Iterable[float] = 4,
     **pgr_kwargs: Any,
 ) -> tuple[Figure, Axes]:
     """
@@ -372,13 +373,13 @@ def plot_graph_routes(
     ----------
     G : networkx.MultiDiGraph
         input graph
-    routes : Sequence of list of int
-        Sequence of lists of node IDs
-    route_colors : string or Sequence of string
-        if string, 1 color for all routes. if Sequence, the colors for each
+    routes : Iterable of list of int
+        Iterable of lists of node IDs
+    route_colors : string or Iterable of string
+        if string, 1 color for all routes. if Iterable, the colors for each
         route.
-    route_linewidths : float or Sequence of float
-        if float, 1 linewidth for all routes. if Sequence, the linewidth for
+    route_linewidths : float or Iterable of float
+        if float, 1 linewidth for all routes. if Iterable, the linewidth for
         each route.
     pgr_kwargs
         keyword arguments to pass to plot_graph_route
@@ -390,22 +391,26 @@ def plot_graph_routes(
     """
     _verify_mpl()
 
+    # make iterables lists (so we're guaranteed to be able to get their sizes)
+    routes = list(routes)
+    route_colors = (
+        [route_colors] * len(routes) if isinstance(route_colors, str) else list(route_colors)
+    )
+    route_linewidths = (
+        [route_linewidths] * len(routes)
+        if not isinstance(route_linewidths, Iterable)
+        else list(route_linewidths)
+    )
+
     # check for valid arguments
     if not all(isinstance(r, list) for r in routes):  # pragma: no cover
-        msg = "routes must be an sequence of route lists"
+        msg = "`routes` must be an iterable of route lists"
+        raise TypeError(msg)
+    if len(routes) < 1:  # pragma: no cover
+        msg = "You must pass at least 1 route"
         raise ValueError(msg)
-    if len(routes) <= 1:  # pragma: no cover
-        msg = "You must pass more than 1 route"
-        raise ValueError(msg)
-    if isinstance(route_colors, str):
-        route_colors = [route_colors] * len(routes)
-    if len(routes) != len(route_colors):  # pragma: no cover
-        msg = "route_colors list must have same length as routes"
-        raise ValueError(msg)
-    if not isinstance(route_linewidths, Sequence):
-        route_linewidths = [route_linewidths] * len(routes)
-    if len(routes) != len(route_linewidths):  # pragma: no cover
-        msg = "route_linewidths list must have same length as routes"
+    if not (len(routes) == len(route_colors) == len(route_linewidths)):  # pragma: no cover
+        msg = "`route_colors` and `route_linewidths` must have same lengths as `routes`"
         raise ValueError(msg)
 
     # plot the graph and the first route
