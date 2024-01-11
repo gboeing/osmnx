@@ -12,7 +12,7 @@ dependencies:
   - networkx=2.5
   - numpy=1.20
   - pandas=1.1
-  - python=3.8 # pin to minimum version from /pyproject.toml
+  - python=3.9 # pin to minimum version from /pyproject.toml
   - requests=2.27
   - shapely=2.0
 
