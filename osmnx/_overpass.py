@@ -33,7 +33,7 @@ def _get_network_filter(network_type: str) -> str:
 
     Returns
     -------
-    filtr : string
+    overpass_filter : string
         the Overpass query filter
     """
     # define built-in queries to send to the API. specifying way["highway"]
@@ -100,12 +100,12 @@ def _get_network_filter(network_type: str) -> str:
     )
 
     if network_type in filters:
-        osm_filter = filters[network_type]
+        overpass_filter = filters[network_type]
     else:  # pragma: no cover
         msg = f"Unrecognized network_type {network_type!r}"
         raise ValueError(msg)
 
-    return osm_filter
+    return overpass_filter
 
 
 def _get_overpass_pause(
@@ -131,7 +131,7 @@ def _get_overpass_pause(
     Returns
     -------
     pause : float
-        the current pause duration demanded by the Overpass status endpoint
+        the current pause duration specified by the Overpass status endpoint
     """
     if not settings.overpass_rate_limit:
         # if overpass rate limiting is False, then there is zero pause
@@ -344,7 +344,7 @@ def _download_overpass_features(
     polygon: Polygon, tags: dict[str, bool | str | list[str]]
 ) -> Generator[dict[Any, Any], None, None]:
     """
-    Retrieve OSM features within boundary from the Overpass API.
+    Retrieve OSM features within some boundary polygon from the Overpass API.
 
     Parameters
     ----------
