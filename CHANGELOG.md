@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- add type annotations throughout the package for user type hinting and type checking (#1107)
 - fix a bug in the features module's polygon handling (#1104)
 - deprecate return_coords argument in graph.graph_from_address function (#1105)
 
