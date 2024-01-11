@@ -6,7 +6,7 @@ import itertools
 import multiprocessing as mp
 from collections.abc import Generator
 from collections.abc import Iterable
-from typing import Any
+from typing import overload
 from warnings import warn
 
 import networkx as nx
@@ -16,13 +16,103 @@ from . import utils
 from . import utils_graph
 
 
+# orig/dest int, weight present, cpus present
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+    weight: str,
+    cpus: int | None,
+) -> list[int] | None:
+    ...
+
+
+# orig/dest int, weight missing, cpus present
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+    *,
+    cpus: int | None,
+) -> list[int] | None:
+    ...
+
+
+# orig/dest int, weight present, cpus missing
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+    weight: str,
+) -> list[int] | None:
+    ...
+
+
+# orig/dest int, weight missing, cpus missing
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+) -> list[int] | None:
+    ...
+
+
+# orig/dest Iterable, weight present, cpus present
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: Iterable[int],
+    dest: Iterable[int],
+    weight: str,
+    cpus: int | None,
+) -> list[list[int] | None]:
+    ...
+
+
+# orig/dest Iterable, weight missing, cpus present
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: Iterable[int],
+    dest: Iterable[int],
+    *,
+    cpus: int | None,
+) -> list[list[int] | None]:
+    ...
+
+
+# orig/dest Iterable, weight present, cpus missing
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: Iterable[int],
+    dest: Iterable[int],
+    weight: str,
+) -> list[list[int] | None]:
+    ...
+
+
+# orig/dest Iterable, weight missing, cpus missing
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: Iterable[int],
+    dest: Iterable[int],
+) -> list[list[int] | None]:
+    ...
+
+
 def shortest_path(
     G: nx.MultiDiGraph,
     orig: int | Iterable[int],
     dest: int | Iterable[int],
     weight: str = "length",
     cpus: int | None = 1,
-) -> list[Any] | None:
+) -> list[int] | None | list[list[int] | None]:
     """
     Solve shortest path from origin node(s) to destination node(s).
 
@@ -60,16 +150,19 @@ def shortest_path(
     _verify_edge_attribute(G, weight)
 
     # if neither orig nor dest is iterable, just return the shortest path
-    if not (hasattr(orig, "__iter__") or hasattr(dest, "__iter__")):
+    if not (isinstance(orig, Iterable) or isinstance(dest, Iterable)):
         return _single_shortest_path(G, orig, dest, weight)
 
     # if only 1 of orig or dest is iterable and the other is not, raise error
-    if not (hasattr(orig, "__iter__") and hasattr(dest, "__iter__")):
+    if not (isinstance(orig, Iterable) and isinstance(dest, Iterable)):
         msg = "orig and dest must either both be iterable or neither must be iterable"
-        raise ValueError(msg)
+        raise TypeError(msg)
 
-    # if both orig and dest are iterable, ensure they have same lengths
-    if len(orig) != len(dest):  # type: ignore[arg-type]  # pragma: no cover
+    # if both orig and dest are iterable, make them lists (so we're guaranteed
+    # to be able to get their sizes) then ensure they have same lengths
+    orig = list(orig)
+    dest = list(dest)
+    if len(orig) != len(dest):  # pragma: no cover
         msg = "orig and dest must be of equal length"
         raise ValueError(msg)
 
@@ -77,7 +170,7 @@ def shortest_path(
     if cpus is None:
         cpus = mp.cpu_count()
     cpus = min(cpus, mp.cpu_count())
-    utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")  # type: ignore[arg-type]
+    utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")
 
     # if single-threading, calculate each shortest path one at a time
     if cpus == 1:
