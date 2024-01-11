@@ -80,11 +80,13 @@ extend-select = [
     "EM",   # check raw literals inside exception raising
     "ERA",  # check commented-out code from python files a la eradicate
     "F",    # check python source code for errors a la pyflakes
+    "FA",   # check from __future__ import annotations
     "FIX",  # check temporary developer notes a la flake8-fixme
    #"FURB", # check code improvements a la refurb (preview)
     "G",    # check logging string formatting a la flake8-logging-format
     "I",    # check isort imports
    #"LOG",  # check logging module usage a la flake8-logging (preview)
+    "NPY",  # check numpy usage
     "PD",   # check pandas linting a la pandas-vet
     "PERF", # check performance anti-patterns a la perflint
     "PGH",  # check pygrep hooks
