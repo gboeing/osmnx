@@ -22,7 +22,9 @@ from ._errors import ResponseStatusCodeError
 _original_getaddrinfo = socket.getaddrinfo
 
 
-def _save_to_cache(url: str, response_json: dict[Any, Any] | list[Any], ok: bool) -> None:
+def _save_to_cache(
+    url: str, response_json: dict[str, Any] | list[dict[str, Any]], ok: bool
+) -> None:
     """
     Save a HTTP response JSON object to a file in the cache folder.
 
@@ -98,7 +100,9 @@ def _url_in_cache(url: str) -> Path | None:
     return filepath if filepath.is_file() else None
 
 
-def _retrieve_from_cache(url: str, check_remark: bool = True) -> dict[Any, Any] | list[Any] | None:
+def _retrieve_from_cache(
+    url: str, check_remark: bool = True
+) -> dict[str, Any] | list[dict[str, Any]] | None:
     """
     Retrieve a HTTP response JSON object from the cache, if it exists.
 
@@ -120,7 +124,7 @@ def _retrieve_from_cache(url: str, check_remark: bool = True) -> dict[Any, Any] 
         # return cached response for this url if exists, otherwise return None
         cache_filepath = _url_in_cache(url)
         if cache_filepath is not None:
-            response_json: dict[Any, Any] | list[Any] = json.loads(
+            response_json: dict[str, Any] | list[dict[str, Any]] = json.loads(
                 cache_filepath.read_text(encoding="utf-8")
             )
 
@@ -312,7 +316,7 @@ def _parse_response(response: requests.Response) -> dict[Any, Any] | list[dict[s
 
     # parse the response to JSON and log/raise exceptions
     try:
-        response_json: dict[Any, Any] | list[Any] = response.json()
+        response_json: dict[str, Any] | list[dict[str, Any]] = response.json()
     except JSONDecodeError as e:  # pragma: no cover
         msg = f"{domain!r} responded: {response.status_code} {response.reason} {response.text}"
         utils.log(msg, level=lg.ERROR)

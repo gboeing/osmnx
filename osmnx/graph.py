@@ -593,7 +593,7 @@ def graph_from_xml(
 
 
 def _create_graph(
-    response_jsons: Iterable[dict[Any, Any]],
+    response_jsons: Iterable[dict[str, Any]],
     retain_all: bool = False,
     bidirectional: bool = False,
 ) -> nx.MultiDiGraph:
@@ -720,7 +720,7 @@ def _convert_path(element: dict[str, Any]) -> dict[str, Any]:
 
 
 def _parse_nodes_paths(
-    response_json: dict[Any, Any],
+    response_json: dict[str, Any],
 ) -> tuple[dict[int, dict[str, Any]], dict[int, dict[str, Any]]]:
     """
     Construct dicts of nodes and paths from an Overpass response.

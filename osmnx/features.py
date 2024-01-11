@@ -405,7 +405,7 @@ def features_from_xml(
 
 
 def _create_gdf(
-    response_jsons: Iterable[dict[Any, Any] | list[Any]],
+    response_jsons: Iterable[dict[str, Any]],
     polygon: Polygon,
     tags: dict[str, bool | str | list[str]] | None,
 ) -> gpd.GeoDataFrame:
@@ -457,7 +457,7 @@ def _create_gdf(
         # Parses the JSON of OSM nodes, ways and (multipolygon) relations
         # to dictionaries of coordinates, Shapely Points, LineStrings,
         # Polygons and MultiPolygons
-        for element in response_json["elements"]:  # type: ignore[call-overload]
+        for element in response_json["elements"]:
             # id numbers are only unique within element types
             # create unique id from combination of type and id
             unique_id = f"{element['type']}/{element['id']}"

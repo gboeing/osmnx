@@ -301,7 +301,7 @@ def _elevation_request(url: str, pause: float) -> dict[Any, Any]:
     response_json : dict
     """
     # check if request already exists in cache
-    cached_response_json: dict[Any, Any] | None = _downloader._retrieve_from_cache(url)  # type: ignore[assignment]
+    cached_response_json: dict[str, Any] | None = _downloader._retrieve_from_cache(url)  # type: ignore[assignment]
     if cached_response_json is not None:
         return cached_response_json
 
@@ -319,6 +319,6 @@ def _elevation_request(url: str, pause: float) -> dict[Any, Any]:
         **settings.requests_kwargs,
     )
 
-    response_json: dict[Any, Any] = _downloader._parse_response(response)  # type: ignore[assignment]
+    response_json: dict[str, Any] = _downloader._parse_response(response)  # type: ignore[assignment]
     _downloader._save_to_cache(url, response_json, response.ok)
     return response_json
