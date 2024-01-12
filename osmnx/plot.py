@@ -1,6 +1,7 @@
 """Visualize street networks, routes, orientations, and geospatial features."""
 
 from pathlib import Path
+from warnings import warn
 
 import networkx as nx
 import numpy as np
@@ -40,21 +41,36 @@ def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=Fal
     stop : float
         where to end in the colorspace
     alpha : float
-        opacity, the alpha channel for the RGBa colors
+        If `None`, return colors as HTML-like hex triplet "#rrggbb" RGB
+        strings. If `float`, return as "#rrggbbaa" RGBa strings.
     return_hex : bool
-        if True, convert RGBa colors to HTML-like hexadecimal RGB strings. if
-        False, return colors as (R, G, B, alpha) tuples.
+        deprecated, do not use
 
     Returns
     -------
     color_list : list
     """
-    _verify_mpl()
-    color_list = [colormaps[cmap](x) for x in np.linspace(start, stop, n)]
-    if return_hex:
-        color_list = [colors.to_hex(c) for c in color_list]
+    if return_hex is None:
+        return_hex = False
     else:
+        warn(
+            "The `return_hex` function has been deprecated and will be removed "
+            "in the v2.0.0 release.",
+            stacklevel=2,
+        )
+
+    _verify_mpl()
+
+    color_list = [colormaps[cmap](x) for x in np.linspace(start, stop, n)]
+    keep_alpha = alpha is not None
+    if keep_alpha:
         color_list = [(r, g, b, alpha) for r, g, b, _ in color_list]
+    else:
+        color_list = [(r, g, b) for r, g, b, _ in color_list]
+
+    if return_hex:
+        return [colors.to_hex(c, keep_alpha=keep_alpha) for c in color_list]
+
     return color_list
 
 
