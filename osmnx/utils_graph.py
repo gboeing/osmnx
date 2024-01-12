@@ -259,24 +259,27 @@ def graph_from_gdfs(
         msg = "gdf_nodes must contain x and y columns"
         raise ValueError(msg)
 
-    # if gdf_nodes has a geometry attribute set, drop that column (as we use x
-    # and y for geometry information) and warn the user if the geometry values
-    # differ from the coordinates in the x and y columns
-    if hasattr(gdf_nodes, "geometry"):
-        try:
-            all_x_match = (gdf_nodes.geometry.x == gdf_nodes["x"]).all()
-            all_y_match = (gdf_nodes.geometry.y == gdf_nodes["y"]).all()
-            assert all_x_match
-            assert all_y_match
-        except (AssertionError, ValueError):  # pragma: no cover
-            # AssertionError if x/y coords don't match geometry column
-            # ValueError if geometry column contains non-point geometry types
-            warn(
-                "discarding the gdf_nodes geometry column, though its "
-                "values differ from the coordinates in the x and y columns",
-                stacklevel=2,
-            )
-        gdf_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
+    if not hasattr(gdf_nodes, "geometry"):
+        msg = "gdf_nodes must have a geometry attribute"
+        raise ValueError(msg)
+
+    # drop geometry column from gdf_nodes (as we use x and y for geometry
+    # information), but warn the user if the geometry values differ from the
+    # coordinates in the x and y columns. this results in a df instead of gdf.
+    try:
+        all_x_match = (gdf_nodes.geometry.x == gdf_nodes["x"]).all()
+        all_y_match = (gdf_nodes.geometry.y == gdf_nodes["y"]).all()
+        assert all_x_match
+        assert all_y_match
+    except (AssertionError, ValueError):  # pragma: no cover
+        # AssertionError if x/y coords don't match geometry column
+        # ValueError if geometry column contains non-point geometry types
+        warn(
+            "discarding the gdf_nodes geometry column, though its "
+            "values differ from the coordinates in the x and y columns",
+            stacklevel=2,
+        )
+    df_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
 
     # create graph and add graph-level attribute dict
     if graph_attrs is None:
@@ -292,11 +295,11 @@ def graph_from_gdfs(
         G.add_edge(u, v, key=k, **data)
 
     # add any nodes with no incident edges, since they wouldn't be added above
-    G.add_nodes_from(set(gdf_nodes.index) - set(G.nodes))
+    G.add_nodes_from(set(df_nodes.index) - set(G.nodes))
 
     # now all nodes are added, so set nodes' attributes
-    for col in gdf_nodes.columns:
-        nx.set_node_attributes(G, name=col, values=gdf_nodes[col].dropna())
+    for col in df_nodes.columns:
+        nx.set_node_attributes(G, name=col, values=df_nodes[col].dropna())
 
     utils.log("Created graph from node/edge GeoDataFrames")
     return G

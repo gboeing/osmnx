@@ -157,7 +157,6 @@ def project_graph(
     gdf_nodes_proj["x"] = gdf_nodes_proj["geometry"].x
     gdf_nodes_proj["y"] = gdf_nodes_proj["geometry"].y
     to_crs = gdf_nodes_proj.crs
-    gdf_nodes_proj = gdf_nodes_proj.drop(columns=["geometry"])
 
     # STEP 2: PROJECT THE EDGES
     if "simplified" in G.graph and G.graph["simplified"]:
