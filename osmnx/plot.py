@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 from typing import Literal
 from typing import overload
+from warnings import warn
 
 import geopandas as gpd
 import networkx as nx
@@ -41,8 +42,8 @@ def get_colors(
     cmap: str = "viridis",
     start: float = 0,
     stop: float = 1,
-    alpha: float = 1,
-    return_hex: bool = True,
+    alpha: float | None = None,
+    return_hex: bool | None = None,
 ) -> list[str | tuple[float, float, float, float]]:
     """
     Get `n` evenly-spaced colors from a matplotlib colormap.
@@ -58,21 +59,36 @@ def get_colors(
     stop : float
         where to end in the colorspace
     alpha : float
-        opacity, the alpha channel for the RGBa colors
+        If `None`, return colors as HTML-like hex triplet "#rrggbb" RGB
+        strings. If `float`, return as "#rrggbbaa" RGBa strings.
     return_hex : bool
-        If True, return colors as HTML-like hex triplet RGB strings. If False,
-        return colors as (R, G, B, alpha) tuples.
+        deprecated, do not use
 
     Returns
     -------
     color_list : list
     """
-    _verify_mpl()
-    color_list = [colormaps[cmap](x) for x in np.linspace(start, stop, n)]
-    if return_hex:
-        color_list = [colors.to_hex(c) for c in color_list]
+    if return_hex is None:
+        return_hex = False
     else:
+        warn(
+            "The `return_hex` parameter has been deprecated and will be removed "
+            "in the v2.0.0 release.",
+            stacklevel=2,
+        )
+
+    _verify_mpl()
+
+    color_list = [colormaps[cmap](x) for x in np.linspace(start, stop, n)]
+    keep_alpha = alpha is not None
+    if keep_alpha:
         color_list = [(r, g, b, alpha) for r, g, b, _ in color_list]
+    else:
+        color_list = [(r, g, b) for r, g, b, _ in color_list]
+
+    if return_hex:
+        return [colors.to_hex(c, keep_alpha=keep_alpha) for c in color_list]
+
     return color_list
 
 
