@@ -167,7 +167,7 @@ def truncate_graph_polygon(
     utils.log("Identifying all nodes that lie outside the polygon...")
 
     # first identify all nodes whose point geometries lie within the polygon
-    gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
+    gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)["geometry"]
     to_keep = utils_geo._intersect_index_quadrats(gs_nodes, polygon)
 
     if not to_keep:

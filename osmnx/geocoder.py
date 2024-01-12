@@ -162,7 +162,7 @@ def geocode_to_gdf(
 
 
 def _geocode_query_to_gdf(
-    query: str | dict[str, str], which_result: int, by_osmid: bool
+    query: str | dict[str, str], which_result: int | None, by_osmid: bool
 ) -> gpd.GeoDataFrame:
     """
     Geocode a single place query to a GeoDataFrame.
@@ -242,7 +242,9 @@ def _geocode_query_to_gdf(
     return gdf
 
 
-def _get_first_polygon(results: list[dict[str, Any]], query: str) -> dict[str, Any]:
+def _get_first_polygon(
+    results: list[dict[str, Any]], query: str | dict[str, str]
+) -> dict[str, Any]:
     """
     Choose first result of geometry type (Multi)Polygon from list of results.
 

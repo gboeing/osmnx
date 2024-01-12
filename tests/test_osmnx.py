@@ -141,7 +141,7 @@ def test_stats() -> None:
     """Test generating graph stats."""
     # create graph, add a new node, add bearings, project it
     G = ox.graph_from_place(place1, network_type="all")
-    G.add_node(0, x=location_point[1], y=location_point[0])
+    G.add_node(0, x=location_point[1], y=location_point[0], street_count=0)
     _ = ox.bearing.calculate_bearing(0, 0, 1, 1)
     G = ox.add_edge_bearings(G)
     G = ox.add_edge_bearings(G, precision=2)
@@ -226,7 +226,7 @@ def test_osm_xml() -> None:
     first = gdf_way.iloc[0].dropna().astype(str)
     root = etree.Element("osm", attrib={"version": "0.6", "generator": "OSMnx"})
     edge = etree.SubElement(root, "way")
-    ox.osm_xml._append_nodes_as_edge_attrs(edge, first, gdf_way)
+    ox.osm_xml._append_nodes_as_edge_attrs(edge, first.to_dict(), gdf_way)
 
     # restore settings
     ox.settings.overpass_settings = default_overpass_settings

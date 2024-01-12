@@ -17,6 +17,7 @@ from __future__ import annotations
 import itertools
 import logging as lg
 from collections import Counter
+from collections.abc import Iterable
 from typing import Any
 
 import networkx as nx
@@ -29,7 +30,7 @@ from . import utils
 from . import utils_graph
 
 
-def streets_per_node(G: nx.MultiDiGraph) -> dict[str, int]:
+def streets_per_node(G: nx.MultiDiGraph) -> dict[int, int]:
     """
     Count streets (undirected edges) incident on each node.
 
@@ -43,7 +44,9 @@ def streets_per_node(G: nx.MultiDiGraph) -> dict[str, int]:
     spn : dict
         dictionary with node ID keys and street count values
     """
-    spn = dict(nx.get_node_attributes(G, "street_count"))
+    # ensure each count value has type int (otherwise could be type np.int64)
+    # if user has projected the graph bc GeoDataFrames use np.int64 for ints
+    spn = {k: int(v) for k, v in nx.get_node_attributes(G, "street_count").items()}
     if set(spn) != set(G.nodes):
         utils.log("Graph nodes changed since `street_count`s were calculated", level=lg.WARNING)
     return spn
@@ -128,7 +131,11 @@ def intersection_count(G: nx.MultiDiGraph, min_streets: int = 2) -> int:
     """
     spn = streets_per_node(G)
     node_ids = set(G.nodes)
-    return sum(count >= min_streets and node in node_ids for node, count in spn.items())
+    count = sum(c >= min_streets and n in node_ids for n, c in spn.items())
+
+    # ensure count value has type int (otherwise could be type np.int64) if
+    # user has projected the graph bc GeoDataFrames use np.int64 for ints
+    return int(count)
 
 
 def street_segment_count(Gu: nx.MultiGraph) -> int:
@@ -171,13 +178,13 @@ def street_length_total(Gu: nx.MultiGraph) -> float:
     return float(sum(d["length"] for u, v, d in Gu.edges(data=True)))
 
 
-def edge_length_total(G: nx.MultiDiGraph) -> float:
+def edge_length_total(G: nx.MultiGraph) -> float:
     """
     Calculate graph's total edge length.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
+    G : networkx.MultiGraph
         input graph
 
     Returns
@@ -260,7 +267,9 @@ def circuity_avg(Gu: nx.MultiGraph) -> float | None:
         return None
 
 
-def count_streets_per_node(G: nx.MultiDiGraph, nodes: list[int] | None = None) -> dict[int, int]:
+def count_streets_per_node(
+    G: nx.MultiDiGraph, nodes: Iterable[int] | None = None
+) -> dict[int, int]:
     """
     Count how many physical street segments connect to each node in a graph.
 
@@ -276,7 +285,7 @@ def count_streets_per_node(G: nx.MultiDiGraph, nodes: list[int] | None = None) -
     ----------
     G : networkx.MultiDiGraph
         input graph
-    nodes : list
+    nodes : iterable
         which node IDs to get counts for. if None, use all graph nodes,
         otherwise calculate counts only for these node IDs
 

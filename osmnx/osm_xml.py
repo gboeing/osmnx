@@ -373,7 +373,7 @@ def _create_way_for_each_edge(
 
 def _append_merged_edge_attrs(
     xml_edge: ET.Element,
-    sample_edge: pd.Series[Any],
+    sample_edge: dict[str, Any],
     all_edges_df: pd.DataFrame,
     edge_tags: list[str],
     edge_tag_aggs: list[tuple[str, str]] | None,
@@ -385,8 +385,8 @@ def _append_merged_edge_attrs(
     ----------
     xml_edge : ElementTree.Element
         XML representation of an output graph edge
-    sample_edge: pandas.Series
-        sample row from the the dataframe of way edges
+    sample_edge: dict
+        dict of sample row from the the dataframe of way edges
     all_edges_df: pandas.DataFrame
         a dataframe with one row for each edge in an OSM way
     edge_tags : list
@@ -427,7 +427,7 @@ def _append_merged_edge_attrs(
 
 
 def _append_nodes_as_edge_attrs(
-    xml_edge: ET.Element, sample_edge: pd.Series[Any], all_edges_df: pd.DataFrame
+    xml_edge: ET.Element, sample_edge: dict[str, Any], all_edges_df: pd.DataFrame
 ) -> None:
     """
     Extract list of ordered nodes and append as attributes of XML edge.
@@ -436,7 +436,7 @@ def _append_nodes_as_edge_attrs(
     ----------
     xml_edge : ElementTree.Element
         XML representation of an output graph edge
-    sample_edge: pandas.Series
+    sample_edge: dict
         sample row from the the dataframe of way edges
     all_edges_df: pandas.DataFrame
         a dataframe with one row for each edge in an OSM way
@@ -508,11 +508,11 @@ def _append_edges_xml_tree(
             first = all_way_edges.iloc[0].dropna().astype(str)
             edge = ET.SubElement(root, "way", attrib=first[edge_attrs].dropna().to_dict())
             _append_nodes_as_edge_attrs(
-                xml_edge=edge, sample_edge=first, all_edges_df=all_way_edges
+                xml_edge=edge, sample_edge=first.to_dict(), all_edges_df=all_way_edges
             )
             _append_merged_edge_attrs(
                 xml_edge=edge,
-                sample_edge=first,
+                sample_edge=first.to_dict(),
                 edge_tags=edge_tags,
                 edge_tag_aggs=edge_tag_aggs,
                 all_edges_df=all_way_edges,
@@ -529,7 +529,7 @@ def _append_edges_xml_tree(
     return root
 
 
-def _get_unique_nodes_ordered_from_way(df_way_edges: pd.DataFrame) -> list[int]:
+def _get_unique_nodes_ordered_from_way(df_way_edges: pd.DataFrame) -> list[Any]:
     """
     Recover original node order from edges associated with a single OSM way.
 

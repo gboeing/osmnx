@@ -239,7 +239,9 @@ def euclidean_dist_vec(y1, x1, y2, x2):  # type: ignore[no-untyped-def]
 
 
 def add_edge_lengths(
-    G: nx.MultiDiGraph, precision: int | None = None, edges: tuple[int, int, int] | None = None
+    G: nx.MultiDiGraph,
+    precision: int | None = None,
+    edges: Iterable[tuple[int, int, int]] | None = None,
 ) -> nx.MultiDiGraph:
     """
     Add `length` attribute (in meters) to each edge.
@@ -266,9 +268,9 @@ def add_edge_lengths(
         unprojected, unsimplified input graph
     precision : int
         deprecated, do not use
-    edges : tuple
-        tuple of (u, v, k) tuples representing subset of edges to add length
-        attributes to. if None, add lengths to all edges.
+    edges : iterable of tuples
+        iterable of (u, v, k) tuples representing subset of edges to add
+        length attributes to. if None, add lengths to all edges.
 
     Returns
     -------
@@ -283,7 +285,7 @@ def add_edge_lengths(
             stacklevel=2,
         )
 
-    uvk = tuple(G.edges) if edges is None else edges
+    uvk = G.edges if edges is None else edges
 
     # extract edge IDs and corresponding coordinates from their nodes
     x = G.nodes(data="x")
