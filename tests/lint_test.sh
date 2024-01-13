@@ -20,7 +20,7 @@ make -C ./docs html
 python -m sphinx -b linkcheck ./docs/source ./docs/build/linkcheck
 
 # run the tests and report the test coverage
-pytest --cov=./osmnx --cov-report=term-missing --verbose
+pytest --maxfail=1 --typeguard-packages=osmnx --cov=./osmnx --cov-report=term-missing --verbose
 
 # delete temp files and folders
 rm -r -f .pytest_cache .temp ./dist/ ./docs/build osmnx/__pycache__ tests/__pycache__

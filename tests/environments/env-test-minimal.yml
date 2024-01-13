@@ -29,6 +29,7 @@ dependencies:
   - pre-commit
   - pytest
   - pytest-cov
+  - typeguard
   - twine
 
   # docs
