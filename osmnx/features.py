@@ -420,7 +420,7 @@ def _create_gdf(
     Parameters
     ----------
     response_jsons : iterable
-        iterable of JSON responses from from the Overpass API
+        iterable of JSON response dicts from from the Overpass API
     polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         geographic boundary used for filtering the final GeoDataFrame
     tags : dict
