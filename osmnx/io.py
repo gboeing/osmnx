@@ -493,7 +493,7 @@ def _convert_edge_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.M
     return G
 
 
-def _convert_bool_string(value: str) -> bool:
+def _convert_bool_string(value: bool | str) -> bool:
     """
     Convert a "True" or "False" string literal to corresponding boolean type.
 
@@ -506,18 +506,18 @@ def _convert_bool_string(value: str) -> bool:
 
     Parameters
     ----------
-    value : string {"True", "False"}
+    value : bool or string {"True", "False"}
         the value to convert
 
     Returns
     -------
     bool
     """
-    if value in {"True", "False"}:
-        return value == "True"
-
     if isinstance(value, bool):
         return value
+
+    if value in {"True", "False"}:
+        return value == "True"
 
     # otherwise the value is not a valid boolean
     msg = f"invalid literal for boolean: {value!r}"

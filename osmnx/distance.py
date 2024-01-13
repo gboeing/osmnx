@@ -384,7 +384,7 @@ def nearest_nodes(
 
     Returns
     -------
-    nn or (nn, dist) : tuple or np.array or a tuple of (int/np.array, float/np.array)
+    nn or (nn, dist) : int or np.array or a tuple of (int/np.array, float/np.array)
         nearest node ID(s) or optionally a tuple of ID(s) and distance(s)
         between each point and its nearest node
     """
@@ -401,15 +401,18 @@ def nearest_nodes(
     if np.isnan(X_arr).any() or np.isnan(Y_arr).any():  # pragma: no cover
         msg = "`X` and `Y` cannot contain nulls"
         raise ValueError(msg)
+
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
+    nn_array: NDArray[np.int64]
+    dist_array: NDArray[np.float64]
 
     if projection.is_projected(G.graph["crs"]):
         # if projected, use k-d tree for euclidean nearest-neighbor search
         if cKDTree is None:  # pragma: no cover
             msg = "scipy must be installed to search a projected graph"
             raise ImportError(msg)
-        dist, pos = cKDTree(nodes).query(np.array([X_arr, Y_arr]).T, k=1)
-        nn: NDArray[np.int64] = nodes.index[pos].to_numpy()
+        dist_array, pos = cKDTree(nodes).query(np.array([X_arr, Y_arr]).T, k=1)
+        nn_array = nodes.index[pos].to_numpy()
 
     else:
         # if unprojected, use ball tree for haversine nearest-neighbor search
@@ -419,20 +422,24 @@ def nearest_nodes(
         # haversine requires lat, lon coords in radians
         nodes_rad = np.deg2rad(nodes[["y", "x"]])
         points_rad = np.deg2rad(np.array([Y_arr, X_arr]).T)
-        dist, pos = BallTree(nodes_rad, metric="haversine").query(points_rad, k=1)
-        dist = dist[:, 0] * EARTH_RADIUS_M  # convert radians -> meters
-        nn = nodes.index[pos[:, 0]].to_numpy()
+        dist_array, pos = BallTree(nodes_rad, metric="haversine").query(points_rad, k=1)
+        dist_array = dist_array[:, 0] * EARTH_RADIUS_M  # convert radians -> meters
+        nn_array = nodes.index[pos[:, 0]].to_numpy()
 
     # convert results to correct types for return
     if is_scalar:
-        nn = nn[0]
-        dist = dist[0]
-
-    if return_dist:
-        return nn, dist
+        nn = int(nn_array[0])
+        dist = float(dist_array[0])
+        if return_dist:
+            return nn, dist
+        # otherwise
+        return nn
 
     # otherwise
-    return nn
+    if return_dist:
+        return nn_array, dist_array
+    # otherwise
+    return nn_array
 
 
 # if X and Y are floats and return_dist is not provided (defaults False)
@@ -537,6 +544,8 @@ def nearest_edges(
         msg = "`X` and `Y` cannot contain nulls"
         raise ValueError(msg)
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
+    ne_array: NDArray[np.object_]  # array of tuple[int, int, int]
+    dist_array: NDArray[np.float64]
 
     # if no interpolation distance was provided
     if interpolate is None:
@@ -545,12 +554,12 @@ def nearest_edges(
 
         # use the r-tree to find each point's nearest neighbor and distance
         points = [Point(xy) for xy in zip(X_arr, Y_arr)]
-        pos, dist = rtree.query_nearest(points, all_matches=False, return_distance=True)
+        pos, dist_array = rtree.query_nearest(points, all_matches=False, return_distance=True)
 
         # if user passed X/Y lists, the 2nd subarray contains geom indices
         if len(pos.shape) > 1:
             pos = pos[1]
-        ne: NDArray[np.object_] = geoms.iloc[pos].index.to_numpy()
+        ne_array = geoms.iloc[pos].index.to_numpy()
 
     # otherwise, if interpolation distance was provided
     else:
@@ -571,8 +580,8 @@ def nearest_edges(
             if cKDTree is None:  # pragma: no cover
                 msg = "scipy must be installed to search a projected graph"
                 raise ImportError(msg)
-            dist, pos = cKDTree(vertices).query(np.array([X_arr, Y_arr]).T, k=1)
-            ne = vertices.index[pos].to_numpy()
+            dist_array, pos = cKDTree(vertices).query(np.array([X_arr, Y_arr]).T, k=1)
+            ne_array = vertices.index[pos].to_numpy()
 
         else:
             # if unprojected, use ball tree for haversine nearest-neighbor search
@@ -582,20 +591,24 @@ def nearest_edges(
             # haversine requires lat, lon coords in radians
             vertices_rad = np.deg2rad(vertices[["y", "x"]])
             points_rad = np.deg2rad(np.array([Y_arr, X_arr]).T)
-            dist, pos = BallTree(vertices_rad, metric="haversine").query(points_rad, k=1)
-            dist = dist[:, 0] * EARTH_RADIUS_M  # convert radians -> meters
-            ne = vertices.index[pos[:, 0]].to_numpy()
+            dist_array, pos = BallTree(vertices_rad, metric="haversine").query(points_rad, k=1)
+            dist_array = dist_array[:, 0] * EARTH_RADIUS_M  # convert radians -> meters
+            ne_array = vertices.index[pos[:, 0]].to_numpy()
 
     # convert results to correct types for return
     if is_scalar:
-        ne = ne[0]
-        dist = dist[0]
-
-    if return_dist:
-        return ne, dist
+        ne: tuple[int, int, int] = ne_array[0]
+        dist = float(dist_array[0])
+        if return_dist:
+            return ne, dist
+        # otherwise
+        return ne
 
     # otherwise
-    return ne
+    if return_dist:
+        return ne_array, dist_array
+    # otherwise
+    return ne_array
 
 
 def shortest_path(G, orig, dest, weight="length", cpus=1):  # type: ignore[no-untyped-def]

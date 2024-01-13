@@ -101,7 +101,7 @@ def get_node_colors_by_attr(
     stop: float = 1,
     na_color: str = "none",
     equal_size: bool = False,
-) -> pd.Series[str]:
+) -> pd.Series:  # type: ignore[type-arg]
     """
     Get colors based on nodes' numerical attribute values.
 
@@ -132,7 +132,7 @@ def get_node_colors_by_attr(
         labels are node IDs, values are colors as hex strings
     """
     _verify_mpl()
-    vals: pd.Series[float] = pd.Series(nx.get_node_attributes(G, attr))
+    vals = pd.Series(nx.get_node_attributes(G, attr))
     return _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size)
 
 
@@ -145,7 +145,7 @@ def get_edge_colors_by_attr(
     stop: float = 1,
     na_color: str = "none",
     equal_size: bool = False,
-) -> pd.Series[str]:
+) -> pd.Series:  # type: ignore[type-arg]
     """
     Get colors based on edges' numerical attribute values.
 
@@ -176,12 +176,12 @@ def get_edge_colors_by_attr(
         labels are (u, v, k) edge IDs, values are colors as hex strings
     """
     _verify_mpl()
-    vals: pd.Series[float] = pd.Series(nx.get_edge_attributes(G, attr))
+    vals = pd.Series(nx.get_edge_attributes(G, attr))
     return _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size)
 
 
 def plot_graph(
-    G: nx.MultiDiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     ax: Axes | None = None,
     figsize: tuple[float, float] = (8, 8),
     bgcolor: str = "#111111",
@@ -205,7 +205,7 @@ def plot_graph(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
+    G : networkx.MultiGraph or networkx.MultiDiGraph
         input graph
     ax : matplotlib axes instance
         if not None, plot on this pre-existing axes instance
@@ -839,14 +839,14 @@ def plot_orientation(
 
 
 def _get_colors_by_value(
-    vals: pd.Series[float],
+    vals: pd.Series,  # type: ignore[type-arg]
     num_bins: int | None,
     cmap: str,
     start: float,
     stop: float,
     na_color: str,
     equal_size: bool,
-) -> pd.Series[str]:
+) -> pd.Series:  # type: ignore[type-arg]
     """
     Map colors to the values in a series.
 
@@ -874,7 +874,6 @@ def _get_colors_by_value(
     color_series : pandas.Series
         labels are (u, v, k) edge IDs, values are colors as hex strings
     """
-    color_series: pd.Series[str]
     if len(vals) == 0:
         msg = "There are no attribute values."
         raise ValueError(msg)
@@ -890,7 +889,7 @@ def _get_colors_by_value(
         # linearly map a color to each attribute value
         normalizer = colors.Normalize(full_min, full_max)
         scalar_mapper = cm.ScalarMappable(normalizer, colormaps[cmap])
-        color_series = vals.map(scalar_mapper.to_rgba).map(colors.to_hex)  # type: ignore[assignment]
+        color_series = vals.map(scalar_mapper.to_rgba).map(colors.to_hex)
         color_series.loc[pd.isna(vals)] = na_color
 
     else:
@@ -899,7 +898,7 @@ def _get_colors_by_value(
             bins = pd.qcut(vals, num_bins, labels=range(num_bins))
         else:
             bins = pd.cut(vals, num_bins, labels=range(num_bins))
-        bin_colors = get_colors(num_bins, cmap, start, stop)
+        bin_colors = get_colors(num_bins, cmap, start, stop, return_hex=True)
         color_list = [bin_colors[b] if pd.notna(b) else na_color for b in bins]
         color_series = pd.Series(color_list, index=bins.index)
 

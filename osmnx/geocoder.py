@@ -40,7 +40,7 @@ def geocode(query: str) -> tuple[float, float]:
         the (lat, lon) coordinates returned by the geocoder
     """
     # define the parameters
-    params: OrderedDict[str, Any] = OrderedDict()
+    params: OrderedDict[str, int | str] = OrderedDict()
     params["format"] = "json"
     params["limit"] = 1
     params["dedupe"] = 0  # prevent deduping to get precise number of results

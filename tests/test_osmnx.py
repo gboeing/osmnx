@@ -288,7 +288,7 @@ def test_routing() -> None:
     assert ox.speed._clean_maxspeed("100;70") is None
 
     # test collapsing multiple mph values to single kph value
-    assert ox.speed._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44
+    assert ox.speed._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44.25685
 
     # test collapsing invalid values: should return None
     assert ox.speed._collapse_multiple_maxspeed_values(["mph", "kph"], np.mean) is None
@@ -297,8 +297,8 @@ def test_routing() -> None:
     dest_x = np.array([-122.401429])
     orig_y = np.array([37.794302])
     dest_y = np.array([37.794987])
-    orig_node = ox.distance.nearest_nodes(G, orig_x, orig_y)[0]
-    dest_node = ox.distance.nearest_nodes(G, dest_x, dest_y)[0]
+    orig_node = int(ox.distance.nearest_nodes(G, orig_x, orig_y)[0])
+    dest_node = int(ox.distance.nearest_nodes(G, dest_x, dest_y)[0])
 
     # test non-numeric weight, should raise ValueError
     with pytest.raises(ValueError, match="contains non-numeric values"):
@@ -307,7 +307,7 @@ def test_routing() -> None:
     # mismatch iterable and non-iterable orig/dest, should raise TypeError
     msg = "orig and dest must either both be iterable or neither must be iterable"
     with pytest.raises(TypeError, match=msg):
-        route2 = ox.shortest_path(G, orig_node, [dest_node])
+        route2 = ox.shortest_path(G, orig_node, [dest_node])  # type: ignore[call-overload]
 
     # mismatch lengths of orig/dest, should raise ValueError
     msg = "orig and dest must be of equal length"
@@ -330,8 +330,8 @@ def test_routing() -> None:
     # test multiple origins-destinations
     n = 5
     nodes = np.array(G.nodes)
-    origs = np.random.choice(nodes, size=n, replace=True)
-    dests = np.random.choice(nodes, size=n, replace=True)
+    origs = [int(x) for x in np.random.choice(nodes, size=n, replace=True)]
+    dests = [int(x) for x in np.random.choice(nodes, size=n, replace=True)]
     paths1 = ox.shortest_path(G, origs, dests, weight="length", cpus=1)
     paths2 = ox.shortest_path(G, origs, dests, weight="length", cpus=2)
     paths3 = ox.shortest_path(G, origs, dests, weight="length", cpus=None)
@@ -471,7 +471,7 @@ def test_api_endpoints() -> None:
 
     # Searching on public nominatim should work even if a (bad) key was provided
     ox.settings.nominatim_key = "NOT_A_KEY"
-    response_json = ox._nominatim._nominatim_request(params=params, request_type="search")
+    response_json = ox._nominatim._nominatim_request(params=params, request_type="lookup")
 
     ox.settings.nominatim_key = default_key
     ox.settings.nominatim_endpoint = default_nominatim_endpoint

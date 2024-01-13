@@ -328,4 +328,8 @@ def _parse_response(response: requests.Response) -> dict[str, Any] | list[dict[s
     if isinstance(response_json, dict) and "remark" in response_json:  # pragma: no cover
         utils.log(f'{domain!r} remarked: {response_json["remark"]!r}', level=lg.WARNING)
 
+    # log if the response status_code is not OK
+    if not response.ok:
+        utils.log(f"{domain!r} returned HTTP status code {response.status_code}", level=lg.WARNING)
+
     return response_json

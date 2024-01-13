@@ -20,7 +20,7 @@ from . import utils
 # nodes and edges are both missing (therefore both default true)
 @overload
 def graph_to_gdfs(
-    G: nx.MultiDiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     *,
     node_geometry: bool = True,
     fill_edge_geometry: bool = True,
@@ -31,7 +31,7 @@ def graph_to_gdfs(
 # both present/True
 @overload
 def graph_to_gdfs(
-    G: nx.MultiDiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     nodes: Literal[True],
     edges: Literal[True],
     node_geometry: bool = True,
@@ -43,7 +43,7 @@ def graph_to_gdfs(
 # both present, nodes true, edges false
 @overload
 def graph_to_gdfs(
-    G: nx.MultiDiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     nodes: Literal[True],
     edges: Literal[False],
     node_geometry: bool = True,
@@ -55,7 +55,7 @@ def graph_to_gdfs(
 # both present, nodes false, edges true
 @overload
 def graph_to_gdfs(
-    G: nx.MultiDiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     nodes: Literal[False],
     edges: Literal[True],
     node_geometry: bool = True,
@@ -67,7 +67,7 @@ def graph_to_gdfs(
 # nodes missing (therefore default true), edges present/true
 @overload
 def graph_to_gdfs(
-    G: nx.MultiDiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     *,
     edges: Literal[True],
     node_geometry: bool = True,
@@ -79,7 +79,7 @@ def graph_to_gdfs(
 # nodes missing (therefore default true), edges present/false
 @overload
 def graph_to_gdfs(
-    G: nx.MultiDiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     *,
     edges: Literal[False],
     node_geometry: bool = True,
@@ -91,7 +91,7 @@ def graph_to_gdfs(
 # nodes present/true, edges missing (therefore default true)
 @overload
 def graph_to_gdfs(
-    G: nx.MultiDiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     nodes: Literal[True],
     edges: bool = True,
     node_geometry: bool = True,
@@ -103,7 +103,7 @@ def graph_to_gdfs(
 # nodes present/false, edges missing (therefore default true)
 @overload
 def graph_to_gdfs(
-    G: nx.MultiDiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     nodes: Literal[False],
     edges: bool = True,
     node_geometry: bool = True,
@@ -113,20 +113,20 @@ def graph_to_gdfs(
 
 
 def graph_to_gdfs(
-    G: nx.MultiDiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     nodes: bool = True,
     edges: bool = True,
     node_geometry: bool = True,
     fill_edge_geometry: bool = True,
 ) -> gpd.GeoDataFrame | tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
-    Convert a MultiDiGraph to node and/or edge GeoDataFrames.
+    Convert a MultiGraph or MultiDiGraph to node and/or edge GeoDataFrames.
 
     This function is the inverse of `graph_from_gdfs`.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
+    G : networkx.MultiGraph or networkx.MultiDiGraph
         input graph
     nodes : bool
         if True, convert graph nodes to a GeoDataFrame and return it
@@ -142,7 +142,7 @@ def graph_to_gdfs(
     geopandas.GeoDataFrame or tuple
         gdf_nodes or gdf_edges or tuple of (gdf_nodes, gdf_edges). gdf_nodes
         is indexed by osmid and gdf_edges is multi-indexed by u, v, key
-        following normal MultiDiGraph structure.
+        following normal MultiGraph/MultiDiGraph structure.
     """
     crs = G.graph["crs"]
 

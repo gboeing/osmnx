@@ -356,7 +356,7 @@ def features_from_polygon(
 
 def features_from_xml(
     filepath: str | Path,
-    polygon: Polygon | None = None,
+    polygon: Polygon | MultiPolygon | None = None,
     tags: dict[str, bool | str | list[str]] | None = None,
     encoding: str = "utf-8",
 ) -> gpd.GeoDataFrame:
@@ -376,7 +376,7 @@ def features_from_xml(
     ----------
     filepath : string or pathlib.Path
         path to file containing OSM XML data
-    polygon : shapely.geometry.Polygon
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         optional geographic boundary to filter elements
     tags : dict
         optional dict of tags for filtering elements from the XML. Results
@@ -406,7 +406,7 @@ def features_from_xml(
 
 def _create_gdf(
     response_jsons: Iterable[dict[str, Any]],
-    polygon: Polygon,
+    polygon: Polygon | MultiPolygon | None,
     tags: dict[str, bool | str | list[str]] | None,
 ) -> gpd.GeoDataFrame:
     """
@@ -421,7 +421,7 @@ def _create_gdf(
     ----------
     response_jsons : iterable
         iterable of JSON responses from from the Overpass API
-    polygon : shapely.geometry.Polygon
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         geographic boundary used for filtering the final GeoDataFrame
     tags : dict
         dict of tags used for filtering the final GeoDataFrame
@@ -811,10 +811,11 @@ def _parse_relation_to_multipolygon(
 
 def _assemble_multipolygon_component_polygons(
     element: dict[str, Any], geometries: dict[str, Any]
-) -> MultiPolygon:
+) -> tuple[list[Polygon], list[Polygon]]:
     """
     Assemble a MultiPolygon from its component LineStrings and Polygons.
 
+    Returns lists of the MultiPolygons inner and outer polygon components.
     The OSM wiki suggests an algorithm for assembling multipolygon geometries
     https://wiki.openstreetmap.org/wiki/Relation:multipolygon/Algorithm.
     This method takes a simpler approach relying on the accurate tagging
@@ -830,8 +831,7 @@ def _assemble_multipolygon_component_polygons(
 
     Returns
     -------
-    geometry : shapely.geometry.MultiPolygon
-        a single MultiPolygon object
+    polygons : tuple of lists of shapely.geometry.Polygon
     """
     outer_polygons = []
     inner_polygons = []
@@ -1002,7 +1002,9 @@ def _buffer_invalid_geometries(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
 
 def _filter_gdf_by_polygon_and_tags(
-    gdf: gpd.GeoDataFrame, polygon: Polygon, tags: dict[str, bool | str | list[str]] | None
+    gdf: gpd.GeoDataFrame,
+    polygon: Polygon | MultiPolygon | None,
+    tags: dict[str, bool | str | list[str]] | None,
 ) -> gpd.GeoDataFrame:
     """
     Filter the GeoDataFrame to the requested bounding polygon and tags.
@@ -1015,7 +1017,7 @@ def _filter_gdf_by_polygon_and_tags(
     ----------
     gdf : geopandas.GeoDataFrame
         the GeoDataFrame to filter
-    polygon : shapely.geometry.Polygon
+    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
         polygon defining the boundary of the requested area
     tags : dict
         the tags requested
@@ -1033,9 +1035,9 @@ def _filter_gdf_by_polygon_and_tags(
 
         # if a polygon was supplied, create a filter that is True for
         # features that intersect with the polygon
-        if polygon:
+        if polygon is not None:
             # get set of index labels of features that intersect polygon
-            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf, polygon)
+            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf["geometry"], polygon)
             # create boolean series, True for features whose index is in set
             polygon_filter = gdf.index.isin(gdf_indices_in_polygon)
 

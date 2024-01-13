@@ -81,7 +81,9 @@ def add_edge_grades(
     return G
 
 
-def _query_raster(nodes: pd.DataFrame, filepath: str | Path, band: int) -> zip[tuple[int, Any]]:
+def _query_raster(
+    nodes: pd.DataFrame, filepath: str | Path, band: int
+) -> Iterable[tuple[int, Any]]:
     """
     Query a raster for values at coordinates in a DataFrame's x/y columns.
 
@@ -321,4 +323,7 @@ def _elevation_request(url: str, pause: float) -> dict[str, Any]:
 
     response_json: dict[str, Any] = _downloader._parse_response(response)  # type: ignore[assignment]
     _downloader._save_to_cache(url, response_json, response.ok)
+    if not isinstance(response_json, dict):
+        msg = "Elevation API did not return a dict of results."
+        raise TypeError(msg)
     return response_json

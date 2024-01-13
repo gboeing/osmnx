@@ -428,7 +428,7 @@ def bbox_from_point(
 @overload
 def bbox_from_point(
     point: tuple[float, float], *, project_utm: Literal[True], return_crs: Literal[True]
-) -> tuple[float, float, float, float, float]:
+) -> tuple[float, float, float, float, Any]:
     ...
 
 
@@ -498,7 +498,7 @@ def bbox_from_point(
 @overload
 def bbox_from_point(
     point: tuple[float, float], dist: float, project_utm: Literal[True], return_crs: Literal[True]
-) -> tuple[float, float, float, float, float]:
+) -> tuple[float, float, float, float, Any]:
     ...
 
 
@@ -539,7 +539,7 @@ def bbox_from_point(
     dist: float = 1000,
     project_utm: bool = False,
     return_crs: bool = False,
-) -> tuple[float, float, float, float] | tuple[float, float, float, float, float]:
+) -> tuple[float, float, float, float] | tuple[float, float, float, float, Any]:
     """
     Create a bounding box around a (lat, lon) point.
 

@@ -40,12 +40,15 @@ def _download_nominatim_element(
         JSON response from the Nominatim server
     """
     # define the parameters
-    params: OrderedDict[str, Any] = OrderedDict()
+    params: OrderedDict[str, int | str] = OrderedDict()
     params["format"] = "json"
-    params["polygon_geojson"] = int(polygon_geojson)
+    params["polygon_geojson"] = int(polygon_geojson)  # bool -> int
 
     if by_osmid:
         # if querying by OSM ID, use the lookup endpoint
+        if not isinstance(query, str):
+            msg = "`query` must be a string if `by_osmid` is True"
+            raise TypeError(msg)
         request_type = "lookup"
         params["osm_ids"] = query
 
@@ -73,7 +76,7 @@ def _download_nominatim_element(
 
 
 def _nominatim_request(
-    params: OrderedDict[str, Any],
+    params: OrderedDict[str, int | str],
     request_type: str = "search",
     pause: float = 1,
     error_pause: float = 60,
@@ -101,9 +104,12 @@ def _nominatim_request(
         msg = 'Nominatim request_type must be "search", "reverse", or "lookup"'
         raise ValueError(msg)
 
+    # add nominatim API key to params if one has been provided in settings
+    if settings.nominatim_key is not None:
+        params["key"] = settings.nominatim_key
+
     # prepare Nominatim API URL and see if request already exists in cache
     url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
-    params["key"] = settings.nominatim_key
     prepared_url = str(requests.Request("GET", url, params=params).prepare().url)
 
     cached_response_json: list[dict[str, Any]] | None = _downloader._retrieve_from_cache(
@@ -139,4 +145,7 @@ def _nominatim_request(
 
     response_json: list[dict[str, Any]] = _downloader._parse_response(response)  # type: ignore[assignment]
     _downloader._save_to_cache(prepared_url, response_json, response.ok)
+    if not isinstance(response_json, list):
+        msg = "Nominatim API did not return a list of results."
+        raise TypeError(msg)
     return response_json

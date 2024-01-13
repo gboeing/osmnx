@@ -429,4 +429,7 @@ def _overpass_request(
 
     response_json: dict[str, Any] = _downloader._parse_response(response)  # type: ignore[assignment]
     _downloader._save_to_cache(prepared_url, response_json, response.ok)
+    if not isinstance(response_json, dict):
+        msg = "Overpass API did not return a dict of results."
+        raise TypeError(msg)
     return response_json
