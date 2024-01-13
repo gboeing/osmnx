@@ -136,8 +136,7 @@ def geocode_to_gdf(
 
     # for each query and which_result value
     gdf = gpd.GeoDataFrame()
-    wr: int
-    for q, wr in zip(query_list, which_result_list):  # type: ignore[assignment]
+    for q, wr in zip(query_list, which_result_list):
         # ensure each query is correct type
         if not isinstance(q, (str, dict)):  # pragma: no cover
             msg = "each query must be a string or dict"

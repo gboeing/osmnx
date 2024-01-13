@@ -303,8 +303,8 @@ def _elevation_request(url: str, pause: float) -> dict[str, Any]:
     response_json : dict
     """
     # check if request already exists in cache
-    cached_response_json: dict[str, Any] | None = _downloader._retrieve_from_cache(url)  # type: ignore[assignment]
-    if cached_response_json is not None:
+    cached_response_json = _downloader._retrieve_from_cache(url)
+    if isinstance(cached_response_json, dict):
         return cached_response_json
 
     # pause then request this URL
@@ -321,9 +321,9 @@ def _elevation_request(url: str, pause: float) -> dict[str, Any]:
         **settings.requests_kwargs,
     )
 
-    response_json: dict[str, Any] = _downloader._parse_response(response)  # type: ignore[assignment]
-    _downloader._save_to_cache(url, response_json, response.ok)
+    response_json = _downloader._parse_response(response)
     if not isinstance(response_json, dict):
         msg = "Elevation API did not return a dict of results."
         raise TypeError(msg)
+    _downloader._save_to_cache(url, response_json, response.ok)
     return response_json

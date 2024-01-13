@@ -111,11 +111,8 @@ def _nominatim_request(
     # prepare Nominatim API URL and see if request already exists in cache
     url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
     prepared_url = str(requests.Request("GET", url, params=params).prepare().url)
-
-    cached_response_json: list[dict[str, Any]] | None = _downloader._retrieve_from_cache(
-        prepared_url
-    )  # type: ignore[assignment]
-    if cached_response_json is not None:
+    cached_response_json = _downloader._retrieve_from_cache(prepared_url)
+    if isinstance(cached_response_json, list):
         return cached_response_json
 
     # pause then request this URL
@@ -143,9 +140,9 @@ def _nominatim_request(
         time.sleep(error_pause)
         return _nominatim_request(params, request_type, pause, error_pause)
 
-    response_json: list[dict[str, Any]] = _downloader._parse_response(response)  # type: ignore[assignment]
-    _downloader._save_to_cache(prepared_url, response_json, response.ok)
+    response_json = _downloader._parse_response(response)
     if not isinstance(response_json, list):
         msg = "Nominatim API did not return a list of results."
         raise TypeError(msg)
+    _downloader._save_to_cache(prepared_url, response_json, response.ok)
     return response_json
