@@ -389,7 +389,7 @@ def nearest_nodes(
         between each point and its nearest node
     """
     # make coordinates arrays whether user passed iterable values or not
-    if not (hasattr(X, "__iter__") and hasattr(Y, "__iter__")):
+    if not (isinstance(X, Iterable) and isinstance(Y, Iterable)):
         is_scalar = True
         X_arr = np.array([X])
         Y_arr = np.array([Y])
@@ -531,7 +531,7 @@ def nearest_edges(
         of ID(s) and distance(s) between each point and its nearest edge
     """
     # make coordinates arrays whether user passed iterable values or not
-    if not (hasattr(X, "__iter__") and hasattr(Y, "__iter__")):
+    if not (isinstance(X, Iterable) and isinstance(Y, Iterable)):
         is_scalar = True
         X_arr = np.array([X])
         Y_arr = np.array([Y])

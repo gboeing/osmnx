@@ -188,9 +188,9 @@ def plot_graph(
     node_color: str | Sequence[str] = "w",
     node_size: float | Sequence[float] = 15,
     node_alpha: float | None = None,
-    node_edgecolor: str | Sequence[str] = "none",
+    node_edgecolor: str | Iterable[str] = "none",
     node_zorder: int = 1,
-    edge_color: str | Sequence[str] = "#999999",
+    edge_color: str | Iterable[str] = "#999999",
     edge_linewidth: float | Sequence[float] = 1,
     edge_alpha: float | None = None,
     show: bool = True,
@@ -220,12 +220,12 @@ def plot_graph(
     node_alpha : float
         opacity of the nodes, note: if you passed RGBA values to node_color,
         set node_alpha=None to use the alpha channel in node_color
-    node_edgecolor : string or Sequence of string
+    node_edgecolor : string or Iterable of string
         color(s) of the nodes' markers' borders
     node_zorder : int
         zorder to plot nodes: edges are always 1, so set node_zorder=0 to plot
         nodes below edges
-    edge_color : string or Sequence of string
+    edge_color : string or Iterable of string
         color(s) of the edges' lines
     edge_linewidth : float or Sequence of float
         width(s) of the edges' lines: if 0, then skip plotting the edges
@@ -253,8 +253,8 @@ def plot_graph(
         tuple of matplotlib (Figure, Axes)
     """
     _verify_mpl()
-    max_node_size = max(node_size) if hasattr(node_size, "__iter__") else node_size
-    max_edge_lw = max(edge_linewidth) if hasattr(edge_linewidth, "__iter__") else edge_linewidth
+    max_node_size = max(node_size) if isinstance(node_size, Sequence) else node_size
+    max_edge_lw = max(edge_linewidth) if isinstance(edge_linewidth, Sequence) else edge_linewidth
     if max_node_size <= 0 and max_edge_lw <= 0:  # pragma: no cover
         msg = "Either `node_size` or `edge_linewidth` must be > 0 to plot something."
         raise ValueError(msg)
