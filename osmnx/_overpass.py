@@ -241,7 +241,7 @@ def _create_overpass_query(polygon_coord_str: str, tags: dict[str, bool | str | 
 
     Parameters
     ----------
-    polygon_coord_str : st
+    polygon_coord_str : str
         string of lat lon coordinates
     tags : dict
         dict of tags used for finding elements in the search area
