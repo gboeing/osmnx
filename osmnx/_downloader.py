@@ -215,7 +215,7 @@ def _resolve_host_via_doh(hostname: str) -> str:
         utils.log(err_msg, level=lg.ERROR)
         return hostname
 
-    # if there were no exceptions, return
+    # if there were no request exceptions, return
     else:
         if response.ok and data["Status"] == 0:
             # status 0 means NOERROR, so return the IP address

@@ -12,6 +12,7 @@ import requests
 from . import _downloader
 from . import settings
 from . import utils
+from ._errors import InsufficientResponseError
 
 
 def _download_nominatim_element(
@@ -143,6 +144,6 @@ def _nominatim_request(
     response_json = _downloader._parse_response(response)
     if not isinstance(response_json, list):
         msg = "Nominatim API did not return a list of results."
-        raise TypeError(msg)
+        raise InsufficientResponseError(msg)
     _downloader._save_to_cache(prepared_url, response_json, response.ok)
     return response_json

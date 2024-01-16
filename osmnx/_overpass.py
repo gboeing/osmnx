@@ -20,6 +20,7 @@ from . import projection
 from . import settings
 from . import utils
 from . import utils_geo
+from ._errors import InsufficientResponseError
 
 
 def _get_network_filter(network_type: str) -> str:
@@ -428,8 +429,8 @@ def _overpass_request(
         return _overpass_request(data, pause, error_pause)
 
     response_json = _downloader._parse_response(response)
-    if not isinstance(response_json, dict):
+    if not isinstance(response_json, dict):  # pragma: no cover
         msg = "Overpass API did not return a dict of results."
-        raise TypeError(msg)
+        raise InsufficientResponseError(msg)
     _downloader._save_to_cache(prepared_url, response_json, response.ok)
     return response_json
