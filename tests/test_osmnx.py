@@ -330,8 +330,8 @@ def test_routing() -> None:
     # test multiple origins-destinations
     n = 5
     nodes = np.array(G.nodes)
-    origs = [int(x) for x in np.random.choice(nodes, size=n, replace=True)]
-    dests = [int(x) for x in np.random.choice(nodes, size=n, replace=True)]
+    origs = [int(x) for x in np.random.default_rng().choice(nodes, size=n, replace=True)]
+    dests = [int(x) for x in np.random.default_rng().choice(nodes, size=n, replace=True)]
     paths1 = ox.shortest_path(G, origs, dests, weight="length", cpus=1)
     paths2 = ox.shortest_path(G, origs, dests, weight="length", cpus=2)
     paths3 = ox.shortest_path(G, origs, dests, weight="length", cpus=None)
@@ -506,16 +506,16 @@ def test_graph_save_load() -> None:
     # create random boolean graph/node/edge attributes
     attr_name = "test_bool"
     G.graph[attr_name] = False
-    bools = np.random.randint(0, 2, len(G.nodes))
+    bools = np.random.default_rng().integers(low=0, high=2, size=len(G.nodes))
     node_attrs = {n: bool(b) for n, b in zip(G.nodes, bools)}
     nx.set_node_attributes(G, node_attrs, attr_name)
-    bools = np.random.randint(0, 2, len(G.edges))
+    bools = np.random.default_rng().integers(low=0, high=2, size=len(G.edges))
     edge_attrs = {n: bool(b) for n, b in zip(G.edges, bools)}
     nx.set_edge_attributes(G, edge_attrs, attr_name)
 
     # create list, set, and dict attributes for nodes and edges
-    rand_ints_nodes = np.random.randint(0, 10, len(G.nodes))
-    rand_ints_edges = np.random.randint(0, 10, len(G.edges))
+    rand_ints_nodes = np.random.default_rng().integers(low=0, high=10, size=len(G.nodes))
+    rand_ints_edges = np.random.default_rng().integers(low=0, high=10, size=len(G.edges))
     list_node_attrs = {n: [n, r] for n, r in zip(G.nodes, rand_ints_nodes)}
     nx.set_node_attributes(G, list_node_attrs, "test_list")
     list_edge_attrs = {e: [e, r] for e, r in zip(G.edges, rand_ints_edges)}
