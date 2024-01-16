@@ -328,52 +328,6 @@ def route_to_gdf(G: nx.MultiDiGraph, route: list[int], weight: str = "length") -
     return graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
 
 
-def get_route_edge_attributes(  # type: ignore[no-untyped-def]
-    G, route, attribute=None, minimize_key="length", retrieve_default=None
-):
-    """
-    Do not use: deprecated.
-
-    Use the `route_to_gdf` function instead.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        deprecated
-    route : list
-        deprecated
-    attribute : string
-        deprecated
-    minimize_key : string
-        deprecated
-    retrieve_default : function
-        deprecated
-
-    Returns
-    -------
-    attribute_values : list
-        deprecated
-    """
-    warn(
-        "The `get_route_edge_attributes` function has been deprecated and will "
-        "be removed in the v2.0.0 release. Use the `route_to_gdf` function instead.",
-        stacklevel=2,
-    )
-    attribute_values = []
-    for u, v in zip(route[:-1], route[1:]):
-        # if there are parallel edges between two nodes, select the one with the
-        # lowest value of minimize_key
-        data = min(G.get_edge_data(u, v).values(), key=lambda x: x[minimize_key])
-        if attribute is None:
-            attribute_value = data
-        elif retrieve_default is not None:
-            attribute_value = data.get(attribute, retrieve_default(u, v))
-        else:
-            attribute_value = data[attribute]
-        attribute_values.append(attribute_value)
-    return attribute_values
-
-
 def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     """
     Remove from a graph all nodes that have no incident edges.

@@ -329,8 +329,6 @@ def test_routing() -> None:
     assert route5 is not None
 
     route_edges = ox.utils_graph.route_to_gdf(G, route5, "travel_time")
-    attributes = ox.utils_graph.get_route_edge_attributes(G, route5)  # type: ignore[no-untyped-call]
-    attributes = ox.utils_graph.get_route_edge_attributes(G, route5, "travel_time")  # type: ignore[no-untyped-call]
 
     fig, ax = ox.plot_graph_route(G, route5, save=True)
 
