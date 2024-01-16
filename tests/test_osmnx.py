@@ -17,7 +17,6 @@ from collections import OrderedDict
 from pathlib import Path
 from xml.etree import ElementTree as etree
 
-import folium
 import geopandas as gpd
 import networkx as nx
 import numpy as np
@@ -308,18 +307,6 @@ def test_routing() -> None:
     assert ox.distance.great_circle_vec(0, 0, 1, 1) == pytest.approx(157249.6034105)  # type: ignore[no-untyped-call]
     assert ox.distance.euclidean_dist_vec(0, 0, 1, 1) == pytest.approx(1.4142135)  # type: ignore[no-untyped-call]
 
-    # test folium with keyword arguments to pass to folium.PolyLine
-    gm = ox.plot_graph_folium(G, popup_attribute="name", color="#333333", weight=5, opacity=0.7)  # type: ignore[no-untyped-call]
-    rm = ox.plot_route_folium(G, route5, color="#cc0000", weight=5, opacity=0.7)  # type: ignore[no-untyped-call]
-
-    # test calling folium plotters with FeatureGroup instead of Map, and extra kwargs
-    fg = folium.FeatureGroup(name="legend name", show=True)
-    gm = ox.plot_graph_folium(G, graph_map=fg)  # type: ignore[no-untyped-call]
-    assert isinstance(gm, folium.FeatureGroup)
-
-    rm = ox.plot_route_folium(G, route5, route_map=fg, tooltip="x")  # type: ignore[no-untyped-call]
-    assert isinstance(rm, folium.FeatureGroup)
-
 
 def test_plots() -> None:
     """Test visualization methods."""
@@ -593,8 +580,8 @@ def test_graph_from_functions() -> None:
 
 def test_features() -> None:
     """Test downloading features from Overpass."""
-    north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
-    tags1 = {"landuse": True, "building": True, "highway": True}
+    bbox = ox.utils_geo.bbox_from_point(location_point, dist=500)
+    tags1: dict[str, bool | str | list[str]] = {"landuse": True, "building": True, "highway": True}
 
     with pytest.raises(ValueError, match="The geometry of `polygon` is invalid"):
         ox.features.features_from_polygon(Polygon(((0, 0), (0, 0), (0, 0), (0, 0))), tags={})
@@ -604,36 +591,40 @@ def test_features() -> None:
     # test cache_only_mode
     ox.settings.cache_only_mode = True
     with pytest.raises(ox._errors.CacheOnlyInterruptError, match="Interrupted because"):
-        _ = ox.geometries_from_bbox(north, south, east, west, tags=tags1)  # type: ignore[no-untyped-call]
+        _ = ox.features_from_bbox(bbox, tags=tags1)
     ox.settings.cache_only_mode = False
 
-    # geometries_from_bbox - bounding box query to return no data
+    # features_from_bbox - bounding box query to return no data
     with pytest.raises(ox._errors.InsufficientResponseError):
-        gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})  # type: ignore[no-untyped-call]
+        gdf = ox.features_from_bbox(bbox=(0.009, -0.009, 0.009, -0.009), tags={"building": True})
 
-    # geometries_from_bbox - successful
-    gdf = ox.geometries_from_bbox(north, south, east, west, tags=tags1)  # type: ignore[no-untyped-call]
+    # features_from_bbox - successful
+    gdf = ox.features_from_bbox(bbox, tags=tags1)
     fig, ax = ox.plot_footprints(gdf)
     fig, ax = ox.plot_footprints(gdf, ax=ax, bbox=(10, 0, 10, 0))
 
-    # geometries_from_point - tests multipolygon creation
+    # features_from_point - tests multipolygon creation
     gdf = ox.utils_geo.bbox_from_point(location_point, dist=500)
 
-    # geometries_from_place - includes test of list of places
-    tags2 = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
-    gdf = ox.geometries_from_place(place1, tags=tags2, buffer_dist=0)  # type: ignore[no-untyped-call]
-    gdf = ox.geometries_from_place([place1], tags=tags2)  # type: ignore[no-untyped-call]
+    # features_from_place - includes test of list of places
+    tags2: dict[str, bool | str | list[str]] = {
+        "amenity": True,
+        "landuse": ["retail", "commercial"],
+        "highway": "bus_stop",
+    }
+    gdf = ox.features_from_place(place1, tags=tags2, buffer_dist=0)
+    gdf = ox.features_from_place([place1], tags=tags2)
 
-    # geometries_from_polygon
+    # features_from_polygon
     polygon = ox.geocode_to_gdf(place1).geometry.iloc[0]
-    ox.geometries_from_polygon(polygon, tags2)  # type: ignore[no-untyped-call]
+    ox.features_from_polygon(polygon, tags2)
 
-    # geometries_from_address - includes testing overpass settings and snapshot from 2019
+    # features_from_address - includes testing overpass settings and snapshot from 2019
     ox.settings.overpass_settings = '[out:json][timeout:200][date:"2019-10-28T19:20:00Z"]'
-    gdf = ox.geometries_from_address(address, tags=tags2)  # type: ignore[no-untyped-call]
+    gdf = ox.features_from_address(address, tags=tags2)
 
-    # geometries_from_xml - tests error handling of clipped XMLs with incomplete geometry
-    gdf = ox.geometries_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")  # type: ignore[no-untyped-call]
+    # features_from_xml - tests error handling of clipped XMLs with incomplete geometry
+    gdf = ox.features_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")
 
     # test loading a geodataframe from a local .osm xml file
     with bz2.BZ2File("tests/input_data/West-Oakland.osm.bz2") as f:
@@ -641,6 +632,6 @@ def test_features() -> None:
         os.write(handle, f.read())
         os.close(handle)
     for filename in ("tests/input_data/West-Oakland.osm.bz2", temp_filename):
-        gdf = ox.geometries_from_xml(filename)  # type: ignore[no-untyped-call]
+        gdf = ox.features_from_xml(filename)
         assert "Willow Street" in gdf["name"].to_numpy()
     Path.unlink(Path(temp_filename))

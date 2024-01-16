@@ -14,16 +14,8 @@ from .features import features_from_place
 from .features import features_from_point
 from .features import features_from_polygon
 from .features import features_from_xml
-from .folium import plot_graph_folium
-from .folium import plot_route_folium
 from .geocoder import geocode
 from .geocoder import geocode_to_gdf
-from .geometries import geometries_from_address
-from .geometries import geometries_from_bbox
-from .geometries import geometries_from_place
-from .geometries import geometries_from_point
-from .geometries import geometries_from_polygon
-from .geometries import geometries_from_xml
 from .graph import graph_from_address
 from .graph import graph_from_bbox
 from .graph import graph_from_place
