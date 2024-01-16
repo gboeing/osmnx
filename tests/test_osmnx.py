@@ -118,9 +118,12 @@ def test_stats() -> None:
     # calculate entropy
     Gu = ox.get_undirected(G)
     entropy = ox.bearing.orientation_entropy(Gu, weight="length")
-    fig, ax = ox.bearing.plot_orientation(Gu, area=True, title="Title")  # type: ignore[no-untyped-call]
-    fig, ax = ox.plot_orientation(Gu, area=True, title="Title")
-    fig, ax = ox.plot_orientation(Gu, ax=ax, area=False, title="Title")
+    from matplotlib.projections.polar import PolarAxes
+
+    ax: PolarAxes
+    fig, ax = ox.plot.plot_orientation(Gu, area=True, title="Title")
+    fig, ax = ox.plot.plot_orientation(Gu, area=True, title="Title")
+    fig, ax = ox.plot.plot_orientation(Gu, ax=ax, area=False, title="Title")
 
     # test cleaning and rebuilding graph
     G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
@@ -169,11 +172,11 @@ def test_osm_xml() -> None:
 
     # test osm xml output from gdfs
     nodes, edges = ox.graph_to_gdfs(G)
-    ox.osm_xml.save_graph_xml((nodes, edges))  # type: ignore[no-untyped-call]
+    ox.io.save_graph_xml((nodes, edges))
 
     # test ordered nodes from way
     df_uv = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
-    ordered_nodes = ox.osm_xml._get_unique_nodes_ordered_from_way(df_uv)
+    ordered_nodes = ox._osm_xml._get_unique_nodes_ordered_from_way(df_uv)
     assert ordered_nodes == [2, 3, 10, 5, 8]
 
     # test roundabout handling
@@ -186,7 +189,7 @@ def test_osm_xml() -> None:
     first = gdf_way.iloc[0].dropna().astype(str)
     root = etree.Element("osm", attrib={"version": "0.6", "generator": "OSMnx"})
     edge = etree.SubElement(root, "way")
-    ox.osm_xml._append_nodes_as_edge_attrs(edge, first.to_dict(), gdf_way)
+    ox._osm_xml._append_nodes_as_edge_attrs(edge, first.to_dict(), gdf_way)
 
     # restore settings
     ox.settings.overpass_settings = default_overpass_settings

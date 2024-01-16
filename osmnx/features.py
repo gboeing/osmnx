@@ -33,9 +33,9 @@ from shapely.geometry import Polygon
 from shapely.ops import linemerge
 from shapely.ops import polygonize
 
+from . import _osm_xml
 from . import _overpass
 from . import geocoder
-from . import osm_xml
 from . import settings
 from . import utils
 from . import utils_geo
@@ -393,7 +393,7 @@ def features_from_xml(
     gdf : geopandas.GeoDataFrame
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [osm_xml._overpass_json_from_file(filepath, encoding)]
+    response_jsons = [_osm_xml._overpass_json_from_file(filepath, encoding)]
 
     # create GeoDataFrame using this response JSON
     return _create_gdf(response_jsons, polygon=polygon, tags=tags)

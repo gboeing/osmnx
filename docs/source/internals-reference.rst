@@ -91,7 +91,7 @@ osmnx._nominatim module
     :private-members:
     :noindex:
 
-osmnx.osm_xml module
+osmnx._osm_xml module
 --------------------
 
 .. automodule:: osmnx.osm_xml

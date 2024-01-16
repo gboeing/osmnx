@@ -12,7 +12,7 @@ import networkx as nx
 import pandas as pd
 from shapely import wkt
 
-from . import osm_xml
+from . import _osm_xml
 from . import settings
 from . import utils
 from . import utils_graph
@@ -317,7 +317,7 @@ def save_graph_xml(
     -------
     None
     """
-    osm_xml._save_graph_xml(
+    _osm_xml._save_graph_xml(
         data,
         filepath,
         node_tags,

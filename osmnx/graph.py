@@ -19,10 +19,10 @@ import networkx as nx
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
 
+from . import _osm_xml
 from . import _overpass
 from . import distance
 from . import geocoder
-from . import osm_xml
 from . import projection
 from . import settings
 from . import simplification
@@ -566,7 +566,7 @@ def graph_from_xml(
     G : networkx.MultiDiGraph
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [osm_xml._overpass_json_from_file(filepath, encoding)]
+    response_jsons = [_osm_xml._overpass_json_from_file(filepath, encoding)]
 
     # create graph using this response JSON
     G = _create_graph(response_jsons, bidirectional=bidirectional, retain_all=retain_all)

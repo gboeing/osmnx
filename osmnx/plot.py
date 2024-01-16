@@ -723,7 +723,7 @@ def plot_orientation(
     title_y: float = 1.05,
     title_font: dict[str, Any] | None = None,
     xtick_font: dict[str, Any] | None = None,
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, PolarAxes]:
     """
     Plot a polar histogram of a spatial network's bidirectional edge bearings.
 
