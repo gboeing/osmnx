@@ -502,13 +502,10 @@ def test_api_endpoints() -> None:
 
 def test_graph_save_load() -> None:
     """Test saving/loading graphs to/from disk."""
-    # save graph as shapefile and geopackage
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
-    ox.save_graph_shapefile(G, directed=True)  # type: ignore[no-untyped-call]
-    ox.save_graph_shapefile(G, filepath=Path(ox.settings.data_folder) / "graph_shapefile")  # type: ignore[no-untyped-call]
-    ox.save_graph_geopackage(G, directed=False)
 
     # save/load geopackage and convert graph to/from node/edge GeoDataFrames
+    ox.save_graph_geopackage(G, directed=False)
     fp = ".temp/data/graph-dir.gpkg"
     ox.save_graph_geopackage(G, filepath=fp, directed=True)
     gdf_nodes1 = gpd.read_file(fp, layer="nodes").set_index("osmid")
