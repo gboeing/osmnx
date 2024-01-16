@@ -322,7 +322,7 @@ def _elevation_request(url: str, pause: float) -> dict[str, Any]:
     )
 
     response_json = _downloader._parse_response(response)
-    if not isinstance(response_json, dict):
+    if not isinstance(response_json, dict):  # pragma: no cover
         msg = "Elevation API did not return a dict of results."
         raise InsufficientResponseError(msg)
     _downloader._save_to_cache(url, response_json, response.ok)

@@ -189,7 +189,7 @@ def _geocode_query_to_gdf(
     results = _nominatim._download_nominatim_element(query, by_osmid=by_osmid, limit=limit)
 
     # choose the right result from the JSON response
-    if not results:
+    if len(results) == 0:
         # if no results were returned, raise error
         msg = f"Nominatim geocoder returned 0 results for query {query!r}"
         raise InsufficientResponseError(msg)

@@ -32,6 +32,7 @@ from shapely.geometry import MultiPoint
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
+from typeguard import TypeCheckError
 
 import osmnx as ox
 
@@ -135,6 +136,9 @@ def test_geocoder() -> None:
     # test geocoding a bad query: should raise exception
     with pytest.raises(ox._errors.InsufficientResponseError):
         _ = ox.geocode("!@#$%^&*")
+
+    with pytest.raises(ox._errors.InsufficientResponseError):
+        ox.geocode_to_gdf(query="AAAZZZ")
 
 
 def test_stats() -> None:
@@ -251,6 +255,9 @@ def test_elevation() -> None:
     ox.settings.elevation_url_template = (
         "https://api.opentopodata.org/v1/aster30m?locations={locations}&key={key}"
     )
+    _ = ox.elevation.add_node_elevations_google(G, batch_size=100, pause=0.01)
+
+    # same thing again, to hit the cache
     _ = ox.elevation.add_node_elevations_google(G, batch_size=100, pause=0.01)
 
     # add node elevations from a single raster file (some nodes will be null)
@@ -407,13 +414,17 @@ def test_find_nearest() -> None:
     Y = points.y.to_numpy()
 
     # get nearest nodes
+    _ = ox.distance.nearest_nodes(G, X, Y, return_dist=True)
+    _ = ox.distance.nearest_nodes(G, X, Y, return_dist=False)
     nn0, dist0 = ox.distance.nearest_nodes(G, X[0], Y[0], return_dist=True)
-    nn1, dist1 = ox.distance.nearest_nodes(Gp, X[0], Y[0], return_dist=True)
+    nn1 = ox.distance.nearest_nodes(Gp, X[0], Y[0], return_dist=False)
 
     # get nearest edge
+    _ = ox.distance.nearest_edges(Gp, X, Y, return_dist=False)
+    _ = ox.distance.nearest_edges(Gp, X, Y, return_dist=True)
     ne0 = ox.distance.nearest_edges(Gp, X[0], Y[0], interpolate=None)  # type: ignore[call-overload]
-    ne1 = ox.distance.nearest_edges(Gp, X[0], Y[0], interpolate=50)  # type: ignore[call-overload]
-    ne2 = ox.distance.nearest_edges(G, X[0], Y[0], interpolate=50, return_dist=True)  # type: ignore[call-overload]
+    ne1 = ox.distance.nearest_edges(Gp, X[0], Y[0], interpolate=50, return_dist=False)  # type: ignore[call-overload]
+    ne2, _ = ox.distance.nearest_edges(G, X[0], Y[0], interpolate=50, return_dist=True)  # type: ignore[call-overload]
 
 
 def test_api_endpoints() -> None:
@@ -632,19 +643,31 @@ def test_graph_from_functions() -> None:
 
 def test_features() -> None:
     """Test downloading features from Overpass."""
+    north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
+    tags1 = {"landuse": True, "building": True, "highway": True}
+
+    with pytest.raises(ValueError, match="The geometry of `polygon` is invalid"):
+        ox.features.features_from_polygon(Polygon(((0, 0), (0, 0), (0, 0), (0, 0))), tags={})
+    with pytest.raises(TypeCheckError):
+        ox.features.features_from_polygon(Point(0, 0), tags={})
+
+    # test cache_only_mode
+    ox.settings.cache_only_mode = True
+    with pytest.raises(ox._errors.CacheOnlyInterruptError, match="Interrupted because"):
+        _ = ox.geometries_from_bbox(north, south, east, west, tags=tags1)  # type: ignore[no-untyped-call]
+    ox.settings.cache_only_mode = False
+
     # geometries_from_bbox - bounding box query to return no data
     with pytest.raises(ox._errors.InsufficientResponseError):
         gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})  # type: ignore[no-untyped-call]
 
     # geometries_from_bbox - successful
-    north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
-    tags1 = {"landuse": True, "building": True, "highway": True}
     gdf = ox.geometries_from_bbox(north, south, east, west, tags=tags1)  # type: ignore[no-untyped-call]
     fig, ax = ox.plot_footprints(gdf)
     fig, ax = ox.plot_footprints(gdf, ax=ax, bbox=(10, 0, 10, 0))
 
     # geometries_from_point - tests multipolygon creation
-    gdf = ox.geometries_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)  # type: ignore[no-untyped-call]
+    gdf = ox.utils_geo.bbox_from_point(location_point, dist=500)
 
     # geometries_from_place - includes test of list of places
     tags2 = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
