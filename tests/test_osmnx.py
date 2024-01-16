@@ -283,7 +283,7 @@ def test_routing() -> None:
     # test missing weight (should raise warning)
     route3 = ox.shortest_path(G, orig_node, dest_node, weight="time")
     # test good weight
-    route4 = ox.distance.shortest_path(G, orig_node, dest_node, weight="travel_time")  # type: ignore[no-untyped-call]
+    route4 = ox.routing.shortest_path(G, orig_node, dest_node, weight="travel_time")
     route5 = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
     assert route5 is not None
 
@@ -303,12 +303,12 @@ def test_routing() -> None:
 
     # test k shortest paths
     routes = ox.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
-    routes = ox.distance.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")  # type: ignore[no-untyped-call]
+    routes = ox.routing.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
     fig, ax = ox.plot_graph_routes(G, list(routes))
 
     # test great circle and euclidean distance calculators
-    assert ox.distance.great_circle_vec(0, 0, 1, 1) == pytest.approx(157249.6034105)  # type: ignore[no-untyped-call]
-    assert ox.distance.euclidean_dist_vec(0, 0, 1, 1) == pytest.approx(1.4142135)  # type: ignore[no-untyped-call]
+    assert ox.distance.great_circle(0, 0, 1, 1) == pytest.approx(157249.6034105)
+    assert ox.distance.euclidean(0, 0, 1, 1) == pytest.approx(1.4142135)
 
 
 def test_plots() -> None:
