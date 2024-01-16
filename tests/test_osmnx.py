@@ -565,7 +565,7 @@ def test_graph_from_functions():
     """Test downloading graphs from Overpass."""
     # test subdividing a large geometry (raises a UserWarning)
     bbox = ox.utils_geo.bbox_from_point((0, 0), dist=1e5, project_utm=True)
-    poly = ox.utils_geo.bbox_to_poly(bbox=bbox)
+    poly = ox.utils_geo.bbox_to_poly(*bbox)
     _ = ox.utils_geo._consolidate_subdivide_geometry(poly)
 
     # graph from bounding box
