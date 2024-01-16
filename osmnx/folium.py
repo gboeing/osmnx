@@ -1,6 +1,6 @@
 """Create interactive Leaflet web maps of graphs and routes via folium.
 
-This module is deprecated. Do not use. It will be removed in a future release.
+This module is deprecated. Do not use. It will be removed in the v2.0.0 release.
 You can generate and explore interactive web maps of graph nodes, edges,
 and/or routes automatically using GeoPandas.GeoDataFrame.explore instead, for
 example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the OSMnx
@@ -58,7 +58,7 @@ def plot_graph_folium(
     folium.folium.Map
     """
     warn(
-        "The `folium` module has been deprecated and will be removed in a future release. "
+        "The `folium` module has been deprecated and will be removed in the v2.0.0 release. "
         "You can generate and explore interactive web maps of graph nodes, edges, "
         "and/or routes automatically using GeoPandas.GeoDataFrame.explore instead, "
         "for example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the "
@@ -112,7 +112,7 @@ def plot_route_folium(
     folium.folium.Map
     """
     warn(
-        "The `folium` module has been deprecated and will be removed in a future release. "
+        "The `folium` module has been deprecated and will be removed in the v2.0.0 release. "
         "You can generate and explore interactive web maps of graph nodes, edges, "
         "and/or routes automatically using GeoPandas.GeoDataFrame.explore instead, "
         "for example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the "

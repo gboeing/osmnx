@@ -4,6 +4,7 @@
 
 - fix a bug in the features module's polygon handling (#1104)
 - update obsolete numpy random number generation (#1108)
+- update warning messages to note that deprecated code will be removed in v2.0.0 (#1111)
 - deprecate return_coords argument in graph.graph_from_address function (#1105)
 - deprecate return_hex argument in plot.get_colors function (#1109)
 

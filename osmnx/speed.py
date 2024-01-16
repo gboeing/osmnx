@@ -62,7 +62,7 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
         precision = 1
     else:
         warn(
-            "the `precision` parameter is deprecated and will be removed in a future release",
+            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
             stacklevel=2,
         )
 
@@ -150,7 +150,7 @@ def add_edge_travel_times(G, precision=None):
         precision = 1
     else:
         warn(
-            "the `precision` parameter is deprecated and will be removed in a future release",
+            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
             stacklevel=2,
         )
 

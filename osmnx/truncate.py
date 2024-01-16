@@ -144,8 +144,8 @@ def truncate_graph_polygon(
     """
     if quadrat_width is not None or min_num is not None:
         warn(
-            "the `quadrat_width` and `min_num` parameters are deprecated and "
-            "will be removed in a future release",
+            "The `quadrat_width` and `min_num` parameters are deprecated and "
+            "will be removed in the v2.0.0 release.",
             stacklevel=2,
         )
 
