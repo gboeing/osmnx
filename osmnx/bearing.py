@@ -8,7 +8,6 @@ import networkx as nx
 import numpy as np
 from numpy.typing import NDArray
 
-from . import plot
 from . import projection
 
 # scipy is an optional dependency for entropy calculation
@@ -272,88 +271,3 @@ def _bearings_distribution(
     # because we merged the bins, their edges are now only every other one
     bin_edges = bin_edges[range(0, len(bin_edges), 2)]
     return bin_counts, bin_edges
-
-
-def plot_orientation(  # type: ignore[no-untyped-def]
-    Gu,
-    num_bins=36,
-    min_length=0,
-    weight=None,
-    ax=None,
-    figsize=(5, 5),
-    area=True,
-    color="#003366",
-    edgecolor="k",
-    linewidth=0.5,
-    alpha=0.7,
-    title=None,
-    title_y=1.05,
-    title_font=None,
-    xtick_font=None,
-):
-    """
-    Do not use: deprecated.
-
-    The plot_orientation function moved to the plot module. Calling it via the
-    bearing module will raise an error starting in the v2.0.0 release.
-
-    Parameters
-    ----------
-    Gu : networkx.MultiGraph
-        deprecated, do not use
-    num_bins : int
-        deprecated, do not use
-    min_length : float
-        deprecated, do not use
-    weight : string
-        deprecated, do not use
-    ax : matplotlib.axes.PolarAxesSubplot
-        deprecated, do not use
-    figsize : tuple
-        deprecated, do not use
-    area : bool
-        deprecated, do not use
-    color : string
-        deprecated, do not use
-    edgecolor : string
-        deprecated, do not use
-    linewidth : float
-        deprecated, do not use
-    alpha : float
-        deprecated, do not use
-    title : string
-        deprecated, do not use
-    title_y : float
-        deprecated, do not use
-    title_font : dict
-        deprecated, do not use
-    xtick_font : dict
-        deprecated, do not use
-
-    Returns
-    -------
-    fig, ax : tuple
-        matplotlib figure, axis
-    """
-    warn(
-        "The `plot_orientation` function moved to the `plot` module. Calling it "
-        "via the `bearing` module will raise an exception starting with the v2.0.0 release.",
-        stacklevel=2,
-    )
-    return plot.plot_orientation(
-        Gu,
-        num_bins=num_bins,
-        min_length=min_length,
-        weight=weight,
-        ax=ax,
-        figsize=figsize,
-        area=area,
-        color=color,
-        edgecolor=edgecolor,
-        linewidth=linewidth,
-        alpha=alpha,
-        title=title,
-        title_y=title_y,
-        title_font=title_font,
-        xtick_font=xtick_font,
-    )
