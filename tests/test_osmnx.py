@@ -463,7 +463,18 @@ def test_api_endpoints() -> None:
     params["address_details"] = 0
     params["osm_ids"] = "W68876073"
 
+    # good call
     response_json = ox._nominatim._nominatim_request(params=params, request_type="lookup")
+
+    # bad call
+    with pytest.raises(
+        ox._errors.InsufficientResponseError, match="Nominatim API did not return a list of results"
+    ):
+        response_json = ox._nominatim._nominatim_request(params=params, request_type="search")
+
+    # query must be a str if by_osmid=True
+    with pytest.raises(TypeError, match="`query` must be a string if `by_osmid` is True"):
+        ox.geocode_to_gdf(query={"City": "Boston"}, by_osmid=True)
 
     # Invalid nominatim query type
     with pytest.raises(ValueError, match="Nominatim request_type must be"):
