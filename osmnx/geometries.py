@@ -44,7 +44,7 @@ def geometries_from_bbox(north, south, east, west, tags):
     gdf : geopandas.GeoDataFrame
     """
     warn(DEP_MSG, stacklevel=2)
-    return features.features_from_bbox(north, south, east, west, tags)
+    return features.features_from_bbox(north, south, east, west, tags=tags)
 
 
 def geometries_from_point(center_point, tags, dist=1000):
