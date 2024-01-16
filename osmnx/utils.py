@@ -209,8 +209,8 @@ def config(
     None
     """
     warn(
-        "The `utils.config` function is deprecated and will be removed in a "
-        "future release. Instead, use the `settings` module directly to "
+        "The `utils.config` function is deprecated and will be removed in "
+        "the v2.0.0 release. Instead, use the `settings` module directly to "
         "configure a global setting's value. For example, "
         "`ox.settings.log_console=True`.",
         stacklevel=2,

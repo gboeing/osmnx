@@ -54,7 +54,7 @@ def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=Fal
         return_hex = False
     else:
         warn(
-            "The `return_hex` function has been deprecated and will be removed "
+            "The `return_hex` parameter has been deprecated and will be removed "
             "in the v2.0.0 release.",
             stacklevel=2,
         )
