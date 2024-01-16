@@ -1,8 +1,16 @@
 """Visualize street networks, routes, orientations, and geospatial features."""
 
+from __future__ import annotations
+
+from collections.abc import Iterable
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
+from typing import Literal
+from typing import overload
 from warnings import warn
 
+import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -22,11 +30,21 @@ try:
     from matplotlib import cm
     from matplotlib import colormaps
     from matplotlib import colors
+    from matplotlib.axes._axes import Axes
+    from matplotlib.figure import Figure
+    from matplotlib.projections.polar import PolarAxes
 except ImportError:  # pragma: no cover
-    cm = colors = plt = colormaps = None  # type: ignore[assignment]
+    plt = cm = colormaps = colors = None  # type: ignore[assignment]
 
 
-def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=False):
+def get_colors(
+    n: int,
+    cmap: str = "viridis",
+    start: float = 0,
+    stop: float = 1,
+    alpha: float | None = None,
+    return_hex: bool | None = None,
+) -> list[str | tuple[float, float, float, float]]:
     """
     Get `n` evenly-spaced colors from a matplotlib colormap.
 
@@ -54,7 +72,7 @@ def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=Fal
         return_hex = False
     else:
         warn(
-            "The `return_hex` function has been deprecated and will be removed "
+            "The `return_hex` parameter has been deprecated and will be removed "
             "in the v2.0.0 release.",
             stacklevel=2,
         )
@@ -75,17 +93,24 @@ def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=Fal
 
 
 def get_node_colors_by_attr(
-    G, attr, num_bins=None, cmap="viridis", start=0, stop=1, na_color="none", equal_size=False
-):
+    G: nx.MultiDiGraph,
+    attr: str,
+    num_bins: int | None = None,
+    cmap: str = "viridis",
+    start: float = 0,
+    stop: float = 1,
+    na_color: str = "none",
+    equal_size: bool = False,
+) -> pd.Series:  # type: ignore[type-arg]
     """
-    Get colors based on node attribute values.
+    Get colors based on nodes' numerical attribute values.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
     attr : string
-        name of a numerical node attribute
+        name of a node attribute with numerical values
     num_bins : int
         if None, linearly map a color to each value. otherwise, assign values
         to this many bins then assign a color to each bin.
@@ -104,7 +129,7 @@ def get_node_colors_by_attr(
     Returns
     -------
     node_colors : pandas.Series
-        series labels are node IDs and values are colors
+        labels are node IDs, values are colors as hex strings
     """
     _verify_mpl()
     vals = pd.Series(nx.get_node_attributes(G, attr))
@@ -112,17 +137,24 @@ def get_node_colors_by_attr(
 
 
 def get_edge_colors_by_attr(
-    G, attr, num_bins=None, cmap="viridis", start=0, stop=1, na_color="none", equal_size=False
-):
+    G: nx.MultiDiGraph,
+    attr: str,
+    num_bins: int | None = None,
+    cmap: str = "viridis",
+    start: float = 0,
+    stop: float = 1,
+    na_color: str = "none",
+    equal_size: bool = False,
+) -> pd.Series:  # type: ignore[type-arg]
     """
-    Get colors based on edge attribute values.
+    Get colors based on edges' numerical attribute values.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
     attr : string
-        name of a numerical edge attribute
+        name of an edge attribute with numerical values
     num_bins : int
         if None, linearly map a color to each value. otherwise, assign values
         to this many bins then assign a color to each bin.
@@ -141,7 +173,7 @@ def get_edge_colors_by_attr(
     Returns
     -------
     edge_colors : pandas.Series
-        series labels are edge IDs (u, v, key) and values are colors
+        labels are (u, v, k) edge IDs, values are colors as hex strings
     """
     _verify_mpl()
     vals = pd.Series(nx.get_edge_attributes(G, attr))
@@ -149,54 +181,54 @@ def get_edge_colors_by_attr(
 
 
 def plot_graph(
-    G,
-    ax=None,
-    figsize=(8, 8),
-    bgcolor="#111111",
-    node_color="w",
-    node_size=15,
-    node_alpha=None,
-    node_edgecolor="none",
-    node_zorder=1,
-    edge_color="#999999",
-    edge_linewidth=1,
-    edge_alpha=None,
-    show=True,
-    close=False,
-    save=False,
-    filepath=None,
-    dpi=300,
-    bbox=None,
-):
+    G: nx.MultiGraph | nx.MultiDiGraph,
+    ax: Axes | None = None,
+    figsize: tuple[float, float] = (8, 8),
+    bgcolor: str = "#111111",
+    node_color: str | Sequence[str] = "w",
+    node_size: float | Sequence[float] = 15,
+    node_alpha: float | None = None,
+    node_edgecolor: str | Iterable[str] = "none",
+    node_zorder: int = 1,
+    edge_color: str | Iterable[str] = "#999999",
+    edge_linewidth: float | Sequence[float] = 1,
+    edge_alpha: float | None = None,
+    show: bool = True,
+    close: bool = False,
+    save: bool = False,
+    filepath: str | Path | None = None,
+    dpi: int = 300,
+    bbox: tuple[float, float, float, float] | None = None,
+) -> tuple[Figure, Axes]:
     """
     Visualize a graph.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
+    G : networkx.MultiGraph or networkx.MultiDiGraph
         input graph
-    ax : matplotlib axis
-        if not None, plot on this preexisting axis
+    ax : matplotlib axes instance
+        if not None, plot on this pre-existing axes instance
     figsize : tuple
         if ax is None, create new figure with size (width, height)
     bgcolor : string
         background color of plot
-    node_color : string or list
+    node_color : string or Sequence of string
         color(s) of the nodes
-    node_size : int
-        size of the nodes: if 0, then skip plotting the nodes
+    node_size : float or Sequence of float
+        size(s) of the nodes: if 0, then skip plotting the nodes
     node_alpha : float
         opacity of the nodes, note: if you passed RGBA values to node_color,
         set node_alpha=None to use the alpha channel in node_color
-    node_edgecolor : string
-        color of the nodes' markers' borders
+    node_edgecolor : string or Iterable of string
+        color(s) of the nodes' markers' borders
     node_zorder : int
         zorder to plot nodes: edges are always 1, so set node_zorder=0 to plot
         nodes below edges
-    edge_color : string or list
+    edge_color : string or Iterable of string
         color(s) of the edges' lines
-    edge_linewidth : float
-        width of the edges' lines: if 0, then skip plotting the edges
+    edge_linewidth : float or Sequence of float
+        width(s) of the edges' lines: if 0, then skip plotting the edges
     edge_alpha : float
         opacity of the edges, note: if you passed RGBA values to edge_color,
         set edge_alpha=None to use the alpha channel in edge_color
@@ -206,34 +238,30 @@ def plot_graph(
         if True, call pyplot.close() to close the figure
     save : bool
         if True, save the figure to disk at filepath
-    filepath : string
+    filepath : string or pathlib.Path
         if save is True, the path to the file. file format determined from
         extension. if None, use settings.imgs_folder/image.png
     dpi : int
         if save is True, the resolution of saved file
-    bbox : tuple
+    bbox : tuple of float
         bounding box as (north, south, east, west). if None, will calculate
         from spatial extents of plotted geometries.
 
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axis
+        tuple of matplotlib (Figure, Axes)
     """
     _verify_mpl()
-    max_node_size = max(node_size) if hasattr(node_size, "__iter__") else node_size
-    max_edge_lw = max(edge_linewidth) if hasattr(edge_linewidth, "__iter__") else edge_linewidth
+    max_node_size = max(node_size) if isinstance(node_size, Sequence) else node_size
+    max_edge_lw = max(edge_linewidth) if isinstance(edge_linewidth, Sequence) else edge_linewidth
     if max_node_size <= 0 and max_edge_lw <= 0:  # pragma: no cover
-        msg = "Either node_size or edge_linewidth must be > 0 to plot something."
+        msg = "Either `node_size` or `edge_linewidth` must be > 0 to plot something."
         raise ValueError(msg)
 
     # create fig, ax as needed
     utils.log("Begin plotting the graph...")
-    if ax is None:
-        fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor, frameon=False)
-        ax.set_facecolor(bgcolor)
-    else:
-        fig = ax.figure
+    fig, ax = _get_fig_ax(ax=ax, figsize=figsize, bgcolor=bgcolor, polar=False)
 
     if max_edge_lw > 0:
         # plot the edges' geometries
@@ -243,7 +271,7 @@ def plot_graph(
     if max_node_size > 0:
         # scatter plot the nodes' x/y coordinates
         gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
-        ax.scatter(
+        ax.scatter(  # type: ignore[union-attr]
             x=gdf_nodes["x"],
             y=gdf_nodes["y"],
             s=node_size,
@@ -254,7 +282,7 @@ def plot_graph(
         )
 
     # get spatial extents from bbox parameter or the edges' geometries
-    padding = 0
+    padding = 0.0
     if bbox is None:
         try:
             west, south, east, north = gdf_edges.total_bounds
@@ -264,23 +292,23 @@ def plot_graph(
         bbox = north, south, east, west
         padding = 0.02  # pad 2% to not cut off peripheral nodes' circles
 
-    # configure axis appearance, save/show figure as specified, and return
-    ax = _config_ax(ax, G.graph["crs"], bbox, padding)
+    # configure axes appearance, save/show figure as specified, and return
+    ax = _config_ax(ax, G.graph["crs"], bbox, padding)  # type: ignore[arg-type]
     fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi)
     utils.log("Finished plotting the graph")
     return fig, ax
 
 
 def plot_graph_route(
-    G,
-    route,
-    route_color="r",
-    route_linewidth=4,
-    route_alpha=0.5,
-    orig_dest_size=100,
-    ax=None,
-    **pg_kwargs,
-):
+    G: nx.MultiDiGraph,
+    route: list[int],
+    route_color: str = "r",
+    route_linewidth: float = 4,
+    route_alpha: float = 0.5,
+    orig_dest_size: float = 100,
+    ax: Axes | None = None,
+    **pg_kwargs: Any,
+) -> tuple[Figure, Axes]:
     """
     Visualize a route along a graph.
 
@@ -288,26 +316,25 @@ def plot_graph_route(
     ----------
     G : networkx.MultiDiGraph
         input graph
-    route : list
+    route : list of int
         route as a list of node IDs
     route_color : string
         color of the route
-    route_linewidth : int
+    route_linewidth : float
         width of the route line
     route_alpha : float
         opacity of the route line
-    orig_dest_size : int
+    orig_dest_size : float
         size of the origin and destination nodes
-    ax : matplotlib axis
-        if not None, plot route on this preexisting axis instead of creating a
-        new fig, ax and drawing the underlying graph
+    ax : matplotlib axes instance
+        if not None, plot on this pre-existing axes instance
     pg_kwargs
         keyword arguments to pass to plot_graph
 
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axis
+        tuple of matplotlib (Figure, Axes)
     """
     _verify_mpl()
     if ax is None:
@@ -317,12 +344,12 @@ def plot_graph_route(
         kwargs = {k: v for k, v in pg_kwargs.items() if k not in overrides}
         fig, ax = plot_graph(G, show=False, save=False, close=False, **kwargs)
     else:
-        fig = ax.figure
+        fig = ax.figure  # type: ignore[assignment]
 
     # scatterplot origin and destination points (first/last nodes in route)
-    x = (G.nodes[route[0]]["x"], G.nodes[route[-1]]["x"])
-    y = (G.nodes[route[0]]["y"], G.nodes[route[-1]]["y"])
-    ax.scatter(x, y, s=orig_dest_size, c=route_color, alpha=route_alpha, edgecolor="none")
+    od_x = (G.nodes[route[0]]["x"], G.nodes[route[-1]]["x"])
+    od_y = (G.nodes[route[0]]["y"], G.nodes[route[-1]]["y"])
+    ax.scatter(od_x, od_y, s=orig_dest_size, c=route_color, alpha=route_alpha, edgecolor="none")
 
     # assemble the route edge geometries' x and y coords then plot the line
     x = []
@@ -348,7 +375,13 @@ def plot_graph_route(
     return fig, ax
 
 
-def plot_graph_routes(G, routes, route_colors="r", route_linewidths=4, **pgr_kwargs):
+def plot_graph_routes(
+    G: nx.MultiDiGraph,
+    routes: Iterable[list[int]],
+    route_colors: str | Iterable[str] = "r",
+    route_linewidths: float | Iterable[float] = 4,
+    **pgr_kwargs: Any,
+) -> tuple[Figure, Axes]:
     """
     Visualize several routes along a graph.
 
@@ -356,38 +389,44 @@ def plot_graph_routes(G, routes, route_colors="r", route_linewidths=4, **pgr_kwa
     ----------
     G : networkx.MultiDiGraph
         input graph
-    routes : list
-        routes as a list of lists of node IDs
-    route_colors : string or list
-        if string, 1 color for all routes. if list, the colors for each route.
-    route_linewidths : int or list
-        if int, 1 linewidth for all routes. if list, the linewidth for each route.
+    routes : Iterable of list of int
+        Iterable of lists of node IDs
+    route_colors : string or Iterable of string
+        if string, 1 color for all routes. if Iterable, the colors for each
+        route.
+    route_linewidths : float or Iterable of float
+        if float, 1 linewidth for all routes. if Iterable, the linewidth for
+        each route.
     pgr_kwargs
         keyword arguments to pass to plot_graph_route
 
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axis
+        tuple of matplotlib (Figure, Axes)
     """
     _verify_mpl()
 
+    # make iterables lists (so we're guaranteed to be able to get their sizes)
+    routes = list(routes)
+    route_colors = (
+        [route_colors] * len(routes) if isinstance(route_colors, str) else list(route_colors)
+    )
+    route_linewidths = (
+        [route_linewidths] * len(routes)
+        if not isinstance(route_linewidths, Iterable)
+        else list(route_linewidths)
+    )
+
     # check for valid arguments
     if not all(isinstance(r, list) for r in routes):  # pragma: no cover
-        msg = "routes must be a list of route lists"
+        msg = "`routes` must be an iterable of route lists"
+        raise TypeError(msg)
+    if len(routes) < 1:  # pragma: no cover
+        msg = "You must pass at least 1 route"
         raise ValueError(msg)
-    if len(routes) <= 1:  # pragma: no cover
-        msg = "You must pass more than 1 route"
-        raise ValueError(msg)
-    if isinstance(route_colors, str):
-        route_colors = [route_colors] * len(routes)
-    if len(routes) != len(route_colors):  # pragma: no cover
-        msg = "route_colors list must have same length as routes"
-        raise ValueError(msg)
-    if isinstance(route_linewidths, int):
-        route_linewidths = [route_linewidths] * len(routes)
-    if len(routes) != len(route_linewidths):  # pragma: no cover
-        msg = "route_linewidths list must have same length as routes"
+    if not (len(routes) == len(route_colors) == len(route_linewidths)):  # pragma: no cover
+        msg = "`route_colors` and `route_linewidths` must have same lengths as `routes`"
         raise ValueError(msg)
 
     # plot the graph and the first route
@@ -429,18 +468,18 @@ def plot_graph_routes(G, routes, route_colors="r", route_linewidths=4, **pgr_kwa
 
 
 def plot_figure_ground(
-    G=None,
-    address=None,
-    point=None,
-    dist=805,
-    network_type="drive_service",
-    street_widths=None,
-    default_width=4,
-    figsize=(8, 8),
-    edge_color="w",
-    smooth_joints=True,
-    **pg_kwargs,
-):
+    G: nx.MultiDiGraph | None = None,
+    address: str | None = None,
+    point: tuple[float, float] | None = None,
+    dist: float = 805,
+    network_type: str = "drive_service",
+    street_widths: dict[str, float] | None = None,
+    default_width: float = 4,
+    figsize: tuple[float, float] = (8, 8),
+    edge_color: str = "w",
+    smooth_joints: bool = True,
+    **pg_kwargs: Any,
+) -> tuple[Figure, Axes]:
     """
     Plot a figure-ground diagram of a street network.
 
@@ -450,18 +489,18 @@ def plot_figure_ground(
         input graph, must be unprojected
     address : string
         address to geocode as the center point if G is not passed in
-    point : tuple
-        center point if address and G are not passed in
-    dist : numeric
+    point : tuple of float
+        the (lat, lon) center point if address and G are not passed in
+    dist : float
         how many meters to extend north, south, east, west from center point
     network_type : string
         what type of street network to get
     street_widths : dict
-        dict keys are street types and values are widths to plot in pixels
-    default_width : numeric
-        fallback width in pixels for any street type not in street_widths
-    figsize : numeric
-        (width, height) of figure, should be equal
+        dict keys are street types and values are widths to plot
+    default_width : float
+        fallback width for any street type not in street_widths
+    figsize : tuple
+        tuple of (width, height) of figure (values should be equal)
     edge_color : string
         color of the edges' lines
     smooth_joints : bool
@@ -473,7 +512,7 @@ def plot_figure_ground(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axis
+        tuple of matplotlib (Figure, Axes)
     """
     _verify_mpl()
     multiplier = 1.2
@@ -538,7 +577,7 @@ def plot_figure_ground(
 
     if smooth_joints:
         # for each node, get a nodesize according to the narrowest incident edge
-        node_widths = {}
+        node_widths: dict[int, float] = {}
         for node in Gu.nodes:
             # first, identify all the highway types of this node's incident edges
             ie_data = [Gu.get_edge_data(node, nbr) for nbr in Gu.neighbors(node)]
@@ -567,7 +606,7 @@ def plot_figure_ground(
                 node_widths[node] = circle_area
 
         # assign the node size to each node in the graph
-        node_sizes = [node_widths[node] for node in Gu.nodes]
+        node_sizes: list[float] | float = [node_widths[node] for node in Gu.nodes]
     else:
         node_sizes = 0
 
@@ -591,21 +630,21 @@ def plot_figure_ground(
 
 
 def plot_footprints(
-    gdf,
-    ax=None,
-    figsize=(8, 8),
-    color="orange",
-    edge_color="none",
-    edge_linewidth=0,
-    alpha=None,
-    bgcolor="#111111",
-    bbox=None,
-    save=False,
-    show=True,
-    close=False,
-    filepath=None,
-    dpi=600,
-):
+    gdf: gpd.GeoDataFrame,
+    ax: Axes | None = None,
+    figsize: tuple[float, float] = (8, 8),
+    color: str = "orange",
+    edge_color: str = "none",
+    edge_linewidth: float = 0,
+    alpha: float | None = None,
+    bgcolor: str = "#111111",
+    bbox: tuple[float, float, float, float] | None = None,
+    save: bool = False,
+    show: bool = True,
+    close: bool = False,
+    filepath: str | Path | None = None,
+    dpi: int = 600,
+) -> tuple[Figure, Axes]:
     """
     Visualize a GeoDataFrame of geospatial features' footprints.
 
@@ -613,8 +652,8 @@ def plot_footprints(
     ----------
     gdf : geopandas.GeoDataFrame
         GeoDataFrame of footprints (shapely Polygons and MultiPolygons)
-    ax : axis
-        if not None, plot on this preexisting axis
+    ax : matplotlib axes instance
+        if not None, plot on this pre-existing axes instance
     figsize : tuple
         if ax is None, create new figure with size (width, height)
     color : string
@@ -636,7 +675,7 @@ def plot_footprints(
         if True, call pyplot.show() to show the figure
     close : bool
         if True, call pyplot.close() to close the figure
-    filepath : string
+    filepath : string or pathlib.Path
         if save is True, the path to the file. file format determined from
         extension. if None, use settings.imgs_folder/image.png
     dpi : int
@@ -645,15 +684,10 @@ def plot_footprints(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axis
+        tuple of matplotlib (Figure, Axes)
     """
     _verify_mpl()
-
-    if ax is None:
-        fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor, frameon=False)
-        ax.set_facecolor(bgcolor)
-    else:
-        fig = ax.figure
+    fig, ax = _get_fig_ax(ax=ax, figsize=figsize, bgcolor=bgcolor, polar=False)
 
     # retain only Polygons and MultiPolygons, then plot
     gdf = gdf[gdf["geometry"].type.isin({"Polygon", "MultiPolygon"})]
@@ -667,29 +701,29 @@ def plot_footprints(
     else:
         north, south, east, west = bbox
 
-    # configure axis appearance, save/show figure as specified, and return
-    ax = _config_ax(ax, gdf.crs, (north, south, east, west), 0)
+    # configure axes appearance, save/show figure as specified, and return
+    ax = _config_ax(ax, gdf.crs, (north, south, east, west), 0)  # type: ignore[arg-type]
     fig, ax = _save_and_show(fig, ax, save, show, close, filepath, dpi)
     return fig, ax
 
 
 def plot_orientation(
-    Gu,
-    num_bins=36,
-    min_length=0,
-    weight=None,
-    ax=None,
-    figsize=(5, 5),
-    area=True,
-    color="#003366",
-    edgecolor="k",
-    linewidth=0.5,
-    alpha=0.7,
-    title=None,
-    title_y=1.05,
-    title_font=None,
-    xtick_font=None,
-):
+    Gu: nx.MultiGraph,
+    num_bins: int = 36,
+    min_length: float = 0,
+    weight: str | None = None,
+    ax: PolarAxes | None = None,
+    figsize: tuple[float, float] = (5, 5),
+    area: bool = True,
+    color: str = "#003366",
+    edgecolor: str = "k",
+    linewidth: float = 0.5,
+    alpha: float = 0.7,
+    title: str | None = None,
+    title_y: float = 1.05,
+    title_font: dict[str, Any] | None = None,
+    xtick_font: dict[str, Any] | None = None,
+) -> tuple[Figure, Axes]:
     """
     Plot a polar histogram of a spatial network's bidirectional edge bearings.
 
@@ -710,8 +744,9 @@ def plot_orientation(
         ignore edges with `length` attributes less than `min_length`
     weight : string
         if not None, weight edges' bearings by this (non-null) edge attribute
-    ax : matplotlib.axes.PolarAxesSubplot
-        if not None, plot on this preexisting axis; must have projection=polar
+    ax : matplotlib.projections.polar.PolarAxes
+        if not None, plot on this pre-existing axes instance (must have
+        projection=polar)
     figsize : tuple
         if ax is None, create new figure with size (width, height)
     area : bool
@@ -737,7 +772,7 @@ def plot_orientation(
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axis
+        tuple of matplotlib (Figure, PolarAxes)
     """
     _verify_mpl()
 
@@ -767,11 +802,8 @@ def plot_orientation(
     bin_frequency = bin_counts / bin_counts.sum()
     radius = np.sqrt(bin_frequency) if area else bin_frequency
 
-    # create ax (if necessary) then set N at top and go clockwise
-    if ax is None:
-        fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "polar"})
-    else:
-        fig = ax.figure
+    # create PolarAxes (if not passed-in) then set N at top and go clockwise
+    fig, ax = _get_fig_ax(ax=ax, figsize=figsize, bgcolor=None, polar=True)
     ax.set_theta_zero_location("N")
     ax.set_theta_direction("clockwise")
     ax.set_ylim(top=radius.max())
@@ -806,7 +838,15 @@ def plot_orientation(
     return fig, ax
 
 
-def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size):
+def _get_colors_by_value(
+    vals: pd.Series,  # type: ignore[type-arg]
+    num_bins: int | None,
+    cmap: str,
+    start: float,
+    stop: float,
+    na_color: str,
+    equal_size: bool,
+) -> pd.Series:  # type: ignore[type-arg]
     """
     Map colors to the values in a series.
 
@@ -832,7 +872,7 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
     Returns
     -------
     color_series : pandas.Series
-        series labels are node/edge IDs and values are colors
+        labels are (u, v, k) edge IDs, values are colors as hex strings
     """
     if len(vals) == 0:
         msg = "There are no attribute values."
@@ -849,30 +889,40 @@ def _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size
         # linearly map a color to each attribute value
         normalizer = colors.Normalize(full_min, full_max)
         scalar_mapper = cm.ScalarMappable(normalizer, colormaps[cmap])
-        color_series = vals.map(scalar_mapper.to_rgba)
+        color_series = vals.map(scalar_mapper.to_rgba).map(colors.to_hex)
         color_series.loc[pd.isna(vals)] = na_color
 
     else:
         # otherwise, bin values then assign colors to bins
-        cut_func = pd.qcut if equal_size else pd.cut
-        bins = cut_func(vals, num_bins, labels=range(num_bins))
-        bin_colors = get_colors(num_bins, cmap, start, stop)
+        if equal_size:
+            bins = pd.qcut(vals, num_bins, labels=range(num_bins))
+        else:
+            bins = pd.cut(vals, num_bins, labels=range(num_bins))
+        bin_colors = get_colors(num_bins, cmap, start, stop, return_hex=True)
         color_list = [bin_colors[b] if pd.notna(b) else na_color for b in bins]
         color_series = pd.Series(color_list, index=bins.index)
 
     return color_series
 
 
-def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dpi=300):
+def _save_and_show(
+    fig: Figure,
+    ax: Axes,
+    save: bool = False,
+    show: bool = True,
+    close: bool = True,
+    filepath: str | Path | None = None,
+    dpi: int = 300,
+) -> tuple[Figure, Axes]:
     """
     Save a figure to disk and/or show it, as specified by args.
 
     Parameters
     ----------
-    fig : figure
+    fig : matplotlib figure
         matplotlib figure
-    ax : axis
-        matplotlib axis
+    ax : matplotlib axes instance
+        matplotlib axes
     save : bool
         if True, save the figure to disk at filepath
     show : bool
@@ -888,40 +938,38 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
     Returns
     -------
     fig, ax : tuple
-        matplotlib figure, axis
+        matplotlib figure, axes
     """
     fig.canvas.draw()
     fig.canvas.flush_events()
 
     if save:
         # default filepath, if none provided
-        filepath = Path(settings.imgs_folder) / "image.png" if filepath is None else Path(filepath)
+        fp = Path(settings.imgs_folder) / "image.png" if filepath is None else Path(filepath)
 
         # if save folder does not already exist, create it
-        filepath.parent.mkdir(parents=True, exist_ok=True)
+        fp.parent.mkdir(parents=True, exist_ok=True)
 
         # get the file extension and figure facecolor
-        ext = filepath.suffix.strip(".")
+        ext = fp.suffix.strip(".")
         fc = fig.get_facecolor()
 
         if ext == "svg":
             # if the file format is svg, prep the fig/ax for saving
             ax.axis("off")
-            ax.set_position([0, 0, 1, 1])
+            ax.set_position((0, 0, 1, 1))
             ax.patch.set_alpha(0.0)
             fig.patch.set_alpha(0.0)
-            fig.savefig(filepath, bbox_inches=0, format=ext, facecolor=fc, transparent=True)
+            fig.savefig(fp, bbox_inches=0, format=ext, facecolor=fc, transparent=True)
         else:
-            # constrain saved figure's extent to interior of the axis
+            # constrain saved figure's extent to interior of the axes
             extent = ax.bbox.transformed(fig.dpi_scale_trans.inverted())
 
             # temporarily turn figure frame on to save with facecolor
             fig.set_frameon(True)
-            fig.savefig(
-                filepath, dpi=dpi, bbox_inches=extent, format=ext, facecolor=fc, transparent=True
-            )
+            fig.savefig(fp, dpi=dpi, bbox_inches=extent, format=ext, facecolor=fc, transparent=True)
             fig.set_frameon(False)  # and turn it back off again
-        utils.log(f"Saved figure to disk at {filepath}")
+        utils.log(f"Saved figure to disk at {fp}")
 
     if show:
         plt.show()
@@ -932,14 +980,14 @@ def _save_and_show(fig, ax, save=False, show=True, close=True, filepath=None, dp
     return fig, ax
 
 
-def _config_ax(ax, crs, bbox, padding):
+def _config_ax(ax: Axes, crs: Any, bbox: tuple[float, float, float, float], padding: float) -> Axes:
     """
-    Configure axis for display.
+    Configure matplotlib axes instance for display.
 
     Parameters
     ----------
-    ax : matplotlib axis
-        the axis containing the plot
+    ax : matplotlib axes instance
+        the axes instance containing the plot
     crs : dict or string or pyproj.CRS
         the CRS of the plotted geometries
     bbox : tuple
@@ -949,10 +997,10 @@ def _config_ax(ax, crs, bbox, padding):
 
     Returns
     -------
-    ax : matplotlib axis
-        the configured/styled axis
+    ax : matplotlib axes
+        the configured/styled axes instance
     """
-    # set the axis view limits to bbox + relative padding
+    # set the axes view limits to bbox + relative padding
     north, south, east, west = bbox
     padding_ns = (north - south) * padding
     padding_ew = (east - west) * padding
@@ -963,7 +1011,7 @@ def _config_ax(ax, crs, bbox, padding):
     # so there is no space around the plot
     ax.margins(0)
     ax.tick_params(which="both", direction="in")
-    _ = [s.set_visible(False) for s in ax.spines.values()]
+    _ = [s.set_visible(False) for s in ax.spines.values()]  # type: ignore[func-returns-value]
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
 
@@ -979,7 +1027,59 @@ def _config_ax(ax, crs, bbox, padding):
     return ax
 
 
-def _verify_mpl():
+# if polar = False, return Axes
+@overload  # pragma: no cover
+def _get_fig_ax(
+    ax: Axes | None, figsize: tuple[float, float], bgcolor: str | None, polar: Literal[False]
+) -> tuple[Figure, Axes]:
+    ...
+
+
+# if polar = True, return PolarAxes
+@overload  # pragma: no cover
+def _get_fig_ax(
+    ax: Axes | None, figsize: tuple[float, float], bgcolor: str | None, polar: Literal[True]
+) -> tuple[Figure, PolarAxes]:
+    ...
+
+
+def _get_fig_ax(
+    ax: Axes | None, figsize: tuple[float, float], bgcolor: str | None, polar: bool
+) -> tuple[Figure, Axes | PolarAxes]:
+    """
+    Generate a matplotlib Figure and (Polar)Axes or return existing ones.
+
+    Parameters
+    ----------
+    ax : matplotlib axes instance
+        if not None, plot on this pre-existing axes instance
+    figsize : tuple of float
+        if ax is None, create new figure with size (width, height)
+    bgcolor : string
+        background color of plot
+    polar : bool
+        if True, generate PolarAxes instead of Axes
+
+    Returns
+    -------
+    fig, ax : tuple
+        tuple of matplotlib (Figure, Axes) or (Figure, PolarAxes)
+    """
+    if ax is None:
+        if polar:
+            # make PolarAxes
+            fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "polar"})
+        else:
+            # make regular Axes
+            fig, ax = plt.subplots(figsize=figsize, facecolor=bgcolor, frameon=False)
+            ax.set_facecolor(bgcolor)
+    else:
+        fig = ax.figure  # type: ignore[assignment]
+
+    return fig, ax
+
+
+def _verify_mpl() -> None:
     """
     Verify that matplotlib is installed and successfully imported.
 

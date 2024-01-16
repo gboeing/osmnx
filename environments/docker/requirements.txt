@@ -30,6 +30,12 @@ hatch
 pip
 twine
 
+# typing
+mypy
+pandas-stubs
+typeguard
+types-requests
+
 # linting/testing
 nbdime
 nbqa

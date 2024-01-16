@@ -19,7 +19,7 @@ except ImportError:  # pragma: no cover
     folium = None
 
 
-def plot_graph_folium(
+def plot_graph_folium(  # type: ignore[no-untyped-def]
     G,
     graph_map=None,
     popup_attribute=None,
@@ -67,10 +67,10 @@ def plot_graph_folium(
     )
     # create gdf of all graph edges
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)
-    return _plot_folium(gdf_edges, graph_map, popup_attribute, tiles, zoom, fit_bounds, **kwargs)
+    return _plot_folium(gdf_edges, graph_map, popup_attribute, tiles, zoom, fit_bounds, **kwargs)  # type: ignore[no-untyped-call]
 
 
-def plot_route_folium(
+def plot_route_folium(  # type: ignore[no-untyped-def]
     G,
     route,
     route_map=None,
@@ -123,10 +123,10 @@ def plot_route_folium(
     node_pairs = zip(route[:-1], route[1:])
     uvk = ((u, v, min(G[u][v].items(), key=lambda k: k[1]["length"])[0]) for u, v in node_pairs)
     gdf_edges = utils_graph.graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
-    return _plot_folium(gdf_edges, route_map, popup_attribute, tiles, zoom, fit_bounds, **kwargs)
+    return _plot_folium(gdf_edges, route_map, popup_attribute, tiles, zoom, fit_bounds, **kwargs)  # type: ignore[no-untyped-call]
 
 
-def _plot_folium(gdf, m, popup_attribute, tiles, zoom, fit_bounds, **kwargs):
+def _plot_folium(gdf, m, popup_attribute, tiles, zoom, fit_bounds, **kwargs):  # type: ignore[no-untyped-def]
     """
     Plot a GeoDataFrame of LineStrings on a folium map object.
 
@@ -170,7 +170,7 @@ def _plot_folium(gdf, m, popup_attribute, tiles, zoom, fit_bounds, **kwargs):
     # add each edge to the map
     for vals in gdf[attrs].to_numpy():
         params = dict(zip(["geom", "popup_val"], vals))
-        pl = _make_folium_polyline(**params, **kwargs)
+        pl = _make_folium_polyline(**params, **kwargs)  # type: ignore[no-untyped-call]
         pl.add_to(m)
 
     # if fit_bounds is True, fit the map to the bounds of the route by passing
@@ -182,7 +182,7 @@ def _plot_folium(gdf, m, popup_attribute, tiles, zoom, fit_bounds, **kwargs):
     return m
 
 
-def _make_folium_polyline(geom, popup_val=None, **kwargs):
+def _make_folium_polyline(geom, popup_val=None, **kwargs):  # type: ignore[no-untyped-def]
     """
     Turn LineString geometry into a folium PolyLine with attributes.
 

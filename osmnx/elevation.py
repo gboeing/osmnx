@@ -1,9 +1,13 @@
 """Add node elevations from raster files or web APIs, and calculate edge grades."""
 
+from __future__ import annotations
+
 import multiprocessing as mp
 import time
+from collections.abc import Iterable
 from hashlib import sha1
 from pathlib import Path
+from typing import Any
 from warnings import warn
 
 import networkx as nx
@@ -25,7 +29,9 @@ except ImportError:  # pragma: no cover
     rasterio = gdal = None
 
 
-def add_edge_grades(G, add_absolute=True, precision=None):
+def add_edge_grades(
+    G: nx.MultiDiGraph, add_absolute: bool = True, precision: int | None = None
+) -> nx.MultiDiGraph:
     """
     Add `grade` attribute to each graph edge.
 
@@ -75,7 +81,9 @@ def add_edge_grades(G, add_absolute=True, precision=None):
     return G
 
 
-def _query_raster(nodes, filepath, band):
+def _query_raster(
+    nodes: pd.DataFrame, filepath: str | Path, band: int
+) -> Iterable[tuple[int, Any]]:
     """
     Query a raster for values at coordinates in a DataFrame's x/y columns.
 
@@ -100,11 +108,16 @@ def _query_raster(nodes, filepath, band):
         return zip(nodes.index, values)
 
 
-def add_node_elevations_raster(G, filepath, band=1, cpus=None):
+def add_node_elevations_raster(
+    G: nx.MultiDiGraph,
+    filepath: str | Path | Iterable[str | Path],
+    band: int = 1,
+    cpus: int | None = None,
+) -> nx.MultiDiGraph:
     """
     Add `elevation` attribute to each node from local raster file(s).
 
-    If `filepath` is a list of paths, this will generate a virtual raster
+    If `filepath` is an iterable of paths, this will generate a virtual raster
     composed of the files at those paths as an intermediate step.
 
     See also the `add_edge_grades` function.
@@ -113,8 +126,8 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
     ----------
     G : networkx.MultiDiGraph
         input graph, in same CRS as raster
-    filepath : string or pathlib.Path or list of strings/Paths
-        path (or list of paths) to the raster file(s) to query
+    filepath : string or pathlib.Path or iterable of strings/Paths
+        the path(s) to the raster file(s) to query
     band : int
         which raster band to query
     cpus : int
@@ -134,8 +147,8 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
     cpus = min(cpus, mp.cpu_count())
     utils.log(f"Attaching elevations with {cpus} CPUs...")
 
-    # if a list of filepaths is passed, compose them all as a virtual raster
-    # use the sha1 hash of the filepaths list as the vrt filename
+    # if multiple filepaths are passed in, compose them as a virtual raster
+    # use the sha1 hash of the filepaths object as the vrt filename
     if not isinstance(filepath, (str, Path)):
         filepaths = [str(p) for p in filepath]
         sha = sha1(str(filepaths).encode("utf-8")).hexdigest()
@@ -161,14 +174,14 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
 
 
 def add_node_elevations_google(
-    G,
-    api_key=None,
-    batch_size=350,
-    pause=0,
-    max_locations_per_batch=None,
-    precision=None,
-    url_template=None,
-):
+    G: nx.MultiDiGraph,
+    api_key: str | None = None,
+    batch_size: int = 350,
+    pause: float = 0,
+    max_locations_per_batch: int | None = None,
+    precision: int | None = None,
+    url_template: str | None = None,
+) -> nx.MultiDiGraph:
     """
     Add an `elevation` (meters) attribute to each node using a web service.
 
@@ -274,7 +287,7 @@ def add_node_elevations_google(
     return G
 
 
-def _elevation_request(url, pause):
+def _elevation_request(url: str, pause: float) -> dict[str, Any]:
     """
     Send a HTTP GET request to Google Maps-style Elevation API.
 
@@ -291,7 +304,7 @@ def _elevation_request(url, pause):
     """
     # check if request already exists in cache
     cached_response_json = _downloader._retrieve_from_cache(url)
-    if cached_response_json is not None:
+    if isinstance(cached_response_json, dict):
         return cached_response_json
 
     # pause then request this URL
@@ -309,5 +322,8 @@ def _elevation_request(url, pause):
     )
 
     response_json = _downloader._parse_response(response)
-    _downloader._save_to_cache(url, response_json, response.status_code)
+    if not isinstance(response_json, dict):  # pragma: no cover
+        msg = "Elevation API did not return a dict of results."
+        raise InsufficientResponseError(msg)
+    _downloader._save_to_cache(url, response_json, response.ok)
     return response_json

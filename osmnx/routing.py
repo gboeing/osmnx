@@ -1,7 +1,12 @@
 """Calculate weighted shortest paths between graph nodes."""
 
+from __future__ import annotations
+
 import itertools
 import multiprocessing as mp
+from collections.abc import Generator
+from collections.abc import Iterable
+from typing import overload
 from warnings import warn
 
 import networkx as nx
@@ -11,7 +16,103 @@ from . import utils
 from . import utils_graph
 
 
-def shortest_path(G, orig, dest, weight="length", cpus=1):
+# orig/dest int, weight present, cpus present
+@overload  # pragma: no cover
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+    weight: str,
+    cpus: int | None,
+) -> list[int] | None:
+    ...
+
+
+# orig/dest int, weight missing, cpus present
+@overload  # pragma: no cover
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+    *,
+    cpus: int | None,
+) -> list[int] | None:
+    ...
+
+
+# orig/dest int, weight present, cpus missing
+@overload  # pragma: no cover
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+    weight: str,
+) -> list[int] | None:
+    ...
+
+
+# orig/dest int, weight missing, cpus missing
+@overload  # pragma: no cover
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+) -> list[int] | None:
+    ...
+
+
+# orig/dest Iterable, weight present, cpus present
+@overload  # pragma: no cover
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: Iterable[int],
+    dest: Iterable[int],
+    weight: str,
+    cpus: int | None,
+) -> list[list[int] | None]:
+    ...
+
+
+# orig/dest Iterable, weight missing, cpus present
+@overload  # pragma: no cover
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: Iterable[int],
+    dest: Iterable[int],
+    *,
+    cpus: int | None,
+) -> list[list[int] | None]:
+    ...
+
+
+# orig/dest Iterable, weight present, cpus missing
+@overload  # pragma: no cover
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: Iterable[int],
+    dest: Iterable[int],
+    weight: str,
+) -> list[list[int] | None]:
+    ...
+
+
+# orig/dest Iterable, weight missing, cpus missing
+@overload  # pragma: no cover
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: Iterable[int],
+    dest: Iterable[int],
+) -> list[list[int] | None]:
+    ...
+
+
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int | Iterable[int],
+    dest: int | Iterable[int],
+    weight: str = "length",
+    cpus: int | None = 1,
+) -> list[int] | None | list[list[int] | None]:
     """
     Solve shortest path from origin node(s) to destination node(s).
 
@@ -31,10 +132,10 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
     ----------
     G : networkx.MultiDiGraph
         input graph
-    orig : int or list
-        origin node ID, or a list of origin node IDs
-    dest : int or list
-        destination node ID, or a list of destination node IDs
+    orig : int or iterable of ints
+        origin node ID(s)
+    dest : int or iterable of ints
+        destination node ID(s)
     weight : string
         edge attribute to minimize when solving shortest path
     cpus : int
@@ -43,21 +144,24 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
     Returns
     -------
     path : list
-        list of node IDs constituting the shortest path, or, if orig and dest
-        are lists, then a list of path lists
+        list of node IDs constituting the shortest path, or, if `orig` and
+        `dest` are both iterable, then a list of path lists
     """
     _verify_edge_attribute(G, weight)
 
     # if neither orig nor dest is iterable, just return the shortest path
-    if not (hasattr(orig, "__iter__") or hasattr(dest, "__iter__")):
+    if not (isinstance(orig, Iterable) or isinstance(dest, Iterable)):
         return _single_shortest_path(G, orig, dest, weight)
 
     # if only 1 of orig or dest is iterable and the other is not, raise error
-    if not (hasattr(orig, "__iter__") and hasattr(dest, "__iter__")):
+    if not (isinstance(orig, Iterable) and isinstance(dest, Iterable)):
         msg = "orig and dest must either both be iterable or neither must be iterable"
-        raise ValueError(msg)
+        raise TypeError(msg)
 
-    # if both orig and dest are iterable, ensure they have same lengths
+    # if both orig and dest are iterable, make them lists (so we're guaranteed
+    # to be able to get their sizes) then ensure they have same lengths
+    orig = list(orig)
+    dest = list(dest)
     if len(orig) != len(dest):  # pragma: no cover
         msg = "orig and dest must be of equal length"
         raise ValueError(msg)
@@ -81,7 +185,9 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
     return paths
 
 
-def k_shortest_paths(G, orig, dest, k, weight="length"):
+def k_shortest_paths(
+    G: nx.MultiDiGraph, orig: int, dest: int, k: int, weight: str = "length"
+) -> Generator[list[int], None, None]:
     """
     Solve `k` shortest paths from an origin node to a destination node.
 
@@ -104,7 +210,7 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
 
     Yields
     ------
-    path : list
+    path : generator
         a generator of `k` shortest paths ordered by total weight. each path
         is a list of node IDs.
     """
@@ -113,12 +219,15 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
     yield from itertools.islice(paths_gen, 0, k)
 
 
-def _single_shortest_path(G, orig, dest, weight):
+def _single_shortest_path(
+    G: nx.MultiDiGraph, orig: int, dest: int, weight: str
+) -> list[int] | None:
     """
     Solve the shortest path from an origin node to a destination node.
 
-    This function is a convenience wrapper around networkx.shortest_path, with
-    exception handling for unsolvable paths. It uses Dijkstra's algorithm.
+    This function uses Dijkstra's algorithm. It is a convenience wrapper
+    around networkx.shortest_path, with exception handling for unsolvable
+    paths. If the path is unsolvable, it returns None.
 
     Parameters
     ----------
@@ -137,13 +246,13 @@ def _single_shortest_path(G, orig, dest, weight):
         list of node IDs constituting the shortest path
     """
     try:
-        return nx.shortest_path(G, orig, dest, weight=weight, method="dijkstra")
+        return list(nx.shortest_path(G, orig, dest, weight=weight, method="dijkstra"))
     except nx.exception.NetworkXNoPath:  # pragma: no cover
         utils.log(f"Cannot solve path from {orig} to {dest}")
         return None
 
 
-def _verify_edge_attribute(G, attr):
+def _verify_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
     """
     Verify attribute values are numeric and non-null across graph edges.
 

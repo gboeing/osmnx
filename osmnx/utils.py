@@ -1,4 +1,5 @@
 """General utility functions."""
+from __future__ import annotations
 
 import datetime as dt
 import logging as lg
@@ -12,7 +13,7 @@ from warnings import warn
 from . import settings
 
 
-def citation(style="bibtex"):
+def citation(style: str = "bibtex") -> None:
     """
     Print the OSMnx package's citation information.
 
@@ -66,7 +67,7 @@ def citation(style="bibtex"):
     print(msg)  # noqa: T201
 
 
-def ts(style="datetime", template=None):
+def ts(style: str = "datetime", template: str | None = None) -> str:
     """
     Return current local timestamp as a string.
 
@@ -97,7 +98,7 @@ def ts(style="datetime", template=None):
     return template.format(dt.datetime.now().astimezone())
 
 
-def config(
+def config(  # type: ignore[no-untyped-def]
     all_oneway=settings.all_oneway,
     bidirectional_network_types=settings.bidirectional_network_types,
     cache_folder=settings.cache_folder,
@@ -252,7 +253,9 @@ def config(
     settings.requests_kwargs = requests_kwargs
 
 
-def log(message, level=None, name=None, filename=None):
+def log(
+    message: str, level: int | None = None, name: str | None = None, filename: str | None = None
+) -> None:
     """
     Write a message to the logger.
 
@@ -285,7 +288,7 @@ def log(message, level=None, name=None, filename=None):
     if settings.log_file:
         # get the current logger (or create a new one, if none), then log
         # message at requested level
-        logger = _get_logger(level=level, name=name, filename=filename)
+        logger = _get_logger(name=name, filename=filename)
         if level == lg.DEBUG:
             logger.debug(message)
         elif level == lg.INFO:
@@ -305,8 +308,8 @@ def log(message, level=None, name=None, filename=None):
             # print explicitly to terminal in case Jupyter has captured stdout
             if getattr(sys.stdout, "_original_stdstream_copy", None) is not None:
                 # redirect the Jupyter-captured pipe back to original
-                os.dup2(sys.stdout._original_stdstream_copy, sys.__stdout__.fileno())
-                sys.stdout._original_stdstream_copy = None
+                os.dup2(sys.stdout._original_stdstream_copy, sys.__stdout__.fileno())  # type: ignore[attr-defined]
+                sys.stdout._original_stdstream_copy = None  # type: ignore[attr-defined]
             with redirect_stdout(sys.__stdout__):
                 print(message, file=sys.__stdout__, flush=True)
         except OSError:
@@ -314,14 +317,12 @@ def log(message, level=None, name=None, filename=None):
             print(message, flush=True)  # noqa: T201
 
 
-def _get_logger(level, name, filename):
+def _get_logger(name: str, filename: str) -> lg.Logger:
     """
     Create a logger or return the current one if already instantiated.
 
     Parameters
     ----------
-    level : int
-        one of Python's logger.level constants
     name : string
         name of the logger
     filename : string
@@ -329,24 +330,21 @@ def _get_logger(level, name, filename):
 
     Returns
     -------
-    logger : logging.logger
+    logger : logging.Logger
     """
     logger = lg.getLogger(name)
 
-    # if a logger with this name is not already set up
-    if not getattr(logger, "handler_set", None):
-        # get today's date and construct a log filename
-        log_filename = Path(settings.logs_folder) / f'{filename}_{ts(style="date")}.log'
-
-        # if the logs folder does not already exist, create it
-        log_filename.parent.mkdir(parents=True, exist_ok=True)
+    # if a logger with this name is not already set up with a handler
+    if not len(logger.handlers) > 0:
+        # make log filepath and create parent folder if it doesn't exist
+        filepath = Path(settings.logs_folder) / f'{filename}_{ts(style="date")}.log'
+        filepath.parent.mkdir(parents=True, exist_ok=True)
 
         # create file handler and log formatter and set them up
-        handler = lg.FileHandler(log_filename, encoding="utf-8")
-        formatter = lg.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
-        handler.setFormatter(formatter)
+        handler = lg.FileHandler(filepath, encoding="utf-8")
+        handler.setLevel(lg.DEBUG)
+        handler.setFormatter(lg.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s"))
         logger.addHandler(handler)
-        logger.setLevel(level)
-        logger.handler_set = True
+        logger.setLevel(lg.DEBUG)
 
     return logger

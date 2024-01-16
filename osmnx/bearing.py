@@ -1,9 +1,12 @@
 """Calculate graph edge bearings."""
+from __future__ import annotations
 
+from typing import overload
 from warnings import warn
 
 import networkx as nx
 import numpy as np
+from numpy.typing import NDArray
 
 from . import plot
 from . import projection
@@ -15,7 +18,34 @@ except ImportError:  # pragma: no cover
     scipy = None
 
 
-def calculate_bearing(lat1, lon1, lat2, lon2):
+# if coords are all floats, return float
+@overload  # pragma: no cover
+def calculate_bearing(
+    lat1: float,
+    lon1: float,
+    lat2: float,
+    lon2: float,
+) -> float:
+    ...
+
+
+# if coords are all arrays, return array
+@overload  # pragma: no cover
+def calculate_bearing(
+    lat1: NDArray[np.float64],
+    lon1: NDArray[np.float64],
+    lat2: NDArray[np.float64],
+    lon2: NDArray[np.float64],
+) -> NDArray[np.float64]:
+    ...
+
+
+def calculate_bearing(
+    lat1: float | NDArray[np.float64],
+    lon1: float | NDArray[np.float64],
+    lat2: float | NDArray[np.float64],
+    lon2: float | NDArray[np.float64],
+) -> float | NDArray[np.float64]:
     """
     Calculate the compass bearing(s) between pairs of lat-lon points.
 
@@ -51,10 +81,11 @@ def calculate_bearing(lat1, lon1, lat2, lon2):
     initial_bearing = np.degrees(np.arctan2(y, x))
 
     # normalize to 0-360 degrees to get compass bearing
-    return initial_bearing % 360
+    bearing: float | NDArray[np.float64] = initial_bearing % 360
+    return bearing
 
 
-def add_edge_bearings(G, precision=None):
+def add_edge_bearings(G: nx.MultiDiGraph, precision: int | None = None) -> nx.MultiDiGraph:
     """
     Add compass `bearing` attributes to all graph edges.
 
@@ -103,7 +134,9 @@ def add_edge_bearings(G, precision=None):
     return G
 
 
-def orientation_entropy(Gu, num_bins=36, min_length=0, weight=None):
+def orientation_entropy(
+    Gu: nx.MultiGraph, num_bins: int = 36, min_length: float = 0, weight: str | None = None
+) -> float:
     """
     Calculate undirected graph's orientation entropy.
 
@@ -141,10 +174,13 @@ def orientation_entropy(Gu, num_bins=36, min_length=0, weight=None):
         msg = "scipy must be installed to calculate entropy"
         raise ImportError(msg)
     bin_counts, _ = _bearings_distribution(Gu, num_bins, min_length, weight)
-    return scipy.stats.entropy(bin_counts)
+    entropy: float = scipy.stats.entropy(bin_counts)
+    return entropy
 
 
-def _extract_edge_bearings(Gu, min_length=0, weight=None):
+def _extract_edge_bearings(
+    Gu: nx.MultiGraph, min_length: float = 0, weight: str | None = None
+) -> NDArray[np.float64]:
     """
     Extract undirected graph's bidirectional edge bearings.
 
@@ -166,7 +202,7 @@ def _extract_edge_bearings(Gu, min_length=0, weight=None):
 
     Returns
     -------
-    bearings : numpy.array
+    bearings : numpy.array of float
         the graph's bidirectional edge bearings
     """
     if nx.is_directed(Gu) or projection.is_projected(Gu.graph["crs"]):  # pragma: no cover
@@ -184,13 +220,15 @@ def _extract_edge_bearings(Gu, min_length=0, weight=None):
                 bearings.append(data["bearing"])
 
     # drop any nulls, calculate reverse bearings, concatenate and return
-    bearings = np.array(bearings)
-    bearings = bearings[~np.isnan(bearings)]
-    bearings_r = (bearings - 180) % 360
-    return np.concatenate([bearings, bearings_r])
+    bearings_array = np.array(bearings)
+    bearings_array = bearings_array[~np.isnan(bearings_array)]
+    bearings_array_r = (bearings_array - 180) % 360
+    return np.concatenate([bearings_array, bearings_array_r])
 
 
-def _bearings_distribution(Gu, num_bins, min_length=0, weight=None):
+def _bearings_distribution(
+    Gu: nx.MultiGraph, num_bins: int, min_length: float = 0, weight: str | None = None
+) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
     """
     Compute distribution of bearings across evenly spaced bins.
 
@@ -217,7 +255,7 @@ def _bearings_distribution(Gu, num_bins, min_length=0, weight=None):
 
     Returns
     -------
-    bin_counts, bin_edges : tuple of numpy.array
+    bin_counts, bin_edges : tuple of numpy.array of float
         counts of bearings per bin and the bins edges
     """
     n = num_bins * 2
@@ -236,7 +274,7 @@ def _bearings_distribution(Gu, num_bins, min_length=0, weight=None):
     return bin_counts, bin_edges
 
 
-def plot_orientation(
+def plot_orientation(  # type: ignore[no-untyped-def]
     Gu,
     num_bins=36,
     min_length=0,

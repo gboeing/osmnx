@@ -7,7 +7,12 @@ built-in network type or provide your own custom filter with Overpass QL.
 Refer to the Getting Started guide for usage limitations.
 """
 
+from __future__ import annotations
+
 import itertools
+from collections.abc import Iterable
+from pathlib import Path
+from typing import Any
 from warnings import warn
 
 import networkx as nx
@@ -32,17 +37,17 @@ from ._version import __version__
 
 
 def graph_from_bbox(
-    north,
-    south,
-    east,
-    west,
-    network_type="all_private",
-    simplify=True,
-    retain_all=False,
-    truncate_by_edge=False,
-    clean_periphery=None,
-    custom_filter=None,
-):
+    north: float,
+    south: float,
+    east: float,
+    west: float,
+    network_type: str = "all_private",
+    simplify: bool = True,
+    retain_all: bool = False,
+    truncate_by_edge: bool = False,
+    clean_periphery: bool | None = None,
+    custom_filter: str | None = None,
+) -> nx.MultiDiGraph:
     """
     Download and create a graph within some bounding box.
 
@@ -107,16 +112,16 @@ def graph_from_bbox(
 
 
 def graph_from_point(
-    center_point,
-    dist=1000,
-    dist_type="bbox",
-    network_type="all_private",
-    simplify=True,
-    retain_all=False,
-    truncate_by_edge=False,
-    clean_periphery=None,
-    custom_filter=None,
-):
+    center_point: tuple[float, float],
+    dist: float = 1000,
+    dist_type: str = "bbox",
+    network_type: str = "all_private",
+    simplify: bool = True,
+    retain_all: bool = False,
+    truncate_by_edge: bool = False,
+    clean_periphery: bool | None = None,
+    custom_filter: str | None = None,
+) -> nx.MultiDiGraph:
     """
     Download and create a graph within some distance of a (lat, lon) point.
 
@@ -128,13 +133,13 @@ def graph_from_point(
     ----------
     center_point : tuple
         the (lat, lon) center point around which to construct the graph
-    dist : int
-        retain only those nodes within this many meters of the center of the
-        graph, with distance determined according to dist_type argument
+    dist : float
+        retain only those nodes within this many meters of `center_point`,
+        measuring distance according to `dist_type`
     dist_type : string {"network", "bbox"}
-        if "bbox", retain only those nodes within a bounding box of the
-        distance parameter. if "network", retain only those nodes within some
-        network distance from the center-most node.
+        if "bbox", retain only those nodes within a bounding box of `dist`. if
+        "network", retain only those nodes within `dist` network distance from
+        the center-most node.
     network_type : string, {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         what type of street network to get if custom_filter is None
     simplify : bool
@@ -187,7 +192,7 @@ def graph_from_point(
     if dist_type == "network":
         # if dist_type is network, find node in graph nearest to center point
         # then truncate graph by network dist from it
-        node = distance.nearest_nodes(G, X=[center_point[1]], Y=[center_point[0]])[0]
+        node = distance.nearest_nodes(G, X=center_point[1], Y=center_point[0])
         G = truncate.truncate_graph_dist(G, node, max_dist=dist)
 
     utils.log(f"graph_from_point returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
@@ -195,17 +200,17 @@ def graph_from_point(
 
 
 def graph_from_address(
-    address,
-    dist=1000,
-    dist_type="bbox",
-    network_type="all_private",
-    simplify=True,
-    retain_all=False,
-    truncate_by_edge=False,
-    return_coords=None,
-    clean_periphery=None,
-    custom_filter=None,
-):
+    address: str,
+    dist: float = 1000,
+    dist_type: str = "bbox",
+    network_type: str = "all_private",
+    simplify: bool = True,
+    retain_all: bool = False,
+    truncate_by_edge: bool = False,
+    return_coords: bool | None = None,
+    clean_periphery: bool | None = None,
+    custom_filter: str | None = None,
+) -> nx.MultiDiGraph | tuple[nx.MultiDiGraph, tuple[float, float]]:
     """
     Download and create a graph within some distance of an address.
 
@@ -218,13 +223,13 @@ def graph_from_address(
     address : string
         the address to geocode and use as the central point around which to
         construct the graph
-    dist : int
-        retain only those nodes within this many meters of the center of the
-        graph
+    dist : float
+        retain only those nodes within this many meters of `center_point`,
+        measuring distance according to `dist_type`
     dist_type : string {"network", "bbox"}
-        if "bbox", retain only those nodes within a bounding box of the
-        distance parameter. if "network", retain only those nodes within some
-        network distance from the center-most node.
+        if "bbox", retain only those nodes within a bounding box of `dist`. if
+        "network", retain only those nodes within `dist` network distance from
+        the center-most node.
     network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         what type of street network to get if custom_filter is None
     simplify : bool
@@ -247,7 +252,7 @@ def graph_from_address(
 
     Returns
     -------
-    networkx.MultiDiGraph or optionally (networkx.MultiDiGraph, (lat, lon))
+    G or (G, (lat, lon)): networkx.MultiDiGraph or tuple
 
     Notes
     -----
@@ -289,16 +294,16 @@ def graph_from_address(
 
 
 def graph_from_place(
-    query,
-    network_type="all_private",
-    simplify=True,
-    retain_all=False,
-    truncate_by_edge=False,
-    which_result=None,
-    buffer_dist=None,
-    clean_periphery=None,
-    custom_filter=None,
-):
+    query: str | dict[str, str] | list[str | dict[str, str]],
+    network_type: str = "all_private",
+    simplify: bool = True,
+    retain_all: bool = False,
+    truncate_by_edge: bool = False,
+    which_result: int | None = None,
+    buffer_dist: float | None = None,
+    clean_periphery: bool | None = None,
+    custom_filter: str | None = None,
+) -> nx.MultiDiGraph:
     """
     Download and create a graph within the boundaries of some place(s).
 
@@ -396,14 +401,14 @@ def graph_from_place(
 
 
 def graph_from_polygon(
-    polygon,
-    network_type="all_private",
-    simplify=True,
-    retain_all=False,
-    truncate_by_edge=False,
-    clean_periphery=None,
-    custom_filter=None,
-):
+    polygon: Polygon | MultiPolygon,
+    network_type: str = "all_private",
+    simplify: bool = True,
+    retain_all: bool = False,
+    truncate_by_edge: bool = False,
+    clean_periphery: bool | None = None,
+    custom_filter: str | None = None,
+) -> nx.MultiDiGraph:
     """
     Download and create a graph within the boundaries of a (multi)polygon.
 
@@ -540,8 +545,12 @@ def graph_from_polygon(
 
 
 def graph_from_xml(
-    filepath, bidirectional=False, simplify=True, retain_all=False, encoding="utf-8"
-):
+    filepath: str | Path,
+    bidirectional: bool = False,
+    simplify: bool = True,
+    retain_all: bool = False,
+    encoding: str = "utf-8",
+) -> nx.MultiDiGraph:
     """
     Create a graph from data in a .osm formatted XML file.
 
@@ -582,7 +591,11 @@ def graph_from_xml(
     return G
 
 
-def _create_graph(response_jsons, retain_all=False, bidirectional=False):
+def _create_graph(
+    response_jsons: Iterable[dict[str, Any]],
+    retain_all: bool = False,
+    bidirectional: bool = False,
+) -> nx.MultiDiGraph:
     """
     Create a networkx MultiDiGraph from Overpass API responses.
 
@@ -593,7 +606,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     Parameters
     ----------
     response_jsons : iterable
-        iterable of dicts of JSON responses from from the Overpass API
+        iterable of JSON responses dicts from the Overpass API
     retain_all : bool
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
@@ -604,11 +617,12 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     -------
     G : networkx.MultiDiGraph
     """
-    response_count = 0
-    nodes = {}
-    paths = {}
+    # each dict's keys are OSM IDs and values are dicts of attributes
+    nodes: dict[int, dict[str, Any]] = {}
+    paths: dict[int, dict[str, Any]] = {}
 
     # consume response_jsons generator to download data from server
+    response_count = 0
     for response_json in response_jsons:
         response_count += 1
 
@@ -658,7 +672,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     return G
 
 
-def _convert_node(element):
+def _convert_node(element: dict[str, Any]) -> dict[str, Any]:
     """
     Convert an OSM node element into the format for a networkx node.
 
@@ -679,7 +693,7 @@ def _convert_node(element):
     return node
 
 
-def _convert_path(element):
+def _convert_path(element: dict[str, Any]) -> dict[str, Any]:
     """
     Convert an OSM way element into the format for a networkx path.
 
@@ -704,7 +718,9 @@ def _convert_path(element):
     return path
 
 
-def _parse_nodes_paths(response_json):
+def _parse_nodes_paths(
+    response_json: dict[str, Any],
+) -> tuple[dict[int, dict[str, Any]], dict[int, dict[str, Any]]]:
     """
     Construct dicts of nodes and paths from an Overpass response.
 
@@ -716,7 +732,7 @@ def _parse_nodes_paths(response_json):
     Returns
     -------
     nodes, paths : tuple of dicts
-        dicts' keys = osmid and values = dict of attributes
+        each dict's keys are OSM IDs and values are dicts of attributes
     """
     nodes = {}
     paths = {}
@@ -729,7 +745,7 @@ def _parse_nodes_paths(response_json):
     return nodes, paths
 
 
-def _is_path_one_way(path, bidirectional, oneway_values):
+def _is_path_one_way(path: dict[str, Any], bidirectional: bool, oneway_values: set[str]) -> bool:
     """
     Determine if a path of nodes allows travel in only one direction.
 
@@ -776,7 +792,7 @@ def _is_path_one_way(path, bidirectional, oneway_values):
     return False
 
 
-def _is_path_reversed(path, reversed_values):
+def _is_path_reversed(path: dict[str, Any], reversed_values: set[str]) -> bool:
     """
     Determine if the order of nodes in a path should be reversed.
 
@@ -795,7 +811,9 @@ def _is_path_reversed(path, reversed_values):
     return "oneway" in path and path["oneway"] in reversed_values
 
 
-def _add_paths(G, paths, bidirectional=False):
+def _add_paths(
+    G: nx.MultiDiGraph, paths: Iterable[dict[str, Any]], bidirectional: bool = False
+) -> None:
     """
     Add a list of paths to the graph as edges.
 
@@ -803,8 +821,8 @@ def _add_paths(G, paths, bidirectional=False):
     ----------
     G : networkx.MultiDiGraph
         graph to add paths to
-    paths : list
-        list of paths' `tag:value` attribute data dicts
+    paths : iterable
+        iterable of paths' `tag:value` attribute data dicts
     bidirectional : bool
         if True, create bi-directional edges for one-way streets
 

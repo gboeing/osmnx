@@ -1,6 +1,8 @@
 # ruff: noqa: E402 F841 PLR2004
 """Test suite for the package."""
 
+from __future__ import annotations
+
 # use agg backend so you don't need a display on CI
 # do this first before pyplot is imported by anything
 import matplotlib as mpl
@@ -30,10 +32,11 @@ from shapely.geometry import MultiPoint
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
+from typeguard import TypeCheckError
 
 import osmnx as ox
 
-ox.config(log_console=True)
+ox.config(log_console=True)  # type: ignore[no-untyped-call]
 ox.settings.log_console = True
 ox.settings.log_file = True
 ox.settings.use_cache = True
@@ -54,7 +57,7 @@ p = (
 polygon = wkt.loads(p)
 
 
-def test_logging():
+def test_logging() -> None:
     """Test the logger."""
     ox.log("test a fake default message")
     ox.log("test a fake debug", level=lg.DEBUG)
@@ -69,7 +72,7 @@ def test_logging():
     ox.ts(style="time")
 
 
-def test_exceptions():
+def test_exceptions() -> None:
     """Test the custom errors."""
     message = "testing exception"
 
@@ -86,18 +89,18 @@ def test_exceptions():
         raise ox._errors.GraphSimplificationError(message)
 
 
-def test_coords_rounding():
+def test_coords_rounding() -> None:
     """Test the rounding of geometry coordinates."""
     precision = 3
 
     shape1 = Point(1.123456, 2.123456)
-    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
+    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)  # type: ignore[no-untyped-call]
 
     shape1 = MultiPoint([(1.123456, 2.123456), (3.123456, 4.123456)])
-    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
+    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)  # type: ignore[no-untyped-call]
 
     shape1 = LineString([(1.123456, 2.123456), (3.123456, 4.123456)])
-    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
+    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)  # type: ignore[no-untyped-call]
 
     shape1 = MultiLineString(
         [
@@ -106,10 +109,10 @@ def test_coords_rounding():
         ]
     )
 
-    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
+    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)  # type: ignore[no-untyped-call]
 
     shape1 = Polygon([(1.123456, 2.123456), (3.123456, 4.123456), (6.123456, 5.123456)])
-    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
+    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)  # type: ignore[no-untyped-call]
 
     shape1 = MultiPolygon(
         [
@@ -117,13 +120,13 @@ def test_coords_rounding():
             Polygon([(16.123456, 15.123456), (13.123456, 14.123456), (12.123456, 11.123456)]),
         ]
     )
-    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)
+    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)  # type: ignore[no-untyped-call]
 
     with pytest.raises(TypeError, match="cannot round coordinates of unhandled geometry type"):
-        ox.utils_geo.round_geometry_coords(GeometryCollection(), precision)
+        ox.utils_geo.round_geometry_coords(GeometryCollection(), precision)  # type: ignore[no-untyped-call]
 
 
-def test_geocoder():
+def test_geocoder() -> None:
     """Test retrieving elements by place name and OSM ID."""
     city = ox.geocode_to_gdf("R2999176", by_osmid=True)
     city = ox.geocode_to_gdf(place1, which_result=1, buffer_dist=100)
@@ -134,12 +137,15 @@ def test_geocoder():
     with pytest.raises(ox._errors.InsufficientResponseError):
         _ = ox.geocode("!@#$%^&*")
 
+    with pytest.raises(ox._errors.InsufficientResponseError):
+        ox.geocode_to_gdf(query="AAAZZZ")
 
-def test_stats():
+
+def test_stats() -> None:
     """Test generating graph stats."""
     # create graph, add a new node, add bearings, project it
     G = ox.graph_from_place(place1, network_type="all")
-    G.add_node(0, x=location_point[1], y=location_point[0])
+    G.add_node(0, x=location_point[1], y=location_point[0], street_count=0)
     _ = ox.bearing.calculate_bearing(0, 0, 1, 1)
     G = ox.add_edge_bearings(G)
     G = ox.add_edge_bearings(G, precision=2)
@@ -156,7 +162,7 @@ def test_stats():
     # calculate entropy
     Gu = ox.get_undirected(G)
     entropy = ox.bearing.orientation_entropy(Gu, weight="length")
-    fig, ax = ox.bearing.plot_orientation(Gu, area=True, title="Title")
+    fig, ax = ox.bearing.plot_orientation(Gu, area=True, title="Title")  # type: ignore[no-untyped-call]
     fig, ax = ox.plot_orientation(Gu, area=True, title="Title")
     fig, ax = ox.plot_orientation(Gu, ax=ax, area=False, title="Title")
 
@@ -173,7 +179,7 @@ def test_stats():
     G_clean = ox.consolidate_intersections(G, rebuild_graph=False)
 
 
-def test_osm_xml():
+def test_osm_xml() -> None:
     """Test working with .osm XML data."""
     # test loading a graph from a local .osm xml file
     node_id = 53098262
@@ -207,7 +213,7 @@ def test_osm_xml():
 
     # test osm xml output from gdfs
     nodes, edges = ox.graph_to_gdfs(G)
-    ox.osm_xml.save_graph_xml([nodes, edges])
+    ox.osm_xml.save_graph_xml((nodes, edges))  # type: ignore[no-untyped-call]
 
     # test ordered nodes from way
     df_uv = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
@@ -224,14 +230,14 @@ def test_osm_xml():
     first = gdf_way.iloc[0].dropna().astype(str)
     root = etree.Element("osm", attrib={"version": "0.6", "generator": "OSMnx"})
     edge = etree.SubElement(root, "way")
-    ox.osm_xml._append_nodes_as_edge_attrs(edge, first, gdf_way)
+    ox.osm_xml._append_nodes_as_edge_attrs(edge, first.to_dict(), gdf_way)
 
     # restore settings
     ox.settings.overpass_settings = default_overpass_settings
     ox.settings.all_oneway = default_all_oneway
 
 
-def test_elevation():
+def test_elevation() -> None:
     """Test working with elevation data."""
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
 
@@ -251,6 +257,9 @@ def test_elevation():
     )
     _ = ox.elevation.add_node_elevations_google(G, batch_size=100, pause=0.01)
 
+    # same thing again, to hit the cache
+    _ = ox.elevation.add_node_elevations_google(G, batch_size=100, pause=0.01)
+
     # add node elevations from a single raster file (some nodes will be null)
     rasters = list(Path("tests/input_data").glob("elevation*.tif"))
     G = ox.elevation.add_node_elevations_raster(G, rasters[0], cpus=1)
@@ -265,7 +274,7 @@ def test_elevation():
     G = ox.add_edge_grades(G, add_absolute=True, precision=2)
 
 
-def test_routing():
+def test_routing() -> None:
     """Test working with speed, travel time, and routing."""
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
 
@@ -286,7 +295,7 @@ def test_routing():
     assert ox.speed._clean_maxspeed("100;70") is None
 
     # test collapsing multiple mph values to single kph value
-    assert ox.speed._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44
+    assert ox.speed._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44.25685
 
     # test collapsing invalid values: should return None
     assert ox.speed._collapse_multiple_maxspeed_values(["mph", "kph"], np.mean) is None
@@ -295,35 +304,41 @@ def test_routing():
     dest_x = np.array([-122.401429])
     orig_y = np.array([37.794302])
     dest_y = np.array([37.794987])
-    orig_node = ox.distance.nearest_nodes(G, orig_x, orig_y)[0]
-    dest_node = ox.distance.nearest_nodes(G, dest_x, dest_y)[0]
+    orig_node = int(ox.distance.nearest_nodes(G, orig_x, orig_y)[0])
+    dest_node = int(ox.distance.nearest_nodes(G, dest_x, dest_y)[0])
 
-    # test non-numeric weight (should raise ValueError)
+    # test non-numeric weight, should raise ValueError
     with pytest.raises(ValueError, match="contains non-numeric values"):
-        route = ox.shortest_path(G, orig_node, dest_node, weight="highway")
+        route1 = ox.shortest_path(G, orig_node, dest_node, weight="highway")
 
-    # mismatch iterable and non-iterable orig/dest should raise ValueError
+    # mismatch iterable and non-iterable orig/dest, should raise TypeError
     msg = "orig and dest must either both be iterable or neither must be iterable"
+    with pytest.raises(TypeError, match=msg):
+        route2 = ox.shortest_path(G, orig_node, [dest_node])  # type: ignore[call-overload]
+
+    # mismatch lengths of orig/dest, should raise ValueError
+    msg = "orig and dest must be of equal length"
     with pytest.raises(ValueError, match=msg):
-        route = ox.shortest_path(G, orig_node, [dest_node])
+        route2 = ox.shortest_path(G, [orig_node] * 2, [dest_node] * 3)
 
     # test missing weight (should raise warning)
-    route = ox.shortest_path(G, orig_node, dest_node, weight="time")
+    route3 = ox.shortest_path(G, orig_node, dest_node, weight="time")
     # test good weight
-    route = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
-    route = ox.distance.shortest_path(G, orig_node, dest_node, weight="travel_time")
+    route4 = ox.distance.shortest_path(G, orig_node, dest_node, weight="travel_time")  # type: ignore[no-untyped-call]
+    route5 = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
+    assert route5 is not None
 
-    route_edges = ox.utils_graph.route_to_gdf(G, route, "travel_time")
-    attributes = ox.utils_graph.get_route_edge_attributes(G, route)
-    attributes = ox.utils_graph.get_route_edge_attributes(G, route, "travel_time")
+    route_edges = ox.utils_graph.route_to_gdf(G, route5, "travel_time")
+    attributes = ox.utils_graph.get_route_edge_attributes(G, route5)  # type: ignore[no-untyped-call]
+    attributes = ox.utils_graph.get_route_edge_attributes(G, route5, "travel_time")  # type: ignore[no-untyped-call]
 
-    fig, ax = ox.plot_graph_route(G, route, save=True)
+    fig, ax = ox.plot_graph_route(G, route5, save=True)
 
     # test multiple origins-destinations
     n = 5
     nodes = np.array(G.nodes)
-    origs = np.random.default_rng().choice(nodes, size=n, replace=True)
-    dests = np.random.default_rng().choice(nodes, size=n, replace=True)
+    origs = [int(x) for x in np.random.default_rng().choice(nodes, size=n, replace=True)]
+    dests = [int(x) for x in np.random.default_rng().choice(nodes, size=n, replace=True)]
     paths1 = ox.shortest_path(G, origs, dests, weight="length", cpus=1)
     paths2 = ox.shortest_path(G, origs, dests, weight="length", cpus=2)
     paths3 = ox.shortest_path(G, origs, dests, weight="length", cpus=None)
@@ -331,27 +346,27 @@ def test_routing():
 
     # test k shortest paths
     routes = ox.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
-    routes = ox.distance.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
+    routes = ox.distance.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")  # type: ignore[no-untyped-call]
     fig, ax = ox.plot_graph_routes(G, list(routes))
 
     # test great circle and euclidean distance calculators
-    assert ox.distance.great_circle_vec(0, 0, 1, 1) == pytest.approx(157249.6034105)
-    assert ox.distance.euclidean_dist_vec(0, 0, 1, 1) == pytest.approx(1.4142135)
+    assert ox.distance.great_circle_vec(0, 0, 1, 1) == pytest.approx(157249.6034105)  # type: ignore[no-untyped-call]
+    assert ox.distance.euclidean_dist_vec(0, 0, 1, 1) == pytest.approx(1.4142135)  # type: ignore[no-untyped-call]
 
     # test folium with keyword arguments to pass to folium.PolyLine
-    gm = ox.plot_graph_folium(G, popup_attribute="name", color="#333333", weight=5, opacity=0.7)
-    rm = ox.plot_route_folium(G, route, color="#cc0000", weight=5, opacity=0.7)
+    gm = ox.plot_graph_folium(G, popup_attribute="name", color="#333333", weight=5, opacity=0.7)  # type: ignore[no-untyped-call]
+    rm = ox.plot_route_folium(G, route5, color="#cc0000", weight=5, opacity=0.7)  # type: ignore[no-untyped-call]
 
     # test calling folium plotters with FeatureGroup instead of Map, and extra kwargs
     fg = folium.FeatureGroup(name="legend name", show=True)
-    gm = ox.plot_graph_folium(G, graph_map=fg)
+    gm = ox.plot_graph_folium(G, graph_map=fg)  # type: ignore[no-untyped-call]
     assert isinstance(gm, folium.FeatureGroup)
 
-    rm = ox.plot_route_folium(G, route, route_map=fg, tooltip="x")
+    rm = ox.plot_route_folium(G, route5, route_map=fg, tooltip="x")  # type: ignore[no-untyped-call]
     assert isinstance(rm, folium.FeatureGroup)
 
 
-def test_plots():
+def test_plots() -> None:
     """Test visualization methods."""
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
     Gp = ox.project_graph(G)
@@ -389,7 +404,7 @@ def test_plots():
     fig, ax = ox.plot_figure_ground(address=address, dist=500, network_type="bike")
 
 
-def test_find_nearest():
+def test_find_nearest() -> None:
     """Test nearest node/edge searching."""
     # get graph and x/y coords to search
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
@@ -399,16 +414,20 @@ def test_find_nearest():
     Y = points.y.to_numpy()
 
     # get nearest nodes
+    _ = ox.distance.nearest_nodes(G, X, Y, return_dist=True)
+    _ = ox.distance.nearest_nodes(G, X, Y, return_dist=False)
     nn0, dist0 = ox.distance.nearest_nodes(G, X[0], Y[0], return_dist=True)
-    nn1, dist1 = ox.distance.nearest_nodes(Gp, X[0], Y[0], return_dist=True)
+    nn1 = ox.distance.nearest_nodes(Gp, X[0], Y[0], return_dist=False)
 
     # get nearest edge
-    ne0 = ox.distance.nearest_edges(Gp, X[0], Y[0], interpolate=None)
-    ne1 = ox.distance.nearest_edges(Gp, X[0], Y[0], interpolate=50)
-    ne2 = ox.distance.nearest_edges(G, X[0], Y[0], interpolate=50, return_dist=True)
+    _ = ox.distance.nearest_edges(Gp, X, Y, return_dist=False)
+    _ = ox.distance.nearest_edges(Gp, X, Y, return_dist=True)
+    ne0 = ox.distance.nearest_edges(Gp, X[0], Y[0], interpolate=None)  # type: ignore[call-overload]
+    ne1 = ox.distance.nearest_edges(Gp, X[0], Y[0], interpolate=50, return_dist=False)  # type: ignore[call-overload]
+    ne2, _ = ox.distance.nearest_edges(G, X[0], Y[0], interpolate=50, return_dist=True)  # type: ignore[call-overload]
 
 
-def test_api_endpoints():
+def test_api_endpoints() -> None:
     """Test different API endpoints."""
     default_timeout = ox.settings.timeout
     default_key = ox.settings.nominatim_key
@@ -437,7 +456,7 @@ def test_api_endpoints():
     ox.settings.overpass_rate_limit = default_overpass_rate_limit
     ox.settings.timeout = default_timeout
 
-    params = OrderedDict()
+    params: OrderedDict[str, int | str] = OrderedDict()
     params["format"] = "json"
     params["address_details"] = 0
 
@@ -455,7 +474,18 @@ def test_api_endpoints():
     params["address_details"] = 0
     params["osm_ids"] = "W68876073"
 
+    # good call
     response_json = ox._nominatim._nominatim_request(params=params, request_type="lookup")
+
+    # bad call
+    with pytest.raises(
+        ox._errors.InsufficientResponseError, match="Nominatim API did not return a list of results"
+    ):
+        response_json = ox._nominatim._nominatim_request(params=params, request_type="search")
+
+    # query must be a str if by_osmid=True
+    with pytest.raises(TypeError, match="`query` must be a string if `by_osmid` is True"):
+        ox.geocode_to_gdf(query={"City": "Boston"}, by_osmid=True)
 
     # Invalid nominatim query type
     with pytest.raises(ValueError, match="Nominatim request_type must be"):
@@ -463,21 +493,19 @@ def test_api_endpoints():
 
     # Searching on public nominatim should work even if a (bad) key was provided
     ox.settings.nominatim_key = "NOT_A_KEY"
-    response_json = ox._nominatim._nominatim_request(params=params, request_type="search")
+    response_json = ox._nominatim._nominatim_request(params=params, request_type="lookup")
 
     ox.settings.nominatim_key = default_key
     ox.settings.nominatim_endpoint = default_nominatim_endpoint
     ox.settings.overpass_endpoint = default_overpass_endpoint
 
 
-def test_graph_save_load():
+def test_graph_save_load() -> None:
     """Test saving/loading graphs to/from disk."""
-    fp = Path(ox.settings.data_folder) / "graph.graphml"
-
     # save graph as shapefile and geopackage
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
-    ox.save_graph_shapefile(G, directed=True)
-    ox.save_graph_shapefile(G, filepath=Path(ox.settings.data_folder) / "graph_shapefile")
+    ox.save_graph_shapefile(G, directed=True)  # type: ignore[no-untyped-call]
+    ox.save_graph_shapefile(G, filepath=Path(ox.settings.data_folder) / "graph_shapefile")  # type: ignore[no-untyped-call]
     ox.save_graph_geopackage(G, directed=False)
 
     # save/load geopackage and convert graph to/from node/edge GeoDataFrames
@@ -561,7 +589,7 @@ def test_graph_save_load():
     G = ox.load_graphml(graphml_str=data, node_dtypes=nd, edge_dtypes=ed)
 
 
-def test_graph_from_functions():
+def test_graph_from_functions() -> None:
     """Test downloading graphs from Overpass."""
     # test subdividing a large geometry (raises a UserWarning)
     bbox = ox.utils_geo.bbox_from_point((0, 0), dist=1e5, project_utm=True)
@@ -604,7 +632,7 @@ def test_graph_from_functions():
         location_point, dist=500, custom_filter=cf, dist_type="bbox", network_type="all"
     )
 
-    ox.settings.memory = "1073741824"
+    ox.settings.memory = 1073741824
     G = ox.graph_from_point(
         location_point,
         dist=500,
@@ -613,37 +641,49 @@ def test_graph_from_functions():
     )
 
 
-def test_features():
+def test_features() -> None:
     """Test downloading features from Overpass."""
+    north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
+    tags1 = {"landuse": True, "building": True, "highway": True}
+
+    with pytest.raises(ValueError, match="The geometry of `polygon` is invalid"):
+        ox.features.features_from_polygon(Polygon(((0, 0), (0, 0), (0, 0), (0, 0))), tags={})
+    with pytest.raises(TypeCheckError):
+        ox.features.features_from_polygon(Point(0, 0), tags={})
+
+    # test cache_only_mode
+    ox.settings.cache_only_mode = True
+    with pytest.raises(ox._errors.CacheOnlyInterruptError, match="Interrupted because"):
+        _ = ox.geometries_from_bbox(north, south, east, west, tags=tags1)  # type: ignore[no-untyped-call]
+    ox.settings.cache_only_mode = False
+
     # geometries_from_bbox - bounding box query to return no data
     with pytest.raises(ox._errors.InsufficientResponseError):
-        gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
+        gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})  # type: ignore[no-untyped-call]
 
     # geometries_from_bbox - successful
-    north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
-    tags = {"landuse": True, "building": True, "highway": True}
-    gdf = ox.geometries_from_bbox(north, south, east, west, tags=tags)
+    gdf = ox.geometries_from_bbox(north, south, east, west, tags=tags1)  # type: ignore[no-untyped-call]
     fig, ax = ox.plot_footprints(gdf)
     fig, ax = ox.plot_footprints(gdf, ax=ax, bbox=(10, 0, 10, 0))
 
     # geometries_from_point - tests multipolygon creation
-    gdf = ox.geometries_from_point((48.15, 10.02), tags={"landuse": True}, dist=2000)
+    gdf = ox.utils_geo.bbox_from_point(location_point, dist=500)
 
     # geometries_from_place - includes test of list of places
-    tags = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
-    gdf = ox.geometries_from_place(place1, tags=tags, buffer_dist=0)
-    gdf = ox.geometries_from_place([place1], tags=tags)
+    tags2 = {"amenity": True, "landuse": ["retail", "commercial"], "highway": "bus_stop"}
+    gdf = ox.geometries_from_place(place1, tags=tags2, buffer_dist=0)  # type: ignore[no-untyped-call]
+    gdf = ox.geometries_from_place([place1], tags=tags2)  # type: ignore[no-untyped-call]
 
     # geometries_from_polygon
     polygon = ox.geocode_to_gdf(place1).geometry.iloc[0]
-    ox.geometries_from_polygon(polygon, tags)
+    ox.geometries_from_polygon(polygon, tags2)  # type: ignore[no-untyped-call]
 
     # geometries_from_address - includes testing overpass settings and snapshot from 2019
     ox.settings.overpass_settings = '[out:json][timeout:200][date:"2019-10-28T19:20:00Z"]'
-    gdf = ox.geometries_from_address(address, tags=tags)
+    gdf = ox.geometries_from_address(address, tags=tags2)  # type: ignore[no-untyped-call]
 
     # geometries_from_xml - tests error handling of clipped XMLs with incomplete geometry
-    gdf = ox.geometries_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")
+    gdf = ox.geometries_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")  # type: ignore[no-untyped-call]
 
     # test loading a geodataframe from a local .osm xml file
     with bz2.BZ2File("tests/input_data/West-Oakland.osm.bz2") as f:
@@ -651,6 +691,6 @@ def test_features():
         os.write(handle, f.read())
         os.close(handle)
     for filename in ("tests/input_data/West-Oakland.osm.bz2", temp_filename):
-        gdf = ox.geometries_from_xml(filename)
+        gdf = ox.geometries_from_xml(filename)  # type: ignore[no-untyped-call]
         assert "Willow Street" in gdf["name"].to_numpy()
     Path.unlink(Path(temp_filename))

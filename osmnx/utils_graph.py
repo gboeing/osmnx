@@ -1,6 +1,11 @@
 """Graph utility functions."""
 
+from __future__ import annotations
+
 import itertools
+from typing import Any
+from typing import Literal
+from typing import overload
 from warnings import warn
 
 import geopandas as gpd
@@ -12,15 +17,116 @@ from shapely.geometry import Point
 from . import utils
 
 
-def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
+# nodes and edges are both missing (therefore both default true)
+@overload  # pragma: no cover
+def graph_to_gdfs(
+    G: nx.MultiGraph | nx.MultiDiGraph,
+    *,
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    ...
+
+
+# both present/True
+@overload  # pragma: no cover
+def graph_to_gdfs(
+    G: nx.MultiGraph | nx.MultiDiGraph,
+    nodes: Literal[True],
+    edges: Literal[True],
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    ...
+
+
+# both present, nodes true, edges false
+@overload  # pragma: no cover
+def graph_to_gdfs(
+    G: nx.MultiGraph | nx.MultiDiGraph,
+    nodes: Literal[True],
+    edges: Literal[False],
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> gpd.GeoDataFrame:
+    ...
+
+
+# both present, nodes false, edges true
+@overload  # pragma: no cover
+def graph_to_gdfs(
+    G: nx.MultiGraph | nx.MultiDiGraph,
+    nodes: Literal[False],
+    edges: Literal[True],
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> gpd.GeoDataFrame:
+    ...
+
+
+# nodes missing (therefore default true), edges present/true
+@overload  # pragma: no cover
+def graph_to_gdfs(
+    G: nx.MultiGraph | nx.MultiDiGraph,
+    *,
+    edges: Literal[True],
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    ...
+
+
+# nodes missing (therefore default true), edges present/false
+@overload  # pragma: no cover
+def graph_to_gdfs(
+    G: nx.MultiGraph | nx.MultiDiGraph,
+    *,
+    edges: Literal[False],
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> gpd.GeoDataFrame:
+    ...
+
+
+# nodes present/true, edges missing (therefore default true)
+@overload  # pragma: no cover
+def graph_to_gdfs(
+    G: nx.MultiGraph | nx.MultiDiGraph,
+    nodes: Literal[True],
+    edges: bool = True,
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    ...
+
+
+# nodes present/false, edges missing (therefore default true)
+@overload  # pragma: no cover
+def graph_to_gdfs(
+    G: nx.MultiGraph | nx.MultiDiGraph,
+    nodes: Literal[False],
+    edges: bool = True,
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> gpd.GeoDataFrame:
+    ...
+
+
+def graph_to_gdfs(
+    G: nx.MultiGraph | nx.MultiDiGraph,
+    nodes: bool = True,
+    edges: bool = True,
+    node_geometry: bool = True,
+    fill_edge_geometry: bool = True,
+) -> gpd.GeoDataFrame | tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """
-    Convert a MultiDiGraph to node and/or edge GeoDataFrames.
+    Convert a MultiGraph or MultiDiGraph to node and/or edge GeoDataFrames.
 
     This function is the inverse of `graph_from_gdfs`.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
+    G : networkx.MultiGraph or networkx.MultiDiGraph
         input graph
     nodes : bool
         if True, convert graph nodes to a GeoDataFrame and return it
@@ -36,7 +142,7 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     geopandas.GeoDataFrame or tuple
         gdf_nodes or gdf_edges or tuple of (gdf_nodes, gdf_edges). gdf_nodes
         is indexed by osmid and gdf_edges is multi-indexed by u, v, key
-        following normal MultiDiGraph structure.
+        following normal MultiGraph/MultiDiGraph structure.
     """
     crs = G.graph["crs"]
 
@@ -70,7 +176,13 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
             x_lookup = nx.get_node_attributes(G, "x")
             y_lookup = nx.get_node_attributes(G, "y")
 
-            def _make_edge_geometry(u, v, data, x=x_lookup, y=y_lookup):
+            def _make_edge_geometry(
+                u: int,
+                v: int,
+                data: dict[str, Any],
+                x: dict[int, float] = x_lookup,
+                y: dict[int, float] = y_lookup,
+            ) -> LineString:
                 if "geometry" in data:
                     return data["geometry"]
 
@@ -109,7 +221,11 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     raise ValueError(msg)
 
 
-def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
+def graph_from_gdfs(
+    gdf_nodes: gpd.GeoDataFrame,
+    gdf_edges: gpd.GeoDataFrame,
+    graph_attrs: dict[str, Any] | None = None,
+) -> nx.MultiDiGraph:
     """
     Convert node and edge GeoDataFrames to a MultiDiGraph.
 
@@ -143,24 +259,27 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
         msg = "gdf_nodes must contain x and y columns"
         raise ValueError(msg)
 
-    # if gdf_nodes has a geometry attribute set, drop that column (as we use x
-    # and y for geometry information) and warn the user if the geometry values
-    # differ from the coordinates in the x and y columns
-    if hasattr(gdf_nodes, "geometry"):
-        try:
-            all_x_match = (gdf_nodes.geometry.x == gdf_nodes["x"]).all()
-            all_y_match = (gdf_nodes.geometry.y == gdf_nodes["y"]).all()
-            assert all_x_match
-            assert all_y_match
-        except (AssertionError, ValueError):  # pragma: no cover
-            # AssertionError if x/y coords don't match geometry column
-            # ValueError if geometry column contains non-point geometry types
-            warn(
-                "discarding the gdf_nodes geometry column, though its "
-                "values differ from the coordinates in the x and y columns",
-                stacklevel=2,
-            )
-        gdf_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
+    if not hasattr(gdf_nodes, "geometry"):
+        msg = "gdf_nodes must have a geometry attribute"
+        raise ValueError(msg)
+
+    # drop geometry column from gdf_nodes (as we use x and y for geometry
+    # information), but warn the user if the geometry values differ from the
+    # coordinates in the x and y columns. this results in a df instead of gdf.
+    try:
+        all_x_match = (gdf_nodes.geometry.x == gdf_nodes["x"]).all()
+        all_y_match = (gdf_nodes.geometry.y == gdf_nodes["y"]).all()
+        assert all_x_match
+        assert all_y_match
+    except (AssertionError, ValueError):  # pragma: no cover
+        # AssertionError if x/y coords don't match geometry column
+        # ValueError if geometry column contains non-point geometry types
+        warn(
+            "discarding the gdf_nodes geometry column, though its "
+            "values differ from the coordinates in the x and y columns",
+            stacklevel=2,
+        )
+    df_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
 
     # create graph and add graph-level attribute dict
     if graph_attrs is None:
@@ -176,17 +295,17 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
         G.add_edge(u, v, key=k, **data)
 
     # add any nodes with no incident edges, since they wouldn't be added above
-    G.add_nodes_from(set(gdf_nodes.index) - set(G.nodes))
+    G.add_nodes_from(set(df_nodes.index) - set(G.nodes))
 
     # now all nodes are added, so set nodes' attributes
-    for col in gdf_nodes.columns:
-        nx.set_node_attributes(G, name=col, values=gdf_nodes[col].dropna())
+    for col in df_nodes.columns:
+        nx.set_node_attributes(G, name=col, values=df_nodes[col].dropna())
 
     utils.log("Created graph from node/edge GeoDataFrames")
     return G
 
 
-def route_to_gdf(G, route, weight="length"):
+def route_to_gdf(G: nx.MultiDiGraph, route: list[int], weight: str = "length") -> gpd.GeoDataFrame:
     """
     Return a GeoDataFrame of the edges in a path, in order.
 
@@ -209,7 +328,7 @@ def route_to_gdf(G, route, weight="length"):
     return graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
 
 
-def get_route_edge_attributes(
+def get_route_edge_attributes(  # type: ignore[no-untyped-def]
     G, route, attribute=None, minimize_key="length", retrieve_default=None
 ):
     """
@@ -227,7 +346,7 @@ def get_route_edge_attributes(
         deprecated
     minimize_key : string
         deprecated
-    retrieve_default : Callable[Tuple[Any, Any], Any]
+    retrieve_default : function
         deprecated
 
     Returns
@@ -255,7 +374,7 @@ def get_route_edge_attributes(
     return attribute_values
 
 
-def remove_isolated_nodes(G):
+def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     """
     Remove from a graph all nodes that have no incident edges.
 
@@ -279,7 +398,7 @@ def remove_isolated_nodes(G):
     return G
 
 
-def get_largest_component(G, strongly=False):
+def get_largest_component(G: nx.MultiDiGraph, strongly: bool = False) -> nx.MultiDiGraph:
     """
     Get subgraph of G's largest weakly/strongly connected component.
 
@@ -317,7 +436,7 @@ def get_largest_component(G, strongly=False):
     return G
 
 
-def get_digraph(G, weight="length"):
+def get_digraph(G: nx.MultiDiGraph, weight: str = "length") -> nx.DiGraph:
     """
     Convert MultiDiGraph to DiGraph.
 
@@ -337,7 +456,7 @@ def get_digraph(G, weight="length"):
     """
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
-    to_remove = []
+    to_remove: list[tuple[int, int, int]] = []
 
     # identify all the parallel edges in the MultiDiGraph
     parallels = ((u, v) for u, v in G.edges(keys=False) if len(G.get_edge_data(u, v)) > 1)
@@ -354,7 +473,7 @@ def get_digraph(G, weight="length"):
     return nx.DiGraph(G)
 
 
-def get_undirected(G):
+def get_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
     """
     Convert MultiDiGraph to undirected MultiGraph.
 
@@ -417,7 +536,7 @@ def get_undirected(G):
     return H
 
 
-def _is_duplicate_edge(data1, data2):
+def _is_duplicate_edge(data1: dict[str, Any], data2: dict[str, Any]) -> bool:
     """
     Check if two graph edge data dicts have the same osmid and geometry.
 
@@ -457,7 +576,7 @@ def _is_duplicate_edge(data1, data2):
     return is_dupe
 
 
-def _is_same_geometry(ls1, ls2):
+def _is_same_geometry(ls1: LineString, ls2: LineString) -> bool:
     """
     Determine if two LineString geometries are the same (in either direction).
 
@@ -485,7 +604,7 @@ def _is_same_geometry(ls1, ls2):
     return geom2 in (geom1, geom1_r)  # noqa: PLR6201
 
 
-def _update_edge_keys(G):
+def _update_edge_keys(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     """
     Increment key of one edge of parallel edges that differ in geometry.
 

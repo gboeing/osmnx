@@ -44,7 +44,7 @@ default_referer : string
 default_user_agent : string
     HTTP header user-agent. Default is
     `"OSMnx Python package (https://github.com/gboeing/osmnx)"`.
-doh_url_template : string
+doh_url_template : string or None
     Endpoint to resolve DNS-over-HTTPS if local DNS resolution fails. Set to
     None to disable DoH, but see `downloader._config_dns` documentation for
     caveats. Default is: `"https://8.8.8.8/resolve?name={hostname}"`
@@ -70,18 +70,18 @@ log_name : string
     Name of the logger. Default is `"OSMnx"`.
 logs_folder : string or pathlib.Path
     Path to folder in which to save log files. Default is `"./logs"`.
-max_query_area_size : int
+max_query_area_size : float
     Maximum area for any part of the geometry in meters: any polygon bigger
     than this will get divided up for multiple queries to the API. Default is
     `2500000000`.
-memory : int
+memory : int or None
     Overpass server memory allocation size for the query, in bytes. If
     None, server will use its default allocation size. Use with caution.
     Default is `None`.
 nominatim_endpoint : string
     The base API url to use for Nominatim queries. Default is
     `"https://nominatim.openstreetmap.org/"`.
-nominatim_key : string
+nominatim_key : string or None
     Your Nominatim API key, if you are using an API instance that requires
     one. Default is `None`.
 osm_xml_node_attrs : list
@@ -132,46 +132,58 @@ useful_tags_way : list
     "ref", "name", "highway", "maxspeed", "service", "access", "area",
     "landuse", "width", "est_width", "junction"]`.
 """
+from __future__ import annotations
 
 import logging as lg
+from pathlib import Path
+from typing import Any
 
-all_oneway = False
-bidirectional_network_types = ["walk"]
-cache_folder = "./cache"
-cache_only_mode = False
-data_folder = "./data"
-default_accept_language = "en"
-default_access = '["access"!~"private"]'
-default_crs = "epsg:4326"
-default_referer = "OSMnx Python package (https://github.com/gboeing/osmnx)"
-default_user_agent = "OSMnx Python package (https://github.com/gboeing/osmnx)"
-doh_url_template = "https://8.8.8.8/resolve?name={hostname}"
-elevation_url_template = (
+all_oneway: bool = False
+bidirectional_network_types: list[str] = ["walk"]
+cache_folder: str | Path = "./cache"
+cache_only_mode: bool = False
+data_folder: str | Path = "./data"
+default_accept_language: str = "en"
+default_access: str = '["access"!~"private"]'
+default_crs: str = "epsg:4326"
+default_referer: str = "OSMnx Python package (https://github.com/gboeing/osmnx)"
+default_user_agent: str = "OSMnx Python package (https://github.com/gboeing/osmnx)"
+doh_url_template: str | None = "https://8.8.8.8/resolve?name={hostname}"
+elevation_url_template: str = (
     "https://maps.googleapis.com/maps/api/elevation/json?locations={locations}&key={key}"
 )
-imgs_folder = "./images"
-log_console = False
-log_file = False
-log_filename = "osmnx"
-log_level = lg.INFO
-log_name = "OSMnx"
-logs_folder = "./logs"
-max_query_area_size = 50 * 1000 * 50 * 1000
-memory = None
-nominatim_endpoint = "https://nominatim.openstreetmap.org/"
-nominatim_key = None
-osm_xml_node_attrs = ["id", "timestamp", "uid", "user", "version", "changeset", "lat", "lon"]
-osm_xml_node_tags = ["highway"]
-osm_xml_way_attrs = ["id", "timestamp", "uid", "user", "version", "changeset"]
-osm_xml_way_tags = ["highway", "lanes", "maxspeed", "name", "oneway"]
-overpass_endpoint = "https://overpass-api.de/api"
-overpass_rate_limit = True
-overpass_settings = "[out:json][timeout:{timeout}]{maxsize}"
-requests_kwargs: dict = {}
-timeout = 180
-use_cache = True
-useful_tags_node = ["ref", "highway"]
-useful_tags_way = [
+imgs_folder: str | Path = "./images"
+log_console: bool = False
+log_file: bool = False
+log_filename: str = "osmnx"
+log_level: int = lg.INFO
+log_name: str = "OSMnx"
+logs_folder: str | Path = "./logs"
+max_query_area_size: float = 50 * 1000 * 50 * 1000
+memory: int | None = None
+nominatim_endpoint: str = "https://nominatim.openstreetmap.org/"
+nominatim_key: str | None = None
+osm_xml_node_attrs: list[str] = [
+    "id",
+    "timestamp",
+    "uid",
+    "user",
+    "version",
+    "changeset",
+    "lat",
+    "lon",
+]
+osm_xml_node_tags: list[str] = ["highway"]
+osm_xml_way_attrs: list[str] = ["id", "timestamp", "uid", "user", "version", "changeset"]
+osm_xml_way_tags: list[str] = ["highway", "lanes", "maxspeed", "name", "oneway"]
+overpass_endpoint: str = "https://overpass-api.de/api"
+overpass_rate_limit: bool = True
+overpass_settings: str = "[out:json][timeout:{timeout}]{maxsize}"
+requests_kwargs: dict[str, Any] = {}
+timeout: float = 180
+use_cache: bool = True
+useful_tags_node: list[str] = ["ref", "highway"]
+useful_tags_way: list[str] = [
     "bridge",
     "tunnel",
     "oneway",

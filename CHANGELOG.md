@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## 2.0.0 (Unreleased)
+
+- add type annotations throughout the package for user type hinting and type checking (#1107)
+
+## 1.x.x (Unreleased)
 
 - fix a bug in the features module's polygon handling (#1104)
 - update obsolete numpy random number generation (#1108)

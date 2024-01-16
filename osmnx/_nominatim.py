@@ -1,17 +1,26 @@
 """Tools to work with the Nominatim API."""
 
+from __future__ import annotations
+
 import logging as lg
 import time
 from collections import OrderedDict
+from typing import Any
 
 import requests
 
 from . import _downloader
 from . import settings
 from . import utils
+from ._errors import InsufficientResponseError
 
 
-def _download_nominatim_element(query, by_osmid=False, limit=1, polygon_geojson=1):
+def _download_nominatim_element(
+    query: str | dict[str, str],
+    by_osmid: bool = False,
+    limit: int = 1,
+    polygon_geojson: bool = True,
+) -> list[dict[str, Any]]:
     """
     Retrieve an OSM element from the Nominatim API.
 
@@ -23,21 +32,24 @@ def _download_nominatim_element(query, by_osmid=False, limit=1, polygon_geojson=
         if True, treat query as an OSM ID lookup rather than text search
     limit : int
         max number of results to return
-    polygon_geojson : int
-        retrieve the place's geometry from the API, 0=no, 1=yes
+    polygon_geojson : bool
+        whether to retrieve the place's geometry from the API
 
     Returns
     -------
-    response_json : dict
+    response_json : list
         JSON response from the Nominatim server
     """
     # define the parameters
-    params = OrderedDict()
+    params: OrderedDict[str, int | str] = OrderedDict()
     params["format"] = "json"
-    params["polygon_geojson"] = polygon_geojson
+    params["polygon_geojson"] = int(polygon_geojson)  # bool -> int
 
     if by_osmid:
         # if querying by OSM ID, use the lookup endpoint
+        if not isinstance(query, str):
+            msg = "`query` must be a string if `by_osmid` is True"
+            raise TypeError(msg)
         request_type = "lookup"
         params["osm_ids"] = query
 
@@ -64,7 +76,12 @@ def _download_nominatim_element(query, by_osmid=False, limit=1, polygon_geojson=
     return _nominatim_request(params=params, request_type=request_type)
 
 
-def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
+def _nominatim_request(
+    params: OrderedDict[str, int | str],
+    request_type: str = "search",
+    pause: float = 1,
+    error_pause: float = 60,
+) -> list[dict[str, Any]]:
     """
     Send a HTTP GET request to the Nominatim API and return response.
 
@@ -82,18 +99,21 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
 
     Returns
     -------
-    response_json : dict
+    response_json : list
     """
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
         msg = 'Nominatim request_type must be "search", "reverse", or "lookup"'
         raise ValueError(msg)
 
+    # add nominatim API key to params if one has been provided in settings
+    if settings.nominatim_key is not None:
+        params["key"] = settings.nominatim_key
+
     # prepare Nominatim API URL and see if request already exists in cache
     url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
-    params["key"] = settings.nominatim_key
-    prepared_url = requests.Request("GET", url, params=params).prepare().url
+    prepared_url = str(requests.Request("GET", url, params=params).prepare().url)
     cached_response_json = _downloader._retrieve_from_cache(prepared_url)
-    if cached_response_json is not None:
+    if isinstance(cached_response_json, list):
         return cached_response_json
 
     # pause then request this URL
@@ -122,5 +142,8 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
         return _nominatim_request(params, request_type, pause, error_pause)
 
     response_json = _downloader._parse_response(response)
-    _downloader._save_to_cache(prepared_url, response_json, response.status_code)
+    if not isinstance(response_json, list):
+        msg = "Nominatim API did not return a list of results."
+        raise InsufficientResponseError(msg)
+    _downloader._save_to_cache(prepared_url, response_json, response.ok)
     return response_json

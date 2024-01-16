@@ -1,10 +1,14 @@
 """Serialize graphs to/from files on disk."""
 
+from __future__ import annotations
+
 import ast
 import contextlib
 from pathlib import Path
+from typing import Any
 from warnings import warn
 
+import geopandas as gpd
 import networkx as nx
 import pandas as pd
 from shapely import wkt
@@ -15,7 +19,12 @@ from . import utils
 from . import utils_graph
 
 
-def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
+def save_graph_geopackage(
+    G: nx.MultiDiGraph,
+    filepath: str | Path | None = None,
+    directed: bool = False,
+    encoding: str = "utf-8",
+) -> None:
     """
     Save graph nodes and edges to disk as layers in a GeoPackage file.
 
@@ -26,12 +35,12 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
     filepath : string or pathlib.Path
         path to the GeoPackage file including extension. if None, use default
         data folder + graph.gpkg
-    encoding : string
-        the character encoding for the saved file
     directed : bool
         if False, save one edge for each undirected edge in the graph but
         retain original oneway and to/from information as edge attributes; if
         True, save one edge for each directed edge in the graph
+    encoding : string
+        the character encoding for the saved file
 
     Returns
     -------
@@ -57,7 +66,7 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
     utils.log(f"Saved graph as GeoPackage at {filepath!r}")
 
 
-def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
+def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):  # type: ignore[no-untyped-def]
     """
     Do not use: deprecated. Use the save_graph_geopackage function instead.
 
@@ -115,7 +124,12 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     utils.log(f"Saved graph as shapefiles at {filepath!r}")
 
 
-def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
+def save_graphml(
+    G: nx.MultiDiGraph,
+    filepath: str | Path | None = None,
+    gephi: bool = False,
+    encoding: str = "utf-8",
+) -> None:
     """
     Save graph to disk as GraphML file.
 
@@ -170,8 +184,12 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
 
 
 def load_graphml(
-    filepath=None, graphml_str=None, node_dtypes=None, edge_dtypes=None, graph_dtypes=None
-):
+    filepath: str | Path | None = None,
+    graphml_str: str | None = None,
+    node_dtypes: dict[str, Any] | None = None,
+    edge_dtypes: dict[str, Any] | None = None,
+    graph_dtypes: dict[str, Any] | None = None,
+) -> nx.MultiDiGraph:
     """
     Load an OSMnx-saved GraphML file from disk or GraphML string.
 
@@ -273,18 +291,18 @@ def load_graphml(
 
 
 def save_graph_xml(
-    data,
-    filepath=None,
-    node_tags=settings.osm_xml_node_tags,
-    node_attrs=settings.osm_xml_node_attrs,
-    edge_tags=settings.osm_xml_way_tags,
-    edge_attrs=settings.osm_xml_way_attrs,
-    oneway=False,
-    merge_edges=True,
-    edge_tag_aggs=None,
-    api_version=0.6,
-    precision=6,
-):
+    data: nx.MultiDiGraph | tuple[gpd.GeoDataFrame, gpd.GeoDataFrame],
+    filepath: str | Path | None = None,
+    node_tags: list[str] = settings.osm_xml_node_tags,
+    node_attrs: list[str] = settings.osm_xml_node_attrs,
+    edge_tags: list[str] = settings.osm_xml_way_tags,
+    edge_attrs: list[str] = settings.osm_xml_way_attrs,
+    oneway: bool = False,
+    merge_edges: bool = True,
+    edge_tag_aggs: list[tuple[str, str]] | None = None,
+    api_version: str = "0.6",
+    precision: int = 6,
+) -> None:
     """
     Save graph to disk as an OSM-formatted XML .osm file.
 
@@ -320,8 +338,8 @@ def save_graph_xml(
 
     Parameters
     ----------
-    data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
-        geopandas GeoDataFrames
+    data : networkx.MultiDiGraph or tuple of GeoDataFrames
+        either a MultiDiGraph or (gdf_nodes, gdf_edges) tuple
     filepath : string or pathlib.Path
         path to the .osm file including extension. if None, use default data
         folder + graph.osm
@@ -349,7 +367,7 @@ def save_graph_xml(
         this method to aggregate the lengths of the individual
         component edges. Otherwise, the length attribute will simply
         reflect the length of the first edge associated with the way.
-    api_version : float
+    api_version : string
         OpenStreetMap API version to write to the XML file header
     precision : int
         number of decimal places to round latitude and longitude values
@@ -373,7 +391,7 @@ def save_graph_xml(
     )
 
 
-def _convert_graph_attr_types(G, dtypes=None):
+def _convert_graph_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.MultiDiGraph:
     """
     Convert graph-level attributes using a dict of data types.
 
@@ -398,7 +416,7 @@ def _convert_graph_attr_types(G, dtypes=None):
     return G
 
 
-def _convert_node_attr_types(G, dtypes=None):
+def _convert_node_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.MultiDiGraph:
     """
     Convert graph nodes' attributes using a dict of data types.
 
@@ -428,7 +446,7 @@ def _convert_node_attr_types(G, dtypes=None):
     return G
 
 
-def _convert_edge_attr_types(G, dtypes=None):
+def _convert_edge_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.MultiDiGraph:
     """
     Convert graph edges' attributes using a dict of data types.
 
@@ -474,7 +492,7 @@ def _convert_edge_attr_types(G, dtypes=None):
     return G
 
 
-def _convert_bool_string(value):
+def _convert_bool_string(value: bool | str) -> bool:
     """
     Convert a "True" or "False" string literal to corresponding boolean type.
 
@@ -487,25 +505,25 @@ def _convert_bool_string(value):
 
     Parameters
     ----------
-    value : string {"True", "False"}
+    value : bool or string {"True", "False"}
         the value to convert
 
     Returns
     -------
     bool
     """
-    if value in {"True", "False"}:
-        return value == "True"
-
     if isinstance(value, bool):
         return value
+
+    if value in {"True", "False"}:
+        return value == "True"
 
     # otherwise the value is not a valid boolean
     msg = f"invalid literal for boolean: {value!r}"
     raise ValueError(msg)
 
 
-def _stringify_nonnumeric_cols(gdf):
+def _stringify_nonnumeric_cols(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """
     Make every non-numeric GeoDataFrame column (besides geometry) a string.
 

@@ -1,6 +1,10 @@
-"""Simplify, correct, and consolidate network topology."""
+"""Simplify, correct, and consolidate spatial network topology."""
+
+from __future__ import annotations
 
 import logging as lg
+from collections.abc import Generator
+from typing import Any
 
 import geopandas as gpd
 import networkx as nx
@@ -15,7 +19,7 @@ from . import utils_graph
 from ._errors import GraphSimplificationError
 
 
-def _is_endpoint(G, node, strict=True):
+def _is_endpoint(G: nx.MultiDiGraph, node: int, strict: bool = True) -> bool:
     """
     Determine if a node is a true endpoint of an edge.
 
@@ -81,7 +85,9 @@ def _is_endpoint(G, node, strict=True):
     return False
 
 
-def _build_path(G, endpoint, endpoint_successor, endpoints):
+def _build_path(
+    G: nx.MultiDiGraph, endpoint: int, endpoint_successor: int, endpoints: set[int]
+) -> list[int]:
     """
     Build a path of nodes from one endpoint node to next endpoint node.
 
@@ -151,7 +157,9 @@ def _build_path(G, endpoint, endpoint_successor, endpoints):
     return path
 
 
-def _get_paths_to_simplify(G, strict=True):
+def _get_paths_to_simplify(
+    G: nx.MultiDiGraph, strict: bool = True
+) -> Generator[list[int], None, None]:
     """
     Generate all the paths to be simplified between endpoint nodes.
 
@@ -168,7 +176,7 @@ def _get_paths_to_simplify(G, strict=True):
 
     Yields
     ------
-    path_to_simplify : list
+    path_to_simplify : generator
         a generator of paths to simplify
     """
     # first identify all the nodes that are endpoints
@@ -185,7 +193,7 @@ def _get_paths_to_simplify(G, strict=True):
                 yield _build_path(G, endpoint, successor, endpoints)
 
 
-def _remove_rings(G):
+def _remove_rings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     """
     Remove all self-contained rings from a graph.
 
@@ -210,7 +218,9 @@ def _remove_rings(G):
     return G
 
 
-def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
+def simplify_graph(
+    G: nx.MultiDiGraph, strict: bool = True, remove_rings: bool = True, track_merged: bool = False
+) -> nx.MultiDiGraph:
     """
     Simplify a graph's topology by removing interstitial nodes.
 
@@ -266,7 +276,7 @@ def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
         merged_edges = []
-        path_attributes = {}
+        path_attributes: dict[str, Any] = {}
         for u, v in zip(path[:-1], path[1:]):
             if track_merged:
                 # keep track of the edges that were merged
@@ -346,8 +356,12 @@ def simplify_graph(G, strict=True, remove_rings=True, track_merged=False):
 
 
 def consolidate_intersections(
-    G, tolerance=10, rebuild_graph=True, dead_ends=False, reconnect_edges=True
-):
+    G: nx.MultiDiGraph,
+    tolerance: float = 10,
+    rebuild_graph: bool = True,
+    dead_ends: bool = False,
+    reconnect_edges: bool = True,
+) -> nx.MultiDiGraph | gpd.GeoSeries:
     """
     Consolidate intersections comprising clusters of nearby nodes.
 
@@ -433,7 +447,7 @@ def consolidate_intersections(
     return _merge_nodes_geometric(G, tolerance).centroid
 
 
-def _merge_nodes_geometric(G, tolerance):
+def _merge_nodes_geometric(G: nx.MultiDiGraph, tolerance: float) -> gpd.GeoSeries:
     """
     Geometrically merge nodes within some distance of each other.
 
@@ -458,7 +472,9 @@ def _merge_nodes_geometric(G, tolerance):
     return gpd.GeoSeries(merged.geoms, crs=G.graph["crs"])
 
 
-def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=True):
+def _consolidate_intersections_rebuild_graph(
+    G: nx.MultiDiGraph, tolerance: float = 10, reconnect_edges: bool = True
+) -> nx.MultiDiGraph:
     """
     Consolidate intersections comprising clusters of nearby nodes.
 

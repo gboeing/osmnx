@@ -1,6 +1,10 @@
 """Calculate graph edge speeds and travel times."""
 
+from __future__ import annotations
+
 import re
+from typing import Any
+from typing import Callable
 from warnings import warn
 
 import networkx as nx
@@ -10,7 +14,13 @@ import pandas as pd
 from . import utils_graph
 
 
-def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.mean):
+def add_edge_speeds(
+    G: nx.MultiDiGraph,
+    hwy_speeds: dict[str, float] | None = None,
+    fallback: float | None = None,
+    precision: int | None = None,
+    agg: Callable[[Any], Any] = np.mean,
+) -> nx.MultiDiGraph:
     """
     Add edge speeds (km per hour) to graph as new `speed_kph` edge attributes.
 
@@ -42,7 +52,7 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
         speed data. Any edges with highway type not in `hwy_speeds` will be
         assigned the mean preexisting speed value of all edges of that highway
         type.
-    fallback : numeric
+    fallback : float
         default speed value (km per hour) to assign to edges whose highway
         type did not appear in `hwy_speeds` and had no preexisting speed
         values on any edge
@@ -125,7 +135,7 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
     return G
 
 
-def add_edge_travel_times(G, precision=None):
+def add_edge_travel_times(G: nx.MultiDiGraph, precision: int | None = None) -> nx.MultiDiGraph:
     """
     Add edge travel time (seconds) to graph as new `travel_time` edge attributes.
 
@@ -180,7 +190,9 @@ def add_edge_travel_times(G, precision=None):
     return G
 
 
-def _clean_maxspeed(maxspeed, agg=np.mean, convert_mph=True):
+def _clean_maxspeed(
+    maxspeed: str | float, agg: Callable[[Any], Any] = np.mean, convert_mph: bool = True
+) -> float | None:
     """
     Clean a maxspeed string and convert mph to kph if necessary.
 
@@ -191,8 +203,9 @@ def _clean_maxspeed(maxspeed, agg=np.mean, convert_mph=True):
 
     Parameters
     ----------
-    maxspeed : string
-        a valid OpenStreetMap way maxspeed value
+    maxspeed : string or float
+        an OSM way maxspeed value. null values are expected to be floats
+        (np.nan), and non-null values are strings.
     agg : function
         aggregation function if maxspeed contains multiple values (default
         is numpy.mean)
@@ -201,9 +214,13 @@ def _clean_maxspeed(maxspeed, agg=np.mean, convert_mph=True):
 
     Returns
     -------
-    clean_value : string
+    clean_value : float
+        clean value resulting from `agg` function
     """
     MILES_TO_KM = 1.60934
+    if not isinstance(maxspeed, str):
+        return None
+
     # regex adapted from OSM wiki
     pattern = "^([0-9][\\.,0-9]+?)(?:[ ]?(?:km/h|kmh|kph|mph|knots))?$"
     values = re.split(r"\|", maxspeed)  # creates a list even if it's a single value
@@ -211,33 +228,39 @@ def _clean_maxspeed(maxspeed, agg=np.mean, convert_mph=True):
         clean_values = []
         for value in values:
             match = re.match(pattern, value)
-            clean_value = float(match.group(1).replace(",", "."))
+            clean_value = float(match.group(1).replace(",", "."))  # type: ignore[union-attr]
             if convert_mph and "mph" in maxspeed.lower():
                 clean_value = clean_value * MILES_TO_KM
             clean_values.append(clean_value)
-        return agg(clean_values)
+        return float(agg(clean_values))
 
     except (ValueError, AttributeError):
         # if invalid input, return None
         return None
 
 
-def _collapse_multiple_maxspeed_values(value, agg):
+def _collapse_multiple_maxspeed_values(
+    value: str | float | list[str | float], agg: Callable[[Any], Any]
+) -> float | str | None:
     """
     Collapse a list of maxspeed values to a single value.
 
+    Returns None if a ValueError is encountered.
+
     Parameters
     ----------
-    value : list or string
-        an OSM way maxspeed value, or a list of them
+    value : string or float or list
+        an OSM way maxspeed value, or a list of them. null values are expected
+        to be floats (np.nan), and non-null values are strings.
     agg : function
         the aggregation function to reduce the list to a single value
 
     Returns
     -------
-    agg_value : int
-        an integer representation of the aggregated value in the list,
-        converted to kph if original value was in mph.
+    collapsed : float or str
+        if `value` was a string or null, it is just returned directly.
+        otherwise, the return is a float representation of the aggregated
+        value in the list (converted to kph if original value was in mph).
     """
     # if this isn't a list, just return it right back to the caller
     if not isinstance(value, list):
@@ -248,6 +271,10 @@ def _collapse_multiple_maxspeed_values(value, agg):
         # clean each value in list and convert to kph if it is mph then
         # return a single aggregated value
         values = [_clean_maxspeed(x) for x in value]
-        return int(agg(pd.Series(values).dropna()))
+        collapsed = float(agg(pd.Series(values).dropna()))
+        if pd.isna(collapsed):
+            return None
+        # otherwise
+        return collapsed  # noqa: TRY300
     except ValueError:
         return None
