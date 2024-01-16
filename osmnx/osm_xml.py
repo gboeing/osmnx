@@ -122,7 +122,7 @@ def save_graph_xml(  # type: ignore[no-untyped-def]
     oneway=False,
     merge_edges=True,
     edge_tag_aggs=None,
-    api_version=0.6,
+    api_version="0.6",
     precision=6,
 ):
     """
@@ -152,7 +152,7 @@ def save_graph_xml(  # type: ignore[no-untyped-def]
         do not use, deprecated
     edge_tag_aggs : list of length-2 string tuples
         do not use, deprecated
-    api_version : float
+    api_version : str
         do not use, deprecated
     precision : int
         do not use, deprecated
@@ -192,7 +192,7 @@ def _save_graph_xml(
     oneway: bool,
     merge_edges: bool,
     edge_tag_aggs: list[tuple[str, str]] | None,
-    api_version: float,
+    api_version: str,
     precision: int,
 ) -> None:
     """
@@ -229,7 +229,7 @@ def _save_graph_xml(
         this method to aggregate the lengths of the individual
         component edges. Otherwise, the length attribute will simply
         reflect the length of the first edge associated with the way.
-    api_version : float
+    api_version : string
         OpenStreetMap API version to write to the XML file header
     precision : int
         number of decimal places to round latitude and longitude values
@@ -291,9 +291,7 @@ def _save_graph_xml(
         )
 
     # initialize XML tree with an OSM root element then append nodes/edges
-    root = ET.Element(
-        "osm", attrib={"version": str(api_version), "generator": f"OSMnx {__version__}"}
-    )
+    root = ET.Element("osm", attrib={"version": api_version, "generator": f"OSMnx {__version__}"})
     root = _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags)
     root = _append_edges_xml_tree(
         root, gdf_edges, edge_attrs, edge_tags, edge_tag_aggs, merge_edges

@@ -22,8 +22,8 @@ from . import utils_graph
 def save_graph_geopackage(
     G: nx.MultiDiGraph,
     filepath: str | Path | None = None,
-    encoding: str = "utf-8",
     directed: bool = False,
+    encoding: str = "utf-8",
 ) -> None:
     """
     Save graph nodes and edges to disk as layers in a GeoPackage file.
@@ -35,12 +35,12 @@ def save_graph_geopackage(
     filepath : string or pathlib.Path
         path to the GeoPackage file including extension. if None, use default
         data folder + graph.gpkg
-    encoding : string
-        the character encoding for the saved file
     directed : bool
         if False, save one edge for each undirected edge in the graph but
         retain original oneway and to/from information as edge attributes; if
         True, save one edge for each directed edge in the graph
+    encoding : string
+        the character encoding for the saved file
 
     Returns
     -------
@@ -300,7 +300,7 @@ def save_graph_xml(
     oneway: bool = False,
     merge_edges: bool = True,
     edge_tag_aggs: list[tuple[str, str]] | None = None,
-    api_version: float = 0.6,
+    api_version: str = "0.6",
     precision: int = 6,
 ) -> None:
     """
@@ -367,7 +367,7 @@ def save_graph_xml(
         this method to aggregate the lengths of the individual
         component edges. Otherwise, the length attribute will simply
         reflect the length of the first edge associated with the way.
-    api_version : float
+    api_version : string
         OpenStreetMap API version to write to the XML file header
     precision : int
         number of decimal places to round latitude and longitude values
