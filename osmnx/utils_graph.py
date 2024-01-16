@@ -18,7 +18,7 @@ from . import utils
 
 
 # nodes and edges are both missing (therefore both default true)
-@overload
+@overload  # pragma: no cover
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     *,
@@ -29,7 +29,7 @@ def graph_to_gdfs(
 
 
 # both present/True
-@overload
+@overload  # pragma: no cover
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     nodes: Literal[True],
@@ -41,7 +41,7 @@ def graph_to_gdfs(
 
 
 # both present, nodes true, edges false
-@overload
+@overload  # pragma: no cover
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     nodes: Literal[True],
@@ -53,7 +53,7 @@ def graph_to_gdfs(
 
 
 # both present, nodes false, edges true
-@overload
+@overload  # pragma: no cover
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     nodes: Literal[False],
@@ -65,7 +65,7 @@ def graph_to_gdfs(
 
 
 # nodes missing (therefore default true), edges present/true
-@overload
+@overload  # pragma: no cover
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     *,
@@ -77,7 +77,7 @@ def graph_to_gdfs(
 
 
 # nodes missing (therefore default true), edges present/false
-@overload
+@overload  # pragma: no cover
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     *,
@@ -89,7 +89,7 @@ def graph_to_gdfs(
 
 
 # nodes present/true, edges missing (therefore default true)
-@overload
+@overload  # pragma: no cover
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     nodes: Literal[True],
@@ -101,7 +101,7 @@ def graph_to_gdfs(
 
 
 # nodes present/false, edges missing (therefore default true)
-@overload
+@overload  # pragma: no cover
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     nodes: Literal[False],

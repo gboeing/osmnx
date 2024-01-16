@@ -36,19 +36,19 @@ EARTH_RADIUS_M = 6_371_009
 
 
 # if coords are all floats, return float
-@overload
+@overload  # pragma: no cover
 def great_circle(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     ...
 
 
 # if coords are all floats (and optional arg is provided), return float
-@overload
+@overload  # pragma: no cover
 def great_circle(lat1: float, lon1: float, lat2: float, lon2: float, earth_radius: float) -> float:
     ...
 
 
 # if coords are all arrays, return array
-@overload
+@overload  # pragma: no cover
 def great_circle(
     lat1: NDArray[np.float64],
     lon1: NDArray[np.float64],
@@ -59,7 +59,7 @@ def great_circle(
 
 
 # if coords are all arrays (and optional arg is provided), return array
-@overload
+@overload  # pragma: no cover
 def great_circle(
     lat1: NDArray[np.float64],
     lon1: NDArray[np.float64],
@@ -122,13 +122,13 @@ def great_circle(
 
 
 # if coords are all floats, return float
-@overload
+@overload  # pragma: no cover
 def euclidean(y1: float, x1: float, y2: float, x2: float) -> float:
     ...
 
 
 # if coords are all arrays, return array
-@overload
+@overload  # pragma: no cover
 def euclidean(
     y1: NDArray[np.float64],
     x1: NDArray[np.float64],
@@ -309,19 +309,19 @@ def add_edge_lengths(
 
 
 # if X and Y are floats and return_dist is not provided (defaults False)
-@overload
+@overload  # pragma: no cover
 def nearest_nodes(G: nx.MultiDiGraph, X: float, Y: float) -> int:
     ...
 
 
 # if X and Y are floats and return_dist is provided/False
-@overload
+@overload  # pragma: no cover
 def nearest_nodes(G: nx.MultiDiGraph, X: float, Y: float, return_dist: Literal[False]) -> int:
     ...
 
 
 # if X and Y are floats and return_dist is provided/True
-@overload
+@overload  # pragma: no cover
 def nearest_nodes(
     G: nx.MultiDiGraph, X: float, Y: float, return_dist: Literal[True]
 ) -> tuple[NDArray[np.int64], NDArray[np.float64]]:
@@ -329,13 +329,13 @@ def nearest_nodes(
 
 
 # if X and Y are iterable and return_dist is not provided (defaults False)
-@overload
+@overload  # pragma: no cover
 def nearest_nodes(G: nx.MultiDiGraph, X: Iterable[float], Y: Iterable[float]) -> NDArray[np.int64]:
     ...
 
 
 # if X and Y are iterable and return_dist is provided/False
-@overload
+@overload  # pragma: no cover
 def nearest_nodes(
     G: nx.MultiDiGraph, X: Iterable[float], Y: Iterable[float], return_dist: Literal[False]
 ) -> NDArray[np.int64]:
@@ -343,7 +343,7 @@ def nearest_nodes(
 
 
 # if X and Y are iterable and return_dist is provided/True
-@overload
+@overload  # pragma: no cover
 def nearest_nodes(
     G: nx.MultiDiGraph, X: Iterable[float], Y: Iterable[float], return_dist: Literal[True]
 ) -> tuple[NDArray[np.int64], NDArray[np.float64]]:
@@ -443,13 +443,13 @@ def nearest_nodes(
 
 
 # if X and Y are floats and return_dist is not provided (defaults False)
-@overload
+@overload  # pragma: no cover
 def nearest_edges(G: nx.MultiDiGraph, X: float, Y: float) -> tuple[int, int, int]:
     ...
 
 
 # if X and Y are floats and return_dist is provided/False
-@overload
+@overload  # pragma: no cover
 def nearest_edges(
     G: nx.MultiDiGraph, X: float, Y: float, *, return_dist: Literal[False]
 ) -> tuple[int, int, int]:
@@ -457,7 +457,7 @@ def nearest_edges(
 
 
 # if X and Y are floats and return_dist is provided/True
-@overload
+@overload  # pragma: no cover
 def nearest_edges(
     G: nx.MultiDiGraph, X: float, Y: float, *, return_dist: Literal[True]
 ) -> tuple[tuple[int, int, int], float]:
@@ -465,7 +465,7 @@ def nearest_edges(
 
 
 # if X and Y are iterable and return_dist is not provided (defaults False)
-@overload
+@overload  # pragma: no cover
 def nearest_edges(
     G: nx.MultiDiGraph, X: Iterable[float], Y: Iterable[float]
 ) -> NDArray[np.object_]:
@@ -473,7 +473,7 @@ def nearest_edges(
 
 
 # if X and Y are iterable and return_dist is provided/False
-@overload
+@overload  # pragma: no cover
 def nearest_edges(
     G: nx.MultiDiGraph, X: Iterable[float], Y: Iterable[float], *, return_dist: Literal[False]
 ) -> NDArray[np.object_]:
@@ -481,7 +481,7 @@ def nearest_edges(
 
 
 # if X and Y are iterable and return_dist is provided/True
-@overload
+@overload  # pragma: no cover
 def nearest_edges(
     G: nx.MultiDiGraph, X: Iterable[float], Y: Iterable[float], *, return_dist: Literal[True]
 ) -> tuple[NDArray[np.object_], NDArray[np.float64]]:

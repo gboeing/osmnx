@@ -19,7 +19,7 @@ except ImportError:  # pragma: no cover
 
 
 # if coords are all floats, return float
-@overload
+@overload  # pragma: no cover
 def calculate_bearing(
     lat1: float,
     lon1: float,
@@ -30,7 +30,7 @@ def calculate_bearing(
 
 
 # if coords are all arrays, return array
-@overload
+@overload  # pragma: no cover
 def calculate_bearing(
     lat1: NDArray[np.float64],
     lon1: NDArray[np.float64],
