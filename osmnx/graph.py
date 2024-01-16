@@ -260,8 +260,8 @@ def graph_from_address(
     else:
         warn(
             "The `return_coords` argument has been deprecated and will be removed in "
-            "a future release. Future behavior will be as though `return_coords=False`. "
-            "If you want the address's geocoded coordinates, use the `geocode` module.",
+            "the v2.0.0 release. Future behavior will be as though `return_coords=False`. "
+            "If you want the address's geocoded coordinates, use the `geocode` function.",
             stacklevel=2,
         )
     # geocode the address string to a (lat, lon) point
@@ -358,7 +358,7 @@ def graph_from_place(
     if buffer_dist is not None:
         warn(
             "The buffer_dist argument has been deprecated and will be removed "
-            "in a future release. Buffer your query area directly, if desired.",
+            "in the v2.0.0 release. Buffer your query area directly, if desired.",
             stacklevel=2,
         )
 
@@ -449,7 +449,7 @@ def graph_from_polygon(
     else:
         warn(
             "The clean_periphery argument has been deprecated and will be removed in "
-            "a future release. Future behavior will be as though clean_periphery=True.",
+            "the v2.0.0 release. Future behavior will be as though clean_periphery=True.",
             stacklevel=2,
         )
 

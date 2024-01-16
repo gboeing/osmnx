@@ -106,7 +106,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     Do not use, deprecated.
 
     The `great_circle_vec` function has been renamed `great_circle`. Calling
-    `great_circle_vec` will raise an error in a future release.
+    `great_circle_vec` will raise an error in the v2.0.0 release.
 
     Parameters
     ----------
@@ -130,7 +130,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     """
     warn(
         "The `great_circle_vec` function has been renamed `great_circle`. Calling "
-        "`great_circle_vec` will raise an error in a future release.",
+        "`great_circle_vec` will raise an error starting in the v2.0.0 release.",
         stacklevel=2,
     )
     return great_circle(lat1, lng1, lat2, lng2, earth_radius)
@@ -141,7 +141,7 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     Do not use, deprecated.
 
     The `euclidean_dist_vec` function has been renamed `euclidean`. Calling
-    `euclidean_dist_vec` will raise an error in a future release.
+    `euclidean_dist_vec` will raise an error in the v2.0.0 release.
 
     Parameters
     ----------
@@ -161,7 +161,7 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     """
     warn(
         "The `euclidean_dist_vec` function has been renamed `euclidean`. Calling "
-        "`euclidean_dist_vec` will raise an error in a future release.",
+        "`euclidean_dist_vec` will raise an error starting in the v2.0.0 release.",
         stacklevel=2,
     )
     return euclidean(y1, x1, y2, x2)
@@ -206,7 +206,7 @@ def add_edge_lengths(G, precision=None, edges=None):
         precision = 3
     else:
         warn(
-            "the `precision` parameter is deprecated and will be removed in a future release",
+            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
             stacklevel=2,
         )
 
@@ -372,7 +372,8 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     # otherwise, if interpolation distance was provided
     else:
         warn(
-            "The `interpolate` parameter has been deprecated and will be removed in a future release",
+            "The `interpolate` parameter has been deprecated and will be "
+            "removed in the v2.0.0 release.",
             stacklevel=2,
         )
 
@@ -422,7 +423,7 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
     Do not use, deprecated.
 
     The `shortest_path` function has moved to the `routing` module. Calling
-    it via the `distance` module will raise an error in a future release.
+    it via the `distance` module will raise an error in the v2.0.0 release.
 
     Parameters
     ----------
@@ -444,8 +445,8 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
         are lists, then a list of path lists
     """
     warn(
-        "The `shortest_path` function has moved to the `routing` module. "
-        "Calling it via the `distance` module will raise an error in a future release.",
+        "The `shortest_path` function has moved to the `routing` module. Calling it "
+        "via the `distance` module will raise an error starting in the v2.0.0 release.",
         stacklevel=2,
     )
     return routing.shortest_path(G, orig, dest, weight, cpus)
@@ -456,7 +457,7 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
     Do not use, deprecated.
 
     The `k_shortest_paths` function has moved to the `routing` module. Calling
-    it via the `distance` module will raise an error in a future release.
+    it via the `distance` module will raise an error in the v2.0.0 release.
 
     Parameters
     ----------
@@ -480,7 +481,7 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
     """
     warn(
         "The `k_shortest_paths` function has moved to the `routing` module. "
-        "Calling it via the `distance` module will raise an error in a future release.",
+        "Calling it via the `distance` module will raise an error in the v2.0.0 release.",
         stacklevel=2,
     )
     return routing.k_shortest_paths(G, orig, dest, k, weight)
