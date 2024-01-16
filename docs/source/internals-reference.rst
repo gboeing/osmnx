@@ -92,9 +92,9 @@ osmnx._nominatim module
     :noindex:
 
 osmnx._osm_xml module
---------------------
+---------------------
 
-.. automodule:: osmnx.osm_xml
+.. automodule:: osmnx._osm_xml
     :members:
     :private-members:
     :noindex:
