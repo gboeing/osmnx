@@ -46,9 +46,9 @@ def sample_points(G, n):
         warn("graph should be undirected to avoid oversampling bidirectional edges", stacklevel=2)
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
     weights = gdf_edges["length"] / gdf_edges["length"].sum()
-    idx = np.random.choice(gdf_edges.index, size=n, p=weights)
+    idx = np.random.default_rng().choice(gdf_edges.index, size=n, p=weights)
     lines = gdf_edges.loc[idx, "geometry"]
-    return lines.interpolate(np.random.rand(n), normalized=True)
+    return lines.interpolate(np.random.default_rng().random(n), normalized=True)
 
 
 def interpolate_points(geom, dist):
