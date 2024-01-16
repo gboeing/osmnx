@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 import contextlib
-from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 from warnings import warn
@@ -292,7 +291,7 @@ def load_graphml(
 
 
 def save_graph_xml(
-    data: nx.MultiDiGraph | Iterable[gpd.GeoDataFrame],
+    data: nx.MultiDiGraph | tuple[gpd.GeoDataFrame, gpd.GeoDataFrame],
     filepath: str | Path | None = None,
     node_tags: list[str] = settings.osm_xml_node_tags,
     node_attrs: list[str] = settings.osm_xml_node_attrs,
@@ -339,8 +338,8 @@ def save_graph_xml(
 
     Parameters
     ----------
-    data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
-        geopandas GeoDataFrames
+    data : networkx.MultiDiGraph or tuple of GeoDataFrames
+        either a MultiDiGraph or (gdf_nodes, gdf_edges) tuple
     filepath : string or pathlib.Path
         path to the .osm file including extension. if None, use default data
         folder + graph.osm

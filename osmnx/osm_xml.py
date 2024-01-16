@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import bz2
 import xml.sax
-from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 from typing import TextIO
@@ -184,7 +183,7 @@ def save_graph_xml(  # type: ignore[no-untyped-def]
 
 
 def _save_graph_xml(
-    data: nx.MultiDiGraph | Iterable[gpd.GeoDataFrame],
+    data: nx.MultiDiGraph | tuple[gpd.GeoDataFrame, gpd.GeoDataFrame],
     filepath: str | Path | None,
     node_tags: list[str],
     node_attrs: list[str],
@@ -201,8 +200,8 @@ def _save_graph_xml(
 
     Parameters
     ----------
-    data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
-        geopandas GeoDataFrames
+    data : networkx.MultiDiGraph or tuple of GeoDataFrames
+        either a MultiDiGraph or (gdf_nodes, gdf_edges) tuple
     filepath : string or pathlib.Path
         path to the .osm file including extension. if None, use default data
         folder + graph.osm
@@ -252,12 +251,15 @@ def _save_graph_xml(
             stacklevel=2,
         )
 
-    try:
-        gdf_nodes, gdf_edges = data
-    except ValueError:
+    if isinstance(data, nx.MultiDiGraph):
         gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(
             data, node_geometry=False, fill_edge_geometry=False
         )
+    elif isinstance(data, tuple):
+        gdf_nodes, gdf_edges = data
+    else:
+        msg = "`data` must be a MultiDiGraph or a tuple of node/edge GeoDataFrames."
+        raise TypeError(msg)
 
     # rename columns per osm specification
     gdf_nodes = gdf_nodes.rename(columns={"x": "lon", "y": "lat"})
