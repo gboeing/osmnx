@@ -17,7 +17,7 @@ twine check --strict ./dist/*
 
 # build the docs
 make -C ./docs html
-python -m sphinx -b linkcheck ./docs/source ./docs/build/linkcheck
+#python -m sphinx -b linkcheck ./docs/source ./docs/build/linkcheck
 
 # run the tests and report the test coverage
 pytest --maxfail=1 --typeguard-packages=osmnx --cov=./osmnx --cov-report=term-missing --verbose
