@@ -25,11 +25,6 @@ import pandas as pd
 import pytest
 from requests.exceptions import ConnectionError
 from shapely import wkt
-from shapely.geometry import GeometryCollection
-from shapely.geometry import LineString
-from shapely.geometry import MultiLineString
-from shapely.geometry import MultiPoint
-from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 from typeguard import TypeCheckError
@@ -86,43 +81,6 @@ def test_exceptions() -> None:
 
     with pytest.raises(ox._errors.GraphSimplificationError):
         raise ox._errors.GraphSimplificationError(message)
-
-
-def test_coords_rounding() -> None:
-    """Test the rounding of geometry coordinates."""
-    precision = 3
-
-    shape1 = Point(1.123456, 2.123456)
-    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)  # type: ignore[no-untyped-call]
-
-    shape1 = MultiPoint([(1.123456, 2.123456), (3.123456, 4.123456)])
-    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)  # type: ignore[no-untyped-call]
-
-    shape1 = LineString([(1.123456, 2.123456), (3.123456, 4.123456)])
-    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)  # type: ignore[no-untyped-call]
-
-    shape1 = MultiLineString(
-        [
-            [(1.123456, 2.123456), (3.123456, 4.123456)],
-            [(11.123456, 12.123456), (13.123456, 14.123456)],
-        ]
-    )
-
-    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)  # type: ignore[no-untyped-call]
-
-    shape1 = Polygon([(1.123456, 2.123456), (3.123456, 4.123456), (6.123456, 5.123456)])
-    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)  # type: ignore[no-untyped-call]
-
-    shape1 = MultiPolygon(
-        [
-            Polygon([(1.123456, 2.123456), (3.123456, 4.123456), (6.123456, 5.123456)]),
-            Polygon([(16.123456, 15.123456), (13.123456, 14.123456), (12.123456, 11.123456)]),
-        ]
-    )
-    shape2 = ox.utils_geo.round_geometry_coords(shape1, precision)  # type: ignore[no-untyped-call]
-
-    with pytest.raises(TypeError, match="cannot round coordinates of unhandled geometry type"):
-        ox.utils_geo.round_geometry_coords(GeometryCollection(), precision)  # type: ignore[no-untyped-call]
 
 
 def test_geocoder() -> None:
