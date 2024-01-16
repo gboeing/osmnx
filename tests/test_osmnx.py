@@ -593,20 +593,18 @@ def test_graph_from_functions() -> None:
     """Test downloading graphs from Overpass."""
     # test subdividing a large geometry (raises a UserWarning)
     bbox = ox.utils_geo.bbox_from_point((0, 0), dist=1e5, project_utm=True)
-    poly = ox.utils_geo.bbox_to_poly(*bbox)
+    poly = ox.utils_geo.bbox_to_poly(bbox)
     _ = ox.utils_geo._consolidate_subdivide_geometry(poly)
 
     # graph from bounding box
     _ = ox.utils_geo.bbox_from_point(location_point, project_utm=True, return_crs=True)
-    north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
-    G = ox.graph_from_bbox(north, south, east, west, network_type="drive")
-    G = ox.graph_from_bbox(
-        north, south, east, west, network_type="drive_service", truncate_by_edge=True
-    )
+    bbox = ox.utils_geo.bbox_from_point(location_point, dist=500)
+    G = ox.graph_from_bbox(bbox, network_type="drive")
+    G = ox.graph_from_bbox(bbox, network_type="drive_service", truncate_by_edge=True)
 
     # truncate graph by bounding box
-    north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=400)
-    G = ox.truncate.truncate_graph_bbox(G, north, south, east, west, min_num=3)
+    bbox = ox.utils_geo.bbox_from_point(location_point, dist=400)
+    G = ox.truncate.truncate_graph_bbox(G, bbox, min_num=3)
     G = ox.utils_graph.get_largest_component(G, strongly=True)
 
     # graph from address

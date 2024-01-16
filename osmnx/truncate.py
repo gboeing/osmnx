@@ -69,10 +69,6 @@ def truncate_graph_dist(
 
 def truncate_graph_bbox(
     G: nx.MultiDiGraph,
-    north: float,
-    south: float,
-    east: float,
-    west: float,
     bbox: tuple[float, float, float, float],
     truncate_by_edge: bool = False,
     retain_all: bool = False,
@@ -86,14 +82,6 @@ def truncate_graph_bbox(
     ----------
     G : networkx.MultiDiGraph
         input graph
-    north : float
-        deprecated, do not use
-    south : float
-        deprecated, do not use
-    east : float
-        deprecated, do not use
-    west : float
-        deprecated, do not use
     bbox : tuple of floats
         bounding box as (north, south, east, west)
     truncate_by_edge : bool
@@ -112,14 +100,6 @@ def truncate_graph_bbox(
     G : networkx.MultiDiGraph
         the truncated graph
     """
-    if not (north is None and south is None and east is None and west is None):
-        msg = (
-            "The `north`, `south`, `east`, and `west` parameters are deprecated and "
-            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
-        )
-        warn(msg, stacklevel=2)
-        bbox = (north, south, east, west)
-
     # convert bounding box to a polygon, then truncate
     polygon = utils_geo.bbox_to_poly(bbox=bbox)
     G = truncate_graph_polygon(

@@ -85,10 +85,6 @@ _POLYGON_FEATURES: dict[str, dict[str, str | list[str]]] = {
 
 
 def features_from_bbox(
-    north: float,
-    south: float,
-    east: float,
-    west: float,
     bbox: tuple[float, float, float, float],
     tags: dict[str, bool | str | list[str]],
 ) -> gpd.GeoDataFrame:
@@ -103,14 +99,6 @@ def features_from_bbox(
 
     Parameters
     ----------
-    north : float
-        deprecated, do not use
-    south : float
-        deprecated, do not use
-    east : float
-        deprecated, do not use
-    west : float
-        deprecated, do not use
     bbox : tuple of floats
         bounding box as (north, south, east, west)
     tags : dict
@@ -130,14 +118,6 @@ def features_from_bbox(
     -------
     gdf : geopandas.GeoDataFrame
     """
-    if not (north is None and south is None and east is None and west is None):
-        msg = (
-            "The `north`, `south`, `east`, and `west` parameters are deprecated and "
-            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
-        )
-        warn(msg, stacklevel=2)
-        bbox = (north, south, east, west)
-
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(bbox=bbox)
 

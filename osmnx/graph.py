@@ -37,10 +37,6 @@ from ._version import __version__
 
 
 def graph_from_bbox(
-    north: float,
-    south: float,
-    east: float,
-    west: float,
     bbox: tuple[float, float, float, float],
     network_type: str = "all_private",
     simplify: bool = True,
@@ -58,14 +54,6 @@ def graph_from_bbox(
 
     Parameters
     ----------
-    north : float
-        deprecated, do not use
-    south : float
-        deprecated, do not use
-    east : float
-        deprecated, do not use
-    west : float
-        deprecated, do not use
     bbox : tuple of floats
         bounding box as (north, south, east, west)
     network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
@@ -96,14 +84,6 @@ def graph_from_bbox(
     function to automatically make multiple requests: see that function's
     documentation for caveats.
     """
-    if not (north is None and south is None and east is None and west is None):
-        msg = (
-            "The `north`, `south`, `east`, and `west` parameters are deprecated and "
-            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
-        )
-        warn(msg, stacklevel=2)
-        bbox = (north, south, east, west)
-
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(bbox=bbox)
 

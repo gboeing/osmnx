@@ -429,7 +429,7 @@ def bbox_from_point(
 @overload  # pragma: no cover
 def bbox_from_point(
     point: tuple[float, float], *, project_utm: Literal[True], return_crs: Literal[True]
-) -> tuple[float, float, float, float, Any]:
+) -> tuple[tuple[float, float, float, float], Any]:
     ...
 
 
@@ -499,7 +499,7 @@ def bbox_from_point(
 @overload  # pragma: no cover
 def bbox_from_point(
     point: tuple[float, float], dist: float, project_utm: Literal[True], return_crs: Literal[True]
-) -> tuple[float, float, float, float, Any]:
+) -> tuple[tuple[float, float, float, float], Any]:
     ...
 
 
@@ -540,7 +540,7 @@ def bbox_from_point(
     dist: float = 1000,
     project_utm: bool = False,
     return_crs: bool = False,
-) -> tuple[float, float, float, float] | tuple[float, float, float, float, Any]:
+) -> tuple[float, float, float, float] | tuple[tuple[float, float, float, float], Any]:
     """
     Create a bounding box around a (lat, lon) point.
 
@@ -587,22 +587,12 @@ def bbox_from_point(
     return north, south, east, west
 
 
-def bbox_to_poly(
-    north: float, south: float, east: float, west: float, bbox: tuple[float, float, float, float]
-) -> Polygon:
+def bbox_to_poly(bbox: tuple[float, float, float, float]) -> Polygon:
     """
     Convert bounding box coordinates to shapely Polygon.
 
     Parameters
     ----------
-    north : float
-        deprecated, do not use
-    south : float
-        deprecated, do not use
-    east : float
-        deprecated, do not use
-    west : float
-        deprecated, do not use
     bbox : tuple of floats
         bounding box as (north, south, east, west)
 
@@ -610,12 +600,5 @@ def bbox_to_poly(
     -------
     shapely.geometry.Polygon
     """
-    if not (north is None and south is None and east is None and west is None):
-        msg = (
-            "The `north`, `south`, `east`, and `west` parameters are deprecated and "
-            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
-        )
-        warn(msg, stacklevel=2)
-    else:
-        north, south, east, west = bbox
+    north, south, east, west = bbox
     return Polygon([(west, south), (east, south), (east, north), (west, north)])
