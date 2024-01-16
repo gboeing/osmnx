@@ -62,7 +62,7 @@ def geocode(query: str) -> tuple[float, float]:
 
 def geocode_to_gdf(
     query: str | dict[str, str] | list[str | dict[str, str]],
-    which_result: int | None = None,
+    which_result: int | None | list[int | None] = None,
     by_osmid: bool = False,
     buffer_dist: float | None = None,
 ) -> gpd.GeoDataFrame:
@@ -82,8 +82,8 @@ def geocode_to_gdf(
     or relation (R) in accordance with the Nominatim API format. For example,
     `query=["R2192363", "N240109189", "W427818536"]`.
 
-    If `query` is a list, then `which_result` must be either a single value or
-    a list with the same length as `query`. The queries you provide must be
+    If `query` is a list, then `which_result` must be either an int or a list
+    with the same length as `query`. The queries you provide must be
     resolvable to elements in the Nominatim database. The resulting
     GeoDataFrame's geometry column contains place boundaries if they exist.
 
@@ -117,17 +117,18 @@ def geocode_to_gdf(
         msg = "query must be a string, or dict, or list of strings/dicts"
         raise TypeError(msg)
 
-    # if caller passed a list of queries but a scalar which_result value, then
-    # turn which_result into a list with same length as query list
-    if isinstance(query, list) and (isinstance(which_result, int) or which_result is None):
-        which_result_list = [which_result] * len(query)
-
-    # turn query and which_result into lists if they're not already
-    query_list = query
-    if not isinstance(query_list, list):
-        query_list = [query_list]
-    if not isinstance(which_result, list):
-        which_result_list = [which_result]
+    if isinstance(query, list):
+        # if query is a list of queries but which_result is int/None, then
+        # turn which_result into a list with same length as query list
+        query_list = query
+        which_result_list = (
+            which_result if isinstance(which_result, list) else [which_result] * len(query)
+        )
+    else:
+        # if query is not already a list, turn it into one
+        # if which_result was a list, take 0th element, otherwise make it list
+        query_list = [query]
+        which_result_list = [which_result[0]] if isinstance(which_result, list) else [which_result]
 
     # ensure same length
     if len(query_list) != len(which_result_list):  # pragma: no cover
