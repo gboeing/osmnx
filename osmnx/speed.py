@@ -72,7 +72,7 @@ def add_edge_speeds(
         precision = 1
     else:
         warn(
-            "the `precision` parameter is deprecated and will be removed in a future release",
+            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
             stacklevel=2,
         )
 
@@ -160,7 +160,7 @@ def add_edge_travel_times(G: nx.MultiDiGraph, precision: int | None = None) -> n
         precision = 1
     else:
         warn(
-            "the `precision` parameter is deprecated and will be removed in a future release",
+            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
             stacklevel=2,
         )
 

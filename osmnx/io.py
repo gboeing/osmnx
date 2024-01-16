@@ -94,7 +94,7 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):  #
     """
     warn(
         "The `save_graph_shapefile` function is deprecated and will be removed "
-        "in a future release. Instead, use the `save_graph_geopackage` function "
+        "in the v2.0.0 release. Instead, use the `save_graph_geopackage` function "
         "to save graphs as GeoPackage files for subsequent GIS analysis.",
         stacklevel=2,
     )

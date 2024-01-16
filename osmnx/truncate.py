@@ -73,6 +73,7 @@ def truncate_graph_bbox(
     south: float,
     east: float,
     west: float,
+    bbox: tuple[float, float, float, float],
     truncate_by_edge: bool = False,
     retain_all: bool = False,
     quadrat_width: float | None = None,
@@ -86,13 +87,15 @@ def truncate_graph_bbox(
     G : networkx.MultiDiGraph
         input graph
     north : float
-        northern latitude of bounding box
+        deprecated, do not use
     south : float
-        southern latitude of bounding box
+        deprecated, do not use
     east : float
-        eastern longitude of bounding box
+        deprecated, do not use
     west : float
-        western longitude of bounding box
+        deprecated, do not use
+    bbox : tuple of floats
+        bounding box as (north, south, east, west)
     truncate_by_edge : bool
         if True, retain nodes outside bounding box if at least one of node's
         neighbors is within the bounding box
@@ -109,8 +112,16 @@ def truncate_graph_bbox(
     G : networkx.MultiDiGraph
         the truncated graph
     """
+    if not (north is None and south is None and east is None and west is None):
+        msg = (
+            "The `north`, `south`, `east`, and `west` parameters are deprecated and "
+            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
+        )
+        warn(msg, stacklevel=2)
+        bbox = (north, south, east, west)
+
     # convert bounding box to a polygon, then truncate
-    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    polygon = utils_geo.bbox_to_poly(bbox=bbox)
     G = truncate_graph_polygon(
         G,
         polygon,
@@ -159,8 +170,8 @@ def truncate_graph_polygon(
     """
     if quadrat_width is not None or min_num is not None:
         warn(
-            "the `quadrat_width` and `min_num` parameters are deprecated and "
-            "will be removed in a future release",
+            "The `quadrat_width` and `min_num` parameters are deprecated and "
+            "will be removed in the v2.0.0 release.",
             stacklevel=2,
         )
 

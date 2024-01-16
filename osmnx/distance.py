@@ -177,7 +177,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):  # ty
     Do not use, deprecated.
 
     The `great_circle_vec` function has been renamed `great_circle`. Calling
-    `great_circle_vec` will raise an error in a future release.
+    `great_circle_vec` will raise an error in the v2.0.0 release.
 
     Parameters
     ----------
@@ -201,7 +201,7 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):  # ty
     """
     warn(
         "The `great_circle_vec` function has been renamed `great_circle`. Calling "
-        "`great_circle_vec` will raise an error in a future release.",
+        "`great_circle_vec` will raise an error starting in the v2.0.0 release.",
         stacklevel=2,
     )
     return great_circle(lat1, lng1, lat2, lng2, earth_radius)
@@ -212,7 +212,7 @@ def euclidean_dist_vec(y1, x1, y2, x2):  # type: ignore[no-untyped-def]
     Do not use, deprecated.
 
     The `euclidean_dist_vec` function has been renamed `euclidean`. Calling
-    `euclidean_dist_vec` will raise an error in a future release.
+    `euclidean_dist_vec` will raise an error in the v2.0.0 release.
 
     Parameters
     ----------
@@ -232,7 +232,7 @@ def euclidean_dist_vec(y1, x1, y2, x2):  # type: ignore[no-untyped-def]
     """
     warn(
         "The `euclidean_dist_vec` function has been renamed `euclidean`. Calling "
-        "`euclidean_dist_vec` will raise an error in a future release.",
+        "`euclidean_dist_vec` will raise an error starting in the v2.0.0 release.",
         stacklevel=2,
     )
     return euclidean(y1, x1, y2, x2)
@@ -281,7 +281,7 @@ def add_edge_lengths(
         precision = 3
     else:
         warn(
-            "the `precision` parameter is deprecated and will be removed in a future release",
+            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
             stacklevel=2,
         )
 
@@ -564,7 +564,8 @@ def nearest_edges(
     # otherwise, if interpolation distance was provided
     else:
         warn(
-            "The `interpolate` parameter has been deprecated and will be removed in a future release",
+            "The `interpolate` parameter has been deprecated and will be "
+            "removed in the v2.0.0 release.",
             stacklevel=2,
         )
 
@@ -616,7 +617,7 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):  # type: ignore[no-un
     Do not use, deprecated.
 
     The `shortest_path` function has moved to the `routing` module. Calling
-    it via the `distance` module will raise an error in a future release.
+    it via the `distance` module will raise an error in the v2.0.0 release.
 
     Parameters
     ----------
@@ -638,8 +639,8 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):  # type: ignore[no-un
         are lists, then a list of path lists
     """
     warn(
-        "The `shortest_path` function has moved to the `routing` module. "
-        "Calling it via the `distance` module will raise an error in a future release.",
+        "The `shortest_path` function has moved to the `routing` module. Calling it "
+        "via the `distance` module will raise an error starting in the v2.0.0 release.",
         stacklevel=2,
     )
     return routing.shortest_path(G, orig, dest, weight, cpus)
@@ -650,7 +651,7 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):  # type: ignore[no-unty
     Do not use, deprecated.
 
     The `k_shortest_paths` function has moved to the `routing` module. Calling
-    it via the `distance` module will raise an error in a future release.
+    it via the `distance` module will raise an error in the v2.0.0 release.
 
     Parameters
     ----------
@@ -674,7 +675,7 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):  # type: ignore[no-unty
     """
     warn(
         "The `k_shortest_paths` function has moved to the `routing` module. "
-        "Calling it via the `distance` module will raise an error in a future release.",
+        "Calling it via the `distance` module will raise an error in the v2.0.0 release.",
         stacklevel=2,
     )
     return routing.k_shortest_paths(G, orig, dest, k, weight)

@@ -112,7 +112,7 @@ def add_edge_bearings(G: nx.MultiDiGraph, precision: int | None = None) -> nx.Mu
         precision = 1
     else:
         warn(
-            "the `precision` parameter is deprecated and will be removed in a future release",
+            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
             stacklevel=2,
         )
 
@@ -295,7 +295,7 @@ def plot_orientation(  # type: ignore[no-untyped-def]
     Do not use: deprecated.
 
     The plot_orientation function moved to the plot module. Calling it via the
-    bearing module will raise an error in a future release.
+    bearing module will raise an error starting in the v2.0.0 release.
 
     Parameters
     ----------
@@ -337,7 +337,7 @@ def plot_orientation(  # type: ignore[no-untyped-def]
     """
     warn(
         "The `plot_orientation` function moved to the `plot` module. Calling it "
-        "via the `bearing` module will cause an exception in a future release.",
+        "via the `bearing` module will raise an exception starting with the v2.0.0 release.",
         stacklevel=2,
     )
     return plot.plot_orientation(

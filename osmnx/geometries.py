@@ -2,7 +2,7 @@
 Do not use: deprecated.
 
 The `geometries` module has been renamed the `features` module. The
-`geometries` module is deprecated and will be removed in a future release.
+`geometries` module is deprecated and will be removed in the v2.0.0 release.
 """
 
 from warnings import warn
@@ -13,7 +13,7 @@ DEP_MSG = (
     "The `geometries` module and `geometries_from_X` functions have been "
     "renamed the `features` module and `features_from_X` functions. Use these "
     "instead. The `geometries` module and function names are deprecated and "
-    "will be removed in a future release."
+    "will be removed in the v2.0.0 release."
 )
 
 
@@ -24,7 +24,7 @@ def geometries_from_bbox(north, south, east, west, tags):  # type: ignore[no-unt
     The `geometries` module and `geometries_from_X` functions have been
     renamed the `features` module and `features_from_X` functions. Use these
     instead. The `geometries` module and functions are deprecated and will be
-    removed in a future release.
+    removed in the v2.0.0 release.
 
     Parameters
     ----------
@@ -44,7 +44,7 @@ def geometries_from_bbox(north, south, east, west, tags):  # type: ignore[no-unt
     gdf : geopandas.GeoDataFrame
     """
     warn(DEP_MSG, stacklevel=2)
-    return features.features_from_bbox(north, south, east, west, tags)
+    return features.features_from_bbox(north, south, east, west, tags=tags)
 
 
 def geometries_from_point(center_point, tags, dist=1000):  # type: ignore[no-untyped-def]
@@ -54,7 +54,7 @@ def geometries_from_point(center_point, tags, dist=1000):  # type: ignore[no-unt
     The `geometries` module and `geometries_from_X` functions have been
     renamed the `features` module and `features_from_X` functions. Use these
     instead. The `geometries` module and functions are deprecated and will be
-    removed in a future release.
+    removed in the v2.0.0 release.
 
     Parameters
     ----------
@@ -80,7 +80,7 @@ def geometries_from_address(address, tags, dist=1000):  # type: ignore[no-untype
     The `geometries` module and `geometries_from_X` functions have been
     renamed the `features` module and `features_from_X` functions. Use these
     instead. The `geometries` module and functions are deprecated and will be
-    removed in a future release.
+    removed in the v2.0.0 release.
 
     Parameters
     ----------
@@ -106,7 +106,7 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):  # 
     The `geometries` module and `geometries_from_X` functions have been
     renamed the `features` module and `features_from_X` functions. Use these
     instead. The `geometries` module and functions are deprecated and will be
-    removed in a future release.
+    removed in the v2.0.0 release.
 
     Parameters
     ----------
@@ -134,7 +134,7 @@ def geometries_from_polygon(polygon, tags):  # type: ignore[no-untyped-def]
     The `geometries` module and `geometries_from_X` functions have been
     renamed the `features` module and `features_from_X` functions. Use these
     instead. The `geometries` module and functions are deprecated and will be
-    removed in a future release.
+    removed in the v2.0.0 release.
 
     Parameters
     ----------
@@ -158,7 +158,7 @@ def geometries_from_xml(filepath, polygon=None, tags=None):  # type: ignore[no-u
     The `geometries` module and `geometries_from_X` functions have been
     renamed the `features` module and `features_from_X` functions. Use these
     instead. The `geometries` module and functions are deprecated and will be
-    removed in a future release.
+    removed in the v2.0.0 release.
 
     Parameters
     ----------

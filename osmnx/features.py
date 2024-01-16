@@ -85,7 +85,12 @@ _POLYGON_FEATURES: dict[str, dict[str, str | list[str]]] = {
 
 
 def features_from_bbox(
-    north: float, south: float, east: float, west: float, tags: dict[str, bool | str | list[str]]
+    north: float,
+    south: float,
+    east: float,
+    west: float,
+    bbox: tuple[float, float, float, float],
+    tags: dict[str, bool | str | list[str]],
 ) -> gpd.GeoDataFrame:
     """
     Create a GeoDataFrame of OSM features within a N, S, E, W bounding box.
@@ -99,13 +104,15 @@ def features_from_bbox(
     Parameters
     ----------
     north : float
-        northern latitude of bounding box
+        deprecated, do not use
     south : float
-        southern latitude of bounding box
+        deprecated, do not use
     east : float
-        eastern longitude of bounding box
+        deprecated, do not use
     west : float
-        western longitude of bounding box
+        deprecated, do not use
+    bbox : tuple of floats
+        bounding box as (north, south, east, west)
     tags : dict
         Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -123,8 +130,16 @@ def features_from_bbox(
     -------
     gdf : geopandas.GeoDataFrame
     """
+    if not (north is None and south is None and east is None and west is None):
+        msg = (
+            "The `north`, `south`, `east`, and `west` parameters are deprecated and "
+            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
+        )
+        warn(msg, stacklevel=2)
+        bbox = (north, south, east, west)
+
     # convert bounding box to a polygon
-    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    polygon = utils_geo.bbox_to_poly(bbox=bbox)
 
     # create GeoDataFrame of features within this polygon
     return features_from_polygon(polygon, tags)
@@ -166,10 +181,10 @@ def features_from_point(
     gdf : geopandas.GeoDataFrame
     """
     # create bounding box from center point and distance in each direction
-    north, south, east, west = utils_geo.bbox_from_point(center_point, dist)
+    bbox = utils_geo.bbox_from_point(center_point, dist)
 
     # convert the bounding box to a polygon
-    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    polygon = utils_geo.bbox_to_poly(bbox=bbox)
 
     # create GeoDataFrame of features within this polygon
     return features_from_polygon(polygon, tags)
@@ -275,7 +290,7 @@ def features_from_place(
     if buffer_dist is not None:
         warn(
             "The buffer_dist argument has been deprecated and will be removed "
-            "in a future release. Buffer your query area directly, if desired.",
+            "in the v2.0.0 release. Buffer your query area directly, if desired.",
             stacklevel=2,
         )
 

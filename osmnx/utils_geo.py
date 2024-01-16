@@ -220,7 +220,8 @@ def round_geometry_coords(geom, precision):  # type: ignore[no-untyped-def]
     shapely.geometry.geometry
     """
     warn(
-        "the `round_geometry_coords` function is deprecated and will be removed in a future release",
+        "The `round_geometry_coords` function is deprecated and will be "
+        "removed in the v2.0.0 release.",
         stacklevel=2,
     )
 
@@ -559,8 +560,8 @@ def bbox_from_point(
 
     Returns
     -------
-    tuple
-        (north, south, east, west) or (north, south, east, west, crs_proj)
+    bbox or bbox, crs: tuple or tuple, crs
+        (north, south, east, west) or ((north, south, east, west), crs)
     """
     EARTH_RADIUS_M = 6_371_009  # meters
     lat, lon = point
@@ -573,36 +574,48 @@ def bbox_from_point(
     west = lon - delta_lon
 
     if project_utm:
-        bbox_poly = bbox_to_poly(north, south, east, west)
+        bbox_poly = bbox_to_poly(bbox=(north, south, east, west))
         bbox_proj, crs_proj = projection.project_geometry(bbox_poly)
         west, south, east, north = bbox_proj.bounds
 
     utils.log(f"Created bbox {dist} m from {point}: {north},{south},{east},{west}")
 
     if project_utm and return_crs:
-        return north, south, east, west, crs_proj
+        return (north, south, east, west), crs_proj
 
     # otherwise
     return north, south, east, west
 
 
-def bbox_to_poly(north: float, south: float, east: float, west: float) -> Polygon:
+def bbox_to_poly(
+    north: float, south: float, east: float, west: float, bbox: tuple[float, float, float, float]
+) -> Polygon:
     """
     Convert bounding box coordinates to shapely Polygon.
 
     Parameters
     ----------
     north : float
-        northern coordinate
+        deprecated, do not use
     south : float
-        southern coordinate
+        deprecated, do not use
     east : float
-        eastern coordinate
+        deprecated, do not use
     west : float
-        western coordinate
+        deprecated, do not use
+    bbox : tuple of floats
+        bounding box as (north, south, east, west)
 
     Returns
     -------
     shapely.geometry.Polygon
     """
+    if not (north is None and south is None and east is None and west is None):
+        msg = (
+            "The `north`, `south`, `east`, and `west` parameters are deprecated and "
+            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
+        )
+        warn(msg, stacklevel=2)
+    else:
+        north, south, east, west = bbox
     return Polygon([(west, south), (east, south), (east, north), (west, north)])

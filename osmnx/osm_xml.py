@@ -130,7 +130,7 @@ def save_graph_xml(  # type: ignore[no-untyped-def]
 
     The `save_graph_xml` has moved from the `osm_xml` module to the `io`
     module. `osm_xml.save_graph_xml` has been deprecated and will be removed
-    in a future release. Access the function via the `io` module instead.
+    in the v2.0.0 release. Access the function via the `io` module instead.
 
     Parameters
     ----------
@@ -163,8 +163,8 @@ def save_graph_xml(  # type: ignore[no-untyped-def]
     """
     warn(
         "The save_graph_xml function has moved from the osm_xml module to the io module. "
-        " osm_xml.save_graph_xml has been deprecated and will be removed in a "
-        " future release. Access the function via the io module instead.",
+        "osm_xml.save_graph_xml has been deprecated and will be removed in the v2.0.0 "
+        "release. Access the function via the io module instead.",
         stacklevel=2,
     )
     _save_graph_xml(
