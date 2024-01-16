@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 1.9.0 (Unreleased)
 
 - fix a bug in the features module's polygon handling (#1104)
 - update obsolete numpy random number generation (#1108)
+- deprecate north, south, east, west arguments throughout package in favor of bbox tuple argument (#1112)
 - deprecate return_coords argument in graph.graph_from_address function (#1105)
 - deprecate return_hex argument in plot.get_colors function (#1109)
 
