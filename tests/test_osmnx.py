@@ -36,7 +36,6 @@ from typeguard import TypeCheckError
 
 import osmnx as ox
 
-ox.config(log_console=True)  # type: ignore[no-untyped-call]
 ox.settings.log_console = True
 ox.settings.log_file = True
 ox.settings.use_cache = True

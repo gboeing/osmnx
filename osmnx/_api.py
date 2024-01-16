@@ -50,7 +50,6 @@ from .speed import add_edge_speeds
 from .speed import add_edge_travel_times
 from .stats import basic_stats
 from .utils import citation
-from .utils import config
 from .utils import log
 from .utils import ts
 from .utils_graph import get_digraph
