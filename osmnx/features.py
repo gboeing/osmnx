@@ -79,7 +79,7 @@ _POLYGON_FEATURES = {
 }
 
 
-def features_from_bbox(north, south, east, west, tags):
+def features_from_bbox(north=None, south=None, east=None, west=None, bbox=None, tags=None):
     """
     Create a GeoDataFrame of OSM features within a N, S, E, W bounding box.
 
@@ -92,13 +92,15 @@ def features_from_bbox(north, south, east, west, tags):
     Parameters
     ----------
     north : float
-        northern latitude of bounding box
+        deprecated, do not use
     south : float
-        southern latitude of bounding box
+        deprecated, do not use
     east : float
-        eastern longitude of bounding box
+        deprecated, do not use
     west : float
-        western longitude of bounding box
+        deprecated, do not use
+    bbox : tuple of floats
+        bounding box as (north, south, east, west)
     tags : dict
         Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -116,8 +118,16 @@ def features_from_bbox(north, south, east, west, tags):
     -------
     gdf : geopandas.GeoDataFrame
     """
+    if not (north is None and south is None and east is None and west is None):
+        msg = (
+            "The `north`, `south`, `east`, and `west` parameters are deprecated and "
+            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
+        )
+        warn(msg, stacklevel=2)
+        bbox = (north, south, east, west)
+
     # convert bounding box to a polygon
-    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    polygon = utils_geo.bbox_to_poly(bbox=bbox)
 
     # create GeoDataFrame of features within this polygon
     return features_from_polygon(polygon, tags)
@@ -157,10 +167,10 @@ def features_from_point(center_point, tags, dist=1000):
     gdf : geopandas.GeoDataFrame
     """
     # create bounding box from center point and distance in each direction
-    north, south, east, west = utils_geo.bbox_from_point(center_point, dist)
+    bbox = utils_geo.bbox_from_point(center_point, dist)
 
     # convert the bounding box to a polygon
-    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    polygon = utils_geo.bbox_to_poly(bbox=bbox)
 
     # create GeoDataFrame of features within this polygon
     return features_from_polygon(polygon, tags)

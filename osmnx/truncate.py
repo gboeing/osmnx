@@ -59,10 +59,11 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
 
 def truncate_graph_bbox(
     G,
-    north,
-    south,
-    east,
-    west,
+    north=None,
+    south=None,
+    east=None,
+    west=None,
+    bbox=None,
     truncate_by_edge=False,
     retain_all=False,
     quadrat_width=None,
@@ -76,13 +77,15 @@ def truncate_graph_bbox(
     G : networkx.MultiDiGraph
         input graph
     north : float
-        northern latitude of bounding box
+        deprecated, do not use
     south : float
-        southern latitude of bounding box
+        deprecated, do not use
     east : float
-        eastern longitude of bounding box
+        deprecated, do not use
     west : float
-        western longitude of bounding box
+        deprecated, do not use
+    bbox : tuple of floats
+        bounding box as (north, south, east, west)
     truncate_by_edge : bool
         if True, retain nodes outside bounding box if at least one of node's
         neighbors is within the bounding box
@@ -99,8 +102,16 @@ def truncate_graph_bbox(
     G : networkx.MultiDiGraph
         the truncated graph
     """
+    if not (north is None and south is None and east is None and west is None):
+        msg = (
+            "The `north`, `south`, `east`, and `west` parameters are deprecated and "
+            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
+        )
+        warn(msg, stacklevel=2)
+        bbox = (north, south, east, west)
+
     # convert bounding box to a polygon, then truncate
-    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    polygon = utils_geo.bbox_to_poly(bbox=bbox)
     G = truncate_graph_polygon(
         G,
         polygon,

@@ -32,10 +32,11 @@ from ._version import __version__
 
 
 def graph_from_bbox(
-    north,
-    south,
-    east,
-    west,
+    north=None,
+    south=None,
+    east=None,
+    west=None,
+    bbox=None,
     network_type="all_private",
     simplify=True,
     retain_all=False,
@@ -53,13 +54,15 @@ def graph_from_bbox(
     Parameters
     ----------
     north : float
-        northern latitude of bounding box
+        deprecated, do not use
     south : float
-        southern latitude of bounding box
+        deprecated, do not use
     east : float
-        eastern longitude of bounding box
+        deprecated, do not use
     west : float
-        western longitude of bounding box
+        deprecated, do not use
+    bbox : tuple of floats
+        bounding box as (north, south, east, west)
     network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         what type of street network to get if custom_filter is None
     simplify : bool
@@ -88,8 +91,16 @@ def graph_from_bbox(
     function to automatically make multiple requests: see that function's
     documentation for caveats.
     """
+    if not (north is None and south is None and east is None and west is None):
+        msg = (
+            "The `north`, `south`, `east`, and `west` parameters are deprecated and "
+            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
+        )
+        warn(msg, stacklevel=2)
+        bbox = (north, south, east, west)
+
     # convert bounding box to a polygon
-    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    polygon = utils_geo.bbox_to_poly(bbox=bbox)
 
     # create graph using this polygon geometry
     G = graph_from_polygon(
@@ -168,14 +179,11 @@ def graph_from_point(
         raise ValueError(msg)
 
     # create bounding box from center point and distance in each direction
-    north, south, east, west = utils_geo.bbox_from_point(center_point, dist)
+    bbox = utils_geo.bbox_from_point(center_point, dist)
 
     # create a graph from the bounding box
     G = graph_from_bbox(
-        north,
-        south,
-        east,
-        west,
+        bbox=bbox,
         network_type=network_type,
         simplify=simplify,
         retain_all=retain_all,
