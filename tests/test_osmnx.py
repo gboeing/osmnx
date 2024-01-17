@@ -157,12 +157,14 @@ def test_osm_xml() -> None:
     Path.unlink(Path(temp_filename))
 
     # test .osm xml saving
-    default_all_oneway = ox.settings.all_oneway
-    ox.settings.all_oneway = True
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
-    ox.save_graph_xml(G, merge_edges=False, filepath=Path(ox.settings.data_folder) / "graph.osm")
+    fp = Path(ox.settings.data_folder) / "graph.osm"
+    ox.save_graph_xml(G, merge_edges=False, filepath=fp)  # issues UserWarning
+    G = ox.graph_from_xml(fp)  # issues UserWarning
 
     # test osm xml output merge edges
+    default_all_oneway = ox.settings.all_oneway
+    ox.settings.all_oneway = True
     ox.io.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")], precision=5)
 
     # test osm xml output from gdfs

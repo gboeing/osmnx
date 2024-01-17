@@ -174,7 +174,7 @@ def _save_graph_xml(
     # if save folder does not already exist, create it
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
-    if not settings.all_oneway:  # pragma: no cover
+    if not settings.all_oneway:
         msg = (
             "For the `save_graph_xml` function to behave properly, the graph "
             "must have been created with `ox.settings.all_oneway=True`."
