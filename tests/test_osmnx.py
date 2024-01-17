@@ -448,6 +448,7 @@ def test_graph_save_load() -> None:
     G2 = ox.graph_from_gdfs(gdf_nodes1, gdf_edges1)
     G2 = ox.graph_from_gdfs(gdf_nodes1, gdf_edges1, graph_attrs=G.graph)
     gdf_nodes2, gdf_edges2 = ox.graph_to_gdfs(G2)
+    _ = list(ox.utils_geo.interpolate_points(gdf_edges2["geometry"].iloc[0], 0.001))
     assert set(gdf_nodes1.index) == set(gdf_nodes2.index) == set(G.nodes) == set(G2.nodes)
     assert set(gdf_edges1.index) == set(gdf_edges2.index) == set(G.edges) == set(G2.edges)
 
