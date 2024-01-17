@@ -318,7 +318,8 @@ def test_plots() -> None:
     G = ox.project_graph(G, to_latlong=True)
 
     # test getting colors
-    co = ox.plot.get_colors(n=5, return_hex=True)
+    co1 = ox.plot.get_colors(n=5, cmap="plasma", start=0.1, stop=0.9, alpha=0.5)
+    co2 = ox.plot.get_colors(n=5, cmap="plasma", start=0.1, stop=0.9, alpha=None)
     nc = ox.plot.get_node_colors_by_attr(G, "x")
     ec = ox.plot.get_edge_colors_by_attr(G, "length", num_bins=5)
 
