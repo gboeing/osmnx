@@ -116,10 +116,7 @@ def test_stats() -> None:
     # calculate entropy
     Gu = ox.get_undirected(G)
     entropy = ox.bearing.orientation_entropy(Gu, weight="length")
-    from matplotlib.projections.polar import PolarAxes
 
-    ax: PolarAxes
-    fig, ax = ox.plot.plot_orientation(Gu, area=True, title="Title")
     fig, ax = ox.plot.plot_orientation(Gu, area=True, title="Title")
     fig, ax = ox.plot.plot_orientation(Gu, ax=ax, area=False, title="Title")
 
@@ -292,7 +289,6 @@ def test_routing() -> None:
     assert paths1 == paths2 == paths3
 
     # test k shortest paths
-    routes = ox.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
     routes = ox.routing.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
     fig, ax = ox.plot_graph_routes(G, list(routes))
 
