@@ -5,18 +5,15 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Literal
 from typing import overload
-from warnings import warn
 
 import networkx as nx
 import numpy as np
-import pandas as pd
 from numpy.typing import NDArray
 from shapely.geometry import Point
 from shapely.strtree import STRtree
 
 from . import projection
 from . import utils
-from . import utils_geo
 from . import utils_graph
 
 # scipy is optional dependency for projected nearest-neighbor search
@@ -414,7 +411,6 @@ def nearest_edges(
     G: nx.MultiDiGraph,
     X: float | Iterable[float],
     Y: float | Iterable[float],
-    interpolate: float | None = None,
     return_dist: bool = False,
 ) -> (
     tuple[int, int, int]
@@ -441,8 +437,6 @@ def nearest_edges(
     Y : float or iterable of floats
         points' y (latitude) coordinates, in same CRS/units as graph and
         containing no nulls
-    interpolate : float
-        deprecated, do not use
     return_dist : bool
         optionally also return distance between points and nearest edges
 
@@ -469,54 +463,17 @@ def nearest_edges(
     ne_array: NDArray[np.object_]  # array of tuple[int, int, int]
     dist_array: NDArray[np.float64]
 
-    # if no interpolation distance was provided
-    if interpolate is None:
-        # build an r-tree spatial index by position for subsequent iloc
-        rtree = STRtree(geoms)
+    # build an r-tree spatial index by position for subsequent iloc
+    rtree = STRtree(geoms)
 
-        # use the r-tree to find each point's nearest neighbor and distance
-        points = [Point(xy) for xy in zip(X_arr, Y_arr)]
-        pos, dist_array = rtree.query_nearest(points, all_matches=False, return_distance=True)
+    # use the r-tree to find each point's nearest neighbor and distance
+    points = [Point(xy) for xy in zip(X_arr, Y_arr)]
+    pos, dist_array = rtree.query_nearest(points, all_matches=False, return_distance=True)
 
-        # if user passed X/Y lists, the 2nd subarray contains geom indices
-        if len(pos.shape) > 1:
-            pos = pos[1]
-        ne_array = geoms.iloc[pos].index.to_numpy()
-
-    # otherwise, if interpolation distance was provided
-    else:
-        warn(
-            "The `interpolate` parameter has been deprecated and will be "
-            "removed in the v2.0.0 release.",
-            stacklevel=2,
-        )
-
-        # interpolate points along edges to index with k-d tree or ball tree
-        uvk_xy: list = []  # type: ignore[type-arg]
-        for uvk, geom in zip(geoms.index, geoms.to_numpy()):
-            uvk_xy.extend((uvk, xy) for xy in utils_geo.interpolate_points(geom, interpolate))
-        labels, xy = zip(*uvk_xy)
-        vertices = pd.DataFrame(xy, index=labels, columns=["x", "y"])
-
-        if projection.is_projected(G.graph["crs"]):
-            # if projected, use k-d tree for euclidean nearest-neighbor search
-            if cKDTree is None:  # pragma: no cover
-                msg = "scipy must be installed to search a projected graph"
-                raise ImportError(msg)
-            dist_array, pos = cKDTree(vertices).query(np.array([X_arr, Y_arr]).T, k=1)
-            ne_array = vertices.index[pos].to_numpy()
-
-        else:
-            # if unprojected, use ball tree for haversine nearest-neighbor search
-            if BallTree is None:  # pragma: no cover
-                msg = "scikit-learn must be installed to search an unprojected graph"
-                raise ImportError(msg)
-            # haversine requires lat, lon coords in radians
-            vertices_rad = np.deg2rad(vertices[["y", "x"]])
-            points_rad = np.deg2rad(np.array([Y_arr, X_arr]).T)
-            dist_array, pos = BallTree(vertices_rad, metric="haversine").query(points_rad, k=1)
-            dist_array = dist_array[:, 0] * EARTH_RADIUS_M  # convert radians -> meters
-            ne_array = vertices.index[pos[:, 0]].to_numpy()
+    # if user passed X/Y lists, the 2nd subarray contains geom indices
+    if len(pos.shape) > 1:
+        pos = pos[1]
+    ne_array = geoms.iloc[pos].index.to_numpy()
 
     # convert results to correct types for return
     if is_scalar:

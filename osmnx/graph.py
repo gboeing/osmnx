@@ -13,7 +13,6 @@ import itertools
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
-from warnings import warn
 
 import networkx as nx
 from shapely.geometry import MultiPolygon
@@ -42,7 +41,6 @@ def graph_from_bbox(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    clean_periphery: bool | None = None,
     custom_filter: str | None = None,
 ) -> nx.MultiDiGraph:
     """
@@ -66,8 +64,6 @@ def graph_from_bbox(
     truncate_by_edge : bool
         if True, retain nodes outside bounding box if at least one of node's
         neighbors is within the bounding box
-    clean_periphery : bool
-        deprecated, do not use
     custom_filter : string
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
@@ -94,7 +90,6 @@ def graph_from_bbox(
         simplify=simplify,
         retain_all=retain_all,
         truncate_by_edge=truncate_by_edge,
-        clean_periphery=clean_periphery,
         custom_filter=custom_filter,
     )
 
@@ -110,7 +105,6 @@ def graph_from_point(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    clean_periphery: bool | None = None,
     custom_filter: str | None = None,
 ) -> nx.MultiDiGraph:
     """
@@ -141,8 +135,6 @@ def graph_from_point(
     truncate_by_edge : bool
         if True, retain nodes outside bounding box if at least one of node's
         neighbors is within the bounding box
-    clean_periphery : bool,
-        deprecated, do not use
     custom_filter : string
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
@@ -173,7 +165,6 @@ def graph_from_point(
         simplify=simplify,
         retain_all=retain_all,
         truncate_by_edge=truncate_by_edge,
-        clean_periphery=clean_periphery,
         custom_filter=custom_filter,
     )
 
@@ -195,8 +186,6 @@ def graph_from_address(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    return_coords: bool | None = None,
-    clean_periphery: bool | None = None,
     custom_filter: str | None = None,
 ) -> nx.MultiDiGraph | tuple[nx.MultiDiGraph, tuple[float, float]]:
     """
@@ -228,10 +217,6 @@ def graph_from_address(
     truncate_by_edge : bool
         if True, retain nodes outside bounding box if at least one of node's
         neighbors is within the bounding box
-    return_coords : bool
-        deprecated, do not use
-    clean_periphery : bool
-        deprecated, do not use
     custom_filter : string
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
@@ -248,15 +233,6 @@ def graph_from_address(
     function to automatically make multiple requests: see that function's
     documentation for caveats.
     """
-    if return_coords is None:
-        return_coords = False
-    else:
-        warn(
-            "The `return_coords` argument has been deprecated and will be removed in "
-            "the v2.0.0 release. Future behavior will be as though `return_coords=False`. "
-            "If you want the address's geocoded coordinates, use the `geocode` function.",
-            stacklevel=2,
-        )
     # geocode the address string to a (lat, lon) point
     point = geocoder.geocode(query=address)
 
@@ -269,15 +245,10 @@ def graph_from_address(
         simplify=simplify,
         retain_all=retain_all,
         truncate_by_edge=truncate_by_edge,
-        clean_periphery=clean_periphery,
         custom_filter=custom_filter,
     )
+
     utils.log(f"graph_from_address returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
-
-    if return_coords:
-        return G, point
-
-    # otherwise
     return G
 
 
@@ -287,9 +258,7 @@ def graph_from_place(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    which_result: int | None = None,
-    buffer_dist: float | None = None,
-    clean_periphery: bool | None = None,
+    which_result: int | None | list[int | None] = None,
     custom_filter: str | None = None,
 ) -> nx.MultiDiGraph:
     """
@@ -325,13 +294,9 @@ def graph_from_place(
     truncate_by_edge : bool
         if True, retain nodes outside boundary polygon if at least one of
         node's neighbors is within the polygon
-    which_result : int
+    which_result : int or list
         which geocoding result to use. if None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one.
-    buffer_dist : float
-        deprecated, do not use
-    clean_periphery : bool
-        deprecated, do not use
     custom_filter : string
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
@@ -348,30 +313,18 @@ def graph_from_place(
     function to automatically make multiple requests: see that function's
     documentation for caveats.
     """
-    if buffer_dist is not None:
-        warn(
-            "The buffer_dist argument has been deprecated and will be removed "
-            "in the v2.0.0 release. Buffer your query area directly, if desired.",
-            stacklevel=2,
-        )
-
     # create a GeoDataFrame with the spatial boundaries of the place(s)
-    if isinstance(query, (str, dict)):
-        # if it is a string (place name) or dict (structured place query),
-        # then it is a single place
-        gdf_place = geocoder.geocode_to_gdf(
-            query, which_result=which_result, buffer_dist=buffer_dist
-        )
-    elif isinstance(query, list):
-        # if it is a list, it contains multiple places to get
-        gdf_place = geocoder.geocode_to_gdf(query, buffer_dist=buffer_dist)
+    if isinstance(query, (str, dict, list)):
+        # if string (place name) or dict (structured place query), this is a
+        # single place. if list, it contains multiple places to retrieve.
+        gdf_place = geocoder.geocode_to_gdf(query, which_result=which_result)
     else:  # pragma: no cover
         msg = "query must be dict, string, or list of strings"
         raise TypeError(msg)
 
-    # extract the geometry from the GeoDataFrame to use in API query
+    # extract the geometry from the GeoDataFrame to use in query
     polygon = gdf_place["geometry"].unary_union
-    utils.log("Constructed place geometry polygon(s) to query API")
+    utils.log("Constructed place geometry polygon(s) to query Overpass")
 
     # create graph using this polygon(s) geometry
     G = graph_from_polygon(
@@ -380,7 +333,6 @@ def graph_from_place(
         simplify=simplify,
         retain_all=retain_all,
         truncate_by_edge=truncate_by_edge,
-        clean_periphery=clean_periphery,
         custom_filter=custom_filter,
     )
 
@@ -394,7 +346,6 @@ def graph_from_polygon(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    clean_periphery: bool | None = None,
     custom_filter: str | None = None,
 ) -> nx.MultiDiGraph:
     """
@@ -419,8 +370,6 @@ def graph_from_polygon(
     truncate_by_edge : bool
         if True, retain nodes outside boundary polygon if at least one of
         node's neighbors is within the polygon
-    clean_periphery : bool
-        deprecated, do not use
     custom_filter : string
         a custom ways filter to be used instead of the network_type presets
         e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
@@ -437,15 +386,6 @@ def graph_from_polygon(
     function to automatically make multiple requests: see that function's
     documentation for caveats.
     """
-    if clean_periphery is None:
-        clean_periphery = True
-    else:
-        warn(
-            "The clean_periphery argument has been deprecated and will be removed in "
-            "the v2.0.0 release. Future behavior will be as though clean_periphery=True.",
-            stacklevel=2,
-        )
-
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:  # pragma: no cover
@@ -460,73 +400,41 @@ def graph_from_polygon(
         )
         raise TypeError(msg)
 
-    if clean_periphery:
-        # create a new buffered polygon 0.5km around the desired one
-        buffer_dist = 500
-        poly_proj, crs_utm = projection.project_geometry(polygon)
-        poly_proj_buff = poly_proj.buffer(buffer_dist)
-        poly_buff, _ = projection.project_geometry(poly_proj_buff, crs=crs_utm, to_latlong=True)
+    # create a new buffered polygon 0.5km around the desired one
+    buffer_dist = 500
+    poly_proj, crs_utm = projection.project_geometry(polygon)
+    poly_proj_buff = poly_proj.buffer(buffer_dist)
+    poly_buff, _ = projection.project_geometry(poly_proj_buff, crs=crs_utm, to_latlong=True)
 
-        # download the network data from OSM within buffered polygon
-        response_jsons = _overpass._download_overpass_network(
-            poly_buff, network_type, custom_filter
-        )
+    # download the network data from OSM within buffered polygon
+    response_jsons = _overpass._download_overpass_network(poly_buff, network_type, custom_filter)
 
-        # create buffered graph from the downloaded data
-        bidirectional = network_type in settings.bidirectional_network_types
-        G_buff = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
+    # create buffered graph from the downloaded data
+    bidirectional = network_type in settings.bidirectional_network_types
+    G_buff = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
 
-        # truncate buffered graph to the buffered polygon and retain_all for
-        # now. needed because overpass returns entire ways that also include
-        # nodes outside the poly if the way (that is, a way with a single OSM
-        # ID) has a node inside the poly at some point.
-        G_buff = truncate.truncate_graph_polygon(G_buff, poly_buff, True, truncate_by_edge)
+    # truncate buffered graph to the buffered polygon and retain_all for
+    # now. needed because overpass returns entire ways that also include
+    # nodes outside the poly if the way (that is, a way with a single OSM
+    # ID) has a node inside the poly at some point.
+    G_buff = truncate.truncate_graph_polygon(G_buff, poly_buff, True, truncate_by_edge)
 
-        # simplify the graph topology
-        if simplify:
-            G_buff = simplification.simplify_graph(G_buff)
+    # simplify the graph topology
+    if simplify:
+        G_buff = simplification.simplify_graph(G_buff)
 
-        # truncate graph by original polygon to return graph within polygon
-        # caller wants. don't simplify again: this allows us to retain
-        # intersections along the street that may now only connect 2 street
-        # segments in the network, but in reality also connect to an
-        # intersection just outside the polygon
-        G = truncate.truncate_graph_polygon(G_buff, polygon, retain_all, truncate_by_edge)
+    # truncate graph by original polygon to return graph within polygon
+    # caller wants. don't simplify again: this allows us to retain
+    # intersections along the street that may now only connect 2 street
+    # segments in the network, but in reality also connect to an
+    # intersection just outside the polygon
+    G = truncate.truncate_graph_polygon(G_buff, polygon, retain_all, truncate_by_edge)
 
-        # count how many physical streets in buffered graph connect to each
-        # intersection in un-buffered graph, to retain true counts for each
-        # intersection, even if some of its neighbors are outside the polygon
-        spn = stats.count_streets_per_node(G_buff, nodes=G.nodes)
-        nx.set_node_attributes(G, values=spn, name="street_count")
-
-    # if clean_periphery=False, just use the polygon as provided
-    else:
-        # download the network data from OSM
-        response_jsons = _overpass._download_overpass_network(polygon, network_type, custom_filter)
-
-        # create graph from the downloaded data
-        bidirectional = network_type in settings.bidirectional_network_types
-        G = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
-
-        # truncate the graph to the extent of the polygon
-        G = truncate.truncate_graph_polygon(G, polygon, retain_all, truncate_by_edge)
-
-        # simplify the graph topology after truncation. don't truncate after
-        # simplifying or you may have simplified out to an endpoint beyond the
-        # truncation distance, which would strip out the entire edge
-        if simplify:
-            G = simplification.simplify_graph(G)
-
-        # count how many physical streets connect to each intersection/deadend
-        # note this will be somewhat inaccurate due to periphery effects, so
-        # it's best to parameterize function with clean_periphery=True
-        spn = stats.count_streets_per_node(G)
-        nx.set_node_attributes(G, values=spn, name="street_count")
-        warn(
-            "the graph-level street_count attribute will likely be inaccurate "
-            "when you set clean_periphery=False",
-            stacklevel=2,
-        )
+    # count how many physical streets in buffered graph connect to each
+    # intersection in un-buffered graph, to retain true counts for each
+    # intersection, even if some of its neighbors are outside the polygon
+    spn = stats.count_streets_per_node(G_buff, nodes=G.nodes)
+    nx.set_node_attributes(G, values=spn, name="street_count")
 
     utils.log(f"graph_from_polygon returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
     return G

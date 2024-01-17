@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 
 from . import bearing
+from . import geocoder
 from . import graph
 from . import projection
 from . import settings
@@ -519,14 +520,14 @@ def plot_figure_ground(
     # dist multiplier to ensure we get more than enough network. simplify in
     # non-strict mode to not combine multiple street types into single edge
     elif address is not None:
-        G, point = graph.graph_from_address(
+        point = geocoder.geocode(address)
+        G = graph.graph_from_address(
             address,
             dist=dist * multiplier,
             dist_type="bbox",
             network_type=network_type,
             simplify=False,
             truncate_by_edge=True,
-            return_coords=True,
         )
         G = simplification.simplify_graph(G, strict=False)
     elif point is not None:

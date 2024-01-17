@@ -20,7 +20,6 @@ import warnings
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
-from warnings import warn
 
 import geopandas as gpd
 import pandas as pd
@@ -216,8 +215,7 @@ def features_from_address(
 def features_from_place(
     query: str | dict[str, str] | list[str | dict[str, str]],
     tags: dict[str, bool | str | list[str]],
-    which_result: int | None = None,
-    buffer_dist: float | None = None,
+    which_result: int | None | list[int | None] = None,
 ) -> gpd.GeoDataFrame:
     """
     Create GeoDataFrame of OSM features within boundaries of some place(s).
@@ -257,40 +255,26 @@ def features_from_place(
         the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
-    which_result : int
+    which_result : int or list
         which geocoding result to use. if None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one.
-    buffer_dist : float
-        deprecated, do not use
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
     """
-    if buffer_dist is not None:
-        warn(
-            "The buffer_dist argument has been deprecated and will be removed "
-            "in the v2.0.0 release. Buffer your query area directly, if desired.",
-            stacklevel=2,
-        )
-
     # create a GeoDataFrame with the spatial boundaries of the place(s)
-    if isinstance(query, (str, dict)):
-        # if it is a string (place name) or dict (structured place query),
-        # then it is a single place
-        gdf_place = geocoder.geocode_to_gdf(
-            query, which_result=which_result, buffer_dist=buffer_dist
-        )
-    elif isinstance(query, list):
-        # if it is a list, it contains multiple places to get
-        gdf_place = geocoder.geocode_to_gdf(query, buffer_dist=buffer_dist)
+    if isinstance(query, (str, dict, list)):
+        # if string (place name) or dict (structured place query), this is a
+        # single place. if list, it contains multiple places to retrieve.
+        gdf_place = geocoder.geocode_to_gdf(query, which_result=which_result)
     else:  # pragma: no cover
         msg = "query must be dict, string, or list of strings"
         raise TypeError(msg)
 
-    # extract the geometry from the GeoDataFrame to use in API query
+    # extract the geometry from the GeoDataFrame to use in query
     polygon = gdf_place["geometry"].unary_union
-    utils.log("Constructed place geometry polygon(s) to query API")
+    utils.log("Constructed place geometry polygon(s) to query Overpass")
 
     # create GeoDataFrame using this polygon(s) geometry
     return features_from_polygon(polygon, tags)

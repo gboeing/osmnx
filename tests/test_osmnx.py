@@ -85,7 +85,7 @@ def test_exceptions() -> None:
 def test_geocoder() -> None:
     """Test retrieving elements by place name and OSM ID."""
     city = ox.geocode_to_gdf("R2999176", by_osmid=True)
-    city = ox.geocode_to_gdf(place1, which_result=1, buffer_dist=100)
+    city = ox.geocode_to_gdf(place1, which_result=1)
     city = ox.geocode_to_gdf(place2)
     city_projected = ox.project_gdf(city, to_crs="epsg:3395")
 
@@ -358,9 +358,8 @@ def test_find_nearest() -> None:
     # get nearest edge
     _ = ox.distance.nearest_edges(Gp, X, Y, return_dist=False)
     _ = ox.distance.nearest_edges(Gp, X, Y, return_dist=True)
-    ne0 = ox.distance.nearest_edges(Gp, X[0], Y[0], interpolate=None)  # type: ignore[call-overload]
-    ne1 = ox.distance.nearest_edges(Gp, X[0], Y[0], interpolate=50, return_dist=False)  # type: ignore[call-overload]
-    ne2, _ = ox.distance.nearest_edges(G, X[0], Y[0], interpolate=50, return_dist=True)  # type: ignore[call-overload]
+    _ = ox.distance.nearest_edges(Gp, X[0], Y[0], return_dist=False)
+    _ = ox.distance.nearest_edges(Gp, X[0], Y[0], return_dist=True)
 
 
 def test_api_endpoints() -> None:
@@ -544,7 +543,7 @@ def test_graph_from_functions() -> None:
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
 
     # graph from list of places
-    G = ox.graph_from_place([place1], network_type="all", buffer_dist=0, clean_periphery=False)
+    G = ox.graph_from_place([place1], which_result=[None], network_type="all")
 
     # graph from polygon
     G = ox.graph_from_polygon(polygon, network_type="walk", truncate_by_edge=True, simplify=False)
@@ -606,8 +605,8 @@ def test_features() -> None:
         "landuse": ["retail", "commercial"],
         "highway": "bus_stop",
     }
-    gdf = ox.features_from_place(place1, tags=tags2, buffer_dist=0)
-    gdf = ox.features_from_place([place1], tags=tags2)
+    gdf = ox.features_from_place(place1, tags=tags2)
+    gdf = ox.features_from_place([place1], which_result=[None], tags=tags2)
 
     # features_from_polygon
     polygon = ox.geocode_to_gdf(place1).geometry.iloc[0]

@@ -11,13 +11,11 @@ from __future__ import annotations
 import logging as lg
 from collections import OrderedDict
 from typing import Any
-from warnings import warn
 
 import geopandas as gpd
 import pandas as pd
 
 from . import _nominatim
-from . import projection
 from . import settings
 from . import utils
 from ._errors import InsufficientResponseError
@@ -64,7 +62,6 @@ def geocode_to_gdf(
     query: str | dict[str, str] | list[str | dict[str, str]],
     which_result: int | None | list[int | None] = None,
     by_osmid: bool = False,
-    buffer_dist: float | None = None,
 ) -> gpd.GeoDataFrame:
     """
     Retrieve OSM elements by place name or OSM ID with the Nominatim API.
@@ -91,28 +88,19 @@ def geocode_to_gdf(
     ----------
     query : string or dict or list of strings/dicts
         query string(s) or structured dict(s) to geocode
-    which_result : int
+    which_result : int or list
         which search result to return. if None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one. to get
         the top match regardless of geometry type, set which_result=1.
         ignored if by_osmid=True.
     by_osmid : bool
         if True, treat query as an OSM ID lookup rather than text search
-    buffer_dist : float
-        deprecated, do not use
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
         a GeoDataFrame with one row for each query
     """
-    if buffer_dist is not None:
-        warn(
-            "The buffer_dist argument has been deprecated and will be removed "
-            "in the v2.0.0 release. Buffer your results directly, if desired.",
-            stacklevel=2,
-        )
-
     if not isinstance(query, (str, dict, list)):  # pragma: no cover
         msg = "query must be a string, or dict, or list of strings/dicts"
         raise TypeError(msg)
@@ -148,15 +136,6 @@ def geocode_to_gdf(
 
     # reset GeoDataFrame index and set its CRS
     gdf = gdf.reset_index(drop=True).set_crs(settings.default_crs)
-
-    # if buffer_dist was passed in, project the geometry to UTM, buffer it in
-    # meters, then project it back to lat-lon
-    if buffer_dist is not None and len(gdf) > 0:
-        gdf_utm = projection.project_gdf(gdf)
-        gdf_utm["geometry"] = gdf_utm["geometry"].buffer(buffer_dist)
-        gdf = projection.project_gdf(gdf_utm, to_latlong=True)
-        utils.log(f"Buffered GeoDataFrame to {buffer_dist} meters")
-
     utils.log(f"Created GeoDataFrame with {len(gdf)} rows from {len(query_list)} queries")
     return gdf
 
