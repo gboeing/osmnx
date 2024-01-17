@@ -104,10 +104,8 @@ def test_stats() -> None:
     G.add_node(0, x=location_point[1], y=location_point[0], street_count=0)
     _ = ox.bearing.calculate_bearing(0, 0, 1, 1)
     G = ox.add_edge_bearings(G)
-    G = ox.add_edge_bearings(G, precision=2)
     G_proj = ox.project_graph(G)
     G_proj = ox.distance.add_edge_lengths(G_proj, edges=tuple(G_proj.edges)[0:3])
-    G_proj = ox.distance.add_edge_lengths(G_proj, edges=tuple(G_proj.edges)[0:3], precision=2)
 
     # calculate stats
     cspn = ox.stats.count_streets_per_node(G)
@@ -202,13 +200,7 @@ def test_elevation() -> None:
 
     # add node elevations from Google (fails without API key)
     with pytest.raises(ox._errors.InsufficientResponseError):
-        _ = ox.elevation.add_node_elevations_google(
-            G,
-            api_key="",
-            max_locations_per_batch=350,
-            precision=2,
-            url_template=ox.settings.elevation_url_template,
-        )
+        _ = ox.elevation.add_node_elevations_google(G, api_key="", batch_size=350)
 
     # add node elevations from Open Topo Data (works without API key)
     ox.settings.elevation_url_template = (
@@ -230,7 +222,6 @@ def test_elevation() -> None:
 
     # add edge grades and their absolute values
     G = ox.add_edge_grades(G, add_absolute=True)
-    G = ox.add_edge_grades(G, add_absolute=True, precision=2)
 
 
 def test_routing() -> None:
@@ -239,9 +230,8 @@ def test_routing() -> None:
 
     # give each edge speed and travel time attributes
     G = ox.add_edge_speeds(G)
-    G = ox.add_edge_speeds(G, hwy_speeds={"motorway": 100}, precision=2)
+    G = ox.add_edge_speeds(G, hwy_speeds={"motorway": 100})
     G = ox.add_edge_travel_times(G)
-    G = ox.add_edge_travel_times(G, precision=2)
 
     # test value cleaning
     assert ox.speed._clean_maxspeed("100,2") == 100.2
@@ -547,7 +537,7 @@ def test_graph_from_functions() -> None:
 
     # truncate graph by bounding box
     bbox = ox.utils_geo.bbox_from_point(location_point, dist=400)
-    G = ox.truncate.truncate_graph_bbox(G, bbox, min_num=3)
+    G = ox.truncate.truncate_graph_bbox(G, bbox)
     G = ox.utils_graph.get_largest_component(G, strongly=True)
 
     # graph from address

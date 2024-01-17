@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 from typing import Any
 from typing import Callable
-from warnings import warn
 
 import networkx as nx
 import numpy as np
@@ -18,7 +17,6 @@ def add_edge_speeds(
     G: nx.MultiDiGraph,
     hwy_speeds: dict[str, float] | None = None,
     fallback: float | None = None,
-    precision: int | None = None,
     agg: Callable[[Any], Any] = np.mean,
 ) -> nx.MultiDiGraph:
     """
@@ -56,8 +54,6 @@ def add_edge_speeds(
         default speed value (km per hour) to assign to edges whose highway
         type did not appear in `hwy_speeds` and had no preexisting speed
         values on any edge
-    precision : int
-        deprecated, do not use
     agg : function
         aggregation function to impute missing values from observed values.
         the default is numpy.mean, but you might also consider for example
@@ -68,14 +64,6 @@ def add_edge_speeds(
     G : networkx.MultiDiGraph
         graph with speed_kph attributes on all edges
     """
-    if precision is None:
-        precision = 1
-    else:
-        warn(
-            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
-            stacklevel=2,
-        )
-
     if fallback is None:
         fallback = np.nan
 
@@ -129,13 +117,13 @@ def add_edge_speeds(
         raise ValueError(msg)
 
     # add speed kph attribute to graph edges
-    edges["speed_kph"] = speed_kph.round(precision).to_numpy()
+    edges["speed_kph"] = speed_kph.to_numpy()
     nx.set_edge_attributes(G, values=edges["speed_kph"], name="speed_kph")
 
     return G
 
 
-def add_edge_travel_times(G: nx.MultiDiGraph, precision: int | None = None) -> nx.MultiDiGraph:
+def add_edge_travel_times(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     """
     Add edge travel time (seconds) to graph as new `travel_time` edge attributes.
 
@@ -148,22 +136,12 @@ def add_edge_travel_times(G: nx.MultiDiGraph, precision: int | None = None) -> n
     ----------
     G : networkx.MultiDiGraph
         input graph
-    precision : int
-        deprecated, do not use
 
     Returns
     -------
     G : networkx.MultiDiGraph
         graph with travel_time attributes on all edges
     """
-    if precision is None:
-        precision = 1
-    else:
-        warn(
-            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
-            stacklevel=2,
-        )
-
     edges = utils_graph.graph_to_gdfs(G, nodes=False)
 
     # verify edge length and speed_kph attributes exist
@@ -184,7 +162,7 @@ def add_edge_travel_times(G: nx.MultiDiGraph, precision: int | None = None) -> n
     travel_time = distance_km / speed_km_sec
 
     # add travel time attribute to graph edges
-    edges["travel_time"] = travel_time.round(precision).to_numpy()
+    edges["travel_time"] = travel_time.to_numpy()
     nx.set_edge_attributes(G, values=edges["travel_time"], name="travel_time")
 
     return G

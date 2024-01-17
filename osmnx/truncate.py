@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from warnings import warn
-
 import networkx as nx
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
@@ -72,8 +70,6 @@ def truncate_graph_bbox(
     bbox: tuple[float, float, float, float],
     truncate_by_edge: bool = False,
     retain_all: bool = False,
-    quadrat_width: float | None = None,
-    min_num: int | None = None,
 ) -> nx.MultiDiGraph:
     """
     Remove every node in graph that falls outside a bounding box.
@@ -90,10 +86,6 @@ def truncate_graph_bbox(
     retain_all : bool
         if True, return the entire graph even if it is not connected.
         otherwise, retain only the largest weakly connected component.
-    quadrat_width : float
-        deprecated, do not use
-    min_num : int
-        deprecated, do not use
 
     Returns
     -------
@@ -102,14 +94,7 @@ def truncate_graph_bbox(
     """
     # convert bounding box to a polygon, then truncate
     polygon = utils_geo.bbox_to_poly(bbox=bbox)
-    G = truncate_graph_polygon(
-        G,
-        polygon,
-        retain_all=retain_all,
-        truncate_by_edge=truncate_by_edge,
-        quadrat_width=quadrat_width,
-        min_num=min_num,
-    )
+    G = truncate_graph_polygon(G, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
 
     utils.log("Truncated graph by bounding box")
     return G
@@ -120,8 +105,6 @@ def truncate_graph_polygon(
     polygon: Polygon | MultiPolygon,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    quadrat_width: float | None = None,
-    min_num: int | None = None,
 ) -> nx.MultiDiGraph:
     """
     Remove every node in graph that falls outside a (Multi)Polygon.
@@ -138,23 +121,12 @@ def truncate_graph_polygon(
     truncate_by_edge : bool
         if True, retain nodes outside boundary polygon if at least one of
         node's neighbors is within the polygon
-    quadrat_width : float
-        deprecated, do not use
-    min_num : int
-        deprecated, do not use
 
     Returns
     -------
     G : networkx.MultiDiGraph
         the truncated graph
     """
-    if quadrat_width is not None or min_num is not None:
-        warn(
-            "The `quadrat_width` and `min_num` parameters are deprecated and "
-            "will be removed in the v2.0.0 release.",
-            stacklevel=2,
-        )
-
     utils.log("Identifying all nodes that lie outside the polygon...")
 
     # first identify all nodes whose point geometries lie within the polygon

@@ -173,7 +173,6 @@ def euclidean(
 
 def add_edge_lengths(
     G: nx.MultiDiGraph,
-    precision: int | None = None,
     edges: Iterable[tuple[int, int, int]] | None = None,
 ) -> nx.MultiDiGraph:
     """
@@ -199,8 +198,6 @@ def add_edge_lengths(
     ----------
     G : networkx.MultiDiGraph
         unprojected, unsimplified input graph
-    precision : int
-        deprecated, do not use
     edges : iterable of tuples
         iterable of (u, v, k) tuples representing subset of edges to add
         length attributes to. if None, add lengths to all edges.
@@ -210,14 +207,6 @@ def add_edge_lengths(
     G : networkx.MultiDiGraph
         graph with edge length attributes
     """
-    if precision is None:
-        precision = 3
-    else:
-        warn(
-            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
-            stacklevel=2,
-        )
-
     uvk = G.edges if edges is None else edges
 
     # extract edge IDs and corresponding coordinates from their nodes
@@ -233,7 +222,7 @@ def add_edge_lengths(
         raise ValueError(msg) from e
 
     # calculate great circle distances, round, and fill nulls with zeros
-    dists = great_circle(c[:, 0], c[:, 1], c[:, 2], c[:, 3]).round(precision)
+    dists = great_circle(c[:, 0], c[:, 1], c[:, 2], c[:, 3])
     dists[np.isnan(dists)] = 0
     nx.set_edge_attributes(G, values=dict(zip(uvk, dists)), name="length")
 

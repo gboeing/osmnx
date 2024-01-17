@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from typing import overload
-from warnings import warn
 
 import networkx as nx
 import numpy as np
@@ -84,7 +83,7 @@ def calculate_bearing(
     return bearing
 
 
-def add_edge_bearings(G: nx.MultiDiGraph, precision: int | None = None) -> nx.MultiDiGraph:
+def add_edge_bearings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     """
     Add compass `bearing` attributes to all graph edges.
 
@@ -99,22 +98,12 @@ def add_edge_bearings(G: nx.MultiDiGraph, precision: int | None = None) -> nx.Mu
     ----------
     G : networkx.MultiDiGraph
         unprojected graph
-    precision : int
-        deprecated, do not use
 
     Returns
     -------
     G : networkx.MultiDiGraph
         graph with edge bearing attributes
     """
-    if precision is None:
-        precision = 1
-    else:
-        warn(
-            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
-            stacklevel=2,
-        )
-
     if projection.is_projected(G.graph["crs"]):  # pragma: no cover
         msg = "graph must be unprojected to add edge bearings"
         raise ValueError(msg)
@@ -127,7 +116,7 @@ def add_edge_bearings(G: nx.MultiDiGraph, precision: int | None = None) -> nx.Mu
 
     # calculate bearings then set as edge attributes
     bearings = calculate_bearing(coords[:, 0], coords[:, 1], coords[:, 2], coords[:, 3])
-    values = zip(uvk, bearings.round(precision))
+    values = zip(uvk, bearings)
     nx.set_edge_attributes(G, dict(values), name="bearing")
 
     return G
