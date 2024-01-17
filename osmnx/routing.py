@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import itertools
 import multiprocessing as mp
-from collections.abc import Generator
 from collections.abc import Iterable
+from collections.abc import Iterator
 from typing import overload
 from warnings import warn
 
@@ -187,7 +187,7 @@ def shortest_path(
 
 def k_shortest_paths(
     G: nx.MultiDiGraph, orig: int, dest: int, k: int, weight: str = "length"
-) -> Generator[list[int], None, None]:
+) -> Iterator[list[int]]:
     """
     Solve `k` shortest paths from an origin node to a destination node.
 

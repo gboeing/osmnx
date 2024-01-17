@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Iterator
 from typing import Any
 from typing import Literal
 from typing import overload
@@ -55,7 +55,7 @@ def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
     return lines.interpolate(np.random.default_rng().random(n), normalized=True)
 
 
-def interpolate_points(geom: LineString, dist: float) -> Generator[tuple[float, float], None, None]:
+def interpolate_points(geom: LineString, dist: float) -> Iterator[tuple[float, float]]:
     """
     Interpolate evenly spaced points along a LineString.
 
