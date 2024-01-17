@@ -3,6 +3,7 @@
 ## 2.0.0 (Unreleased)
 
 - add type annotations throughout the package for user type hinting and type checking (#1107)
+- remove functionality previously deprecated in v1 (#1113)
 
 ## 1.9.0 (Unreleased)
 
