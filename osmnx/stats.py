@@ -4,10 +4,9 @@ Calculate geometric and topological network measures.
 This module defines streets as the edges in an undirected representation of
 the graph. Using undirected graph edges prevents double-counting bidirectional
 edges of a two-way street, but may double-count a divided road's separate
-centerlines with different end point nodes. If `clean_periphery=True` when the
-graph was created (which is the default parameterization), then you will get
-accurate node degrees (and in turn streets-per-node counts) even at the
-periphery of the graph.
+centerlines with different end point nodes. Due to OSMnx's periphery cleaning
+when the graph was created, you will get accurate node degrees (and in turn
+streets-per-node counts) even at the periphery of the graph.
 
 You can use NetworkX directly for additional topological network measures.
 """

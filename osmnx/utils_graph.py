@@ -274,11 +274,11 @@ def graph_from_gdfs(
     except (AssertionError, ValueError):  # pragma: no cover
         # AssertionError if x/y coords don't match geometry column
         # ValueError if geometry column contains non-point geometry types
-        warn(
-            "discarding the gdf_nodes geometry column, though its "
-            "values differ from the coordinates in the x and y columns",
-            stacklevel=2,
+        msg = (
+            "Discarding the `gdf_nodes` geometry column, though its values "
+            "differ from the coordinates in the x and y columns."
         )
+        warn(msg, stacklevel=2)
     df_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
 
     # create graph and add graph-level attribute dict
@@ -326,52 +326,6 @@ def route_to_gdf(G: nx.MultiDiGraph, route: list[int], weight: str = "length") -
     pairs = zip(route[:-1], route[1:])
     uvk = ((u, v, min(G[u][v].items(), key=lambda i: i[1][weight])[0]) for u, v in pairs)
     return graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
-
-
-def get_route_edge_attributes(  # type: ignore[no-untyped-def]
-    G, route, attribute=None, minimize_key="length", retrieve_default=None
-):
-    """
-    Do not use: deprecated.
-
-    Use the `route_to_gdf` function instead.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        deprecated
-    route : list
-        deprecated
-    attribute : string
-        deprecated
-    minimize_key : string
-        deprecated
-    retrieve_default : function
-        deprecated
-
-    Returns
-    -------
-    attribute_values : list
-        deprecated
-    """
-    warn(
-        "The `get_route_edge_attributes` function has been deprecated and will "
-        "be removed in a future release. Use the `route_to_gdf` function instead.",
-        stacklevel=2,
-    )
-    attribute_values = []
-    for u, v in zip(route[:-1], route[1:]):
-        # if there are parallel edges between two nodes, select the one with the
-        # lowest value of minimize_key
-        data = min(G.get_edge_data(u, v).values(), key=lambda x: x[minimize_key])
-        if attribute is None:
-            attribute_value = data
-        elif retrieve_default is not None:
-            attribute_value = data.get(attribute, retrieve_default(u, v))
-        else:
-            attribute_value = data[attribute]
-        attribute_values.append(attribute_value)
-    return attribute_values
 
 
 def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:

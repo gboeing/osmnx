@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import itertools
 import multiprocessing as mp
-from collections.abc import Generator
 from collections.abc import Iterable
+from collections.abc import Iterator
 from typing import overload
 from warnings import warn
 
@@ -187,7 +187,7 @@ def shortest_path(
 
 def k_shortest_paths(
     G: nx.MultiDiGraph, orig: int, dest: int, k: int, weight: str = "length"
-) -> Generator[list[int], None, None]:
+) -> Iterator[list[int]]:
     """
     Solve `k` shortest paths from an origin node to a destination node.
 
@@ -256,25 +256,25 @@ def _verify_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
     """
     Verify attribute values are numeric and non-null across graph edges.
 
-    Raises a `ValueError` if attribute contains non-numeric values and raises
-    a warning if attribute is missing or null on any edges.
+    Raises a ValueError if this attribute contains non-numeric values, and
+    issues a UserWarning if this attribute is missing or null on any edges.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
     attr : string
-        edge attribute to verify
+        name of the edge attribute to verify
 
     Returns
     -------
     None
     """
     try:
-        values = np.array(tuple(G.edges(data=attr)))[:, 2]
-        values_float = values.astype(float)
+        values_float = (np.array(tuple(G.edges(data=attr)))[:, 2]).astype(float)
         if np.isnan(values_float).any():
-            warn(f"The attribute {attr!r} is missing or null on some edges.", stacklevel=2)
+            msg = f"The attribute {attr!r} is missing or null on some edges."
+            warn(msg, stacklevel=2)
     except ValueError as e:
         msg = f"The edge attribute {attr!r} contains non-numeric values."
         raise ValueError(msg) from e

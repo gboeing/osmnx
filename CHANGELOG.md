@@ -3,11 +3,14 @@
 ## 2.0.0 (Unreleased)
 
 - add type annotations throughout the package for user type hinting and type checking (#1107)
+- remove functionality previously deprecated in v1 (#1113)
 
-## 1.x.x (Unreleased)
+## 1.9.0 (Unreleased)
 
 - fix a bug in the features module's polygon handling (#1104)
 - update obsolete numpy random number generation (#1108)
+- update warning messages to note that deprecated code will be removed in v2.0.0 (#1111)
+- deprecate north, south, east, west arguments throughout package in favor of bbox tuple argument (#1112)
 - deprecate return_coords argument in graph.graph_from_address function (#1105)
 - deprecate return_hex argument in plot.get_colors function (#1109)
 

@@ -8,7 +8,6 @@ from collections.abc import Iterable
 from hashlib import sha1
 from pathlib import Path
 from typing import Any
-from warnings import warn
 
 import networkx as nx
 import numpy as np
@@ -29,9 +28,7 @@ except ImportError:  # pragma: no cover
     rasterio = gdal = None
 
 
-def add_edge_grades(
-    G: nx.MultiDiGraph, add_absolute: bool = True, precision: int | None = None
-) -> nx.MultiDiGraph:
+def add_edge_grades(G: nx.MultiDiGraph, add_absolute: bool = True) -> nx.MultiDiGraph:
     """
     Add `grade` attribute to each graph edge.
 
@@ -48,29 +45,19 @@ def add_edge_grades(
         input graph with `elevation` node attribute
     add_absolute : bool
         if True, also add absolute value of grade as `grade_abs` attribute
-    precision : int
-        deprecated, do not use
 
     Returns
     -------
     G : networkx.MultiDiGraph
         graph with edge `grade` (and optionally `grade_abs`) attributes
     """
-    if precision is None:
-        precision = 3
-    else:
-        warn(
-            "the `precision` parameter is deprecated and will be removed in a future release",
-            stacklevel=2,
-        )
-
     elev_lookup = G.nodes(data="elevation")
     u, v, k, lengths = zip(*G.edges(keys=True, data="length"))
     uvk = tuple(zip(u, v, k))
 
     # calculate edges' elevation changes from u to v then divide by lengths
     elevs = np.array([(elev_lookup[u], elev_lookup[v]) for u, v, k in uvk])
-    grades = ((elevs[:, 1] - elevs[:, 0]) / np.array(lengths)).round(precision)
+    grades = (elevs[:, 1] - elevs[:, 0]) / np.array(lengths)
     nx.set_edge_attributes(G, dict(zip(uvk, grades)), name="grade")
 
     # optionally add grade absolute value to the edge attributes
@@ -174,13 +161,7 @@ def add_node_elevations_raster(
 
 
 def add_node_elevations_google(
-    G: nx.MultiDiGraph,
-    api_key: str | None = None,
-    batch_size: int = 350,
-    pause: float = 0,
-    max_locations_per_batch: int | None = None,
-    precision: int | None = None,
-    url_template: str | None = None,
+    G: nx.MultiDiGraph, api_key: str | None = None, batch_size: int = 350, pause: float = 0
 ) -> nx.MultiDiGraph:
     """
     Add an `elevation` (meters) attribute to each node using a web service.
@@ -206,62 +187,29 @@ def add_node_elevations_google(
     pause : float
         time to pause between API calls, which can be increased if you get
         rate limited
-    max_locations_per_batch : int
-        deprecated, do not use
-    precision : int
-        deprecated, do not use
-    url_template : string
-        deprecated, do not use
 
     Returns
     -------
     G : networkx.MultiDiGraph
         graph with node elevation attributes
     """
-    if max_locations_per_batch is None:
-        max_locations_per_batch = batch_size
-    else:
-        warn(
-            "the `max_locations_per_batch` parameter is deprecated and will be "
-            "removed in a future release, use the `batch_size` parameter instead",
-            stacklevel=2,
-        )
-
-    if precision is None:
-        precision = 3
-    else:
-        warn(
-            "the `precision` parameter is deprecated and will be removed in a future release",
-            stacklevel=2,
-        )
-
-    if url_template is None:
-        url_template = settings.elevation_url_template
-    else:
-        warn(
-            "the `url_template` parameter is deprecated and will be removed "
-            "in a future release, configure the `settings` module's "
-            "`elevation_url_template` instead",
-            stacklevel=2,
-        )
-
     # make a pandas series of all the nodes' coordinates as 'lat,lon'
     # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
     # in more locations per API call
     node_points = pd.Series(
         {node: f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)}
     )
-    n_calls = int(np.ceil(len(node_points) / max_locations_per_batch))
-    domain = _downloader._hostname_from_url(url_template)
+    n_calls = int(np.ceil(len(node_points) / batch_size))
+    domain = _downloader._hostname_from_url(settings.elevation_url_template)
     utils.log(f"Requesting node elevations from {domain!r} in {n_calls} request(s)")
 
-    # break the series of coordinates into chunks of max_locations_per_batch
+    # break the series of coordinates into chunks of batch_size
     # API format is locations=lat,lon|lat,lon|lat,lon|lat,lon...
     results = []
-    for i in range(0, len(node_points), max_locations_per_batch):
-        chunk = node_points.iloc[i : i + max_locations_per_batch]
+    for i in range(0, len(node_points), batch_size):
+        chunk = node_points.iloc[i : i + batch_size]
         locations = "|".join(chunk)
-        url = url_template.format(locations=locations, key=api_key)
+        url = settings.elevation_url_template.format(locations=locations, key=api_key)
 
         # download and append these elevation results to list of all results
         response_json = _elevation_request(url, pause)
@@ -280,7 +228,6 @@ def add_node_elevations_google(
     # add elevation as an attribute to the nodes
     df_elev = pd.DataFrame(node_points, columns=["node_points"])
     df_elev["elevation"] = [result["elevation"] for result in results]
-    df_elev["elevation"] = df_elev["elevation"].round(precision)
     nx.set_node_attributes(G, name="elevation", values=df_elev["elevation"].to_dict())
     utils.log(f"Added elevation data from {domain!r} to all nodes.")
 

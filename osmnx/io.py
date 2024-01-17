@@ -6,14 +6,13 @@ import ast
 import contextlib
 from pathlib import Path
 from typing import Any
-from warnings import warn
 
 import geopandas as gpd
 import networkx as nx
 import pandas as pd
 from shapely import wkt
 
-from . import osm_xml
+from . import _osm_xml
 from . import settings
 from . import utils
 from . import utils_graph
@@ -64,64 +63,6 @@ def save_graph_geopackage(
     gdf_nodes.to_file(filepath, layer="nodes", driver="GPKG", index=True, encoding=encoding)
     gdf_edges.to_file(filepath, layer="edges", driver="GPKG", index=True, encoding=encoding)
     utils.log(f"Saved graph as GeoPackage at {filepath!r}")
-
-
-def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):  # type: ignore[no-untyped-def]
-    """
-    Do not use: deprecated. Use the save_graph_geopackage function instead.
-
-    The Shapefile format is proprietary and outdated. Instead, use the
-    superior GeoPackage file format via the save_graph_geopackage function.
-    See http://switchfromshapefile.org/ for more information.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    filepath : string or pathlib.Path
-        path to the shapefiles folder (no file extension). if None, use
-        default data folder + graph_shapefile
-    encoding : string
-        the character encoding for the saved files
-    directed : bool
-        if False, save one edge for each undirected edge in the graph but
-        retain original oneway and to/from information as edge attributes; if
-        True, save one edge for each directed edge in the graph
-
-    Returns
-    -------
-    None
-    """
-    warn(
-        "The `save_graph_shapefile` function is deprecated and will be removed "
-        "in a future release. Instead, use the `save_graph_geopackage` function "
-        "to save graphs as GeoPackage files for subsequent GIS analysis.",
-        stacklevel=2,
-    )
-
-    # default filepath if none was provided
-    filepath = (
-        Path(settings.data_folder) / "graph_shapefile" if filepath is None else Path(filepath)
-    )
-
-    # if save folder does not already exist, create it (shapefiles
-    # get saved as set of files)
-    filepath.mkdir(parents=True, exist_ok=True)
-    filepath_nodes = filepath / "nodes.shp"
-    filepath_edges = filepath / "edges.shp"
-
-    # convert graph to gdfs and stringify non-numeric columns
-    if directed:
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
-    else:
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
-    gdf_nodes = _stringify_nonnumeric_cols(gdf_nodes)
-    gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
-
-    # save the nodes and edges as separate ESRI shapefiles
-    gdf_nodes.to_file(filepath_nodes, driver="ESRI Shapefile", index=True, encoding=encoding)
-    gdf_edges.to_file(filepath_edges, driver="ESRI Shapefile", index=True, encoding=encoding)
-    utils.log(f"Saved graph as shapefiles at {filepath!r}")
 
 
 def save_graphml(
@@ -376,7 +317,7 @@ def save_graph_xml(
     -------
     None
     """
-    osm_xml._save_graph_xml(
+    _osm_xml._save_graph_xml(
         data,
         filepath,
         node_tags,

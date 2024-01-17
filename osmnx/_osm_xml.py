@@ -96,90 +96,20 @@ def _overpass_json_from_file(filepath: str | Path, encoding: str) -> dict[str, A
     with _opener(Path(filepath), encoding) as f:
         root_attrs = ET.parse(f).getroot().attrib
         if "generator" in root_attrs and "OSMnx" in root_attrs["generator"]:
-            warn(
+            msg = (
                 "The XML file you are loading appears to have been generated "
                 "by OSMnx: this use case is not supported and may not behave "
                 "as expected. To save/load graphs to/from disk for later use "
                 "in OSMnx, use the `io.save_graphml` and `io.load_graphml` "
-                "functions instead. Refer to the documentation for details.",
-                stacklevel=2,
+                "functions instead. Refer to the documentation for details."
             )
+            warn(msg, stacklevel=2)
 
     # parse the XML to Overpass-like JSON
     with _opener(Path(filepath), encoding) as f:
         handler = _OSMContentHandler()
         xml.sax.parse(f, handler)
         return handler.object
-
-
-def save_graph_xml(  # type: ignore[no-untyped-def]
-    data,
-    filepath=None,
-    node_tags=settings.osm_xml_node_tags,
-    node_attrs=settings.osm_xml_node_attrs,
-    edge_tags=settings.osm_xml_way_tags,
-    edge_attrs=settings.osm_xml_way_attrs,
-    oneway=False,
-    merge_edges=True,
-    edge_tag_aggs=None,
-    api_version="0.6",
-    precision=6,
-):
-    """
-    Do not use: deprecated.
-
-    The `save_graph_xml` has moved from the `osm_xml` module to the `io`
-    module. `osm_xml.save_graph_xml` has been deprecated and will be removed
-    in a future release. Access the function via the `io` module instead.
-
-    Parameters
-    ----------
-    data : networkx.multidigraph
-        do not use, deprecated
-    filepath : string or pathlib.Path
-        do not use, deprecated
-    node_tags : list
-        do not use, deprecated
-    node_attrs: list
-        do not use, deprecated
-    edge_tags : list
-        do not use, deprecated
-    edge_attrs : list
-        do not use, deprecated
-    oneway : bool
-        do not use, deprecated
-    merge_edges : bool
-        do not use, deprecated
-    edge_tag_aggs : list of length-2 string tuples
-        do not use, deprecated
-    api_version : str
-        do not use, deprecated
-    precision : int
-        do not use, deprecated
-
-    Returns
-    -------
-    None
-    """
-    warn(
-        "The save_graph_xml function has moved from the osm_xml module to the io module. "
-        " osm_xml.save_graph_xml has been deprecated and will be removed in a "
-        " future release. Access the function via the io module instead.",
-        stacklevel=2,
-    )
-    _save_graph_xml(
-        data,
-        filepath,
-        node_tags,
-        node_attrs,
-        edge_tags,
-        edge_attrs,
-        oneway,
-        merge_edges,
-        edge_tag_aggs,
-        api_version,
-        precision,
-    )
 
 
 def _save_graph_xml(
@@ -244,12 +174,12 @@ def _save_graph_xml(
     # if save folder does not already exist, create it
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
-    if not settings.all_oneway:  # pragma: no cover
-        warn(
+    if not settings.all_oneway:
+        msg = (
             "For the `save_graph_xml` function to behave properly, the graph "
-            "must have been created with `ox.settings.all_oneway=True`.",
-            stacklevel=2,
+            "must have been created with `ox.settings.all_oneway=True`."
         )
+        warn(msg, stacklevel=2)
 
     if isinstance(data, nx.MultiDiGraph):
         gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(

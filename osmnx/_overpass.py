@@ -6,7 +6,7 @@ import datetime as dt
 import logging as lg
 import time
 from collections import OrderedDict
-from collections.abc import Generator
+from collections.abc import Iterator
 from typing import Any
 
 import numpy as np
@@ -148,9 +148,9 @@ def _get_overpass_pause(
         )
         status = response.text.split("\n")[4]
         status_first_token = status.split(" ")[0]
-    except ConnectionError:  # pragma: no cover
+    except ConnectionError as ce:  # pragma: no cover
         # cannot reach status endpoint, log error and return default duration
-        utils.log(f"Unable to query {url}, got status {response.status_code}", level=lg.ERROR)
+        utils.log(f"Unable to query {url}, {ce}", level=lg.ERROR)
         return default_duration
     except (AttributeError, IndexError, ValueError):  # pragma: no cover
         # cannot parse output, log error and return default duration
@@ -305,7 +305,7 @@ def _create_overpass_query(polygon_coord_str: str, tags: dict[str, bool | str | 
 
 def _download_overpass_network(
     polygon: Polygon | MultiPolygon, network_type: str, custom_filter: str | None
-) -> Generator[dict[str, Any], None, None]:
+) -> Iterator[dict[str, Any]]:
     """
     Retrieve networked ways and nodes within boundary from the Overpass API.
 
@@ -343,7 +343,7 @@ def _download_overpass_network(
 
 def _download_overpass_features(
     polygon: Polygon, tags: dict[str, bool | str | list[str]]
-) -> Generator[dict[str, Any], None, None]:
+) -> Iterator[dict[str, Any]]:
     """
     Retrieve OSM features within some boundary polygon from the Overpass API.
 

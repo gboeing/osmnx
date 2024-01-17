@@ -59,26 +59,10 @@ osmnx.features module
     :private-members:
     :noindex:
 
-osmnx.folium module
--------------------
-
-.. automodule:: osmnx.folium
-    :members:
-    :private-members:
-    :noindex:
-
 osmnx.geocoder module
 ---------------------
 
 .. automodule:: osmnx.geocoder
-    :members:
-    :private-members:
-    :noindex:
-
-osmnx.geometries module
------------------------
-
-.. automodule:: osmnx.geometries
     :members:
     :private-members:
     :noindex:
@@ -107,10 +91,10 @@ osmnx._nominatim module
     :private-members:
     :noindex:
 
-osmnx.osm_xml module
---------------------
+osmnx._osm_xml module
+---------------------
 
-.. automodule:: osmnx.osm_xml
+.. automodule:: osmnx._osm_xml
     :members:
     :private-members:
     :noindex:

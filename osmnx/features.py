@@ -20,7 +20,6 @@ import warnings
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
-from warnings import warn
 
 import geopandas as gpd
 import pandas as pd
@@ -33,9 +32,9 @@ from shapely.geometry import Polygon
 from shapely.ops import linemerge
 from shapely.ops import polygonize
 
+from . import _osm_xml
 from . import _overpass
 from . import geocoder
-from . import osm_xml
 from . import settings
 from . import utils
 from . import utils_geo
@@ -85,7 +84,8 @@ _POLYGON_FEATURES: dict[str, dict[str, str | list[str]]] = {
 
 
 def features_from_bbox(
-    north: float, south: float, east: float, west: float, tags: dict[str, bool | str | list[str]]
+    bbox: tuple[float, float, float, float],
+    tags: dict[str, bool | str | list[str]],
 ) -> gpd.GeoDataFrame:
     """
     Create a GeoDataFrame of OSM features within a N, S, E, W bounding box.
@@ -98,14 +98,8 @@ def features_from_bbox(
 
     Parameters
     ----------
-    north : float
-        northern latitude of bounding box
-    south : float
-        southern latitude of bounding box
-    east : float
-        eastern longitude of bounding box
-    west : float
-        western longitude of bounding box
+    bbox : tuple of floats
+        bounding box as (north, south, east, west)
     tags : dict
         Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -124,7 +118,7 @@ def features_from_bbox(
     gdf : geopandas.GeoDataFrame
     """
     # convert bounding box to a polygon
-    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    polygon = utils_geo.bbox_to_poly(bbox=bbox)
 
     # create GeoDataFrame of features within this polygon
     return features_from_polygon(polygon, tags)
@@ -166,10 +160,10 @@ def features_from_point(
     gdf : geopandas.GeoDataFrame
     """
     # create bounding box from center point and distance in each direction
-    north, south, east, west = utils_geo.bbox_from_point(center_point, dist)
+    bbox = utils_geo.bbox_from_point(center_point, dist)
 
     # convert the bounding box to a polygon
-    polygon = utils_geo.bbox_to_poly(north, south, east, west)
+    polygon = utils_geo.bbox_to_poly(bbox=bbox)
 
     # create GeoDataFrame of features within this polygon
     return features_from_polygon(polygon, tags)
@@ -221,8 +215,7 @@ def features_from_address(
 def features_from_place(
     query: str | dict[str, str] | list[str | dict[str, str]],
     tags: dict[str, bool | str | list[str]],
-    which_result: int | None = None,
-    buffer_dist: float | None = None,
+    which_result: int | None | list[int | None] = None,
 ) -> gpd.GeoDataFrame:
     """
     Create GeoDataFrame of OSM features within boundaries of some place(s).
@@ -262,40 +255,26 @@ def features_from_place(
         the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
-    which_result : int
+    which_result : int or list
         which geocoding result to use. if None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one.
-    buffer_dist : float
-        deprecated, do not use
 
     Returns
     -------
     gdf : geopandas.GeoDataFrame
     """
-    if buffer_dist is not None:
-        warn(
-            "The buffer_dist argument has been deprecated and will be removed "
-            "in a future release. Buffer your query area directly, if desired.",
-            stacklevel=2,
-        )
-
     # create a GeoDataFrame with the spatial boundaries of the place(s)
-    if isinstance(query, (str, dict)):
-        # if it is a string (place name) or dict (structured place query),
-        # then it is a single place
-        gdf_place = geocoder.geocode_to_gdf(
-            query, which_result=which_result, buffer_dist=buffer_dist
-        )
-    elif isinstance(query, list):
-        # if it is a list, it contains multiple places to get
-        gdf_place = geocoder.geocode_to_gdf(query, buffer_dist=buffer_dist)
+    if isinstance(query, (str, dict, list)):
+        # if string (place name) or dict (structured place query), this is a
+        # single place. if list, it contains multiple places to retrieve.
+        gdf_place = geocoder.geocode_to_gdf(query, which_result=which_result)
     else:  # pragma: no cover
         msg = "query must be dict, string, or list of strings"
         raise TypeError(msg)
 
-    # extract the geometry from the GeoDataFrame to use in API query
+    # extract the geometry from the GeoDataFrame to use in query
     polygon = gdf_place["geometry"].unary_union
-    utils.log("Constructed place geometry polygon(s) to query API")
+    utils.log("Constructed place geometry polygon(s) to query Overpass")
 
     # create GeoDataFrame using this polygon(s) geometry
     return features_from_polygon(polygon, tags)
@@ -398,7 +377,7 @@ def features_from_xml(
     gdf : geopandas.GeoDataFrame
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [osm_xml._overpass_json_from_file(filepath, encoding)]
+    response_jsons = [_osm_xml._overpass_json_from_file(filepath, encoding)]
 
     # create GeoDataFrame using this response JSON
     return _create_gdf(response_jsons, polygon=polygon, tags=tags)

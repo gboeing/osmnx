@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Iterator
 from typing import Any
 from typing import Literal
 from typing import overload
@@ -12,10 +12,7 @@ import geopandas as gpd
 import networkx as nx
 import numpy as np
 from shapely.geometry import LineString
-from shapely.geometry import MultiLineString
-from shapely.geometry import MultiPoint
 from shapely.geometry import MultiPolygon
-from shapely.geometry import Point
 from shapely.geometry import Polygon
 from shapely.ops import split
 
@@ -50,7 +47,8 @@ def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
         which each point was drawn
     """
     if nx.is_directed(G):  # pragma: no cover
-        warn("graph should be undirected to avoid oversampling bidirectional edges", stacklevel=2)
+        msg = "`G` should be undirected to avoid oversampling bidirectional edges."
+        warn(msg, stacklevel=2)
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
     weights = gdf_edges["length"] / gdf_edges["length"].sum()
     idx = np.random.default_rng().choice(gdf_edges.index, size=n, p=weights)
@@ -58,7 +56,7 @@ def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
     return lines.interpolate(np.random.default_rng().random(n), normalized=True)
 
 
-def interpolate_points(geom: LineString, dist: float) -> Generator[tuple[float, float], None, None]:
+def interpolate_points(geom: LineString, dist: float) -> Iterator[tuple[float, float]]:
     """
     Interpolate evenly spaced points along a LineString.
 
@@ -86,165 +84,6 @@ def interpolate_points(geom: LineString, dist: float) -> Generator[tuple[float, 
     else:  # pragma: no cover
         msg = f"unhandled geometry type {geom.geom_type}"
         raise TypeError(msg)
-
-
-def _round_polygon_coords(p, precision):  # type: ignore[no-untyped-def]
-    """
-    Round the coordinates of a shapely Polygon to some decimal precision.
-
-    Parameters
-    ----------
-    p : shapely.geometry.Polygon
-        the polygon to round the coordinates of
-    precision : int
-        decimal precision to round coordinates to
-
-    Returns
-    -------
-    shapely.geometry.Polygon
-    """
-    # round coords of Polygon exterior
-    shell = [[round(x, precision) for x in c] for c in p.exterior.coords]
-
-    # round coords of (possibly multiple, possibly none) Polygon interior(s)
-    holes = [[[round(x, precision) for x in c] for c in i.coords] for i in p.interiors]
-
-    # construct new Polygon with rounded coordinates and buffer by zero to
-    # clean self-touching or self-crossing polygons
-    return Polygon(shell=shell, holes=holes).buffer(0)
-
-
-def _round_multipolygon_coords(mp, precision):  # type: ignore[no-untyped-def]
-    """
-    Round the coordinates of a shapely MultiPolygon to some decimal precision.
-
-    Parameters
-    ----------
-    mp : shapely.geometry.MultiPolygon
-        the MultiPolygon to round the coordinates of
-    precision : int
-        decimal precision to round coordinates to
-
-    Returns
-    -------
-    shapely.geometry.MultiPolygon
-    """
-    return MultiPolygon([_round_polygon_coords(p, precision) for p in mp.geoms])  # type: ignore[no-untyped-call]
-
-
-def _round_point_coords(pt, precision):  # type: ignore[no-untyped-def]
-    """
-    Round the coordinates of a shapely Point to some decimal precision.
-
-    Parameters
-    ----------
-    pt : shapely.geometry.Point
-        the Point to round the coordinates of
-    precision : int
-        decimal precision to round coordinates to
-
-    Returns
-    -------
-    shapely.geometry.Point
-    """
-    return Point([round(x, precision) for x in pt.coords[0]])
-
-
-def _round_multipoint_coords(mpt, precision):  # type: ignore[no-untyped-def]
-    """
-    Round the coordinates of a shapely MultiPoint to some decimal precision.
-
-    Parameters
-    ----------
-    mpt : shapely.geometry.MultiPoint
-        the MultiPoint to round the coordinates of
-    precision : int
-        decimal precision to round coordinates to
-
-    Returns
-    -------
-    shapely.geometry.MultiPoint
-    """
-    return MultiPoint([_round_point_coords(pt, precision) for pt in mpt.geoms])  # type: ignore[no-untyped-call]
-
-
-def _round_linestring_coords(ls, precision):  # type: ignore[no-untyped-def]
-    """
-    Round the coordinates of a shapely LineString to some decimal precision.
-
-    Parameters
-    ----------
-    ls : shapely.geometry.LineString
-        the LineString to round the coordinates of
-    precision : int
-        decimal precision to round coordinates to
-
-    Returns
-    -------
-    shapely.geometry.LineString
-    """
-    return LineString([[round(x, precision) for x in c] for c in ls.coords])
-
-
-def _round_multilinestring_coords(mls, precision):  # type: ignore[no-untyped-def]
-    """
-    Round the coordinates of a shapely MultiLineString to some decimal precision.
-
-    Parameters
-    ----------
-    mls : shapely.geometry.MultiLineString
-        the MultiLineString to round the coordinates of
-    precision : int
-        decimal precision to round coordinates to
-
-    Returns
-    -------
-    shapely.geometry.MultiLineString
-    """
-    return MultiLineString([_round_linestring_coords(ls, precision) for ls in mls.geoms])  # type: ignore[no-untyped-call]
-
-
-def round_geometry_coords(geom, precision):  # type: ignore[no-untyped-def]
-    """
-    Do not use: deprecated.
-
-    Parameters
-    ----------
-    geom : shapely.geometry.geometry {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon}
-        deprecated, do not use
-    precision : int
-        deprecated, do not use
-
-    Returns
-    -------
-    shapely.geometry.geometry
-    """
-    warn(
-        "the `round_geometry_coords` function is deprecated and will be removed in a future release",
-        stacklevel=2,
-    )
-
-    if isinstance(geom, Point):
-        return _round_point_coords(geom, precision)  # type: ignore[no-untyped-call]
-
-    if isinstance(geom, MultiPoint):
-        return _round_multipoint_coords(geom, precision)  # type: ignore[no-untyped-call]
-
-    if isinstance(geom, LineString):
-        return _round_linestring_coords(geom, precision)  # type: ignore[no-untyped-call]
-
-    if isinstance(geom, MultiLineString):
-        return _round_multilinestring_coords(geom, precision)  # type: ignore[no-untyped-call]
-
-    if isinstance(geom, Polygon):
-        return _round_polygon_coords(geom, precision)  # type: ignore[no-untyped-call]
-
-    if isinstance(geom, MultiPolygon):
-        return _round_multipolygon_coords(geom, precision)  # type: ignore[no-untyped-call]
-
-    # otherwise
-    msg = f"cannot round coordinates of unhandled geometry type: {type(geom)}"
-    raise TypeError(msg)
 
 
 def _consolidate_subdivide_geometry(geometry: Polygon | MultiPolygon) -> MultiPolygon:
@@ -428,7 +267,7 @@ def bbox_from_point(
 @overload  # pragma: no cover
 def bbox_from_point(
     point: tuple[float, float], *, project_utm: Literal[True], return_crs: Literal[True]
-) -> tuple[float, float, float, float, Any]:
+) -> tuple[tuple[float, float, float, float], Any]:
     ...
 
 
@@ -498,7 +337,7 @@ def bbox_from_point(
 @overload  # pragma: no cover
 def bbox_from_point(
     point: tuple[float, float], dist: float, project_utm: Literal[True], return_crs: Literal[True]
-) -> tuple[float, float, float, float, Any]:
+) -> tuple[tuple[float, float, float, float], Any]:
     ...
 
 
@@ -539,7 +378,7 @@ def bbox_from_point(
     dist: float = 1000,
     project_utm: bool = False,
     return_crs: bool = False,
-) -> tuple[float, float, float, float] | tuple[float, float, float, float, Any]:
+) -> tuple[float, float, float, float] | tuple[tuple[float, float, float, float], Any]:
     """
     Create a bounding box around a (lat, lon) point.
 
@@ -559,8 +398,8 @@ def bbox_from_point(
 
     Returns
     -------
-    tuple
-        (north, south, east, west) or (north, south, east, west, crs_proj)
+    bbox or bbox, crs: tuple or tuple, crs
+        (north, south, east, west) or ((north, south, east, west), crs)
     """
     EARTH_RADIUS_M = 6_371_009  # meters
     lat, lon = point
@@ -573,36 +412,31 @@ def bbox_from_point(
     west = lon - delta_lon
 
     if project_utm:
-        bbox_poly = bbox_to_poly(north, south, east, west)
+        bbox_poly = bbox_to_poly(bbox=(north, south, east, west))
         bbox_proj, crs_proj = projection.project_geometry(bbox_poly)
         west, south, east, north = bbox_proj.bounds
 
     utils.log(f"Created bbox {dist} m from {point}: {north},{south},{east},{west}")
 
     if project_utm and return_crs:
-        return north, south, east, west, crs_proj
+        return (north, south, east, west), crs_proj
 
     # otherwise
     return north, south, east, west
 
 
-def bbox_to_poly(north: float, south: float, east: float, west: float) -> Polygon:
+def bbox_to_poly(bbox: tuple[float, float, float, float]) -> Polygon:
     """
     Convert bounding box coordinates to shapely Polygon.
 
     Parameters
     ----------
-    north : float
-        northern coordinate
-    south : float
-        southern coordinate
-    east : float
-        eastern coordinate
-    west : float
-        western coordinate
+    bbox : tuple of floats
+        bounding box as (north, south, east, west)
 
     Returns
     -------
     shapely.geometry.Polygon
     """
+    north, south, east, west = bbox
     return Polygon([(west, south), (east, south), (east, north), (west, north)])

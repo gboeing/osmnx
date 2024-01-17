@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging as lg
-from collections.abc import Generator
+from collections.abc import Iterator
 from typing import Any
 
 import geopandas as gpd
@@ -157,9 +157,7 @@ def _build_path(
     return path
 
 
-def _get_paths_to_simplify(
-    G: nx.MultiDiGraph, strict: bool = True
-) -> Generator[list[int], None, None]:
+def _get_paths_to_simplify(G: nx.MultiDiGraph, strict: bool = True) -> Iterator[list[int]]:
     """
     Generate all the paths to be simplified between endpoint nodes.
 

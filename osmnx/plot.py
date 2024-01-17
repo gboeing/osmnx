@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any
 from typing import Literal
 from typing import overload
-from warnings import warn
 
 import geopandas as gpd
 import networkx as nx
@@ -16,6 +15,7 @@ import numpy as np
 import pandas as pd
 
 from . import bearing
+from . import geocoder
 from . import graph
 from . import projection
 from . import settings
@@ -43,8 +43,7 @@ def get_colors(
     start: float = 0,
     stop: float = 1,
     alpha: float | None = None,
-    return_hex: bool | None = None,
-) -> list[str | tuple[float, float, float, float]]:
+) -> list[str]:
     """
     Get `n` evenly-spaced colors from a matplotlib colormap.
 
@@ -55,41 +54,23 @@ def get_colors(
     cmap : string
         name of a matplotlib colormap
     start : float
-        where to start in the colorspace
+        where to start in the colorspace (0 to 1)
     stop : float
-        where to end in the colorspace
+        where to end in the colorspace (0 to 1)
     alpha : float
         If `None`, return colors as HTML-like hex triplet "#rrggbb" RGB
         strings. If `float`, return as "#rrggbbaa" RGBa strings.
-    return_hex : bool
-        deprecated, do not use
 
     Returns
     -------
     color_list : list
     """
-    if return_hex is None:
-        return_hex = False
-    else:
-        warn(
-            "The `return_hex` parameter has been deprecated and will be removed "
-            "in the v2.0.0 release.",
-            stacklevel=2,
-        )
-
     _verify_mpl()
-
-    color_list = [colormaps[cmap](x) for x in np.linspace(start, stop, n)]
+    color_gen = (colormaps[cmap](x) for x in np.linspace(start, stop, n))
     keep_alpha = alpha is not None
     if keep_alpha:
-        color_list = [(r, g, b, alpha) for r, g, b, _ in color_list]
-    else:
-        color_list = [(r, g, b) for r, g, b, _ in color_list]
-
-    if return_hex:
-        return [colors.to_hex(c, keep_alpha=keep_alpha) for c in color_list]
-
-    return color_list
+        color_gen = ((r, g, b, alpha) for r, g, b, _ in color_gen)
+    return [colors.to_hex(c, keep_alpha=keep_alpha) for c in color_gen]
 
 
 def get_node_colors_by_attr(
@@ -539,14 +520,14 @@ def plot_figure_ground(
     # dist multiplier to ensure we get more than enough network. simplify in
     # non-strict mode to not combine multiple street types into single edge
     elif address is not None:
-        G, point = graph.graph_from_address(
+        point = geocoder.geocode(address)
+        G = graph.graph_from_address(
             address,
             dist=dist * multiplier,
             dist_type="bbox",
             network_type=network_type,
             simplify=False,
             truncate_by_edge=True,
-            return_coords=True,
         )
         G = simplification.simplify_graph(G, strict=False)
     elif point is not None:
@@ -723,7 +704,7 @@ def plot_orientation(
     title_y: float = 1.05,
     title_font: dict[str, Any] | None = None,
     xtick_font: dict[str, Any] | None = None,
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, PolarAxes]:
     """
     Plot a polar histogram of a spatial network's bidirectional edge bearings.
 
@@ -898,7 +879,7 @@ def _get_colors_by_value(
             bins = pd.qcut(vals, num_bins, labels=range(num_bins))
         else:
             bins = pd.cut(vals, num_bins, labels=range(num_bins))
-        bin_colors = get_colors(num_bins, cmap, start, stop, return_hex=True)
+        bin_colors = get_colors(num_bins, cmap, start, stop)
         color_list = [bin_colors[b] if pd.notna(b) else na_color for b in bins]
         color_series = pd.Series(color_list, index=bins.index)
 

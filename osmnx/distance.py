@@ -5,19 +5,15 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Literal
 from typing import overload
-from warnings import warn
 
 import networkx as nx
 import numpy as np
-import pandas as pd
 from numpy.typing import NDArray
 from shapely.geometry import Point
 from shapely.strtree import STRtree
 
 from . import projection
-from . import routing
 from . import utils
-from . import utils_geo
 from . import utils_graph
 
 # scipy is optional dependency for projected nearest-neighbor search
@@ -172,75 +168,8 @@ def euclidean(
     return dist
 
 
-def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):  # type: ignore[no-untyped-def]
-    """
-    Do not use, deprecated.
-
-    The `great_circle_vec` function has been renamed `great_circle`. Calling
-    `great_circle_vec` will raise an error in a future release.
-
-    Parameters
-    ----------
-    lat1 : float or numpy.array of float
-        first point's latitude coordinate
-    lng1 : float or numpy.array of float
-        first point's longitude coordinate
-    lat2 : float or numpy.array of float
-        second point's latitude coordinate
-    lng2 : float or numpy.array of float
-        second point's longitude coordinate
-    earth_radius : float
-        earth's radius in units in which distance will be returned (default is
-        meters)
-
-    Returns
-    -------
-    dist : float or numpy.array of float
-        distance from each (lat1, lng1) to each (lat2, lng2) in units of
-        earth_radius
-    """
-    warn(
-        "The `great_circle_vec` function has been renamed `great_circle`. Calling "
-        "`great_circle_vec` will raise an error in a future release.",
-        stacklevel=2,
-    )
-    return great_circle(lat1, lng1, lat2, lng2, earth_radius)
-
-
-def euclidean_dist_vec(y1, x1, y2, x2):  # type: ignore[no-untyped-def]
-    """
-    Do not use, deprecated.
-
-    The `euclidean_dist_vec` function has been renamed `euclidean`. Calling
-    `euclidean_dist_vec` will raise an error in a future release.
-
-    Parameters
-    ----------
-    y1 : float or numpy.array of float
-        first point's y coordinate
-    x1 : float or numpy.array of float
-        first point's x coordinate
-    y2 : float or numpy.array of float
-        second point's y coordinate
-    x2 : float or numpy.array of float
-        second point's x coordinate
-
-    Returns
-    -------
-    dist : float or numpy.array of float
-        distance from each (x1, y1) to each (x2, y2) in coordinates' units
-    """
-    warn(
-        "The `euclidean_dist_vec` function has been renamed `euclidean`. Calling "
-        "`euclidean_dist_vec` will raise an error in a future release.",
-        stacklevel=2,
-    )
-    return euclidean(y1, x1, y2, x2)
-
-
 def add_edge_lengths(
     G: nx.MultiDiGraph,
-    precision: int | None = None,
     edges: Iterable[tuple[int, int, int]] | None = None,
 ) -> nx.MultiDiGraph:
     """
@@ -266,8 +195,6 @@ def add_edge_lengths(
     ----------
     G : networkx.MultiDiGraph
         unprojected, unsimplified input graph
-    precision : int
-        deprecated, do not use
     edges : iterable of tuples
         iterable of (u, v, k) tuples representing subset of edges to add
         length attributes to. if None, add lengths to all edges.
@@ -277,14 +204,6 @@ def add_edge_lengths(
     G : networkx.MultiDiGraph
         graph with edge length attributes
     """
-    if precision is None:
-        precision = 3
-    else:
-        warn(
-            "the `precision` parameter is deprecated and will be removed in a future release",
-            stacklevel=2,
-        )
-
     uvk = G.edges if edges is None else edges
 
     # extract edge IDs and corresponding coordinates from their nodes
@@ -300,7 +219,7 @@ def add_edge_lengths(
         raise ValueError(msg) from e
 
     # calculate great circle distances, round, and fill nulls with zeros
-    dists = great_circle(c[:, 0], c[:, 1], c[:, 2], c[:, 3]).round(precision)
+    dists = great_circle(c[:, 0], c[:, 1], c[:, 2], c[:, 3])
     dists[np.isnan(dists)] = 0
     nx.set_edge_attributes(G, values=dict(zip(uvk, dists)), name="length")
 
@@ -492,7 +411,6 @@ def nearest_edges(
     G: nx.MultiDiGraph,
     X: float | Iterable[float],
     Y: float | Iterable[float],
-    interpolate: float | None = None,
     return_dist: bool = False,
 ) -> (
     tuple[int, int, int]
@@ -519,8 +437,6 @@ def nearest_edges(
     Y : float or iterable of floats
         points' y (latitude) coordinates, in same CRS/units as graph and
         containing no nulls
-    interpolate : float
-        deprecated, do not use
     return_dist : bool
         optionally also return distance between points and nearest edges
 
@@ -547,53 +463,17 @@ def nearest_edges(
     ne_array: NDArray[np.object_]  # array of tuple[int, int, int]
     dist_array: NDArray[np.float64]
 
-    # if no interpolation distance was provided
-    if interpolate is None:
-        # build an r-tree spatial index by position for subsequent iloc
-        rtree = STRtree(geoms)
+    # build an r-tree spatial index by position for subsequent iloc
+    rtree = STRtree(geoms)
 
-        # use the r-tree to find each point's nearest neighbor and distance
-        points = [Point(xy) for xy in zip(X_arr, Y_arr)]
-        pos, dist_array = rtree.query_nearest(points, all_matches=False, return_distance=True)
+    # use the r-tree to find each point's nearest neighbor and distance
+    points = [Point(xy) for xy in zip(X_arr, Y_arr)]
+    pos, dist_array = rtree.query_nearest(points, all_matches=False, return_distance=True)
 
-        # if user passed X/Y lists, the 2nd subarray contains geom indices
-        if len(pos.shape) > 1:
-            pos = pos[1]
-        ne_array = geoms.iloc[pos].index.to_numpy()
-
-    # otherwise, if interpolation distance was provided
-    else:
-        warn(
-            "The `interpolate` parameter has been deprecated and will be removed in a future release",
-            stacklevel=2,
-        )
-
-        # interpolate points along edges to index with k-d tree or ball tree
-        uvk_xy: list = []  # type: ignore[type-arg]
-        for uvk, geom in zip(geoms.index, geoms.to_numpy()):
-            uvk_xy.extend((uvk, xy) for xy in utils_geo.interpolate_points(geom, interpolate))
-        labels, xy = zip(*uvk_xy)
-        vertices = pd.DataFrame(xy, index=labels, columns=["x", "y"])
-
-        if projection.is_projected(G.graph["crs"]):
-            # if projected, use k-d tree for euclidean nearest-neighbor search
-            if cKDTree is None:  # pragma: no cover
-                msg = "scipy must be installed to search a projected graph"
-                raise ImportError(msg)
-            dist_array, pos = cKDTree(vertices).query(np.array([X_arr, Y_arr]).T, k=1)
-            ne_array = vertices.index[pos].to_numpy()
-
-        else:
-            # if unprojected, use ball tree for haversine nearest-neighbor search
-            if BallTree is None:  # pragma: no cover
-                msg = "scikit-learn must be installed to search an unprojected graph"
-                raise ImportError(msg)
-            # haversine requires lat, lon coords in radians
-            vertices_rad = np.deg2rad(vertices[["y", "x"]])
-            points_rad = np.deg2rad(np.array([Y_arr, X_arr]).T)
-            dist_array, pos = BallTree(vertices_rad, metric="haversine").query(points_rad, k=1)
-            dist_array = dist_array[:, 0] * EARTH_RADIUS_M  # convert radians -> meters
-            ne_array = vertices.index[pos[:, 0]].to_numpy()
+    # if user passed X/Y lists, the 2nd subarray contains geom indices
+    if len(pos.shape) > 1:
+        pos = pos[1]
+    ne_array = geoms.iloc[pos].index.to_numpy()
 
     # convert results to correct types for return
     if is_scalar:
@@ -609,72 +489,3 @@ def nearest_edges(
         return ne_array, dist_array
     # otherwise
     return ne_array
-
-
-def shortest_path(G, orig, dest, weight="length", cpus=1):  # type: ignore[no-untyped-def]
-    """
-    Do not use, deprecated.
-
-    The `shortest_path` function has moved to the `routing` module. Calling
-    it via the `distance` module will raise an error in a future release.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    orig : int or list
-        origin node ID, or a list of origin node IDs
-    dest : int or list
-        destination node ID, or a list of destination node IDs
-    weight : string
-        edge attribute to minimize when solving shortest path
-    cpus : int
-        how many CPU cores to use; if None, use all available
-
-    Returns
-    -------
-    path : list
-        list of node IDs constituting the shortest path, or, if orig and dest
-        are lists, then a list of path lists
-    """
-    warn(
-        "The `shortest_path` function has moved to the `routing` module. "
-        "Calling it via the `distance` module will raise an error in a future release.",
-        stacklevel=2,
-    )
-    return routing.shortest_path(G, orig, dest, weight, cpus)
-
-
-def k_shortest_paths(G, orig, dest, k, weight="length"):  # type: ignore[no-untyped-def]
-    """
-    Do not use, deprecated.
-
-    The `k_shortest_paths` function has moved to the `routing` module. Calling
-    it via the `distance` module will raise an error in a future release.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    orig : int
-        origin node ID
-    dest : int
-        destination node ID
-    k : int
-        number of shortest paths to solve
-    weight : string
-        edge attribute to minimize when solving shortest paths. default is
-        edge length in meters.
-
-    Yields
-    ------
-    path : list
-        a generator of `k` shortest paths ordered by total weight. each path
-        is a list of node IDs.
-    """
-    warn(
-        "The `k_shortest_paths` function has moved to the `routing` module. "
-        "Calling it via the `distance` module will raise an error in a future release.",
-        stacklevel=2,
-    )
-    return routing.k_shortest_paths(G, orig, dest, k, weight)
