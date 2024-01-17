@@ -96,14 +96,14 @@ def _overpass_json_from_file(filepath: str | Path, encoding: str) -> dict[str, A
     with _opener(Path(filepath), encoding) as f:
         root_attrs = ET.parse(f).getroot().attrib
         if "generator" in root_attrs and "OSMnx" in root_attrs["generator"]:
-            warn(
+            msg = (
                 "The XML file you are loading appears to have been generated "
                 "by OSMnx: this use case is not supported and may not behave "
                 "as expected. To save/load graphs to/from disk for later use "
                 "in OSMnx, use the `io.save_graphml` and `io.load_graphml` "
-                "functions instead. Refer to the documentation for details.",
-                stacklevel=2,
+                "functions instead. Refer to the documentation for details."
             )
+            warn(msg, stacklevel=2)
 
     # parse the XML to Overpass-like JSON
     with _opener(Path(filepath), encoding) as f:
@@ -175,11 +175,11 @@ def _save_graph_xml(
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
     if not settings.all_oneway:  # pragma: no cover
-        warn(
+        msg = (
             "For the `save_graph_xml` function to behave properly, the graph "
-            "must have been created with `ox.settings.all_oneway=True`.",
-            stacklevel=2,
+            "must have been created with `ox.settings.all_oneway=True`."
         )
+        warn(msg, stacklevel=2)
 
     if isinstance(data, nx.MultiDiGraph):
         gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(

@@ -47,7 +47,8 @@ def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
         which each point was drawn
     """
     if nx.is_directed(G):  # pragma: no cover
-        warn("graph should be undirected to avoid oversampling bidirectional edges", stacklevel=2)
+        msg = "`G` should be undirected to avoid oversampling bidirectional edges."
+        warn(msg, stacklevel=2)
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
     weights = gdf_edges["length"] / gdf_edges["length"].sum()
     idx = np.random.default_rng().choice(gdf_edges.index, size=n, p=weights)

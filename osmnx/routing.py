@@ -256,25 +256,25 @@ def _verify_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
     """
     Verify attribute values are numeric and non-null across graph edges.
 
-    Raises a `ValueError` if attribute contains non-numeric values and raises
-    a warning if attribute is missing or null on any edges.
+    Raises a ValueError if this attribute contains non-numeric values, and
+    issues a UserWarning if this attribute is missing or null on any edges.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
         input graph
     attr : string
-        edge attribute to verify
+        name of the edge attribute to verify
 
     Returns
     -------
     None
     """
     try:
-        values = np.array(tuple(G.edges(data=attr)))[:, 2]
-        values_float = values.astype(float)
+        values_float = (np.array(tuple(G.edges(data=attr)))[:, 2]).astype(float)
         if np.isnan(values_float).any():
-            warn(f"The attribute {attr!r} is missing or null on some edges.", stacklevel=2)
+            msg = f"The attribute {attr!r} is missing or null on some edges."
+            warn(msg, stacklevel=2)
     except ValueError as e:
         msg = f"The edge attribute {attr!r} contains non-numeric values."
         raise ValueError(msg) from e
