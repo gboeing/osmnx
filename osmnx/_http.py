@@ -55,11 +55,7 @@ def _save_to_cache(
     """
     if settings.use_cache:
         if not ok:  # pragma: no cover
-            utils.log("Did not save to cache because response status_code is not OK")
-
-        elif response_json is None:  # pragma: no cover
-            utils.log("Did not save to cache because response_json is None")
-
+            utils.log("Did not save to cache because HTTP status code is not OK.", level=lg.WARNING)
         else:
             # create the folder on the disk if it doesn't already exist
             cache_folder = Path(settings.cache_folder)

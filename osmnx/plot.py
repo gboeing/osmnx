@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from collections.abc import Sequence
 from pathlib import Path
+from types import ModuleType
 from typing import Any
 from typing import Literal
 from typing import overload
@@ -26,6 +27,8 @@ from . import utils_graph
 
 # matplotlib is an optional dependency needed for visualization
 try:
+    mpl: ModuleType | None
+    import matplotlib as mpl
     import matplotlib.pyplot as plt
     from matplotlib import cm
     from matplotlib import colormaps
@@ -34,7 +37,7 @@ try:
     from matplotlib.figure import Figure
     from matplotlib.projections.polar import PolarAxes
 except ImportError:  # pragma: no cover
-    plt = cm = colormaps = colors = None  # type: ignore[assignment]
+    mpl = None
 
 
 def get_colors(
@@ -1068,6 +1071,6 @@ def _verify_mpl() -> None:
     -------
     None
     """
-    if cm is None or colors is None or plt is None or colormaps is None:  # pragma: no cover
+    if mpl is None:  # pragma: no cover
         msg = "matplotlib must be installed as an optional dependency for visualization"
         raise ImportError(msg)
