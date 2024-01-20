@@ -101,10 +101,6 @@ def geocode_to_gdf(
     gdf : geopandas.GeoDataFrame
         a GeoDataFrame with one row for each query
     """
-    if not isinstance(query, (str, dict, list)):  # pragma: no cover
-        msg = "query must be a string, or dict, or list of strings/dicts"
-        raise TypeError(msg)
-
     if isinstance(query, list):
         # if query is a list of queries but which_result is int/None, then
         # turn which_result into a list with same length as query list
@@ -123,16 +119,9 @@ def geocode_to_gdf(
         msg = "which_result length must equal query length"
         raise ValueError(msg)
 
-    # for each query and which_result value
-    gdf = gpd.GeoDataFrame()
-    for q, wr in zip(query_list, which_result_list):
-        # ensure each query is correct type
-        if not isinstance(q, (str, dict)):  # pragma: no cover
-            msg = "each query must be a string or dict"
-            raise TypeError(msg)
-
-        # geocode each query then add to GeoDataFrame as a new row
-        gdf = pd.concat([gdf, _geocode_query_to_gdf(q, wr, by_osmid)])
+    # geocode each query then add to GeoDataFrame as a new row
+    gdfs = (_geocode_query_to_gdf(q, wr, by_osmid) for q, wr in zip(query_list, which_result_list))
+    gdf = pd.concat(gdfs)
 
     # reset GeoDataFrame index and set its CRS
     gdf = gdf.reset_index(drop=True).set_crs(settings.default_crs)

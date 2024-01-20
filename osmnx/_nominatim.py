@@ -69,7 +69,7 @@ def _download_nominatim_element(
             for key in sorted(query):
                 params[key] = query[key]
         else:  # pragma: no cover
-            msg = "query must be a dict or a string"
+            msg = "each query must be a dict or a string"  # type: ignore[unreachable]
             raise TypeError(msg)
 
     # request the URL, return the JSON

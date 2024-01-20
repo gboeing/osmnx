@@ -263,16 +263,8 @@ def features_from_place(
     -------
     gdf : geopandas.GeoDataFrame
     """
-    # create a GeoDataFrame with the spatial boundaries of the place(s)
-    if isinstance(query, (str, dict, list)):
-        # if string (place name) or dict (structured place query), this is a
-        # single place. if list, it contains multiple places to retrieve.
-        gdf_place = geocoder.geocode_to_gdf(query, which_result=which_result)
-    else:  # pragma: no cover
-        msg = "query must be dict, string, or list of strings"
-        raise TypeError(msg)
-
     # extract the geometry from the GeoDataFrame to use in query
+    gdf_place = geocoder.geocode_to_gdf(query, which_result=which_result)
     polygon = gdf_place["geometry"].unary_union
     utils.log("Constructed place geometry polygon(s) to query Overpass")
 
