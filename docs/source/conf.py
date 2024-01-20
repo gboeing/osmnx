@@ -37,6 +37,8 @@ autodoc_mock_imports = [
     "sklearn",
 ]
 
+autodoc_typehints = "none"
+
 # general configuration and options for HTML output
 # see https://www.sphinx-doc.org/en/master/usage/configuration.html
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
