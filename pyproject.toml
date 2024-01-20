@@ -60,10 +60,10 @@ path = "osmnx/_version.py"
 [tool.mypy]
 cache_dir = "~/.cache/mypy"
 ignore_missing_imports = true
-implicit_reexport = true
 python_version = "3.9"
 strict = true
 warn_no_return = true
+warn_unreachable = true
 
 [tool.ruff]
 cache-dir = "~/.cache/ruff"

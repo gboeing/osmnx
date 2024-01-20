@@ -2,8 +2,17 @@
 
 ## 2.0.0 (Unreleased)
 
-- add type annotations throughout the package for user type hinting and type checking (#1107)
+- add type annotations to all public and private functions throughout the package (#1107)
 - remove functionality previously deprecated in v1 (#1113)
+- drop Python 3.8 support (#1106)
+- make which_result function parameter consistently able to accept a list throughout package (#1113)
+- make utils_geo.bbox_from_point function return a tuple of floats for consistency with rest of package (#1113)
+- fix bug in \_downloader.\_save_to_cache function usage (#1107)
+- fix bug in handling requests ConnectionError when querying Overpass status endpoint (#1113)
+- minor fixes throughout to address inconsistencies revealed by type enforcement (#1107 #1114)
+- rename osm_xml module to \_osm_xml to make it private, as all its functions are private (#1113)
+- rename private \_downloader module to \_http (#1114)
+- remove unnecessary private \_api module (#1114)
 
 ## 1.9.0 (Unreleased)
 

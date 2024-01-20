@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from . import _downloader
+from . import _http
 from . import settings
 from . import utils
 from . import utils_graph
@@ -200,7 +200,7 @@ def add_node_elevations_google(
         {node: f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)}
     )
     n_calls = int(np.ceil(len(node_points) / batch_size))
-    domain = _downloader._hostname_from_url(settings.elevation_url_template)
+    domain = _http._hostname_from_url(settings.elevation_url_template)
     utils.log(f"Requesting node elevations from {domain!r} in {n_calls} request(s)")
 
     # break the series of coordinates into chunks of batch_size
@@ -250,12 +250,12 @@ def _elevation_request(url: str, pause: float) -> dict[str, Any]:
     response_json : dict
     """
     # check if request already exists in cache
-    cached_response_json = _downloader._retrieve_from_cache(url)
+    cached_response_json = _http._retrieve_from_cache(url)
     if isinstance(cached_response_json, dict):
         return cached_response_json
 
     # pause then request this URL
-    domain = _downloader._hostname_from_url(url)
+    domain = _http._hostname_from_url(url)
     utils.log(f"Pausing {pause} second(s) before making HTTP GET request to {domain!r}")
     time.sleep(pause)
 
@@ -264,13 +264,13 @@ def _elevation_request(url: str, pause: float) -> dict[str, Any]:
     response = requests.get(
         url,
         timeout=settings.timeout,
-        headers=_downloader._get_http_headers(),
+        headers=_http._get_http_headers(),
         **settings.requests_kwargs,
     )
 
-    response_json = _downloader._parse_response(response)
+    response_json = _http._parse_response(response)
     if not isinstance(response_json, dict):  # pragma: no cover
         msg = "Elevation API did not return a dict of results."
         raise InsufficientResponseError(msg)
-    _downloader._save_to_cache(url, response_json, response.ok)
+    _http._save_to_cache(url, response_json, response.ok)
     return response_json

@@ -40,4 +40,5 @@ repos:
     rev: "v1.8.0"
     hooks:
       - id: mypy
-        additional_dependencies: [matplotlib, pandas-stubs, types-requests]
+        additional_dependencies:
+          [matplotlib, pandas-stubs, pytest, types-requests]

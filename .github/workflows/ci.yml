@@ -47,7 +47,7 @@ jobs:
         run: SKIP=no-commit-to-branch pre-commit run --all-files
 
       - name: Test docs
-        run: make -C ./docs html
+        run: make -C ./docs html SPHINXOPTS="-W --keep-going"
 
       - name: Test code
         run: pytest --maxfail=1 --typeguard-packages=osmnx --cov=./osmnx --cov-report=xml --cov-report=term-missing --verbose
