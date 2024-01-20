@@ -16,7 +16,7 @@ hatch build --clean
 twine check --strict ./dist/*
 
 # build the docs
-make -C ./docs html
+make -C ./docs html SPHINXOPTS="-W --keep-going"
 #python -m sphinx -b linkcheck ./docs/source ./docs/build/linkcheck
 
 # run the tests and report the test coverage

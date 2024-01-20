@@ -46,7 +46,7 @@ jobs:
 
       - name: Test docs
         run: |
-          make -C ./docs html
+          make -C ./docs html SPHINXOPTS="-W --keep-going"
           python -m sphinx -b linkcheck ./docs/source ./docs/build/linkcheck
 
       - name: Test code
