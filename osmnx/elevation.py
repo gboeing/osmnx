@@ -25,7 +25,8 @@ try:
     import rasterio
     from osgeo import gdal
 except ImportError:  # pragma: no cover
-    rasterio = gdal = None
+    rasterio = None
+    gdal = None
 
 
 def add_edge_grades(G: nx.MultiDiGraph, add_absolute: bool = True) -> nx.MultiDiGraph:
@@ -126,7 +127,7 @@ def add_node_elevations_raster(
         graph with node elevation attributes
     """
     if rasterio is None or gdal is None:  # pragma: no cover
-        msg = "gdal and rasterio must be installed to query raster files"
+        msg = "gdal and rasterio must be installed as optional dependencies to query raster files"
         raise ImportError(msg)
 
     if cpus is None:

@@ -328,7 +328,7 @@ def nearest_nodes(
     if projection.is_projected(G.graph["crs"]):
         # if projected, use k-d tree for euclidean nearest-neighbor search
         if cKDTree is None:  # pragma: no cover
-            msg = "scipy must be installed to search a projected graph"
+            msg = "scipy must be installed as an optional dependency to search a projected graph"
             raise ImportError(msg)
         dist_array, pos = cKDTree(nodes).query(np.array([X_arr, Y_arr]).T, k=1)
         nn_array = nodes.index[pos].to_numpy()
@@ -336,7 +336,7 @@ def nearest_nodes(
     else:
         # if unprojected, use ball tree for haversine nearest-neighbor search
         if BallTree is None:  # pragma: no cover
-            msg = "scikit-learn must be installed to search an unprojected graph"
+            msg = "scikit-learn must be installed as an optional dependency to search an unprojected graph"
             raise ImportError(msg)
         # haversine requires lat, lon coords in radians
         nodes_rad = np.deg2rad(nodes[["y", "x"]])

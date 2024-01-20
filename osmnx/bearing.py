@@ -159,7 +159,7 @@ def orientation_entropy(
     """
     # check if we were able to import scipy
     if scipy is None:  # pragma: no cover
-        msg = "scipy must be installed to calculate entropy"
+        msg = "scipy must be installed as an optional dependency to calculate entropy"
         raise ImportError(msg)
     bin_counts, _ = _bearings_distribution(Gu, num_bins, min_length, weight)
     entropy: float = scipy.stats.entropy(bin_counts)

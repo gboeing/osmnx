@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Iterable
 from collections.abc import Sequence
 from pathlib import Path
-from types import ModuleType
 from typing import Any
 from typing import Literal
 from typing import overload
@@ -27,8 +26,7 @@ from . import utils_graph
 
 # matplotlib is an optional dependency needed for visualization
 try:
-    mpl: ModuleType | None
-    import matplotlib as mpl
+    mpl_available = True
     import matplotlib.pyplot as plt
     from matplotlib import cm
     from matplotlib import colormaps
@@ -37,7 +35,7 @@ try:
     from matplotlib.figure import Figure
     from matplotlib.projections.polar import PolarAxes
 except ImportError:  # pragma: no cover
-    mpl = None
+    mpl_available = False
 
 
 def get_colors(
@@ -115,7 +113,6 @@ def get_node_colors_by_attr(
     node_colors : pandas.Series
         labels are node IDs, values are colors as hex strings
     """
-    _verify_mpl()
     vals = pd.Series(nx.get_node_attributes(G, attr))
     return _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size)
 
@@ -159,7 +156,6 @@ def get_edge_colors_by_attr(
     edge_colors : pandas.Series
         labels are (u, v, k) edge IDs, values are colors as hex strings
     """
-    _verify_mpl()
     vals = pd.Series(nx.get_edge_attributes(G, attr))
     return _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size)
 
@@ -389,8 +385,6 @@ def plot_graph_routes(
     fig, ax : tuple
         tuple of matplotlib (Figure, Axes)
     """
-    _verify_mpl()
-
     # make iterables lists (so we're guaranteed to be able to get their sizes)
     routes = list(routes)
     route_colors = (
@@ -858,6 +852,8 @@ def _get_colors_by_value(
     color_series : pandas.Series
         labels are (u, v, k) edge IDs, values are colors as hex strings
     """
+    _verify_mpl()
+
     if len(vals) == 0:
         msg = "There are no attribute values."
         raise ValueError(msg)
@@ -1071,6 +1067,6 @@ def _verify_mpl() -> None:
     -------
     None
     """
-    if mpl is None:  # pragma: no cover
+    if not mpl_available:  # pragma: no cover
         msg = "matplotlib must be installed as an optional dependency for visualization"
         raise ImportError(msg)
