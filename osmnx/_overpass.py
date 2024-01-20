@@ -15,7 +15,7 @@ from requests.exceptions import ConnectionError
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
 
-from . import _downloader
+from . import _http
 from . import projection
 from . import settings
 from . import utils
@@ -142,7 +142,7 @@ def _get_overpass_pause(
         url = base_endpoint.rstrip("/") + "/status"
         response = requests.get(
             url,
-            headers=_downloader._get_http_headers(),
+            headers=_http._get_http_headers(),
             timeout=settings.timeout,
             **settings.requests_kwargs,
         )
@@ -391,19 +391,19 @@ def _overpass_request(
     response_json : dict or list
     """
     # resolve url to same IP even if there is server round-robin redirecting
-    _downloader._config_dns(settings.overpass_endpoint)
+    _http._config_dns(settings.overpass_endpoint)
 
     # prepare the Overpass API URL and see if request already exists in cache
     url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
     prepared_url = str(requests.Request("GET", url, params=data).prepare().url)
-    cached_response_json = _downloader._retrieve_from_cache(prepared_url)
+    cached_response_json = _http._retrieve_from_cache(prepared_url)
     if isinstance(cached_response_json, dict):
         return cached_response_json
 
     # pause then request this URL
     if pause is None:
         this_pause = _get_overpass_pause(settings.overpass_endpoint)
-    domain = _downloader._hostname_from_url(url)
+    domain = _http._hostname_from_url(url)
     utils.log(f"Pausing {this_pause} second(s) before making HTTP POST request to {domain!r}")
     time.sleep(this_pause)
 
@@ -413,7 +413,7 @@ def _overpass_request(
         url,
         data=data,
         timeout=settings.timeout,
-        headers=_downloader._get_http_headers(),
+        headers=_http._get_http_headers(),
         **settings.requests_kwargs,
     )
 
@@ -428,9 +428,9 @@ def _overpass_request(
         time.sleep(this_pause)
         return _overpass_request(data, pause, error_pause)
 
-    response_json = _downloader._parse_response(response)
+    response_json = _http._parse_response(response)
     if not isinstance(response_json, dict):  # pragma: no cover
         msg = "Overpass API did not return a dict of results."
         raise InsufficientResponseError(msg)
-    _downloader._save_to_cache(prepared_url, response_json, response.ok)
+    _http._save_to_cache(prepared_url, response_json, response.ok)
     return response_json

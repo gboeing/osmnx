@@ -27,14 +27,6 @@ osmnx.distance module
     :private-members:
     :noindex:
 
-osmnx._downloader module
-------------------------
-
-.. automodule:: osmnx._downloader
-    :members:
-    :private-members:
-    :noindex:
-
 osmnx.elevation module
 ----------------------
 
@@ -71,6 +63,14 @@ osmnx.graph module
 ------------------
 
 .. automodule:: osmnx.graph
+    :members:
+    :private-members:
+    :noindex:
+
+osmnx._http module
+------------------
+
+.. automodule:: osmnx._http
     :members:
     :private-members:
     :noindex:

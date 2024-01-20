@@ -9,7 +9,7 @@ from typing import Any
 
 import requests
 
-from . import _downloader
+from . import _http
 from . import settings
 from . import utils
 from ._errors import InsufficientResponseError
@@ -112,12 +112,12 @@ def _nominatim_request(
     # prepare Nominatim API URL and see if request already exists in cache
     url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
     prepared_url = str(requests.Request("GET", url, params=params).prepare().url)
-    cached_response_json = _downloader._retrieve_from_cache(prepared_url)
+    cached_response_json = _http._retrieve_from_cache(prepared_url)
     if isinstance(cached_response_json, list):
         return cached_response_json
 
     # pause then request this URL
-    domain = _downloader._hostname_from_url(url)
+    domain = _http._hostname_from_url(url)
     utils.log(f"Pausing {pause} second(s) before making HTTP GET request to {domain!r}")
     time.sleep(pause)
 
@@ -127,7 +127,7 @@ def _nominatim_request(
         url,
         params=params,
         timeout=settings.timeout,
-        headers=_downloader._get_http_headers(),
+        headers=_http._get_http_headers(),
         **settings.requests_kwargs,
     )
 
@@ -141,9 +141,9 @@ def _nominatim_request(
         time.sleep(error_pause)
         return _nominatim_request(params, request_type, pause, error_pause)
 
-    response_json = _downloader._parse_response(response)
+    response_json = _http._parse_response(response)
     if not isinstance(response_json, list):
         msg = "Nominatim API did not return a list of results."
         raise InsufficientResponseError(msg)
-    _downloader._save_to_cache(prepared_url, response_json, response.ok)
+    _http._save_to_cache(prepared_url, response_json, response.ok)
     return response_json
