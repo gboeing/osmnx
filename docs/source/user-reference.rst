@@ -1,9 +1,7 @@
 User Reference
 ==============
 
-This is the User Reference for the OSMnx package. If you are looking for an introduction to OSMnx, read the :doc:`getting-started` guide.
-
-This guide describes the usage of OSMnx's public API. Every function can be accessed via ``ox.module_name.function_name()`` and many can also be accessed directly via ``ox.function_name()`` as a shortcut.
+This is the User Reference for the OSMnx package. If you are looking for an introduction to OSMnx, read the :doc:`getting-started` guide. This guide describes the usage of OSMnx's public API.
 
 osmnx.bearing module
 --------------------

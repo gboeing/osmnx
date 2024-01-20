@@ -3,14 +3,6 @@ Internals Reference
 
 This is the complete OSMnx internals reference for developers, including private internal modules and functions. If you are instead looking for a user guide to OSMnx's public API, see the :doc:`user-reference`.
 
-osmnx._api module
------------------
-
-.. automodule:: osmnx._api
-    :members:
-    :private-members:
-    :noindex:
-
 osmnx.bearing module
 --------------------
 
