@@ -104,28 +104,23 @@ def geocode_to_gdf(
     if isinstance(query, list):
         # if query is a list of queries but which_result is int/None, then
         # turn which_result into a list with same length as query list
-        query_list = query
-        which_result_list = (
-            which_result if isinstance(which_result, list) else [which_result] * len(query)
-        )
+        q_list = query
+        wr_list = which_result if isinstance(which_result, list) else [which_result] * len(query)
     else:
         # if query is not already a list, turn it into one
         # if which_result was a list, take 0th element, otherwise make it list
-        query_list = [query]
-        which_result_list = [which_result[0]] if isinstance(which_result, list) else [which_result]
+        q_list = [query]
+        wr_list = [which_result[0]] if isinstance(which_result, list) else [which_result]
 
     # ensure same length
-    if len(query_list) != len(which_result_list):  # pragma: no cover
+    if len(q_list) != len(wr_list):  # pragma: no cover
         msg = "which_result length must equal query length"
         raise ValueError(msg)
 
-    # geocode each query then add to GeoDataFrame as a new row
-    gdfs = (_geocode_query_to_gdf(q, wr, by_osmid) for q, wr in zip(query_list, which_result_list))
-    gdf = pd.concat(gdfs)
-
-    # reset GeoDataFrame index and set its CRS
-    gdf = gdf.reset_index(drop=True).set_crs(settings.default_crs)
-    utils.log(f"Created GeoDataFrame with {len(gdf)} rows from {len(query_list)} queries")
+    # geocode each query, concat as GeoDataFrame rows, then set the CRS
+    results = (_geocode_query_to_gdf(q, wr, by_osmid) for q, wr in zip(q_list, wr_list))
+    gdf = pd.concat(results, ignore_index=True).set_crs(settings.default_crs)
+    utils.log(f"Created GeoDataFrame with {len(gdf)} rows from {len(q_list)} queries")
     return gdf
 
 
