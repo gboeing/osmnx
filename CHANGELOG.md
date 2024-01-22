@@ -5,6 +5,7 @@
 - add type annotations to all public and private functions throughout the package (#1107)
 - remove functionality previously deprecated in v1 (#1113)
 - drop Python 3.8 support (#1106)
+- increase add_node_elevations_google default batch_size to 512 to match Google's limit (#1115)
 - make which_result function parameter consistently able to accept a list throughout package (#1113)
 - make utils_geo.bbox_from_point function return a tuple of floats for consistency with rest of package (#1113)
 - fix bug in \_downloader.\_save_to_cache function usage (#1107)

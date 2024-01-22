@@ -162,7 +162,7 @@ def add_node_elevations_raster(
 
 
 def add_node_elevations_google(
-    G: nx.MultiDiGraph, api_key: str | None = None, batch_size: int = 350, pause: float = 0
+    G: nx.MultiDiGraph, api_key: str | None = None, batch_size: int = 512, pause: float = 0
 ) -> nx.MultiDiGraph:
     """
     Add an `elevation` (meters) attribute to each node using a web service.
@@ -171,6 +171,8 @@ def add_node_elevations_google(
     use an equivalent API with the same interface and response format, such as
     Open Topo Data, via the `settings` module's `elevation_url_template`. The
     Google Maps Elevation API requires an API key but other providers may not.
+    You can find more information about the Google Maps Elevation API at:
+    https://developers.google.com/maps/documentation/elevation
 
     For a free local alternative see the `add_node_elevations_raster`
     function. See also the `add_edge_grades` function.
@@ -182,9 +184,8 @@ def add_node_elevations_google(
     api_key : string
         a valid API key, can be None if the API does not require a key
     batch_size : int
-        max number of coordinate pairs to submit in each API call (if this is
-        too high, the server will reject the request because its character
-        limit exceeds the max allowed)
+        max number of coordinate pairs to submit in each request (depends on
+        provider's limits). Google's limit is 512.
     pause : float
         time to pause between API calls, which can be increased if you get
         rate limited
@@ -194,12 +195,9 @@ def add_node_elevations_google(
     G : networkx.MultiDiGraph
         graph with node elevation attributes
     """
-    # make a pandas series of all the nodes' coordinates as 'lat,lon'
-    # round coordinates to 5 decimal places (approx 1 meter) to be able to fit
-    # in more locations per API call
-    node_points = pd.Series(
-        {node: f'{data["y"]:.5f},{data["x"]:.5f}' for node, data in G.nodes(data=True)}
-    )
+    # make a pandas series of all the nodes' coordinates as "lat,lon" and
+    # round coordinates to 6 decimal places (approx 5 to 10 cm resolution)
+    node_points = pd.Series({n: f'{d["y"]:.6f},{d["x"]:.6f}' for n, d in G.nodes(data=True)})
     n_calls = int(np.ceil(len(node_points) / batch_size))
     domain = _http._hostname_from_url(settings.elevation_url_template)
     utils.log(f"Requesting node elevations from {domain!r} in {n_calls} request(s)")
