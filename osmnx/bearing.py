@@ -1,4 +1,5 @@
-"""Calculate graph edge bearings."""
+"""Calculate graph edge bearings and orientation entropy."""
+
 from __future__ import annotations
 
 from typing import overload
@@ -49,24 +50,24 @@ def calculate_bearing(
 
     Vectorized function to calculate initial bearings between two points'
     coordinates or between arrays of points' coordinates. Expects coordinates
-    in decimal degrees. Bearing represents the clockwise angle in degrees
-    between north and the geodesic line from (lat1, lon1) to (lat2, lon2).
+    in decimal degrees. The bearing represents the clockwise angle in degrees
+    between north and the geodesic line from `(lat1, lon1)` to `(lat2, lon2)`.
 
     Parameters
     ----------
-    lat1 : float or numpy.array of float
-        first point's latitude coordinate
-    lon1 : float or numpy.array of float
-        first point's longitude coordinate
-    lat2 : float or numpy.array of float
-        second point's latitude coordinate
-    lon2 : float or numpy.array of float
-        second point's longitude coordinate
+    lat1
+        First point's latitude coordinate(s).
+    lon1
+        First point's longitude coordinate(s).
+    lat2
+        Second point's latitude coordinate(s).
+    lon2
+        Second point's longitude coordinate(s).
 
     Returns
     -------
-    bearing : float or numpy.array of float
-        the bearing(s) in decimal degrees
+    bearing
+        The bearing(s) in decimal degrees.
     """
     # get the latitudes and the difference in longitudes, all in radians
     lat1 = np.radians(lat1)
@@ -85,24 +86,24 @@ def calculate_bearing(
 
 def add_edge_bearings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     """
-    Add compass `bearing` attributes to all graph edges.
+    Calculate and add compass `bearing` attributes to all graph edges.
 
     Vectorized function to calculate (initial) bearing from origin node to
     destination node for each edge in a directed, unprojected graph then add
-    these bearings as new edge attributes. Bearing represents angle in degrees
-    (clockwise) between north and the geodesic line from the origin node to
-    the destination node. Ignores self-loop edges as their bearings are
-    undefined.
+    these bearings as new `bearing` edge attributes. Bearing represents angle
+    in degrees (clockwise) between north and the geodesic line from the origin
+    node to the destination node. Ignores self-loop edges as their bearings
+    are undefined.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        unprojected graph
+    G
+        Unprojected graph.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        graph with edge bearing attributes
+    G
+        Graph with `bearing` attributes on the edges.
     """
     if projection.is_projected(G.graph["crs"]):  # pragma: no cover
         msg = "graph must be unprojected to add edge bearings"
@@ -128,9 +129,9 @@ def orientation_entropy(
     """
     Calculate undirected graph's orientation entropy.
 
-    Orientation entropy is the entropy of its edges' bidirectional bearings
-    across evenly spaced bins. Ignores self-loop edges as their bearings are
-    undefined.
+    Orientation entropy is the Shannon entropy of the graphs' edges'
+    bidirectional bearings across evenly spaced bins. Ignores self-loop edges
+    as their bearings are undefined.
 
     For more info see: Boeing, G. 2019. "Urban Spatial Order: Street Network
     Orientation, Configuration, and Entropy." Applied Network Science, 4 (1),
@@ -138,24 +139,23 @@ def orientation_entropy(
 
     Parameters
     ----------
-    Gu : networkx.MultiGraph
-        undirected, unprojected graph with `bearing` attributes on each edge
-    num_bins : int
-        number of bins; for example, if `num_bins=36` is provided, then each
-        bin will represent 10 degrees around the compass
-    min_length : float
-        ignore edges with `length` attributes less than `min_length`; useful
-        to ignore the noise of many very short edges
-    weight : string
-        if not None, weight edges' bearings by this (non-null) edge attribute.
-        for example, if "length" is provided, this will return 1 bearing
-        observation per meter per street, which could result in a very large
-        `bearings` array.
+    Gu
+        Undirected, unprojected graph with `bearing` attributes on each edge.
+    num_bins
+        Number of bins. For example, if `num_bins=36` is provided, then each
+        bin will represent 10 degrees around the compass.
+    min_length
+        Ignore edges with `length` attributes less than `min_length`. Useful
+        to ignore the noise of many very short edges.
+    weight
+        If not None, weight edges' bearings by this (non-null) edge attribute.
+        For example, if "length" is provided, this will return 1 bearing
+        observation per meter per street.
 
     Returns
     -------
-    entropy : float
-        the graph's orientation entropy
+    entropy
+        The orientation entropy of `Gu`.
     """
     # check if we were able to import scipy
     if scipy is None:  # pragma: no cover
@@ -177,21 +177,21 @@ def _extract_edge_bearings(
 
     Parameters
     ----------
-    Gu : networkx.MultiGraph
-        undirected, unprojected graph with `bearing` attributes on each edge
-    min_length : float
-        ignore edges with `length` attributes less than `min_length`; useful
-        to ignore the noise of many very short edges
-    weight : string
-        if not None, weight edges' bearings by this (non-null) edge attribute.
-        for example, if "length" is provided, this will return 1 bearing
-        observation per meter per street, which could result in a very large
-        `bearings` array.
+    Gu
+        Undirected, unprojected graph with `bearing` attributes on each edge.
+    min_length
+        Ignore edges with `length` attributes less than `min_length`. Useful
+        to ignore the noise of many very short edges.
+    weight
+        If not None, weight edges' bearings by this (non-null) edge attribute.
+        For example, if "length" is provided, this will return 1 bearing
+        observation per meter per street (which could result in a very large
+        `bearings` array).
 
     Returns
     -------
-    bearings : numpy.array of float
-        the graph's bidirectional edge bearings
+    bearings
+        The bidirectional edge bearings of `Gu`.
     """
     if nx.is_directed(Gu) or projection.is_projected(Gu.graph["crs"]):  # pragma: no cover
         msg = "graph must be undirected and unprojected to analyze edge bearings"
@@ -228,23 +228,23 @@ def _bearings_distribution(
 
     Parameters
     ----------
-    Gu : networkx.MultiGraph
-        undirected, unprojected graph with `bearing` attributes on each edge
-    num_bins : int
-        number of bins for the bearings histogram
-    min_length : float
-        ignore edges with `length` attributes less than `min_length`; useful
-        to ignore the noise of many very short edges
-    weight : string
-        if not None, weight edges' bearings by this (non-null) edge attribute.
-        for example, if "length" is provided, this will return 1 bearing
-        observation per meter per street, which could result in a very large
-        `bearings` array.
+    Gu
+        Undirected, unprojected graph with `bearing` attributes on each edge.
+    num_bins
+        Number of bins for the bearing histogram.
+    min_length
+        Ignore edges with `length` attributes less than `min_length`. Useful
+        to ignore the noise of many very short edges.
+    weight
+        If not None, weight edges' bearings by this (non-null) edge attribute.
+        For example, if "length" is provided, this will return 1 bearing
+        observation per meter per street (which could result in a very large
+        `bearings` array).
 
     Returns
     -------
-    bin_counts, bin_edges : tuple of numpy.array of float
-        counts of bearings per bin and the bins edges
+    bin_counts, bin_edges
+        Counts of bearings per bin and the bins edges.
     """
     n = num_bins * 2
     bins = np.arange(n + 1) * 360 / n
