@@ -35,4 +35,4 @@ dependencies:
   # docs
   - furo
   - sphinx=7 # pin to version from /docs/requirements.txt
-  - sphinx_autodoc_typehints
+  - sphinx-autodoc-typehints

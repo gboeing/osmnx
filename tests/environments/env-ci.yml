@@ -32,4 +32,4 @@ dependencies:
   # docs
   - furo
   - sphinx=7
-  - sphinx_autodoc_typehints
+  - sphinx-autodoc-typehints
