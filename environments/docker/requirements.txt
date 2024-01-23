@@ -23,6 +23,7 @@ statsmodels
 # docs
 furo
 sphinx
+sphinx_autodoc_typehints
 
 # packaging
 conda-smithy
