@@ -94,7 +94,11 @@ def test_geocoder() -> None:
         _ = ox.geocode("!@#$%^&*")
 
     with pytest.raises(ox._errors.InsufficientResponseError):
-        ox.geocode_to_gdf(query="AAAZZZ")
+        _ = ox.geocode_to_gdf(query="AAAZZZ")
+
+    # fails to geocode to a (Multi)Polygon
+    with pytest.raises(TypeError):
+        _ = ox.geocode_to_gdf("Bunker Hill, Los Angeles, CA, USA")
 
 
 def test_stats() -> None:
