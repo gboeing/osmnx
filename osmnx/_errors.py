@@ -2,7 +2,7 @@
 
 
 class CacheOnlyInterruptError(InterruptedError):
-    """Exception for settings.cache_only_mode=True interruption."""
+    """Exception for `settings.cache_only_mode=True` interruption."""
 
 
 class GraphSimplificationError(ValueError):

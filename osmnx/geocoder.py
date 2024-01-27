@@ -162,7 +162,11 @@ def _geocode_query_to_gdf(
 
     elif which_result is None:
         # else, if which_result=None, auto-select the first (Multi)Polygon
-        result = _get_first_polygon(results, query)
+        try:
+            result = _get_first_polygon(results)
+        except TypeError as e:
+            msg = f"Nominatim did not geocode query {query!r} to a geometry of type (Multi)Polygon"
+            raise TypeError(msg) from e
 
     elif len(results) >= which_result:
         # else, if we got at least which_result results, choose that one
@@ -204,9 +208,7 @@ def _geocode_query_to_gdf(
     return gdf
 
 
-def _get_first_polygon(
-    results: list[dict[str, Any]], query: str | dict[str, str]
-) -> dict[str, Any]:
+def _get_first_polygon(results: list[dict[str, Any]]) -> dict[str, Any]:
     """
     Choose first result of geometry type (Multi)Polygon from list of results.
 
@@ -214,8 +216,6 @@ def _get_first_polygon(
     ----------
     results
         Results from the Nominatim API.
-    query
-        The query string or structured dict that was geocoded.
 
     Returns
     -------
@@ -228,6 +228,5 @@ def _get_first_polygon(
         if "geojson" in result and result["geojson"]["type"] in polygon_types:
             return result
 
-    # if we never found a polygon, throw an error
-    msg = f"Nominatim could not geocode query {query!r} to a geometry of type (Multi)Polygon"
-    raise TypeError(msg)
+    # if we never found a polygon, raise an error
+    raise TypeError
