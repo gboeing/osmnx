@@ -445,7 +445,7 @@ def nearest_edges(
 
     Returns
     -------
-    nn or (nn, dist)
+    ne or (ne, dist)
         Nearest edge ID(s) as `(u, v, k)` tuples, or optionally a tuple of
         ID(s) and distance(s) between each point and its nearest edge.
     """
