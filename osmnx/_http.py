@@ -42,12 +42,12 @@ def _save_to_cache(
 
     Parameters
     ----------
-    url : string
-        the URL of the request
-    response_json : dict or list
-        the JSON response
-    ok : bool
-        requests response.ok value
+    url
+        The URL of the request.
+    response_json
+        The JSON response from the server.
+    ok
+        A `requests.response.ok` value.
 
     Returns
     -------
@@ -80,13 +80,13 @@ def _url_in_cache(url: str) -> Path | None:
 
     Parameters
     ----------
-    url : string
-        the URL to look for in the cache
+    url
+        The URL to look for in the cache.
 
     Returns
     -------
-    filepath : pathlib.Path
-        path to cached response for url if it exists, otherwise None
+    filepath
+        Path to cached response for `url` if it exists, otherwise None.
     """
     # hash the url to generate the cache filename
     filename = sha1(url.encode("utf-8")).hexdigest() + ".json"
@@ -100,20 +100,20 @@ def _retrieve_from_cache(
     url: str, check_remark: bool = True
 ) -> dict[str, Any] | list[dict[str, Any]] | None:
     """
-    Retrieve a HTTP response JSON object from the cache, if it exists.
+    Retrieve a HTTP response JSON object from the cache if it exists.
 
     Parameters
     ----------
-    url : string
-        the URL of the request
-    check_remark : bool
-        if True, only return filepath if cached response does not have a
-        remark key indicating a server warning
+    url
+        The URL of the request.
+    check_remark
+        If True, only return filepath if cached response does not have a
+        remark key indicating a server warning.
 
     Returns
     -------
-    response_json : dict or list
-        cached response for url if it exists in the cache, otherwise None
+    response_json
+        Cached response for `url` if it exists in the cache, otherwise None.
     """
     # if the tool is configured to use the cache
     if settings.use_cache:
@@ -148,17 +148,17 @@ def _get_http_headers(
 
     Parameters
     ----------
-    user_agent : string
-        the user agent string, if None will set with OSMnx default
-    referer : string
-        the referer string, if None will set with OSMnx default
-    accept_language : string
-        make accept-language explicit e.g. for consistent nominatim result
-        sorting
+    user_agent
+        The user agent string. If None, use the OSMnx default.
+    referer
+        The referer string. If None, use the OSMnx default.
+    accept_language
+        The accept language. Make it explicit for consistent Nominatim result
+        sorting.
 
     Returns
     -------
-    headers : dict
+    headers
     """
     if user_agent is None:
         user_agent = settings.default_user_agent
@@ -187,13 +187,13 @@ def _resolve_host_via_doh(hostname: str) -> str:
 
     Parameters
     ----------
-    hostname : string
-        the hostname to consistently resolve the IP address of
+    hostname
+        The hostname to consistently resolve the IP address of.
 
     Returns
     -------
-    ip_address : string
-        resolved IP address of host, or hostname itself if resolution failed
+    ip_address
+        Resolved IP address of host, or hostname itself if resolution failed.
     """
     if settings.doh_url_template is None:
         # if user has set the url template to None, return hostname itself
@@ -243,8 +243,8 @@ def _config_dns(url: str) -> None:
 
     Parameters
     ----------
-    url : string
-        the URL to consistently resolve the IP address of
+    url
+        The URL to consistently resolve the IP address of.
 
     Returns
     -------
@@ -279,13 +279,13 @@ def _hostname_from_url(url: str) -> str:
 
     Parameters
     ----------
-    url : string
-        the url from which to extract the hostname
+    url
+        The url from which to extract the hostname.
 
     Returns
     -------
-    hostname : string
-        the extracted hostname (domain)
+    hostname
+        The extracted hostname (domain).
     """
     return urlparse(url).netloc.split(":")[0]
 
@@ -296,12 +296,12 @@ def _parse_response(response: requests.Response) -> dict[str, Any] | list[dict[s
 
     Parameters
     ----------
-    response : requests.response
-        the response object
+    response
+        The response object.
 
     Returns
     -------
-    response_json : dict or list
+    response_json
         Value will be a dict if the response is from the Google or Overpass
         APIs, and a list if the response is from the Nominatim API.
     """
