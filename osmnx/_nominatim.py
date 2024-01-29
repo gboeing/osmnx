@@ -26,19 +26,18 @@ def _download_nominatim_element(
 
     Parameters
     ----------
-    query : string or dict
-        query string or structured query dict
-    by_osmid : bool
-        if True, treat query as an OSM ID lookup rather than text search
-    limit : int
-        max number of results to return
-    polygon_geojson : bool
-        whether to retrieve the place's geometry from the API
+    query
+        Query string or structured query dict.
+    by_osmid
+        If True, treat `query` as an OSM ID lookup rather than text search.
+    limit
+        Max number of results to return.
+    polygon_geojson
+        Whether to retrieve the place's geometry from the API.
 
     Returns
     -------
-    response_json : list
-        JSON response from the Nominatim server
+    response_json
     """
     # define the parameters
     params: OrderedDict[str, int | str] = OrderedDict()
@@ -87,19 +86,20 @@ def _nominatim_request(
 
     Parameters
     ----------
-    params : OrderedDict
-        key-value pairs of parameters
-    request_type : string {"search", "reverse", "lookup"}
-        which Nominatim API endpoint to query
-    pause : float
-        how long to pause before request, in seconds. per the nominatim usage
-        policy: "an absolute maximum of 1 request per second" is allowed
-    error_pause : float
-        how long to pause in seconds before re-trying request if error
+    params
+        Key-value pairs of parameters.
+    request_type
+        {"search", "reverse", "lookup"}
+        Which Nominatim API endpoint to query.
+    pause
+        How long to pause before request, in seconds. Per the nominatim usage
+        policy: "an absolute maximum of 1 request per second" is allowed.
+    error_pause
+        How long to pause in seconds before re-trying request if error.
 
     Returns
     -------
-    response_json : list
+    response_json
     """
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
         msg = 'Nominatim request_type must be "search", "reverse", or "lookup"'
