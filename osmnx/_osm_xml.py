@@ -25,8 +25,8 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
     """
     SAX content handler for OSM XML.
 
-    Used to build an Overpass-like response JSON object in self.object. For
-    format notes, see https://wiki.openstreetmap.org/wiki/OSM_XML and
+    Builds an Overpass-like response JSON object in self.object. For format
+    notes, see https://wiki.openstreetmap.org/wiki/OSM_XML and
     https://overpass-api.de
     """
 
@@ -73,15 +73,15 @@ def _overpass_json_from_file(filepath: str | Path, encoding: str) -> dict[str, A
 
     Parameters
     ----------
-    filepath : string or pathlib.Path
-        path to file containing OSM XML data
-    encoding : string
-        the XML file's character encoding
+    filepath
+        Path to file containing OSM XML data.
+    encoding
+        The XML file's character encoding.
 
     Returns
     -------
-    response_json : dict
-        a parsed JSON response from the Overpass API
+    response_json
+        A parsed JSON response from the Overpass API.
     """
 
     # open the XML file, handling bz2 or regular XML
@@ -126,43 +126,43 @@ def _save_graph_xml(
     precision: int,
 ) -> None:
     """
-    Save graph to disk as an OSM-formatted UTF-8 encoded XML .osm file.
+    Save graph to disk as an OSM-formatted XML .osm file.
 
     Parameters
     ----------
-    data : networkx.MultiDiGraph or tuple of GeoDataFrames
-        either a MultiDiGraph or (gdf_nodes, gdf_edges) tuple
-    filepath : string or pathlib.Path
-        path to the .osm file including extension. if None, use default data
-        folder + graph.osm
-    node_tags : list
-        osm node tags to include in output OSM XML
-    node_attrs: list
-        osm node attributes to include in output OSM XML
-    edge_tags : list
-        osm way tags to include in output OSM XML
-    edge_attrs : list
-        osm way attributes to include in output OSM XML
-    oneway : bool
-        the default oneway value used to fill this tag where missing
-    merge_edges : bool
-        if True merges graph edges such that each OSM way has one entry
-        and one entry only in the OSM XML. Otherwise, every OSM way
-        will have a separate entry for each node pair it contains.
-    edge_tag_aggs : list of length-2 string tuples
-        useful only if merge_edges is True, this argument allows the user
-        to specify edge attributes to aggregate such that the merged
-        OSM way entry tags accurately represent the sum total of
-        their component edge attributes. For example, if the user
-        wants the OSM way to have a "length" attribute, the user must
-        specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
-        this method to aggregate the lengths of the individual
-        component edges. Otherwise, the length attribute will simply
-        reflect the length of the first edge associated with the way.
-    api_version : string
-        OpenStreetMap API version to write to the XML file header
-    precision : int
-        number of decimal places to round latitude and longitude values
+    data
+        Either a MultiDiGraph or (gdf_nodes, gdf_edges) tuple.
+    filepath
+        Path to the .osm file including extension. If None, use default
+        `settings.data_folder/graph.osm`.
+    node_tags
+        OSM node tags to include in output OSM XML.
+    node_attrs
+        OSM node attributes to include in output OSM XML.
+    edge_tags
+        OSM way tags to include in output OSM XML.
+    edge_attrs
+        OSM way attributes to include in output OSM XML.
+    oneway
+        The default oneway value used to fill this tag where missing.
+    merge_edges
+        If True, merge graph edges such that each OSM way has one entry and
+        one entry only in the OSM XML. Otherwise, every OSM way will have a
+        separate entry for each node pair it contains.
+    edge_tag_aggs
+        Useful only if `merge_edges` is True, this argument allows the user to
+        specify edge attributes to aggregate such that the merged OSM way
+        entry tags accurately represent the sum total of their component edge
+        attributes. For example, if the user wants the OSM way to have a
+        "length" attribute, the user must specify
+        `edge_tag_aggs=[('length', 'sum')]` in order to tell this function to
+        aggregate the lengths of the individual component edges. Otherwise,
+        the length attribute will simply reflect the length of the first edge
+        associated with the way.
+    api_version
+        OpenStreetMap API version to save in the XML file header.
+    precision
+        Number of decimal places to round latitude and longitude values.
 
     Returns
     -------
@@ -240,19 +240,19 @@ def _append_nodes_xml_tree(
 
     Parameters
     ----------
-    root : ElementTree.Element
-        xml tree
-    gdf_nodes : geopandas.GeoDataFrame
-        GeoDataFrame of graph nodes
-    node_attrs : list
-        osm way attributes to include in output OSM XML
-    node_tags : list
-        osm way tags to include in output OSM XML
+    root
+        The XML tree.
+    gdf_nodes
+        A GeoDataFrame of graph nodes.
+    node_attrs
+        OSM way attributes to include in output OSM XML.
+    node_tags
+        OSM way tags to include in output OSM XML.
 
     Returns
     -------
-    root : ElementTree.Element
-        xml tree with nodes appended
+    root
+        The XML tree with nodes appended.
     """
     for _, row in gdf_nodes.iterrows():
         row_str = row.dropna().astype(str)
@@ -278,14 +278,14 @@ def _create_way_for_each_edge(
 
     Parameters
     ----------
-    root : ElementTree.Element
-        an empty XML tree
-    gdf_edges : geopandas.GeoDataFrame
-        GeoDataFrame of graph edges
-    edge_attrs : list
-        osm way attributes to include in output OSM XML
-    edge_tags : list
-        osm way tags to include in output OSM XML
+    root
+        An empty XML tree.
+    gdf_edges
+        A GeoDataFrame of graph edges.
+    edge_attrs
+        OSM way attributes to include in output OSM XML.
+    edge_tags
+        OSM way tags to include in output OSM XML.
 
     Returns
     -------
@@ -313,23 +313,24 @@ def _append_merged_edge_attrs(
 
     Parameters
     ----------
-    xml_edge : ElementTree.Element
-        XML representation of an output graph edge
-    sample_edge: dict
-        dict of sample row from the the dataframe of way edges
-    all_edges_df: pandas.DataFrame
-        a dataframe with one row for each edge in an OSM way
-    edge_tags : list
-        osm way tags to include in output OSM XML
-    edge_tag_aggs : list of length-2 string tuples
-        useful only if merge_edges is True, this argument allows the user to
+    xml_edge
+        XML representation of an output graph edge.
+    sample_edge
+        Dict of sample row from the the dataframe of way edges.
+    all_edges_df
+        A DataFrame with one row for each edge in an OSM way.
+    edge_tags
+        OSM way tags to include in output OSM XML.
+    edge_tag_aggs
+        Useful only if `merge_edges` is True, this argument allows the user to
         specify edge attributes to aggregate such that the merged OSM way
         entry tags accurately represent the sum total of their component edge
-        attributes. For example if the user wants the OSM way to have a length
-        attribute, the user must specify `edge_tag_aggs=[('length', 'sum')]`
-        to tell this method to aggregate the lengths of the individual
-        component edges. Otherwise, the length attribute will simply reflect
-        the length of the first edge associated with the way.
+        attributes. For example, if the user wants the OSM way to have a
+        "length" attribute, the user must specify
+        `edge_tag_aggs=[('length', 'sum')]` in order to tell this function to
+        aggregate the lengths of the individual component edges. Otherwise,
+        the length attribute will simply reflect the length of the first edge
+        associated with the way.
 
     Returns
     -------
@@ -364,12 +365,12 @@ def _append_nodes_as_edge_attrs(
 
     Parameters
     ----------
-    xml_edge : ElementTree.Element
-        XML representation of an output graph edge
-    sample_edge: dict
-        sample row from the the dataframe of way edges
+    xml_edge
+        XML representation of an output graph edge.
+    sample_edge
+        Sample row from the the DataFrame of way edges.
     all_edges_df: pandas.DataFrame
-        a dataframe with one row for each edge in an OSM way
+        A DataFrame with one row for each edge in an OSM way.
 
     Returns
     -------
@@ -404,33 +405,33 @@ def _append_edges_xml_tree(
 
     Parameters
     ----------
-    root : ElementTree.Element
-        xml tree
-    gdf_edges : geopandas.GeoDataFrame
-        GeoDataFrame of graph edges
-    edge_attrs : list
-        osm way attributes to include in output OSM XML
-    edge_tags : list
-        osm way tags to include in output OSM XML
-    edge_tag_aggs : list of length-2 string tuples
-        useful only if merge_edges is True, this argument allows the user
-        to specify edge attributes to aggregate such that the merged
-        OSM way entry tags accurately represent the sum total of
-        their component edge attributes. For example, if the user
-        wants the OSM way to have a "length" attribute, the user must
-        specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
-        this method to aggregate the lengths of the individual
-        component edges. Otherwise, the length attribute will simply
-        reflect the length of the first edge associated with the way.
-    merge_edges : bool
-        if True merges graph edges such that each OSM way has one entry
-        and one entry only in the OSM XML. Otherwise, every OSM way
-        will have a separate entry for each node pair it contains.
+    root
+        An XML tree.
+    gdf_edges
+        A GeoDataFrame of graph edges.
+    edge_attrs
+        OSM way attributes to include in output OSM XML.
+    edge_tags
+        OSM way tags to include in output OSM XML.
+    edge_tag_aggs
+        Useful only if `merge_edges` is True, this argument allows the user to
+        specify edge attributes to aggregate such that the merged OSM way
+        entry tags accurately represent the sum total of their component edge
+        attributes. For example, if the user wants the OSM way to have a
+        "length" attribute, the user must specify
+        `edge_tag_aggs=[('length', 'sum')]` in order to tell this function to
+        aggregate the lengths of the individual component edges. Otherwise,
+        the length attribute will simply reflect the length of the first edge
+        associated with the way.
+    merge_edges
+        If True, merge graph edges such that each OSM way has one entry and
+        one entry only in the OSM XML. Otherwise, every OSM way will have a
+        separate entry for each node pair it contains.
 
     Returns
     -------
-    root : ElementTree.Element
-        XML tree with edges appended
+    root
+        XML tree with edges appended.
     """
     gdf_edges = gdf_edges.reset_index()
     if merge_edges:
@@ -465,13 +466,13 @@ def _get_unique_nodes_ordered_from_way(df_way_edges: pd.DataFrame) -> list[Any]:
 
     Parameters
     ----------
-    df_way_edges : pandas.DataFrame
-        Dataframe containing columns 'u' and 'v' corresponding to
-        origin/destination nodes.
+    df_way_edges
+        Dataframe containing columns 'u' and 'v' corresponding to origin and
+        destination nodes.
 
     Returns
     -------
-    unique_ordered_nodes : list
+    unique_ordered_nodes
         An ordered list of unique node IDs. If the edges do not all connect
         (e.g. [(1, 2), (2,3), (10, 11), (11, 12), (12, 13)]), then this method
         will return only those nodes associated with the largest component of
