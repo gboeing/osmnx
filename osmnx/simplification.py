@@ -561,8 +561,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
             wccs = list(nx.weakly_connected_components(G.subgraph(nodes_subset.index)))
             if len(wccs) > 1:
                 # if there are multiple components in this cluster
-                suffix = 0
-                for wcc in wccs:
+                for suffix, wcc in enumerate(wccs):
                     # set subcluster xy to the centroid of just these nodes
                     idx = list(wcc)
                     subcluster_centroid = node_points.loc[idx].unary_union.centroid
@@ -570,7 +569,6 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
                     gdf.loc[idx, "y"] = subcluster_centroid.y
                     # move to subcluster by appending suffix to cluster label
                     gdf.loc[idx, "cluster"] = f"{cluster_label}-{suffix}"
-                    suffix += 1
 
     # give nodes unique integer IDs (subclusters with suffixes are strings)
     gdf["cluster"] = gdf["cluster"].factorize()[0]
