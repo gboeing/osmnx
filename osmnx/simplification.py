@@ -240,7 +240,7 @@ def simplify_graph(
     G: nx.MultiDiGraph,
     endpoint_attrs: Iterable[str] | None = None,
     remove_rings: bool = True,
-    track_merged: bool = False,  # noqa: C901
+    track_merged: bool = False,
 ) -> nx.MultiDiGraph:
     """
     Simplify a graph's topology by removing interstitial nodes.
@@ -257,7 +257,7 @@ def simplify_graph(
     list of all the (u, v) node pairs that were merged together.
 
     Use the `endpoint_attrs` parameter to relax simplification strictness. For
-    example, `endpoint_attrs=['osmid']` will retain every node whose incident
+    example, `endpoint_attrs=["osmid"]` will retain every node whose incident
     edges have different OSM IDs. This lets you keep nodes at elbow two-way
     intersections (but be aware that sometimes individual blocks have multiple
     OSM IDs within them too). You could also use this parameter to retain

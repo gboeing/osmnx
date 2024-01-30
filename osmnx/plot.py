@@ -454,23 +454,24 @@ def plot_figure_ground(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph, must be unprojected
-    dist : float
-        how many meters to extend north, south, east, west from center point
-    street_widths : dict
-        dict keys are street types and values are widths to plot in pixels
-    default_width : numeric
-        fallback width in pixels for any street type not in street_widths
-    color : string
-        color of the streets
+    G
+        Unprojected graph.
+    dist
+        How many meters to extend plot bounding box north, south, east, and
+        west from the graph's center point.
+    street_widths
+        Dict keys are street types (OSM "highway" tags) and values are the
+        widths to plot them, in pixels.
+    default_width
+        Fallback width, in pixels, for any street type not in `street_widths`.
+    color
+        Color of the streets.
     pg_kwargs
-        keyword arguments to pass to plot_graph
+        Keyword arguments to pass to `plot_graph`.
 
     Returns
     -------
-    fig, ax : tuple
-        tuple of matplotlib (Figure, Axes)
+    fig, ax
     """
     _verify_mpl()
 
