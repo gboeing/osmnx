@@ -8,6 +8,7 @@
 - deprecate north, south, east, west arguments throughout package in favor of bbox tuple argument (#1112)
 - deprecate return_coords argument in graph.graph_from_address function (#1105)
 - deprecate return_hex argument in plot.get_colors function (#1109)
+- deprecate address, point, network_type, edge_color, and smooth_joints arguments in plot.plot_figure_ground function (#1121)
 
 ## 1.8.1 (2023-12-31)
 

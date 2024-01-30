@@ -436,9 +436,9 @@ def plot_figure_ground(
     network_type="drive_service",
     street_widths=None,
     default_width=4,
-    figsize=(8, 8),
-    edge_color="w",
-    smooth_joints=True,
+    color="w",
+    edge_color=None,
+    smooth_joints=None,
     **pg_kwargs,
 ):
     """
@@ -449,24 +449,23 @@ def plot_figure_ground(
     G : networkx.MultiDiGraph
         input graph, must be unprojected
     address : string
-        address to geocode as the center point if G is not passed in
+        deprecated, do not use
     point : tuple
-        center point if address and G are not passed in
+        deprecated, do not use
     dist : numeric
         how many meters to extend north, south, east, west from center point
     network_type : string
-        what type of street network to get
+        deprecated, do not use
     street_widths : dict
         dict keys are street types and values are widths to plot in pixels
     default_width : numeric
         fallback width in pixels for any street type not in street_widths
-    figsize : numeric
-        (width, height) of figure, should be equal
+    color : string
+        color of the streets
     edge_color : string
-        color of the edges' lines
+        deprecated, do not use
     smooth_joints : bool
-        if True, plot nodes same width as streets to smooth line joints and
-        prevent cracks between them from showing
+        deprecated, do not use
     pg_kwargs
         keyword arguments to pass to plot_graph
 
@@ -476,7 +475,24 @@ def plot_figure_ground(
         matplotlib figure, axis
     """
     _verify_mpl()
-    multiplier = 1.2
+
+    if edge_color is None:
+        edge_color = color
+    else:
+        msg = (
+            "The `edge_color` parameter is deprecated and will be removed in the "
+            "v2.0.0 release. Use `color` instead."
+        )
+        warn(msg, stacklevel=2)
+
+    if smooth_joints is None:
+        smooth_joints = True
+    else:
+        msg = (
+            "The `smooth_joints` parameter is deprecated and will be removed in the "
+            "v2.0.0 release. In the future this function will behave as though True."
+        )
+        warn(msg, stacklevel=2)
 
     # if user did not pass in custom street widths, create a dict of defaults
     if street_widths is None:
@@ -490,6 +506,12 @@ def plot_figure_ground(
             "motorway": 6,
         }
 
+    multiplier = 1.2
+    dep_msg = (
+        "The `address`, `point`, and `network_type` parameters are deprecated "
+        "and will be removed in the v2.0.0 release. Pass `G` instead."
+    )
+
     # if G was passed in, plot it centered on its node centroid
     if G is not None:
         gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=True)
@@ -500,6 +522,7 @@ def plot_figure_ground(
     # dist multiplier to ensure we get more than enough network. simplify in
     # non-strict mode to not combine multiple street types into single edge
     elif address is not None:
+        warn(dep_msg, stacklevel=2)
         G, point = graph.graph_from_address(
             address,
             dist=dist * multiplier,
@@ -511,6 +534,7 @@ def plot_figure_ground(
         )
         G = simplification.simplify_graph(G, strict=False)
     elif point is not None:
+        warn(dep_msg, stacklevel=2)
         G = graph.graph_from_point(
             point,
             dist=dist * multiplier,
@@ -580,7 +604,6 @@ def plot_figure_ground(
     fig, ax = plot_graph(
         G=Gu,
         bbox=bbox,
-        figsize=figsize,
         node_size=node_sizes,
         node_color=edge_color,
         edge_color=edge_color,
