@@ -15,11 +15,8 @@ import numpy as np
 import pandas as pd
 
 from . import bearing
-from . import geocoder
-from . import graph
 from . import projection
 from . import settings
-from . import simplification
 from . import utils
 from . import utils_geo
 from . import utils_graph
@@ -445,16 +442,11 @@ def plot_graph_routes(
 
 
 def plot_figure_ground(
-    G: nx.MultiDiGraph | None = None,
-    address: str | None = None,
-    point: tuple[float, float] | None = None,
+    G: nx.MultiDiGraph,
     dist: float = 805,
-    network_type: str = "drive_service",
     street_widths: dict[str, float] | None = None,
     default_width: float = 4,
-    figsize: tuple[float, float] = (8, 8),
-    edge_color: str = "w",
-    smooth_joints: bool = True,
+    color: str = "w",
     **pg_kwargs: Any,
 ) -> tuple[Figure, Axes]:
     """
@@ -464,25 +456,14 @@ def plot_figure_ground(
     ----------
     G : networkx.MultiDiGraph
         input graph, must be unprojected
-    address : string
-        address to geocode as the center point if G is not passed in
-    point : tuple of float
-        the (lat, lon) center point if address and G are not passed in
     dist : float
         how many meters to extend north, south, east, west from center point
-    network_type : string
-        what type of street network to get
     street_widths : dict
-        dict keys are street types and values are widths to plot
-    default_width : float
-        fallback width for any street type not in street_widths
-    figsize : tuple
-        tuple of (width, height) of figure (values should be equal)
-    edge_color : string
-        color of the edges' lines
-    smooth_joints : bool
-        if True, plot nodes same width as streets to smooth line joints and
-        prevent cracks between them from showing
+        dict keys are street types and values are widths to plot in pixels
+    default_width : numeric
+        fallback width in pixels for any street type not in street_widths
+    color : string
+        color of the streets
     pg_kwargs
         keyword arguments to pass to plot_graph
 
@@ -492,7 +473,6 @@ def plot_figure_ground(
         tuple of matplotlib (Figure, Axes)
     """
     _verify_mpl()
-    multiplier = 1.2
 
     # if user did not pass in custom street widths, create a dict of defaults
     if street_widths is None:
@@ -506,39 +486,10 @@ def plot_figure_ground(
             "motorway": 6,
         }
 
-    # if G was passed in, plot it centered on its node centroid
-    if G is not None:
-        gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=True)
-        lonlat_point = gdf_nodes.unary_union.centroid.coords[0]
-        point = tuple(reversed(lonlat_point))
-
-    # otherwise get network by address or point (whichever was passed) using a
-    # dist multiplier to ensure we get more than enough network. simplify in
-    # non-strict mode to not combine multiple street types into single edge
-    elif address is not None:
-        point = geocoder.geocode(address)
-        G = graph.graph_from_address(
-            address,
-            dist=dist * multiplier,
-            dist_type="bbox",
-            network_type=network_type,
-            simplify=False,
-            truncate_by_edge=True,
-        )
-        G = simplification.simplify_graph(G, strict=False)
-    elif point is not None:
-        G = graph.graph_from_point(
-            point,
-            dist=dist * multiplier,
-            dist_type="bbox",
-            network_type=network_type,
-            simplify=False,
-            truncate_by_edge=True,
-        )
-        G = simplification.simplify_graph(G, strict=False)
-    else:  # pragma: no cover
-        msg = "You must pass an address or lat-lon point or graph."
-        raise ValueError(msg)
+    # plot G centered on its node centroid
+    gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=True)
+    lonlat_point = gdf_nodes.unary_union.centroid.coords[0]
+    point = tuple(reversed(lonlat_point))
 
     # we need an undirected graph to find every edge incident on a node
     Gu = utils_graph.get_undirected(G)
@@ -552,40 +503,38 @@ def plot_figure_ground(
         else:
             edge_linewidths.append(default_width)
 
-    if smooth_joints:
-        # for each node, get a nodesize according to the narrowest incident edge
-        node_widths: dict[int, float] = {}
-        for node in Gu.nodes:
-            # first, identify all the highway types of this node's incident edges
-            ie_data = [Gu.get_edge_data(node, nbr) for nbr in Gu.neighbors(node)]
-            edge_types = [d[min(d)]["highway"] for d in ie_data]
-            if not edge_types:
-                # if node has no incident edges, make size zero
-                node_widths[node] = 0
-            else:
-                # flatten the list of edge types
-                et_flat = []
-                for et in edge_types:
-                    if isinstance(et, list):
-                        et_flat.extend(et)
-                    else:
-                        et_flat.append(et)
+    # smooth the joints
+    # for each node, get a nodesize according to the narrowest incident edge
+    node_widths: dict[int, float] = {}
+    for node in Gu.nodes:
+        # first, identify all the highway types of this node's incident edges
+        ie_data = [Gu.get_edge_data(node, nbr) for nbr in Gu.neighbors(node)]
+        edge_types = [d[min(d)]["highway"] for d in ie_data]
+        if not edge_types:
+            # if node has no incident edges, make size zero
+            node_widths[node] = 0
+        else:
+            # flatten the list of edge types
+            et_flat = []
+            for et in edge_types:
+                if isinstance(et, list):
+                    et_flat.extend(et)
+                else:
+                    et_flat.append(et)
 
-                # lookup corresponding width for each edge type in flat list
-                edge_widths = [street_widths.get(et, default_width) for et in et_flat]
+            # lookup corresponding width for each edge type in flat list
+            edge_widths = [street_widths.get(et, default_width) for et in et_flat]
 
-                # node diameter should equal largest edge width to make joints
-                # perfectly smooth. alternatively use min(?) to prevent
-                # anything larger from extending past smallest street's line.
-                # circle marker sizes are in area, so use diameter squared.
-                circle_diameter = max(edge_widths)
-                circle_area = circle_diameter**2
-                node_widths[node] = circle_area
+            # node diameter should equal largest edge width to make joints
+            # perfectly smooth. alternatively use min(?) to prevent
+            # anything larger from extending past smallest street's line.
+            # circle marker sizes are in area, so use diameter squared.
+            circle_diameter = max(edge_widths)
+            circle_area = circle_diameter**2
+            node_widths[node] = circle_area
 
-        # assign the node size to each node in the graph
-        node_sizes: list[float] | float = [node_widths[node] for node in Gu.nodes]
-    else:
-        node_sizes = 0
+    # assign the node size to each node in the graph
+    node_sizes: list[float] | float = [node_widths[node] for node in Gu.nodes]
 
     # define the view extents of the plotting figure
     bbox = utils_geo.bbox_from_point(point, dist, project_utm=False)
@@ -596,10 +545,9 @@ def plot_figure_ground(
     fig, ax = plot_graph(
         G=Gu,
         bbox=bbox,
-        figsize=figsize,
         node_size=node_sizes,
-        node_color=edge_color,
-        edge_color=edge_color,
+        node_color=color,
+        edge_color=color,
         edge_linewidth=edge_linewidths,
         **kwargs,
     )
