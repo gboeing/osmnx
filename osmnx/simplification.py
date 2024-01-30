@@ -219,7 +219,7 @@ def _remove_rings(G: nx.MultiDiGraph, endpoint_attrs: Iterable[str] | None) -> n
     endpoint_attrs
         Edge attribute names for relaxing the strictness of endpoint
         determination. If not None, a node is an endpoint if its incident
-        edges have different values then each other for any of the edge
+        edges have different values than each other for any of the edge
         attributes in `endpoint_attrs`.
 
     Returns
@@ -434,11 +434,11 @@ def consolidate_intersections(
         If False, discard dead-end nodes to return only street-intersection
         points.
     reconnect_edges
-        Ignored if `rebuild_graph` is not True. If True, reconnect edges and
-        their geometries in rebuilt graph to the consolidated nodes and update
-        edge length attributes. If False, returned graph has no edges (which
-        is faster if you just need topologically consolidated intersection
-        counts).
+        If True, reconnect edges (and their geometries) to the consolidated
+        nodes in rebuilt graph, and update the edge length attributes. If
+        False, the returned graph has no edges (which is faster if you just
+        need topologically consolidated intersection counts). Ignored if
+        `rebuild_graph` is not True.
 
     Returns
     -------
@@ -525,10 +525,11 @@ def _consolidate_intersections_rebuild_graph(
         Nodes are buffered to this distance (in graph's geometry's units) and
         subsequent overlaps are dissolved into a single node.
     reconnect_edges
-        If True, reconnect edges and their geometries in rebuilt graph to the
-        consolidated nodes and update edge length attributes. If False,
-        returned graph has no edges (which is faster if you just need
-        topologically consolidated intersection counts).
+        If True, reconnect edges (and their geometries) to the consolidated
+        nodes in rebuilt graph, and update the edge length attributes. If
+        False, the returned graph has no edges (which is faster if you just
+        need topologically consolidated intersection counts). Ignored if
+        `rebuild_graph` is not True.
 
     Returns
     -------
