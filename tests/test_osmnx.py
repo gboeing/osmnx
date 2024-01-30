@@ -338,8 +338,6 @@ def test_plots() -> None:
 
     # figure-ground plots
     fig, ax = ox.plot_figure_ground(G=G)
-    fig, ax = ox.plot_figure_ground(point=location_point, dist=500, network_type="drive")
-    fig, ax = ox.plot_figure_ground(address=address, dist=500, network_type="bike")
 
 
 def test_find_nearest() -> None:
@@ -550,7 +548,7 @@ def test_graph_from_functions() -> None:
 
     # graph from polygon
     G = ox.graph_from_polygon(polygon, network_type="walk", truncate_by_edge=True, simplify=False)
-    G = ox.simplify_graph(G, strict=False, remove_rings=False, track_merged=True)
+    G = ox.simplify_graph(G, endpoint_attrs=["osmid"], remove_rings=False, track_merged=True)
 
     # test custom query filter
     cf = (

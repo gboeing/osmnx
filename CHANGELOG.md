@@ -3,7 +3,8 @@
 ## 2.0.0 (Unreleased)
 
 - add type annotations to all public and private functions throughout the package (#1107)
-- remove functionality previously deprecated in v1 (#1113)
+- improve docstrings throughout the package (#1116)
+- remove functionality previously deprecated in v1 (#1113 #1122)
 - drop Python 3.8 support (#1106)
 - increase add_node_elevations_google default batch_size to 512 to match Google's limit (#1115)
 - make which_result function parameter consistently able to accept a list throughout package (#1113)
@@ -17,12 +18,15 @@
 
 ## 1.9.0 (Unreleased)
 
+- add endpoint_attrs argument to simplification.simplify_graph function to flexibly relax strictness (#1117)
 - fix a bug in the features module's polygon handling (#1104)
 - update obsolete numpy random number generation (#1108)
 - update warning messages to note that deprecated code will be removed in v2.0.0 (#1111)
+- deprecate strict argument in simplification.simplify_graph function in favor of new endpoint_attrs argument (#1117)
 - deprecate north, south, east, west arguments throughout package in favor of bbox tuple argument (#1112)
 - deprecate return_coords argument in graph.graph_from_address function (#1105)
 - deprecate return_hex argument in plot.get_colors function (#1109)
+- deprecate address, point, network_type, edge_color, and smooth_joints arguments in plot.plot_figure_ground function (#1121)
 
 ## 1.8.1 (2023-12-31)
 
