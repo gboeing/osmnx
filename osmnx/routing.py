@@ -130,22 +130,22 @@ def shortest_path(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    orig : int or iterable of ints
-        origin node ID(s)
-    dest : int or iterable of ints
-        destination node ID(s)
-    weight : string
-        edge attribute to minimize when solving shortest path
-    cpus : int
-        how many CPU cores to use; if None, use all available
+    G
+        Input graph,
+    orig
+        Origin node ID(s).
+    dest
+        Destination node ID(s).
+    weight
+        Edge attribute to minimize when solving shortest path.
+    cpus
+        How many CPU cores to use. If None, use all available.
 
     Returns
     -------
-    path : list
-        list of node IDs constituting the shortest path, or, if `orig` and
-        `dest` are both iterable, then a list of path lists
+    path
+        The node IDs constituting the shortest path, or, if `orig` and `dest`
+        are both iterable, then a list of such paths.
     """
     _verify_edge_attribute(G, weight)
 
@@ -196,23 +196,21 @@ def k_shortest_paths(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    orig : int
-        origin node ID
-    dest : int
-        destination node ID
-    k : int
-        number of shortest paths to solve
-    weight : string
-        edge attribute to minimize when solving shortest paths. default is
-        edge length in meters.
+    G
+        Input graph.
+    orig
+        Origin node ID.
+    dest
+        Destination node ID.
+    k
+        Number of shortest paths to solve.
+    weight
+        Edge attribute to minimize when solving shortest paths.
 
     Yields
     ------
-    path : generator
-        a generator of `k` shortest paths ordered by total weight. each path
-        is a list of node IDs.
+    path
+        The node IDs constituting the next-shortest path.
     """
     _verify_edge_attribute(G, weight)
     paths_gen = nx.shortest_simple_paths(utils_graph.get_digraph(G, weight), orig, dest, weight)
@@ -226,24 +224,24 @@ def _single_shortest_path(
     Solve the shortest path from an origin node to a destination node.
 
     This function uses Dijkstra's algorithm. It is a convenience wrapper
-    around networkx.shortest_path, with exception handling for unsolvable
+    around `networkx.shortest_path`, with exception handling for unsolvable
     paths. If the path is unsolvable, it returns None.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    orig : int
-        origin node ID
-    dest : int
-        destination node ID
-    weight : string
-        edge attribute to minimize when solving shortest path
+    G
+        Input graph.
+    orig
+        Origin node ID.
+    dest
+        Destination node ID.
+    weight
+        Edge attribute to minimize when solving shortest path.
 
     Returns
     -------
-    path : list
-        list of node IDs constituting the shortest path
+    path
+        The node IDs constituting the shortest path.
     """
     try:
         return list(nx.shortest_path(G, orig, dest, weight=weight, method="dijkstra"))
@@ -261,10 +259,10 @@ def _verify_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    attr : string
-        name of the edge attribute to verify
+    G
+        Input graph.
+    attr
+        Name of the edge attribute to verify.
 
     Returns
     -------
