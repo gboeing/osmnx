@@ -455,17 +455,18 @@ def plot_figure_ground(
     Parameters
     ----------
     G
-        Unprojected graph.
+        An unprojected graph.
     dist
-        How many meters to extend plot bounding box north, south, east, and
-        west from the graph's center point.
+        How many meters to extend plot's bounding box north, south, east, and
+        west from the graph's center point. Default corresponds to a square
+        mile bounding box.
     street_widths
-        Dict keys are street types (OSM "highway" tags) and values are the
+        Dict keys are street types (ie, OSM "highway" tags) and values are the
         widths to plot them, in pixels.
     default_width
         Fallback width, in pixels, for any street type not in `street_widths`.
     color
-        Color of the streets.
+        The color of the streets.
     pg_kwargs
         Keyword arguments to pass to `plot_graph`.
 
@@ -475,7 +476,7 @@ def plot_figure_ground(
     """
     _verify_mpl()
 
-    # if user did not pass in custom street widths, create a dict of defaults
+    # if user did not pass in custom street widths, define default values
     if street_widths is None:
         street_widths = {
             "footway": 1.5,
@@ -486,11 +487,6 @@ def plot_figure_ground(
             "track": 1.5,
             "motorway": 6,
         }
-
-    # plot G centered on its node centroid
-    gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=True)
-    lonlat_point = gdf_nodes.unary_union.centroid.coords[0]
-    point = tuple(reversed(lonlat_point))
 
     # we need an undirected graph to find every edge incident on a node
     Gu = utils_graph.get_undirected(G)
@@ -504,14 +500,14 @@ def plot_figure_ground(
         else:
             edge_linewidths.append(default_width)
 
-    # smooth the joints
-    # for each node, get a nodesize according to the narrowest incident edge
+    # smooth the street segment joints
+    # for each node, get a node size according to the narrowest incident edge
     node_widths: dict[int, float] = {}
     for node in Gu.nodes:
         # first, identify all the highway types of this node's incident edges
-        ie_data = [Gu.get_edge_data(node, nbr) for nbr in Gu.neighbors(node)]
+        ie_data = (Gu.get_edge_data(node, nbr) for nbr in Gu.neighbors(node))
         edge_types = [d[min(d)]["highway"] for d in ie_data]
-        if not edge_types:
+        if len(edge_types) == 0:
             # if node has no incident edges, make size zero
             node_widths[node] = 0
         else:
@@ -523,13 +519,11 @@ def plot_figure_ground(
                 else:
                     et_flat.append(et)
 
-            # lookup corresponding width for each edge type in flat list
+            # look up corresponding width for each edge type in flat list
             edge_widths = [street_widths.get(et, default_width) for et in et_flat]
 
-            # node diameter should equal largest edge width to make joints
-            # perfectly smooth. alternatively use min(?) to prevent
-            # anything larger from extending past smallest street's line.
-            # circle marker sizes are in area, so use diameter squared.
+            # node diameter should = largest edge width to make joints smooth
+            # mpl circle marker sizes are in area, so use diameter squared
             circle_diameter = max(edge_widths)
             circle_area = circle_diameter**2
             node_widths[node] = circle_area
@@ -538,7 +532,10 @@ def plot_figure_ground(
     node_sizes: list[float] | float = [node_widths[node] for node in Gu.nodes]
 
     # define the view extents of the plotting figure
-    bbox = utils_geo.bbox_from_point(point, dist, project_utm=False)
+    node_geoms = utils_graph.graph_to_gdfs(Gu, edges=False, node_geometry=True).unary_union
+    lonlat_point = node_geoms.centroid.coords[0]
+    latlon_point = tuple(reversed(lonlat_point))
+    bbox = utils_geo.bbox_from_point(latlon_point, dist, project_utm=False)
 
     # plot the figure
     overrides = {"bbox", "node_size", "node_color", "edge_linewidth"}
