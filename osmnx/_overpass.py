@@ -29,13 +29,14 @@ def _get_network_filter(network_type: str) -> str:
 
     Parameters
     ----------
-    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
-        what type of street network to get
+    network_type
+        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        What type of street network to retrieve.
 
     Returns
     -------
-    overpass_filter : string
-        the Overpass query filter
+    overpass_filter
+        The Overpass query filter.
     """
     # define built-in queries to send to the API. specifying way["highway"]
     # means that all ways returned must have a highway tag. the filters then
@@ -121,18 +122,18 @@ def _get_overpass_pause(
 
     Parameters
     ----------
-    base_endpoint : string
-        base Overpass API url (without "/status" at the end)
-    recursive_delay : float
-        how long to wait between recursive calls if the server is currently
-        running a query
-    default_duration : float
-        if fatal error, fall back on returning this value
+    base_endpoint
+        Base Overpass API URL (without "/status" at the end).
+    recursive_delay
+        How long to wait between recursive calls if the server is currently
+        running a query.
+    default_duration
+        If a fatal error occurs, fall back on returning this value.
 
     Returns
     -------
-    pause : float
-        the current pause duration specified by the Overpass status endpoint
+    pause
+        The current pause duration specified by the Overpass status endpoint.
     """
     if not settings.overpass_rate_limit:
         # if overpass rate limiting is False, then there is zero pause
@@ -193,8 +194,9 @@ def _make_overpass_settings() -> str:
 
     Returns
     -------
-    overpass_settings: string
-        settings.overpass_settings string formatted with timeout and maxsize
+    overpass_settings
+        The `settings.overpass_settings` string formatted with "timeout" and
+        "maxsize" values.
     """
     maxsize = "" if settings.memory is None else f"[maxsize:{settings.memory}]"
     return settings.overpass_settings.format(timeout=settings.timeout, maxsize=maxsize)
@@ -204,19 +206,19 @@ def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list[s
     """
     Subdivide query polygon and return list of coordinate strings.
 
-    Project to utm, divide polygon up into sub-polygons if area exceeds a
+    Project to UTM, divide `polygon` up into sub-polygons if area exceeds a
     max size (in meters), project back to lat-lon, then get a list of
     polygon(s) exterior coordinates. Ignore interior ("holes") coordinates.
 
     Parameters
     ----------
-    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        polygon to convert to exterior coordinate strings
+    polygon
+        The (Multi)Polygon to convert to exterior coordinate strings.
 
     Returns
     -------
-    coord_strs : list
-        list of strings of exterior coordinates of polygon(s)
+    coord_strs
+        Exterior coordinates of polygon(s).
     """
     # first subdivide the polygon if its area exceeds max size
     # this results in a multipolygon of 1+ constituent polygons
@@ -225,8 +227,8 @@ def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list[s
     multi_poly, _ = projection.project_geometry(multi_poly_proj, crs=crs_proj, to_latlong=True)
 
     # then extract each's exterior coords to the string format Overpass
-    # expects, rounding lats and lons to 6 decimals (ie, ~100 mm) so we
-    # can hash and cache URL strings consistently
+    # expects, rounding lats and lons to 6 decimals (approx 5 to 10 cm
+    # resolution) so we can hash and cache URL strings consistently
     coord_strs = []
     for geom in multi_poly.geoms:
         x, y = geom.exterior.xy
@@ -238,18 +240,18 @@ def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list[s
 
 def _create_overpass_query(polygon_coord_str: str, tags: dict[str, bool | str | list[str]]) -> str:
     """
-    Create an Overpass features query string based on passed tags.
+    Create an Overpass features query string based on tags.
 
     Parameters
     ----------
-    polygon_coord_str : str
-        string of lat lon coordinates
-    tags : dict
-        dict of tags used for finding elements in the search area
+    polygon_coord_str
+        The lat lon coordinates.
+    tags
+        Tags used for finding elements in the search area.
 
     Returns
     -------
-    query : string
+    query
     """
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
@@ -311,17 +313,17 @@ def _download_overpass_network(
 
     Parameters
     ----------
-    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        boundary to fetch the network ways/nodes within
-    network_type : string
-        what type of street network to get if custom_filter is None
-    custom_filter : string
-        a custom "ways" filter to be used instead of the network_type presets
+    polygon
+        The boundary to fetch the network ways/nodes within.
+    network_type
+        What type of street network to get if `custom_filter` is None.
+    custom_filter
+        A custom "ways" filter to be used instead of `network_type` presets.
 
     Yields
     ------
-    response_jsons : generator
-        a generator of JSON responses from the Overpass server
+    response_json
+        JSON response from the Overpass server.
     """
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type, if provided, otherwise use custom_filter
@@ -349,15 +351,15 @@ def _download_overpass_features(
 
     Parameters
     ----------
-    polygon : shapely.geometry.Polygon
-        boundaries to fetch elements within
-    tags : dict
-        dict of tags used for finding elements in the selected area
+    polygon
+        Boundary to retrieve elements within.
+    tags
+        Tags used for finding elements in the selected area.
 
     Yields
     ------
-    response_jsons : generator
-        a generator of JSON responses from the Overpass server
+    response_json
+        JSON response from the Overpass server.
     """
     # subdivide query polygon to get list of sub-divided polygon coord strings
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
@@ -377,18 +379,18 @@ def _overpass_request(
 
     Parameters
     ----------
-    data : OrderedDict
-        key-value pairs of parameters
-    pause : float
-        how long to pause in seconds before request, if None, will query API
-        status endpoint to find when next slot is available
-    error_pause : float
-        how long to pause in seconds (in addition to `pause`) before re-trying
-        request if error
+    data
+        Key-value pairs of parameters.
+    pause
+        How long to pause in seconds before request. If None, will query API
+        status endpoint to find when next slot is available.
+    error_pause
+        How long to pause in seconds (in addition to `pause`) before re-trying
+        request if error.
 
     Returns
     -------
-    response_json : dict or list
+    response_json
     """
     # resolve url to same IP even if there is server round-robin redirecting
     _http._config_dns(settings.overpass_endpoint)

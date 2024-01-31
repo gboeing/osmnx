@@ -23,8 +23,9 @@ def citation(style: str = "bibtex") -> None:
 
     Parameters
     ----------
-    style : string {"apa", "bibtex", "ieee"}
-        citation format, either APA or BibTeX or IEEE
+    style
+        {"apa", "bibtex", "ieee"}
+        The citation format, either APA or BibTeX or IEEE.
 
     Returns
     -------
@@ -72,16 +73,16 @@ def ts(style: str = "datetime", template: str | None = None) -> str:
 
     Parameters
     ----------
-    style : string {"datetime", "date", "time"}
-        format the timestamp with this built-in style
-    template : string
-        if not None, format the timestamp with this format string instead of
-        one of the built-in styles
+    style
+        {"datetime", "date", "time"}
+        Format the timestamp with this built-in style.
+    template
+        If not None, format the timestamp with this format string instead of
+        one of the built-in styles.
 
     Returns
     -------
-    ts : string
-        local timestamp string
+    timestamp
     """
     if template is None:
         if style == "datetime":
@@ -104,18 +105,19 @@ def log(
     Write a message to the logger.
 
     This logs to file and/or prints to the console (terminal), depending on
-    the current configuration of settings.log_file and settings.log_console.
+    the current configuration of `settings.log_file` and
+    `settings.log_console`.
 
     Parameters
     ----------
-    message : string
-        the message to log
-    level : int
-        one of Python's logger.level constants
-    name : string
-        name of the logger
-    filename : string
-        name of the log file, without file extension
+    message
+        The message to log.
+    level
+        One of the Python `logger.level` constants.
+    name
+        Name of the logger.
+    filename
+        Name of the log file, without file extension.
 
     Returns
     -------
@@ -167,14 +169,14 @@ def _get_logger(name: str, filename: str) -> lg.Logger:
 
     Parameters
     ----------
-    name : string
-        name of the logger
-    filename : string
-        name of the log file, without file extension
+    name
+        Name of the logger.
+    filename
+        Name of the log file, without file extension.
 
     Returns
     -------
-    logger : logging.Logger
+    logger
     """
     logger = lg.getLogger(name)
 

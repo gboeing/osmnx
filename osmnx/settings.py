@@ -7,10 +7,10 @@ all_oneway : bool
     the original order of nodes stored in the OSM way XML. This also retains
     original OSM string values for oneway attribute values, rather than
     converting them to a True/False bool. Default is `False`.
-bidirectional_network_types : list
+bidirectional_network_types : list[str]
     Network types for which a fully bidirectional graph will be created.
     Default is `["walk"]`.
-cache_folder : string or pathlib.Path
+cache_folder : str | Path
     Path to folder in which to save/load HTTP response cache, if the
     `use_cache` setting equals `True`. Default is `"./cache"`.
 cache_only_mode : bool
@@ -21,12 +21,12 @@ cache_only_mode : bool
     only query Overpass one request at a time) then using the local cache to
     quickly build many graphs simultaneously with multiprocessing. Default is
     `False`.
-data_folder : string or pathlib.Path
+data_folder : str | Path
     Path to folder in which to save/load graph files by default. Default is
     `"./data"`.
-default_accept_language : string
+default_accept_language : str
     HTTP header accept-language. Default is `"en"`.
-default_access : string
+default_access : str
     Default filter for OSM "access" key. Default is `'["access"!~"private"]'`.
     Note that also filtering out "access=no" ways prevents including
     transit-only bridges (e.g., Tilikum Crossing) from appearing in drivable
@@ -35,83 +35,83 @@ default_access : string
     it is accessible, so we can't filter out all "access=no" ways by default.
     Best to be permissive here then remove complicated combinations of tags
     programatically after the full graph is downloaded and constructed.
-default_crs : string
+default_crs : str
     Default coordinate reference system to set when creating graphs. Default
     is `"epsg:4326"`.
-default_referer : string
+default_referer : str
     HTTP header referer. Default is
     `"OSMnx Python package (https://github.com/gboeing/osmnx)"`.
-default_user_agent : string
+default_user_agent : str
     HTTP header user-agent. Default is
     `"OSMnx Python package (https://github.com/gboeing/osmnx)"`.
-doh_url_template : string or None
+doh_url_template : str | None
     Endpoint to resolve DNS-over-HTTPS if local DNS resolution fails. Set to
     None to disable DoH, but see `downloader._config_dns` documentation for
     caveats. Default is: `"https://8.8.8.8/resolve?name={hostname}"`
-elevation_url_template : string
+elevation_url_template : str
     Endpoint of the Google Maps Elevation API (or equivalent), containing
     exactly two parameters: `locations` and `key`. Default is:
     `"https://maps.googleapis.com/maps/api/elevation/json?locations={locations}&key={key}"`
     One example of an alternative equivalent would be Open Topo Data:
     `"https://api.opentopodata.org/v1/aster30m?locations={locations}&key={key}"`
-imgs_folder : string or pathlib.Path
+imgs_folder : str | Path
     Path to folder in which to save plotted images by default. Default is
     `"./images"`.
 log_file : bool
     If True, save log output to a file in logs_folder. Default is `False`.
-log_filename : string
+log_filename : str
     Name of the log file, without file extension. Default is `"osmnx"`.
 log_console : bool
     If True, print log output to the console (terminal window). Default is
     `False`.
 log_level : int
     One of Python's logger.level constants. Default is `logging.INFO`.
-log_name : string
+log_name : str
     Name of the logger. Default is `"OSMnx"`.
-logs_folder : string or pathlib.Path
+logs_folder : str | Path
     Path to folder in which to save log files. Default is `"./logs"`.
 max_query_area_size : float
     Maximum area for any part of the geometry in meters: any polygon bigger
     than this will get divided up for multiple queries to the API. Default is
     `2500000000`.
-memory : int or None
+memory : int | None
     Overpass server memory allocation size for the query, in bytes. If
     None, server will use its default allocation size. Use with caution.
     Default is `None`.
-nominatim_endpoint : string
+nominatim_endpoint : str
     The base API url to use for Nominatim queries. Default is
     `"https://nominatim.openstreetmap.org/"`.
-nominatim_key : string or None
+nominatim_key : str | None
     Your Nominatim API key, if you are using an API instance that requires
     one. Default is `None`.
-osm_xml_node_attrs : list
+osm_xml_node_attrs : list[str]
     Node attributes for saving .osm XML files with `save_graph_xml` function.
     Default is `["id", "timestamp", "uid", "user", "version", "changeset",
     "lat", "lon"]`.
-osm_xml_node_tags : list
+osm_xml_node_tags : list[str]
     Node tags for saving .osm XML files with `save_graph_xml` function.
     Default is `["highway"]`.
-osm_xml_way_attrs : list
+osm_xml_way_attrs : list[str]
     Edge attributes for saving .osm XML files with `save_graph_xml` function.
     Default is `["id", "timestamp", "uid", "user", "version", "changeset"]`.
-osm_xml_way_tags : list
+osm_xml_way_tags : list[str]
     Edge tags for for saving .osm XML files with `save_graph_xml` function.
     Default is `["highway", "lanes", "maxspeed", "name", "oneway"]`.
-overpass_endpoint : string
+overpass_endpoint : str
     The base API url to use for Overpass queries. Default is
     `"https://overpass-api.de/api"`.
 overpass_rate_limit : bool
     If True, check the Overpass server status endpoint for how long to
     pause before making request. Necessary if server uses slot management,
-    but can be set to False if you are running your own overpass instance
+    but can be set to False if you are running your own Overpass instance
     without rate limiting. Default is `True`.
-overpass_settings : string
+overpass_settings : str
     Settings string for Overpass queries. Default is
     `"[out:json][timeout:{timeout}]{maxsize}"`. By default, the {timeout} and
     {maxsize} values are set dynamically by OSMnx when used.
     To query, for example, historical OSM data as of a certain date:
     `'[out:json][timeout:90][date:"2019-10-28T19:20:00Z"]'`. Use with caution.
-requests_kwargs : dict
+requests_kwargs : dict[str, Any]
     Optional keyword args to pass to the requests package when connecting
     to APIs, for example to configure authentication or provide a path to
     a local certificate file. More info on options such as auth, cert,
@@ -123,10 +123,10 @@ timeout : int
 use_cache : bool
     If True, cache HTTP responses locally instead of calling API repeatedly
     for the same request. Default is `True`.
-useful_tags_node : list
+useful_tags_node : list[str]
     OSM "node" tags to add as graph node attributes, when present in the data
     retrieved from OSM. Default is `["ref", "highway"]`.
-useful_tags_way : list
+useful_tags_way : list[str]
     OSM "way" tags to add as graph edge attributes, when present in the data
     retrieved from OSM. Default is `["bridge", "tunnel", "oneway", "lanes",
     "ref", "name", "highway", "maxspeed", "service", "access", "area",

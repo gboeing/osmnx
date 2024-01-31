@@ -52,27 +52,28 @@ def graph_from_bbox(
 
     Parameters
     ----------
-    bbox : tuple of floats
-        bounding box as (north, south, east, west)
-    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
-        what type of street network to get if custom_filter is None
-    simplify : bool
-        if True, simplify graph topology with the `simplify_graph` function
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    truncate_by_edge : bool
-        if True, retain nodes outside bounding box if at least one of node's
-        neighbors is within the bounding box
-    custom_filter : string
-        a custom ways filter to be used instead of the network_type presets
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
-        in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bi-directional.
+    bbox
+        Bounding box as `(north, south, east, west)`.
+    network_type
+        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        What type of street network to retrieve if `custom_filter` is None.
+    simplify
+        If True, simplify graph topology via the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+    truncate_by_edge
+        If True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box.
+    custom_filter
+        A custom ways filter to be used instead of the `network_type` presets,
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
+        in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
 
     Notes
     -----
@@ -116,34 +117,36 @@ def graph_from_point(
 
     Parameters
     ----------
-    center_point : tuple
-        the (lat, lon) center point around which to construct the graph
-    dist : float
-        retain only those nodes within this many meters of `center_point`,
-        measuring distance according to `dist_type`
-    dist_type : string {"network", "bbox"}
-        if "bbox", retain only those nodes within a bounding box of `dist`. if
+    center_point
+        The `(lat, lon)` center point around which to construct the graph.
+    dist
+        Retain only those nodes within this many meters of `center_point`,
+        measuring distance according to `dist_type`.
+    dist_type
+        {"network", "bbox"}
+        If "bbox", retain only those nodes within a bounding box of `dist`. If
         "network", retain only those nodes within `dist` network distance from
-        the center-most node.
-    network_type : string, {"all_private", "all", "bike", "drive", "drive_service", "walk"}
-        what type of street network to get if custom_filter is None
-    simplify : bool
-        if True, simplify graph topology with the `simplify_graph` function
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    truncate_by_edge : bool
-        if True, retain nodes outside bounding box if at least one of node's
-        neighbors is within the bounding box
-    custom_filter : string
-        a custom ways filter to be used instead of the network_type presets
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
-        in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bi-directional.
+        the centermost node.
+    network_type
+        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        What type of street network to retrieve if `custom_filter` is None.
+    simplify
+        If True, simplify graph topology with the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+    truncate_by_edge
+        If True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box.
+    custom_filter
+        A custom ways filter to be used instead of the `network_type` presets,
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
+        in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
 
     Notes
     -----
@@ -197,35 +200,37 @@ def graph_from_address(
 
     Parameters
     ----------
-    address : string
-        the address to geocode and use as the central point around which to
-        construct the graph
-    dist : float
-        retain only those nodes within this many meters of `center_point`,
-        measuring distance according to `dist_type`
-    dist_type : string {"network", "bbox"}
-        if "bbox", retain only those nodes within a bounding box of `dist`. if
+    address
+        The address to geocode and use as the central point around which to
+        construct the graph.
+    dist
+        Retain only those nodes within this many meters of `center_point`,
+        measuring distance according to `dist_type`.
+    dist_type
+        {"network", "bbox"}
+        If "bbox", retain only those nodes within a bounding box of `dist`. If
         "network", retain only those nodes within `dist` network distance from
-        the center-most node.
-    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
-        what type of street network to get if custom_filter is None
-    simplify : bool
-        if True, simplify graph topology with the `simplify_graph` function
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    truncate_by_edge : bool
-        if True, retain nodes outside bounding box if at least one of node's
-        neighbors is within the bounding box
-    custom_filter : string
-        a custom ways filter to be used instead of the network_type presets
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
-        in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bi-directional.
+        the centermost node.
+    network_type
+        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        What type of street network to retrieve if `custom_filter` is None.
+    simplify
+        If True, simplify graph topology with the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+    truncate_by_edge
+        If True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box.
+    custom_filter
+        A custom ways filter to be used instead of the `network_type` presets,
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
+        in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional.
 
     Returns
     -------
-    G or (G, (lat, lon)): networkx.MultiDiGraph or tuple
+    G or (G, (lat, lon))
 
     Notes
     -----
@@ -282,30 +287,31 @@ def graph_from_place(
 
     Parameters
     ----------
-    query : string or dict or list
-        the query or queries to geocode to get place boundary polygon(s)
-    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
-        what type of street network to get if custom_filter is None
-    simplify : bool
-        if True, simplify graph topology with the `simplify_graph` function
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    truncate_by_edge : bool
-        if True, retain nodes outside boundary polygon if at least one of
-        node's neighbors is within the polygon
-    which_result : int or list
+    query
+        The query or queries to geocode to retrieve place boundary polygon(s).
+    network_type
+        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        What type of street network to retrieve if `custom_filter` is None.
+    simplify
+        If True, simplify graph topology with the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+    truncate_by_edge
+        If True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box.
+    which_result
         which geocoding result to use. if None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one.
-    custom_filter : string
-        a custom ways filter to be used instead of the network_type presets
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
-        in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bi-directional.
+    custom_filter
+        A custom ways filter to be used instead of the `network_type` presets,
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
+        in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
 
     Notes
     -----
@@ -349,28 +355,29 @@ def graph_from_polygon(
 
     Parameters
     ----------
-    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the shape to get network data within. coordinates should be in
-        unprojected latitude-longitude degrees (EPSG:4326).
-    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
-        what type of street network to get if custom_filter is None
-    simplify : bool
-        if True, simplify graph topology with the `simplify_graph` function
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    truncate_by_edge : bool
-        if True, retain nodes outside boundary polygon if at least one of
-        node's neighbors is within the polygon
-    custom_filter : string
-        a custom ways filter to be used instead of the network_type presets
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
-        in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bi-directional.
+    polygon
+        The geometry within which to construct the graph. Coordinates should
+        be in unprojected latitude-longitude degrees (EPSG:4326).
+    network_type
+        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        What type of street network to retrieve if `custom_filter` is None.
+    simplify
+        If True, simplify graph topology with the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+    truncate_by_edge
+        If True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box.
+    custom_filter
+        A custom ways filter to be used instead of the `network_type` presets,
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
+        in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
 
     Notes
     -----
@@ -440,30 +447,30 @@ def graph_from_xml(
     encoding: str = "utf-8",
 ) -> nx.MultiDiGraph:
     """
-    Create a graph from data in a .osm formatted XML file.
+    Create a graph from data in an OSM-formatted XML file.
 
-    Do not load an XML file generated by OSMnx: this use case is not supported
-    and may not behave as expected. To save/load graphs to/from disk for later
-    use in OSMnx, use the `io.save_graphml` and `io.load_graphml` functions
-    instead.
+    Do not load an XML file previously generated by OSMnx: this use case is
+    not supported and may not behave as expected. To save/load graphs to/from
+    disk for later use in OSMnx, use the `io.save_graphml` and
+    `io.load_graphml` functions instead.
 
     Parameters
     ----------
-    filepath : string or pathlib.Path
-        path to file containing OSM XML data
-    bidirectional : bool
-        if True, create bi-directional edges for one-way streets
-    simplify : bool
-        if True, simplify graph topology with the `simplify_graph` function
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    encoding : string
-        the XML file's character encoding
+    filepath
+        Path to file containing OSM XML data.
+    bidirectional
+        If True, create bidirectional edges for one-way streets.
+    simplify
+        If True, simplify graph topology with the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+    encoding
+        The XML file's character encoding.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
     # transmogrify file of OSM XML data into JSON
     response_jsons = [_osm_xml._overpass_json_from_file(filepath, encoding)]
@@ -485,7 +492,7 @@ def _create_graph(
     bidirectional: bool = False,
 ) -> nx.MultiDiGraph:
     """
-    Create a networkx MultiDiGraph from Overpass API responses.
+    Create a NetworkX MultiDiGraph from Overpass API responses.
 
     Adds length attributes in meters (great-circle distance between endpoints)
     to all of the graph's (pre-simplified, straight-line) edges via the
@@ -493,17 +500,17 @@ def _create_graph(
 
     Parameters
     ----------
-    response_jsons : iterable
-        iterable of JSON responses dicts from the Overpass API
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    bidirectional : bool
-        if True, create bi-directional edges for one-way streets
+    response_jsons
+        Iterable of JSON responses from the Overpass API.
+    retain_all
+        If True, return the entire graph even if it is not connected.
+        Otherwise, retain only the largest weakly connected component.
+    bidirectional
+        If True, create bidirectional edges for one-way streets.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
     # each dict's keys are OSM IDs and values are dicts of attributes
     nodes: dict[int, dict[str, Any]] = {}
@@ -562,16 +569,16 @@ def _create_graph(
 
 def _convert_node(element: dict[str, Any]) -> dict[str, Any]:
     """
-    Convert an OSM node element into the format for a networkx node.
+    Convert an OSM node element into the format for a NetworkX node.
 
     Parameters
     ----------
-    element : dict
-        an OSM node element
+    element
+        OSM element of type "node".
 
     Returns
     -------
-    node : dict
+    node
     """
     node = {"y": element["lat"], "x": element["lon"]}
     if "tags" in element:
@@ -583,16 +590,16 @@ def _convert_node(element: dict[str, Any]) -> dict[str, Any]:
 
 def _convert_path(element: dict[str, Any]) -> dict[str, Any]:
     """
-    Convert an OSM way element into the format for a networkx path.
+    Convert an OSM way element into the format for a NetworkX path.
 
     Parameters
     ----------
-    element : dict
-        an OSM way element
+    element
+        OSM element of type "way".
 
     Returns
     -------
-    path : dict
+    path
     """
     path = {"osmid": element["id"]}
 
@@ -614,13 +621,13 @@ def _parse_nodes_paths(
 
     Parameters
     ----------
-    response_json : dict
-        JSON response from the Overpass API
+    response_json
+        JSON response from the Overpass API.
 
     Returns
     -------
-    nodes, paths : tuple of dicts
-        each dict's keys are OSM IDs and values are dicts of attributes
+    nodes, paths
+        Each dict's keys are OSM IDs and values are dicts of attributes.
     """
     nodes = {}
     paths = {}
@@ -633,22 +640,22 @@ def _parse_nodes_paths(
     return nodes, paths
 
 
-def _is_path_one_way(path: dict[str, Any], bidirectional: bool, oneway_values: set[str]) -> bool:
+def _is_path_one_way(attrs: dict[str, Any], bidirectional: bool, oneway_values: set[str]) -> bool:
     """
     Determine if a path of nodes allows travel in only one direction.
 
     Parameters
     ----------
-    path : dict
-        a path's `tag:value` attribute data
-    bidirectional : bool
-        whether this is a bi-directional network type
-    oneway_values : set
-        the values OSM uses in its 'oneway' tag to denote True
+    attrs
+        A path's `tag:value` attribute data.
+    bidirectional
+        Whether this is a bidirectional network type.
+    oneway_values
+        The values OSM uses in its "oneway" tag to denote True.
 
     Returns
     -------
-    bool
+    is_one_way
     """
     # rule 1
     if settings.all_oneway:
@@ -657,22 +664,22 @@ def _is_path_one_way(path: dict[str, Any], bidirectional: bool, oneway_values: s
 
     # rule 2
     if bidirectional:
-        # if this is a bi-directional network type, then nothing in it is
+        # if this is a bidirectional network type, then nothing in it is
         # considered one-way. eg, if this is a walking network, this may very
         # well be a one-way street (as cars/bikes go), but in a walking-only
-        # network it is a bi-directional edge (you can walk both directions on
+        # network it is a bidirectional edge (you can walk both directions on
         # a one-way street). so we will add this path (in both directions) to
         # the graph and set its oneway attribute to False.
         return False
 
     # rule 3
-    if "oneway" in path and path["oneway"] in oneway_values:
-        # if this path is tagged as one-way and if it is not a bi-directional
+    if "oneway" in attrs and attrs["oneway"] in oneway_values:
+        # if this path is tagged as one-way and if it is not a bidirectional
         # network type then we'll add the path in one direction only
         return True
 
     # rule 4
-    if "junction" in path and path["junction"] == "roundabout":
+    if "junction" in attrs and attrs["junction"] == "roundabout":
         # roundabouts are also one-way but are not explicitly tagged as such
         return True
 
@@ -680,39 +687,39 @@ def _is_path_one_way(path: dict[str, Any], bidirectional: bool, oneway_values: s
     return False
 
 
-def _is_path_reversed(path: dict[str, Any], reversed_values: set[str]) -> bool:
+def _is_path_reversed(attrs: dict[str, Any], reversed_values: set[str]) -> bool:
     """
     Determine if the order of nodes in a path should be reversed.
 
     Parameters
     ----------
-    path : dict
-        a path's `tag:value` attribute data
-    reversed_values : set
-        the values OSM uses in its 'oneway' tag to denote travel can only
-        occur in the opposite direction of the node order
+    attrs
+        A path's `tag:value` attribute data.
+    reversed_values
+        The values OSM uses in its 'oneway' tag to denote travel can only
+        occur in the opposite direction of the node order.
 
     Returns
     -------
-    bool
+    is_reversed
     """
-    return "oneway" in path and path["oneway"] in reversed_values
+    return "oneway" in attrs and attrs["oneway"] in reversed_values
 
 
 def _add_paths(
     G: nx.MultiDiGraph, paths: Iterable[dict[str, Any]], bidirectional: bool = False
 ) -> None:
     """
-    Add a list of paths to the graph as edges.
+    Add OSM paths to the graph as edges.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        graph to add paths to
-    paths : iterable
-        iterable of paths' `tag:value` attribute data dicts
-    bidirectional : bool
-        if True, create bi-directional edges for one-way streets
+    G
+        The graph to add paths to.
+    paths
+        Iterable of paths' `tag:value` attribute data dicts.
+    bidirectional
+        If True, create bidirectional edges for one-way streets.
 
     Returns
     -------

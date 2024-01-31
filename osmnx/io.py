@@ -29,17 +29,17 @@ def save_graph_geopackage(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    filepath : string or pathlib.Path
-        path to the GeoPackage file including extension. if None, use default
-        data folder + graph.gpkg
-    directed : bool
-        if False, save one edge for each undirected edge in the graph but
-        retain original oneway and to/from information as edge attributes; if
-        True, save one edge for each directed edge in the graph
-    encoding : string
-        the character encoding for the saved file
+    G
+        The graph to save.
+    filepath
+        Path to the GeoPackage file including extension. If None, use default
+        `settings.data_folder/graph.gpkg`.
+    directed
+        If False, save one edge for each undirected edge in the graph but
+        retain original oneway and to/from information as edge attributes. If
+        True, save one edge for each directed edge in the graph.
+    encoding
+        The character encoding of the saved GeoPackage file.
 
     Returns
     -------
@@ -76,16 +76,16 @@ def save_graphml(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    filepath : string or pathlib.Path
-        path to the GraphML file including extension. if None, use default
-        data folder + graph.graphml
-    gephi : bool
-        if True, give each edge a unique key/id to work around Gephi's
-        interpretation of the GraphML specification
-    encoding : string
-        the character encoding for the saved file
+    G
+        The graph to save as.
+    filepath
+        Path to the GraphML file including extension. If None, use default
+        `settings.data_folder/graph.graphml`.
+    gephi
+        If True, give each edge a unique key/id for compatibility with Gephi's
+        interpretation of the GraphML specification.
+    encoding
+        The character encoding of the saved GraphML file.
 
     Returns
     -------
@@ -151,24 +151,23 @@ def load_graphml(
 
     Parameters
     ----------
-    filepath : string or pathlib.Path
-        path to the GraphML file
-    graphml_str : string
-        a valid and decoded string representation of a GraphML file's contents
-    node_dtypes : dict
-        dict of node attribute names:types to convert values' data types. the
-        type can be a python type or a custom string converter function.
-    edge_dtypes : dict
-        dict of edge attribute names:types to convert values' data types. the
-        type can be a python type or a custom string converter function.
-    graph_dtypes : dict
-        dict of graph-level attribute names:types to convert values' data
-        types. the type can be a python type or a custom string converter
-        function.
+    filepath
+        Path to the GraphML file.
+    graphml_str
+        Valid and decoded string representation of a GraphML file's contents.
+    node_dtypes
+        Dict of node attribute names:types to convert values' data types. The
+        type can be a type or a custom string converter function.
+    edge_dtypes
+        Dict of edge attribute names:types to convert values' data types. The
+        type can be a type or a custom string converter function.
+    graph_dtypes
+        Dict of graph-level attribute names:types to convert values' data
+        types. The type can be a type or a custom string converter function.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
     if (filepath is None and graphml_str is None) or (
         filepath is not None and graphml_str is not None
@@ -279,39 +278,39 @@ def save_graph_xml(
 
     Parameters
     ----------
-    data : networkx.MultiDiGraph or tuple of GeoDataFrames
-        either a MultiDiGraph or (gdf_nodes, gdf_edges) tuple
-    filepath : string or pathlib.Path
-        path to the .osm file including extension. if None, use default data
-        folder + graph.osm
-    node_tags : list
-        osm node tags to include in output OSM XML
-    node_attrs: list
-        osm node attributes to include in output OSM XML
-    edge_tags : list
-        osm way tags to include in output OSM XML
-    edge_attrs : list
-        osm way attributes to include in output OSM XML
-    oneway : bool
-        the default oneway value used to fill this tag where missing
-    merge_edges : bool
-        if True merges graph edges such that each OSM way has one entry
-        and one entry only in the OSM XML. Otherwise, every OSM way
-        will have a separate entry for each node pair it contains.
-    edge_tag_aggs : list of length-2 string tuples
-        useful only if merge_edges is True, this argument allows the user
-        to specify edge attributes to aggregate such that the merged
-        OSM way entry tags accurately represent the sum total of
-        their component edge attributes. For example, if the user
-        wants the OSM way to have a "length" attribute, the user must
-        specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
-        this method to aggregate the lengths of the individual
-        component edges. Otherwise, the length attribute will simply
-        reflect the length of the first edge associated with the way.
-    api_version : string
-        OpenStreetMap API version to write to the XML file header
-    precision : int
-        number of decimal places to round latitude and longitude values
+    data
+        Either a MultiDiGraph or (gdf_nodes, gdf_edges) tuple.
+    filepath
+        Path to the .osm file including extension. If None, use default
+        `settings.data_folder/graph.osm`.
+    node_tags
+        OSM node tags to include in output OSM XML.
+    node_attrs
+        OSM node attributes to include in output OSM XML.
+    edge_tags
+        OSM way tags to include in output OSM XML.
+    edge_attrs
+        OSM way attributes to include in output OSM XML.
+    oneway
+        The default oneway value used to fill this tag where missing.
+    merge_edges
+        If True, merge graph edges such that each OSM way has one entry and
+        one entry only in the OSM XML. Otherwise, every OSM way will have a
+        separate entry for each node pair it contains.
+    edge_tag_aggs
+        Useful only if `merge_edges` is True, this argument allows the user to
+        specify edge attributes to aggregate such that the merged OSM way
+        entry tags accurately represent the sum total of their component edge
+        attributes. For example, if the user wants the OSM way to have a
+        "length" attribute, the user must specify
+        `edge_tag_aggs=[('length', 'sum')]` in order to tell this function to
+        aggregate the lengths of the individual component edges. Otherwise,
+        the length attribute will simply reflect the length of the first edge
+        associated with the way.
+    api_version
+        OpenStreetMap API version to save in the XML file header.
+    precision
+        Number of decimal places to round latitude and longitude values.
 
     Returns
     -------
@@ -338,14 +337,14 @@ def _convert_graph_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    dtypes : dict
-        dict of graph-level attribute names:types
+    G
+        Graph to convert the graph-level attributes of.
+    dtypes
+        Dict of graph-level attribute names:types.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
     # remove node_default and edge_default metadata keys if they exist
     G.graph.pop("node_default", None)
@@ -363,14 +362,14 @@ def _convert_node_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.M
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    dtypes : dict
-        dict of node attribute names:types
+    G
+        Graph to convert the node attributes of.
+    dtypes
+        Dict of node attribute names:types.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
     for _, data in G.nodes(data=True):
         # first, eval stringified lists, dicts, or sets to convert them to objects
@@ -393,14 +392,14 @@ def _convert_edge_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.M
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    dtypes : dict
-        dict of edge attribute names:types
+    G
+        Graph to convert the edge attributes of.
+    dtypes
+        Dict of edge attribute names:types.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
     # for each edge in the graph, eval attribute value lists and convert types
     for _, _, data in G.edges(data=True, keys=False):
@@ -446,12 +445,12 @@ def _convert_bool_string(value: bool | str) -> bool:
 
     Parameters
     ----------
-    value : bool or string {"True", "False"}
-        the value to convert
+    value
+        The string value to convert to bool.
 
     Returns
     -------
-    bool
+    bool_value
     """
     if isinstance(value, bool):
         return value
@@ -473,13 +472,13 @@ def _stringify_nonnumeric_cols(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 
     Parameters
     ----------
-    gdf : geopandas.GeoDataFrame
-        gdf to stringify non-numeric columns of
+    gdf
+        GeoDataFrame to stringify non-numeric columns of.
 
     Returns
     -------
-    gdf : geopandas.GeoDataFrame
-        gdf with non-numeric columns stringified
+    gdf
+        GeoDataFrame with non-numeric columns stringified.
     """
     # stringify every non-numeric column other than geometry column
     for col in (c for c in gdf.columns if c != "geometry"):

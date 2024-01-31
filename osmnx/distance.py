@@ -1,4 +1,4 @@
-"""Calculate distances and find nearest node/edge(s) to point(s)."""
+"""Calculate distances and find nearest graph node/edge(s) to point(s)."""
 
 from __future__ import annotations
 
@@ -82,23 +82,23 @@ def great_circle(
 
     Parameters
     ----------
-    lat1 : float or numpy.array of float
-        first point's latitude coordinate
-    lon1 : float or numpy.array of float
-        first point's longitude coordinate
-    lat2 : float or numpy.array of float
-        second point's latitude coordinate
-    lon2 : float or numpy.array of float
-        second point's longitude coordinate
-    earth_radius : float
-        earth's radius in units in which distance will be returned (default is
-        meters)
+    lat1
+        First point's latitude coordinate(s).
+    lon1
+        First point's longitude coordinate(s).
+    lat2
+        Second point's latitude coordinate(s).
+    lon2
+        Second point's longitude coordinate(s).
+    earth_radius
+        Earth's radius in units in which distance will be returned (default
+        represents meters).
 
     Returns
     -------
-    dist : float or numpy.array of float
-        distance from each (lat1, lon1) to each (lat2, lon2) in units of
-        earth_radius
+    dist
+        Distance from each `(lat1, lon1)` point to each `(lat2, lon2)` point
+        in units of `earth_radius`.
     """
     y1 = np.deg2rad(lat1)
     y2 = np.deg2rad(lat2)
@@ -149,19 +149,20 @@ def euclidean(
 
     Parameters
     ----------
-    y1 : float or numpy.array of float
-        first point's y coordinate
-    x1 : float or numpy.array of float
-        first point's x coordinate
-    y2 : float or numpy.array of float
-        second point's y coordinate
-    x2 : float or numpy.array of float
-        second point's x coordinate
+    y1
+        First point's y coordinate(s).
+    x1
+        First point's x coordinate(s).
+    y2
+        Second point's y coordinate(s).
+    x2
+        Second point's x coordinate(s).
 
     Returns
     -------
-    dist : float or numpy.array of float
-        distance from each (x1, y1) to each (x2, y2) in coordinates' units
+    dist
+        Distance from each `(x1, y1)` point to each `(x2, y2)` point in same
+        units as the points' coordinates.
     """
     # pythagorean theorem
     dist: float | NDArray[np.float64] = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
@@ -173,11 +174,11 @@ def add_edge_lengths(
     edges: Iterable[tuple[int, int, int]] | None = None,
 ) -> nx.MultiDiGraph:
     """
-    Add `length` attribute (in meters) to each edge.
+    Calculate and add `length` attribute (in meters) to each edge.
 
     Vectorized function to calculate great-circle distance between each edge's
-    incident nodes. Ensure graph is in unprojected coordinates, and
-    unsimplified to get accurate distances.
+    incident nodes. Ensure graph is unprojected and unsimplified to calculate
+    accurate distances.
 
     Note: this function is run by all the `graph.graph_from_x` functions
     automatically to add `length` attributes to all edges. It calculates edge
@@ -185,24 +186,24 @@ def add_edge_lengths(
     OSMnx automatically runs this function upon graph creation, it does it
     before simplifying the graph: thus it calculates the straight-line lengths
     of edge segments that are themselves all straight. Only after
-    simplification do edges take on a (potentially) curvilinear geometry. If
-    you wish to calculate edge lengths later, you are calculating
+    simplification do edges take on (potentially) curvilinear geometry. If you
+    wish to calculate edge lengths later, note that you will be calculating
     straight-line distances which necessarily ignore the curvilinear geometry.
-    You only want to run this function on a graph with all straight edges
+    Thus you only want to run this function on a graph with all straight edges
     (such as is the case with an unsimplified graph).
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        unprojected, unsimplified input graph
-    edges : iterable of tuples
-        iterable of (u, v, k) tuples representing subset of edges to add
-        length attributes to. if None, add lengths to all edges.
+    G
+        Unprojected and unsimplified input graph.
+    edges
+        The subset of edges to add `length` attributes to, as `(u, v, k)`
+        tuples. If None, add lengths to all edges.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        graph with edge length attributes
+    G
+        Graph with `length` attributes on the edges.
     """
     uvk = G.edges if edges is None else edges
 
@@ -279,10 +280,10 @@ def nearest_nodes(
     Find the nearest node to a point or to each of several points.
 
     If `X` and `Y` are single coordinate values, this will return the nearest
-    node to that point. If `X` and `Y` are lists of coordinate values, this
-    will return the nearest node to each point.
+    node to that point. If `X` and `Y` are iterables of coordinate values,
+    this will return the nearest node to each point.
 
-    If the graph is projected, this uses a k-d tree for euclidean nearest
+    If the graph is projected, this uses a k-d tree for Euclidean nearest
     neighbor search, which requires that scipy is installed as an optional
     dependency. If it is unprojected, this uses a ball tree for haversine
     nearest neighbor search, which requires that scikit-learn is installed as
@@ -290,22 +291,23 @@ def nearest_nodes(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        graph in which to find nearest nodes
-    X : float or iterable of floats
-        points' x (longitude) coordinates, in same CRS/units as graph and
-        containing no nulls
-    Y : float or iterable of floats
-        points' y (latitude) coordinates, in same CRS/units as graph and
-        containing no nulls
-    return_dist : bool
-        optionally also return distance between points and nearest nodes
+    G
+        Graph in which to find nearest nodes.
+    X
+        The points' x (longitude) coordinates, in same CRS/units as graph and
+        containing no nulls.
+    Y
+        The points' y (latitude) coordinates, in same CRS/units as graph and
+        containing no nulls.
+    return_dist
+        If True, optionally also return the distance(s) between point(s) and
+        nearest node(s).
 
     Returns
     -------
-    nn or (nn, dist) : int or np.array or a tuple of (int/np.array, float/np.array)
-        nearest node ID(s) or optionally a tuple of ID(s) and distance(s)
-        between each point and its nearest node
+    nn or (nn, dist)
+        Nearest node ID(s) or optionally a tuple of ID(s) and distance(s)
+        between each point and its nearest node.
     """
     # make coordinates arrays whether user passed iterable values or not
     if not (isinstance(X, Iterable) and isinstance(Y, Iterable)):
@@ -422,29 +424,30 @@ def nearest_edges(
     Find the nearest edge to a point or to each of several points.
 
     If `X` and `Y` are single coordinate values, this will return the nearest
-    edge to that point. If `X` and `Y` are lists of coordinate values, this
-    will return the nearest edge to each point. This function uses an R-tree
-    spatial index and minimizes the euclidean distance from each point to the
+    edge to that point. If `X` and `Y` are iterables of coordinate values,
+    this will return the nearest edge to each point. This uses an R-tree
+    spatial index and minimizes the Euclidean distance from each point to the
     possible matches. For accurate results, use a projected graph and points.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        graph in which to find nearest edges
-    X : float or iterable of floats
-        points' x (longitude) coordinates, in same CRS/units as graph and
-        containing no nulls
-    Y : float or iterable of floats
-        points' y (latitude) coordinates, in same CRS/units as graph and
-        containing no nulls
-    return_dist : bool
-        optionally also return distance between points and nearest edges
+    G
+        Graph in which to find nearest edges.
+    X
+        The points' x (longitude) coordinates, in same CRS/units as graph and
+        containing no nulls.
+    Y
+        The points' y (latitude) coordinates, in same CRS/units as graph and
+        containing no nulls.
+    return_dist
+        If True, optionally also return the distance(s) between point(s) and
+        nearest edge(s).
 
     Returns
     -------
-    ne or (ne, dist) : tuple or np.array or a tuple of (tuple/np.array, float/np.array)
-        nearest edge ID(s) (as `u`, `v`, `key` tuples) or optionally a tuple
-        of ID(s) and distance(s) between each point and its nearest edge
+    ne or (ne, dist)
+        Nearest edge ID(s) as `(u, v, k)` tuples, or optionally a tuple of
+        ID(s) and distance(s) between each point and its nearest edge.
     """
     # make coordinates arrays whether user passed iterable values or not
     if not (isinstance(X, Iterable) and isinstance(Y, Iterable)):

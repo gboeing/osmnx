@@ -23,19 +23,19 @@ from ._errors import InsufficientResponseError
 
 def geocode(query: str) -> tuple[float, float]:
     """
-    Geocode place names or addresses to (lat, lon) with the Nominatim API.
+    Geocode place names or addresses to `(lat, lon)` with the Nominatim API.
 
     This geocodes the query via the Nominatim "search" endpoint.
 
     Parameters
     ----------
-    query : string
-        the query string to geocode
+    query
+        The query string to geocode.
 
     Returns
     -------
-    point : tuple
-        the (lat, lon) coordinates returned by the geocoder
+    point
+        The `(lat, lon)` coordinates returned by the geocoder.
     """
     # define the parameters
     params: OrderedDict[str, int | str] = OrderedDict()
@@ -86,20 +86,20 @@ def geocode_to_gdf(
 
     Parameters
     ----------
-    query : string or dict or list of strings/dicts
-        query string(s) or structured dict(s) to geocode
-    which_result : int or list
-        which search result to return. if None, auto-select the first
-        (Multi)Polygon or raise an error if OSM doesn't return one. to get
-        the top match regardless of geometry type, set which_result=1.
-        ignored if by_osmid=True.
-    by_osmid : bool
-        if True, treat query as an OSM ID lookup rather than text search
+    query
+        The query string(s) or structured dict(s) to geocode.
+    which_result
+        Which search result to return. If None, auto-select the first
+        (Multi)Polygon or raise an error if OSM doesn't return one. To get
+        the top match regardless of geometry type, set `which_result=1`.
+        Ignored if `by_osmid=True`.
+    by_osmid
+        If True, treat query as an OSM ID lookup rather than text search.
 
     Returns
     -------
-    gdf : geopandas.GeoDataFrame
-        a GeoDataFrame with one row for each query
+    gdf
+        GeoDataFrame with one row for each query result.
     """
     if isinstance(query, list):
         # if query is a list of queries but which_result is int/None, then
@@ -132,23 +132,22 @@ def _geocode_query_to_gdf(
 
     Parameters
     ----------
-    query : string or dict
-        query string or structured dict to geocode
-    which_result : int
-        which geocoding result to use. if None, auto-select the first
-        (Multi)Polygon or raise an error if OSM doesn't return one. to get
-        the top match regardless of geometry type, set which_result=1.
-        ignored if by_osmid=True.
-    by_osmid : bool
-        if True, handle query as an OSM ID for lookup rather than text search
+    query
+        Query string or structured dict to geocode.
+    which_result
+        Which search result to return. If None, auto-select the first
+        (Multi)Polygon or raise an error if OSM doesn't return one. To get
+        the top match regardless of geometry type, set `which_result=1`.
+        Ignored if `by_osmid=True`.
+    by_osmid
+        If True, treat query as an OSM ID lookup rather than text search.
 
     Returns
     -------
-    gdf : geopandas.GeoDataFrame
-        a GeoDataFrame with one row containing the result of geocoding
+    gdf
+        GeoDataFrame with one row containing the geocoding result.
     """
     limit = 50 if which_result is None else which_result
-
     results = _nominatim._download_nominatim_element(query, by_osmid=by_osmid, limit=limit)
 
     # choose the right result from the JSON response
@@ -163,7 +162,11 @@ def _geocode_query_to_gdf(
 
     elif which_result is None:
         # else, if which_result=None, auto-select the first (Multi)Polygon
-        result = _get_first_polygon(results, query)
+        try:
+            result = _get_first_polygon(results)
+        except TypeError as e:
+            msg = f"Nominatim did not geocode query {query!r} to a geometry of type (Multi)Polygon"
+            raise TypeError(msg) from e
 
     elif len(results) >= which_result:
         # else, if we got at least which_result results, choose that one
@@ -205,23 +208,19 @@ def _geocode_query_to_gdf(
     return gdf
 
 
-def _get_first_polygon(
-    results: list[dict[str, Any]], query: str | dict[str, str]
-) -> dict[str, Any]:
+def _get_first_polygon(results: list[dict[str, Any]]) -> dict[str, Any]:
     """
     Choose first result of geometry type (Multi)Polygon from list of results.
 
     Parameters
     ----------
-    results : list
-        list of results from Nominatim API
-    query : str
-        the query string or structured dict that was geocoded
+    results
+        Results from the Nominatim API.
 
     Returns
     -------
-    result : dict
-        the chosen result
+    result
+        The chosen result.
     """
     polygon_types = {"Polygon", "MultiPolygon"}
 
@@ -229,6 +228,5 @@ def _get_first_polygon(
         if "geojson" in result and result["geojson"]["type"] in polygon_types:
             return result
 
-    # if we never found a polygon, throw an error
-    msg = f"Nominatim could not geocode query {query!r} to a geometry of type (Multi)Polygon"
-    raise TypeError(msg)
+    # if we never found a polygon, raise an error
+    raise TypeError

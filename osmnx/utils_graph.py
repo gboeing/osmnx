@@ -126,23 +126,23 @@ def graph_to_gdfs(
 
     Parameters
     ----------
-    G : networkx.MultiGraph or networkx.MultiDiGraph
-        input graph
-    nodes : bool
-        if True, convert graph nodes to a GeoDataFrame and return it
-    edges : bool
-        if True, convert graph edges to a GeoDataFrame and return it
-    node_geometry : bool
-        if True, create a geometry column from node x and y attributes
-    fill_edge_geometry : bool
-        if True, fill in missing edge geometry fields using nodes u and v
+    G
+        Input graph.
+    nodes
+        If True, convert graph nodes to a GeoDataFrame and return it.
+    edges
+        If True, convert graph edges to a GeoDataFrame and return it.
+    node_geometry
+        If True, create a geometry column from node "x" and "y" attributes.
+    fill_edge_geometry
+        If True, fill missing edge geometry fields using endpoint nodes'
+        coordinates to create a LineString.
 
     Returns
     -------
-    geopandas.GeoDataFrame or tuple
-        gdf_nodes or gdf_edges or tuple of (gdf_nodes, gdf_edges). gdf_nodes
-        is indexed by osmid and gdf_edges is multi-indexed by u, v, key
-        following normal MultiGraph/MultiDiGraph structure.
+    gdf_nodes or gdf_edges or (gdf_nodes, gdf_edges)
+        `gdf_nodes` is indexed by `osmid` and `gdf_edges` is multi-indexed by
+        `(u, v, key)` following normal MultiGraph/MultiDiGraph structure.
     """
     crs = G.graph["crs"]
 
@@ -230,30 +230,31 @@ def graph_from_gdfs(
     Convert node and edge GeoDataFrames to a MultiDiGraph.
 
     This function is the inverse of `graph_to_gdfs` and is designed to work in
-    conjunction with it.
+    conjunction with it. However, you can convert arbitrary node and edge
+    GeoDataFrames as long as 1) `gdf_nodes` is uniquely indexed by `osmid`, 2)
+    `gdf_nodes` contains `x` and `y` coordinate columns representing node
+    geometries, 3) `gdf_edges` is uniquely multi-indexed by `(u, v, key)`
+    (following normal MultiDiGraph structure). This allows you to load any
+    node/edge Shapefiles or GeoPackage layers as GeoDataFrames then convert
+    them to a MultiDiGraph for network analysis.
 
-    However, you can convert arbitrary node and edge GeoDataFrames as long as
-    1) `gdf_nodes` is uniquely indexed by `osmid`, 2) `gdf_nodes` contains `x`
-    and `y` coordinate columns representing node geometries, 3) `gdf_edges` is
-    uniquely multi-indexed by `u`, `v`, `key` (following normal MultiDiGraph
-    structure). This allows you to load any node/edge shapefiles or GeoPackage
-    layers as GeoDataFrames then convert them to a MultiDiGraph for graph
-    analysis. Note that any `geometry` attribute on `gdf_nodes` is discarded
-    since `x` and `y` provide the necessary node geometry information instead.
+    Note that any `geometry` attribute on `gdf_nodes` is discarded, since `x`
+    and `y` provide the necessary node geometry information instead.
 
     Parameters
     ----------
-    gdf_nodes : geopandas.GeoDataFrame
-        GeoDataFrame of graph nodes uniquely indexed by osmid
-    gdf_edges : geopandas.GeoDataFrame
-        GeoDataFrame of graph edges uniquely multi-indexed by u, v, key
-    graph_attrs : dict
-        the new G.graph attribute dict. if None, use crs from gdf_edges as the
-        only graph-level attribute (gdf_edges must have crs attribute set)
+    gdf_nodes
+        GeoDataFrame of graph nodes uniquely indexed by `osmid`.
+    gdf_edges
+        GeoDataFrame of graph edges uniquely multi-indexed by `(u, v, key)`.
+    graph_attrs
+        The new `G.graph` attribute dictionary. If None, use `gdf_edges`'s CRS
+        as the only graph-level attribute (`gdf_edges` must have its `crs`
+        attribute set).
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
     if not ("x" in gdf_nodes.columns and "y" in gdf_nodes.columns):  # pragma: no cover
         msg = "gdf_nodes must contain x and y columns"
@@ -311,17 +312,16 @@ def route_to_gdf(G: nx.MultiDiGraph, route: list[int], weight: str = "length") -
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    route : list
-        list of node IDs constituting the path
-    weight : string
-        if there are parallel edges between two nodes, choose lowest weight
+    G
+        Input graph.
+    route
+        Node IDs constituting the path.
+    weight
+        Attribute value to minimize when choosing between parallel edges.
 
     Returns
     -------
-    gdf_edges : geopandas.GeoDataFrame
-        GeoDataFrame of the edges
+    gdf_edges
     """
     pairs = zip(route[:-1], route[1:])
     uvk = ((u, v, min(G[u][v].items(), key=lambda i: i[1][weight])[0]) for u, v in pairs)
@@ -334,13 +334,13 @@ def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        graph from which to remove isolated nodes
+    G
+        Graph from which to remove isolated nodes.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        graph with all isolated nodes removed
+    G
+        Graph with all isolated nodes removed.
     """
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
@@ -354,20 +354,20 @@ def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
 def get_largest_component(G: nx.MultiDiGraph, strongly: bool = False) -> nx.MultiDiGraph:
     """
-    Get subgraph of G's largest weakly/strongly connected component.
+    Get subgraph of `G`'s largest weakly or strongly connected component.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    strongly : bool
-        if True, return the largest strongly instead of weakly connected
-        component
+    G
+        Input graph.
+    strongly
+        If True, return the largest strongly (instead of weakly) connected
+        component.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        the largest connected component subgraph of the original graph
+    G
+        The largest connected component subgraph of the original graph.
     """
     if strongly:
         kind = "strongly"
@@ -394,19 +394,19 @@ def get_digraph(G: nx.MultiDiGraph, weight: str = "length") -> nx.DiGraph:
     """
     Convert MultiDiGraph to DiGraph.
 
-    Chooses between parallel edges by minimizing `weight` attribute value.
-    Note: see also `get_undirected` to convert MultiDiGraph to MultiGraph.
+    Chooses between parallel edges by minimizing `weight` attribute value. See
+    also `get_undirected` to convert MultiDiGraph to MultiGraph.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    weight : string
-        attribute value to minimize when choosing between parallel edges
+    G
+        Input graph.
+    weight
+        Attribute value to minimize when choosing between parallel edges.
 
     Returns
     -------
-    networkx.DiGraph
+    G
     """
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
@@ -431,17 +431,17 @@ def get_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
     """
     Convert MultiDiGraph to undirected MultiGraph.
 
-    Maintains parallel edges only if their geometries differ. Note: see also
+    Maintains parallel edges only if their geometries differ. See also
     `get_digraph` to convert MultiDiGraph to DiGraph.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
+    G
+        Input graph.
 
     Returns
     -------
-    networkx.MultiGraph
+    G
     """
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
@@ -492,18 +492,18 @@ def get_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
 
 def _is_duplicate_edge(data1: dict[str, Any], data2: dict[str, Any]) -> bool:
     """
-    Check if two graph edge data dicts have the same osmid and geometry.
+    Check if two graph edge data dicts have the same `osmid` and `geometry`.
 
     Parameters
     ----------
-    data1: dict
-        the first edge's data
-    data2 : dict
-        the second edge's data
+    data1
+        The first edge's attribute data.
+    data2
+        The second edge's attribute data.
 
     Returns
     -------
-    is_dupe : bool
+    is_dupe
     """
     is_dupe = False
 
@@ -538,14 +538,14 @@ def _is_same_geometry(ls1: LineString, ls2: LineString) -> bool:
 
     Parameters
     ----------
-    ls1 : shapely.geometry.LineString
-        the first LineString geometry
-    ls2 : shapely.geometry.LineString
-        the second LineString geometry
+    ls1
+        The first LineString geometry.
+    ls2
+        The second LineString geometry.
 
     Returns
     -------
-    bool
+    is_same
     """
     # extract coordinates from each LineString geometry
     geom1 = [tuple(coords) for coords in ls1.xy]
@@ -562,19 +562,19 @@ def _update_edge_keys(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     """
     Increment key of one edge of parallel edges that differ in geometry.
 
-    For example, two streets from u to v that bow away from each other as
+    For example, two streets from `u` to `v` that bow away from each other as
     separate streets, rather than opposite direction edges of a single street.
-    Increment one of these edge's keys so that they do not match across u, v,
-    k or v, u, k so we can add both to an undirected MultiGraph.
+    Increment one of these edge's keys so that they do not match across
+    `(u, v, k)` or `(v, u, k)` so we can add both to an undirected MultiGraph.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
+    G
+        Input graph.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
     # identify all the edges that are duplicates based on a sorted combination
     # of their origin, destination, and key. that is, edge uv will match edge vu

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging as lg
+from collections.abc import Iterable
 from collections.abc import Iterator
 from typing import Any
 
@@ -19,67 +20,77 @@ from . import utils_graph
 from ._errors import GraphSimplificationError
 
 
-def _is_endpoint(G: nx.MultiDiGraph, node: int, strict: bool = True) -> bool:
+def _is_endpoint(G: nx.MultiDiGraph, node: int, endpoint_attrs: Iterable[str] | None) -> bool:
     """
     Determine if a node is a true endpoint of an edge.
 
-    Return True if the node is a "real" endpoint of an edge in the network,
-    otherwise False. OSM data includes lots of nodes that exist only as points
-    to help streets bend around curves. An end point is a node that either:
-    1) is its own neighbor, ie, it self-loops.
-    2) or, has no incoming edges or no outgoing edges, ie, all its incident
-    edges point inward or all its incident edges point outward.
-    3) or, it does not have exactly two neighbors and degree of 2 or 4.
-    4) or, if strict mode is false, if its edges have different OSM IDs.
+    Return True if the node is a "true" endpoint of an edge in the network,
+    otherwise False. OpenStreetMap data includes many nodes that exist only as
+    geometric vertices to allow ways to curve. A true edge endpoint is a node
+    that satisfies at least 1 of the following 4 rules:
+
+    1) It is its own neighbor (ie, it self-loops).
+
+    2) Or, it has no incoming edges or no outgoing edges (ie, all its incident
+    edges are inbound or all its incident edges are outbound).
+
+    3) Or, it does not have exactly two neighbors and degree of 2 or 4.
+
+    4) Or, if `endpoint_attrs` is not None, and its incident edges have
+    different values than each other for any of the edge attributes in
+    `endpoint_attrs`.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    node : int
-        the node to examine
-    strict : bool
-        if False, allow nodes to be end points even if they fail all other rules
-        but have edges with different OSM IDs
+    G
+        Input graph.
+    node
+        The node to examine.
+    endpoint_attrs
+        Edge attribute names for relaxing the strictness of endpoint
+        determination. If not None, a node is an endpoint if its incident
+        edges have different values then each other for any of the edge
+        attributes in `endpoint_attrs`.
 
     Returns
     -------
-    bool
+    endpoint
     """
     neighbors = set(list(G.predecessors(node)) + list(G.successors(node)))
     n = len(neighbors)
     d = G.degree(node)
 
-    # rule 1
+    # RULE 1
+    # if the node appears in its list of neighbors, it self-loops: this is
+    # always an endpoint
     if node in neighbors:
-        # if the node appears in its list of neighbors, it self-loops
-        # this is always an endpoint.
         return True
 
-    # rule 2
+    # RULE 2
+    # if node has no incoming edges or no outgoing edges, it is an endpoint
     if G.out_degree(node) == 0 or G.in_degree(node) == 0:
-        # if node has no incoming edges or no outgoing edges, it is an endpoint
         return True
 
-    # rule 3
+    # RULE 3
+    # else, if it does NOT have 2 neighbors AND either 2 or 4 directed edges,
+    # it is an endpoint. either it has 1 or 3+ neighbors, in which case it is
+    # a dead-end or an intersection of multiple streets or it has 2 neighbors
+    # but 3 degree (indicating a change from oneway to twoway) or more than 4
+    # degree (indicating a parallel edge) and thus is an endpoint
     if not ((n == 2) and (d in {2, 4})):  # noqa: PLR2004
-        # else, if it does NOT have 2 neighbors AND either 2 or 4 directed
-        # edges, it is an endpoint. either it has 1 or 3+ neighbors, in which
-        # case it is a dead-end or an intersection of multiple streets or it has
-        # 2 neighbors but 3 degree (indicating a change from oneway to twoway)
-        # or more than 4 degree (indicating a parallel edge) and thus is an
-        # endpoint
         return True
 
-    # rule 4
-    if not strict:
-        # non-strict mode: do its incident edges have different OSM IDs?
-        # first collect all the OSM way IDs for incoming edges
-        # then collect all the OSM way IDs for outgoing edges
-        # if there is more than 1 OSM ID then it is an endpoint, otherwise not
-        incoming = [G.edges[u, node, k]["osmid"] for u in G.predecessors(node) for k in G[u][node]]
-        outgoing = [G.edges[node, v, k]["osmid"] for v in G.successors(node) for k in G[node][v]]
-        return len(set(incoming + outgoing)) > 1
+    # RULE 4
+    # non-strict mode: do its incident edges have different attr values? for
+    # each attribute to check, collect the attribute's values in all inbound
+    # and outbound edges. if there is more than 1 unique value then then this
+    # node is an endpoint
+    if endpoint_attrs is not None:
+        for attr in endpoint_attrs:
+            in_values = {v for _, _, v in G.in_edges(node, data=attr, keys=False)}
+            out_values = {v for _, _, v in G.out_edges(node, data=attr, keys=False)}
+            if len(in_values | out_values) > 1:
+                return True
 
     # if none of the preceding rules passed, then it is not an endpoint
     return False
@@ -93,22 +104,22 @@ def _build_path(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    endpoint : int
-        the endpoint node from which to start the path
-    endpoint_successor : int
-        the successor of endpoint through which the path to the next endpoint
-        will be built
-    endpoints : set
-        the set of all nodes in the graph that are endpoints
+    G
+        Input graph.
+    endpoint
+        Ehe endpoint node from which to start the path.
+    endpoint_successor
+        The successor of endpoint through which the path to the next endpoint
+        will be built.
+    endpoints
+        The set of all nodes in the graph that are endpoints.
 
     Returns
     -------
-    path : list
-        the first and last items in the resulting path list are endpoint
+    path
+        The first and last items in the resulting path list are endpoint
         nodes, and all other items are interstitial nodes that can be removed
-        subsequently
+        subsequently.
     """
     # start building path from endpoint node through its successor
     path = [endpoint, endpoint_successor]
@@ -157,7 +168,9 @@ def _build_path(
     return path
 
 
-def _get_paths_to_simplify(G: nx.MultiDiGraph, strict: bool = True) -> Iterator[list[int]]:
+def _get_paths_to_simplify(
+    G: nx.MultiDiGraph, endpoint_attrs: Iterable[str] | None
+) -> Iterator[list[int]]:
     """
     Generate all the paths to be simplified between endpoint nodes.
 
@@ -166,19 +179,20 @@ def _get_paths_to_simplify(G: nx.MultiDiGraph, strict: bool = True) -> Iterator[
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    strict : bool
-        if False, allow nodes to be end points even if they fail all other rules
-        but have edges with different OSM IDs
+    G
+        Input graph.
+    endpoint_attrs
+        Edge attribute names for relaxing the strictness of endpoint
+        determination. If not None, a node is an endpoint if its incident
+        edges have different values then each other for any of the edge
+        attributes in `endpoint_attrs`.
 
     Yields
     ------
-    path_to_simplify : generator
-        a generator of paths to simplify
+    path_to_simplify
     """
     # first identify all the nodes that are endpoints
-    endpoints = {n for n in G.nodes if _is_endpoint(G, n, strict=strict)}
+    endpoints = {n for n in G.nodes if _is_endpoint(G, n, endpoint_attrs)}
     utils.log(f"Identified {len(endpoints):,} edge endpoints")
 
     # for each endpoint node, look at each of its successor nodes
@@ -191,7 +205,7 @@ def _get_paths_to_simplify(G: nx.MultiDiGraph, strict: bool = True) -> Iterator[
                 yield _build_path(G, endpoint, successor, endpoints)
 
 
-def _remove_rings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
+def _remove_rings(G: nx.MultiDiGraph, endpoint_attrs: Iterable[str] | None) -> nx.MultiDiGraph:
     """
     Remove all self-contained rings from a graph.
 
@@ -200,58 +214,74 @@ def _remove_rings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
+    G
+        Input graph.
+    endpoint_attrs
+        Edge attribute names for relaxing the strictness of endpoint
+        determination. If not None, a node is an endpoint if its incident
+        edges have different values than each other for any of the edge
+        attributes in `endpoint_attrs`.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        graph with self-contained rings removed
+    G
+        Graph with self-contained rings removed.
     """
     nodes_in_rings = set()
     for wcc in nx.weakly_connected_components(G):
-        if not any(_is_endpoint(G, n) for n in wcc):
+        if not any(_is_endpoint(G, n, endpoint_attrs) for n in wcc):
             nodes_in_rings.update(wcc)
     G.remove_nodes_from(nodes_in_rings)
     return G
 
 
 def simplify_graph(
-    G: nx.MultiDiGraph, strict: bool = True, remove_rings: bool = True, track_merged: bool = False
+    G: nx.MultiDiGraph,
+    endpoint_attrs: Iterable[str] | None = None,
+    remove_rings: bool = True,
+    track_merged: bool = False,
 ) -> nx.MultiDiGraph:
     """
     Simplify a graph's topology by removing interstitial nodes.
 
-    Simplifies graph topology by removing all nodes that are not intersections
-    or dead-ends. Create an edge directly between the end points that
-    encapsulate them, but retain the geometry of the original edges, saved as
-    a new `geometry` attribute on the new edge. Note that only simplified
-    edges receive a `geometry` attribute. Some of the resulting consolidated
-    edges may comprise multiple OSM ways, and if so, their multiple attribute
-    values are stored as a list. Optionally, the simplified edges can receive
-    a `merged_edges` attribute that contains a list of all the (u, v) node
-    pairs that were merged together.
+    This simplifies graph topology by removing all nodes that are not
+    intersections or dead-ends, by creating an edge directly between the end
+    points that encapsulate them while retaining the full geometry of the
+    original edges, saved as a new `geometry` attribute on the new edge.
+
+    Note that only simplified edges receive a `geometry` attribute. Some of
+    the resulting consolidated edges may comprise multiple OSM ways, and if
+    so, their multiple attribute values are stored as a list. Optionally, the
+    simplified edges can receive a `merged_edges` attribute that contains a
+    list of all the (u, v) node pairs that were merged together.
+
+    Use the `endpoint_attrs` parameter to relax simplification strictness. For
+    example, `endpoint_attrs=["osmid"]` will retain every node whose incident
+    edges have different OSM IDs. This lets you keep nodes at elbow two-way
+    intersections (but be aware that sometimes individual blocks have multiple
+    OSM IDs within them too). You could also use this parameter to retain
+    nodes where sidewalks or bike lanes begin/end in the middle of a block.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    strict : bool
-        if False, allow nodes to be end points even if they fail all other
-        rules but have incident edges with different OSM IDs. Lets you keep
-        nodes at elbow two-way intersections, but sometimes individual blocks
-        have multiple OSM IDs within them too.
-    remove_rings : bool
-        if True, remove isolated self-contained rings that have no endpoints
-    track_merged : bool
-        if True, add `merged_edges` attribute on simplified edges, containing
-        a list of all the (u, v) node pairs that were merged together
+    G
+        Input graph.
+    endpoint_attrs
+        Edge attribute names for relaxing the strictness of endpoint
+        determination. If not None, a node is an endpoint if its incident
+        edges have different values then each other for any of the edge
+        attributes in `endpoint_attrs`.
+    remove_rings
+        If True, remove isolated self-contained rings that have no endpoints.
+    track_merged
+        If True, add `merged_edges` attribute on simplified edges, containing
+        a list of all the `(u, v)` node pairs that were merged together.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        topologically simplified graph, with a new `geometry` attribute on
-        each simplified edge
+    G
+        Topologically simplified graph, with a new `geometry` attribute on
+        each simplified edge.
     """
     if "simplified" in G.graph and G.graph["simplified"]:  # pragma: no cover
         msg = "This graph has already been simplified, cannot simplify it again."
@@ -270,7 +300,7 @@ def simplify_graph(
     all_edges_to_add = []
 
     # generate each path that needs to be simplified
-    for path in _get_paths_to_simplify(G, strict=strict):
+    for path in _get_paths_to_simplify(G, endpoint_attrs):
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
         merged_edges = []
@@ -340,7 +370,7 @@ def simplify_graph(
     G.remove_nodes_from(set(all_nodes_to_remove))
 
     if remove_rings:
-        G = _remove_rings(G)
+        G = _remove_rings(G, endpoint_attrs)
 
     # mark the graph as having been simplified
     G.graph["simplified"] = True
@@ -391,33 +421,32 @@ def consolidate_intersections(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        a projected graph
-    tolerance : float
-        nodes are buffered to this distance (in graph's geometry's units) and
-        subsequent overlaps are dissolved into a single node
-    rebuild_graph : bool
-        if True, consolidate the nodes topologically, rebuild the graph, and
-        return as networkx.MultiDiGraph. if False, consolidate the nodes
-        geometrically and return the consolidated node points as
-        geopandas.GeoSeries
-    dead_ends : bool
-        if False, discard dead-end nodes to return only street-intersection
-        points
-    reconnect_edges : bool
-        ignored if rebuild_graph is not True. if True, reconnect edges and
-        their geometries in rebuilt graph to the consolidated nodes and update
-        edge length attributes; if False, returned graph has no edges (which
-        is faster if you just need topologically consolidated intersection
-        counts).
+    G
+        A projected graph.
+    tolerance
+        Nodes are buffered to this distance (in graph's geometry's units) and
+        subsequent overlaps are dissolved into a single node.
+    rebuild_graph
+        If True, consolidate the nodes topologically, rebuild the graph, and
+        return as MultiDiGraph. Otherwise, consolidate the nodes geometrically
+        and return the consolidated node points as GeoSeries.
+    dead_ends
+        If False, discard dead-end nodes to return only street-intersection
+        points.
+    reconnect_edges
+        If True, reconnect edges (and their geometries) to the consolidated
+        nodes in rebuilt graph, and update the edge length attributes. If
+        False, the returned graph has no edges (which is faster if you just
+        need topologically consolidated intersection counts). Ignored if
+        `rebuild_graph` is not True.
 
     Returns
     -------
-    networkx.MultiDiGraph or geopandas.GeoSeries
-        if rebuild_graph=True, returns MultiDiGraph with consolidated
-        intersections and reconnected edge geometries. if rebuild_graph=False,
-        returns GeoSeries of shapely Points representing the centroids of
-        street intersections
+    G or gs
+        If `rebuild_graph=True`, returns MultiDiGraph with consolidated
+        intersections and (optionally) reconnected edge geometries. If
+        `rebuild_graph=False`, returns GeoSeries of Points representing the
+        centroids of street intersections.
     """
     # if dead_ends is False, discard dead-ends to retain only intersections
     if not dead_ends:
@@ -451,16 +480,16 @@ def _merge_nodes_geometric(G: nx.MultiDiGraph, tolerance: float) -> gpd.GeoSerie
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        a projected graph
-    tolerance : float
-        buffer nodes to this distance (in graph's geometry's units) then merge
-        overlapping polygons into a single polygon via a unary union operation
+    G
+        A projected graph.
+    tolerance
+        Buffer nodes to this distance (in graph's geometry's units) then merge
+        overlapping polygons into a single polygon via unary union operation.
 
     Returns
     -------
-    merged : GeoSeries
-        the merged overlapping polygons of the buffered nodes
+    merged
+        The merged overlapping polygons of the buffered nodes.
     """
     # buffer nodes GeoSeries then get unary union to merge overlaps
     merged = utils_graph.graph_to_gdfs(G, edges=False)["geometry"].buffer(tolerance).unary_union
@@ -490,23 +519,23 @@ def _consolidate_intersections_rebuild_graph(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        a projected graph
-    tolerance : float
-        nodes are buffered to this distance (in graph's geometry's units) and
-        subsequent overlaps are dissolved into a single node
-    reconnect_edges : bool
-        ignored if rebuild_graph is not True. if True, reconnect edges and
-        their geometries in rebuilt graph to the consolidated nodes and update
-        edge length attributes; if False, returned graph has no edges (which
-        is faster if you just need topologically consolidated intersection
-        counts).
+    G
+        A projected graph.
+    tolerance
+        Nodes are buffered to this distance (in graph's geometry's units) and
+        subsequent overlaps are dissolved into a single node.
+    reconnect_edges
+        If True, reconnect edges (and their geometries) to the consolidated
+        nodes in rebuilt graph, and update the edge length attributes. If
+        False, the returned graph has no edges (which is faster if you just
+        need topologically consolidated intersection counts). Ignored if
+        `rebuild_graph` is not True.
 
     Returns
     -------
-    H : networkx.MultiDiGraph
-        a rebuilt graph with consolidated intersections and reconnected
-        edge geometries
+    H
+        A rebuilt graph with consolidated intersections and reconnected edge
+        geometries.
     """
     # STEP 1
     # buffer nodes to passed-in distance and merge overlaps. turn merged nodes
@@ -537,8 +566,7 @@ def _consolidate_intersections_rebuild_graph(
             wccs = list(nx.weakly_connected_components(G.subgraph(nodes_subset.index)))
             if len(wccs) > 1:
                 # if there are multiple components in this cluster
-                suffix = 0
-                for wcc in wccs:
+                for suffix, wcc in enumerate(wccs):
                     # set subcluster xy to the centroid of just these nodes
                     idx = list(wcc)
                     subcluster_centroid = node_points.loc[idx].unary_union.centroid
@@ -546,7 +574,6 @@ def _consolidate_intersections_rebuild_graph(
                     gdf.loc[idx, "y"] = subcluster_centroid.y
                     # move to subcluster by appending suffix to cluster label
                     gdf.loc[idx, "cluster"] = f"{cluster_label}-{suffix}"
-                    suffix += 1
 
     # give nodes unique integer IDs (subclusters with suffixes are strings)
     gdf["cluster"] = gdf["cluster"].factorize()[0]

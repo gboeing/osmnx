@@ -42,27 +42,27 @@ def add_edge_speeds(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    hwy_speeds : dict
-        dict keys = OSM highway types and values = typical speeds (km per
+    G
+        Input graph.
+    hwy_speeds
+        Dict keys are OSM highway types and values are typical speeds (km per
         hour) to assign to edges of that highway type for any edges missing
         speed data. Any edges with highway type not in `hwy_speeds` will be
-        assigned the mean preexisting speed value of all edges of that highway
-        type.
-    fallback : float
-        default speed value (km per hour) to assign to edges whose highway
-        type did not appear in `hwy_speeds` and had no preexisting speed
-        values on any edge
-    agg : function
-        aggregation function to impute missing values from observed values.
-        the default is numpy.mean, but you might also consider for example
-        numpy.median, numpy.nanmedian, or your own custom function
+        assigned the mean pre-existing speed value of all edges of that
+        highway type.
+    fallback
+        Default speed value (km per hour) to assign to edges whose highway
+        type did not appear in `hwy_speeds` and had no pre-existing speed
+        attribute values on any edge.
+    agg
+        Aggregation function to impute missing values from observed values.
+        The default is `numpy.mean`, but you might also consider for example
+        `numpy.median`, `numpy.nanmedian`, or your own custom function.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        graph with speed_kph attributes on all edges
+    G
+        Graph with `speed_kph` attributes on all edges.
     """
     if fallback is None:
         fallback = np.nan
@@ -134,13 +134,13 @@ def add_edge_travel_times(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
+    G
+        Input graph.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        graph with travel_time attributes on all edges
+    G
+        Graph with `travel_time` attributes on all edges.
     """
     edges = utils_graph.graph_to_gdfs(G, nodes=False)
 
@@ -181,19 +181,19 @@ def _clean_maxspeed(
 
     Parameters
     ----------
-    maxspeed : string or float
-        an OSM way maxspeed value. null values are expected to be floats
-        (np.nan), and non-null values are strings.
-    agg : function
-        aggregation function if maxspeed contains multiple values (default
-        is numpy.mean)
-    convert_mph : bool
-        if True, convert miles per hour to km per hour
+    maxspeed
+        An OSM way "maxspeed" attribute value. Null values are expected to be
+        of type float (`numpy.nan`), and non-null values are strings.
+    agg
+        Aggregation function if `maxspeed` contains multiple values (default
+        is `numpy.mean`).
+    convert_mph
+        If True, convert miles per hour to kilometers per hour.
 
     Returns
     -------
-    clean_value : float
-        clean value resulting from `agg` function
+    clean_value
+        Clean value resulting from `agg` function.
     """
     MILES_TO_KM = 1.60934
     if not isinstance(maxspeed, str):
@@ -227,17 +227,17 @@ def _collapse_multiple_maxspeed_values(
 
     Parameters
     ----------
-    value : string or float or list
-        an OSM way maxspeed value, or a list of them. null values are expected
-        to be floats (np.nan), and non-null values are strings.
-    agg : function
-        the aggregation function to reduce the list to a single value
+    value
+        An OSM way "maxspeed" attribute value. Null values are expected to be
+        of type float (`numpy.nan`), and non-null values are strings.
+    agg
+        The aggregation function to reduce the list to a single value.
 
     Returns
     -------
-    collapsed : float or str
-        if `value` was a string or null, it is just returned directly.
-        otherwise, the return is a float representation of the aggregated
+    collapsed
+        If `value` was a string or null, it is just returned directly.
+        Otherwise, the return is a float representation of the aggregated
         value in the list (converted to kph if original value was in mph).
     """
     # if this isn't a list, just return it right back to the caller

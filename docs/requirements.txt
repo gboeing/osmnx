@@ -1,2 +1,3 @@
 furo
 sphinx == 7.*  # same value as needs_sphinx in /docs/source/conf.py
+sphinx-autodoc-typehints

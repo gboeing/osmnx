@@ -37,10 +37,17 @@ autodoc_mock_imports = [
     "sklearn",
 ]
 
+autodoc_typehints = "description"
+napoleon_use_param = True
+napoleon_use_rtype = False
+typehints_document_rtype = True
+typehints_use_rtype = False
+typehints_fully_qualified = False
+
 # general configuration and options for HTML output
 # see https://www.sphinx-doc.org/en/master/usage/configuration.html
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx_autodoc_typehints"]
 html_static_path: list[str] = []
 html_theme = "furo"
 language = "en"

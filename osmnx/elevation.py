@@ -31,26 +31,27 @@ except ImportError:  # pragma: no cover
 
 def add_edge_grades(G: nx.MultiDiGraph, add_absolute: bool = True) -> nx.MultiDiGraph:
     """
-    Add `grade` attribute to each graph edge.
+    Calculate and add `grade` attributes to all graph edges.
 
     Vectorized function to calculate the directed grade (ie, rise over run)
     for each edge in the graph and add it to the edge as an attribute. Nodes
-    must already have `elevation` attributes to use this function.
+    must already have `elevation` attributes before using this function.
 
     See also the `add_node_elevations_raster` and `add_node_elevations_google`
     functions.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph with `elevation` node attribute
-    add_absolute : bool
-        if True, also add absolute value of grade as `grade_abs` attribute
+    G
+        Graph with `elevation` node attributes.
+    add_absolute
+        If True, also add absolute value of grade as `grade_abs` attribute.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        graph with edge `grade` (and optionally `grade_abs`) attributes
+    G
+        Graph with `grade` (and optionally `grade_abs`) attributes on the
+        edges.
     """
     elev_lookup = G.nodes(data="elevation")
     u, v, k, lengths = zip(*G.edges(keys=True, data="length"))
@@ -73,21 +74,22 @@ def _query_raster(
     nodes: pd.DataFrame, filepath: str | Path, band: int
 ) -> Iterable[tuple[int, Any]]:
     """
-    Query a raster for values at coordinates in a DataFrame's x/y columns.
+    Query a raster file for values at coordinates in DataFrame x/y columns.
 
     Parameters
     ----------
-    nodes : pandas.DataFrame
-        DataFrame indexed by node ID and with two columns: x and y
-    filepath : string or pathlib.Path
-        path to the raster file or VRT to query
-    band : int
-        which raster band to query
+    nodes
+        DataFrame indexed by node ID and with two columns representing x and y
+        coordinates.
+    filepath
+        Path to the raster file or VRT to query.
+    band
+        Which raster band to query.
 
     Returns
     -------
-    nodes_values : zip
-        zipped node IDs and corresponding raster values
+    nodes_values
+        Zip of node IDs and corresponding raster values.
     """
     # must open raster file here: cannot pickle it to pass in multiprocessing
     with rasterio.open(filepath) as raster:
@@ -103,7 +105,7 @@ def add_node_elevations_raster(
     cpus: int | None = None,
 ) -> nx.MultiDiGraph:
     """
-    Add `elevation` attribute to each node from local raster file(s).
+    Add `elevation` attributes to all nodes from local raster file(s).
 
     If `filepath` is an iterable of paths, this will generate a virtual raster
     composed of the files at those paths as an intermediate step.
@@ -112,19 +114,19 @@ def add_node_elevations_raster(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph, in same CRS as raster
-    filepath : string or pathlib.Path or iterable of strings/Paths
-        the path(s) to the raster file(s) to query
-    band : int
-        which raster band to query
-    cpus : int
-        how many CPU cores to use; if None, use all available
+    G
+        Graph in same CRS as raster.
+    filepath
+        The path(s) to the raster file(s) to query.
+    band
+        Which raster band to query.
+    cpus
+        How many CPU cores to use. If None, use all available.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        graph with node elevation attributes
+    G
+        Graph with `elevation` attributes on the nodes.
     """
     if rasterio is None or gdal is None:  # pragma: no cover
         msg = "gdal and rasterio must be installed as optional dependencies to query raster files"
@@ -165,7 +167,7 @@ def add_node_elevations_google(
     G: nx.MultiDiGraph, api_key: str | None = None, batch_size: int = 512, pause: float = 0
 ) -> nx.MultiDiGraph:
     """
-    Add an `elevation` (meters) attribute to each node using a web service.
+    Add `elevation` (meters) attributes to all nodes using a web service.
 
     By default, this uses the Google Maps Elevation API but you can optionally
     use an equivalent API with the same interface and response format, such as
@@ -179,21 +181,21 @@ def add_node_elevations_google(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    api_key : string
-        a valid API key, can be None if the API does not require a key
-    batch_size : int
-        max number of coordinate pairs to submit in each request (depends on
+    G
+        Graph to add elevation data to.
+    api_key
+        A valid API key. Can be None if the API does not require a key.
+    batch_size
+        Max number of coordinate pairs to submit in each request (depends on
         provider's limits). Google's limit is 512.
-    pause : float
-        time to pause between API calls, which can be increased if you get
-        rate limited
+    pause
+        How long to pause in seconds between API calls, which can be increased
+        if you get rate limited.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        graph with node elevation attributes
+    G
+        Graph with `elevation` attributes on the nodes.
     """
     # make a pandas series of all the nodes' coordinates as "lat,lon" and
     # round coordinates to 6 decimal places (approx 5 to 10 cm resolution)
@@ -235,18 +237,18 @@ def add_node_elevations_google(
 
 def _elevation_request(url: str, pause: float) -> dict[str, Any]:
     """
-    Send a HTTP GET request to Google Maps-style Elevation API.
+    Send a HTTP GET request to a Google Maps-style Elevation API.
 
     Parameters
     ----------
-    url : string
-        URL for API endpoint populated with request data
-    pause : float
-        how long to pause in seconds before request
+    url
+        URL of API endpoint, populated with request data.
+    pause
+        How long to pause in seconds before request.
 
     Returns
     -------
-    response_json : dict
+    response_json
     """
     # check if request already exists in cache
     cached_response_json = _http._retrieve_from_cache(url)

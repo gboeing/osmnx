@@ -35,13 +35,13 @@ def streets_per_node(G: nx.MultiDiGraph) -> dict[int, int]:
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
+    G
+        Input graph.
 
     Returns
     -------
-    spn : dict
-        dictionary with node ID keys and street count values
+    spn
+        Dictionary with node ID keys and street count values.
     """
     # ensure each count value has type int (otherwise could be type np.int64)
     # if user has projected the graph bc GeoDataFrames use np.int64 for ints
@@ -57,13 +57,13 @@ def streets_per_node_avg(G: nx.MultiDiGraph) -> float:
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
+    G
+        Input graph.
 
     Returns
     -------
-    spna : float
-        average count of streets per node
+    spna
+        Average count of streets per node.
     """
     spn_vals = streets_per_node(G).values()
     return float(sum(spn_vals) / len(G.nodes))
@@ -75,14 +75,14 @@ def streets_per_node_counts(G: nx.MultiDiGraph) -> dict[int, int]:
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
+    G
+        Input graph.
 
     Returns
     -------
-    spnc : dict
-        dictionary keyed by count of streets incident on each node, and with
-        values of how many nodes in the graph have this count
+    spnc
+        Dictionary keyed by count of streets incident on each node, and with
+        values of how many nodes in the graph have this count.
     """
     spn_vals = list(streets_per_node(G).values())
     return {i: spn_vals.count(i) for i in range(int(max(spn_vals)) + 1)}
@@ -94,14 +94,14 @@ def streets_per_node_proportions(G: nx.MultiDiGraph) -> dict[int, float]:
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
+    G
+        Input graph.
 
     Returns
     -------
-    spnp : dict
-        dictionary keyed by count of streets incident on each node, and with
-        values of what proportion of nodes in the graph have this count
+    spnp
+        Dictionary keyed by count of streets incident on each node, and with
+        values of what proportion of nodes in the graph have this count.
     """
     n = len(G.nodes)
     spnc = streets_per_node_counts(G)
@@ -117,16 +117,16 @@ def intersection_count(G: nx.MultiDiGraph, min_streets: int = 2) -> int:
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    min_streets : int
-        a node must have at least `min_streets` incident on them to count as
-        an intersection
+    G
+        Input graph.
+    min_streets
+        A node must have at least `min_streets` incident on them to count as
+        an intersection.
 
     Returns
     -------
-    count : int
-        count of intersections in graph
+    count
+        Count of intersections in graph.
     """
     spn = streets_per_node(G)
     node_ids = set(G.nodes)
@@ -143,13 +143,13 @@ def street_segment_count(Gu: nx.MultiGraph) -> int:
 
     Parameters
     ----------
-    Gu : networkx.MultiGraph
-        undirected input graph
+    Gu
+        Undirected input graph.
 
     Returns
     -------
-    count : int
-        count of street segments in graph
+    count
+        Count of street segments in graph.
     """
     if nx.is_directed(Gu):  # pragma: no cover
         msg = "`Gu` must be undirected"
@@ -163,13 +163,13 @@ def street_length_total(Gu: nx.MultiGraph) -> float:
 
     Parameters
     ----------
-    Gu : networkx.MultiGraph
-        undirected input graph
+    Gu
+        Undirected input graph.
 
     Returns
     -------
-    length : float
-        total length (meters) of streets in graph
+    length
+        Total length (meters) of streets in graph.
     """
     if nx.is_directed(Gu):  # pragma: no cover
         msg = "`Gu` must be undirected"
@@ -183,13 +183,13 @@ def edge_length_total(G: nx.MultiGraph) -> float:
 
     Parameters
     ----------
-    G : networkx.MultiGraph
-        input graph
+    G
+        Input graph.
 
     Returns
     -------
-    length : float
-        total length (meters) of edges in graph
+    length
+        Total length (meters) of edges in graph.
     """
     return float(sum(d["length"] for u, v, d in G.edges(data=True)))
 
@@ -202,13 +202,13 @@ def self_loop_proportion(Gu: nx.MultiGraph) -> float:
 
     Parameters
     ----------
-    Gu : networkx.MultiGraph
-        undirected input graph
+    Gu
+        Undirected input graph.
 
     Returns
     -------
-    proportion : float
-        proportion of graph edges that are self-loops
+    proportion
+        Proportion of graph edges that are self-loops.
     """
     if nx.is_directed(Gu):  # pragma: no cover
         msg = "`Gu` must be undirected"
@@ -227,25 +227,21 @@ def circuity_avg(Gu: nx.MultiGraph) -> float | None:
 
     Parameters
     ----------
-    Gu : networkx.MultiGraph
-        undirected input graph
+    Gu
+        Undirected input graph.
 
     Returns
     -------
-    circuity_avg : float
-        the graph's average undirected edge circuity
+    circuity_avg
+        The graph's average undirected edge circuity.
     """
     if nx.is_directed(Gu):  # pragma: no cover
         msg = "`Gu` must be undirected"
         raise ValueError(msg)
 
     # extract the edges' endpoint nodes' coordinates
-    coords = np.array(
-        [
-            (Gu.nodes[u]["y"], Gu.nodes[u]["x"], Gu.nodes[v]["y"], Gu.nodes[v]["x"])
-            for u, v, _ in Gu.edges
-        ]
-    )
+    n = Gu.nodes
+    coords = np.array([(n[u]["y"], n[u]["x"], n[v]["y"], n[v]["x"]) for u, v, _ in Gu.edges])
     y1 = coords[:, 0]
     x1 = coords[:, 1]
     y2 = coords[:, 2]
@@ -282,17 +278,17 @@ def count_streets_per_node(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    nodes : iterable
-        which node IDs to get counts for. if None, use all graph nodes,
-        otherwise calculate counts only for these node IDs
+    G
+        Input graph.
+    nodes
+        Which node IDs to get counts for. If None, use all graph nodes.
+        Otherwise calculate counts only for these node IDs.
 
     Returns
     -------
-    streets_per_node : dict
-        counts of how many physical streets connect to each node, with keys =
-        node ids and values = counts
+    streets_per_node
+        Counts of how many physical streets connect to each node, with keys =
+        node ids and values = counts.
     """
     if nodes is None:
         nodes = G.nodes
@@ -330,21 +326,21 @@ def basic_stats(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    area : float
-        if not None, calculate density measures and use this value (in square
-        meters) as the denominator
-    clean_int_tol : float
-        if not None, calculate consolidated intersections count (and density,
-        if `area` is also provided) and use this tolerance value; refer to the
+    G
+        Input graph.
+    area
+        If not None, calculate density measures and use `area` (in square
+        meters) as the denominator.
+    clean_int_tol
+        If not None, calculate consolidated intersections count (and density,
+        if `area` is also provided) and use this tolerance value. Refer to the
         `simplification.consolidate_intersections` function documentation for
-        details
+        details.
 
     Returns
     -------
-    stats : dict
-        dictionary containing the following keys
+    stats
+        Dictionary containing the following keys:
           - `circuity_avg` - see `circuity_avg` function documentation
           - `clean_intersection_count` - see `clean_intersection_count` function documentation
           - `clean_intersection_density_km` - `clean_intersection_count` per sq km
