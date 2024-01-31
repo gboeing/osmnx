@@ -33,18 +33,18 @@ def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
 
     Parameters
     ----------
-    G : networkx.MultiGraph
-        graph from which to sample points. should be undirected (to avoid
+    G
+        Graph from which to sample points. Should be undirected (to avoid
         oversampling bidirectional edges) and projected (for accurate point
-        interpolation)
-    n : int
-        how many points to sample
+        interpolation).
+    n
+        How many points to sample.
 
     Returns
     -------
-    points : geopandas.GeoSeries
-        the sampled points, multi-indexed by (u, v, key) of the edge from
-        which each point was drawn
+    point
+        The sampled points, multi-indexed by `(u, v, key)` of the edge from
+        which each point was sampled.
     """
     if nx.is_directed(G):  # pragma: no cover
         msg = "`G` should be undirected to avoid oversampling bidirectional edges."
@@ -65,16 +65,16 @@ def interpolate_points(geom: LineString, dist: float) -> Iterator[tuple[float, f
 
     Parameters
     ----------
-    geom : shapely.geometry.LineString
-        a LineString geometry
-    dist : float
-        spacing distance between interpolated points, in same units as `geom`.
-        smaller values accordingly generate more points.
+    geom
+        A LineString geometry.
+    dist
+        Spacing distance between interpolated points, in same units as `geom`.
+        Smaller values accordingly generate more points.
 
     Yields
     ------
-    points : generator
-        tuples of (x, y) floats of the interpolated points' coordinates
+    point
+        Tuple of interpolated points' `(x, y)` coordinates.
     """
     if isinstance(geom, LineString):
         num_vert = max(round(geom.length / dist), 1)
@@ -88,11 +88,11 @@ def interpolate_points(geom: LineString, dist: float) -> Iterator[tuple[float, f
 
 def _consolidate_subdivide_geometry(geometry: Polygon | MultiPolygon) -> MultiPolygon:
     """
-    Consolidate and subdivide some geometry.
+    Consolidate and subdivide some (projected) geometry.
 
     Consolidate a geometry into a convex hull, then subdivide it into smaller
     sub-polygons if its area exceeds max size (in geometry's units). Configure
-    the max size via max_query_area_size in the settings module.
+    the max size via `max_query_area_size` in the `settings` module.
 
     When the geometry has a very large area relative to its vertex count,
     the resulting MultiPolygon's boundary may differ somewhat from the input,
@@ -101,12 +101,12 @@ def _consolidate_subdivide_geometry(geometry: Polygon | MultiPolygon) -> MultiPo
 
     Parameters
     ----------
-    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the projected (in meter units) geometry to consolidate and subdivide
+    geometry
+        The projected (in meter units) geometry to consolidate and subdivide.
 
     Returns
     -------
-    geometry : shapely.geometry.MultiPolygon
+    geometry
     """
     if not isinstance(geometry, (Polygon, MultiPolygon)):  # pragma: no cover
         msg = "Geometry must be a shapely Polygon or MultiPolygon"
@@ -148,15 +148,15 @@ def _quadrat_cut_geometry(geometry: Polygon | MultiPolygon, quadrat_width: float
 
     Parameters
     ----------
-    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the geometry to split up into smaller sub-polygons
-    quadrat_width : float
-        width (in geometry's units) of quadrat squares with which to split up
-        the geometry
+    geometry
+        The geometry to split up into smaller sub-polygons.
+    quadrat_width
+        Width (in geometry's units) of quadrat squares with which to split up
+        the geometry.
 
     Returns
     -------
-    geometry : shapely.geometry.MultiPolygon
+    geometry
     """
     # min number of dividing lines (3 produces a grid of 4 quadrat squares)
     min_num = 3
@@ -196,15 +196,15 @@ def _intersect_index_quadrats(
 
     Parameters
     ----------
-    geometries : geopandas.GeoSeries
-        the geometries to intersect with the polygon
-    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the polygon to intersect with the geometries
+    geometries
+        The geometries to intersect with the polygon.
+    polygon
+        The polygon to intersect with the geometries.
 
     Returns
     -------
-    geoms_in_poly : set
-        set of the index labels of the geometries that intersected the polygon
+    geoms_in_poly
+        The index labels of the geometries that intersected the polygon.
     """
     # create an r-tree spatial index for the geometries
     rtree = geometries.sindex
@@ -387,19 +387,19 @@ def bbox_from_point(
 
     Parameters
     ----------
-    point : tuple
-        the (lat, lon) center point to create the bounding box around
-    dist : float
-        bounding box distance in meters from the center point
-    project_utm : bool
-        if True, return bounding box as UTM-projected coordinates
-    return_crs : bool
-        if True, and project_utm=True, return the projected CRS too
+    point
+        The `(lat, lon)` center point to create the bounding box around.
+    dist
+        Bounding box distance in meters from the center point.
+    project_utm
+        If True, return bounding box as UTM-projected coordinates.
+    return_crs
+        If True, and `project_utm` is True, then return the projected CRS too.
 
     Returns
     -------
-    bbox or bbox, crs: tuple or tuple, crs
-        (north, south, east, west) or ((north, south, east, west), crs)
+    bbox or bbox, crs
+        `(north, south, east, west)` or `((north, south, east, west), crs)`.
     """
     EARTH_RADIUS_M = 6_371_009  # meters
     lat, lon = point
@@ -427,16 +427,16 @@ def bbox_from_point(
 
 def bbox_to_poly(bbox: tuple[float, float, float, float]) -> Polygon:
     """
-    Convert bounding box coordinates to shapely Polygon.
+    Convert bounding box coordinates to Shapely Polygon.
 
     Parameters
     ----------
-    bbox : tuple of floats
-        bounding box as (north, south, east, west)
+    bbox
+        Bounding box as `(north, south, east, west)`.
 
     Returns
     -------
-    shapely.geometry.Polygon
+    polygon
     """
     north, south, east, west = bbox
     return Polygon([(west, south), (east, south), (east, north), (west, north)])
