@@ -92,7 +92,7 @@ def _nominatim_request(
         {"search", "reverse", "lookup"}
         Which Nominatim API endpoint to query.
     pause
-        How long to pause before request, in seconds. Per the nominatim usage
+        How long to pause before request, in seconds. Per the Nominatim usage
         policy: "an absolute maximum of 1 request per second" is allowed.
     error_pause
         How long to pause in seconds before re-trying request if error.

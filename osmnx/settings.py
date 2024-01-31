@@ -103,7 +103,7 @@ overpass_endpoint : str
 overpass_rate_limit : bool
     If True, check the Overpass server status endpoint for how long to
     pause before making request. Necessary if server uses slot management,
-    but can be set to False if you are running your own overpass instance
+    but can be set to False if you are running your own Overpass instance
     without rate limiting. Default is `True`.
 overpass_settings : str
     Settings string for Overpass queries. Default is

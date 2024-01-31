@@ -74,7 +74,7 @@ def interpolate_points(geom: LineString, dist: float) -> Iterator[tuple[float, f
     Yields
     ------
     point
-        Tuple of interpolated points' `(x, y)` coordinates.
+        Interpolated point's `(x, y)` coordinates.
     """
     if isinstance(geom, LineString):
         num_vert = max(round(geom.length / dist), 1)
