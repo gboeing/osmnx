@@ -246,7 +246,7 @@ def _create_overpass_query(polygon_coord_str: str, tags: dict[str, bool | str | 
     ----------
     polygon_coord_str
         The lat lon coordinates.
-    tags : dict
+    tags
         Tags used for finding elements in the search area.
 
     Returns
@@ -317,7 +317,7 @@ def _download_overpass_network(
         The boundary to fetch the network ways/nodes within.
     network_type
         What type of street network to get if `custom_filter` is None.
-    custom_filter : string
+    custom_filter
         A custom "ways" filter to be used instead of `network_type` presets.
 
     Yields
@@ -353,7 +353,7 @@ def _download_overpass_features(
     ----------
     polygon
         Boundary to retrieve elements within.
-    tags : dict
+    tags
         Tags used for finding elements in the selected area.
 
     Yields
