@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.9.0 (Unreleased)
+## 1.9.0 (2023-01-31)
 
 - add endpoint_attrs argument to simplification.simplify_graph function to flexibly relax strictness (#1117)
 - fix a bug in the features module's polygon handling (#1104)
