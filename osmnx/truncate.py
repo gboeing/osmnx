@@ -19,30 +19,31 @@ def truncate_graph_dist(
     retain_all: bool = False,
 ) -> nx.MultiDiGraph:
     """
-    Remove every node farther than some network distance from source_node.
+    Remove every node farther than some network distance from `source_node`.
 
     This function can be slow for large graphs, as it must calculate shortest
-    path distances between source_node and every other graph node.
+    path distances between `source_node` and every other graph node.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    source_node : int
-        node in graph from which to measure network distances to other nodes
-    max_dist : float
-        remove every node in the graph that is greater than this distance (in
-        same units as `weight` attribute) along the network from `source_node`
-    weight : string
-        graph edge attribute to use to measure distance
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
+    G
+        Input graph.
+    source_node
+        Node from which to measure network distances to all other nodes.
+    max_dist
+        Remove every node in the graph that is greater than this distance (in
+        same units as `weight` attribute) along the network from
+        `source_node`.
+    weight
+        Graph edge attribute to use to measure distance.
+    retain_all
+        If True, return the entire graph even if it is not connected.
+        Otherwise, retain only the largest weakly connected component.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        the truncated graph
+    G
+        The truncated graph.
     """
     # get the shortest distance between the node and every other node
     distances = nx.shortest_path_length(G, source=source_node, weight=weight)
@@ -76,21 +77,21 @@ def truncate_graph_bbox(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    bbox : tuple of floats
-        bounding box as (north, south, east, west)
-    truncate_by_edge : bool
-        if True, retain nodes outside bounding box if at least one of node's
-        neighbors is within the bounding box
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
+    G
+        Input graph.
+    bbox
+        Bounding box as `(north, south, east, west)`.
+    truncate_by_edge
+        If True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box.
+    retain_all
+        If True, return the entire graph even if it is not connected.
+        Otherwise, retain only the largest weakly connected component.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        the truncated graph
+    G
+        The truncated graph.
     """
     # convert bounding box to a polygon, then truncate
     polygon = utils_geo.bbox_to_poly(bbox=bbox)
@@ -111,21 +112,21 @@ def truncate_graph_polygon(
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        only retain nodes in graph that lie within this geometry
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    truncate_by_edge : bool
-        if True, retain nodes outside boundary polygon if at least one of
-        node's neighbors is within the polygon
+    G
+        Input graph.
+    polygon
+        Only retain nodes in graph that lie within this geometry.
+    retain_all
+        If True, return the entire graph even if it is not connected.
+        Otherwise, retain only the largest weakly connected component.
+    truncate_by_edge
+        If True, retain nodes outside boundary polygon if at least one of
+        node's neighbors is within the polygon.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        the truncated graph
+    G
+        The truncated graph.
     """
     utils.log("Identifying all nodes that lie outside the polygon...")
 
