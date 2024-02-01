@@ -1,11 +1,16 @@
 # Changelog
 
-## 1.9.0 (2023-01-31)
+## 1.9.1 (2024-02-01)
+
+- fix deprecation warning in simplification.simplify_graph function (#1125)
+
+## 1.9.0 (2024-01-31)
 
 - add endpoint_attrs argument to simplification.simplify_graph function to flexibly relax strictness (#1117)
 - fix a bug in the features module's polygon handling (#1104)
 - update obsolete numpy random number generation (#1108)
-- update FutureWarning messages to note that deprecated code will be removed in v2.0.0 (#1111)
+- make deprecation warnings FutureWarnings (#1124)
+- update warning messages to note that deprecated code will be removed in v2.0.0 (#1111)
 - deprecate strict argument in simplification.simplify_graph function in favor of new endpoint_attrs argument (#1117)
 - deprecate north, south, east, west arguments throughout package in favor of bbox tuple argument (#1112)
 - deprecate return_coords argument in graph.graph_from_address function (#1105)

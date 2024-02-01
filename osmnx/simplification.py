@@ -1,6 +1,7 @@
 """Simplify, correct, and consolidate network topology."""
 
 import logging as lg
+from warnings import warn
 
 import geopandas as gpd
 import networkx as nx
@@ -280,6 +281,7 @@ def simplify_graph(G, strict=None, endpoint_attrs=None, remove_rings=True, track
             "reproduces the old `strict=True` behvavior and `endpoint_attrs=['osmid']` "
             "reproduces the old `strict=False` behavior."
         )
+        warn(msg, FutureWarning, stacklevel=2)
         # maintain old behavior if strict is passed during deprecation
         endpoint_attrs = None if strict else ["osmid"]
 
