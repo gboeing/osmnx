@@ -48,7 +48,7 @@ def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
     """
     if nx.is_directed(G):  # pragma: no cover
         msg = "`G` should be undirected to avoid oversampling bidirectional edges."
-        warn(msg, stacklevel=2)
+        warn(msg, UserWarning, stacklevel=2)
     gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
     weights = gdf_edges["length"] / gdf_edges["length"].sum()
     idx = np.random.default_rng().choice(gdf_edges.index, size=n, p=weights)
@@ -129,7 +129,7 @@ def _consolidate_subdivide_geometry(geometry: Polygon | MultiPolygon) -> MultiPo
             "area size. It will automatically be divided up into multiple "
             "sub-queries accordingly. This may take a long time."
         )
-        warn(msg, stacklevel=2)
+        warn(msg, UserWarning, stacklevel=2)
 
     # if geometry area exceeds max size, subdivide it into smaller subpolygons
     # that are no greater than settings.max_query_area_size in size

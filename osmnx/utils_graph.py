@@ -276,10 +276,10 @@ def graph_from_gdfs(
         # AssertionError if x/y coords don't match geometry column
         # ValueError if geometry column contains non-point geometry types
         msg = (
-            "Discarding the `gdf_nodes` geometry column, though its values "
-            "differ from the coordinates in the x and y columns."
+            "Discarding the `gdf_nodes` 'geometry' column, though its values "
+            "differ from the coordinates in the 'x' and 'y' columns."
         )
-        warn(msg, stacklevel=2)
+        warn(msg, UserWarning, stacklevel=2)
     df_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
 
     # create graph and add graph-level attribute dict
