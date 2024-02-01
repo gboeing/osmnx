@@ -3,6 +3,10 @@ User Reference
 
 This is the User Reference for the OSMnx package. If you are looking for an introduction to OSMnx, read the :doc:`getting-started` guide. This guide describes the usage of OSMnx's public API.
 
+OSMnx 2.0 is coming soon: read the `migration guide`_.
+
+.. _migration guide: https://github.com/gboeing/osmnx/issues/1123
+
 osmnx.bearing module
 --------------------
 
