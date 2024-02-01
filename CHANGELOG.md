@@ -18,7 +18,7 @@
 
 ## 1.9.1 (2024-02-01)
 
-- fix deprecation warning in simplification.simplify_graph function (#1125)
+- fix deprecation warning in simplification.simplify_graph function (#1126)
 
 ## 1.9.0 (2024-01-31)
 
