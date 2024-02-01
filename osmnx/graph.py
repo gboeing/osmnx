@@ -96,7 +96,7 @@ def graph_from_bbox(
             "The `north`, `south`, `east`, and `west` parameters are deprecated and "
             "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
         )
-        warn(msg, stacklevel=2)
+        warn(msg, FutureWarning, stacklevel=2)
         bbox = (north, south, east, west)
 
     # convert bounding box to a polygon
@@ -270,6 +270,7 @@ def graph_from_address(
             "The `return_coords` argument has been deprecated and will be removed in "
             "the v2.0.0 release. Future behavior will be as though `return_coords=False`. "
             "If you want the address's geocoded coordinates, use the `geocode` function.",
+            FutureWarning,
             stacklevel=2,
         )
     # geocode the address string to a (lat, lon) point
@@ -367,6 +368,7 @@ def graph_from_place(
         warn(
             "The buffer_dist argument has been deprecated and will be removed "
             "in the v2.0.0 release. Buffer your query area directly, if desired.",
+            FutureWarning,
             stacklevel=2,
         )
 
@@ -458,6 +460,7 @@ def graph_from_polygon(
         warn(
             "The clean_periphery argument has been deprecated and will be removed in "
             "the v2.0.0 release. Future behavior will be as though clean_periphery=True.",
+            FutureWarning,
             stacklevel=2,
         )
 

@@ -56,6 +56,7 @@ def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=Fal
         warn(
             "The `return_hex` parameter has been deprecated and will be removed "
             "in the v2.0.0 release.",
+            FutureWarning,
             stacklevel=2,
         )
 
@@ -483,7 +484,7 @@ def plot_figure_ground(
             "The `edge_color` parameter is deprecated and will be removed in the "
             "v2.0.0 release. Use `color` instead."
         )
-        warn(msg, stacklevel=2)
+        warn(msg, FutureWarning, stacklevel=2)
 
     if smooth_joints is None:
         smooth_joints = True
@@ -492,7 +493,7 @@ def plot_figure_ground(
             "The `smooth_joints` parameter is deprecated and will be removed in the "
             "v2.0.0 release. In the future this function will behave as though True."
         )
-        warn(msg, stacklevel=2)
+        warn(msg, FutureWarning, stacklevel=2)
 
     # if user did not pass in custom street widths, create a dict of defaults
     if street_widths is None:
@@ -522,7 +523,7 @@ def plot_figure_ground(
     # dist multiplier to ensure we get more than enough network. simplify in
     # non-strict mode to not combine multiple street types into single edge
     elif address is not None:
-        warn(dep_msg, stacklevel=2)
+        warn(dep_msg, FutureWarning, stacklevel=2)
         G, point = graph.graph_from_address(
             address,
             dist=dist * multiplier,
@@ -534,7 +535,7 @@ def plot_figure_ground(
         )
         G = simplification.simplify_graph(G, strict=False)
     elif point is not None:
-        warn(dep_msg, stacklevel=2)
+        warn(dep_msg, FutureWarning, stacklevel=2)
         G = graph.graph_from_point(
             point,
             dist=dist * multiplier,

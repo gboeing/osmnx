@@ -107,7 +107,7 @@ def truncate_graph_bbox(
             "The `north`, `south`, `east`, and `west` parameters are deprecated and "
             "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
         )
-        warn(msg, stacklevel=2)
+        warn(msg, FutureWarning, stacklevel=2)
         bbox = (north, south, east, west)
 
     # convert bounding box to a polygon, then truncate
@@ -157,6 +157,7 @@ def truncate_graph_polygon(
         warn(
             "The `quadrat_width` and `min_num` parameters are deprecated and "
             "will be removed in the v2.0.0 release.",
+            FutureWarning,
             stacklevel=2,
         )
 

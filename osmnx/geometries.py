@@ -43,7 +43,7 @@ def geometries_from_bbox(north, south, east, west, tags):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    warn(DEP_MSG, stacklevel=2)
+    warn(DEP_MSG, FutureWarning, stacklevel=2)
     return features.features_from_bbox(north, south, east, west, tags=tags)
 
 
@@ -69,7 +69,7 @@ def geometries_from_point(center_point, tags, dist=1000):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    warn(DEP_MSG, stacklevel=2)
+    warn(DEP_MSG, FutureWarning, stacklevel=2)
     return features.features_from_point(center_point, tags, dist)
 
 
@@ -95,7 +95,7 @@ def geometries_from_address(address, tags, dist=1000):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    warn(DEP_MSG, stacklevel=2)
+    warn(DEP_MSG, FutureWarning, stacklevel=2)
     return features.features_from_address(address, tags, dist)
 
 
@@ -123,7 +123,7 @@ def geometries_from_place(query, tags, which_result=None, buffer_dist=None):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    warn(DEP_MSG, stacklevel=2)
+    warn(DEP_MSG, FutureWarning, stacklevel=2)
     return features.features_from_place(query, tags, which_result, buffer_dist)
 
 
@@ -147,7 +147,7 @@ def geometries_from_polygon(polygon, tags):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    warn(DEP_MSG, stacklevel=2)
+    warn(DEP_MSG, FutureWarning, stacklevel=2)
     return features.features_from_polygon(polygon, tags)
 
 
@@ -173,5 +173,5 @@ def geometries_from_xml(filepath, polygon=None, tags=None):
     -------
     gdf : geopandas.GeoDataFrame
     """
-    warn(DEP_MSG, stacklevel=2)
+    warn(DEP_MSG, FutureWarning, stacklevel=2)
     return features.features_from_xml(filepath, polygon, tags)

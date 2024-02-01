@@ -123,7 +123,7 @@ def features_from_bbox(north=None, south=None, east=None, west=None, bbox=None, 
             "The `north`, `south`, `east`, and `west` parameters are deprecated and "
             "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
         )
-        warn(msg, stacklevel=2)
+        warn(msg, FutureWarning, stacklevel=2)
         bbox = (north, south, east, west)
 
     # convert bounding box to a polygon
@@ -270,6 +270,7 @@ def features_from_place(query, tags, which_result=None, buffer_dist=None):
         warn(
             "The buffer_dist argument has been deprecated and will be removed "
             "in the v2.0.0 release. Buffer your query area directly, if desired.",
+            FutureWarning,
             stacklevel=2,
         )
 

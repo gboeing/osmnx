@@ -215,6 +215,7 @@ def round_geometry_coords(geom, precision):
     warn(
         "The `round_geometry_coords` function is deprecated and will be "
         "removed in the v2.0.0 release.",
+        FutureWarning,
         stacklevel=2,
     )
 
@@ -459,7 +460,7 @@ def bbox_to_poly(north=None, south=None, east=None, west=None, bbox=None):
             "The `north`, `south`, `east`, and `west` parameters are deprecated and "
             "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
         )
-        warn(msg, stacklevel=2)
+        warn(msg, FutureWarning, stacklevel=2)
     else:
         north, south, east, west = bbox
     return Polygon([(west, south), (east, south), (east, north), (west, north)])

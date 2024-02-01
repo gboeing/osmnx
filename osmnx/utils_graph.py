@@ -238,6 +238,7 @@ def get_route_edge_attributes(
     warn(
         "The `get_route_edge_attributes` function has been deprecated and will "
         "be removed in the v2.0.0 release. Use the `route_to_gdf` function instead.",
+        FutureWarning,
         stacklevel=2,
     )
     attribute_values = []

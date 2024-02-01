@@ -213,6 +213,7 @@ def config(
         "the v2.0.0 release. Instead, use the `settings` module directly to "
         "configure a global setting's value. For example, "
         "`ox.settings.log_console=True`.",
+        FutureWarning,
         stacklevel=2,
     )
 
