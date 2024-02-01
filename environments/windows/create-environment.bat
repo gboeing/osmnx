@@ -1,6 +1,6 @@
 SET ENV="ox"
 SET PACKAGE="osmnx"
-CALL %USERPROFILE%\mambaforge\Scripts\activate.bat && ^
+CALL %USERPROFILE%\miniforge3\Scripts\activate.bat && ^
 conda deactivate && ^
 mamba env remove -n %ENV% --yes && ^
 mamba clean --all --yes --quiet --no-banner && ^
