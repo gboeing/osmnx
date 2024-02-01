@@ -63,6 +63,7 @@ def plot_graph_folium(
         "and/or routes automatically using GeoPandas.GeoDataFrame.explore instead, "
         "for example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the "
         "OSMnx examples gallery for complete details and demonstrations.",
+        FutureWarning,
         stacklevel=2,
     )
     # create gdf of all graph edges
@@ -117,6 +118,7 @@ def plot_route_folium(
         "and/or routes automatically using GeoPandas.GeoDataFrame.explore instead, "
         "for example like: `ox.graph_to_gdfs(G, nodes=False).explore()`. See the "
         "OSMnx examples gallery for complete details and demonstrations.",
+        FutureWarning,
         stacklevel=2,
     )
     # create gdf of the route edges in order

@@ -82,6 +82,7 @@ def add_edge_bearings(G, precision=None):
     else:
         warn(
             "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
+            FutureWarning,
             stacklevel=2,
         )
 
@@ -300,6 +301,7 @@ def plot_orientation(
     warn(
         "The `plot_orientation` function moved to the `plot` module. Calling it "
         "via the `bearing` module will raise an exception starting with the v2.0.0 release.",
+        FutureWarning,
         stacklevel=2,
     )
     return plot.plot_orientation(

@@ -55,6 +55,7 @@ def add_edge_grades(G, add_absolute=True, precision=None):
     else:
         warn(
             "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
+            FutureWarning,
             stacklevel=2,
         )
 
@@ -211,6 +212,7 @@ def add_node_elevations_google(
         warn(
             "The `max_locations_per_batch` parameter is deprecated and will be "
             "removed the v2.0.0 release, use the `batch_size` parameter instead",
+            FutureWarning,
             stacklevel=2,
         )
 
@@ -219,6 +221,7 @@ def add_node_elevations_google(
     else:
         warn(
             "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
+            FutureWarning,
             stacklevel=2,
         )
 
@@ -229,6 +232,7 @@ def add_node_elevations_google(
             "The `url_template` parameter is deprecated and will be removed "
             "in the v2.0.0 release. Configure the `settings` module's "
             "`elevation_url_template` instead",
+            FutureWarning,
             stacklevel=2,
         )
 

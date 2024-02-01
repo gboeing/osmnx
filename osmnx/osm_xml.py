@@ -159,6 +159,7 @@ def save_graph_xml(
         "The save_graph_xml function has moved from the osm_xml module to the io module. "
         "osm_xml.save_graph_xml has been deprecated and will be removed in the v2.0.0 "
         "release. Access the function via the io module instead.",
+        FutureWarning,
         stacklevel=2,
     )
     _save_graph_xml(

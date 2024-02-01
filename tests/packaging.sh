@@ -17,7 +17,7 @@ mamba update conda-smithy --yes --no-banner
 
 # test the docs build and validate that all their links are live
 rm -rf ./docs/build
-make -C ./docs html
+make -C ./docs html SPHINXOPTS="-W --keep-going"
 python -m sphinx -b linkcheck ./docs/source ./docs/build/linkcheck
 rm -rf ./docs/build
 
