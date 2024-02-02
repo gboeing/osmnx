@@ -149,9 +149,9 @@ def _get_overpass_pause(
         )
         status = response.text.split("\n")[4]
         status_first_token = status.split(" ")[0]
-    except ConnectionError as ce:  # pragma: no cover
+    except ConnectionError as e:  # pragma: no cover
         # cannot reach status endpoint, log error and return default duration
-        utils.log(f"Unable to query {url}, {ce}", level=lg.ERROR)
+        utils.log(f"Unable to query {url}, {e}", level=lg.ERROR)
         return default_duration
     except (AttributeError, IndexError, ValueError):  # pragma: no cover
         # cannot parse output, log error and return default duration
