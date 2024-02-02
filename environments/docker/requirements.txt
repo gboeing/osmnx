@@ -2,19 +2,13 @@
 osmnx
 python == 3.11.*
 
-# helpful
-beautifulsoup4
-bokeh
+# helpful extras
 bottleneck
 cartopy
-contextily
-cython
 folium
 jupyterlab
-mapclassify
 numexpr
 pillow
-psycopg2
 pysal
 python-igraph
 seaborn

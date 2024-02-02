@@ -9,6 +9,7 @@ find . -type f -name "*.vrt" -delete
 find . -type f -name ".coverage*" -delete
 
 # lint
+ruff check . --preview
 pre-commit run --all-files
 
 # test building and validating the package

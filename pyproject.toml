@@ -89,10 +89,10 @@ extend-select = [
     "F",    # check python source code for errors a la pyflakes
     "FA",   # check from __future__ import annotations
     "FIX",  # check temporary developer notes a la flake8-fixme
-   #"FURB", # check code improvements a la refurb (preview)
+    "FURB", # check code improvements a la refurb
     "G",    # check logging string formatting a la flake8-logging-format
     "I",    # check isort imports
-   #"LOG",  # check logging module usage a la flake8-logging (preview)
+    "LOG",  # check logging module usage a la flake8-logging
     "NPY",  # check numpy usage
     "PD",   # check pandas linting a la pandas-vet
     "PERF", # check performance anti-patterns a la perflint
