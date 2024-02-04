@@ -5,11 +5,11 @@ from __future__ import annotations
 from collections.abc import Iterable
 from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Literal
 from typing import overload
 
-import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -21,16 +21,21 @@ from . import utils
 from . import utils_geo
 from . import utils_graph
 
+if TYPE_CHECKING:
+    import geopandas as gpd
+
 # matplotlib is an optional dependency needed for visualization
 try:
-    mpl_available = True
     import matplotlib.pyplot as plt
     from matplotlib import cm
     from matplotlib import colormaps
     from matplotlib import colors
-    from matplotlib.axes._axes import Axes
-    from matplotlib.figure import Figure
-    from matplotlib.projections.polar import PolarAxes
+    from matplotlib.axes._axes import Axes  # noqa: TCH002
+    from matplotlib.figure import Figure  # noqa: TCH002
+    from matplotlib.projections.polar import PolarAxes  # noqa: TCH002
+
+    mpl_available = True
+
 except ImportError:  # pragma: no cover
     mpl_available = False
 

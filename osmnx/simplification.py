@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import logging as lg
-from collections.abc import Iterable
-from collections.abc import Iterator
+from typing import TYPE_CHECKING
 from typing import Any
 
 import geopandas as gpd
@@ -18,6 +17,10 @@ from . import stats
 from . import utils
 from . import utils_graph
 from ._errors import GraphSimplificationError
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from collections.abc import Iterator
 
 
 def _is_endpoint(G: nx.MultiDiGraph, node: int, endpoint_attrs: Iterable[str] | None) -> bool:

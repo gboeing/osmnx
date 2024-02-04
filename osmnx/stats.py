@@ -16,7 +16,7 @@ from __future__ import annotations
 import itertools
 import logging as lg
 from collections import Counter
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 from typing import Any
 
 import networkx as nx
@@ -27,6 +27,9 @@ from . import projection
 from . import simplification
 from . import utils
 from . import utils_graph
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def streets_per_node(G: nx.MultiDiGraph) -> dict[int, int]:

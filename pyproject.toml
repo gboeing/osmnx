@@ -105,6 +105,7 @@ extend-select = [
     "RSE",  # check exception raise statements via flake8-raise
     "SIM",  # check code simplicity a la flake8-simplify
     "T20",  # check for any print statements
+    "TCH",  # check that imports only used for type hinting are guarded
     "TRY",  # check exception handling anti-patterns a la tryceratops
     "UP",   # check outdated syntax a la pyupgrade
     "W",    # check code style conventions a la pycodestyle warnings

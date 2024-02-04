@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import multiprocessing as mp
 import time
-from collections.abc import Iterable
 from hashlib import sha1
 from pathlib import Path
+from typing import TYPE_CHECKING
 from typing import Any
 
 import networkx as nx
@@ -19,6 +19,9 @@ from . import settings
 from . import utils
 from . import utils_graph
 from ._errors import InsufficientResponseError
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 # rasterio and gdal are optional dependencies for raster querying
 try:

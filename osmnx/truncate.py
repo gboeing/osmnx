@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import networkx as nx
-from shapely.geometry import MultiPolygon
-from shapely.geometry import Polygon
 
 from . import utils
 from . import utils_geo
 from . import utils_graph
+
+if TYPE_CHECKING:
+    from shapely.geometry import MultiPolygon
+    from shapely.geometry import Polygon
 
 
 def truncate_graph_dist(

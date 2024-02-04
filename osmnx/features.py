@@ -17,8 +17,7 @@ from __future__ import annotations
 
 import logging as lg
 import warnings
-from collections.abc import Iterable
-from pathlib import Path
+from typing import TYPE_CHECKING
 from typing import Any
 
 import geopandas as gpd
@@ -40,6 +39,10 @@ from . import utils
 from . import utils_geo
 from ._errors import CacheOnlyInterruptError
 from ._errors import InsufficientResponseError
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from pathlib import Path
 
 # dict of tags to determine if closed ways should be polygons, based on JSON
 # from https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features

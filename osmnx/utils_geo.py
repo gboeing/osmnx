@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Literal
 from typing import overload
 from warnings import warn
 
-import geopandas as gpd
 import networkx as nx
 import numpy as np
 from shapely.geometry import LineString
@@ -20,6 +19,11 @@ from . import projection
 from . import settings
 from . import utils
 from . import utils_graph
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    import geopandas as gpd
 
 
 def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:

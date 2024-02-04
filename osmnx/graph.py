@@ -12,6 +12,7 @@ from __future__ import annotations
 import itertools
 from collections.abc import Iterable
 from pathlib import Path
+from typing import TYPE_CHECKING
 from typing import Any
 
 import networkx as nx
@@ -33,6 +34,10 @@ from . import utils_graph
 from ._errors import CacheOnlyInterruptError
 from ._errors import InsufficientResponseError
 from ._version import __version__
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from pathlib import Path
 
 
 def graph_from_bbox(

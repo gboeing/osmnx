@@ -6,14 +6,12 @@ import datetime as dt
 import logging as lg
 import time
 from collections import OrderedDict
-from collections.abc import Iterator
+from typing import TYPE_CHECKING
 from typing import Any
 
 import numpy as np
 import requests
 from requests.exceptions import ConnectionError
-from shapely.geometry import MultiPolygon
-from shapely.geometry import Polygon
 
 from . import _http
 from . import projection
@@ -21,6 +19,12 @@ from . import settings
 from . import utils
 from . import utils_geo
 from ._errors import InsufficientResponseError
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from shapely.geometry import MultiPolygon
+    from shapely.geometry import Polygon
 
 
 def _get_network_filter(network_type: str) -> str:

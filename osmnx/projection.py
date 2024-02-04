@@ -1,15 +1,18 @@
 """Project a graph, GeoDataFrame, or geometry to a different CRS."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Any
 
 import geopandas as gpd
-import networkx as nx
-from shapely import Geometry
 
 from . import settings
 from . import utils
 from . import utils_graph
+
+if TYPE_CHECKING:
+    import networkx as nx
+    from shapely import Geometry
 
 
 def is_projected(crs: Any) -> bool:

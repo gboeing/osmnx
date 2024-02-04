@@ -5,12 +5,12 @@ from __future__ import annotations
 import bz2
 import xml.sax
 from pathlib import Path
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import TextIO
 from warnings import warn
 from xml.etree import ElementTree as ET
 
-import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -19,6 +19,9 @@ from . import settings
 from . import utils
 from . import utils_graph
 from ._version import __version__
+
+if TYPE_CHECKING:
+    import geopandas as gpd
 
 
 class _OSMContentHandler(xml.sax.handler.ContentHandler):

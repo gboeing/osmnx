@@ -5,9 +5,9 @@ from __future__ import annotations
 import ast
 import contextlib
 from pathlib import Path
+from typing import TYPE_CHECKING
 from typing import Any
 
-import geopandas as gpd
 import networkx as nx
 import pandas as pd
 from shapely import wkt
@@ -16,6 +16,9 @@ from . import _osm_xml
 from . import settings
 from . import utils
 from . import utils_graph
+
+if TYPE_CHECKING:
+    import geopandas as gpd
 
 
 def save_graph_geopackage(

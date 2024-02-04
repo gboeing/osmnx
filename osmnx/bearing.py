@@ -6,7 +6,6 @@ from typing import overload
 
 import networkx as nx
 import numpy as np
-from numpy.typing import NDArray
 
 from . import projection
 
@@ -31,20 +30,20 @@ def calculate_bearing(
 # if coords are all arrays, return array
 @overload  # pragma: no cover
 def calculate_bearing(
-    lat1: NDArray[np.float64],
-    lon1: NDArray[np.float64],
-    lat2: NDArray[np.float64],
-    lon2: NDArray[np.float64],
-) -> NDArray[np.float64]:
+    lat1: np.typing.NDArray[np.float64],
+    lon1: np.typing.NDArray[np.float64],
+    lat2: np.typing.NDArray[np.float64],
+    lon2: np.typing.NDArray[np.float64],
+) -> np.typing.NDArray[np.float64]:
     ...
 
 
 def calculate_bearing(
-    lat1: float | NDArray[np.float64],
-    lon1: float | NDArray[np.float64],
-    lat2: float | NDArray[np.float64],
-    lon2: float | NDArray[np.float64],
-) -> float | NDArray[np.float64]:
+    lat1: float | np.typing.NDArray[np.float64],
+    lon1: float | np.typing.NDArray[np.float64],
+    lat2: float | np.typing.NDArray[np.float64],
+    lon2: float | np.typing.NDArray[np.float64],
+) -> float | np.typing.NDArray[np.float64]:
     """
     Calculate the compass bearing(s) between pairs of lat-lon points.
 
@@ -80,7 +79,7 @@ def calculate_bearing(
     initial_bearing = np.degrees(np.arctan2(y, x))
 
     # normalize to 0-360 degrees to get compass bearing
-    bearing: float | NDArray[np.float64] = initial_bearing % 360
+    bearing: float | np.typing.NDArray[np.float64] = initial_bearing % 360
     return bearing
 
 
@@ -168,7 +167,7 @@ def orientation_entropy(
 
 def _extract_edge_bearings(
     Gu: nx.MultiGraph, min_length: float = 0, weight: str | None = None
-) -> NDArray[np.float64]:
+) -> np.typing.NDArray[np.float64]:
     """
     Extract undirected graph's bidirectional edge bearings.
 
@@ -216,7 +215,7 @@ def _extract_edge_bearings(
 
 def _bearings_distribution(
     Gu: nx.MultiGraph, num_bins: int, min_length: float = 0, weight: str | None = None
-) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
+) -> tuple[np.typing.NDArray[np.float64], np.typing.NDArray[np.float64]]:
     """
     Compute distribution of bearings across evenly spaced bins.
 
