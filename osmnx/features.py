@@ -855,7 +855,7 @@ def _assemble_multipolygon_component_polygons(
         for merged_inner_linestring in merged_inner_linestrings.geoms:
             inner_polygons += polygonize(merged_inner_linestring)
 
-    if not outer_polygons:
+    if len(outer_polygons) == 0:
         msg = (
             "No outer polygons were created for"
             f" https://www.openstreetmap.org/{element['type']}/{element['id']}"

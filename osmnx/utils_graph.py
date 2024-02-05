@@ -148,7 +148,7 @@ def graph_to_gdfs(
     crs = G.graph["crs"]
 
     if nodes:
-        if not G.nodes:  # pragma: no cover
+        if len(G.nodes) == 0:  # pragma: no cover
             msg = "graph contains no nodes"
             raise ValueError(msg)
 
@@ -166,7 +166,7 @@ def graph_to_gdfs(
         utils.log(msg, level=lg.INFO)
 
     if edges:
-        if not G.edges:  # pragma: no cover
+        if len(G.edges) == 0:  # pragma: no cover
             msg = "Graph contains no edges"
             raise ValueError(msg)
 

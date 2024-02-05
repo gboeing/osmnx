@@ -464,7 +464,7 @@ def consolidate_intersections(
         G.remove_nodes_from(dead_end_nodes)
 
     if rebuild_graph:
-        if not G or not G.edges:
+        if len(G.nodes) == 0 or len(G.edges) == 0:
             # cannot rebuild a graph with no nodes or no edges, just return it
             return G
 
@@ -472,7 +472,7 @@ def consolidate_intersections(
         return _consolidate_intersections_rebuild_graph(G, tolerance, reconnect_edges)
 
     # otherwise, if we're not rebuilding the graph
-    if not G:
+    if len(G) == 0:
         # if graph has no nodes, just return empty GeoSeries
         return gpd.GeoSeries(crs=G.graph["crs"])
 
@@ -614,7 +614,7 @@ def _consolidate_intersections_rebuild_graph(
     street_count = stats.count_streets_per_node(H, nodes=null_nodes)
     nx.set_node_attributes(H, street_count, name="street_count")
 
-    if not G.edges or not reconnect_edges:
+    if len(G.edges) == 0 or not reconnect_edges:
         # if reconnect_edges is False or there are no edges in original graph
         # (after dead-end removed), then skip edges and return new graph as-is
         return H

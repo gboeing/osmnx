@@ -404,7 +404,7 @@ def plot_graph_routes(
     if not all(isinstance(r, list) for r in routes):  # pragma: no cover
         msg = "`routes` must be an iterable of route lists"
         raise TypeError(msg)
-    if len(routes) < 1:  # pragma: no cover
+    if len(routes) == 0:  # pragma: no cover
         msg = "You must pass at least 1 route"
         raise ValueError(msg)
     if not (len(routes) == len(route_colors) == len(route_linewidths)):  # pragma: no cover

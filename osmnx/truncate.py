@@ -142,7 +142,7 @@ def truncate_graph_polygon(
     gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)["geometry"]
     to_keep = utils_geo._intersect_index_quadrats(gs_nodes, polygon)
 
-    if not to_keep:
+    if len(to_keep) == 0:
         # no graph nodes within the polygon: can't create a graph from that
         msg = "Found no graph nodes within the requested polygon"
         raise ValueError(msg)

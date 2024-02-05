@@ -99,7 +99,7 @@ def project_gdf(
     gdf_proj
         The projected GeoDataFrame.
     """
-    if gdf.crs is None or len(gdf) < 1:  # pragma: no cover
+    if gdf.crs is None or len(gdf) == 0:  # pragma: no cover
         msg = "GeoDataFrame must have a valid CRS and cannot be empty"
         raise ValueError(msg)
 
