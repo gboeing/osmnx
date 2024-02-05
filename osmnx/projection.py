@@ -1,15 +1,19 @@
 """Project a graph, GeoDataFrame, or geometry to a different CRS."""
 from __future__ import annotations
 
+import logging as lg
+from typing import TYPE_CHECKING
 from typing import Any
 
 import geopandas as gpd
-import networkx as nx
-from shapely import Geometry
 
 from . import settings
 from . import utils
 from . import utils_graph
+
+if TYPE_CHECKING:
+    import networkx as nx
+    from shapely import Geometry
 
 
 def is_projected(crs: Any) -> bool:
@@ -95,7 +99,7 @@ def project_gdf(
     gdf_proj
         The projected GeoDataFrame.
     """
-    if gdf.crs is None or len(gdf) < 1:  # pragma: no cover
+    if gdf.crs is None or len(gdf) == 0:  # pragma: no cover
         msg = "GeoDataFrame must have a valid CRS and cannot be empty"
         raise ValueError(msg)
 
@@ -110,7 +114,9 @@ def project_gdf(
     # project the gdf
     gdf_proj = gdf.to_crs(to_crs)
     crs_desc = f"{gdf_proj.crs.to_string()} / {gdf_proj.crs.name}"
-    utils.log(f"Projected GeoDataFrame to {crs_desc!r}")
+
+    msg = f"Projected GeoDataFrame to {crs_desc!r}"
+    utils.log(msg, level=lg.INFO)
     return gdf_proj
 
 
@@ -174,5 +180,6 @@ def project_graph(
     G_proj = utils_graph.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj, G.graph)
     G_proj.graph["crs"] = to_crs
 
-    utils.log(f"Projected graph with {len(G)} nodes and {len(G.edges)} edges")
+    msg = f"Projected graph with {len(G)} nodes and {len(G.edges)} edges"
+    utils.log(msg, level=lg.INFO)
     return G_proj

@@ -55,7 +55,8 @@ def _save_to_cache(
     """
     if settings.use_cache:
         if not ok:  # pragma: no cover
-            utils.log("Did not save to cache because HTTP status code is not OK.", level=lg.WARNING)
+            msg = "Did not save to cache because HTTP status code is not OK"
+            utils.log(msg, level=lg.WARNING)
         else:
             # create the folder on the disk if it doesn't already exist
             cache_folder = Path(settings.cache_folder)
@@ -68,7 +69,8 @@ def _save_to_cache(
 
             # dump to json, and save to file
             cache_filepath.write_text(json.dumps(response_json), encoding="utf-8")
-            utils.log(f"Saved response to cache file {str(cache_filepath)!r}")
+            msg = f"Saved response to cache file {str(cache_filepath)!r}"
+            utils.log(msg, level=lg.INFO)
 
 
 def _url_in_cache(url: str) -> Path | None:
@@ -129,14 +131,17 @@ def _retrieve_from_cache(
             if (
                 check_remark and isinstance(response_json, dict) and "remark" in response_json
             ):  # pragma: no cover
-                utils.log(
+                msg = (
                     f"Ignoring cache file {str(cache_filepath)!r} because "
                     f"it contains a remark: {response_json['remark']!r}"
                 )
+                utils.log(msg, lg.WARNING)
                 return None
 
-            utils.log(f"Retrieved response from cache file {str(cache_filepath)!r}")
+            msg = f"Retrieved response from cache file {str(cache_filepath)!r}"
+            utils.log(msg, lg.INFO)
             return response_json
+
     return None
 
 
@@ -197,7 +202,8 @@ def _resolve_host_via_doh(hostname: str) -> str:
     """
     if settings.doh_url_template is None:
         # if user has set the url template to None, return hostname itself
-        utils.log("User set `doh_url_template=None`, requesting host by name", level=lg.WARNING)
+        msg = "User set `doh_url_template=None`, requesting host by name"
+        utils.log(msg, level=lg.WARNING)
         return hostname
 
     err_msg = f"Failed to resolve {hostname!r} IP via DoH, requesting host by name"
@@ -255,16 +261,15 @@ def _config_dns(url: str) -> None:
         ip = socket.gethostbyname(hostname)
     except socket.gaierror:  # pragma: no cover
         # may occur when using a proxy, so instead resolve IP address via DoH
-        utils.log(
-            f"Encountered gaierror while trying to resolve {hostname!r}, trying again via DoH...",
-            level=lg.ERROR,
-        )
+        msg = f"Encountered gaierror while trying to resolve {hostname!r}, trying again via DoH..."
+        utils.log(msg, level=lg.ERROR)
         ip = _resolve_host_via_doh(hostname)
 
     # mutate socket.getaddrinfo to map hostname -> IP address
     def _getaddrinfo(*args, **kwargs):  # type: ignore[no-untyped-def]
         if args[0] == hostname:
-            utils.log(f"Resolved {hostname!r} to {ip!r}")
+            msg = f"Resolved {hostname!r} to {ip!r}"
+            utils.log(msg, level=lg.INFO)
             return _original_getaddrinfo(ip, *args[1:], **kwargs)
 
         # otherwise
@@ -308,7 +313,8 @@ def _parse_response(response: requests.Response) -> dict[str, Any] | list[dict[s
     # log the response size and domain
     domain = _hostname_from_url(response.url)
     size_kb = len(response.content) / 1000
-    utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r} with status {response.status_code}")
+    msg = f"Downloaded {size_kb:,.1f}kB from {domain!r} with status {response.status_code}"
+    utils.log(msg, level=lg.INFO)
 
     # parse the response to JSON and log/raise exceptions
     try:
@@ -322,10 +328,12 @@ def _parse_response(response: requests.Response) -> dict[str, Any] | list[dict[s
 
     # log any remarks if they exist
     if isinstance(response_json, dict) and "remark" in response_json:  # pragma: no cover
-        utils.log(f'{domain!r} remarked: {response_json["remark"]!r}', level=lg.WARNING)
+        msg = f"{domain!r} remarked: {response_json['remark']!r}"
+        utils.log(msg, level=lg.WARNING)
 
     # log if the response status_code is not OK
     if not response.ok:
-        utils.log(f"{domain!r} returned HTTP status code {response.status_code}", level=lg.WARNING)
+        msg = f"{domain!r} returned HTTP status code {response.status_code}"
+        utils.log(msg, level=lg.WARNING)
 
     return response_json

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+import logging as lg
 from typing import Any
 from typing import Literal
 from typing import overload
@@ -147,7 +148,7 @@ def graph_to_gdfs(
     crs = G.graph["crs"]
 
     if nodes:
-        if not G.nodes:  # pragma: no cover
+        if len(G.nodes) == 0:  # pragma: no cover
             msg = "graph contains no nodes"
             raise ValueError(msg)
 
@@ -161,10 +162,11 @@ def graph_to_gdfs(
             gdf_nodes = gpd.GeoDataFrame(data, index=uvk)
 
         gdf_nodes.index = gdf_nodes.index.rename("osmid")
-        utils.log("Created nodes GeoDataFrame from graph")
+        msg = "Created nodes GeoDataFrame from graph"
+        utils.log(msg, level=lg.INFO)
 
     if edges:
-        if not G.edges:  # pragma: no cover
+        if len(G.edges) == 0:  # pragma: no cover
             msg = "Graph contains no edges"
             raise ValueError(msg)
 
@@ -205,7 +207,8 @@ def graph_to_gdfs(
         gdf_edges["key"] = k
         gdf_edges = gdf_edges.set_index(["u", "v", "key"])
 
-        utils.log("Created edges GeoDataFrame from graph")
+        msg = "Created edges GeoDataFrame from graph"
+        utils.log(msg, level=lg.INFO)
 
     if nodes and edges:
         return gdf_nodes, gdf_edges
@@ -276,10 +279,10 @@ def graph_from_gdfs(
         # AssertionError if x/y coords don't match geometry column
         # ValueError if geometry column contains non-point geometry types
         msg = (
-            "Discarding the `gdf_nodes` geometry column, though its values "
-            "differ from the coordinates in the x and y columns."
+            "Discarding the `gdf_nodes` 'geometry' column, though its values "
+            "differ from the coordinates in the 'x' and 'y' columns."
         )
-        warn(msg, stacklevel=2)
+        warn(msg, category=UserWarning, stacklevel=2)
     df_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
 
     # create graph and add graph-level attribute dict
@@ -302,7 +305,8 @@ def graph_from_gdfs(
     for col in df_nodes.columns:
         nx.set_node_attributes(G, name=col, values=df_nodes[col].dropna())
 
-    utils.log("Created graph from node/edge GeoDataFrames")
+    msg = "Created graph from node/edge GeoDataFrames"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
@@ -348,7 +352,9 @@ def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     # get the set of all isolated nodes, then remove them
     isolated_nodes = {node for node, degree in G.degree() if degree < 1}
     G.remove_nodes_from(isolated_nodes)
-    utils.log(f"Removed {len(isolated_nodes):,} isolated nodes")
+
+    msg = f"Removed {len(isolated_nodes):,} isolated nodes"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
@@ -385,7 +391,9 @@ def get_largest_component(G: nx.MultiDiGraph, strongly: bool = False) -> nx.Mult
 
         # induce (frozen) subgraph then unfreeze it by making new MultiDiGraph
         G = nx.MultiDiGraph(G.subgraph(largest_cc))
-        utils.log(f"Got largest {kind} connected component ({len(G):,} of {n:,} total nodes)")
+
+        msg = f"Got largest {kind} connected component ({len(G):,} of {n:,} total nodes)"
+        utils.log(msg, level=lg.INFO)
 
     return G
 
@@ -422,7 +430,8 @@ def get_digraph(G: nx.MultiDiGraph, weight: str = "length") -> nx.DiGraph:
         to_remove.extend((u, v, k) for k in G[u][v] if k != k_min)
 
     G.remove_edges_from(to_remove)
-    utils.log("Converted MultiDiGraph to DiGraph")
+    msg = "Converted MultiDiGraph to DiGraph"
+    utils.log(msg, level=lg.INFO)
 
     return nx.DiGraph(G)
 
@@ -485,7 +494,8 @@ def get_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
                         duplicate_edges.add((u1, v1, key2))
 
     H.remove_edges_from(duplicate_edges)
-    utils.log("Converted MultiDiGraph to undirected MultiGraph")
+    msg = "Converted MultiDiGraph to undirected MultiGraph"
+    utils.log(msg, level=lg.INFO)
 
     return H
 

@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import logging as lg
-from collections.abc import Iterable
-from collections.abc import Iterator
+from typing import TYPE_CHECKING
 from typing import Any
 
 import geopandas as gpd
@@ -18,6 +17,10 @@ from . import stats
 from . import utils
 from . import utils_graph
 from ._errors import GraphSimplificationError
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from collections.abc import Iterator
 
 
 def _is_endpoint(G: nx.MultiDiGraph, node: int, endpoint_attrs: Iterable[str] | None) -> bool:
@@ -193,7 +196,8 @@ def _get_paths_to_simplify(
     """
     # first identify all the nodes that are endpoints
     endpoints = {n for n in G.nodes if _is_endpoint(G, n, endpoint_attrs)}
-    utils.log(f"Identified {len(endpoints):,} edge endpoints")
+    msg = f"Identified {len(endpoints):,} edge endpoints"
+    utils.log(msg, level=lg.INFO)
 
     # for each endpoint node, look at each of its successor nodes
     for endpoint in endpoints:
@@ -287,7 +291,8 @@ def simplify_graph(
         msg = "This graph has already been simplified, cannot simplify it again."
         raise GraphSimplificationError(msg)
 
-    utils.log("Begin topologically simplifying the graph...")
+    msg = "Begin topologically simplifying the graph..."
+    utils.log(msg, level=lg.INFO)
 
     # define edge segment attributes to sum upon edge simplification
     attrs_to_sum = {"length", "travel_time"}
@@ -315,7 +320,8 @@ def simplify_graph(
             # street... we will keep only one of the edges (see below)
             edge_count = G.number_of_edges(u, v)
             if edge_count != 1:
-                utils.log(f"Found {edge_count} edges between {u} and {v} when simplifying")
+                msg = f"Found {edge_count} edges between {u} and {v} when simplifying"
+                utils.log(msg, level=lg.WARNING)
 
             # get edge between these nodes: if multiple edges exist between
             # them (see above), we retain only one in the simplified graph
@@ -379,7 +385,7 @@ def simplify_graph(
         f"Simplified graph: {initial_node_count:,} to {len(G):,} nodes, "
         f"{initial_edge_count:,} to {len(G.edges):,} edges"
     )
-    utils.log(msg)
+    utils.log(msg, level=lg.INFO)
     return G
 
 
@@ -458,7 +464,7 @@ def consolidate_intersections(
         G.remove_nodes_from(dead_end_nodes)
 
     if rebuild_graph:
-        if not G or not G.edges:
+        if len(G.nodes) == 0 or len(G.edges) == 0:
             # cannot rebuild a graph with no nodes or no edges, just return it
             return G
 
@@ -466,7 +472,7 @@ def consolidate_intersections(
         return _consolidate_intersections_rebuild_graph(G, tolerance, reconnect_edges)
 
     # otherwise, if we're not rebuilding the graph
-    if not G:
+    if len(G) == 0:
         # if graph has no nodes, just return empty GeoSeries
         return gpd.GeoSeries(crs=G.graph["crs"])
 
@@ -608,7 +614,7 @@ def _consolidate_intersections_rebuild_graph(
     street_count = stats.count_streets_per_node(H, nodes=null_nodes)
     nx.set_node_attributes(H, street_count, name="street_count")
 
-    if not G.edges or not reconnect_edges:
+    if len(G.edges) == 0 or not reconnect_edges:
         # if reconnect_edges is False or there are no edges in original graph
         # (after dead-end removed), then skip edges and return new graph as-is
         return H

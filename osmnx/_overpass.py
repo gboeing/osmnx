@@ -6,14 +6,12 @@ import datetime as dt
 import logging as lg
 import time
 from collections import OrderedDict
-from collections.abc import Iterator
+from typing import TYPE_CHECKING
 from typing import Any
 
 import numpy as np
 import requests
 from requests.exceptions import ConnectionError
-from shapely.geometry import MultiPolygon
-from shapely.geometry import Polygon
 
 from . import _http
 from . import projection
@@ -21,6 +19,12 @@ from . import settings
 from . import utils
 from . import utils_geo
 from ._errors import InsufficientResponseError
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from shapely.geometry import MultiPolygon
+    from shapely.geometry import Polygon
 
 
 def _get_network_filter(network_type: str) -> str:
@@ -149,13 +153,15 @@ def _get_overpass_pause(
         )
         status = response.text.split("\n")[4]
         status_first_token = status.split(" ")[0]
-    except ConnectionError as ce:  # pragma: no cover
+    except ConnectionError as e:  # pragma: no cover
         # cannot reach status endpoint, log error and return default duration
-        utils.log(f"Unable to query {url}, {ce}", level=lg.ERROR)
+        msg = f"Unable to query {url}, {e}"
+        utils.log(msg, level=lg.ERROR)
         return default_duration
     except (AttributeError, IndexError, ValueError):  # pragma: no cover
         # cannot parse output, log error and return default duration
-        utils.log(f"Unable to parse {url} response: {response.text}", level=lg.ERROR)
+        msg = f"Unable to parse {url} response: {response.text}"
+        utils.log(msg, level=lg.ERROR)
         return default_duration
 
     try:
@@ -182,7 +188,8 @@ def _get_overpass_pause(
 
         # any other status is unrecognized: log error, return default duration
         else:
-            utils.log(f"Unrecognized server status: {status!r}", level=lg.ERROR)
+            msg = f"Unrecognized server status: {status!r}"
+            utils.log(msg, level=lg.ERROR)
             return default_duration
 
     return pause
@@ -232,13 +239,15 @@ def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list[s
     coord_strs = []
     for geom in multi_poly.geoms:
         x, y = geom.exterior.xy
-        coord_list = [f'{xy[1]:.6f}{" "}{xy[0]:.6f}' for xy in zip(x, y)]
+        coord_list = [f"{xy[1]:.6f}{' '}{xy[0]:.6f}" for xy in zip(x, y)]
         coord_strs.append(" ".join(coord_list))
 
     return coord_strs
 
 
-def _create_overpass_query(polygon_coord_str: str, tags: dict[str, bool | str | list[str]]) -> str:
+def _create_overpass_features_query(
+    polygon_coord_str: str, tags: dict[str, bool | str | list[str]]
+) -> str:
     """
     Create an Overpass features query string based on tags.
 
@@ -334,7 +343,8 @@ def _download_overpass_network(
 
     # subdivide query polygon to get list of sub-divided polygon coord strings
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
-    utils.log(f"Requesting data from API in {len(polygon_coord_strs)} request(s)")
+    msg = f"Requesting data from API in {len(polygon_coord_strs)} request(s)"
+    utils.log(msg, level=lg.INFO)
 
     # pass exterior coordinates of each polygon in list to API, one at a time
     # the '>' makes it recurse so we get ways and the ways' nodes.
@@ -363,11 +373,12 @@ def _download_overpass_features(
     """
     # subdivide query polygon to get list of sub-divided polygon coord strings
     polygon_coord_strs = _make_overpass_polygon_coord_strs(polygon)
-    utils.log(f"Requesting data from API in {len(polygon_coord_strs)} request(s)")
+    msg = f"Requesting data from API in {len(polygon_coord_strs)} request(s)"
+    utils.log(msg, level=lg.INFO)
 
     # pass exterior coordinates of each polygon in list to API, one at a time
     for polygon_coord_str in polygon_coord_strs:
-        query_str = _create_overpass_query(polygon_coord_str, tags)
+        query_str = _create_overpass_features_query(polygon_coord_str, tags)
         yield _overpass_request(OrderedDict(data=query_str))
 
 
@@ -406,11 +417,13 @@ def _overpass_request(
     if pause is None:
         this_pause = _get_overpass_pause(settings.overpass_endpoint)
     domain = _http._hostname_from_url(url)
-    utils.log(f"Pausing {this_pause} second(s) before making HTTP POST request to {domain!r}")
+    msg = f"Pausing {this_pause} second(s) before making HTTP POST request to {domain!r}"
+    utils.log(msg, level=lg.INFO)
     time.sleep(this_pause)
 
     # transmit the HTTP POST request
-    utils.log(f"Post {prepared_url} with timeout={settings.timeout}")
+    msg = f"Post {prepared_url} with timeout={settings.timeout}"
+    utils.log(msg, level=lg.INFO)
     response = requests.post(
         url,
         data=data,

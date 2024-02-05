@@ -51,6 +51,9 @@ Documentation = "https://osmnx.readthedocs.io"
 "Code Repository" = "https://github.com/gboeing/osmnx"
 "Examples Gallery" = "https://github.com/gboeing/osmnx-examples"
 
+[tool.coverage.report]
+exclude_also = ["if TYPE_CHECKING:"]
+
 [tool.hatch.build]
 packages = ["osmnx"]
 
@@ -105,6 +108,7 @@ extend-select = [
     "RSE",  # check exception raise statements via flake8-raise
     "SIM",  # check code simplicity a la flake8-simplify
     "T20",  # check for any print statements
+    "TCH",  # check that imports used only for type hinting are guarded
     "TRY",  # check exception handling anti-patterns a la tryceratops
     "UP",   # check outdated syntax a la pyupgrade
     "W",    # check code style conventions a la pycodestyle warnings

@@ -9,9 +9,11 @@ Refer to the Getting Started guide for usage limitations.
 
 from __future__ import annotations
 
-import itertools
+import logging as lg
 from collections.abc import Iterable
+from itertools import groupby
 from pathlib import Path
+from typing import TYPE_CHECKING
 from typing import Any
 
 import networkx as nx
@@ -33,6 +35,10 @@ from . import utils_graph
 from ._errors import CacheOnlyInterruptError
 from ._errors import InsufficientResponseError
 from ._version import __version__
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from pathlib import Path
 
 
 def graph_from_bbox(
@@ -94,7 +100,8 @@ def graph_from_bbox(
         custom_filter=custom_filter,
     )
 
-    utils.log(f"graph_from_bbox returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
+    msg = f"graph_from_bbox returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
@@ -177,7 +184,8 @@ def graph_from_point(
         node = distance.nearest_nodes(G, X=center_point[1], Y=center_point[0])
         G = truncate.truncate_graph_dist(G, node, max_dist=dist)
 
-    utils.log(f"graph_from_point returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
+    msg = f"graph_from_point returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
@@ -253,7 +261,8 @@ def graph_from_address(
         custom_filter=custom_filter,
     )
 
-    utils.log(f"graph_from_address returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
+    msg = f"graph_from_address returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
@@ -322,7 +331,9 @@ def graph_from_place(
     # extract the geometry from the GeoDataFrame to use in query
     gdf_place = geocoder.geocode_to_gdf(query, which_result=which_result)
     polygon = gdf_place["geometry"].unary_union
-    utils.log("Constructed place geometry polygon(s) to query Overpass")
+
+    msg = "Constructed place geometry polygon(s) to query Overpass"
+    utils.log(msg, level=lg.INFO)
 
     # create graph using this polygon(s) geometry
     G = graph_from_polygon(
@@ -334,7 +345,8 @@ def graph_from_place(
         custom_filter=custom_filter,
     )
 
-    utils.log(f"graph_from_place returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
+    msg = f"graph_from_place returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
@@ -435,7 +447,8 @@ def graph_from_polygon(
     spn = stats.count_streets_per_node(G_buff, nodes=G.nodes)
     nx.set_node_attributes(G, values=spn, name="street_count")
 
-    utils.log(f"graph_from_polygon returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
+    msg = f"graph_from_polygon returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
@@ -482,7 +495,8 @@ def graph_from_xml(
     if simplify:
         G = simplification.simplify_graph(G)
 
-    utils.log(f"graph_from_xml returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
+    msg = f"graph_from_xml returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
@@ -530,7 +544,8 @@ def _create_graph(
         nodes.update(nodes_temp)
         paths.update(paths_temp)
 
-    utils.log(f"Retrieved all data from API in {response_count} request(s)")
+    msg = f"Retrieved all data from API in {response_count} request(s)"
+    utils.log(msg, level=lg.INFO)
     if settings.cache_only_mode:  # pragma: no cover
         # after consuming all response_jsons in loop, raise exception to catch
         msg = "Interrupted because `settings.cache_only_mode=True`"
@@ -550,7 +565,8 @@ def _create_graph(
     G = nx.MultiDiGraph(**metadata)
 
     # add each OSM node and way (a path of edges) to the graph
-    utils.log(f"Creating graph from {len(nodes):,} OSM nodes and {len(paths):,} OSM ways...")
+    msg = f"Creating graph from {len(nodes):,} OSM nodes and {len(paths):,} OSM ways..."
+    utils.log(msg, level=lg.INFO)
     G.add_nodes_from(nodes.items())
     _add_paths(G, paths.values(), bidirectional)
 
@@ -558,7 +574,8 @@ def _create_graph(
     if not retain_all:
         G = utils_graph.get_largest_component(G)
 
-    utils.log(f"Created graph with {len(G):,} nodes and {len(G.edges):,} edges")
+    msg = f"Created graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
 
     # add length (great-circle distance between nodes) attribute to each edge
     if len(G.edges) > 0:
@@ -604,7 +621,7 @@ def _convert_path(element: dict[str, Any]) -> dict[str, Any]:
     path = {"osmid": element["id"]}
 
     # remove any consecutive duplicate elements in the list of nodes
-    path["nodes"] = [group[0] for group in itertools.groupby(element["nodes"])]
+    path["nodes"] = [group[0] for group in groupby(element["nodes"])]
 
     if "tags" in element:
         for useful_tag in settings.useful_tags_way:

@@ -135,8 +135,11 @@ useful_tags_way : list[str]
 from __future__ import annotations
 
 import logging as lg
-from pathlib import Path
+from typing import TYPE_CHECKING
 from typing import Any
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 all_oneway: bool = False
 bidirectional_network_types: list[str] = ["walk"]

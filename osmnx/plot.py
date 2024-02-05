@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 
+import logging as lg
 from collections.abc import Iterable
 from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import Literal
 from typing import overload
 
-import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -21,16 +22,21 @@ from . import utils
 from . import utils_geo
 from . import utils_graph
 
+if TYPE_CHECKING:
+    import geopandas as gpd
+
 # matplotlib is an optional dependency needed for visualization
 try:
-    mpl_available = True
     import matplotlib.pyplot as plt
     from matplotlib import cm
     from matplotlib import colormaps
     from matplotlib import colors
-    from matplotlib.axes._axes import Axes
-    from matplotlib.figure import Figure
-    from matplotlib.projections.polar import PolarAxes
+    from matplotlib.axes._axes import Axes  # noqa: TCH002
+    from matplotlib.figure import Figure  # noqa: TCH002
+    from matplotlib.projections.polar import PolarAxes  # noqa: TCH002
+
+    mpl_available = True
+
 except ImportError:  # pragma: no cover
     mpl_available = False
 
@@ -236,7 +242,8 @@ def plot_graph(
         raise ValueError(msg)
 
     # create fig, ax as needed
-    utils.log("Begin plotting the graph...")
+    msg = "Begin plotting the graph..."
+    utils.log(msg, level=lg.INFO)
     fig, ax = _get_fig_ax(ax=ax, figsize=figsize, bgcolor=bgcolor, polar=False)
 
     if max_edge_lw > 0:
@@ -273,7 +280,8 @@ def plot_graph(
     fig, ax = _save_and_show(
         fig=fig, ax=ax, show=show, close=close, save=save, filepath=filepath, dpi=dpi
     )
-    utils.log("Finished plotting the graph")
+    msg = "Finished plotting the graph"
+    utils.log(msg, level=lg.INFO)
     return fig, ax
 
 
@@ -396,7 +404,7 @@ def plot_graph_routes(
     if not all(isinstance(r, list) for r in routes):  # pragma: no cover
         msg = "`routes` must be an iterable of route lists"
         raise TypeError(msg)
-    if len(routes) < 1:  # pragma: no cover
+    if len(routes) == 0:  # pragma: no cover
         msg = "You must pass at least 1 route"
         raise ValueError(msg)
     if not (len(routes) == len(route_colors) == len(route_linewidths)):  # pragma: no cover
@@ -895,7 +903,9 @@ def _save_and_show(
             fig.set_frameon(True)
             fig.savefig(fp, dpi=dpi, bbox_inches=extent, format=ext, facecolor=fc, transparent=True)
             fig.set_frameon(False)  # and turn it back off again
-        utils.log(f"Saved figure to disk at {fp!r}")
+
+        msg = f"Saved figure to disk at {fp!r}"
+        utils.log(msg, level=lg.INFO)
 
     if show:
         plt.show()

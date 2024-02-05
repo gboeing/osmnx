@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import bz2
+import logging as lg
 import xml.sax
 from pathlib import Path
+from typing import TYPE_CHECKING
 from typing import Any
 from typing import TextIO
 from warnings import warn
 from xml.etree import ElementTree as ET
 
-import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -19,6 +20,9 @@ from . import settings
 from . import utils
 from . import utils_graph
 from ._version import __version__
+
+if TYPE_CHECKING:
+    import geopandas as gpd
 
 
 class _OSMContentHandler(xml.sax.handler.ContentHandler):
@@ -103,7 +107,7 @@ def _overpass_json_from_file(filepath: str | Path, encoding: str) -> dict[str, A
                 "in OSMnx, use the `io.save_graphml` and `io.load_graphml` "
                 "functions instead. Refer to the documentation for details."
             )
-            warn(msg, stacklevel=2)
+            warn(msg, category=UserWarning, stacklevel=2)
 
     # parse the XML to Overpass-like JSON
     with _opener(Path(filepath), encoding) as f:
@@ -179,7 +183,7 @@ def _save_graph_xml(
             "For the `save_graph_xml` function to behave properly, the graph "
             "must have been created with `ox.settings.all_oneway=True`."
         )
-        warn(msg, stacklevel=2)
+        warn(msg, category=UserWarning, stacklevel=2)
 
     if isinstance(data, nx.MultiDiGraph):
         gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(
@@ -229,7 +233,8 @@ def _save_graph_xml(
 
     # write to disk
     ET.ElementTree(root).write(filepath, encoding="utf-8", xml_declaration=True)
-    utils.log(f"Saved graph as .osm file at {filepath!r}")
+    msg = f"Saved graph as .osm file at {filepath!r}"
+    utils.log(msg, level=lg.INFO)
 
 
 def _append_nodes_xml_tree(
@@ -496,6 +501,7 @@ def _get_unique_nodes_ordered_from_way(df_way_edges: pd.DataFrame) -> list[Any]:
     num_unique_nodes = len(np.unique(all_nodes))
 
     if len(unique_ordered_nodes) < num_unique_nodes:
-        utils.log(f"Recovered order for {len(unique_ordered_nodes)} of {num_unique_nodes} nodes")
+        msg = f"Recovered order for {len(unique_ordered_nodes)} of {num_unique_nodes} nodes"
+        utils.log(msg, level=lg.INFO)
 
     return unique_ordered_nodes

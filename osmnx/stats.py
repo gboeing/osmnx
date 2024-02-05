@@ -16,7 +16,7 @@ from __future__ import annotations
 import itertools
 import logging as lg
 from collections import Counter
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 from typing import Any
 
 import networkx as nx
@@ -27,6 +27,9 @@ from . import projection
 from . import simplification
 from . import utils
 from . import utils_graph
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def streets_per_node(G: nx.MultiDiGraph) -> dict[int, int]:
@@ -47,7 +50,8 @@ def streets_per_node(G: nx.MultiDiGraph) -> dict[int, int]:
     # if user has projected the graph bc GeoDataFrames use np.int64 for ints
     spn = {k: int(v) for k, v in nx.get_node_attributes(G, "street_count").items()}
     if set(spn) != set(G.nodes):
-        utils.log("Graph nodes changed since `street_count`s were calculated", level=lg.WARNING)
+        msg = "Graph nodes changed since `street_count`s were calculated"
+        utils.log(msg, level=lg.WARNING)
     return spn
 
 
@@ -311,7 +315,8 @@ def count_streets_per_node(
     counts = Counter(edges_flat)
     streets_per_node = {node: counts[node] for node in nodes}
 
-    utils.log("Counted undirected street segments incident on each node")
+    msg = "Counted undirected street segments incident on each node"
+    utils.log(msg, level=lg.INFO)
     return streets_per_node
 
 

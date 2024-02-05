@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import logging as lg
+from typing import TYPE_CHECKING
+
 import networkx as nx
-from shapely.geometry import MultiPolygon
-from shapely.geometry import Polygon
 
 from . import utils
 from . import utils_geo
 from . import utils_graph
+
+if TYPE_CHECKING:
+    from shapely.geometry import MultiPolygon
+    from shapely.geometry import Polygon
 
 
 def truncate_graph_dist(
@@ -62,7 +67,8 @@ def truncate_graph_dist(
         G = utils_graph.remove_isolated_nodes(G)
         G = utils_graph.get_largest_component(G)
 
-    utils.log(f"Truncated graph by {weight}-weighted network distance")
+    msg = f"Truncated graph by {weight}-weighted network distance"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
@@ -97,7 +103,8 @@ def truncate_graph_bbox(
     polygon = utils_geo.bbox_to_poly(bbox=bbox)
     G = truncate_graph_polygon(G, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
 
-    utils.log("Truncated graph by bounding box")
+    msg = "Truncated graph by bounding box"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
@@ -128,13 +135,14 @@ def truncate_graph_polygon(
     G
         The truncated graph.
     """
-    utils.log("Identifying all nodes that lie outside the polygon...")
+    msg = "Identifying all nodes that lie outside the polygon..."
+    utils.log(msg, level=lg.INFO)
 
     # first identify all nodes whose point geometries lie within the polygon
     gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)["geometry"]
     to_keep = utils_geo._intersect_index_quadrats(gs_nodes, polygon)
 
-    if not to_keep:
+    if len(to_keep) == 0:
         # no graph nodes within the polygon: can't create a graph from that
         msg = "Found no graph nodes within the requested polygon"
         raise ValueError(msg)
@@ -160,12 +168,14 @@ def truncate_graph_polygon(
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
     G.remove_nodes_from(nodes_to_remove)
-    utils.log(f"Removed {len(nodes_to_remove):,} nodes outside polygon")
+    msg = f"Removed {len(nodes_to_remove):,} nodes outside polygon"
+    utils.log(msg, level=lg.INFO)
 
     if not retain_all:
         # remove any isolated nodes and retain only the largest component
         G = utils_graph.remove_isolated_nodes(G)
         G = utils_graph.get_largest_component(G)
 
-    utils.log("Truncated graph by polygon")
+    msg = "Truncated graph by polygon"
+    utils.log(msg, level=lg.INFO)
     return G

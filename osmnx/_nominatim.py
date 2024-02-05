@@ -118,11 +118,13 @@ def _nominatim_request(
 
     # pause then request this URL
     domain = _http._hostname_from_url(url)
-    utils.log(f"Pausing {pause} second(s) before making HTTP GET request to {domain!r}")
+    msg = f"Pausing {pause} second(s) before making HTTP GET request to {domain!r}"
+    utils.log(msg, level=lg.INFO)
     time.sleep(pause)
 
     # transmit the HTTP GET request
-    utils.log(f"Get {prepared_url} with timeout={settings.timeout}")
+    msg = f"Get {prepared_url} with timeout={settings.timeout}"
+    utils.log(msg, level=lg.INFO)
     response = requests.get(
         url,
         params=params,

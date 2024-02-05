@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import itertools
+import logging as lg
 import multiprocessing as mp
 from collections.abc import Iterable
 from collections.abc import Iterator
@@ -170,7 +171,9 @@ def shortest_path(
     if cpus is None:
         cpus = mp.cpu_count()
     cpus = min(cpus, mp.cpu_count())
-    utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")
+
+    msg = f"Solving {len(orig)} paths with {cpus} CPUs..."
+    utils.log(msg, level=lg.INFO)
 
     # if single-threading, calculate each shortest path one at a time
     if cpus == 1:
@@ -246,7 +249,8 @@ def _single_shortest_path(
     try:
         return list(nx.shortest_path(G, orig, dest, weight=weight, method="dijkstra"))
     except nx.exception.NetworkXNoPath:  # pragma: no cover
-        utils.log(f"Cannot solve path from {orig} to {dest}")
+        msg = f"Cannot solve path from {orig} to {dest}"
+        utils.log(msg, level=lg.WARNING)
         return None
 
 
@@ -272,7 +276,7 @@ def _verify_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
         values_float = (np.array(tuple(G.edges(data=attr)))[:, 2]).astype(float)
         if np.isnan(values_float).any():
             msg = f"The attribute {attr!r} is missing or null on some edges."
-            warn(msg, stacklevel=2)
+            warn(msg, category=UserWarning, stacklevel=2)
     except ValueError as e:
         msg = f"The edge attribute {attr!r} contains non-numeric values."
         raise ValueError(msg) from e

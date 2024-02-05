@@ -181,9 +181,9 @@ def _get_logger(name: str, filename: str) -> lg.Logger:
     logger = lg.getLogger(name)
 
     # if a logger with this name is not already set up with a handler
-    if not len(logger.handlers) > 0:
+    if len(logger.handlers) == 0:
         # make log filepath and create parent folder if it doesn't exist
-        filepath = Path(settings.logs_folder) / f'{filename}_{ts(style="date")}.log'
+        filepath = Path(settings.logs_folder) / f"{filename}_{ts(style='date')}.log"
         filepath.parent.mkdir(parents=True, exist_ok=True)
 
         # create file handler and log formatter and set them up
