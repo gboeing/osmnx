@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging as lg
 from collections.abc import Iterable
 from collections.abc import Sequence
 from pathlib import Path
@@ -241,7 +242,8 @@ def plot_graph(
         raise ValueError(msg)
 
     # create fig, ax as needed
-    utils.log("Begin plotting the graph...")
+    msg = "Begin plotting the graph..."
+    utils.log(msg, level=lg.INFO)
     fig, ax = _get_fig_ax(ax=ax, figsize=figsize, bgcolor=bgcolor, polar=False)
 
     if max_edge_lw > 0:
@@ -278,7 +280,8 @@ def plot_graph(
     fig, ax = _save_and_show(
         fig=fig, ax=ax, show=show, close=close, save=save, filepath=filepath, dpi=dpi
     )
-    utils.log("Finished plotting the graph")
+    msg = "Finished plotting the graph"
+    utils.log(msg, level=lg.INFO)
     return fig, ax
 
 
@@ -900,7 +903,9 @@ def _save_and_show(
             fig.set_frameon(True)
             fig.savefig(fp, dpi=dpi, bbox_inches=extent, format=ext, facecolor=fc, transparent=True)
             fig.set_frameon(False)  # and turn it back off again
-        utils.log(f"Saved figure to disk at {fp!r}")
+
+        msg = f"Saved figure to disk at {fp!r}"
+        utils.log(msg, level=lg.INFO)
 
     if show:
         plt.show()

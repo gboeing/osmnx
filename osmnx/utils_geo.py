@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging as lg
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import Literal
@@ -212,14 +213,16 @@ def _intersect_index_quadrats(
     """
     # create an r-tree spatial index for the geometries
     rtree = geometries.sindex
-    utils.log(f"Built r-tree spatial index for {len(geometries):,} geometries")
+    msg = f"Built r-tree spatial index for {len(geometries):,} geometries"
+    utils.log(msg, level=lg.INFO)
 
     # cut polygon into chunks for faster spatial index intersecting. specify a
     # sensible quadrat_width to balance performance (eg, 0.1 degrees is approx
     # 8 km at NYC's latitude) with either projected or unprojected coordinates
     quadrat_width = max(0.1, np.sqrt(polygon.area) / 10)
     multipoly = _quadrat_cut_geometry(polygon, quadrat_width)
-    utils.log(f"Accelerating r-tree with {len(multipoly.geoms)} quadrats")
+    msg = f"Accelerating r-tree with {len(multipoly.geoms)} quadrats"
+    utils.log(msg, level=lg.INFO)
 
     # loop through each chunk of the polygon to find intersecting geometries
     # first find approximate matches with spatial index, then precise matches
@@ -233,7 +236,8 @@ def _intersect_index_quadrats(
             precise_matches = possible_matches[possible_matches.intersects(poly_buff)]
             geoms_in_poly.update(precise_matches.index)
 
-    utils.log(f"Identified {len(geoms_in_poly):,} geometries inside polygon")
+    msg = f"Identified {len(geoms_in_poly):,} geometries inside polygon"
+    utils.log(msg, level=lg.INFO)
     return geoms_in_poly
 
 
@@ -420,7 +424,8 @@ def bbox_from_point(
         bbox_proj, crs_proj = projection.project_geometry(bbox_poly)
         west, south, east, north = bbox_proj.bounds
 
-    utils.log(f"Created bbox {dist} m from {point}: {north},{south},{east},{west}")
+    msg = f"Created bbox {dist} m from {point}: {north},{south},{east},{west}"
+    utils.log(msg, level=lg.INFO)
 
     if project_utm and return_crs:
         return (north, south, east, west), crs_proj

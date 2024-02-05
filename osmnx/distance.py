@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging as lg
 from collections.abc import Iterable
 from typing import Literal
 from typing import overload
@@ -223,7 +224,8 @@ def add_edge_lengths(
     dists[np.isnan(dists)] = 0
     nx.set_edge_attributes(G, values=dict(zip(uvk, dists)), name="length")
 
-    utils.log("Added length attributes to graph edges")
+    msg = "Added length attributes to graph edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 

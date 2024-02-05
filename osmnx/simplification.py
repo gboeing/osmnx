@@ -196,7 +196,8 @@ def _get_paths_to_simplify(
     """
     # first identify all the nodes that are endpoints
     endpoints = {n for n in G.nodes if _is_endpoint(G, n, endpoint_attrs)}
-    utils.log(f"Identified {len(endpoints):,} edge endpoints")
+    msg = f"Identified {len(endpoints):,} edge endpoints"
+    utils.log(msg, level=lg.INFO)
 
     # for each endpoint node, look at each of its successor nodes
     for endpoint in endpoints:
@@ -290,7 +291,8 @@ def simplify_graph(
         msg = "This graph has already been simplified, cannot simplify it again."
         raise GraphSimplificationError(msg)
 
-    utils.log("Begin topologically simplifying the graph...")
+    msg = "Begin topologically simplifying the graph..."
+    utils.log(msg, level=lg.INFO)
 
     # define edge segment attributes to sum upon edge simplification
     attrs_to_sum = {"length", "travel_time"}
@@ -318,7 +320,8 @@ def simplify_graph(
             # street... we will keep only one of the edges (see below)
             edge_count = G.number_of_edges(u, v)
             if edge_count != 1:
-                utils.log(f"Found {edge_count} edges between {u} and {v} when simplifying")
+                msg = f"Found {edge_count} edges between {u} and {v} when simplifying"
+                utils.log(msg, level=lg.WARNING)
 
             # get edge between these nodes: if multiple edges exist between
             # them (see above), we retain only one in the simplified graph
@@ -382,7 +385,7 @@ def simplify_graph(
         f"Simplified graph: {initial_node_count:,} to {len(G):,} nodes, "
         f"{initial_edge_count:,} to {len(G.edges):,} edges"
     )
-    utils.log(msg)
+    utils.log(msg, level=lg.INFO)
     return G
 
 

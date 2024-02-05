@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging as lg
 import multiprocessing as mp
 import time
 from hashlib import sha1
@@ -69,7 +70,8 @@ def add_edge_grades(G: nx.MultiDiGraph, add_absolute: bool = True) -> nx.MultiDi
     if add_absolute:
         nx.set_edge_attributes(G, dict(zip(uvk, np.abs(grades))), name="grade_abs")
 
-    utils.log("Added grade attributes to all edges.")
+    msg = "Added grade attributes to all edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
@@ -138,7 +140,8 @@ def add_node_elevations_raster(
     if cpus is None:
         cpus = mp.cpu_count()
     cpus = min(cpus, mp.cpu_count())
-    utils.log(f"Attaching elevations with {cpus} CPUs...")
+    msg = f"Attaching elevations with {cpus} CPUs..."
+    utils.log(msg, level=lg.INFO)
 
     # if multiple filepaths are passed in, compose them as a virtual raster
     # use the sha1 hash of the filepaths object as the vrt filename
@@ -162,7 +165,8 @@ def add_node_elevations_raster(
 
     assert len(G) == len(elevs)
     nx.set_node_attributes(G, elevs, name="elevation")
-    utils.log("Added elevation data from raster to all nodes.")
+    msg = "Added elevation data from raster to all nodes"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
@@ -202,10 +206,12 @@ def add_node_elevations_google(
     """
     # make a pandas series of all the nodes' coordinates as "lat,lon" and
     # round coordinates to 6 decimal places (approx 5 to 10 cm resolution)
-    node_points = pd.Series({n: f'{d["y"]:.6f},{d["x"]:.6f}' for n, d in G.nodes(data=True)})
+    node_points = pd.Series({n: f"{d['y']:.6f},{d['x']:.6f}" for n, d in G.nodes(data=True)})
     n_calls = int(np.ceil(len(node_points) / batch_size))
     domain = _http._hostname_from_url(settings.elevation_url_template)
-    utils.log(f"Requesting node elevations from {domain!r} in {n_calls} request(s)")
+
+    msg = f"Requesting node elevations from {domain!r} in {n_calls} request(s)"
+    utils.log(msg, level=lg.INFO)
 
     # break the series of coordinates into chunks of batch_size
     # API format is locations=lat,lon|lat,lon|lat,lon|lat,lon...
@@ -224,7 +230,7 @@ def add_node_elevations_google(
 
     # sanity check that all our vectors have the same number of elements
     msg = f"Graph has {len(G):,} nodes and we received {len(results):,} results from {domain!r}"
-    utils.log(msg)
+    utils.log(msg, level=lg.INFO)
     if not (len(results) == len(G) == len(node_points)):  # pragma: no cover
         err_msg = f"{msg}\n{response_json}"
         raise InsufficientResponseError(err_msg)
@@ -233,7 +239,8 @@ def add_node_elevations_google(
     df_elev = pd.DataFrame(node_points, columns=["node_points"])
     df_elev["elevation"] = [result["elevation"] for result in results]
     nx.set_node_attributes(G, name="elevation", values=df_elev["elevation"].to_dict())
-    utils.log(f"Added elevation data from {domain!r} to all nodes.")
+    msg = f"Added elevation data from {domain!r} to all nodes."
+    utils.log(msg, level=lg.INFO)
 
     return G
 
@@ -260,11 +267,13 @@ def _elevation_request(url: str, pause: float) -> dict[str, Any]:
 
     # pause then request this URL
     domain = _http._hostname_from_url(url)
-    utils.log(f"Pausing {pause} second(s) before making HTTP GET request to {domain!r}")
+    msg = f"Pausing {pause} second(s) before making HTTP GET request to {domain!r}"
+    utils.log(msg, level=lg.INFO)
     time.sleep(pause)
 
     # transmit the HTTP GET request
-    utils.log(f"Get {url} with timeout={settings.timeout}")
+    msg = f"Get {url} with timeout={settings.timeout}"
+    utils.log(msg, level=lg.INFO)
     response = requests.get(
         url,
         timeout=settings.timeout,

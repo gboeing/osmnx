@@ -1,6 +1,7 @@
 """Project a graph, GeoDataFrame, or geometry to a different CRS."""
 from __future__ import annotations
 
+import logging as lg
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -113,7 +114,9 @@ def project_gdf(
     # project the gdf
     gdf_proj = gdf.to_crs(to_crs)
     crs_desc = f"{gdf_proj.crs.to_string()} / {gdf_proj.crs.name}"
-    utils.log(f"Projected GeoDataFrame to {crs_desc!r}")
+
+    msg = f"Projected GeoDataFrame to {crs_desc!r}"
+    utils.log(msg, level=lg.INFO)
     return gdf_proj
 
 
@@ -177,5 +180,6 @@ def project_graph(
     G_proj = utils_graph.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj, G.graph)
     G_proj.graph["crs"] = to_crs
 
-    utils.log(f"Projected graph with {len(G)} nodes and {len(G.edges)} edges")
+    msg = f"Projected graph with {len(G)} nodes and {len(G.edges)} edges"
+    utils.log(msg, level=lg.INFO)
     return G_proj

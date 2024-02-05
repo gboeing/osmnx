@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import contextlib
+import logging as lg
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
@@ -65,7 +66,9 @@ def save_graph_geopackage(
     # save the nodes and edges as GeoPackage layers
     gdf_nodes.to_file(filepath, layer="nodes", driver="GPKG", index=True, encoding=encoding)
     gdf_edges.to_file(filepath, layer="edges", driver="GPKG", index=True, encoding=encoding)
-    utils.log(f"Saved graph as GeoPackage at {filepath!r}")
+
+    msg = f"Saved graph as GeoPackage at {filepath!r}"
+    utils.log(msg, level=lg.INFO)
 
 
 def save_graphml(
@@ -124,7 +127,8 @@ def save_graphml(
             data[attr] = str(value)
 
     nx.write_graphml(G, path=filepath, encoding=encoding)
-    utils.log(f"Saved graph as GraphML file at {filepath!r}")
+    msg = f"Saved graph as GraphML file at {filepath!r}"
+    utils.log(msg, level=lg.INFO)
 
 
 def load_graphml(
@@ -224,12 +228,14 @@ def load_graphml(
         )
 
     # convert graph/node/edge attribute data types
-    utils.log("Converting node, edge, and graph-level attribute data types")
+    msg = "Converting node, edge, and graph-level attribute data types"
+    utils.log(msg, level=lg.INFO)
     G = _convert_graph_attr_types(G, default_graph_dtypes)
     G = _convert_node_attr_types(G, default_node_dtypes)
     G = _convert_edge_attr_types(G, default_edge_dtypes)
 
-    utils.log(f"Loaded graph with {len(G)} nodes and {len(G.edges)} edges from {source!r}")
+    msg = f"Loaded graph with {len(G)} nodes and {len(G.edges)} edges from {source!r}"
+    utils.log(msg, level=lg.INFO)
     return G
 
 

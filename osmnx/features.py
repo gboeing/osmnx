@@ -261,7 +261,8 @@ def features_from_place(
     # extract the geometry from the GeoDataFrame to use in query
     gdf_place = geocoder.geocode_to_gdf(query, which_result=which_result)
     polygon = gdf_place["geometry"].unary_union
-    utils.log("Constructed place geometry polygon(s) to query Overpass")
+    msg = "Constructed place geometry polygon(s) to query Overpass"
+    utils.log(msg, level=lg.INFO)
 
     # create GeoDataFrame using this polygon(s) geometry
     return features_from_polygon(polygon, tags)
@@ -397,7 +398,8 @@ def _create_gdf(
         # if cache_only_mode, consume response_jsons then interrupt
         for _ in response_jsons:
             response_count += 1
-        utils.log(f"Retrieved all data from API in {response_count} request(s)")
+        msg = f"Retrieved all data from API in {response_count} request(s)"
+        utils.log(msg, level=lg.INFO)
         msg = "Interrupted because `settings.cache_only_mode=True`"
         raise CacheOnlyInterruptError(msg)
 
@@ -456,7 +458,8 @@ def _create_gdf(
                 )
                 geometries[unique_id] = multipolygon
 
-    utils.log(f"Retrieved all data from API in {response_count} request(s)")
+    msg = f"Retrieved all data from API in {response_count} request(s)"
+    utils.log(msg, level=lg.INFO)
 
     # ensure we got some node/way data back from the server request(s)
     if len(geometries) == 0:  # pragma: no cover
@@ -464,10 +467,12 @@ def _create_gdf(
         raise InsufficientResponseError(msg)
 
     # remove untagged elements from the final dict of geometries
-    utils.log(f"{len(geometries)} geometries created in the dict")
+    msg = f"{len(geometries)} geometries created in the dict"
+    utils.log(msg, level=lg.INFO)
     for untagged_element_id in untagged_element_ids:
         geometries.pop(untagged_element_id, None)
-    utils.log(f"{len(untagged_element_ids)} untagged features removed")
+    msg = f"{len(untagged_element_ids)} untagged features removed"
+    utils.log(msg, level=lg.INFO)
 
     # create GeoDataFrame, ensure it has geometry, then set crs
     gdf = gpd.GeoDataFrame.from_dict(geometries, orient="index")
@@ -492,7 +497,8 @@ def _create_gdf(
         gdf = gdf[~(gdf["geometry"].is_empty | gdf["geometry"].isna())].copy()
         warnings.resetwarnings()
 
-    utils.log(f"{len(gdf)} features in the final GeoDataFrame")
+    msg = f"{len(gdf)} features in the final GeoDataFrame"
+    utils.log(msg, level=lg.INFO)
     return gdf
 
 
@@ -585,10 +591,11 @@ def _parse_way_to_linestring_or_polygon(
         except KeyError as e:  # pragma: no cover
             # XMLs may include geometries that are incomplete, in which case
             # return an empty geometry
-            utils.log(
+            msg = (
                 f"node/{e} was not found in `coords`.\n"
                 f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
             )
+            utils.log(msg, level=lg.WARNING)
             geometry = LineString()
 
     # if the OSM element is a closed way (i.e. first and last nodes are the
@@ -603,10 +610,11 @@ def _parse_way_to_linestring_or_polygon(
             except (GEOSException, ValueError) as e:
                 # XMLs may include geometries that are incomplete, in which
                 # case return an empty geometry
-                utils.log(
-                    f"{e} . The geometry for "
+                msg = (
+                    f"{e}. The geometry for "
                     f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
                 )
+                utils.log(msg, level=lg.WARNING)
                 geometry = Polygon()
         else:
             # if it is a LineString
@@ -617,10 +625,11 @@ def _parse_way_to_linestring_or_polygon(
             except (GEOSException, ValueError) as e:
                 # XMLs may include geometries that are incomplete, in which
                 # case return an empty geometry
-                utils.log(
-                    f"{e} . The geometry for "
+                msg = (
+                    f"{e}. The geometry for "
                     f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
                 )
+                utils.log(msg, level=lg.WARNING)
                 geometry = LineString()
 
     linestring_or_polygon["geometry"] = geometry
@@ -748,10 +757,11 @@ def _parse_relation_to_multipolygon(
     try:
         member_ways = [geometries[f"way/{member_way_ref}"] for member_way_ref in member_way_refs]
     except KeyError as e:  # pragma: no cover
-        utils.log(
+        msg = (
             f"{e} was not found in `geometries`.\nThe geometry for "
             f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
         )
+        utils.log(msg, level=lg.WARNING)
         multipolygon["geometry"] = MultiPolygon()
         return multipolygon
 
@@ -846,10 +856,11 @@ def _assemble_multipolygon_component_polygons(
             inner_polygons += polygonize(merged_inner_linestring)
 
     if not outer_polygons:
-        utils.log(
+        msg = (
             "No outer polygons were created for"
             f" https://www.openstreetmap.org/{element['type']}/{element['id']}"
         )
+        utils.log(msg, level=lg.WARNING)
 
     return outer_polygons, inner_polygons
 
@@ -889,10 +900,11 @@ def _subtract_inner_polygons_from_outer_polygons(
                 try:
                     outer_polygon_diff = outer_polygon_diff.difference(inner_polygon)
                 except TopologicalError:  # pragma: no cover
-                    utils.log(
+                    msg = (
                         f"relation https://www.openstreetmap.org/relation/{element['id']} "
                         "caused a TopologicalError, trying with zero buffer."
                     )
+                    utils.log(msg, level=lg.WARNING)
                     outer_polygon_diff = outer_polygon.buffer(0).difference(inner_polygon.buffer(0))
 
         # note: .buffer(0) can return either a Polygon or MultiPolygon
@@ -948,11 +960,11 @@ def _buffer_invalid_geometries(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             # create a list of their urls and log them
             osm_url = "https://www.openstreetmap.org/"
             invalid_geom_urls = [osm_url + unique_id for unique_id in invalid_geometry_ids]
-            utils.log(
+            msg = (
                 f"{len(invalid_geometry_ids)} invalid geometries"
-                f".buffer(0) applied to {invalid_geom_urls}",
-                level=lg.WARNING,
+                f".buffer(0) applied to {invalid_geom_urls}"
             )
+            utils.log(msg, level=lg.INFO)
 
             gdf.loc[invalid_geometry_filter, "geometry"] = gdf.loc[
                 invalid_geometry_filter, "geometry"
@@ -1001,7 +1013,8 @@ def _filter_gdf_by_polygon_and_tags(
             # create boolean series, True for features whose index is in set
             polygon_filter = gdf.index.isin(gdf_indices_in_polygon)
 
-            utils.log(f"{sum(~polygon_filter)} features removed by the polygon filter")
+            msg = f"{sum(~polygon_filter)} features removed by the polygon filter"
+            utils.log(msg, level=lg.INFO)
 
         # if tags were supplied, create filter that is True for features
         # that have at least one of the requested tags
@@ -1023,7 +1036,8 @@ def _filter_gdf_by_polygon_and_tags(
 
                 combined_tag_filter = combined_tag_filter | tag_filter
 
-            utils.log(f"{sum(~combined_tag_filter)} features removed by the tag filter")
+            msg = f"{sum(~combined_tag_filter)} features removed by the tag filter"
+            utils.log(msg, level=lg.INFO)
 
         # apply the filters
         gdf = gdf[polygon_filter & combined_tag_filter].copy()

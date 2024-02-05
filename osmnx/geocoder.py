@@ -50,7 +50,9 @@ def geocode(query: str) -> tuple[float, float]:
         lat = float(response_json[0]["lat"])
         lon = float(response_json[0]["lon"])
         point = (lat, lon)
-        utils.log(f"Geocoded {query!r} to {point}")
+
+        msg = f"Geocoded {query!r} to {point}"
+        utils.log(msg, level=lg.INFO)
         return point
 
     # otherwise we got no results back
@@ -120,7 +122,9 @@ def geocode_to_gdf(
     # geocode each query, concat as GeoDataFrame rows, then set the CRS
     results = (_geocode_query_to_gdf(q, wr, by_osmid) for q, wr in zip(q_list, wr_list))
     gdf = pd.concat(results, ignore_index=True).set_crs(settings.default_crs)
-    utils.log(f"Created GeoDataFrame with {len(gdf)} rows from {len(q_list)} queries")
+
+    msg = f"Created GeoDataFrame with {len(gdf)} rows from {len(q_list)} queries"
+    utils.log(msg, level=lg.INFO)
     return gdf
 
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import bz2
+import logging as lg
 import xml.sax
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -232,7 +233,8 @@ def _save_graph_xml(
 
     # write to disk
     ET.ElementTree(root).write(filepath, encoding="utf-8", xml_declaration=True)
-    utils.log(f"Saved graph as .osm file at {filepath!r}")
+    msg = f"Saved graph as .osm file at {filepath!r}"
+    utils.log(msg, level=lg.INFO)
 
 
 def _append_nodes_xml_tree(
@@ -499,6 +501,7 @@ def _get_unique_nodes_ordered_from_way(df_way_edges: pd.DataFrame) -> list[Any]:
     num_unique_nodes = len(np.unique(all_nodes))
 
     if len(unique_ordered_nodes) < num_unique_nodes:
-        utils.log(f"Recovered order for {len(unique_ordered_nodes)} of {num_unique_nodes} nodes")
+        msg = f"Recovered order for {len(unique_ordered_nodes)} of {num_unique_nodes} nodes"
+        utils.log(msg, level=lg.INFO)
 
     return unique_ordered_nodes
