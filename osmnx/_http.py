@@ -149,33 +149,32 @@ def _get_http_headers(
     user_agent: str | None = None, referer: str | None = None, accept_language: str | None = None
 ) -> dict[str, str]:
     """
-    Update the default requests HTTP headers with OSMnx info.
+    Update the default requests HTTP headers with OSMnx information.
 
     Parameters
     ----------
     user_agent
-        The user agent string. If None, use the OSMnx default.
+        The user agent. If None, use `settings.http_user_agent` value.
     referer
-        The referer string. If None, use the OSMnx default.
+        The referer. If None, use `settings.http_referer` value.
     accept_language
-        The accept language. Make it explicit for consistent Nominatim result
-        sorting.
+        The accept language. If None, use `settings.http_accept_language`
+        value.
 
     Returns
     -------
     headers
     """
     if user_agent is None:
-        user_agent = settings.default_user_agent
+        user_agent = settings.http_user_agent
     if referer is None:
-        referer = settings.default_referer
+        referer = settings.http_referer
     if accept_language is None:
-        accept_language = settings.default_accept_language
+        accept_language = settings.http_accept_language
 
+    info = {"User-Agent": user_agent, "referer": referer, "Accept-Language": accept_language}
     headers = dict(requests.utils.default_headers())
-    headers.update(
-        {"User-Agent": user_agent, "referer": referer, "Accept-Language": accept_language}
-    )
+    headers.update(info)
     return headers
 
 

@@ -24,10 +24,8 @@ cache_only_mode : bool
 data_folder : str | Path
     Path to folder in which to save/load graph files by default. Default is
     `"./data"`.
-default_accept_language : str
-    HTTP header accept-language. Default is `"en"`.
 default_access : str
-    Default filter for OSM "access" key. Default is `'["access"!~"private"]'`.
+    Filter for the OSM "access" key. Default is `'["access"!~"private"]'`.
     Note that also filtering out "access=no" ways prevents including
     transit-only bridges (e.g., Tilikum Crossing) from appearing in drivable
     road network (e.g., `'["access"!~"private|no"]'`). However, some drivable
@@ -38,12 +36,6 @@ default_access : str
 default_crs : str
     Default coordinate reference system to set when creating graphs. Default
     is `"epsg:4326"`.
-default_referer : str
-    HTTP header referer. Default is
-    `"OSMnx Python package (https://github.com/gboeing/osmnx)"`.
-default_user_agent : str
-    HTTP header user-agent. Default is
-    `"OSMnx Python package (https://github.com/gboeing/osmnx)"`.
 doh_url_template : str | None
     Endpoint to resolve DNS-over-HTTPS if local DNS resolution fails. Set to
     None to disable DoH, but see `downloader._config_dns` documentation for
@@ -54,6 +46,16 @@ elevation_url_template : str
     `"https://maps.googleapis.com/maps/api/elevation/json?locations={locations}&key={key}"`
     One example of an alternative equivalent would be Open Topo Data:
     `"https://api.opentopodata.org/v1/aster30m?locations={locations}&key={key}"`
+http_accept_language : str
+    HTTP header accept-language. Default is `"en"`. Note that Nominatim's
+    default language is "en" and it can sort result importance scores
+    differently if a different language is specified.
+http_referer : str
+    HTTP header referer. Default is
+    `"OSMnx Python package (https://github.com/gboeing/osmnx)"`.
+http_user_agent : str
+    HTTP header user-agent. Default is
+    `"OSMnx Python package (https://github.com/gboeing/osmnx)"`.
 imgs_folder : str | Path
     Path to folder in which to save plotted images by default. Default is
     `"./images"`.
@@ -146,15 +148,15 @@ bidirectional_network_types: list[str] = ["walk"]
 cache_folder: str | Path = "./cache"
 cache_only_mode: bool = False
 data_folder: str | Path = "./data"
-default_accept_language: str = "en"
 default_access: str = '["access"!~"private"]'
 default_crs: str = "epsg:4326"
-default_referer: str = "OSMnx Python package (https://github.com/gboeing/osmnx)"
-default_user_agent: str = "OSMnx Python package (https://github.com/gboeing/osmnx)"
 doh_url_template: str | None = "https://8.8.8.8/resolve?name={hostname}"
 elevation_url_template: str = (
     "https://maps.googleapis.com/maps/api/elevation/json?locations={locations}&key={key}"
 )
+http_accept_language: str = "en"
+http_referer: str = "OSMnx Python package (https://github.com/gboeing/osmnx)"
+http_user_agent: str = "OSMnx Python package (https://github.com/gboeing/osmnx)"
 imgs_folder: str | Path = "./images"
 log_console: bool = False
 log_file: bool = False
