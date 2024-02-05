@@ -55,7 +55,7 @@ def _save_to_cache(
     """
     if settings.use_cache:
         if not ok:  # pragma: no cover
-            msg = "Did not save to cache because HTTP status code is not OK."
+            msg = "Did not save to cache because HTTP status code is not OK"
             utils.log(msg, level=lg.WARNING)
         else:
             # create the folder on the disk if it doesn't already exist

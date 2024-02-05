@@ -107,7 +107,7 @@ def _overpass_json_from_file(filepath: str | Path, encoding: str) -> dict[str, A
                 "in OSMnx, use the `io.save_graphml` and `io.load_graphml` "
                 "functions instead. Refer to the documentation for details."
             )
-            warn(msg, UserWarning, stacklevel=2)
+            warn(msg, category=UserWarning, stacklevel=2)
 
     # parse the XML to Overpass-like JSON
     with _opener(Path(filepath), encoding) as f:
@@ -183,7 +183,7 @@ def _save_graph_xml(
             "For the `save_graph_xml` function to behave properly, the graph "
             "must have been created with `ox.settings.all_oneway=True`."
         )
-        warn(msg, UserWarning, stacklevel=2)
+        warn(msg, category=UserWarning, stacklevel=2)
 
     if isinstance(data, nx.MultiDiGraph):
         gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(

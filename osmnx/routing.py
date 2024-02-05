@@ -276,7 +276,7 @@ def _verify_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
         values_float = (np.array(tuple(G.edges(data=attr)))[:, 2]).astype(float)
         if np.isnan(values_float).any():
             msg = f"The attribute {attr!r} is missing or null on some edges."
-            warn(msg, UserWarning, stacklevel=2)
+            warn(msg, category=UserWarning, stacklevel=2)
     except ValueError as e:
         msg = f"The edge attribute {attr!r} contains non-numeric values."
         raise ValueError(msg) from e

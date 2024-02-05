@@ -282,7 +282,7 @@ def graph_from_gdfs(
             "Discarding the `gdf_nodes` 'geometry' column, though its values "
             "differ from the coordinates in the 'x' and 'y' columns."
         )
-        warn(msg, UserWarning, stacklevel=2)
+        warn(msg, category=UserWarning, stacklevel=2)
     df_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
 
     # create graph and add graph-level attribute dict
