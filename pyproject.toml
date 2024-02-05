@@ -51,6 +51,9 @@ Documentation = "https://osmnx.readthedocs.io"
 "Code Repository" = "https://github.com/gboeing/osmnx"
 "Examples Gallery" = "https://github.com/gboeing/osmnx-examples"
 
+[tool.coverage.report]
+exclude_also = ["if TYPE_CHECKING:"]
+
 [tool.hatch.build]
 packages = ["osmnx"]
 
