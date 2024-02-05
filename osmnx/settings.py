@@ -58,14 +58,14 @@ imgs_folder : str | Path
     Path to folder in which to save plotted images by default. Default is
     `"./images"`.
 log_file : bool
-    If True, save log output to a file in logs_folder. Default is `False`.
+    If True, save log output to a file in `logs_folder`. Default is `False`.
 log_filename : str
     Name of the log file, without file extension. Default is `"osmnx"`.
 log_console : bool
     If True, print log output to the console (terminal window). Default is
     `False`.
 log_level : int
-    One of Python's logger.level constants. Default is `logging.INFO`.
+    One of Python's `logger.level` constants. Default is `logging.INFO`.
 log_name : str
     Name of the logger. Default is `"OSMnx"`.
 logs_folder : str | Path

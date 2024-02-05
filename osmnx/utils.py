@@ -113,11 +113,13 @@ def log(
     message
         The message to log.
     level
-        One of the Python `logger.level` constants.
+        One of the Python `logger.level` constants. If None, set to
+        `settings.log_level` value.
     name
-        Name of the logger.
+        The name of the logger. If None, set to `settings.log_name` value.
     filename
-        Name of the log file, without file extension.
+        The name of the log file, without file extension. If None, set to
+        `settings.log_filename` value.
 
     Returns
     -------
