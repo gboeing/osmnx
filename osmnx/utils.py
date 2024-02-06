@@ -99,7 +99,10 @@ def ts(style: str = "datetime", template: str | None = None) -> str:
 
 
 def log(
-    message: str, level: int | None = None, name: str | None = None, filename: str | None = None
+    message: str,
+    level: int | None = None,
+    name: str | None = None,
+    filename: str | None = None,
 ) -> None:
     """
     Write a message to the logger.

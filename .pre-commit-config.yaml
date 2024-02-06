@@ -33,7 +33,7 @@ repos:
     rev: "v0.2.0"
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [--fix, --extend-ignore=RUF100]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy

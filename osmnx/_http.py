@@ -23,7 +23,9 @@ _original_getaddrinfo = socket.getaddrinfo
 
 
 def _save_to_cache(
-    url: str, response_json: dict[str, Any] | list[dict[str, Any]], ok: bool
+    url: str,
+    response_json: dict[str, Any] | list[dict[str, Any]],
+    ok: bool,
 ) -> None:
     """
     Save a HTTP response JSON object to a file in the cache folder.
@@ -99,7 +101,8 @@ def _url_in_cache(url: str) -> Path | None:
 
 
 def _retrieve_from_cache(
-    url: str, check_remark: bool = True
+    url: str,
+    check_remark: bool = True,
 ) -> dict[str, Any] | list[dict[str, Any]] | None:
     """
     Retrieve a HTTP response JSON object from the cache if it exists.
@@ -123,7 +126,7 @@ def _retrieve_from_cache(
         cache_filepath = _url_in_cache(url)
         if cache_filepath is not None:
             response_json: dict[str, Any] | list[dict[str, Any]] = json.loads(
-                cache_filepath.read_text(encoding="utf-8")
+                cache_filepath.read_text(encoding="utf-8"),
             )
 
             # return None if check_remark is True and there is a server
@@ -146,7 +149,9 @@ def _retrieve_from_cache(
 
 
 def _get_http_headers(
-    user_agent: str | None = None, referer: str | None = None, accept_language: str | None = None
+    user_agent: str | None = None,
+    referer: str | None = None,
+    accept_language: str | None = None,
 ) -> dict[str, str]:
     """
     Update the default requests HTTP headers with OSMnx information.
@@ -265,7 +270,7 @@ def _config_dns(url: str) -> None:
         ip = _resolve_host_via_doh(hostname)
 
     # mutate socket.getaddrinfo to map hostname -> IP address
-    def _getaddrinfo(*args, **kwargs):  # type: ignore[no-untyped-def]
+    def _getaddrinfo(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
         if args[0] == hostname:
             msg = f"Resolved {hostname!r} to {ip!r}"
             utils.log(msg, level=lg.INFO)

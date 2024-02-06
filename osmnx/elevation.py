@@ -76,7 +76,9 @@ def add_edge_grades(G: nx.MultiDiGraph, add_absolute: bool = True) -> nx.MultiDi
 
 
 def _query_raster(
-    nodes: pd.DataFrame, filepath: str | Path, band: int
+    nodes: pd.DataFrame,
+    filepath: str | Path,
+    band: int,
 ) -> Iterable[tuple[int, Any]]:
     """
     Query a raster file for values at coordinates in DataFrame x/y columns.
@@ -163,7 +165,6 @@ def add_node_elevations_raster(
             results = pool.starmap_async(_query_raster, args).get()
         elevs = {k: v for kv in results for k, v in kv}
 
-    assert len(G) == len(elevs)
     nx.set_node_attributes(G, elevs, name="elevation")
     msg = "Added elevation data from raster to all nodes"
     utils.log(msg, level=lg.INFO)
@@ -171,7 +172,10 @@ def add_node_elevations_raster(
 
 
 def add_node_elevations_google(
-    G: nx.MultiDiGraph, api_key: str | None = None, batch_size: int = 512, pause: float = 0
+    G: nx.MultiDiGraph,
+    api_key: str | None = None,
+    batch_size: int = 512,
+    pause: float = 0,
 ) -> nx.MultiDiGraph:
     """
     Add `elevation` (meters) attributes to all nodes using a web service.

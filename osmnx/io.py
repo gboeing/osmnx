@@ -218,13 +218,17 @@ def load_graphml(
         # read the graphml file from disk
         source = filepath
         G = nx.read_graphml(
-            Path(filepath), node_type=default_node_dtypes["osmid"], force_multigraph=True
+            Path(filepath),
+            node_type=default_node_dtypes["osmid"],
+            force_multigraph=True,
         )
     else:
         # parse the graphml string
         source = "string"
         G = nx.parse_graphml(
-            graphml_str, node_type=default_node_dtypes["osmid"], force_multigraph=True
+            graphml_str,
+            node_type=default_node_dtypes["osmid"],
+            force_multigraph=True,
         )
 
     # convert graph/node/edge attribute data types

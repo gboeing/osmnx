@@ -100,7 +100,10 @@ def _is_endpoint(G: nx.MultiDiGraph, node: int, endpoint_attrs: Iterable[str] | 
 
 
 def _build_path(
-    G: nx.MultiDiGraph, endpoint: int, endpoint_successor: int, endpoints: set[int]
+    G: nx.MultiDiGraph,
+    endpoint: int,
+    endpoint_successor: int,
+    endpoints: set[int],
 ) -> list[int]:
     """
     Build a path of nodes from one endpoint node to next endpoint node.
@@ -148,7 +151,7 @@ def _build_path(
                     if endpoint in G.successors(successor):
                         # we have come to the end of a self-looping edge, so
                         # add first node to end of path to close it and return
-                        return path + [endpoint]
+                        return [*path, endpoint]
 
                     # otherwise, this can happen due to OSM digitization error
                     # where a one-way street turns into a two-way here, but
@@ -172,7 +175,8 @@ def _build_path(
 
 
 def _get_paths_to_simplify(
-    G: nx.MultiDiGraph, endpoint_attrs: Iterable[str] | None
+    G: nx.MultiDiGraph,
+    endpoint_attrs: Iterable[str] | None,
 ) -> Iterator[list[int]]:
     """
     Generate all the paths to be simplified between endpoint nodes.
@@ -287,7 +291,7 @@ def simplify_graph(
         Topologically simplified graph, with a new `geometry` attribute on
         each simplified edge.
     """
-    if "simplified" in G.graph and G.graph["simplified"]:  # pragma: no cover
+    if G.graph.get("simplified"):  # pragma: no cover
         msg = "This graph has already been simplified, cannot simplify it again."
         raise GraphSimplificationError(msg)
 
@@ -328,7 +332,7 @@ def simplify_graph(
             # We can't assume that there exists an edge from u to v
             # with key=0, so we get a list of all edges from u to v
             # and just take the first one.
-            edge_data = list(G.get_edge_data(u, v).values())[0]
+            edge_data = next(iter(G.get_edge_data(u, v).values()))
             for attr in edge_data:
                 if attr in path_attributes:
                     # if this key already exists in the dict, append it to the
@@ -354,7 +358,7 @@ def simplify_graph(
 
         # construct the new consolidated edge's geometry for this path
         path_attributes["geometry"] = LineString(
-            [Point((G.nodes[node]["x"], G.nodes[node]["y"])) for node in path]
+            [Point((G.nodes[node]["x"], G.nodes[node]["y"])) for node in path],
         )
 
         if track_merged:
@@ -364,7 +368,7 @@ def simplify_graph(
         # add the nodes and edge to their lists for processing at the end
         all_nodes_to_remove.extend(path[1:-1])
         all_edges_to_add.append(
-            {"origin": path[0], "destination": path[-1], "attr_dict": path_attributes}
+            {"origin": path[0], "destination": path[-1], "attr_dict": path_attributes},
         )
 
     # for each edge to add in the list we assembled, create a new edge between
@@ -506,7 +510,9 @@ def _merge_nodes_geometric(G: nx.MultiDiGraph, tolerance: float) -> gpd.GeoSerie
 
 
 def _consolidate_intersections_rebuild_graph(
-    G: nx.MultiDiGraph, tolerance: float = 10, reconnect_edges: bool = True
+    G: nx.MultiDiGraph,
+    tolerance: float = 10,
+    reconnect_edges: bool = True,
 ) -> nx.MultiDiGraph:
     """
     Consolidate intersections comprising clusters of nearby nodes.

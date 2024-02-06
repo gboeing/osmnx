@@ -1,3 +1,4 @@
+# ruff: noqa: INP001
 """
 Configuration file for the Sphinx documentation builder.
 

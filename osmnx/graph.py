@@ -428,7 +428,12 @@ def graph_from_polygon(
     # now. needed because overpass returns entire ways that also include
     # nodes outside the poly if the way (that is, a way with a single OSM
     # ID) has a node inside the poly at some point.
-    G_buff = truncate.truncate_graph_polygon(G_buff, poly_buff, True, truncate_by_edge)
+    G_buff = truncate.truncate_graph_polygon(
+        G=G_buff,
+        polygon=poly_buff,
+        retain_all=True,
+        truncate_by_edge=truncate_by_edge,
+    )
 
     # simplify the graph topology
     if simplify:
@@ -724,7 +729,9 @@ def _is_path_reversed(attrs: dict[str, Any], reversed_values: set[str]) -> bool:
 
 
 def _add_paths(
-    G: nx.MultiDiGraph, paths: Iterable[dict[str, Any]], bidirectional: bool = False
+    G: nx.MultiDiGraph,
+    paths: Iterable[dict[str, Any]],
+    bidirectional: bool = False,
 ) -> None:
     """
     Add OSM paths to the graph as edges.

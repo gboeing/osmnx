@@ -75,44 +75,22 @@ line-length = 100
 target-version = "py39"
 
 [tool.ruff.lint]
-extend-ignore = ["PLR091"]  # ignore PLR complexity checks (we check mccabe with C9)
-extend-select = [
-    "A",    # check python builtins being used as variables or parameters
-    "ARG",  # check unused function arguments
-    "B",    # check common design problems a la flake8-bugbear
-    "BLE",  # check blind exception catching
-    "C4",   # check proper comprehensions
-    "C9",   # check mccabe complexity
-    "D",    # check docstring conventions a la pydocstyle
-    "D417", # check missing args in docstrings (disabled by default for numpy convention)
-    "DTZ",  # check unsafe naive datetime use a la flake8-datetimez
-    "E",    # check code style conventions a la pycodestyle errors
-    "EM",   # check raw literals inside exception raising
-    "ERA",  # check commented-out code from python files a la eradicate
-    "F",    # check python source code for errors a la pyflakes
-    "FA",   # check from __future__ import annotations
-    "FIX",  # check temporary developer notes a la flake8-fixme
-    "FURB", # check code improvements a la refurb
-    "G",    # check logging string formatting a la flake8-logging-format
-    "I",    # check isort imports
-    "LOG",  # check logging module usage a la flake8-logging
-    "NPY",  # check numpy usage
-    "PD",   # check pandas linting a la pandas-vet
-    "PERF", # check performance anti-patterns a la perflint
-    "PGH",  # check pygrep hooks
-    "PIE",  # check misc lints a la flake8-pie
-    "PL",   # check code errors and smells a la pylint
-    "PT",   # check common pytest issues
-    "PTH",  # check pathlib usage
-    "RET",  # check return statements a la flake8-return
-    "RSE",  # check exception raise statements via flake8-raise
-    "SIM",  # check code simplicity a la flake8-simplify
-    "T20",  # check for any print statements
-    "TCH",  # check that imports used only for type hinting are guarded
-    "TRY",  # check exception handling anti-patterns a la tryceratops
-    "UP",   # check outdated syntax a la pyupgrade
-    "W",    # check code style conventions a la pycodestyle warnings
+extend-ignore = [
+    "ANN101", # missing-type-self (deprecated)
+    "CPY001", # missing-copyright-notice (preview)
+    "FBT001", # boolean-type-hint-positional-argument
+    "FBT002", # boolean-default-value-positional-argument
+    "N803",   # invalid-argument-name
+    "N806",   # non-lowercase-variable-in-function
+    "PLR091", # too-many-... complexity checks
+    "S314",   # suspicious-xml-element-tree-usage
+    "S317",   # suspicious-xml-sax-usage
+    "S324",   # hashlib-insecure-hash-function
+    "S405",   # suspicious-xml-etree-import
+    "S406",   # suspicious-xml-sax-import
+    "SLF001", # private-member-access
 ]
+extend-select = ["ALL"]
 
 [tool.ruff.lint.isort]
 force-single-line = true

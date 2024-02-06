@@ -115,7 +115,9 @@ def _get_network_filter(network_type: str) -> str:
 
 
 def _get_overpass_pause(
-    base_endpoint: str, recursive_delay: float = 5, default_duration: float = 60
+    base_endpoint: str,
+    recursive_delay: float = 5,
+    default_duration: float = 60,
 ) -> float:
     """
     Retrieve a pause duration from the Overpass API status endpoint.
@@ -152,7 +154,7 @@ def _get_overpass_pause(
             **settings.requests_kwargs,
         )
         status = response.text.split("\n")[4]
-        status_first_token = status.split(" ")[0]
+        status_first_part = status.split(" ")[0]
     except ConnectionError as e:  # pragma: no cover
         # cannot reach status endpoint, log error and return default duration
         msg = f"Unable to query {url}, {e}"
@@ -167,12 +169,12 @@ def _get_overpass_pause(
     try:
         # if first token is numeric, it's how many slots you have available,
         # no wait required
-        _ = int(status_first_token)  # number of available slots
+        _ = int(status_first_part)  # number of available slots
         pause: float = 0
 
     except ValueError:  # pragma: no cover
         # if first token is 'Slot', it tells you when your slot will be free
-        if status_first_token == "Slot":
+        if status_first_part == "Slot":
             utc_time_str = status.split(" ")[3]
             pattern = "%Y-%m-%dT%H:%M:%SZ,"
             utc_time = dt.datetime.strptime(utc_time_str, pattern).astimezone(dt.timezone.utc)
@@ -182,7 +184,7 @@ def _get_overpass_pause(
 
         # if first token is 'Currently', it is currently running a query so
         # check back in recursive_delay seconds
-        elif status_first_token == "Currently":
+        elif status_first_part == "Currently":
             time.sleep(recursive_delay)
             pause = _get_overpass_pause(base_endpoint)
 
@@ -246,7 +248,8 @@ def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list[s
 
 
 def _create_overpass_features_query(
-    polygon_coord_str: str, tags: dict[str, bool | str | list[str]]
+    polygon_coord_str: str,
+    tags: dict[str, bool | str | list[str]],
 ) -> str:
     """
     Create an Overpass features query string based on tags.
@@ -315,7 +318,9 @@ def _create_overpass_features_query(
 
 
 def _download_overpass_network(
-    polygon: Polygon | MultiPolygon, network_type: str, custom_filter: str | None
+    polygon: Polygon | MultiPolygon,
+    network_type: str,
+    custom_filter: str | None,
 ) -> Iterator[dict[str, Any]]:
     """
     Retrieve networked ways and nodes within boundary from the Overpass API.
@@ -354,7 +359,8 @@ def _download_overpass_network(
 
 
 def _download_overpass_features(
-    polygon: Polygon, tags: dict[str, bool | str | list[str]]
+    polygon: Polygon,
+    tags: dict[str, bool | str | list[str]],
 ) -> Iterator[dict[str, Any]]:
     """
     Retrieve OSM features within some boundary polygon from the Overpass API.
@@ -383,7 +389,9 @@ def _download_overpass_features(
 
 
 def _overpass_request(
-    data: OrderedDict[str, Any], pause: float | None = None, error_pause: float = 60
+    data: OrderedDict[str, Any],
+    pause: float | None = None,
+    error_pause: float = 60,
 ) -> dict[str, Any]:
     """
     Send a HTTP POST request to the Overpass API and return response.

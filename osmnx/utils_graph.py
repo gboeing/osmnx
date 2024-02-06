@@ -270,18 +270,18 @@ def graph_from_gdfs(
     # drop geometry column from gdf_nodes (as we use x and y for geometry
     # information), but warn the user if the geometry values differ from the
     # coordinates in the x and y columns. this results in a df instead of gdf.
+    msg = (
+        "Discarding the `gdf_nodes` 'geometry' column, though its values "
+        "differ from the coordinates in the 'x' and 'y' columns."
+    )
     try:
         all_x_match = (gdf_nodes.geometry.x == gdf_nodes["x"]).all()
         all_y_match = (gdf_nodes.geometry.y == gdf_nodes["y"]).all()
-        assert all_x_match
-        assert all_y_match
-    except (AssertionError, ValueError):  # pragma: no cover
-        # AssertionError if x/y coords don't match geometry column
-        # ValueError if geometry column contains non-point geometry types
-        msg = (
-            "Discarding the `gdf_nodes` 'geometry' column, though its values "
-            "differ from the coordinates in the 'x' and 'y' columns."
-        )
+        if not (all_x_match and all_y_match):
+            # warn if x/y coords don't match geometry column
+            warn(msg, category=UserWarning, stacklevel=2)
+    except ValueError:  # pragma: no cover
+        # warn if geometry column contains non-point geometry types
         warn(msg, category=UserWarning, stacklevel=2)
     df_nodes = gdf_nodes.drop(columns=gdf_nodes.geometry.name)
 
@@ -590,7 +590,7 @@ def _update_edge_keys(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     # of their origin, destination, and key. that is, edge uv will match edge vu
     # as a duplicate, but only if they have the same key
     edges = graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
-    edges["uvk"] = ["_".join(sorted([str(u), str(v)]) + [str(k)]) for u, v, k in edges.index]
+    edges["uvk"] = ["_".join([*sorted([str(u), str(v)]), str(k)]) for u, v, k in edges.index]
     mask = edges["uvk"].duplicated(keep=False)
     dupes = edges[mask].dropna(subset=["geometry"])
 

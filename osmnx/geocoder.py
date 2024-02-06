@@ -129,7 +129,9 @@ def geocode_to_gdf(
 
 
 def _geocode_query_to_gdf(
-    query: str | dict[str, str], which_result: int | None, by_osmid: bool
+    query: str | dict[str, str],
+    which_result: int | None,
+    by_osmid: bool,
 ) -> gpd.GeoDataFrame:
     """
     Geocode a single place query to a GeoDataFrame.

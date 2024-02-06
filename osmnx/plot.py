@@ -278,7 +278,13 @@ def plot_graph(
     # configure axes appearance, save/show figure as specified, and return
     ax = _config_ax(ax, G.graph["crs"], bbox, padding)  # type: ignore[arg-type]
     fig, ax = _save_and_show(
-        fig=fig, ax=ax, show=show, close=close, save=save, filepath=filepath, dpi=dpi
+        fig=fig,
+        ax=ax,
+        show=show,
+        close=close,
+        save=save,
+        filepath=filepath,
+        dpi=dpi,
     )
     msg = "Finished plotting the graph"
     utils.log(msg, level=lg.INFO)
@@ -293,7 +299,7 @@ def plot_graph_route(
     route_alpha: float = 0.5,
     orig_dest_size: float = 100,
     ax: Axes | None = None,
-    **pg_kwargs: Any,
+    **pg_kwargs: Any,  # noqa: ANN401
 ) -> tuple[Figure, Axes]:
     """
     Visualize a path along a graph.
@@ -365,7 +371,7 @@ def plot_graph_routes(
     routes: Iterable[list[int]],
     route_colors: str | Iterable[str] = "r",
     route_linewidths: float | Iterable[float] = 4,
-    **pgr_kwargs: Any,
+    **pgr_kwargs: Any,  # noqa: ANN401
 ) -> tuple[Figure, Axes]:
     """
     Visualize multiple paths along a graph.
@@ -455,7 +461,7 @@ def plot_figure_ground(
     street_widths: dict[str, float] | None = None,
     default_width: float = 4,
     color: str = "w",
-    **pg_kwargs: Any,
+    **pg_kwargs: Any,  # noqa: ANN401
 ) -> tuple[Figure, Axes]:
     """
     Plot a figure-ground diagram of a street network.
@@ -622,7 +628,11 @@ def plot_footprints(
     # retain only Polygons and MultiPolygons, then plot
     gdf = gdf[gdf["geometry"].type.isin({"Polygon", "MultiPolygon"})]
     ax = gdf.plot(
-        ax=ax, facecolor=color, edgecolor=edge_color, linewidth=edge_linewidth, alpha=alpha
+        ax=ax,
+        facecolor=color,
+        edgecolor=edge_color,
+        linewidth=edge_linewidth,
+        alpha=alpha,
     )
 
     # determine figure extents
@@ -634,7 +644,13 @@ def plot_footprints(
     # configure axes appearance, save/show figure as specified, and return
     ax = _config_ax(ax, gdf.crs, (north, south, east, west), 0)  # type: ignore[arg-type]
     fig, ax = _save_and_show(
-        fig=fig, ax=ax, show=show, close=close, save=save, filepath=filepath, dpi=dpi
+        fig=fig,
+        ax=ax,
+        show=show,
+        close=close,
+        save=save,
+        filepath=filepath,
+        dpi=dpi,
     )
     return fig, ax
 
@@ -916,7 +932,7 @@ def _save_and_show(
     return fig, ax
 
 
-def _config_ax(ax: Axes, crs: Any, bbox: tuple[float, float, float, float], padding: float) -> Axes:
+def _config_ax(ax: Axes, crs: Any, bbox: tuple[float, float, float, float], padding: float) -> Axes:  # noqa: ANN401
     """
     Configure a matplotlib axes instance for display.
 
@@ -965,7 +981,10 @@ def _config_ax(ax: Axes, crs: Any, bbox: tuple[float, float, float, float], padd
 # if polar = False, return Axes
 @overload  # pragma: no cover
 def _get_fig_ax(
-    ax: Axes | None, figsize: tuple[float, float], bgcolor: str | None, polar: Literal[False]
+    ax: Axes | None,
+    figsize: tuple[float, float],
+    bgcolor: str | None,
+    polar: Literal[False],
 ) -> tuple[Figure, Axes]:
     ...
 
@@ -973,13 +992,19 @@ def _get_fig_ax(
 # if polar = True, return PolarAxes
 @overload  # pragma: no cover
 def _get_fig_ax(
-    ax: Axes | None, figsize: tuple[float, float], bgcolor: str | None, polar: Literal[True]
+    ax: Axes | None,
+    figsize: tuple[float, float],
+    bgcolor: str | None,
+    polar: Literal[True],
 ) -> tuple[Figure, PolarAxes]:
     ...
 
 
 def _get_fig_ax(
-    ax: Axes | None, figsize: tuple[float, float], bgcolor: str | None, polar: bool
+    ax: Axes | None,
+    figsize: tuple[float, float],
+    bgcolor: str | None,
+    polar: bool,
 ) -> tuple[Figure, Axes | PolarAxes]:
     """
     Generate a matplotlib Figure and (Polar)Axes or return existing ones.

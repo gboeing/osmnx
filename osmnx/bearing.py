@@ -123,7 +123,10 @@ def add_edge_bearings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
 
 def orientation_entropy(
-    Gu: nx.MultiGraph, num_bins: int = 36, min_length: float = 0, weight: str | None = None
+    Gu: nx.MultiGraph,
+    num_bins: int = 36,
+    min_length: float = 0,
+    weight: str | None = None,
 ) -> float:
     """
     Calculate undirected graph's orientation entropy.
@@ -166,7 +169,9 @@ def orientation_entropy(
 
 
 def _extract_edge_bearings(
-    Gu: nx.MultiGraph, min_length: float = 0, weight: str | None = None
+    Gu: nx.MultiGraph,
+    min_length: float = 0,
+    weight: str | None = None,
 ) -> np.typing.NDArray[np.float64]:
     """
     Extract undirected graph's bidirectional edge bearings.
@@ -214,7 +219,10 @@ def _extract_edge_bearings(
 
 
 def _bearings_distribution(
-    Gu: nx.MultiGraph, num_bins: int, min_length: float = 0, weight: str | None = None
+    Gu: nx.MultiGraph,
+    num_bins: int,
+    min_length: float = 0,
+    weight: str | None = None,
 ) -> tuple[np.typing.NDArray[np.float64], np.typing.NDArray[np.float64]]:
     """
     Compute distribution of bearings across evenly spaced bins.

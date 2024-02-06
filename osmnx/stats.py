@@ -267,7 +267,8 @@ def circuity_avg(Gu: nx.MultiGraph) -> float | None:
 
 
 def count_streets_per_node(
-    G: nx.MultiDiGraph, nodes: Iterable[int] | None = None
+    G: nx.MultiDiGraph,
+    nodes: Iterable[int] | None = None,
 ) -> dict[int, int]:
     """
     Count how many physical street segments connect to each node in a graph.
@@ -321,7 +322,9 @@ def count_streets_per_node(
 
 
 def basic_stats(
-    G: nx.MultiDiGraph, area: float | None = None, clean_int_tol: float | None = None
+    G: nx.MultiDiGraph,
+    area: float | None = None,
+    clean_int_tol: float | None = None,
 ) -> dict[str, Any]:
     """
     Calculate basic descriptive geometric and topological measures of a graph.
@@ -389,8 +392,11 @@ def basic_stats(
     if clean_int_tol:
         stats["clean_intersection_count"] = len(
             simplification.consolidate_intersections(
-                G, tolerance=clean_int_tol, rebuild_graph=False, dead_ends=False
-            )
+                G,
+                tolerance=clean_int_tol,
+                rebuild_graph=False,
+                dead_ends=False,
+            ),
         )
 
     # can only calculate density measures if area was provided
