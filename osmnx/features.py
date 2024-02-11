@@ -102,7 +102,8 @@ def features_from_bbox(
     Parameters
     ----------
     bbox
-        Bounding box as `(north, south, east, west)`.
+        Bounding box as `(north, south, east, west)`. Coordinates should be in
+        unprojected latitude-longitude degrees (EPSG:4326).
     tags
         Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -143,6 +144,8 @@ def features_from_point(
     ----------
     center_point
         The `(lat, lon)` center point around which to retrieve the features.
+        Coordinates should be in unprojected latitude-longitude degrees
+        (EPSG:4326).
     tags
         Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -288,7 +291,8 @@ def features_from_polygon(
     Parameters
     ----------
     polygon
-        Spatial boundaries within which to retrieve features.
+        The geometry within which to retrieve features. Coordinates should be
+        in unprojected latitude-longitude degrees (EPSG:4326).
     tags
         Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.

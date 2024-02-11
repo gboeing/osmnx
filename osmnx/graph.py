@@ -59,7 +59,8 @@ def graph_from_bbox(
     Parameters
     ----------
     bbox
-        Bounding box as `(north, south, east, west)`.
+        Bounding box as `(north, south, east, west)`. Coordinates should be in
+        unprojected latitude-longitude degrees (EPSG:4326).
     network_type
         {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         What type of street network to retrieve if `custom_filter` is None.
@@ -126,6 +127,8 @@ def graph_from_point(
     ----------
     center_point
         The `(lat, lon)` center point around which to construct the graph.
+        Coordinates should be in unprojected latitude-longitude degrees
+        (EPSG:4326).
     dist
         Retain only those nodes within this many meters of `center_point`,
         measuring distance according to `dist_type`.
