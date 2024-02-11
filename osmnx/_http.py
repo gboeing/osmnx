@@ -30,11 +30,11 @@ def _save_to_cache(
     """
     Save a HTTP response JSON object to a file in the cache folder.
 
-    Function calculates the checksum of url to generate the cache file's name.
-    If the request was sent to server via POST instead of GET, then URL should
-    be a GET-style representation of request. Response is only saved to a
-    cache file if settings.use_cache is True, response_json is not None, and
-    ok is True.
+    This calculates the checksum of `url` to generate the cache file name. If
+    the request was sent to server via POST instead of GET, then `url` should
+    be a GET-style representation of the request. Response is only saved to a
+    cache file if `settings.use_cache` is True, `response_json` is not None,
+    and `ok` is True.
 
     Users should always pass OrderedDicts instead of dicts of parameters into
     request functions, so the parameters remain in the same order each time,
@@ -66,8 +66,8 @@ def _save_to_cache(
 
             # hash the url to make the filename succinct but unique
             # sha1 digest is 160 bits = 20 bytes = 40 hexadecimal characters
-            filename = sha1(url.encode("utf-8")).hexdigest() + ".json"
-            cache_filepath = cache_folder / filename
+            checksum = sha1(url.encode("utf-8")).hexdigest()  # noqa: S324
+            cache_filepath = cache_folder / f"{checksum}.json"
 
             # dump to json, and save to file
             cache_filepath.write_text(json.dumps(response_json), encoding="utf-8")
@@ -89,15 +89,15 @@ def _url_in_cache(url: str) -> Path | None:
 
     Returns
     -------
-    filepath
+    cache_filepath
         Path to cached response for `url` if it exists, otherwise None.
     """
     # hash the url to generate the cache filename
-    filename = sha1(url.encode("utf-8")).hexdigest() + ".json"
-    filepath = Path(settings.cache_folder) / filename
+    checksum = sha1(url.encode("utf-8")).hexdigest()  # noqa: S324
+    cache_filepath = Path(settings.cache_folder) / f"{checksum}.json"
 
     # if this file exists in the cache, return its full path
-    return filepath if filepath.is_file() else None
+    return cache_filepath if cache_filepath.is_file() else None
 
 
 def _retrieve_from_cache(

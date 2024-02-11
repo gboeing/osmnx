@@ -149,8 +149,8 @@ def add_node_elevations_raster(
     # use the sha1 hash of the filepaths object as the vrt filename
     if not isinstance(filepath, (str, Path)):
         filepaths = [str(p) for p in filepath]
-        sha = sha1(str(filepaths).encode("utf-8")).hexdigest()
-        filepath = f"./.osmnx_{sha}.vrt"
+        checksum = sha1(str(filepaths).encode("utf-8")).hexdigest()  # noqa: S324
+        filepath = f"./.osmnx_{checksum}.vrt"
         gdal.UseExceptions()
         gdal.BuildVRT(filepath, filepaths).FlushCache()
 
