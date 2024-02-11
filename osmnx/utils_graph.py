@@ -565,7 +565,7 @@ def _is_same_geometry(ls1: LineString, ls2: LineString) -> bool:
     geom1_r = [tuple(reversed(coords)) for coords in ls1.xy]
 
     # if second geometry matches first in either direction, return True
-    return geom2 in (geom1, geom1_r)  # noqa: PLR6201
+    return geom2 in (geom1, geom1_r)
 
 
 def _update_edge_keys(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
