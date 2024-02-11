@@ -83,10 +83,6 @@ extend-ignore = [
     "N803",   # invalid-argument-name
     "N806",   # non-lowercase-variable-in-function
     "PLR091", # too-many-... complexity checks
-    "S314",   # suspicious-xml-element-tree-usage
-    "S317",   # suspicious-xml-sax-usage
-    "S405",   # suspicious-xml-etree-import
-    "S406",   # suspicious-xml-sax-import
     "SLF001", # private-member-access
 ]
 extend-select = ["ALL"]
