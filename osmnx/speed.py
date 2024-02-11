@@ -169,7 +169,9 @@ def add_edge_travel_times(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
 
 def _clean_maxspeed(
-    maxspeed: str | float, agg: Callable[[Any], Any] = np.mean, convert_mph: bool = True
+    maxspeed: str | float,
+    agg: Callable[[Any], Any] = np.mean,
+    convert_mph: bool = True,
 ) -> float | None:
     """
     Clean a maxspeed string and convert mph to kph if necessary.
@@ -218,7 +220,8 @@ def _clean_maxspeed(
 
 
 def _collapse_multiple_maxspeed_values(
-    value: str | float | list[str | float], agg: Callable[[Any], Any]
+    value: str | float | list[str | float],
+    agg: Callable[[Any], Any],
 ) -> float | str | None:
     """
     Collapse a list of maxspeed values to a single value.

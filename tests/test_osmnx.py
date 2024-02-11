@@ -1,4 +1,4 @@
-# ruff: noqa: E402 F841 PLR2004
+# ruff: noqa: E402,F841,INP001,PLR2004,S101
 """Test suite for the package."""
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ import os
 import tempfile
 from collections import OrderedDict
 from pathlib import Path
-from xml.etree import ElementTree as etree
+from xml.etree import ElementTree
 
 import geopandas as gpd
 import networkx as nx
@@ -127,7 +127,10 @@ def test_stats() -> None:
     # test cleaning and rebuilding graph
     G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
     G_clean = ox.consolidate_intersections(
-        G_proj, tolerance=10, rebuild_graph=True, reconnect_edges=False
+        G_proj,
+        tolerance=10,
+        rebuild_graph=True,
+        reconnect_edges=False,
     )
     G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=False)
 
@@ -188,8 +191,8 @@ def test_osm_xml() -> None:
     gdf_edges = ox.graph_to_gdfs(G, nodes=False)
     gdf_way = gdf_edges[gdf_edges["osmid"] == 570883705]  # roundabout
     first = gdf_way.iloc[0].dropna().astype(str)
-    root = etree.Element("osm", attrib={"version": "0.6", "generator": "OSMnx"})
-    edge = etree.SubElement(root, "way")
+    root = ElementTree.Element("osm", attrib={"version": "0.6", "generator": "OSMnx"})
+    edge = ElementTree.SubElement(root, "way")
     ox._osm_xml._append_nodes_as_edge_attrs(edge, first.to_dict(), gdf_way)
 
     # restore settings
@@ -414,7 +417,8 @@ def test_api_endpoints() -> None:
 
     # bad call
     with pytest.raises(
-        ox._errors.InsufficientResponseError, match="Nominatim API did not return a list of results"
+        ox._errors.InsufficientResponseError,
+        match="Nominatim API did not return a list of results",
     ):
         response_json = ox._nominatim._nominatim_request(params=params, request_type="search")
 
@@ -435,7 +439,7 @@ def test_api_endpoints() -> None:
     ox.settings.overpass_endpoint = default_overpass_endpoint
 
 
-def test_graph_save_load() -> None:
+def test_graph_save_load() -> None:  # noqa: PLR0915
     """Test saving/loading graphs to/from disk."""
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
 
@@ -560,7 +564,11 @@ def test_graph_from_functions() -> None:
         '["access"!~"private"]'
     )
     G = ox.graph_from_point(
-        location_point, dist=500, custom_filter=cf, dist_type="bbox", network_type="all"
+        location_point,
+        dist=500,
+        custom_filter=cf,
+        dist_type="bbox",
+        network_type="all",
     )
 
     ox.settings.memory = 1073741824

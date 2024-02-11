@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from shapely import Geometry
 
 
-def is_projected(crs: Any) -> bool:
+def is_projected(crs: Any) -> bool:  # noqa: ANN401
     """
     Determine if a coordinate reference system is projected or not.
 
@@ -36,7 +36,10 @@ def is_projected(crs: Any) -> bool:
 
 
 def project_geometry(
-    geometry: Geometry, crs: Any | None = None, to_crs: Any | None = None, to_latlong: bool = False
+    geometry: Geometry,
+    crs: Any | None = None,  # noqa: ANN401
+    to_crs: Any | None = None,  # noqa: ANN401
+    to_latlong: bool = False,
 ) -> tuple[Geometry, Any]:
     """
     Project a Shapely geometry from its current CRS to another.
@@ -74,7 +77,9 @@ def project_geometry(
 
 
 def project_gdf(
-    gdf: gpd.GeoDataFrame, to_crs: Any | None = None, to_latlong: bool = False
+    gdf: gpd.GeoDataFrame,
+    to_crs: Any | None = None,  # noqa: ANN401
+    to_latlong: bool = False,
 ) -> gpd.GeoDataFrame:
     """
     Project a GeoDataFrame from its current CRS to another.
@@ -121,7 +126,9 @@ def project_gdf(
 
 
 def project_graph(
-    G: nx.MultiDiGraph, to_crs: Any | None = None, to_latlong: bool = False
+    G: nx.MultiDiGraph,
+    to_crs: Any | None = None,  # noqa: ANN401
+    to_latlong: bool = False,
 ) -> nx.MultiDiGraph:
     """
     Project a graph from its current CRS to another.
@@ -165,7 +172,7 @@ def project_graph(
     to_crs = gdf_nodes_proj.crs
 
     # STEP 2: PROJECT THE EDGES
-    if "simplified" in G.graph and G.graph["simplified"]:
+    if G.graph.get("simplified"):
         # if graph has previously been simplified, project the edge geometries
         gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
         gdf_edges_proj = project_gdf(gdf_edges, to_crs=to_crs)

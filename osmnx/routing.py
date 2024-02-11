@@ -189,7 +189,11 @@ def shortest_path(
 
 
 def k_shortest_paths(
-    G: nx.MultiDiGraph, orig: int, dest: int, k: int, weight: str = "length"
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+    k: int,
+    weight: str = "length",
 ) -> Iterator[list[int]]:
     """
     Solve `k` shortest paths from an origin node to a destination node.
@@ -221,7 +225,10 @@ def k_shortest_paths(
 
 
 def _single_shortest_path(
-    G: nx.MultiDiGraph, orig: int, dest: int, weight: str
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+    weight: str,
 ) -> list[int] | None:
     """
     Solve the shortest path from an origin node to a destination node.

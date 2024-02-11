@@ -50,4 +50,4 @@ jobs:
           python -m sphinx -b linkcheck ./docs/source ./docs/build/linkcheck
 
       - name: Test code
-        run: pytest --maxfail=1 --typeguard-packages=osmnx --cov=./osmnx --cov-report=term-missing --verbose
+        run: pytest --maxfail=1 --typeguard-packages=osmnx --cov=./osmnx --cov-report=xml --verbose

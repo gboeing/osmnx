@@ -102,7 +102,8 @@ def features_from_bbox(
     Parameters
     ----------
     bbox
-        Bounding box as `(north, south, east, west)`.
+        Bounding box as `(north, south, east, west)`. Coordinates should be in
+        unprojected latitude-longitude degrees (EPSG:4326).
     tags
         Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -126,7 +127,9 @@ def features_from_bbox(
 
 
 def features_from_point(
-    center_point: tuple[float, float], tags: dict[str, bool | str | list[str]], dist: float = 1000
+    center_point: tuple[float, float],
+    tags: dict[str, bool | str | list[str]],
+    dist: float = 1000,
 ) -> gpd.GeoDataFrame:
     """
     Create GeoDataFrame of OSM features within some distance N, S, E, W of a point.
@@ -141,6 +144,8 @@ def features_from_point(
     ----------
     center_point
         The `(lat, lon)` center point around which to retrieve the features.
+        Coordinates should be in unprojected latitude-longitude degrees
+        (EPSG:4326).
     tags
         Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -167,7 +172,9 @@ def features_from_point(
 
 
 def features_from_address(
-    address: str, tags: dict[str, bool | str | list[str]], dist: float = 1000
+    address: str,
+    tags: dict[str, bool | str | list[str]],
+    dist: float = 1000,
 ) -> gpd.GeoDataFrame:
     """
     Create GeoDataFrame of OSM features within some distance N, S, E, W of address.
@@ -269,7 +276,8 @@ def features_from_place(
 
 
 def features_from_polygon(
-    polygon: Polygon | MultiPolygon, tags: dict[str, bool | str | list[str]]
+    polygon: Polygon | MultiPolygon,
+    tags: dict[str, bool | str | list[str]],
 ) -> gpd.GeoDataFrame:
     """
     Create GeoDataFrame of OSM features within boundaries of a (multi)polygon.
@@ -283,7 +291,8 @@ def features_from_polygon(
     Parameters
     ----------
     polygon
-        Spatial boundaries within which to retrieve features.
+        The geometry within which to retrieve features. Coordinates should be
+        in unprojected latitude-longitude degrees (EPSG:4326).
     tags
         Dict of tags used for finding elements in the selected area. Results
         returned are the union, not intersection of each individual tag.
@@ -366,7 +375,7 @@ def features_from_xml(
     return _create_gdf(response_jsons, polygon=polygon, tags=tags)
 
 
-def _create_gdf(
+def _create_gdf(  # noqa: PLR0912
     response_jsons: Iterable[dict[str, Any]],
     polygon: Polygon | MultiPolygon | None,
     tags: dict[str, bool | str | list[str]] | None,
@@ -445,7 +454,8 @@ def _create_gdf(
             elif element["type"] == "way":
                 # Parse all ways to linestrings or polygons
                 linestring_or_polygon = _parse_way_to_linestring_or_polygon(
-                    element=element, coords=coords
+                    element=element,
+                    coords=coords,
                 )
                 geometries[unique_id] = linestring_or_polygon
 
@@ -454,7 +464,8 @@ def _create_gdf(
             ):
                 # parse relations to (multi)polygons
                 multipolygon = _parse_relation_to_multipolygon(
-                    element=element, geometries=geometries
+                    element=element,
+                    geometries=geometries,
                 )
                 geometries[unique_id] = multipolygon
 
@@ -551,7 +562,8 @@ def _parse_node_to_point(element: dict[str, Any]) -> dict[str, Any]:
 
 
 def _parse_way_to_linestring_or_polygon(
-    element: dict[str, Any], coords: dict[int, Any]
+    element: dict[str, Any],
+    coords: dict[int, Any],
 ) -> dict[str, Any]:
     """
     Parse open LineString, closed LineString, or Polygon from OSM way.
@@ -620,7 +632,7 @@ def _parse_way_to_linestring_or_polygon(
             # if it is a LineString
             try:
                 geometry = LineString(
-                    [(coords[node]["lon"], coords[node]["lat"]) for node in nodes]
+                    [(coords[node]["lon"], coords[node]["lat"]) for node in nodes],
                 )
             except (GEOSException, ValueError) as e:
                 # XMLs may include geometries that are incomplete, in which
@@ -718,7 +730,8 @@ def _is_closed_way_a_polygon(element: dict[str, Any]) -> bool:
 
 
 def _parse_relation_to_multipolygon(
-    element: dict[str, Any], geometries: dict[str, Any]
+    element: dict[str, Any],
+    geometries: dict[str, Any],
 ) -> dict[str, Any]:
     """
     Parse MultiPolygon from OSM relation (type:MultiPolygon).
@@ -780,8 +793,9 @@ def _parse_relation_to_multipolygon(
     return multipolygon
 
 
-def _assemble_multipolygon_component_polygons(
-    element: dict[str, Any], geometries: dict[str, Any]
+def _assemble_multipolygon_component_polygons(  # noqa: PLR0912
+    element: dict[str, Any],
+    geometries: dict[str, Any],
 ) -> tuple[list[Polygon], list[Polygon]]:
     """
     Assemble a MultiPolygon from its component LineStrings and Polygons.
@@ -866,7 +880,9 @@ def _assemble_multipolygon_component_polygons(
 
 
 def _subtract_inner_polygons_from_outer_polygons(
-    element: dict[str, Any], outer_polygons: list[Polygon], inner_polygons: list[Polygon]
+    element: dict[str, Any],
+    outer_polygons: list[Polygon],
+    inner_polygons: list[Polygon],
 ) -> Polygon | MultiPolygon:
     """
     Subtract inner Polygons from outer Polygons.
@@ -967,7 +983,8 @@ def _buffer_invalid_geometries(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             utils.log(msg, level=lg.INFO)
 
             gdf.loc[invalid_geometry_filter, "geometry"] = gdf.loc[
-                invalid_geometry_filter, "geometry"
+                invalid_geometry_filter,
+                "geometry",
             ].buffer(0)
 
     return gdf
@@ -1002,8 +1019,8 @@ def _filter_gdf_by_polygon_and_tags(
     # only apply the filters if the GeoDataFrame is not empty
     if not gdf.empty:
         # create two filters, initially all True
-        polygon_filter = pd.Series(True, index=gdf.index)
-        combined_tag_filter = pd.Series(True, index=gdf.index)
+        polygon_filter = pd.Series(data=True, index=gdf.index)
+        combined_tag_filter = pd.Series(data=True, index=gdf.index)
 
         # if a polygon was supplied, create a filter that is True for
         # features that intersect with the polygon

@@ -218,13 +218,17 @@ def load_graphml(
         # read the graphml file from disk
         source = filepath
         G = nx.read_graphml(
-            Path(filepath), node_type=default_node_dtypes["osmid"], force_multigraph=True
+            Path(filepath),
+            node_type=default_node_dtypes["osmid"],
+            force_multigraph=True,
         )
     else:
         # parse the graphml string
         source = "string"
         G = nx.parse_graphml(
-            graphml_str, node_type=default_node_dtypes["osmid"], force_multigraph=True
+            graphml_str,
+            node_type=default_node_dtypes["osmid"],
+            force_multigraph=True,
         )
 
     # convert graph/node/edge attribute data types
@@ -239,7 +243,7 @@ def load_graphml(
     return G
 
 
-def save_graph_xml(
+def save_graph_xml(  # noqa: PLR0913
     data: nx.MultiDiGraph | tuple[gpd.GeoDataFrame, gpd.GeoDataFrame],
     filepath: str | Path | None = None,
     node_tags: list[str] = settings.osm_xml_node_tags,
