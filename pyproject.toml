@@ -76,13 +76,10 @@ target-version = "py39"
 
 [tool.ruff.lint]
 extend-ignore = [
-    "ANN101", # missing-type-self (deprecated)
-    "CPY001", # missing-copyright-notice (preview)
     "FBT001", # boolean-type-hint-positional-argument
     "FBT002", # boolean-default-value-positional-argument
     "N803",   # invalid-argument-name
     "N806",   # non-lowercase-variable-in-function
-    "PLR091", # too-many-... complexity checks
     "SLF001", # private-member-access
 ]
 extend-select = ["ALL"]
@@ -98,3 +95,6 @@ max-line-length = 110  # line length + 10% since it isn't a hard upper bound
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
+[tool.ruff.lint.pylint]
+max-args = 8

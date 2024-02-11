@@ -247,7 +247,7 @@ def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list[s
     return coord_strs
 
 
-def _create_overpass_features_query(
+def _create_overpass_features_query(  # noqa: PLR0912
     polygon_coord_str: str,
     tags: dict[str, bool | str | list[str]],
 ) -> str:

@@ -439,7 +439,7 @@ def test_api_endpoints() -> None:
     ox.settings.overpass_endpoint = default_overpass_endpoint
 
 
-def test_graph_save_load() -> None:
+def test_graph_save_load() -> None:  # noqa: PLR0915
     """Test saving/loading graphs to/from disk."""
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
 

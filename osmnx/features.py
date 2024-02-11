@@ -375,7 +375,7 @@ def features_from_xml(
     return _create_gdf(response_jsons, polygon=polygon, tags=tags)
 
 
-def _create_gdf(
+def _create_gdf(  # noqa: PLR0912
     response_jsons: Iterable[dict[str, Any]],
     polygon: Polygon | MultiPolygon | None,
     tags: dict[str, bool | str | list[str]] | None,
@@ -793,7 +793,7 @@ def _parse_relation_to_multipolygon(
     return multipolygon
 
 
-def _assemble_multipolygon_component_polygons(
+def _assemble_multipolygon_component_polygons(  # noqa: PLR0912
     element: dict[str, Any],
     geometries: dict[str, Any],
 ) -> tuple[list[Polygon], list[Polygon]]:

@@ -37,11 +37,11 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
     https://overpass-api.de
     """
 
-    def __init__(self) -> None:
+    def __init__(self) -> None:  # noqa: ANN101
         self._element: dict[str, Any] | None = None
         self.object: dict[str, Any] = {"elements": []}
 
-    def startElement(self, name: str, attrs: xml.sax.xmlreader.AttributesImpl) -> None:  # noqa: N802
+    def startElement(self, name: str, attrs: xml.sax.xmlreader.AttributesImpl) -> None:  # noqa: ANN101,N802
         if name == "osm":
             self.object.update({k: v for k, v in attrs.items() if k in {"version", "generator"}})
 
@@ -69,7 +69,7 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
                 {k: (int(v) if k == "ref" else v) for k, v in attrs.items()},
             )
 
-    def endElement(self, name: str) -> None:  # noqa: N802
+    def endElement(self, name: str) -> None:  # noqa: ANN101,N802
         if name in {"node", "way", "relation"}:
             self.object["elements"].append(self._element)
 
@@ -119,7 +119,7 @@ def _overpass_json_from_file(filepath: str | Path, encoding: str) -> dict[str, A
         return handler.object
 
 
-def _save_graph_xml(
+def _save_graph_xml(  # noqa: PLR0913
     data: nx.MultiDiGraph | tuple[gpd.GeoDataFrame, gpd.GeoDataFrame],
     filepath: str | Path | None,
     node_tags: list[str],

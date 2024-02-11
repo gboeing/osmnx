@@ -163,7 +163,7 @@ def get_edge_colors_by_attr(
     return _get_colors_by_value(vals, num_bins, cmap, start, stop, na_color, equal_size)
 
 
-def plot_graph(
+def plot_graph(  # noqa: PLR0913
     G: nx.MultiGraph | nx.MultiDiGraph,
     ax: Axes | None = None,
     figsize: tuple[float, float] = (8, 8),
@@ -566,7 +566,7 @@ def plot_figure_ground(
     return fig, ax
 
 
-def plot_footprints(
+def plot_footprints(  # noqa: PLR0913
     gdf: gpd.GeoDataFrame,
     ax: Axes | None = None,
     figsize: tuple[float, float] = (8, 8),
@@ -655,7 +655,7 @@ def plot_footprints(
     return fig, ax
 
 
-def plot_orientation(
+def plot_orientation(  # noqa: PLR0913
     Gu: nx.MultiGraph,
     num_bins: int = 36,
     min_length: float = 0,

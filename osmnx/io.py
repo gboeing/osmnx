@@ -243,7 +243,7 @@ def load_graphml(
     return G
 
 
-def save_graph_xml(
+def save_graph_xml(  # noqa: PLR0913
     data: nx.MultiDiGraph | tuple[gpd.GeoDataFrame, gpd.GeoDataFrame],
     filepath: str | Path | None = None,
     node_tags: list[str] = settings.osm_xml_node_tags,

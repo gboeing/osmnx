@@ -243,7 +243,7 @@ def _remove_rings(G: nx.MultiDiGraph, endpoint_attrs: Iterable[str] | None) -> n
     return G
 
 
-def simplify_graph(
+def simplify_graph(  # noqa: PLR0912
     G: nx.MultiDiGraph,
     endpoint_attrs: Iterable[str] | None = None,
     remove_rings: bool = True,
@@ -509,7 +509,7 @@ def _merge_nodes_geometric(G: nx.MultiDiGraph, tolerance: float) -> gpd.GeoSerie
     return gpd.GeoSeries(merged.geoms, crs=G.graph["crs"])
 
 
-def _consolidate_intersections_rebuild_graph(
+def _consolidate_intersections_rebuild_graph(  # noqa: PLR0912,PLR0915
     G: nx.MultiDiGraph,
     tolerance: float = 10,
     reconnect_edges: bool = True,
