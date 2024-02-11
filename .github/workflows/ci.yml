@@ -44,9 +44,7 @@ jobs:
           conda info --all
 
       - name: Lint code
-        run: |
-          chmod -x tests/test_osmnx.py
-          SKIP=no-commit-to-branch pre-commit run --all-files
+        run: SKIP=no-commit-to-branch pre-commit run --all-files
 
       - name: Test docs
         run: make -C ./docs html SPHINXOPTS="-W --keep-going"
