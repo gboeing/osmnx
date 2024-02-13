@@ -87,7 +87,7 @@ def interpolate_points(geom: LineString, dist: float) -> Iterator[tuple[float, f
             point = geom.interpolate(n / num_vert, normalized=True)
             yield point.x, point.y
     else:  # pragma: no cover
-        msg = f"unhandled geometry type {geom.geom_type}"
+        msg = "`geom` must be a LineString."
         raise TypeError(msg)
 
 
@@ -114,7 +114,7 @@ def _consolidate_subdivide_geometry(geometry: Polygon | MultiPolygon) -> MultiPo
     geometry
     """
     if not isinstance(geometry, (Polygon, MultiPolygon)):  # pragma: no cover
-        msg = "Geometry must be a shapely Polygon or MultiPolygon"
+        msg = "Geometry must be a shapely Polygon or MultiPolygon."
         raise TypeError(msg)
 
     # if geometry is either 1) a Polygon whose area exceeds the max size, or

@@ -165,7 +165,7 @@ def graph_from_point(
     documentation for caveats.
     """
     if dist_type not in {"bbox", "network"}:  # pragma: no cover
-        msg = 'dist_type must be "bbox" or "network"'
+        msg = "`dist_type` must be 'bbox' or 'network'."
         raise ValueError(msg)
 
     # create bounding box from center point and distance in each direction
@@ -403,7 +403,7 @@ def graph_from_polygon(
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:  # pragma: no cover
-        msg = "The geometry to query within is invalid"
+        msg = "The geometry of `polygon` is invalid."
         raise ValueError(msg)
     if not isinstance(polygon, (Polygon, MultiPolygon)):  # pragma: no cover
         msg = (
@@ -556,7 +556,7 @@ def _create_graph(
     utils.log(msg, level=lg.INFO)
     if settings.cache_only_mode:  # pragma: no cover
         # after consuming all response_jsons in loop, raise exception to catch
-        msg = "Interrupted because `settings.cache_only_mode=True`"
+        msg = "Interrupted because `settings.cache_only_mode=True`."
         raise CacheOnlyInterruptError(msg)
 
     # ensure we got some node/way data back from the server request(s)

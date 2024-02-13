@@ -105,7 +105,7 @@ def project_gdf(
         The projected GeoDataFrame.
     """
     if gdf.crs is None or len(gdf) == 0:  # pragma: no cover
-        msg = "GeoDataFrame must have a valid CRS and cannot be empty"
+        msg = "`gdf` must have a valid CRS and cannot be empty."
         raise ValueError(msg)
 
     # if to_latlong is True, project the gdf to the default_crs

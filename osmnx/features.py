@@ -312,7 +312,7 @@ def features_from_polygon(
     """
     # verify that the geometry is valid and is a Polygon/MultiPolygon
     if not polygon.is_valid:
-        msg = "The geometry of `polygon` is invalid"
+        msg = "The geometry of `polygon` is invalid."
         raise ValueError(msg)
 
     if not isinstance(polygon, (Polygon, MultiPolygon)):
@@ -409,7 +409,7 @@ def _create_gdf(  # noqa: PLR0912
             response_count += 1
         msg = f"Retrieved all data from API in {response_count} request(s)"
         utils.log(msg, level=lg.INFO)
-        msg = "Interrupted because `settings.cache_only_mode=True`"
+        msg = "Interrupted because `settings.cache_only_mode=True`."
         raise CacheOnlyInterruptError(msg)
 
     # Dictionaries to hold nodes and complete geometries

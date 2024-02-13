@@ -149,7 +149,7 @@ def graph_to_gdfs(
 
     if nodes:
         if len(G.nodes) == 0:  # pragma: no cover
-            msg = "graph contains no nodes"
+            msg = "Graph contains no nodes."
             raise ValueError(msg)
 
         uvk, data = zip(*G.nodes(data=True))
@@ -167,7 +167,7 @@ def graph_to_gdfs(
 
     if edges:
         if len(G.edges) == 0:  # pragma: no cover
-            msg = "Graph contains no edges"
+            msg = "Graph contains no edges."
             raise ValueError(msg)
 
         u, v, k, data = zip(*G.edges(keys=True, data=True))
@@ -220,7 +220,7 @@ def graph_to_gdfs(
         return gdf_edges
 
     # otherwise
-    msg = "you must request nodes or edges or both"
+    msg = "You must request nodes or edges or both."
     raise ValueError(msg)
 
 
@@ -260,11 +260,11 @@ def graph_from_gdfs(
     G
     """
     if not ("x" in gdf_nodes.columns and "y" in gdf_nodes.columns):  # pragma: no cover
-        msg = "gdf_nodes must contain x and y columns"
+        msg = "`gdf_nodes` must contain 'x' and 'y' columns."
         raise ValueError(msg)
 
     if not hasattr(gdf_nodes, "geometry"):
-        msg = "gdf_nodes must have a geometry attribute"
+        msg = "`gdf_nodes` must have a 'geometry' attribute."
         raise ValueError(msg)
 
     # drop geometry column from gdf_nodes (as we use x and y for geometry

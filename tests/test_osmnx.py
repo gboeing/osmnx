@@ -267,12 +267,12 @@ def test_routing() -> None:
         route1 = ox.shortest_path(G, orig_node, dest_node, weight="highway")
 
     # mismatch iterable and non-iterable orig/dest, should raise TypeError
-    msg = "orig and dest must either both be iterable or neither must be iterable"
+    msg = "must either both be iterable or neither must be iterable"
     with pytest.raises(TypeError, match=msg):
         route2 = ox.shortest_path(G, orig_node, [dest_node])  # type: ignore[call-overload]
 
     # mismatch lengths of orig/dest, should raise ValueError
-    msg = "orig and dest must be of equal length"
+    msg = "must be of equal length"
     with pytest.raises(ValueError, match=msg):
         route2 = ox.shortest_path(G, [orig_node] * 2, [dest_node] * 3)
 
@@ -427,7 +427,7 @@ def test_api_endpoints() -> None:
         ox.geocode_to_gdf(query={"City": "Boston"}, by_osmid=True)
 
     # Invalid nominatim query type
-    with pytest.raises(ValueError, match="Nominatim request_type must be"):
+    with pytest.raises(ValueError, match="Nominatim `request_type` must be"):
         response_json = ox._nominatim._nominatim_request(params=params, request_type="xyz")
 
     # Searching on public nominatim should work even if a (bad) key was provided
@@ -457,9 +457,9 @@ def test_graph_save_load() -> None:  # noqa: PLR0915
     assert set(gdf_edges1.index) == set(gdf_edges2.index) == set(G.edges) == set(G2.edges)
 
     # test code branches that should raise exceptions
-    with pytest.raises(ValueError, match="you must request nodes or edges or both"):
+    with pytest.raises(ValueError, match="You must request nodes or edges or both"):
         ox.graph_to_gdfs(G2, nodes=False, edges=False)
-    with pytest.raises(ValueError, match="invalid literal for boolean"):
+    with pytest.raises(ValueError, match="Invalid literal for boolean"):
         ox.io._convert_bool_string("T")
 
     # create random boolean graph/node/edge attributes
@@ -585,7 +585,7 @@ def test_features() -> None:
     bbox = ox.utils_geo.bbox_from_point(location_point, dist=500)
     tags1: dict[str, bool | str | list[str]] = {"landuse": True, "building": True, "highway": True}
 
-    with pytest.raises(ValueError, match="The geometry of `polygon` is invalid"):
+    with pytest.raises(ValueError, match="The geometry of `polygon` is invalid."):
         ox.features.features_from_polygon(Polygon(((0, 0), (0, 0), (0, 0), (0, 0))), tags={})
     with pytest.raises(TypeCheckError):
         ox.features.features_from_polygon(Point(0, 0), tags={})

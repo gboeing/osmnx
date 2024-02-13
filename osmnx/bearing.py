@@ -105,7 +105,7 @@ def add_edge_bearings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
         Graph with `bearing` attributes on the edges.
     """
     if projection.is_projected(G.graph["crs"]):  # pragma: no cover
-        msg = "graph must be unprojected to add edge bearings"
+        msg = "Graph must be unprojected to add edge bearings."
         raise ValueError(msg)
 
     # extract edge IDs and corresponding coordinates from their nodes
@@ -161,7 +161,7 @@ def orientation_entropy(
     """
     # check if we were able to import scipy
     if scipy is None:  # pragma: no cover
-        msg = "scipy must be installed as an optional dependency to calculate entropy"
+        msg = "scipy must be installed as an optional dependency to calculate entropy."
         raise ImportError(msg)
     bin_counts, _ = _bearings_distribution(Gu, num_bins, min_length, weight)
     entropy: float = scipy.stats.entropy(bin_counts)
@@ -198,7 +198,7 @@ def _extract_edge_bearings(
         The bidirectional edge bearings of `Gu`.
     """
     if nx.is_directed(Gu) or projection.is_projected(Gu.graph["crs"]):  # pragma: no cover
-        msg = "graph must be undirected and unprojected to analyze edge bearings"
+        msg = "Graph must be undirected and unprojected to analyze edge bearings."
         raise ValueError(msg)
     bearings = []
     for u, v, data in Gu.edges(data=True):

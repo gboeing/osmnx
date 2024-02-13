@@ -156,7 +156,7 @@ def street_segment_count(Gu: nx.MultiGraph) -> int:
         Count of street segments in graph.
     """
     if nx.is_directed(Gu):  # pragma: no cover
-        msg = "`Gu` must be undirected"
+        msg = "`Gu` must be undirected."
         raise ValueError(msg)
     return len(Gu.edges)
 
@@ -176,7 +176,7 @@ def street_length_total(Gu: nx.MultiGraph) -> float:
         Total length (meters) of streets in graph.
     """
     if nx.is_directed(Gu):  # pragma: no cover
-        msg = "`Gu` must be undirected"
+        msg = "`Gu` must be undirected."
         raise ValueError(msg)
     return float(sum(d["length"] for u, v, d in Gu.edges(data=True)))
 
@@ -215,7 +215,7 @@ def self_loop_proportion(Gu: nx.MultiGraph) -> float:
         Proportion of graph edges that are self-loops.
     """
     if nx.is_directed(Gu):  # pragma: no cover
-        msg = "`Gu` must be undirected"
+        msg = "`Gu` must be undirected."
         raise ValueError(msg)
     return float(sum(u == v for u, v, k in Gu.edges) / len(Gu.edges))
 
@@ -240,7 +240,7 @@ def circuity_avg(Gu: nx.MultiGraph) -> float | None:
         The graph's average undirected edge circuity.
     """
     if nx.is_directed(Gu):  # pragma: no cover
-        msg = "`Gu` must be undirected"
+        msg = "`Gu` must be undirected."
         raise ValueError(msg)
 
     # extract the edges' endpoint nodes' coordinates

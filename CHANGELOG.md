@@ -2,11 +2,14 @@
 
 ## 2.0.0 (in development)
 
+Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123).
+
 - add type annotations to all public and private functions throughout package (#1107)
-- improve docstrings throughout package (#1116)
-- improve logging and warnings throughout package (#1125)
 - remove functionality previously deprecated in v1 (#1113 #1122)
 - drop Python 3.8 support (#1106)
+- improve docstrings throughout package (#1116)
+- improve logging and warnings throughout package (#1125)
+- improve error messages throughout package (#1131)
 - increase add_node_elevations_google default batch_size to 512 to match Google's limit (#1115)
 - make which_result function parameter consistently able to accept a list throughout package (#1113)
 - make utils_geo.bbox_from_point function return a tuple of floats for consistency with rest of package (#1113)
