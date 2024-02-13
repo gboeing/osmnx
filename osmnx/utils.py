@@ -61,7 +61,7 @@ def citation(style: str = "bibtex") -> None:
             "doi: 10.1016/j.compenvurbsys.2017.05.004."
         )
     else:  # pragma: no cover
-        err_msg = f"unrecognized citation style {style!r}"
+        err_msg = f"Invalid citation style {style!r}."
         raise ValueError(err_msg)
 
     print(msg)  # noqa: T201
@@ -92,7 +92,7 @@ def ts(style: str = "datetime", template: str | None = None) -> str:
         elif style == "time":
             template = "{:%H:%M:%S}"
         else:  # pragma: no cover
-            msg = f"unrecognized timestamp style {style!r}"
+            msg = f"Invalid timestamp style {style!r}."
             raise ValueError(msg)
 
     return template.format(dt.datetime.now().astimezone())

@@ -408,13 +408,13 @@ def plot_graph_routes(
 
     # check for valid arguments
     if not all(isinstance(r, list) for r in routes):  # pragma: no cover
-        msg = "`routes` must be an iterable of route lists"
+        msg = "`routes` must be an iterable of route lists."
         raise TypeError(msg)
     if len(routes) == 0:  # pragma: no cover
-        msg = "You must pass at least 1 route"
+        msg = "You must pass at least 1 route."
         raise ValueError(msg)
     if not (len(routes) == len(route_colors) == len(route_linewidths)):  # pragma: no cover
-        msg = "`route_colors` and `route_linewidths` must have same lengths as `routes`"
+        msg = "`route_colors` and `route_linewidths` must have same lengths as `routes`."
         raise ValueError(msg)
 
     # plot the graph and the first route
@@ -1047,5 +1047,5 @@ def _verify_mpl() -> None:
     None
     """
     if not mpl_available:  # pragma: no cover
-        msg = "matplotlib must be installed as an optional dependency for visualization"
+        msg = "matplotlib must be installed as an optional dependency for visualization."
         raise ImportError(msg)

@@ -111,7 +111,7 @@ def add_edge_speeds(
     # caller did not pass in hwy_speeds or fallback arguments
     if pd.isna(speed_kph).all():
         msg = (
-            "this graph's edges have no preexisting `maxspeed` attribute "
+            "This graph's edges have no preexisting 'maxspeed' attribute "
             "values so you must pass `hwy_speeds` or `fallback` arguments."
         )
         raise ValueError(msg)
@@ -146,12 +146,12 @@ def add_edge_travel_times(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
     # verify edge length and speed_kph attributes exist
     if not ("length" in edges.columns and "speed_kph" in edges.columns):  # pragma: no cover
-        msg = "all edges must have `length` and `speed_kph` attributes."
+        msg = "All edges must have 'length' and 'speed_kph' attributes."
         raise KeyError(msg)
 
     # verify edge length and speed_kph attributes contain no nulls
     if pd.isna(edges["length"]).any() or pd.isna(edges["speed_kph"]).any():  # pragma: no cover
-        msg = "edge `length` and `speed_kph` values must be non-null."
+        msg = "Edge 'length' and 'speed_kph' values must be non-null."
         raise ValueError(msg)
 
     # convert distance meters to km, and speed km per hour to km per second

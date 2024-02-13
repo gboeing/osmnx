@@ -210,7 +210,7 @@ def add_edge_lengths(
     # extract edge IDs and corresponding coordinates from their nodes
     x = G.nodes(data="x")
     y = G.nodes(data="y")
-    msg = "some edges missing nodes, possibly due to input data clipping issue"
+    msg = "Some edges missing nodes, possibly due to input data clipping issue."
     try:
         # two-dimensional array of coordinates: y0, x0, y1, x1
         c = np.array([(y[u], x[u], y[v], x[v]) for u, v, k in uvk])
@@ -341,7 +341,7 @@ def nearest_nodes(
         Y_arr = np.array(Y)
 
     if np.isnan(X_arr).any() or np.isnan(Y_arr).any():  # pragma: no cover
-        msg = "`X` and `Y` cannot contain nulls"
+        msg = "`X` and `Y` cannot contain nulls."
         raise ValueError(msg)
 
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
@@ -351,7 +351,7 @@ def nearest_nodes(
     if projection.is_projected(G.graph["crs"]):
         # if projected, use k-d tree for euclidean nearest-neighbor search
         if cKDTree is None:  # pragma: no cover
-            msg = "scipy must be installed as an optional dependency to search a projected graph"
+            msg = "scipy must be installed as an optional dependency to search a projected graph."
             raise ImportError(msg)
         dist_array, pos = cKDTree(nodes).query(np.array([X_arr, Y_arr]).T, k=1)
         nn_array = nodes.index[pos].to_numpy()
@@ -359,7 +359,7 @@ def nearest_nodes(
     else:
         # if unprojected, use ball tree for haversine nearest-neighbor search
         if BallTree is None:  # pragma: no cover
-            msg = "scikit-learn must be installed as an optional dependency to search an unprojected graph"
+            msg = "scikit-learn must be installed as an optional dependency to search an unprojected graph."
             raise ImportError(msg)
         # haversine requires lat, lon coords in radians
         nodes_rad = np.deg2rad(nodes[["y", "x"]])
@@ -499,7 +499,7 @@ def nearest_edges(
         Y_arr = np.array(Y)
 
     if np.isnan(X_arr).any() or np.isnan(Y_arr).any():  # pragma: no cover
-        msg = "`X` and `Y` cannot contain nulls"
+        msg = "`X` and `Y` cannot contain nulls."
         raise ValueError(msg)
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
     ne_array: np.typing.NDArray[np.object_]  # array of tuple[int, int, int]

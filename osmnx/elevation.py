@@ -136,7 +136,7 @@ def add_node_elevations_raster(
         Graph with `elevation` attributes on the nodes.
     """
     if rasterio is None or gdal is None:  # pragma: no cover
-        msg = "gdal and rasterio must be installed as optional dependencies to query raster files"
+        msg = "gdal and rasterio must be installed as optional dependencies to query raster files."
         raise ImportError(msg)
 
     if cpus is None:

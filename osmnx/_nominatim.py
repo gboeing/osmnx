@@ -47,7 +47,7 @@ def _download_nominatim_element(
     if by_osmid:
         # if querying by OSM ID, use the lookup endpoint
         if not isinstance(query, str):
-            msg = "`query` must be a string if `by_osmid` is True"
+            msg = "`query` must be a string if `by_osmid` is True."
             raise TypeError(msg)
         request_type = "lookup"
         params["osm_ids"] = query
@@ -68,7 +68,7 @@ def _download_nominatim_element(
             for key in sorted(query):
                 params[key] = query[key]
         else:  # pragma: no cover
-            msg = "each query must be a dict or a string"  # type: ignore[unreachable]
+            msg = "Each query must be a dict or a string."  # type: ignore[unreachable]
             raise TypeError(msg)
 
     # request the URL, return the JSON
@@ -102,7 +102,7 @@ def _nominatim_request(
     response_json
     """
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
-        msg = 'Nominatim request_type must be "search", "reverse", or "lookup"'
+        msg = "Nominatim `request_type` must be 'search', 'reverse', or 'lookup'."
         raise ValueError(msg)
 
     # add nominatim API key to params if one has been provided in settings

@@ -163,7 +163,7 @@ def _build_path(
                     # if successor has >1 successors, then successor must have
                     # been an endpoint because you can go in 2 new directions.
                     # this should never occur in practice
-                    msg = f"Impossible simplify pattern failed near {successor}"
+                    msg = f"Impossible simplify pattern failed near {successor}."
                     raise GraphSimplificationError(msg)
 
             # if this successor is an endpoint, we've completed the path

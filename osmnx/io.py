@@ -472,7 +472,7 @@ def _convert_bool_string(value: bool | str) -> bool:
         return value == "True"
 
     # otherwise the value is not a valid boolean
-    msg = f"invalid literal for boolean: {value!r}"
+    msg = f"Invalid literal for boolean: {value!r}."
     raise ValueError(msg)
 
 

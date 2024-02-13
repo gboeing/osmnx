@@ -144,7 +144,7 @@ def truncate_graph_polygon(
 
     if len(to_keep) == 0:
         # no graph nodes within the polygon: can't create a graph from that
-        msg = "Found no graph nodes within the requested polygon"
+        msg = "Found no graph nodes within the requested polygon."
         raise ValueError(msg)
 
     # now identify all nodes whose point geometries lie outside the polygon

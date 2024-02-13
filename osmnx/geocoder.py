@@ -56,7 +56,7 @@ def geocode(query: str) -> tuple[float, float]:
         return point
 
     # otherwise we got no results back
-    msg = f"Nominatim could not geocode query {query!r}"
+    msg = f"Nominatim could not geocode query {query!r}."
     raise InsufficientResponseError(msg)
 
 
@@ -116,7 +116,7 @@ def geocode_to_gdf(
 
     # ensure same length
     if len(q_list) != len(wr_list):  # pragma: no cover
-        msg = "which_result length must equal query length"
+        msg = "`which_result` length must equal `query` length."
         raise ValueError(msg)
 
     # geocode each query, concat as GeoDataFrame rows, then set the CRS
@@ -159,7 +159,7 @@ def _geocode_query_to_gdf(
     # choose the right result from the JSON response
     if len(results) == 0:
         # if no results were returned, raise error
-        msg = f"Nominatim geocoder returned 0 results for query {query!r}"
+        msg = f"Nominatim geocoder returned 0 results for query {query!r}."
         raise InsufficientResponseError(msg)
 
     if by_osmid:
@@ -171,7 +171,7 @@ def _geocode_query_to_gdf(
         try:
             result = _get_first_polygon(results)
         except TypeError as e:
-            msg = f"Nominatim did not geocode query {query!r} to a geometry of type (Multi)Polygon"
+            msg = f"Nominatim did not geocode query {query!r} to a geometry of type (Multi)Polygon."
             raise TypeError(msg) from e
 
     elif len(results) >= which_result:
@@ -180,7 +180,7 @@ def _geocode_query_to_gdf(
 
     else:  # pragma: no cover
         # else, we got fewer results than which_result, raise error
-        msg = f"Nominatim returned {len(results)} result(s) but which_result={which_result}"
+        msg = f"Nominatim returned {len(results)} result(s) but `which_result={which_result}`."
         raise InsufficientResponseError(msg)
 
     # if we got a non (Multi)Polygon geometry type (like a point), log warning

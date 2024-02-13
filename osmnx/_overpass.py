@@ -108,7 +108,7 @@ def _get_network_filter(network_type: str) -> str:
     if network_type in filters:
         overpass_filter = filters[network_type]
     else:  # pragma: no cover
-        msg = f"Unrecognized network_type {network_type!r}"
+        msg = f"Unrecognized network_type {network_type!r}."
         raise ValueError(msg)
 
     return overpass_filter
@@ -269,7 +269,7 @@ def _create_overpass_features_query(  # noqa: PLR0912
     overpass_settings = _make_overpass_settings()
 
     # make sure every value in dict is bool, str, or list of str
-    err_msg = "tags must be a dict with values of bool, str, or list of str"
+    err_msg = "`tags` must be a dict with values of bool, str, or list of str."
     if not isinstance(tags, dict):  # pragma: no cover
         raise TypeError(err_msg)
 

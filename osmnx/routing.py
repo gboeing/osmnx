@@ -156,7 +156,7 @@ def shortest_path(
 
     # if only 1 of orig or dest is iterable and the other is not, raise error
     if not (isinstance(orig, Iterable) and isinstance(dest, Iterable)):
-        msg = "orig and dest must either both be iterable or neither must be iterable"
+        msg = "`orig` and `dest` must either both be iterable or neither must be iterable."
         raise TypeError(msg)
 
     # if both orig and dest are iterable, make them lists (so we're guaranteed
@@ -164,7 +164,7 @@ def shortest_path(
     orig = list(orig)
     dest = list(dest)
     if len(orig) != len(dest):  # pragma: no cover
-        msg = "orig and dest must be of equal length"
+        msg = "`orig` and `dest` must be of equal length."
         raise ValueError(msg)
 
     # determine how many cpu cores to use
