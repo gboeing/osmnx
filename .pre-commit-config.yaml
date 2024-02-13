@@ -30,8 +30,19 @@ repos:
       - id: prettier
         types_or: [markdown, yaml]
 
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: "v0.39.0"
+    hooks:
+      - id: markdownlint
+        args: [--disable=MD013]
+
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: "v0.16"
+    hooks:
+      - id: validate-pyproject
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.2.0"
+    rev: "v0.2.1"
     hooks:
       - id: ruff
         args: [--fix]
