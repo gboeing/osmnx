@@ -2,44 +2,45 @@
 
 First, ensure that you have installed the necessary [dependencies](../tests/environments/env-ci.yml) for the test suite. Then use the repository's [pre-commit hooks](../.pre-commit-config.yaml) and the scripts in this folder to:
 
-- format code/docstrings to the project's style
-- lint the code
-- lint the docstrings
+- format the code and docstrings per the project's style
+- lint the code and docstrings
+- type check the code
 - run tests and coverage
 
-You can read more about the project's standards in the [contributing guidelines](../CONTRIBUTING.md).
+Read more about the project's standards in the [contributing guidelines](../CONTRIBUTING.md).
 
 ## Code format
 
-Format the code and sort imports according to the project's style by changing directories to the repository's root and running:
+Format the code and sort imports per the project's style by running (from the repository root):
 
-```
+```shell
 bash ./tests/format.sh
 ```
 
-## Run the test suite
+## Run tests
 
-Lint and test the code and docstrings by changing directories to the repository's root and running:
+Lint, type check, and test the code/docstrings by running (from the repository root):
 
-```
+```shell
+pre-commit install
 bash ./tests/lint_test.sh
 ```
 
 ## Continuous integration
 
-All PRs trigger continuous integration tests via GitHub Actions. See the [configuration](../.github/workflows/ci.yml). The following steps are automatically run:
+Pull requests trigger continuous integration tests via GitHub Actions. See the [configuration](../.github/workflows/ci.yml). This includes the following steps:
 
 - build the docs
 - check code formatting
-- lint the docstrings
-- lint the code
-- tests and coverage
+- lint the code and docstrings
+- type check the code
+- run tests and coverage
 
 ## Releases
 
 To package and release a new version, update `CHANGELOG.md` and edit the version number in `osmnx/_version.py`. If necessary, update the dates in `LICENSE.txt` and `docs/source/conf.py` and the dependency versions in `pyproject.toml`. Then change directories to the repository's root and run:
 
-```
+```shell
 bash ./tests/packaging.sh
 ```
 
