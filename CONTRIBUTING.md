@@ -10,7 +10,7 @@ Please ask your question on [StackOverflow](https://stackoverflow.com/search?q=o
 
 Ensure you have followed the installation instructions in the [documentation](https://osmnx.readthedocs.io/). If you installed OSMnx via conda-forge, please open an issue at its [feedstock](https://github.com/conda-forge/osmnx-feedstock/issues).
 
-## If you've found a bug
+## If you found a bug
 
 - Read the error message, then review the [documentation](https://osmnx.readthedocs.io/) and OSMnx [Examples Gallery](https://github.com/gboeing/osmnx-examples), which cover key concepts, installation, and package usage.
 - Search through the open and closed [issues](https://github.com/gboeing/osmnx/issues) to see if the problem has already been reported.

@@ -8,7 +8,7 @@ Get Started in 4 Steps
 
 2. Read ":ref:`Introducing OSMnx`" below on this page.
 
-3. Work through the `OSMnx Examples`_ gallery for step-by-step tutorials and sample code.
+3. Work through the OSMnx `Examples Gallery`_ for step-by-step tutorials and sample code.
 
 4. Consult the :doc:`user-reference` for complete details on using the package.
 
@@ -42,7 +42,7 @@ OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of 
 * Visualize travel distance and travel time with isoline and isochrone maps
 * Plot figure-ground diagrams of street networks and building footprints
 
-The `OSMnx Examples`_ gallery contains tutorials and demonstrations of all these features, and package usage is detailed in the :doc:`user-reference`.
+The OSMnx `Examples Gallery`_ contains tutorials and demonstrations of all these features, and package usage is detailed in the :doc:`user-reference`.
 
 Configuration
 ^^^^^^^^^^^^^
@@ -115,7 +115,7 @@ You can plot graphs, routes, network figure-ground diagrams, building footprints
 More Info
 ---------
 
-All of this functionality is demonstrated step-by-step in the `OSMnx Examples`_ gallery, and usage is detailed in the :doc:`user-reference`. More feature development details are in the `Changelog`_. Consult the :doc:`further-reading` resources for additional technical details and research.
+All of this functionality is demonstrated step-by-step in the OSMnx `Examples Gallery`_, and usage is detailed in the :doc:`user-reference`. More feature development details are in the `Changelog`_. Consult the :doc:`further-reading` resources for additional technical details and research.
 
 Frequently Asked Questions
 --------------------------
