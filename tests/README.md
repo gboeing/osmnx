@@ -44,4 +44,4 @@ To package and release a new version, update `CHANGELOG.md` and edit the version
 bash ./tests/packaging.sh
 ```
 
-This will tag the repository with the new version number, upload the PyPI distribution, and update the conda-forge feedstock. Then, open a pull request at the [feedstock](https://github.com/conda-forge/osmnx-feedstock) to release on conda-forge. Finally, when the new version is available on conda-forge, update the [Docker image](../environments/docker) and the [OSMnx Examples](https://github.com/gboeing/osmnx-examples) gallery to use the new version.
+This will tag the repository with the new version number, upload the PyPI distribution, and update the conda-forge feedstock. Then, open a pull request at the [feedstock](https://github.com/conda-forge/osmnx-feedstock) to release on conda-forge. Finally, when the new version is available on conda-forge, update the [Docker image](../environments/docker) and the OSMnx [Examples Gallery](https://github.com/gboeing/osmnx-examples) to use the new version.

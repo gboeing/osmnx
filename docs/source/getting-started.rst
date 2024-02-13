@@ -122,7 +122,7 @@ Frequently Asked Questions
 
 *How do I install OSMnx?* Follow the :doc:`installation` guide.
 
-*How do I use OSMnx?* Check out the step-by-step tutorials in the `OSMnx Examples`_ gallery.
+*How do I use OSMnx?* Check out the step-by-step tutorials in the OSMnx `Examples Gallery`_.
 
 *How does this or that function work?* Consult the :doc:`user-reference`.
 
@@ -132,7 +132,7 @@ Frequently Asked Questions
 
 *Are there any usage limitations?* Yes. Refer to the `Nominatim Usage Policy`_ and `Overpass Commons`_ documentation for usage limitations and restrictions that you must adhere to at all times. If you use an alternative Nominatim/Overpass instance, ensure you understand and obey their usage policies. If you need to exceed these limitations, consider installing your own hosted instance and setting OSMnx to use it.
 
-.. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
+.. _Examples Gallery: https://github.com/gboeing/osmnx-examples
 .. _GeoPandas: https://geopandas.org
 .. _NetworkX: https://networkx.org
 .. _OpenStreetMap: https://www.openstreetmap.org
