@@ -74,14 +74,13 @@ exclude = ["build/*"]
 line-length = 100
 target-version = "py39"
 
+# FBT001 boolean-type-hint-positional-argument
+# FBT002 boolean-default-value-positional-argument
+# N803 invalid-argument-name
+# N806 non-lowercase-variable-in-function
+# SLF001 private-member-access
 [tool.ruff.lint]
-extend-ignore = [
-    "FBT001", # boolean-type-hint-positional-argument
-    "FBT002", # boolean-default-value-positional-argument
-    "N803",   # invalid-argument-name
-    "N806",   # non-lowercase-variable-in-function
-    "SLF001", # private-member-access
-]
+extend-ignore = ["FBT001","FBT002", "N803", "N806", "SLF001"]
 extend-select = ["ALL"]
 
 [tool.ruff.lint.isort]
