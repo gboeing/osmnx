@@ -17,7 +17,6 @@ from xml.etree.ElementTree import parse as etree_parse
 
 import networkx as nx
 import numpy as np
-import pandas as pd
 
 from . import settings
 from . import utils
@@ -26,6 +25,7 @@ from ._version import __version__
 
 if TYPE_CHECKING:
     import geopandas as gpd
+    import pandas as pd
 
 
 class _OSMContentHandler(xml.sax.handler.ContentHandler):
@@ -220,14 +220,9 @@ def _save_graph_xml(  # noqa: PLR0913
         table["changeset"] = "1"
         table["timestamp"] = utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}")
 
-    # misc. string replacements to meet OSM XML spec
+    # string replacement to meet OSM XML spec
     if "oneway" in gdf_edges.columns:
-        # fill blank oneway tags with default (False)
-        gdf_edges.loc[pd.isna(gdf_edges["oneway"]), "oneway"] = oneway
-        gdf_edges.loc[:, "oneway"] = gdf_edges["oneway"].astype(str)
-        gdf_edges.loc[:, "oneway"] = (
-            gdf_edges["oneway"].str.replace("False", "no").replace("True", "yes")
-        )
+        gdf_edges["oneway"] = gdf_edges["oneway"].fillna(oneway).replace({True: "yes", False: "no"})
 
     # initialize XML tree with an OSM root element then append nodes/edges
     root = Element("osm", attrib={"version": api_version, "generator": f"OSMnx {__version__}"})
