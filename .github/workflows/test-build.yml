@@ -1,0 +1,41 @@
+name: Build and check package/docs
+
+on:
+  schedule:
+    - cron: "0 5 * * 1" # every monday at 05:00 UTC
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    defaults:
+      run:
+        shell: bash -elo pipefail {0}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Create environment with Micromamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          cache-downloads: true
+          cache-environment: true
+          environment-file: tests/environments/env-test-build.yml
+          post-cleanup: none
+
+      - name: Build package and twine check
+        run: |
+          hatch build --clean
+          twine check --strict ./dist/*
+
+      - name: Build docs and check links
+        run: python -m sphinx -E -W --keep-going -b linkcheck ./docs/source ./docs/build/linkcheck

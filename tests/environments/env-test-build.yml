@@ -1,0 +1,14 @@
+name: env-test-build
+
+channels:
+  - conda-forge
+
+dependencies:
+  # build
+  - hatch
+  - twine
+
+  # docs
+  - furo
+  - sphinx=7
+  - sphinx-autodoc-typehints
