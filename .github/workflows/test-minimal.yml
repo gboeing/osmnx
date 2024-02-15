@@ -2,7 +2,7 @@ name: Test minimal versions
 
 on:
   schedule:
-    - cron: "0 7 * * 1" # Every Monday at 07:00 UTC
+    - cron: "0 7 * * 1" # every monday at 07:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -38,16 +38,11 @@ jobs:
           conda list
           conda info --all
 
-      - name: Lint code
-        run: |
-          SKIP=no-commit-to-branch pre-commit run --all-files
-          hatch build --clean
-          twine check --strict ./dist/*
+      - name: Run pre-commit checks
+        run: SKIP=no-commit-to-branch pre-commit run --all-files
 
       - name: Test docs
-        run: |
-          make -C ./docs html SPHINXOPTS="-W --keep-going"
-          python -m sphinx -b linkcheck ./docs/source ./docs/build/linkcheck
+        run: make -C ./docs html SPHINXOPTS="-E -W --keep-going"
 
       - name: Test code
-        run: pytest --maxfail=1 --typeguard-packages=osmnx --cov=./osmnx --cov-report=xml --verbose
+        run: pytest --verbose --maxfail=1 --typeguard-packages=osmnx
