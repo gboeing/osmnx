@@ -2,7 +2,7 @@ name: Build and check package/docs
 
 on:
   schedule:
-    - cron: "0 5 * * 1" # every monday at 05:00 UTC
+    - cron: "0 6 * * 1" # every monday at 06:00 UTC
   workflow_dispatch:
 
 jobs:

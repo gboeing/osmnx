@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main, v2]
   schedule:
-    - cron: "0 6 * * 1" # every monday at 06:00 UTC
+    - cron: "0 5 * * 1" # every monday at 05:00 UTC
 
 jobs:
   build:
@@ -49,7 +49,7 @@ jobs:
       - name: Test docs
         run: make -C ./docs html SPHINXOPTS="-E -W --keep-going"
 
-      - name: Test code
+      - name: Test code and coverage
         run: pytest --verbose --maxfail=1 --typeguard-packages=osmnx --cov=osmnx --cov-report=xml
 
       - name: Upload coverage report
