@@ -587,7 +587,7 @@ def test_features() -> None:
 
     with pytest.raises(ValueError, match="The geometry of `polygon` is invalid."):
         ox.features.features_from_polygon(Polygon(((0, 0), (0, 0), (0, 0), (0, 0))), tags={})
-    with pytest.raises(TypeCheckError):
+    with pytest.raises(TypeCheckError), pytest.raises(TypeError):
         ox.features.features_from_polygon(Point(0, 0), tags={})
 
     # test cache_only_mode
