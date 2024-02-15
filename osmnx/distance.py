@@ -9,6 +9,7 @@ from typing import overload
 
 import networkx as nx
 import numpy as np
+import numpy.typing as npt
 from shapely.geometry import Point
 from shapely.strtree import STRtree
 
@@ -46,33 +47,33 @@ def great_circle(lat1: float, lon1: float, lat2: float, lon2: float, earth_radiu
 # if coords are all arrays, return array
 @overload  # pragma: no cover
 def great_circle(
-    lat1: np.typing.NDArray[np.float64],
-    lon1: np.typing.NDArray[np.float64],
-    lat2: np.typing.NDArray[np.float64],
-    lon2: np.typing.NDArray[np.float64],
-) -> np.typing.NDArray[np.float64]:
+    lat1: npt.NDArray[np.float64],
+    lon1: npt.NDArray[np.float64],
+    lat2: npt.NDArray[np.float64],
+    lon2: npt.NDArray[np.float64],
+) -> npt.NDArray[np.float64]:
     ...
 
 
 # if coords are all arrays (and optional arg is provided), return array
 @overload  # pragma: no cover
 def great_circle(
-    lat1: np.typing.NDArray[np.float64],
-    lon1: np.typing.NDArray[np.float64],
-    lat2: np.typing.NDArray[np.float64],
-    lon2: np.typing.NDArray[np.float64],
+    lat1: npt.NDArray[np.float64],
+    lon1: npt.NDArray[np.float64],
+    lat2: npt.NDArray[np.float64],
+    lon2: npt.NDArray[np.float64],
     earth_radius: float,
-) -> np.typing.NDArray[np.float64]:
+) -> npt.NDArray[np.float64]:
     ...
 
 
 def great_circle(
-    lat1: float | np.typing.NDArray[np.float64],
-    lon1: float | np.typing.NDArray[np.float64],
-    lat2: float | np.typing.NDArray[np.float64],
-    lon2: float | np.typing.NDArray[np.float64],
+    lat1: float | npt.NDArray[np.float64],
+    lon1: float | npt.NDArray[np.float64],
+    lat2: float | npt.NDArray[np.float64],
+    lon2: float | npt.NDArray[np.float64],
     earth_radius: float = EARTH_RADIUS_M,
-) -> float | np.typing.NDArray[np.float64]:
+) -> float | npt.NDArray[np.float64]:
     """
     Calculate great-circle distances between pairs of points.
 
@@ -113,7 +114,7 @@ def great_circle(
     arc = 2 * np.arcsin(np.sqrt(h))
 
     # return distance in units of earth_radius
-    dist: float | np.typing.NDArray[np.float64] = arc * earth_radius
+    dist: float | npt.NDArray[np.float64] = arc * earth_radius
     return dist
 
 
@@ -126,20 +127,20 @@ def euclidean(y1: float, x1: float, y2: float, x2: float) -> float:
 # if coords are all arrays, return array
 @overload  # pragma: no cover
 def euclidean(
-    y1: np.typing.NDArray[np.float64],
-    x1: np.typing.NDArray[np.float64],
-    y2: np.typing.NDArray[np.float64],
-    x2: np.typing.NDArray[np.float64],
-) -> np.typing.NDArray[np.float64]:
+    y1: npt.NDArray[np.float64],
+    x1: npt.NDArray[np.float64],
+    y2: npt.NDArray[np.float64],
+    x2: npt.NDArray[np.float64],
+) -> npt.NDArray[np.float64]:
     ...
 
 
 def euclidean(
-    y1: float | np.typing.NDArray[np.float64],
-    x1: float | np.typing.NDArray[np.float64],
-    y2: float | np.typing.NDArray[np.float64],
-    x2: float | np.typing.NDArray[np.float64],
-) -> float | np.typing.NDArray[np.float64]:
+    y1: float | npt.NDArray[np.float64],
+    x1: float | npt.NDArray[np.float64],
+    y2: float | npt.NDArray[np.float64],
+    x2: float | npt.NDArray[np.float64],
+) -> float | npt.NDArray[np.float64]:
     """
     Calculate Euclidean distances between pairs of points.
 
@@ -165,7 +166,7 @@ def euclidean(
         units as the points' coordinates.
     """
     # pythagorean theorem
-    dist: float | np.typing.NDArray[np.float64] = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
+    dist: float | npt.NDArray[np.float64] = ((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5
     return dist
 
 
@@ -250,7 +251,7 @@ def nearest_nodes(
     X: float,
     Y: float,
     return_dist: Literal[True],
-) -> tuple[np.typing.NDArray[np.int64], np.typing.NDArray[np.float64]]:
+) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]:
     ...
 
 
@@ -260,7 +261,7 @@ def nearest_nodes(
     G: nx.MultiDiGraph,
     X: Iterable[float],
     Y: Iterable[float],
-) -> np.typing.NDArray[np.int64]:
+) -> npt.NDArray[np.int64]:
     ...
 
 
@@ -271,7 +272,7 @@ def nearest_nodes(
     X: Iterable[float],
     Y: Iterable[float],
     return_dist: Literal[False],
-) -> np.typing.NDArray[np.int64]:
+) -> npt.NDArray[np.int64]:
     ...
 
 
@@ -282,7 +283,7 @@ def nearest_nodes(
     X: Iterable[float],
     Y: Iterable[float],
     return_dist: Literal[True],
-) -> tuple[np.typing.NDArray[np.int64], np.typing.NDArray[np.float64]]:
+) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]:
     ...
 
 
@@ -293,9 +294,9 @@ def nearest_nodes(
     return_dist: bool = False,
 ) -> (
     int
-    | np.typing.NDArray[np.int64]
+    | npt.NDArray[np.int64]
     | tuple[int, float]
-    | tuple[np.typing.NDArray[np.int64], np.typing.NDArray[np.float64]]
+    | tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]
 ):
     """
     Find the nearest node to a point or to each of several points.
@@ -345,8 +346,8 @@ def nearest_nodes(
         raise ValueError(msg)
 
     nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
-    nn_array: np.typing.NDArray[np.int64]
-    dist_array: np.typing.NDArray[np.float64]
+    nn_array: npt.NDArray[np.int64]
+    dist_array: npt.NDArray[np.float64]
 
     if projection.is_projected(G.graph["crs"]):
         # if projected, use k-d tree for euclidean nearest-neighbor search
@@ -420,7 +421,7 @@ def nearest_edges(
     G: nx.MultiDiGraph,
     X: Iterable[float],
     Y: Iterable[float],
-) -> np.typing.NDArray[np.object_]:
+) -> npt.NDArray[np.object_]:
     ...
 
 
@@ -432,7 +433,7 @@ def nearest_edges(
     Y: Iterable[float],
     *,
     return_dist: Literal[False],
-) -> np.typing.NDArray[np.object_]:
+) -> npt.NDArray[np.object_]:
     ...
 
 
@@ -444,7 +445,7 @@ def nearest_edges(
     Y: Iterable[float],
     *,
     return_dist: Literal[True],
-) -> tuple[np.typing.NDArray[np.object_], np.typing.NDArray[np.float64]]:
+) -> tuple[npt.NDArray[np.object_], npt.NDArray[np.float64]]:
     ...
 
 
@@ -455,9 +456,9 @@ def nearest_edges(
     return_dist: bool = False,
 ) -> (
     tuple[int, int, int]
-    | np.typing.NDArray[np.object_]
+    | npt.NDArray[np.object_]
     | tuple[tuple[int, int, int], float]
-    | tuple[np.typing.NDArray[np.object_], np.typing.NDArray[np.float64]]
+    | tuple[npt.NDArray[np.object_], npt.NDArray[np.float64]]
 ):
     """
     Find the nearest edge to a point or to each of several points.
@@ -502,8 +503,8 @@ def nearest_edges(
         msg = "`X` and `Y` cannot contain nulls."
         raise ValueError(msg)
     geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
-    ne_array: np.typing.NDArray[np.object_]  # array of tuple[int, int, int]
-    dist_array: np.typing.NDArray[np.float64]
+    ne_array: npt.NDArray[np.object_]  # array of tuple[int, int, int]
+    dist_array: npt.NDArray[np.float64]
 
     # build an r-tree spatial index by position for subsequent iloc
     rtree = STRtree(geoms)
