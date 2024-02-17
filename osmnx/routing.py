@@ -23,6 +23,7 @@ def shortest_path(
     G: nx.MultiDiGraph,
     orig: int,
     dest: int,
+    *,
     weight: str,
     cpus: int | None,
 ) -> list[int] | None:
@@ -47,6 +48,7 @@ def shortest_path(
     G: nx.MultiDiGraph,
     orig: int,
     dest: int,
+    *,
     weight: str,
 ) -> list[int] | None:
     ...
@@ -68,6 +70,7 @@ def shortest_path(
     G: nx.MultiDiGraph,
     orig: Iterable[int],
     dest: Iterable[int],
+    *,
     weight: str,
     cpus: int | None,
 ) -> list[list[int] | None]:
@@ -92,6 +95,7 @@ def shortest_path(
     G: nx.MultiDiGraph,
     orig: Iterable[int],
     dest: Iterable[int],
+    *,
     weight: str,
 ) -> list[list[int] | None]:
     ...
@@ -111,6 +115,7 @@ def shortest_path(
     G: nx.MultiDiGraph,
     orig: int | Iterable[int],
     dest: int | Iterable[int],
+    *,
     weight: str = "length",
     cpus: int | None = 1,
 ) -> list[int] | None | list[list[int] | None]:
@@ -193,6 +198,7 @@ def k_shortest_paths(
     orig: int,
     dest: int,
     k: int,
+    *,
     weight: str = "length",
 ) -> Iterator[list[int]]:
     """
@@ -220,7 +226,12 @@ def k_shortest_paths(
         The node IDs constituting the next-shortest path.
     """
     _verify_edge_attribute(G, weight)
-    paths_gen = nx.shortest_simple_paths(utils_graph.get_digraph(G, weight), orig, dest, weight)
+    paths_gen = nx.shortest_simple_paths(
+        G=utils_graph.get_digraph(G, weight=weight),
+        source=orig,
+        target=dest,
+        weight=weight,
+    )
     yield from itertools.islice(paths_gen, 0, k)
 
 

@@ -33,7 +33,7 @@ except ImportError:  # pragma: no cover
     gdal = None
 
 
-def add_edge_grades(G: nx.MultiDiGraph, add_absolute: bool = True) -> nx.MultiDiGraph:
+def add_edge_grades(G: nx.MultiDiGraph, *, add_absolute: bool = True) -> nx.MultiDiGraph:
     """
     Calculate and add `grade` attributes to all graph edges.
 
@@ -108,6 +108,7 @@ def _query_raster(
 def add_node_elevations_raster(
     G: nx.MultiDiGraph,
     filepath: str | Path | Iterable[str | Path],
+    *,
     band: int = 1,
     cpus: int | None = None,
 ) -> nx.MultiDiGraph:
@@ -173,6 +174,7 @@ def add_node_elevations_raster(
 
 def add_node_elevations_google(
     G: nx.MultiDiGraph,
+    *,
     api_key: str | None = None,
     batch_size: int = 512,
     pause: float = 0,

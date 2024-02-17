@@ -15,6 +15,7 @@ from . import utils_graph
 
 def add_edge_speeds(
     G: nx.MultiDiGraph,
+    *,
     hwy_speeds: dict[str, float] | None = None,
     fallback: float | None = None,
     agg: Callable[[Any], Any] = np.mean,
@@ -170,6 +171,7 @@ def add_edge_travel_times(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
 def _clean_maxspeed(
     maxspeed: str | float,
+    *,
     agg: Callable[[Any], Any] = np.mean,
     convert_mph: bool = True,
 ) -> float | None:

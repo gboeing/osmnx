@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 def truncate_graph_dist(
     G: nx.MultiDiGraph,
     source_node: int,
+    *,
     max_dist: float = 1000,
     weight: str = "length",
     retain_all: bool = False,
@@ -75,6 +76,7 @@ def truncate_graph_dist(
 def truncate_graph_bbox(
     G: nx.MultiDiGraph,
     bbox: tuple[float, float, float, float],
+    *,
     truncate_by_edge: bool = False,
     retain_all: bool = False,
 ) -> nx.MultiDiGraph:
@@ -111,6 +113,7 @@ def truncate_graph_bbox(
 def truncate_graph_polygon(
     G: nx.MultiDiGraph,
     polygon: Polygon | MultiPolygon,
+    *,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
 ) -> nx.MultiDiGraph:

@@ -283,7 +283,7 @@ def test_routing() -> None:
     route5 = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
     assert route5 is not None
 
-    route_edges = ox.utils_graph.route_to_gdf(G, route5, "travel_time")
+    route_edges = ox.utils_graph.route_to_gdf(G, route5, weight="travel_time")
 
     fig, ax = ox.plot_graph_route(G, route5, save=True)
 

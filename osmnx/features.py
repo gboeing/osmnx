@@ -129,6 +129,7 @@ def features_from_bbox(
 def features_from_point(
     center_point: tuple[float, float],
     tags: dict[str, bool | str | list[str]],
+    *,
     dist: float = 1000,
 ) -> gpd.GeoDataFrame:
     """
@@ -167,13 +168,14 @@ def features_from_point(
     gdf
     """
     # create bbox from point and dist, then create gdf of features within it
-    bbox = utils_geo.bbox_from_point(center_point, dist)
+    bbox = utils_geo.bbox_from_point(center_point, dist=dist)
     return features_from_bbox(bbox, tags=tags)
 
 
 def features_from_address(
     address: str,
     tags: dict[str, bool | str | list[str]],
+    *,
     dist: float = 1000,
 ) -> gpd.GeoDataFrame:
     """
@@ -217,6 +219,7 @@ def features_from_address(
 def features_from_place(
     query: str | dict[str, str] | list[str | dict[str, str]],
     tags: dict[str, bool | str | list[str]],
+    *,
     which_result: int | None | list[int | None] = None,
 ) -> gpd.GeoDataFrame:
     """
@@ -331,8 +334,9 @@ def features_from_polygon(
 
 def features_from_xml(
     filepath: str | Path,
-    polygon: Polygon | MultiPolygon | None = None,
+    *,
     tags: dict[str, bool | str | list[str]] | None = None,
+    polygon: Polygon | MultiPolygon | None = None,
     encoding: str = "utf-8",
 ) -> gpd.GeoDataFrame:
     """
@@ -349,8 +353,6 @@ def features_from_xml(
     ----------
     filepath
         Path to file containing OSM XML data.
-    polygon
-        Optional spatial boundaries to filter elements.
     tags
         Optional dict of tags for filtering elements from the XML. Results
         returned are the union, not intersection of each individual tag.
@@ -363,6 +365,8 @@ def features_from_xml(
         the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
         'highway':'bus_stop'}` would return all amenities, landuse=retail,
         landuse=commercial, and highway=bus_stop.
+    polygon
+        Optional spatial boundaries to filter elements.
     encoding
         The XML file's character encoding.
 

@@ -25,7 +25,7 @@ _original_getaddrinfo = socket.getaddrinfo
 def _save_to_cache(
     url: str,
     response_json: dict[str, Any] | list[dict[str, Any]],
-    ok: bool,
+    ok: bool,  # noqa: FBT001
 ) -> None:
     """
     Save a HTTP response JSON object to a file in the cache folder.
@@ -102,6 +102,7 @@ def _url_in_cache(url: str) -> Path | None:
 
 def _retrieve_from_cache(
     url: str,
+    *,
     check_remark: bool = True,
 ) -> dict[str, Any] | list[dict[str, Any]] | None:
     """
@@ -149,6 +150,7 @@ def _retrieve_from_cache(
 
 
 def _get_http_headers(
+    *,
     user_agent: str | None = None,
     referer: str | None = None,
     accept_language: str | None = None,

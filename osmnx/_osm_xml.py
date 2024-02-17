@@ -126,8 +126,8 @@ def _save_graph_xml(  # noqa: PLR0913
     node_attrs: list[str],
     edge_tags: list[str],
     edge_attrs: list[str],
-    oneway: bool,
-    merge_edges: bool,
+    oneway: bool,  # noqa: FBT001
+    merge_edges: bool,  # noqa: FBT001
     edge_tag_aggs: list[tuple[str, str]] | None,
     api_version: str,
     precision: int,
@@ -416,7 +416,7 @@ def _append_edges_xml_tree(
     edge_attrs: list[str],
     edge_tags: list[str],
     edge_tag_aggs: list[tuple[str, str]] | None,
-    merge_edges: bool,
+    merge_edges: bool,  # noqa: FBT001
 ) -> Element:
     """
     Append edges to an XML tree.

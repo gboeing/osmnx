@@ -125,6 +125,7 @@ def add_edge_bearings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
 def orientation_entropy(
     Gu: nx.MultiGraph,
+    *,
     num_bins: int = 36,
     min_length: float = 0,
     weight: str | None = None,
@@ -164,13 +165,14 @@ def orientation_entropy(
     if scipy is None:  # pragma: no cover
         msg = "scipy must be installed as an optional dependency to calculate entropy."
         raise ImportError(msg)
-    bin_counts, _ = _bearings_distribution(Gu, num_bins, min_length, weight)
+    bin_counts, _ = _bearings_distribution(Gu, num_bins, min_length=min_length, weight=weight)
     entropy: float = scipy.stats.entropy(bin_counts)
     return entropy
 
 
 def _extract_edge_bearings(
     Gu: nx.MultiGraph,
+    *,
     min_length: float = 0,
     weight: str | None = None,
 ) -> npt.NDArray[np.float64]:
@@ -222,6 +224,7 @@ def _extract_edge_bearings(
 def _bearings_distribution(
     Gu: nx.MultiGraph,
     num_bins: int,
+    *,
     min_length: float = 0,
     weight: str | None = None,
 ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
@@ -257,7 +260,7 @@ def _bearings_distribution(
     n = num_bins * 2
     bins = np.arange(n + 1) * 360 / n
 
-    bearings = _extract_edge_bearings(Gu, min_length, weight)
+    bearings = _extract_edge_bearings(Gu, min_length=min_length, weight=weight)
     count, bin_edges = np.histogram(bearings, bins=bins)
 
     # move last bin to front, so eg 0.01 degrees and 359.99 degrees will be

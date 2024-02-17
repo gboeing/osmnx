@@ -43,6 +43,7 @@ if TYPE_CHECKING:
 
 def graph_from_bbox(
     bbox: tuple[float, float, float, float],
+    *,
     network_type: str = "all_private",
     simplify: bool = True,
     retain_all: bool = False,
@@ -108,6 +109,7 @@ def graph_from_bbox(
 
 def graph_from_point(
     center_point: tuple[float, float],
+    *,
     dist: float = 1000,
     dist_type: str = "bbox",
     network_type: str = "all_private",
@@ -169,7 +171,7 @@ def graph_from_point(
         raise ValueError(msg)
 
     # create bounding box from center point and distance in each direction
-    bbox = utils_geo.bbox_from_point(center_point, dist)
+    bbox = utils_geo.bbox_from_point(center_point, dist=dist)
 
     # create a graph from the bounding box
     G = graph_from_bbox(
@@ -194,6 +196,7 @@ def graph_from_point(
 
 def graph_from_address(
     address: str,
+    *,
     dist: float = 1000,
     dist_type: str = "bbox",
     network_type: str = "all_private",
@@ -255,8 +258,8 @@ def graph_from_address(
     # then create a graph from this point
     G = graph_from_point(
         point,
-        dist,
-        dist_type,
+        dist=dist,
+        dist_type=dist_type,
         network_type=network_type,
         simplify=simplify,
         retain_all=retain_all,
@@ -271,6 +274,7 @@ def graph_from_address(
 
 def graph_from_place(
     query: str | dict[str, str] | list[str | dict[str, str]],
+    *,
     network_type: str = "all_private",
     simplify: bool = True,
     retain_all: bool = False,
@@ -355,6 +359,7 @@ def graph_from_place(
 
 def graph_from_polygon(
     polygon: Polygon | MultiPolygon,
+    *,
     network_type: str = "all_private",
     simplify: bool = True,
     retain_all: bool = False,
@@ -447,7 +452,12 @@ def graph_from_polygon(
     # intersections along the street that may now only connect 2 street
     # segments in the network, but in reality also connect to an
     # intersection just outside the polygon
-    G = truncate.truncate_graph_polygon(G_buff, polygon, retain_all, truncate_by_edge)
+    G = truncate.truncate_graph_polygon(
+        G_buff,
+        polygon,
+        retain_all=retain_all,
+        truncate_by_edge=truncate_by_edge,
+    )
 
     # count how many physical streets in buffered graph connect to each
     # intersection in un-buffered graph, to retain true counts for each
@@ -462,6 +472,7 @@ def graph_from_polygon(
 
 def graph_from_xml(
     filepath: str | Path,
+    *,
     bidirectional: bool = False,
     simplify: bool = True,
     retain_all: bool = False,
@@ -510,6 +521,7 @@ def graph_from_xml(
 
 def _create_graph(
     response_jsons: Iterable[dict[str, Any]],
+    *,
     retain_all: bool = False,
     bidirectional: bool = False,
 ) -> nx.MultiDiGraph:
@@ -665,7 +677,7 @@ def _parse_nodes_paths(
     return nodes, paths
 
 
-def _is_path_one_way(attrs: dict[str, Any], bidirectional: bool, oneway_values: set[str]) -> bool:
+def _is_path_one_way(attrs: dict[str, Any], bidirectional: bool, oneway_values: set[str]) -> bool:  # noqa: FBT001
     """
     Determine if a path of nodes allows travel in only one direction.
 
@@ -734,7 +746,7 @@ def _is_path_reversed(attrs: dict[str, Any], reversed_values: set[str]) -> bool:
 def _add_paths(
     G: nx.MultiDiGraph,
     paths: Iterable[dict[str, Any]],
-    bidirectional: bool = False,
+    bidirectional: bool,  # noqa: FBT001
 ) -> None:
     """
     Add OSM paths to the graph as edges.
