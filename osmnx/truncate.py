@@ -19,8 +19,8 @@ if TYPE_CHECKING:
 def truncate_graph_dist(
     G: nx.MultiDiGraph,
     source_node: int,
+    max_dist: float,
     *,
-    max_dist: float = 1000,
     weight: str = "length",
     retain_all: bool = False,
 ) -> nx.MultiDiGraph:

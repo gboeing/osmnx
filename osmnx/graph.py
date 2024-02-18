@@ -90,7 +90,7 @@ def graph_from_bbox(
     documentation for caveats.
     """
     # convert bounding box to a polygon
-    polygon = utils_geo.bbox_to_poly(bbox=bbox)
+    polygon = utils_geo.bbox_to_poly(bbox)
 
     # create graph using this polygon geometry
     G = graph_from_polygon(
@@ -109,8 +109,8 @@ def graph_from_bbox(
 
 def graph_from_point(
     center_point: tuple[float, float],
+    dist: float,
     *,
-    dist: float = 1000,
     dist_type: str = "bbox",
     network_type: str = "all_private",
     simplify: bool = True,
@@ -171,11 +171,11 @@ def graph_from_point(
         raise ValueError(msg)
 
     # create bounding box from center point and distance in each direction
-    bbox = utils_geo.bbox_from_point(center_point, dist=dist)
+    bbox = utils_geo.bbox_from_point(center_point, dist)
 
     # create a graph from the bounding box
     G = graph_from_bbox(
-        bbox=bbox,
+        bbox,
         network_type=network_type,
         simplify=simplify,
         retain_all=retain_all,
@@ -187,7 +187,7 @@ def graph_from_point(
         # if dist_type is network, find node in graph nearest to center point
         # then truncate graph by network dist from it
         node = distance.nearest_nodes(G, X=center_point[1], Y=center_point[0])
-        G = truncate.truncate_graph_dist(G, node, max_dist=dist)
+        G = truncate.truncate_graph_dist(G, node, dist)
 
     msg = f"graph_from_point returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
     utils.log(msg, level=lg.INFO)
@@ -196,8 +196,8 @@ def graph_from_point(
 
 def graph_from_address(
     address: str,
+    dist: float,
     *,
-    dist: float = 1000,
     dist_type: str = "bbox",
     network_type: str = "all_private",
     simplify: bool = True,
@@ -253,12 +253,12 @@ def graph_from_address(
     documentation for caveats.
     """
     # geocode the address string to a (lat, lon) point
-    point = geocoder.geocode(query=address)
+    point = geocoder.geocode(address)
 
     # then create a graph from this point
     G = graph_from_point(
         point,
-        dist=dist,
+        dist,
         dist_type=dist_type,
         network_type=network_type,
         simplify=simplify,
@@ -420,9 +420,8 @@ def graph_from_polygon(
         raise TypeError(msg)
 
     # create a new buffered polygon 0.5km around the desired one
-    buffer_dist = 500
     poly_proj, crs_utm = projection.project_geometry(polygon)
-    poly_proj_buff = poly_proj.buffer(buffer_dist)
+    poly_proj_buff = poly_proj.buffer(500)
     poly_buff, _ = projection.project_geometry(poly_proj_buff, crs=crs_utm, to_latlong=True)
 
     # download the network data from OSM within buffered polygon
@@ -430,15 +429,15 @@ def graph_from_polygon(
 
     # create buffered graph from the downloaded data
     bidirectional = network_type in settings.bidirectional_network_types
-    G_buff = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
+    G_buff = _create_graph(response_jsons, retain_all, bidirectional)
 
     # truncate buffered graph to the buffered polygon and retain_all for
     # now. needed because overpass returns entire ways that also include
     # nodes outside the poly if the way (that is, a way with a single OSM
     # ID) has a node inside the poly at some point.
     G_buff = truncate.truncate_graph_polygon(
-        G=G_buff,
-        polygon=poly_buff,
+        G_buff,
+        poly_buff,
         retain_all=True,
         truncate_by_edge=truncate_by_edge,
     )
@@ -508,7 +507,7 @@ def graph_from_xml(
     response_jsons = [_osm_xml._overpass_json_from_file(filepath, encoding)]
 
     # create graph using this response JSON
-    G = _create_graph(response_jsons, bidirectional=bidirectional, retain_all=retain_all)
+    G = _create_graph(response_jsons, retain_all, bidirectional)
 
     # simplify the graph topology as the last step
     if simplify:
@@ -521,9 +520,8 @@ def graph_from_xml(
 
 def _create_graph(
     response_jsons: Iterable[dict[str, Any]],
-    *,
-    retain_all: bool = False,
-    bidirectional: bool = False,
+    retain_all: bool,  # noqa: FBT001
+    bidirectional: bool,  # noqa: FBT001
 ) -> nx.MultiDiGraph:
     """
     Create a NetworkX MultiDiGraph from Overpass API responses.

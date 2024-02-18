@@ -122,15 +122,14 @@ def features_from_bbox(
     gdf
     """
     # convert bbox to polygon then create GeoDataFrame of features within it
-    polygon = utils_geo.bbox_to_poly(bbox=bbox)
-    return features_from_polygon(polygon, tags=tags)
+    polygon = utils_geo.bbox_to_poly(bbox)
+    return features_from_polygon(polygon, tags)
 
 
 def features_from_point(
     center_point: tuple[float, float],
     tags: dict[str, bool | str | list[str]],
-    *,
-    dist: float = 1000,
+    dist: float,
 ) -> gpd.GeoDataFrame:
     """
     Create GeoDataFrame of OSM features within some distance N, S, E, W of a point.
@@ -168,15 +167,14 @@ def features_from_point(
     gdf
     """
     # create bbox from point and dist, then create gdf of features within it
-    bbox = utils_geo.bbox_from_point(center_point, dist=dist)
-    return features_from_bbox(bbox, tags=tags)
+    bbox = utils_geo.bbox_from_point(center_point, dist)
+    return features_from_bbox(bbox, tags)
 
 
 def features_from_address(
     address: str,
     tags: dict[str, bool | str | list[str]],
-    *,
-    dist: float = 1000,
+    dist: float,
 ) -> gpd.GeoDataFrame:
     """
     Create GeoDataFrame of OSM features within some distance N, S, E, W of address.
@@ -212,8 +210,8 @@ def features_from_address(
     gdf
     """
     # geocode the address to a point, then create gdf of features around it
-    center_point = geocoder.geocode(query=address)
-    return features_from_point(center_point, tags=tags, dist=dist)
+    center_point = geocoder.geocode(address)
+    return features_from_point(center_point, tags, dist)
 
 
 def features_from_place(
@@ -376,7 +374,7 @@ def features_from_xml(
     """
     # transmogrify OSM XML file to JSON then create GeoDataFrame from it
     response_jsons = [_osm_xml._overpass_json_from_file(filepath, encoding)]
-    return _create_gdf(response_jsons, polygon=polygon, tags=tags)
+    return _create_gdf(response_jsons, polygon, tags)
 
 
 def _create_gdf(  # noqa: PLR0912
