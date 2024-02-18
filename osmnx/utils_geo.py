@@ -242,99 +242,12 @@ def _intersect_index_quadrats(
     return geoms_in_poly
 
 
-# dist missing, project_utm missing/False, return_crs missing/False
-@overload  # pragma: no cover
-def bbox_from_point(point: tuple[float, float]) -> tuple[float, float, float, float]:
-    ...
-
-
-# dist missing, project_utm missing/False, return_crs present/True
-@overload  # pragma: no cover
-def bbox_from_point(
-    point: tuple[float, float],
-    *,
-    return_crs: Literal[True],
-) -> tuple[float, float, float, float]:
-    ...
-
-
-# dist missing, project_utm missing/False, return_crs present/False
-@overload  # pragma: no cover
-def bbox_from_point(
-    point: tuple[float, float],
-    *,
-    return_crs: Literal[False],
-) -> tuple[float, float, float, float]:
-    ...
-
-
-# dist missing, project_utm present/True, return_crs missing/False
-@overload  # pragma: no cover
-def bbox_from_point(
-    point: tuple[float, float],
-    *,
-    project_utm: Literal[True],
-) -> tuple[float, float, float, float]:
-    ...
-
-
-# dist missing, project_utm present/True, return_crs present/True
-@overload  # pragma: no cover
-def bbox_from_point(
-    point: tuple[float, float],
-    *,
-    project_utm: Literal[True],
-    return_crs: Literal[True],
-) -> tuple[tuple[float, float, float, float], Any]:
-    ...
-
-
-# dist missing, project_utm present/True, return_crs present/False
-@overload  # pragma: no cover
-def bbox_from_point(
-    point: tuple[float, float],
-    *,
-    project_utm: Literal[True],
-    return_crs: Literal[False],
-) -> tuple[float, float, float, float]:
-    ...
-
-
-# dist missing, project_utm present/False, return_crs missing/False
-@overload  # pragma: no cover
-def bbox_from_point(
-    point: tuple[float, float],
-    *,
-    project_utm: Literal[False],
-) -> tuple[float, float, float, float]:
-    ...
-
-
-# dist missing, project_utm present/False, return_crs present/True
-@overload  # pragma: no cover
-def bbox_from_point(
-    point: tuple[float, float],
-    *,
-    project_utm: Literal[False],
-    return_crs: Literal[True],
-) -> tuple[float, float, float, float]:
-    ...
-
-
-# dist missing, project_utm present/False, return_crs present/False
-@overload  # pragma: no cover
-def bbox_from_point(
-    point: tuple[float, float],
-    *,
-    project_utm: Literal[False],
-    return_crs: Literal[False],
-) -> tuple[float, float, float, float]:
-    ...
-
-
 # dist present, project_utm missing/False, return_crs missing/False
 @overload  # pragma: no cover
-def bbox_from_point(point: tuple[float, float], dist: float) -> tuple[float, float, float, float]:
+def bbox_from_point(
+    point: tuple[float, float],
+    dist: float,
+) -> tuple[float, float, float, float]:
     ...
 
 
@@ -365,6 +278,7 @@ def bbox_from_point(
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
+    *,
     project_utm: Literal[True],
 ) -> tuple[float, float, float, float]:
     ...
@@ -375,6 +289,7 @@ def bbox_from_point(
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
+    *,
     project_utm: Literal[True],
     return_crs: Literal[True],
 ) -> tuple[tuple[float, float, float, float], Any]:
@@ -386,6 +301,7 @@ def bbox_from_point(
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
+    *,
     project_utm: Literal[True],
     return_crs: Literal[False],
 ) -> tuple[float, float, float, float]:
@@ -397,6 +313,7 @@ def bbox_from_point(
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
+    *,
     project_utm: Literal[False],
 ) -> tuple[float, float, float, float]:
     ...
@@ -407,6 +324,7 @@ def bbox_from_point(
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
+    *,
     project_utm: Literal[False],
     return_crs: Literal[True],
 ) -> tuple[float, float, float, float]:
@@ -418,6 +336,7 @@ def bbox_from_point(
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
+    *,
     project_utm: Literal[False],
     return_crs: Literal[False],
 ) -> tuple[float, float, float, float]:
@@ -426,7 +345,8 @@ def bbox_from_point(
 
 def bbox_from_point(
     point: tuple[float, float],
-    dist: float = 1000,
+    dist: float,
+    *,
     project_utm: bool = False,
     return_crs: bool = False,
 ) -> tuple[float, float, float, float] | tuple[tuple[float, float, float, float], Any]:

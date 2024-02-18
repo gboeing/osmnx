@@ -245,6 +245,7 @@ def _remove_rings(G: nx.MultiDiGraph, endpoint_attrs: Iterable[str] | None) -> n
 
 def simplify_graph(  # noqa: PLR0912
     G: nx.MultiDiGraph,
+    *,
     endpoint_attrs: Iterable[str] | None = None,
     remove_rings: bool = True,
     track_merged: bool = False,
@@ -395,6 +396,7 @@ def simplify_graph(  # noqa: PLR0912
 
 def consolidate_intersections(
     G: nx.MultiDiGraph,
+    *,
     tolerance: float = 10,
     rebuild_graph: bool = True,
     dead_ends: bool = False,
@@ -511,8 +513,8 @@ def _merge_nodes_geometric(G: nx.MultiDiGraph, tolerance: float) -> gpd.GeoSerie
 
 def _consolidate_intersections_rebuild_graph(  # noqa: PLR0912,PLR0915
     G: nx.MultiDiGraph,
-    tolerance: float = 10,
-    reconnect_edges: bool = True,
+    tolerance: float,
+    reconnect_edges: bool,  # noqa: FBT001
 ) -> nx.MultiDiGraph:
     """
     Consolidate intersections comprising clusters of nearby nodes.

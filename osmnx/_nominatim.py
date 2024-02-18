@@ -17,6 +17,7 @@ from ._errors import InsufficientResponseError
 
 def _download_nominatim_element(
     query: str | dict[str, str],
+    *,
     by_osmid: bool = False,
     limit: int = 1,
     polygon_geojson: bool = True,
@@ -77,6 +78,7 @@ def _download_nominatim_element(
 
 def _nominatim_request(
     params: OrderedDict[str, int | str],
+    *,
     request_type: str = "search",
     pause: float = 1,
     error_pause: float = 60,
@@ -141,7 +143,12 @@ def _nominatim_request(
         )
         utils.log(msg, level=lg.WARNING)
         time.sleep(error_pause)
-        return _nominatim_request(params, request_type, pause, error_pause)
+        return _nominatim_request(
+            params,
+            request_type=request_type,
+            pause=pause,
+            error_pause=error_pause,
+        )
 
     response_json = _http._parse_response(response)
     if not isinstance(response_json, list):

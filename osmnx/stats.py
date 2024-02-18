@@ -112,7 +112,7 @@ def streets_per_node_proportions(G: nx.MultiDiGraph) -> dict[int, float]:
     return {i: count / n for i, count in spnc.items()}
 
 
-def intersection_count(G: nx.MultiDiGraph, min_streets: int = 2) -> int:
+def intersection_count(G: nx.MultiDiGraph, *, min_streets: int = 2) -> int:
     """
     Count the intersections in a graph.
 
@@ -268,6 +268,7 @@ def circuity_avg(Gu: nx.MultiGraph) -> float | None:
 
 def count_streets_per_node(
     G: nx.MultiDiGraph,
+    *,
     nodes: Iterable[int] | None = None,
 ) -> dict[int, int]:
     """
@@ -323,6 +324,7 @@ def count_streets_per_node(
 
 def basic_stats(
     G: nx.MultiDiGraph,
+    *,
     area: float | None = None,
     clean_int_tol: float | None = None,
 ) -> dict[str, Any]:

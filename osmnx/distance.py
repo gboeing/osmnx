@@ -172,6 +172,7 @@ def euclidean(
 
 def add_edge_lengths(
     G: nx.MultiDiGraph,
+    *,
     edges: Iterable[tuple[int, int, int]] | None = None,
 ) -> nx.MultiDiGraph:
     """
@@ -240,7 +241,7 @@ def nearest_nodes(G: nx.MultiDiGraph, X: float, Y: float) -> int:
 
 # if X and Y are floats and return_dist is provided/False
 @overload  # pragma: no cover
-def nearest_nodes(G: nx.MultiDiGraph, X: float, Y: float, return_dist: Literal[False]) -> int:
+def nearest_nodes(G: nx.MultiDiGraph, X: float, Y: float, *, return_dist: Literal[False]) -> int:
     ...
 
 
@@ -250,6 +251,7 @@ def nearest_nodes(
     G: nx.MultiDiGraph,
     X: float,
     Y: float,
+    *,
     return_dist: Literal[True],
 ) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]:
     ...
@@ -271,6 +273,7 @@ def nearest_nodes(
     G: nx.MultiDiGraph,
     X: Iterable[float],
     Y: Iterable[float],
+    *,
     return_dist: Literal[False],
 ) -> npt.NDArray[np.int64]:
     ...
@@ -282,6 +285,7 @@ def nearest_nodes(
     G: nx.MultiDiGraph,
     X: Iterable[float],
     Y: Iterable[float],
+    *,
     return_dist: Literal[True],
 ) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]:
     ...
@@ -291,6 +295,7 @@ def nearest_nodes(
     G: nx.MultiDiGraph,
     X: float | Iterable[float],
     Y: float | Iterable[float],
+    *,
     return_dist: bool = False,
 ) -> (
     int
@@ -453,6 +458,7 @@ def nearest_edges(
     G: nx.MultiDiGraph,
     X: float | Iterable[float],
     Y: float | Iterable[float],
+    *,
     return_dist: bool = False,
 ) -> (
     tuple[int, int, int]

@@ -43,13 +43,14 @@ except ImportError:  # pragma: no cover
 
 def get_colors(
     n: int,
+    *,
     cmap: str = "viridis",
     start: float = 0,
     stop: float = 1,
     alpha: float | None = None,
 ) -> list[str]:
     """
-    Get `n` evenly-spaced colors from a matplotlib colormap.
+    Return `n` evenly-spaced colors from a matplotlib colormap.
 
     Parameters
     ----------
@@ -80,6 +81,7 @@ def get_colors(
 def get_node_colors_by_attr(
     G: nx.MultiDiGraph,
     attr: str,
+    *,
     num_bins: int | None = None,
     cmap: str = "viridis",
     start: float = 0,
@@ -88,7 +90,7 @@ def get_node_colors_by_attr(
     equal_size: bool = False,
 ) -> pd.Series:  # type: ignore[type-arg]
     """
-    Get colors based on nodes' numerical attribute values.
+    Return colors based on nodes' numerical attribute values.
 
     Parameters
     ----------
@@ -123,6 +125,7 @@ def get_node_colors_by_attr(
 def get_edge_colors_by_attr(
     G: nx.MultiDiGraph,
     attr: str,
+    *,
     num_bins: int | None = None,
     cmap: str = "viridis",
     start: float = 0,
@@ -131,7 +134,7 @@ def get_edge_colors_by_attr(
     equal_size: bool = False,
 ) -> pd.Series:  # type: ignore[type-arg]
     """
-    Get colors based on edges' numerical attribute values.
+    Return colors based on edges' numerical attribute values.
 
     Parameters
     ----------
@@ -165,6 +168,7 @@ def get_edge_colors_by_attr(
 
 def plot_graph(  # noqa: PLR0913
     G: nx.MultiGraph | nx.MultiDiGraph,
+    *,
     ax: Axes | None = None,
     figsize: tuple[float, float] = (8, 8),
     bgcolor: str = "#111111",
@@ -294,6 +298,7 @@ def plot_graph(  # noqa: PLR0913
 def plot_graph_route(
     G: nx.MultiDiGraph,
     route: list[int],
+    *,
     route_color: str = "r",
     route_linewidth: float = 4,
     route_alpha: float = 0.5,
@@ -369,6 +374,7 @@ def plot_graph_route(
 def plot_graph_routes(
     G: nx.MultiDiGraph,
     routes: Iterable[list[int]],
+    *,
     route_colors: str | Iterable[str] = "r",
     route_linewidths: float | Iterable[float] = 4,
     **pgr_kwargs: Any,  # noqa: ANN401
@@ -457,6 +463,7 @@ def plot_graph_routes(
 
 def plot_figure_ground(
     G: nx.MultiDiGraph,
+    *,
     dist: float = 805,
     street_widths: dict[str, float] | None = None,
     default_width: float = 4,
@@ -549,7 +556,7 @@ def plot_figure_ground(
     node_geoms = utils_graph.graph_to_gdfs(Gu, edges=False, node_geometry=True).unary_union
     lonlat_point = node_geoms.centroid.coords[0]
     latlon_point = tuple(reversed(lonlat_point))
-    bbox = utils_geo.bbox_from_point(latlon_point, dist, project_utm=False)
+    bbox = utils_geo.bbox_from_point(latlon_point, dist=dist, project_utm=False)
 
     # plot the figure
     overrides = {"bbox", "node_size", "node_color", "edge_linewidth"}
@@ -568,6 +575,7 @@ def plot_figure_ground(
 
 def plot_footprints(  # noqa: PLR0913
     gdf: gpd.GeoDataFrame,
+    *,
     ax: Axes | None = None,
     figsize: tuple[float, float] = (8, 8),
     color: str = "orange",
@@ -657,6 +665,7 @@ def plot_footprints(  # noqa: PLR0913
 
 def plot_orientation(  # noqa: PLR0913
     Gu: nx.MultiGraph,
+    *,
     num_bins: int = 36,
     min_length: float = 0,
     weight: str | None = None,
@@ -737,7 +746,12 @@ def plot_orientation(  # noqa: PLR0913
         }
 
     # get the bearings' distribution's bin counts and edges
-    bin_counts, bin_edges = bearing._bearings_distribution(Gu, num_bins, min_length, weight)
+    bin_counts, bin_edges = bearing._bearings_distribution(
+        Gu,
+        num_bins,
+        min_length=min_length,
+        weight=weight,
+    )
 
     # positions: where to center each bar. ignore the last bin edge, because
     # it's the same as the first (i.e., 0 degrees = 360 degrees)
@@ -794,7 +808,7 @@ def _get_colors_by_value(
     start: float,
     stop: float,
     na_color: str,
-    equal_size: bool,
+    equal_size: bool,  # noqa: FBT001
 ) -> pd.Series:  # type: ignore[type-arg]
     """
     Map colors to the values in a Series of node/edge attribute values.
@@ -849,7 +863,7 @@ def _get_colors_by_value(
             bins = pd.qcut(vals, num_bins, labels=range(num_bins))
         else:
             bins = pd.cut(vals, num_bins, labels=range(num_bins))
-        bin_colors = get_colors(num_bins, cmap, start, stop)
+        bin_colors = get_colors(num_bins, cmap=cmap, start=start, stop=stop)
         color_list = [bin_colors[b] if pd.notna(b) else na_color for b in bins]
         color_series = pd.Series(color_list, index=bins.index)
 
@@ -859,6 +873,7 @@ def _get_colors_by_value(
 def _save_and_show(
     fig: Figure,
     ax: Axes,
+    *,
     show: bool = True,
     close: bool = True,
     save: bool = False,
@@ -1004,7 +1019,7 @@ def _get_fig_ax(
     ax: Axes | None,
     figsize: tuple[float, float],
     bgcolor: str | None,
-    polar: bool,
+    polar: bool,  # noqa: FBT001
 ) -> tuple[Figure, Axes | PolarAxes]:
     """
     Generate a matplotlib Figure and (Polar)Axes or return existing ones.

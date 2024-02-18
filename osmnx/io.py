@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 
 def save_graph_geopackage(
     G: nx.MultiDiGraph,
+    *,
     filepath: str | Path | None = None,
     directed: bool = False,
     encoding: str = "utf-8",
@@ -73,6 +74,7 @@ def save_graph_geopackage(
 
 def save_graphml(
     G: nx.MultiDiGraph,
+    *,
     filepath: str | Path | None = None,
     gephi: bool = False,
     encoding: str = "utf-8",
@@ -245,6 +247,7 @@ def load_graphml(
 
 def save_graph_xml(  # noqa: PLR0913
     data: nx.MultiDiGraph | tuple[gpd.GeoDataFrame, gpd.GeoDataFrame],
+    *,
     filepath: str | Path | None = None,
     node_tags: list[str] = settings.osm_xml_node_tags,
     node_attrs: list[str] = settings.osm_xml_node_attrs,

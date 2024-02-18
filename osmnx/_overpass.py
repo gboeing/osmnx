@@ -116,6 +116,7 @@ def _get_network_filter(network_type: str) -> str:
 
 def _get_overpass_pause(
     base_endpoint: str,
+    *,
     recursive_delay: float = 5,
     default_duration: float = 60,
 ) -> float:
@@ -390,6 +391,7 @@ def _download_overpass_features(
 
 def _overpass_request(
     data: OrderedDict[str, Any],
+    *,
     pause: float | None = None,
     error_pause: float = 60,
 ) -> dict[str, Any]:
@@ -449,7 +451,7 @@ def _overpass_request(
         )
         utils.log(msg, level=lg.WARNING)
         time.sleep(this_pause)
-        return _overpass_request(data, pause, error_pause)
+        return _overpass_request(data, pause=pause, error_pause=error_pause)
 
     response_json = _http._parse_response(response)
     if not isinstance(response_json, dict):  # pragma: no cover

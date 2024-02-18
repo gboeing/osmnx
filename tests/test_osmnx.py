@@ -283,7 +283,7 @@ def test_routing() -> None:
     route5 = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
     assert route5 is not None
 
-    route_edges = ox.utils_graph.route_to_gdf(G, route5, "travel_time")
+    route_edges = ox.utils_graph.route_to_gdf(G, route5, weight="travel_time")
 
     fig, ax = ox.plot_graph_route(G, route5, save=True)
 
@@ -534,7 +534,7 @@ def test_graph_from_functions() -> None:
     _ = ox.utils_geo._consolidate_subdivide_geometry(poly)
 
     # graph from bounding box
-    _ = ox.utils_geo.bbox_from_point(location_point, project_utm=True, return_crs=True)
+    _ = ox.utils_geo.bbox_from_point(location_point, dist=1000, project_utm=True, return_crs=True)
     bbox = ox.utils_geo.bbox_from_point(location_point, dist=500)
     G = ox.graph_from_bbox(bbox, network_type="drive")
     G = ox.graph_from_bbox(bbox, network_type="drive_service", truncate_by_edge=True)
@@ -623,7 +623,7 @@ def test_features() -> None:
 
     # features_from_address - includes testing overpass settings and snapshot from 2019
     ox.settings.overpass_settings = '[out:json][timeout:200][date:"2019-10-28T19:20:00Z"]'
-    gdf = ox.features_from_address(address, tags=tags2)
+    gdf = ox.features_from_address(address, tags=tags2, dist=1000)
 
     # features_from_xml - tests error handling of clipped XMLs with incomplete geometry
     gdf = ox.features_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")

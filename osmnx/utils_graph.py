@@ -33,6 +33,7 @@ def graph_to_gdfs(
 @overload  # pragma: no cover
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
+    *,
     nodes: Literal[True],
     edges: Literal[True],
     node_geometry: bool = True,
@@ -45,6 +46,7 @@ def graph_to_gdfs(
 @overload  # pragma: no cover
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
+    *,
     nodes: Literal[True],
     edges: Literal[False],
     node_geometry: bool = True,
@@ -57,6 +59,7 @@ def graph_to_gdfs(
 @overload  # pragma: no cover
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
+    *,
     nodes: Literal[False],
     edges: Literal[True],
     node_geometry: bool = True,
@@ -93,6 +96,7 @@ def graph_to_gdfs(
 @overload  # pragma: no cover
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
+    *,
     nodes: Literal[True],
     edges: bool = True,
     node_geometry: bool = True,
@@ -105,6 +109,7 @@ def graph_to_gdfs(
 @overload  # pragma: no cover
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
+    *,
     nodes: Literal[False],
     edges: bool = True,
     node_geometry: bool = True,
@@ -115,6 +120,7 @@ def graph_to_gdfs(
 
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
+    *,
     nodes: bool = True,
     edges: bool = True,
     node_geometry: bool = True,
@@ -227,6 +233,7 @@ def graph_to_gdfs(
 def graph_from_gdfs(
     gdf_nodes: gpd.GeoDataFrame,
     gdf_edges: gpd.GeoDataFrame,
+    *,
     graph_attrs: dict[str, Any] | None = None,
 ) -> nx.MultiDiGraph:
     """
@@ -310,7 +317,12 @@ def graph_from_gdfs(
     return G
 
 
-def route_to_gdf(G: nx.MultiDiGraph, route: list[int], weight: str = "length") -> gpd.GeoDataFrame:
+def route_to_gdf(
+    G: nx.MultiDiGraph,
+    route: list[int],
+    *,
+    weight: str = "length",
+) -> gpd.GeoDataFrame:
     """
     Return a GeoDataFrame of the edges in a path, in order.
 
@@ -358,17 +370,17 @@ def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     return G
 
 
-def get_largest_component(G: nx.MultiDiGraph, strongly: bool = False) -> nx.MultiDiGraph:
+def get_largest_component(G: nx.MultiDiGraph, *, strongly: bool = False) -> nx.MultiDiGraph:
     """
-    Get subgraph of `G`'s largest weakly or strongly connected component.
+    Return subgraph of `G`'s largest weakly or strongly connected component.
 
     Parameters
     ----------
     G
         Input graph.
     strongly
-        If True, return the largest strongly (instead of weakly) connected
-        component.
+        If True, return the largest strongly connected component. Otherwise
+        return the largest weakly connected component.
 
     Returns
     -------
@@ -398,7 +410,7 @@ def get_largest_component(G: nx.MultiDiGraph, strongly: bool = False) -> nx.Mult
     return G
 
 
-def get_digraph(G: nx.MultiDiGraph, weight: str = "length") -> nx.DiGraph:
+def get_digraph(G: nx.MultiDiGraph, *, weight: str = "length") -> nx.DiGraph:
     """
     Convert MultiDiGraph to DiGraph.
 

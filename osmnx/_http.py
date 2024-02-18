@@ -25,7 +25,7 @@ _original_getaddrinfo = socket.getaddrinfo
 def _save_to_cache(
     url: str,
     response_json: dict[str, Any] | list[dict[str, Any]],
-    ok: bool,
+    ok: bool,  # noqa: FBT001
 ) -> None:
     """
     Save a HTTP response JSON object to a file in the cache folder.
@@ -100,25 +100,22 @@ def _url_in_cache(url: str) -> Path | None:
     return cache_filepath if cache_filepath.is_file() else None
 
 
-def _retrieve_from_cache(
-    url: str,
-    check_remark: bool = True,
-) -> dict[str, Any] | list[dict[str, Any]] | None:
+def _retrieve_from_cache(url: str) -> dict[str, Any] | list[dict[str, Any]] | None:
     """
     Retrieve a HTTP response JSON object from the cache if it exists.
+
+    Returns None if there is a server remark in the cached response.
 
     Parameters
     ----------
     url
         The URL of the request.
-    check_remark
-        If True, only return filepath if cached response does not have a
-        remark key indicating a server warning.
 
     Returns
     -------
     response_json
-        Cached response for `url` if it exists in the cache, otherwise None.
+        Cached response for `url` if it exists in the cache and does not
+        contain a server remark, otherwise None.
     """
     # if the tool is configured to use the cache
     if settings.use_cache:
@@ -129,11 +126,8 @@ def _retrieve_from_cache(
                 cache_filepath.read_text(encoding="utf-8"),
             )
 
-            # return None if check_remark is True and there is a server
-            # remark in the cached response
-            if (
-                check_remark and isinstance(response_json, dict) and "remark" in response_json
-            ):  # pragma: no cover
+            # return None if there is a server remark in the cached response
+            if isinstance(response_json, dict) and ("remark" in response_json):  # pragma: no cover
                 msg = (
                     f"Ignoring cache file {str(cache_filepath)!r} because "
                     f"it contains a remark: {response_json['remark']!r}"
@@ -149,6 +143,7 @@ def _retrieve_from_cache(
 
 
 def _get_http_headers(
+    *,
     user_agent: str | None = None,
     referer: str | None = None,
     accept_language: str | None = None,

@@ -2,7 +2,7 @@
 
 ## 2.0.0 (in development)
 
-Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123).
+Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123)
 
 - add type annotations to all public and private functions throughout package (#1107)
 - remove functionality previously deprecated in v1 (#1113 #1122)
@@ -10,12 +10,15 @@ Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123).
 - improve docstrings throughout package (#1116)
 - improve logging and warnings throughout package (#1125)
 - improve error messages throughout package (#1131)
-- increase add_node_elevations_google default batch_size to 512 to match Google's limit (#1115)
+- make optional function parameters keyword-only throughout package (#1134)
+- make dist function parameter required rather than optional throughout package (#1134)
 - make which_result function parameter consistently able to accept a list throughout package (#1113)
 - make utils_geo.bbox_from_point function return a tuple of floats for consistency with rest of package (#1113)
+- change add_node_elevations_google default batch_size to 512 to match Google's limit (#1115)
 - fix bug in \_downloader.\_save_to_cache function usage (#1107)
 - fix bug in handling requests ConnectionError when querying Overpass status endpoint (#1113)
 - fix minor bugs throughout to address inconsistencies revealed by type enforcement (#1107 #1114)
+- rename truncate.truncate_graph_dist max_dist argument to dist (#1134)
 - rename settings module's default_accept_language, default_referer, and default_user_agent (#1129)
 - rename osm_xml module to \_osm_xml to make it private, as all its functions are private (#1113)
 - rename private \_downloader module to \_http (#1114)

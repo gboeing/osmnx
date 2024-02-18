@@ -62,6 +62,7 @@ def geocode(query: str) -> tuple[float, float]:
 
 def geocode_to_gdf(
     query: str | dict[str, str] | list[str | dict[str, str]],
+    *,
     which_result: int | None | list[int | None] = None,
     by_osmid: bool = False,
 ) -> gpd.GeoDataFrame:
@@ -131,7 +132,7 @@ def geocode_to_gdf(
 def _geocode_query_to_gdf(
     query: str | dict[str, str],
     which_result: int | None,
-    by_osmid: bool,
+    by_osmid: bool,  # noqa: FBT001
 ) -> gpd.GeoDataFrame:
     """
     Geocode a single place query to a GeoDataFrame.

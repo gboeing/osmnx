@@ -37,6 +37,7 @@ def is_projected(crs: Any) -> bool:  # noqa: ANN401
 
 def project_geometry(
     geometry: Geometry,
+    *,
     crs: Any | None = None,  # noqa: ANN401
     to_crs: Any | None = None,  # noqa: ANN401
     to_latlong: bool = False,
@@ -78,6 +79,7 @@ def project_geometry(
 
 def project_gdf(
     gdf: gpd.GeoDataFrame,
+    *,
     to_crs: Any | None = None,  # noqa: ANN401
     to_latlong: bool = False,
 ) -> gpd.GeoDataFrame:
@@ -127,6 +129,7 @@ def project_gdf(
 
 def project_graph(
     G: nx.MultiDiGraph,
+    *,
     to_crs: Any | None = None,  # noqa: ANN401
     to_latlong: bool = False,
 ) -> nx.MultiDiGraph:
@@ -184,7 +187,7 @@ def project_graph(
 
     # STEP 3: REBUILD GRAPH
     # turn projected node/edge gdfs into a graph and update its CRS attribute
-    G_proj = utils_graph.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj, G.graph)
+    G_proj = utils_graph.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj, graph_attrs=G.graph)
     G_proj.graph["crs"] = to_crs
 
     msg = f"Projected graph with {len(G)} nodes and {len(G.edges)} edges"
