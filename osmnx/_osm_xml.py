@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import bz2
 import logging as lg
-import xml.sax
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
@@ -14,6 +13,8 @@ from xml.etree.ElementTree import Element
 from xml.etree.ElementTree import ElementTree
 from xml.etree.ElementTree import SubElement
 from xml.etree.ElementTree import parse as etree_parse
+from xml.sax import parse as sax_parse
+from xml.sax.handler import ContentHandler
 
 import networkx as nx
 import numpy as np
@@ -24,11 +25,13 @@ from . import utils_graph
 from ._version import __version__
 
 if TYPE_CHECKING:
+    from xml.sax.xmlreader import AttributesImpl
+
     import geopandas as gpd
     import pandas as pd
 
 
-class _OSMContentHandler(xml.sax.handler.ContentHandler):
+class _OSMContentHandler(ContentHandler):
     """
     SAX content handler for OSM XML.
 
@@ -41,22 +44,22 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
         self._element: dict[str, Any] | None = None
         self.object: dict[str, Any] = {"elements": []}
 
-    def startElement(self, name: str, attrs: xml.sax.xmlreader.AttributesImpl) -> None:  # noqa: ANN101,N802
+    def startElement(self, name: str, attrs: AttributesImpl) -> None:  # noqa: ANN101,N802
+        float_attrs = {"lat", "lon"}
+        int_attrs = {"id", "uid", "version", "changeset"}
+        meta_attrs = {"version", "generator"}
+
         if name == "osm":
-            self.object.update({k: v for k, v in attrs.items() if k in {"version", "generator"}})
+            self.object.update({k: v for k, v in attrs.items() if k in meta_attrs})
 
         elif name in {"node", "way"}:
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
-            self._element.update({k: float(v) for k, v in attrs.items() if k in {"lat", "lon"}})
-            self._element.update(
-                {k: int(v) for k, v in attrs.items() if k in {"id", "uid", "version", "changeset"}},
-            )
+            self._element.update({k: float(v) for k, v in attrs.items() if k in float_attrs})
+            self._element.update({k: int(v) for k, v in attrs.items() if k in int_attrs})
 
         elif name == "relation":
             self._element = dict(type=name, tags={}, members=[], **attrs)
-            self._element.update(
-                {k: int(v) for k, v in attrs.items() if k in {"id", "uid", "version", "changeset"}},
-            )
+            self._element.update({k: int(v) for k, v in attrs.items() if k in int_attrs})
 
         elif name == "tag":
             self._element["tags"].update({attrs["k"]: attrs["v"]})  # type: ignore[index]
@@ -74,9 +77,9 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
             self.object["elements"].append(self._element)
 
 
-def _overpass_json_from_file(filepath: str | Path, encoding: str) -> dict[str, Any]:
+def _overpass_json_from_xml(filepath: str | Path, encoding: str) -> dict[str, Any]:
     """
-    Read OSM XML from file and return Overpass-like JSON.
+    Read OSM XML data from file and return Overpass-like JSON.
 
     Parameters
     ----------
@@ -115,7 +118,7 @@ def _overpass_json_from_file(filepath: str | Path, encoding: str) -> dict[str, A
     # parse the XML to Overpass-like JSON
     with _opener(Path(filepath), encoding) as f:
         handler = _OSMContentHandler()
-        xml.sax.parse(f, handler)  # noqa: S317
+        sax_parse(f, handler)  # noqa: S317
         return handler.object
 
 

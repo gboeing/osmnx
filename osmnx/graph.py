@@ -504,7 +504,7 @@ def graph_from_xml(
     G
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [_osm_xml._overpass_json_from_file(filepath, encoding)]
+    response_jsons = [_osm_xml._overpass_json_from_xml(filepath, encoding)]
 
     # create graph using this response JSON
     G = _create_graph(response_jsons, retain_all, bidirectional)

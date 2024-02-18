@@ -373,7 +373,7 @@ def features_from_xml(
     gdf
     """
     # transmogrify OSM XML file to JSON then create GeoDataFrame from it
-    response_jsons = [_osm_xml._overpass_json_from_file(filepath, encoding)]
+    response_jsons = [_osm_xml._overpass_json_from_xml(filepath, encoding)]
     return _create_gdf(response_jsons, polygon, tags)
 
 
