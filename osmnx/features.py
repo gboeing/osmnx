@@ -397,7 +397,7 @@ def _create_gdf(  # noqa: PLR0912
     polygon
         Optional spatial boundaries to filter final GeoDataFrame.
     tags
-        Optioanl dict of tags to filter the final GeoDataFrame.
+        Optional dict of tags to filter the final GeoDataFrame.
 
     Returns
     -------
