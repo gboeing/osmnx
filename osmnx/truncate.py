@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 def truncate_graph_dist(
     G: nx.MultiDiGraph,
     source_node: int,
-    max_dist: float,
+    dist: float,
     *,
     weight: str = "length",
     retain_all: bool = False,
@@ -36,9 +36,9 @@ def truncate_graph_dist(
         Input graph.
     source_node
         Node from which to measure network distances to all other nodes.
-    max_dist
-        Remove every node in the graph that is greater than this distance (in
-        same units as `weight` attribute) along the network from
+    dist
+        Remove every node in the graph that is greater than `dist` distance
+        (in same units as `weight` attribute) along the network from
         `source_node`.
     weight
         Graph edge attribute to use to measure distance.
@@ -54,8 +54,8 @@ def truncate_graph_dist(
     # get the shortest distance between the node and every other node
     distances = nx.shortest_path_length(G, source=source_node, weight=weight)
 
-    # then identify every node further than max_dist away
-    distant_nodes = {k for k, v in distances.items() if v > max_dist}
+    # then identify every node further than dist away
+    distant_nodes = {k for k, v in distances.items() if v > dist}
     unreachable_nodes = G.nodes - distances.keys()
 
     # make a copy to not mutate original graph object caller passed in
