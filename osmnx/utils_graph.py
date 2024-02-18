@@ -372,15 +372,15 @@ def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
 def get_largest_component(G: nx.MultiDiGraph, *, strongly: bool = False) -> nx.MultiDiGraph:
     """
-    Get subgraph of `G`'s largest weakly or strongly connected component.
+    Return subgraph of `G`'s largest weakly or strongly connected component.
 
     Parameters
     ----------
     G
         Input graph.
     strongly
-        If True, return the largest strongly (instead of weakly) connected
-        component.
+        If True, return the largest strongly connected component. Otherwise
+        return the largest weakly connected component.
 
     Returns
     -------

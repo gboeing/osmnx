@@ -50,7 +50,7 @@ def get_colors(
     alpha: float | None = None,
 ) -> list[str]:
     """
-    Get `n` evenly-spaced colors from a matplotlib colormap.
+    Return `n` evenly-spaced colors from a matplotlib colormap.
 
     Parameters
     ----------
@@ -90,7 +90,7 @@ def get_node_colors_by_attr(
     equal_size: bool = False,
 ) -> pd.Series:  # type: ignore[type-arg]
     """
-    Get colors based on nodes' numerical attribute values.
+    Return colors based on nodes' numerical attribute values.
 
     Parameters
     ----------
@@ -134,7 +134,7 @@ def get_edge_colors_by_attr(
     equal_size: bool = False,
 ) -> pd.Series:  # type: ignore[type-arg]
     """
-    Get colors based on edges' numerical attribute values.
+    Return colors based on edges' numerical attribute values.
 
     Parameters
     ----------
