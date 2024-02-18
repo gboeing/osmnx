@@ -149,7 +149,7 @@ def orientation_entropy(
         Number of bins. For example, if `num_bins=36` is provided, then each
         bin will represent 10 degrees around the compass.
     min_length
-        Ignore edges with `length` attributes less than `min_length`. Useful
+        Ignore edges with "length" attributes less than `min_length`. Useful
         to ignore the noise of many very short edges.
     weight
         If not None, weight edges' bearings by this (non-null) edge attribute.
@@ -165,16 +165,15 @@ def orientation_entropy(
     if scipy is None:  # pragma: no cover
         msg = "scipy must be installed as an optional dependency to calculate entropy."
         raise ImportError(msg)
-    bin_counts, _ = _bearings_distribution(Gu, num_bins, min_length=min_length, weight=weight)
+    bin_counts, _ = _bearings_distribution(Gu, num_bins, min_length, weight)
     entropy: float = scipy.stats.entropy(bin_counts)
     return entropy
 
 
 def _extract_edge_bearings(
     Gu: nx.MultiGraph,
-    *,
-    min_length: float = 0,
-    weight: str | None = None,
+    min_length: float,
+    weight: str | None,
 ) -> npt.NDArray[np.float64]:
     """
     Extract undirected graph's bidirectional edge bearings.
@@ -224,9 +223,8 @@ def _extract_edge_bearings(
 def _bearings_distribution(
     Gu: nx.MultiGraph,
     num_bins: int,
-    *,
-    min_length: float = 0,
-    weight: str | None = None,
+    min_length: float,
+    weight: str | None,
 ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
     """
     Compute distribution of bearings across evenly spaced bins.
@@ -260,7 +258,7 @@ def _bearings_distribution(
     n = num_bins * 2
     bins = np.arange(n + 1) * 360 / n
 
-    bearings = _extract_edge_bearings(Gu, min_length=min_length, weight=weight)
+    bearings = _extract_edge_bearings(Gu, min_length, weight)
     count, bin_edges = np.histogram(bearings, bins=bins)
 
     # move last bin to front, so eg 0.01 degrees and 359.99 degrees will be
