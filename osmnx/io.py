@@ -245,19 +245,13 @@ def load_graphml(
     return G
 
 
-def save_graph_xml(  # noqa: PLR0913
-    data: nx.MultiDiGraph | tuple[gpd.GeoDataFrame, gpd.GeoDataFrame],
+def save_graph_xml(
+    G: nx.MultiDiGraph,
     *,
     filepath: str | Path | None = None,
-    node_tags: list[str] = settings.osm_xml_node_tags,
-    node_attrs: list[str] = settings.osm_xml_node_attrs,
-    edge_tags: list[str] = settings.osm_xml_way_tags,
-    edge_attrs: list[str] = settings.osm_xml_way_attrs,
     oneway: bool = False,
     merge_edges: bool = True,
     edge_tag_aggs: list[tuple[str, str]] | None = None,
-    api_version: str = "0.6",
-    precision: int = 6,
 ) -> None:
     """
     Save graph to disk as an OSM-formatted XML .osm file.
@@ -284,31 +278,21 @@ def save_graph_xml(  # noqa: PLR0913
     >>> utw = ox.settings.useful_tags_way
     >>> oxwa = ox.settings.osm_xml_way_attrs
     >>> oxwt = ox.settings.osm_xml_way_tags
-    >>> utn = list(set(utn + oxna + oxnt))
-    >>> utw = list(set(utw + oxwa + oxwt))
     >>> ox.settings.all_oneway = True
-    >>> ox.settings.useful_tags_node = utn
-    >>> ox.settings.useful_tags_way = utw
+    >>> ox.settings.useful_tags_node = list(set(utn + oxna + oxnt))
+    >>> ox.settings.useful_tags_way = list(set(utw + oxwa + oxwt))
     >>> G = ox.graph_from_place('Piedmont, CA, USA', network_type='drive')
     >>> ox.save_graph_xml(G, filepath='./data/graph.osm')
 
     Parameters
     ----------
-    data
-        Either a MultiDiGraph or (gdf_nodes, gdf_edges) tuple.
+    G
+        The graph to save.
     filepath
         Path to the .osm file including extension. If None, use default
         `settings.data_folder/graph.osm`.
-    node_tags
-        OSM node tags to include in output OSM XML.
-    node_attrs
-        OSM node attributes to include in output OSM XML.
-    edge_tags
-        OSM way tags to include in output OSM XML.
-    edge_attrs
-        OSM way attributes to include in output OSM XML.
     oneway
-        The default oneway value used to fill this tag where missing.
+        The default "oneway" value used to fill this tag where missing.
     merge_edges
         If True, merge graph edges such that each OSM way has one entry and
         one entry only in the OSM XML. Otherwise, every OSM way will have a
@@ -323,28 +307,12 @@ def save_graph_xml(  # noqa: PLR0913
         aggregate the lengths of the individual component edges. Otherwise,
         the length attribute will simply reflect the length of the first edge
         associated with the way.
-    api_version
-        OpenStreetMap API version to save in the XML file header.
-    precision
-        Number of decimal places to round latitude and longitude values.
 
     Returns
     -------
     None
     """
-    _osm_xml._save_graph_xml(
-        data,
-        filepath,
-        node_tags,
-        node_attrs,
-        edge_tags,
-        edge_attrs,
-        oneway,
-        merge_edges,
-        edge_tag_aggs,
-        api_version,
-        precision,
-    )
+    _osm_xml._save_graph_xml(G, filepath, oneway, merge_edges, edge_tag_aggs)
 
 
 def _convert_graph_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.MultiDiGraph:

@@ -122,39 +122,25 @@ def _overpass_json_from_xml(filepath: str | Path, encoding: str) -> dict[str, An
         return handler.object
 
 
-def _save_graph_xml(  # noqa: PLR0913
-    data: nx.MultiDiGraph | tuple[gpd.GeoDataFrame, gpd.GeoDataFrame],
+def _save_graph_xml(
+    G: nx.MultiDiGraph,
     filepath: str | Path | None,
-    node_tags: list[str],
-    node_attrs: list[str],
-    edge_tags: list[str],
-    edge_attrs: list[str],
     oneway: bool,  # noqa: FBT001
     merge_edges: bool,  # noqa: FBT001
     edge_tag_aggs: list[tuple[str, str]] | None,
-    api_version: str,
-    precision: int,
 ) -> None:
     """
     Save graph to disk as an OSM-formatted XML .osm file.
 
     Parameters
     ----------
-    data
-        Either a MultiDiGraph or (gdf_nodes, gdf_edges) tuple.
+    G
+        The graph to save.
     filepath
         Path to the .osm file including extension. If None, use default
         `settings.data_folder/graph.osm`.
-    node_tags
-        OSM node tags to include in output OSM XML.
-    node_attrs
-        OSM node attributes to include in output OSM XML.
-    edge_tags
-        OSM way tags to include in output OSM XML.
-    edge_attrs
-        OSM way attributes to include in output OSM XML.
     oneway
-        The default oneway value used to fill this tag where missing.
+        The default "oneway" value used to fill this tag where missing.
     merge_edges
         If True, merge graph edges such that each OSM way has one entry and
         one entry only in the OSM XML. Otherwise, every OSM way will have a
@@ -169,21 +155,11 @@ def _save_graph_xml(  # noqa: PLR0913
         aggregate the lengths of the individual component edges. Otherwise,
         the length attribute will simply reflect the length of the first edge
         associated with the way.
-    api_version
-        OpenStreetMap API version to save in the XML file header.
-    precision
-        Number of decimal places to round latitude and longitude values.
 
     Returns
     -------
     None
     """
-    # default filepath if none was provided
-    filepath = Path(settings.data_folder) / "graph.osm" if filepath is None else Path(filepath)
-
-    # if save folder does not already exist, create it
-    filepath.parent.mkdir(parents=True, exist_ok=True)
-
     if not settings.all_oneway:
         msg = (
             "For the `save_graph_xml` function to behave properly, the graph "
@@ -191,19 +167,23 @@ def _save_graph_xml(  # noqa: PLR0913
         )
         warn(msg, category=UserWarning, stacklevel=2)
 
-    if isinstance(data, nx.MultiDiGraph):
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(
-            data,
-            node_geometry=False,
-            fill_edge_geometry=False,
-        )
-    elif isinstance(data, tuple):
-        gdf_nodes, gdf_edges = data
-    else:
-        msg = "`data` must be a MultiDiGraph or a tuple of node/edge GeoDataFrames."
-        raise TypeError(msg)
+    # current OSM editing API version: https://wiki.openstreetmap.org/wiki/API
+    api_version = "0.6"
 
-    # rename columns per osm specification
+    # set precision to round lat/lon decimal values
+    precision = 6
+
+    # default filepath if None was provided
+    filepath = Path(settings.data_folder) / "graph.osm" if filepath is None else Path(filepath)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+
+    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(
+        G,
+        node_geometry=False,
+        fill_edge_geometry=False,
+    )
+
+    # rename columns per OSM specification
     gdf_nodes = gdf_nodes.rename(columns={"x": "lon", "y": "lat"})
     gdf_nodes["lon"] = gdf_nodes["lon"].round(precision)
     gdf_nodes["lat"] = gdf_nodes["lat"].round(precision)
@@ -216,12 +196,12 @@ def _save_graph_xml(  # noqa: PLR0913
         gdf_edges = gdf_edges.reset_index().reset_index().rename(columns={"index": "id"})
 
     # add default values for required attributes
-    for table in (gdf_nodes, gdf_edges):
-        table["uid"] = "1"
-        table["user"] = "OSMnx"
-        table["version"] = "1"
-        table["changeset"] = "1"
-        table["timestamp"] = utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}")
+    for gdf in (gdf_nodes, gdf_edges):
+        gdf["uid"] = "1"
+        gdf["user"] = "OSMnx"
+        gdf["version"] = "1"
+        gdf["changeset"] = "1"
+        gdf["timestamp"] = utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}")
 
     # string replacement to meet OSM XML spec
     if "oneway" in gdf_edges.columns:
@@ -229,19 +209,24 @@ def _save_graph_xml(  # noqa: PLR0913
 
     # initialize XML tree with an OSM root element then append nodes/edges
     root = Element("osm", attrib={"version": api_version, "generator": f"OSMnx {__version__}"})
-    root = _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags)
+    root = _append_nodes_xml_tree(
+        root,
+        gdf_nodes,
+        settings.osm_xml_node_attrs,
+        settings.osm_xml_node_tags,
+    )
     root = _append_edges_xml_tree(
         root,
         gdf_edges,
-        edge_attrs,
-        edge_tags,
+        settings.osm_xml_way_attrs,
+        settings.osm_xml_way_tags,
         edge_tag_aggs,
         merge_edges,
     )
 
     # write to disk
     ElementTree(root).write(filepath, encoding="utf-8", xml_declaration=True)
-    msg = f"Saved graph as .osm file at {filepath!r}"
+    msg = f"Saved graph as XML file at {filepath!r}"
     utils.log(msg, level=lg.INFO)
 
 

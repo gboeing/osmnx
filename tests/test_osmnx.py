@@ -172,11 +172,7 @@ def test_osm_xml() -> None:
     # test osm xml output merge edges
     default_all_oneway = ox.settings.all_oneway
     ox.settings.all_oneway = True
-    ox.io.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")], precision=5)
-
-    # test osm xml output from gdfs
-    nodes, edges = ox.graph_to_gdfs(G)
-    ox.io.save_graph_xml((nodes, edges))
+    ox.io.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")])
 
     # test ordered nodes from way
     df_uv = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
