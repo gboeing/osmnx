@@ -132,6 +132,8 @@ def _save_graph_xml(
     """
     Save graph to disk as an OSM-formatted XML .osm file.
 
+    See format notes at https://wiki.openstreetmap.org/wiki/OSM_XML
+
     Parameters
     ----------
     G
@@ -167,35 +169,33 @@ def _save_graph_xml(
         )
         warn(msg, category=UserWarning, stacklevel=2)
 
-    # current OSM editing API version: https://wiki.openstreetmap.org/wiki/API
-    api_version = "0.6"
-
-    # set precision to round lat/lon decimal values
-    precision = 6
-
     # default filepath if None was provided
     filepath = Path(settings.data_folder) / "graph.osm" if filepath is None else Path(filepath)
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
+    # convert graph to node/edge GeoDataFrames for saving
     gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(
         G,
         node_geometry=False,
         fill_edge_geometry=False,
     )
 
-    # rename columns per OSM specification
-    gdf_nodes = gdf_nodes.rename(columns={"x": "lon", "y": "lat"})
-    gdf_nodes["lon"] = gdf_nodes["lon"].round(precision)
-    gdf_nodes["lat"] = gdf_nodes["lat"].round(precision)
-    gdf_nodes = gdf_nodes.reset_index().rename(columns={"osmid": "id"})
-    if "id" in gdf_edges.columns:
-        gdf_edges = gdf_edges[[col for col in gdf_edges if col != "id"]]
-    if "uniqueid" in gdf_edges.columns:
-        gdf_edges = gdf_edges.rename(columns={"uniqueid": "id"})
-    else:
-        gdf_edges = gdf_edges.reset_index().reset_index().rename(columns={"index": "id"})
+    # reset osmid index then rename osmid column to id, then rename x/y
+    # columns to lat/lon per OSM XML spec, then round lat/lon columns to 6
+    # decimals (approx 5 to 10 cm resolution)
+    col_names = {"osmid": "id", "x": "lon", "y": "lat"}
+    gdf_nodes = gdf_nodes.reset_index().rename(columns=col_names)
+    gdf_nodes[["lon", "lat"]] = gdf_nodes[["lon", "lat"]].round(6)
 
-    # add default values for required attributes
+    # convert oneway bools to strings to meet OSM XML spec
+    if "oneway" in gdf_edges.columns:
+        gdf_edges["oneway"] = gdf_edges["oneway"].fillna(oneway).replace({True: "yes", False: "no"})
+
+    # if id column doesn't exist or isn't unique, create unique id values
+    if not ("id" in gdf_edges.columns and gdf_edges["id"].is_unique):
+        gdf_edges["id"] = range(len(gdf_edges))
+
+    # add default values for required attributes per OSM XML spec
     for gdf in (gdf_nodes, gdf_edges):
         gdf["uid"] = "1"
         gdf["user"] = "OSMnx"
@@ -203,26 +203,11 @@ def _save_graph_xml(
         gdf["changeset"] = "1"
         gdf["timestamp"] = utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}")
 
-    # string replacement to meet OSM XML spec
-    if "oneway" in gdf_edges.columns:
-        gdf_edges["oneway"] = gdf_edges["oneway"].fillna(oneway).replace({True: "yes", False: "no"})
-
     # initialize XML tree with an OSM root element then append nodes/edges
-    root = Element("osm", attrib={"version": api_version, "generator": f"OSMnx {__version__}"})
-    root = _append_nodes_xml_tree(
-        root,
-        gdf_nodes,
-        settings.osm_xml_node_attrs,
-        settings.osm_xml_node_tags,
-    )
-    root = _append_edges_xml_tree(
-        root,
-        gdf_edges,
-        settings.osm_xml_way_attrs,
-        settings.osm_xml_way_tags,
-        edge_tag_aggs,
-        merge_edges,
-    )
+    # current OSM editing API version: https://wiki.openstreetmap.org/wiki/API
+    root = Element("osm", attrib={"version": "0.6", "generator": f"OSMnx {__version__}"})
+    root = _append_nodes_xml_tree(root, gdf_nodes)
+    root = _append_edges_xml_tree(root, gdf_edges, edge_tag_aggs, merge_edges)
 
     # write to disk
     ElementTree(root).write(filepath, encoding="utf-8", xml_declaration=True)
@@ -233,8 +218,6 @@ def _save_graph_xml(
 def _append_nodes_xml_tree(
     root: Element,
     gdf_nodes: gpd.GeoDataFrame,
-    node_attrs: list[str],
-    node_tags: list[str],
 ) -> Element:
     """
     Append nodes to an XML tree.
@@ -242,19 +225,17 @@ def _append_nodes_xml_tree(
     Parameters
     ----------
     root
-        The XML tree.
+        The input XML tree.
     gdf_nodes
         A GeoDataFrame of graph nodes.
-    node_attrs
-        OSM way attributes to include in output OSM XML.
-    node_tags
-        OSM way tags to include in output OSM XML.
 
     Returns
     -------
     root
-        The XML tree with nodes appended.
+        The updated XML tree with nodes appended.
     """
+    node_attrs = settings.osm_xml_node_attrs
+    node_tags = settings.osm_xml_node_tags
     for _, row in gdf_nodes.iterrows():
         row_str = row.dropna().astype(str)
         node = SubElement(root, "node", attrib=row_str[node_attrs].to_dict())
@@ -262,6 +243,73 @@ def _append_nodes_xml_tree(
         for tag in node_tags:
             if tag in row_str:
                 SubElement(node, "tag", attrib={"k": tag, "v": row_str[tag]})
+    return root
+
+
+def _append_edges_xml_tree(
+    root: Element,
+    gdf_edges: gpd.GeoDataFrame,
+    edge_tag_aggs: list[tuple[str, str]] | None,
+    merge_edges: bool,  # noqa: FBT001
+) -> Element:
+    """
+    Append edges to an XML tree.
+
+    Parameters
+    ----------
+    root
+        The input XML tree.
+    gdf_edges
+        A GeoDataFrame of graph edges.
+    edge_tag_aggs
+        Useful only if `merge_edges` is True, this argument allows the user to
+        specify edge attributes to aggregate such that the merged OSM way
+        entry tags accurately represent the sum total of their component edge
+        attributes. For example, if the user wants the OSM way to have a
+        "length" attribute, the user must specify
+        `edge_tag_aggs=[('length', 'sum')]` in order to tell this function to
+        aggregate the lengths of the individual component edges. Otherwise,
+        the length attribute will simply reflect the length of the first edge
+        associated with the way.
+    merge_edges
+        If True, merge graph edges such that each OSM way has one entry and
+        one entry only in the OSM XML. Otherwise, every OSM way will have a
+        separate entry for each node pair it contains.
+
+    Returns
+    -------
+    root
+        The updated XML tree with edges appended.
+    """
+    edge_attrs = settings.osm_xml_way_attrs
+    edge_tags = settings.osm_xml_way_tags
+
+    gdf_edges = gdf_edges.reset_index()
+    if merge_edges:
+        for _, all_way_edges in gdf_edges.groupby("id"):
+            first = all_way_edges.iloc[0].dropna().astype(str)
+            edge = SubElement(root, "way", attrib=first[edge_attrs].dropna().to_dict())
+            _append_nodes_as_edge_attrs(
+                xml_edge=edge,
+                sample_edge=first.to_dict(),
+                all_edges_df=all_way_edges,
+            )
+            _append_merged_edge_attrs(
+                xml_edge=edge,
+                sample_edge=first.to_dict(),
+                edge_tags=edge_tags,
+                edge_tag_aggs=edge_tag_aggs,
+                all_edges_df=all_way_edges,
+            )
+
+    else:
+        _create_way_for_each_edge(
+            root=root,
+            gdf_edges=gdf_edges,
+            edge_attrs=edge_attrs,
+            edge_tags=edge_tags,
+        )
+
     return root
 
 
@@ -396,76 +444,6 @@ def _append_nodes_as_edge_attrs(
             ordered_nodes = [first_node, *ordered_nodes]
         for node in ordered_nodes:
             SubElement(xml_edge, "nd", attrib={"ref": str(node)})
-
-
-def _append_edges_xml_tree(
-    root: Element,
-    gdf_edges: gpd.GeoDataFrame,
-    edge_attrs: list[str],
-    edge_tags: list[str],
-    edge_tag_aggs: list[tuple[str, str]] | None,
-    merge_edges: bool,  # noqa: FBT001
-) -> Element:
-    """
-    Append edges to an XML tree.
-
-    Parameters
-    ----------
-    root
-        An XML tree.
-    gdf_edges
-        A GeoDataFrame of graph edges.
-    edge_attrs
-        OSM way attributes to include in output OSM XML.
-    edge_tags
-        OSM way tags to include in output OSM XML.
-    edge_tag_aggs
-        Useful only if `merge_edges` is True, this argument allows the user to
-        specify edge attributes to aggregate such that the merged OSM way
-        entry tags accurately represent the sum total of their component edge
-        attributes. For example, if the user wants the OSM way to have a
-        "length" attribute, the user must specify
-        `edge_tag_aggs=[('length', 'sum')]` in order to tell this function to
-        aggregate the lengths of the individual component edges. Otherwise,
-        the length attribute will simply reflect the length of the first edge
-        associated with the way.
-    merge_edges
-        If True, merge graph edges such that each OSM way has one entry and
-        one entry only in the OSM XML. Otherwise, every OSM way will have a
-        separate entry for each node pair it contains.
-
-    Returns
-    -------
-    root
-        XML tree with edges appended.
-    """
-    gdf_edges = gdf_edges.reset_index()
-    if merge_edges:
-        for _, all_way_edges in gdf_edges.groupby("id"):
-            first = all_way_edges.iloc[0].dropna().astype(str)
-            edge = SubElement(root, "way", attrib=first[edge_attrs].dropna().to_dict())
-            _append_nodes_as_edge_attrs(
-                xml_edge=edge,
-                sample_edge=first.to_dict(),
-                all_edges_df=all_way_edges,
-            )
-            _append_merged_edge_attrs(
-                xml_edge=edge,
-                sample_edge=first.to_dict(),
-                edge_tags=edge_tags,
-                edge_tag_aggs=edge_tag_aggs,
-                all_edges_df=all_way_edges,
-            )
-
-    else:
-        _create_way_for_each_edge(
-            root=root,
-            gdf_edges=gdf_edges,
-            edge_attrs=edge_attrs,
-            edge_tags=edge_tags,
-        )
-
-    return root
 
 
 def _get_unique_nodes_ordered_from_way(df_way_edges: pd.DataFrame) -> list[Any]:
