@@ -18,6 +18,7 @@ from xml.sax.handler import ContentHandler
 
 import networkx as nx
 import numpy as np
+import pandas as pd
 
 from . import settings
 from . import utils
@@ -28,7 +29,6 @@ if TYPE_CHECKING:
     from xml.sax.xmlreader import AttributesImpl
 
     import geopandas as gpd
-    import pandas as pd
 
 
 class _OSMContentHandler(ContentHandler):
@@ -183,8 +183,8 @@ def _save_graph_xml(
     # reset osmid index then rename osmid column to id, then rename x/y
     # columns to lat/lon per OSM XML spec, then round lat/lon columns to 6
     # decimals (approx 5 to 10 cm resolution)
-    col_names = {"osmid": "id", "x": "lon", "y": "lat"}
-    gdf_nodes = gdf_nodes.reset_index().rename(columns=col_names)
+    cols_rename = {"osmid": "id", "x": "lon", "y": "lat"}
+    gdf_nodes = gdf_nodes.reset_index().rename(columns=cols_rename)
     gdf_nodes[["lon", "lat"]] = gdf_nodes[["lon", "lat"]].round(6)
 
     # convert oneway bools to strings to meet OSM XML spec
@@ -203,10 +203,15 @@ def _save_graph_xml(
         gdf["changeset"] = "1"
         gdf["timestamp"] = utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}")
 
+    # retain only gdf columns corresponding to configured node attrs and tags
+    node_attrs = set(settings.osm_xml_node_attrs)
+    node_tags = set(settings.osm_xml_node_tags)
+    gdf_nodes = gdf_nodes[list(node_attrs | node_tags)]
+
     # initialize XML tree with an OSM root element then append nodes/edges
     # current OSM editing API version: https://wiki.openstreetmap.org/wiki/API
     root = Element("osm", attrib={"version": "0.6", "generator": f"OSMnx {__version__}"})
-    root = _append_nodes_xml_tree(root, gdf_nodes)
+    root = _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags)
     root = _append_edges_xml_tree(root, gdf_edges, edge_tag_aggs, merge_edges)
 
     # write to disk
@@ -218,31 +223,42 @@ def _save_graph_xml(
 def _append_nodes_xml_tree(
     root: Element,
     gdf_nodes: gpd.GeoDataFrame,
+    node_attrs: set[str],
+    node_tags: set[str],
 ) -> Element:
     """
-    Append nodes to an XML tree.
+    Add graph nodes as sub elements of an XML parent element.
 
     Parameters
     ----------
     root
-        The input XML tree.
+        The XML parent element.
     gdf_nodes
         A GeoDataFrame of graph nodes.
+    node_attrs
+        OSM node attributes to include for each node.
+    node_tags
+        OSM node tags to add as sub elements of each node.
 
     Returns
     -------
     root
-        The updated XML tree with nodes appended.
+        Updated XML parent element with nodes sub elements.
     """
-    node_attrs = settings.osm_xml_node_attrs
-    node_tags = settings.osm_xml_node_tags
-    for _, row in gdf_nodes.iterrows():
-        row_str = row.dropna().astype(str)
-        node = SubElement(root, "node", attrib=row_str[node_attrs].to_dict())
+    # convert gdf rows to generator of col:val dicts with null vals removed
+    rows = gdf_nodes.where(gdf_nodes.isna(), gdf_nodes.astype(str)).to_dict(orient="records")
+    nodes = ({k: v for k, v in d.items() if pd.notna(v)} for d in rows)
 
-        for tag in node_tags:
-            if tag in row_str:
-                SubElement(node, "tag", attrib={"k": tag, "v": row_str[tag]})
+    # add each node attr dict as a SubElement of root
+    for node in nodes:
+        node_attr = {k: node[k] for k in node.keys() & node_attrs}
+        se = SubElement(root, "node", attrib=node_attr)
+
+        # add each tag key:value dict as a SubElement of the node SubElement
+        for k in node.keys() & node_tags:
+            node_tag = {"k": k, "v": node[k]}
+            _ = SubElement(se, "tag", attrib=node_tag)
+
     return root
 
 
