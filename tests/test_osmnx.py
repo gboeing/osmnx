@@ -15,7 +15,6 @@ import os
 import tempfile
 from collections import OrderedDict
 from pathlib import Path
-from xml.etree import ElementTree
 
 import geopandas as gpd
 import networkx as nx
@@ -172,24 +171,14 @@ def test_osm_xml() -> None:
     # test osm xml output merge edges
     default_all_oneway = ox.settings.all_oneway
     ox.settings.all_oneway = True
-    ox.io.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")])
-
-    # test ordered nodes from way
-    df_uv = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
-    ordered_nodes = ox._osm_xml._get_unique_nodes_ordered_from_way(df_uv)
-    assert ordered_nodes == [2, 3, 10, 5, 8]
+    ox.io.save_graph_xml(G, merge_edges=True, way_tags_agg={"length": "sum"})
 
     # test roundabout handling
     default_overpass_settings = ox.settings.overpass_settings
     ox.settings.overpass_settings += '[date:"2023-04-01T00:00:00Z"]'
     point = (39.0290346, -84.4696884)
     G = ox.graph_from_point(point, dist=500, dist_type="bbox", network_type="drive", simplify=False)
-    gdf_edges = ox.graph_to_gdfs(G, nodes=False)
-    gdf_way = gdf_edges[gdf_edges["osmid"] == 570883705]  # roundabout
-    first = gdf_way.iloc[0].dropna().astype(str)
-    root = ElementTree.Element("osm", attrib={"version": "0.6", "generator": "OSMnx"})
-    edge = ElementTree.SubElement(root, "way")
-    ox._osm_xml._append_nodes_as_edge_attrs(edge, first.to_dict(), gdf_way)
+    ox.io.save_graph_xml(G, merge_edges=True)
 
     # restore settings
     ox.settings.overpass_settings = default_overpass_settings

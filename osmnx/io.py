@@ -1,4 +1,4 @@
-"""Serialize graphs to/from files on disk."""
+"""Read/write graphs from/to files on disk."""
 
 from __future__ import annotations
 
@@ -251,23 +251,27 @@ def save_graph_xml(
     filepath: str | Path | None = None,
     oneway: bool = False,
     merge_edges: bool = True,
-    edge_tag_aggs: list[tuple[str, str]] | None = None,
+    way_tags_agg: dict[str, Any] | None = None,
 ) -> None:
     """
-    Save graph to disk as an OSM-formatted XML .osm file.
+    Save graph to disk as an OSM XML file.
 
-    This function exists only to allow serialization to the .osm file format
+    This function exists only to allow serialization to the OSM XML format
     for applications that require it, and has constraints to conform to that.
-    As such, this function has a limited use case which does not include
-    saving/loading graphs for subsequent OSMnx analysis. To save/load graphs
-    to/from disk for later use in OSMnx, use the `io.save_graphml` and
-    `io.load_graphml` functions instead. To load a graph from a .osm file that
-    you have downloaded or generated elsewhere, use the `graph.graph_from_xml`
+    As such, it has a limited use case which does not include saving/loading
+    graphs for subsequent OSMnx analysis. To save/load graphs to/from disk for
+    later use in OSMnx, use the `io.save_graphml` and `io.load_graphml`
+    functions instead. To load a graph from an OSM XML file that you have
+    downloaded or generated elsewhere, use the `graph.graph_from_xml`
     function.
 
-    Note: for large networks this function can take a long time to run. Before
-    using this function, make sure you configured OSMnx as described in the
-    example below when you created the graph.
+    Graph must be unsimplified to save as OSM XML. Otherwise, one edge can
+    comprise multiple OSM ways, making it impossible to group edges by way ID.
+    And graph should be created with `ox.settings.all_oneway=True` for this
+    function to behave properly. Due to the iteration required to generate the
+    XML sub-elements, this function can take a long time to run for large
+    graphs. Before using this function, make sure you configured OSMnx as
+    described in the example below when you created the graph.
 
     Example
     -------
@@ -289,7 +293,7 @@ def save_graph_xml(
     G
         The graph to save.
     filepath
-        Path to the .osm file including extension. If None, use default
+        Path to the OSM XML file including extension. If None, use default
         `settings.data_folder/graph.osm`.
     oneway
         The default "oneway" value used to fill this tag where missing.
@@ -297,13 +301,13 @@ def save_graph_xml(
         If True, merge graph edges such that each OSM way has one entry and
         one entry only in the OSM XML. Otherwise, every OSM way will have a
         separate entry for each node pair it contains.
-    edge_tag_aggs
+    way_tags_agg
         Useful only if `merge_edges` is True, this argument allows the user to
         specify edge attributes to aggregate such that the merged OSM way
         entry tags accurately represent the sum total of their component edge
         attributes. For example, if the user wants the OSM way to have a
         "length" attribute, the user must specify
-        `edge_tag_aggs=[('length', 'sum')]` in order to tell this function to
+        `way_tags_agg={"length": "sum"}` in order to tell this function to
         aggregate the lengths of the individual component edges. Otherwise,
         the length attribute will simply reflect the length of the first edge
         associated with the way.
@@ -312,7 +316,7 @@ def save_graph_xml(
     -------
     None
     """
-    _osm_xml._save_graph_xml(G, filepath, oneway, merge_edges, edge_tag_aggs)
+    _osm_xml._save_graph_xml(G, filepath, oneway, merge_edges, way_tags_agg)
 
 
 def _convert_graph_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.MultiDiGraph:
