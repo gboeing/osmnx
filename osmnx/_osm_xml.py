@@ -338,17 +338,21 @@ def _add_ways_xml(
         set_way_tags = set(settings.osm_xml_way_tags)
         for (u, v, k), data in gdf_edges.to_dict(orient="index").items():
             # STEP 1: add the way and its attrs
-            attrs = {k: v for k, v in data.items() if k in set_way_attrs}
+            attrs = {k: str(v) for k, v in data.items() if k in set_way_attrs}
             way_element = SubElement(parent, "way", attrib=attrs)
 
             # STEP 2: add the way's constituent node IDs
-            SubElement(way_element, "nd", attrib={"ref": u})
-            SubElement(way_element, "nd", attrib={"ref": v})
+            SubElement(way_element, "nd", attrib={"ref": str(u)})
+            SubElement(way_element, "nd", attrib={"ref": str(v)})
 
             # STEP 3: add the way's edges' tags
-            tags = {k: v for k, v in data.items() if k in set_way_tags and pd.notna(v)}
+            tags = {
+                k: v
+                for k, v in data.items()
+                if k in set_way_tags and (isinstance(v, list) or pd.notna(v))
+            }
             for tag, value in tags.items():
-                SubElement(way_element, "tag", attrib={"k": tag, "v": value})
+                SubElement(way_element, "tag", attrib={"k": tag, "v": str(value)})
 
     return parent
 
