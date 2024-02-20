@@ -309,13 +309,13 @@ def _add_ways_xml(
         for osmid, way in gdf_edges.groupby("id"):
             # STEP 1: add the way and its attrs as a "way" sub element of the
             # parent element
-            attrib = way[settings.osm_xml_way_attrs].iloc[0].astype(str).to_dict()
-            way_element = SubElement(parent, "way", attrib=attrib)
+            attrs = way[settings.osm_xml_way_attrs].iloc[0].astype(str).to_dict()
+            way_element = SubElement(parent, "way", attrib=attrs)
 
             # STEP 2: add the way's edges' node IDs as "nd" sub elements of
             # the "way" sub element. if way contains more than 1 edge, sort
             # the nodes topologically, otherwise no need to sort.
-            nodes = _sort_nodes(osmid, way) if len(way) > 1 else way.index[0][:2]
+            nodes = _sort_nodes(way.index, osmid) if len(way) > 1 else way.index[0][:2]
             for node in nodes:
                 SubElement(way_element, "nd", attrib={"ref": str(node)})
 
@@ -357,30 +357,45 @@ def _add_ways_xml(
     return parent
 
 
-def _sort_nodes(osmid: int, way: gpd.GeoDataFrame) -> list[int]:
+def _sort_nodes(idx: pd.MultiIndex, osmid: int) -> list[int]:
+    """
+    Topologically sort the nodes of an OSM way.
+
+    Parameters
+    ----------
+    idx
+        The graph edges' `(u, v, k)` IDs constituting the way.
+    osmid
+        The OSM way ID (only used for logging).
+
+    Returns
+    -------
+    ordered_nodes
+        The way's node IDs in topologically sorted order.
+    """
     G = nx.MultiDiGraph()
-    G.add_edges_from(way.index.to_numpy())
+    G.add_edges_from(idx.to_numpy())
     try:
         ordered_nodes = list(nx.topological_sort(G))
 
     except nx.NetworkXUnfeasible:
-        # if it couldn't topologically sort the nodes, the way probably
-        # is a cycle. try sorting again after removing the first
-        # and last nodes to try to break the cycle.
+        # if it couldn't topologically sort the nodes, the way probably is a
+        # cycle. try sorting again after removing the first and last nodes to
+        # try to break the cycle.
         try:
-            first_node = way.index[0][0]
-            last_node = way.index[-1][1]
+            first_node = idx[0][0]
+            last_node = idx[-1][1]
             G2 = G.copy()
             G2.remove_nodes_from([first_node, last_node])
             ordered_nodes = [first_node, *nx.topological_sort(G2), last_node]
 
         except nx.NetworkXUnfeasible:
-            # if it failed again, this way probably contains a loop and
-            # lollipop cycle. find edges that point to the same target
-            # node then see which of those edges can be removed without
-            # disconnecting the graph. remove that edge then re-sort.
+            # if it failed again, way probably contains a loop and lollipop
+            # cycle. find edges that point to the same target node then see
+            # which of those edges can be removed without disconnecting the
+            # graph. remove that edge then try again to sort.
             try:
-                for edge in way[way.index.get_level_values(1).duplicated(keep=False)].index:
+                for edge in idx[idx.get_level_values(1).duplicated(keep=False)]:
                     G3 = G.copy()
                     G3.remove_edge(*edge)
                     if nx.is_weakly_connected(G3):
@@ -388,10 +403,10 @@ def _sort_nodes(osmid: int, way: gpd.GeoDataFrame) -> list[int]:
                 ordered_nodes = [*nx.topological_sort(G3), edge[1]]
 
             except nx.NetworkXUnfeasible:
-                # if it failed again, this way probably contains double
-                # loop and lollipop cycles or another complex cycle
-                # pattern that we cannot handle, so just return the
-                # nodes in the order they were given to us
+                # if it failed again, this way probably contains double loop
+                # and lollipop cycles or another complex cycle pattern that we
+                # cannot handle, so just return the nodes in the order they
+                # were given to us
                 msg = f"Failed to topologically sort way {osmid!r}"
                 utils.log(msg, level=lg.WARNING)
                 ordered_nodes = list(G.nodes)
