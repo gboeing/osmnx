@@ -211,9 +211,8 @@ def _save_graph_xml(
     # 3) retain only edge cols corresponding to configured edge attrs and tags
     if "oneway" in gdf_edges.columns:
         gdf_edges["oneway"] = gdf_edges["oneway"].fillna(oneway).replace({True: "yes", False: "no"})
-    gdf_edges = gdf_edges.rename(columns={"osmid": "id"})
     edge_cols = list(set(settings.osm_xml_way_attrs) | set(settings.osm_xml_way_tags))
-    gdf_edges = gdf_edges[edge_cols].sort_index()
+    gdf_edges = gdf_edges.rename(columns={"osmid": "id"})[edge_cols]
 
     # create parent XML element then add nodes and ways as sub elements
     element = Element("osm", attrib={"version": "0.6", "generator": f"OSMnx {__version__}"})
@@ -222,7 +221,7 @@ def _save_graph_xml(
 
     # write to disk
     ElementTree(element).write(filepath, encoding="utf-8", xml_declaration=True)
-    msg = f"Saved graph as OSM XML file at {filepath!r}"
+    msg = f"Saved graph as OSM XML file at {str(filepath)!r}"
     utils.log(msg, level=lg.INFO)
 
 
@@ -315,7 +314,10 @@ def _add_ways_xml(
             # STEP 2: add the way's edges' node IDs as "nd" sub elements of
             # the "way" sub element. if way contains more than 1 edge, sort
             # the nodes topologically, otherwise no need to sort.
-            nodes = _sort_nodes(way.index, osmid) if len(way) > 1 else way.index[0][:2]
+            if len(way) > 1:
+                nodes = _sort_nodes(nx.MultiDiGraph(way.index.to_list()), osmid)
+            else:
+                nodes = way.index[0][:2]
             for node in nodes:
                 SubElement(way_element, "nd", attrib={"ref": str(node)})
 
@@ -357,14 +359,14 @@ def _add_ways_xml(
     return parent
 
 
-def _sort_nodes(idx: pd.MultiIndex, osmid: int) -> list[int]:
+def _sort_nodes(G: nx.MultiDiGraph, osmid: int) -> list[int]:
     """
     Topologically sort the nodes of an OSM way.
 
     Parameters
     ----------
     idx
-        The graph edges' `(u, v, k)` IDs constituting the way.
+        The graph representing the OSM way.
     osmid
         The OSM way ID (only used for logging).
 
@@ -373,42 +375,63 @@ def _sort_nodes(idx: pd.MultiIndex, osmid: int) -> list[int]:
     ordered_nodes
         The way's node IDs in topologically sorted order.
     """
-    G = nx.MultiDiGraph()
-    G.add_edges_from(idx.to_numpy())
     try:
         ordered_nodes = list(nx.topological_sort(G))
 
     except nx.NetworkXUnfeasible:
-        # if it couldn't topologically sort the nodes, the way probably is a
-        # cycle. try sorting again after removing the first and last nodes to
-        # try to break the cycle.
+        # if it couldn't topologically sort the nodes, the way probably
+        # contains a cycle. try removing an edge to break the cycle. first,
+        # look for multiple edges emanating from the same source node
+        insert_before = True
+        edges = [
+            edge
+            for source in [node for node, degree in G.out_degree() if degree > 1]
+            for edge in G.out_edges(source, keys=True)
+        ]
+
+        # if none found, then look for multiple edges pointing at the same
+        # target node instead
+        if len(edges) == 0:
+            insert_before = False
+            edges = [
+                edge
+                for target in [node for node, degree in G.in_degree() if degree > 1]
+                for edge in G.in_edges(target, keys=True)
+            ]
+
+            # if still none, then take the first edge of the way: the entire
+            # way could just be a cycle in which each node appears once
+            if len(edges) == 0:
+                edges = [next(iter(G.edges))]
+
+        # remove one edge at a time and see if the graph remains connected
+        # and if we are able to topologically sort its nodes
+        for edge in edges:
+            G_ = G.copy()
+            G_.remove_edge(*edge)
+            if nx.is_weakly_connected(G_):
+                break
+
         try:
-            first_node = idx[0][0]
-            last_node = idx[-1][1]
-            G2 = G.copy()
-            G2.remove_nodes_from([first_node, last_node])
-            ordered_nodes = [first_node, *nx.topological_sort(G2), last_node]
+            ordered_nodes = list(nx.topological_sort(G_))
+
+            # re-insert (before or after its neighbor as needed) the duplicate
+            # source or target node from the edge we removed
+            dupe_node = edge[0] if insert_before else edge[1]
+            neighbor = edge[1] if insert_before else edge[0]
+            position = ordered_nodes.index(neighbor)
+            position = position if insert_before else position + 1
+            ordered_nodes.insert(position, dupe_node)
 
         except nx.NetworkXUnfeasible:
-            # if it failed again, way probably contains a loop and lollipop
-            # cycle. find edges that point to the same target node then see
-            # which of those edges can be removed without disconnecting the
-            # graph. remove that edge then try again to sort.
-            try:
-                for edge in idx[idx.get_level_values(1).duplicated(keep=False)]:
-                    G3 = G.copy()
-                    G3.remove_edge(*edge)
-                    if nx.is_weakly_connected(G3):
-                        break
-                ordered_nodes = [*nx.topological_sort(G3), edge[1]]
-
-            except nx.NetworkXUnfeasible:
-                # if it failed again, this way probably contains double loop
-                # and lollipop cycles or another complex cycle pattern that we
-                # cannot handle, so just return the nodes in the order they
-                # were given to us
-                msg = f"Failed to topologically sort way {osmid!r}"
-                utils.log(msg, level=lg.WARNING)
-                ordered_nodes = list(G.nodes)
+            # if it failed again, this way probably contains multiple cycles,
+            # so remove a cycle then try to sort the nodes again, recursively.
+            # note this is destructive and will be missing in the saved data.
+            G_ = G.copy()
+            G_.remove_edges_from(nx.find_cycle(G_))
+            G_ = utils_graph.remove_isolated_nodes(G_)
+            ordered_nodes = _sort_nodes(G_, osmid)
+            msg = f"Had to remove a cycle from way {str(osmid)!r} for topological sort"
+            utils.log(msg, level=lg.WARNING)
 
     return ordered_nodes
