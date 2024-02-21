@@ -238,10 +238,6 @@ def _add_nodes_xml(
         The XML parent element.
     gdf_nodes
         A GeoDataFrame of graph nodes.
-    node_attrs
-        OSM node attributes to include for each node.
-    node_tags
-        OSM node tags to add as sub elements of each node.
 
     Returns
     -------
@@ -365,7 +361,7 @@ def _sort_nodes(G: nx.MultiDiGraph, osmid: int) -> list[int]:
 
     Parameters
     ----------
-    idx
+    G
         The graph representing the OSM way.
     osmid
         The OSM way ID (only used for logging).
@@ -404,8 +400,8 @@ def _sort_nodes(G: nx.MultiDiGraph, osmid: int) -> list[int]:
             if len(edges) == 0:
                 edges = [next(iter(G.edges))]
 
-        # remove one edge at a time and see if the graph remains connected
-        # and if we are able to topologically sort its nodes
+        # remove one edge at a time and, if the graph remains connected, exit
+        # the loop and check if we are able to topologically sort the nodes
         for edge in edges:
             G_ = G.copy()
             G_.remove_edge(*edge)
