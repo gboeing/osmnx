@@ -216,8 +216,8 @@ def _save_graph_xml(
 
     # create parent XML element then add nodes and ways as sub elements
     element = Element("osm", attrib={"version": "0.6", "generator": f"OSMnx {__version__}"})
-    element = _add_nodes_xml(element, gdf_nodes)
-    element = _add_ways_xml(element, gdf_edges, merge_edges, way_tags_agg)
+    _add_nodes_xml(element, gdf_nodes)
+    _add_ways_xml(element, gdf_edges, merge_edges, way_tags_agg)
 
     # write to disk
     ElementTree(element).write(filepath, encoding="utf-8", xml_declaration=True)
@@ -228,7 +228,7 @@ def _save_graph_xml(
 def _add_nodes_xml(
     parent: Element,
     gdf_nodes: gpd.GeoDataFrame,
-) -> Element:
+) -> None:
     """
     Add graph nodes as sub elements of XML parent element.
 
@@ -241,8 +241,7 @@ def _add_nodes_xml(
 
     Returns
     -------
-    parent
-        Updated XML parent element with node sub elements.
+    None
     """
     node_attrs = set(settings.osm_xml_node_attrs)
     node_tags = set(settings.osm_xml_node_tags)
@@ -261,15 +260,13 @@ def _add_nodes_xml(
             node_tag = {"k": k, "v": node[k]}
             _ = SubElement(se, "tag", attrib=node_tag)
 
-    return parent
-
 
 def _add_ways_xml(
     parent: Element,
     gdf_edges: gpd.GeoDataFrame,
     merge_edges: bool,  # noqa: FBT001
     way_tags_agg: dict[str, Any] | None,
-) -> Element:
+) -> None:
     """
     Add graph edges (grouped as ways) as sub elements of XML parent element.
 
@@ -297,8 +294,7 @@ def _add_ways_xml(
 
     Returns
     -------
-    parent
-        Updated XML parent element with edge sub elements.
+    None
     """
     if merge_edges:
         for osmid, way in gdf_edges.groupby("id"):
@@ -351,8 +347,6 @@ def _add_ways_xml(
             }
             for tag, value in tags.items():
                 SubElement(way_element, "tag", attrib={"k": tag, "v": str(value)})
-
-    return parent
 
 
 def _sort_nodes(G: nx.MultiDiGraph, osmid: int) -> list[int]:
