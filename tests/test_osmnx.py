@@ -165,12 +165,10 @@ def test_osm_xml() -> None:
     # test .osm xml saving
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
     fp = Path(ox.settings.data_folder) / "graph.osm"
-    ox.save_graph_xml(G, merge_edges=False, filepath=fp)  # issues UserWarning
+    ox.io.save_graph_xml(G, filepath=fp, way_tags_agg={"lanes": "sum"})
 
-    # test osm xml output merge edges
     default_all_oneway = ox.settings.all_oneway
     ox.settings.all_oneway = True
-    ox.io.save_graph_xml(G, merge_edges=True, way_tags_agg={"lanes": "sum"})
 
     # test roundabout handling
     default_overpass_settings = ox.settings.overpass_settings
@@ -178,9 +176,9 @@ def test_osm_xml() -> None:
     point = (39.0290346, -84.4696884)
     G = ox.graph_from_point(point, dist=500, dist_type="bbox", network_type="drive", simplify=True)
     with pytest.raises(ox._errors.GraphSimplificationError):
-        ox.io.save_graph_xml(G, merge_edges=True)
+        ox.io.save_graph_xml(G)
     G = ox.graph_from_point(point, dist=500, dist_type="bbox", network_type="drive", simplify=False)
-    ox.io.save_graph_xml(G, merge_edges=True)
+    ox.io.save_graph_xml(G)
     G = ox.graph_from_xml(fp)  # issues UserWarning
 
     # restore settings

@@ -249,8 +249,6 @@ def save_graph_xml(
     G: nx.MultiDiGraph,
     *,
     filepath: str | Path | None = None,
-    oneway: bool = False,
-    merge_edges: bool = True,
     way_tags_agg: dict[str, Any] | None = None,
 ) -> None:
     """
@@ -295,15 +293,8 @@ def save_graph_xml(
     filepath
         Path to the OSM XML file including extension. If None, use default
         `settings.data_folder/graph.osm`.
-    oneway
-        The default "oneway" value used to fill this tag where missing.
-    merge_edges
-        If True, merge graph edges such that each OSM way has one entry and
-        one entry only in the OSM XML. Otherwise, every OSM way will have a
-        separate entry for each node pair it contains.
     way_tags_agg
-        Useful only if `merge_edges` is True, this argument allows the user to
-        specify edge attributes to aggregate such that the merged OSM way
+        Specify edge attributes to aggregate such that the merged OSM way
         entry tags accurately represent the sum total of their component edge
         attributes. For example, if the user wants the OSM way to have a
         "length" attribute, the user must specify
@@ -316,7 +307,7 @@ def save_graph_xml(
     -------
     None
     """
-    _osm_xml._save_graph_xml(G, filepath, oneway, merge_edges, way_tags_agg)
+    _osm_xml._save_graph_xml(G, filepath, way_tags_agg)
 
 
 def _convert_graph_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.MultiDiGraph:
