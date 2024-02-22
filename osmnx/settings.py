@@ -88,14 +88,15 @@ nominatim_key : str | None
     one. Default is `None`.
 osm_xml_node_attrs : list[str]
     Node attributes for saving .osm XML files with `save_graph_xml` function.
-    Default is `["id", "timestamp", "uid", "user", "version", "changeset",
-    "lat", "lon"]`.
+    Default is `["id", "timestamp", "uid", "user", "version", "visible",
+    "changeset", "lat", "lon"]`.
 osm_xml_node_tags : list[str]
     Node tags for saving .osm XML files with `save_graph_xml` function.
     Default is `["highway"]`.
 osm_xml_way_attrs : list[str]
     Edge attributes for saving .osm XML files with `save_graph_xml` function.
-    Default is `["id", "timestamp", "uid", "user", "version", "changeset"]`.
+    Default is `["id", "timestamp", "uid", "user", "version", "visible",
+    "changeset"]`.
 osm_xml_way_tags : list[str]
     Edge tags for for saving .osm XML files with `save_graph_xml` function.
     Default is `["highway", "lanes", "maxspeed", "name", "oneway"]`.
@@ -174,12 +175,13 @@ osm_xml_node_attrs: list[str] = [
     "uid",
     "user",
     "version",
+    "visible",
     "changeset",
     "lat",
     "lon",
 ]
 osm_xml_node_tags: list[str] = ["highway"]
-osm_xml_way_attrs: list[str] = ["id", "timestamp", "uid", "user", "version", "changeset"]
+osm_xml_way_attrs: list[str] = ["id", "timestamp", "uid", "user", "version", "visible", "changeset"]
 osm_xml_way_tags: list[str] = ["highway", "lanes", "maxspeed", "name", "oneway"]
 overpass_endpoint: str = "https://overpass-api.de/api"
 overpass_rate_limit: bool = True

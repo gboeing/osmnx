@@ -162,44 +162,51 @@ def _save_graph_xml(
     # current OSM editing API version: https://wiki.openstreetmap.org/wiki/API
     API_VERSION = "0.6"
 
+    # round lat/lon coordinates to 7 decimals (approx 5 to 10 mm resolution)
+    PRECISION = 7
+
+    # warn user if ox.settings.all_oneway is not currently True (but maybe it
+    # was when they created the graph)
     if not settings.all_oneway:
         msg = "Make sure graph was created with `ox.settings.all_oneway=True` to save as OSM XML."
         warn(msg, category=UserWarning, stacklevel=2)
 
+    # raise error if graph has been simplified
     if G.graph.get("simplified", False):
         msg = "Graph must be unsimplified to save as OSM XML."
         raise GraphSimplificationError(msg)
 
-    # default filepath if None was provided
+    # set default filepath if None was provided
     filepath = Path(settings.data_folder) / "graph.osm" if filepath is None else Path(filepath)
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
-    # convert graph to node/edge GeoDataFrames for saving
-    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(
-        G,
-        node_geometry=False,
-        fill_edge_geometry=False,
-    )
+    # convert graph to node/edge gdfs and create dict of spatial bounds
+    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G, fill_edge_geometry=False)
+    coords = [str(round(c, PRECISION)) for c in gdf_nodes.unary_union.bounds]
+    bounds = dict(zip(["minlon", "minlat", "maxlon", "maxlat"], coords))
 
     # add default values (if missing) for required attrs to meet OSM XML spec
     attr_defaults = {
+        "changeset": "1",
+        "timestamp": utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}"),
         "uid": "1",
         "user": "OSMnx",
         "version": "1",
-        "changeset": "1",
-        "timestamp": utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}"),
+        "visible": "true",
     }
     for gdf in (gdf_nodes, gdf_edges):
         for col, value in attr_defaults.items():
             if col not in gdf.columns:
                 gdf[col] = value
+            else:
+                gdf[col] = gdf[col].fillna(value)
 
     # transform nodes gdf to meet OSM XML spec
     # 1) reset index (osmid) then rename osmid, x, and y columns
-    # 2) round lat/lon values to 6 decimals (approx 5 to 10 cm resolution)
+    # 2) round lat/lon coordinates
     # 3) retain only node cols corresponding to configured node attrs and tags
     gdf_nodes = gdf_nodes.reset_index().rename(columns={"osmid": "id", "x": "lon", "y": "lat"})
-    gdf_nodes[["lon", "lat"]] = gdf_nodes[["lon", "lat"]].round(6)
+    gdf_nodes[["lon", "lat"]] = gdf_nodes[["lon", "lat"]].round(PRECISION)
     node_cols = list(set(settings.osm_xml_node_attrs) | set(settings.osm_xml_node_tags))
     gdf_nodes = gdf_nodes[node_cols]
 
@@ -212,8 +219,9 @@ def _save_graph_xml(
     edge_cols = list(set(settings.osm_xml_way_attrs) | set(settings.osm_xml_way_tags))
     gdf_edges = gdf_edges.rename(columns={"osmid": "id"})[edge_cols]
 
-    # create parent XML element then add nodes and ways as sub elements
+    # create parent XML element then add bounds, nodes, ways as sub elements
     element = Element("osm", attrib={"version": API_VERSION, "generator": f"OSMnx {__version__}"})
+    _ = SubElement(element, "bounds", attrib=bounds)
     _add_nodes_xml(element, gdf_nodes)
     _add_ways_xml(element, gdf_edges, way_tags_agg)
 
