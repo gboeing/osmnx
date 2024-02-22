@@ -86,20 +86,6 @@ nominatim_endpoint : str
 nominatim_key : str | None
     Your Nominatim API key, if you are using an API instance that requires
     one. Default is `None`.
-osm_xml_node_attrs : list[str]
-    Node attributes for saving .osm XML files with `save_graph_xml` function.
-    Default is `["id", "timestamp", "uid", "user", "version", "visible",
-    "changeset", "lat", "lon"]`.
-osm_xml_node_tags : list[str]
-    Node tags for saving .osm XML files with `save_graph_xml` function.
-    Default is `["highway"]`.
-osm_xml_way_attrs : list[str]
-    Edge attributes for saving .osm XML files with `save_graph_xml` function.
-    Default is `["id", "timestamp", "uid", "user", "version", "visible",
-    "changeset"]`.
-osm_xml_way_tags : list[str]
-    Edge tags for for saving .osm XML files with `save_graph_xml` function.
-    Default is `["highway", "lanes", "maxspeed", "name", "oneway"]`.
 overpass_endpoint : str
     The base API url to use for Overpass queries. Default is
     `"https://overpass-api.de/api"`.
@@ -169,20 +155,6 @@ max_query_area_size: float = 50 * 1000 * 50 * 1000
 memory: int | None = None
 nominatim_endpoint: str = "https://nominatim.openstreetmap.org/"
 nominatim_key: str | None = None
-osm_xml_node_attrs: list[str] = [
-    "id",
-    "timestamp",
-    "uid",
-    "user",
-    "version",
-    "visible",
-    "changeset",
-    "lat",
-    "lon",
-]
-osm_xml_node_tags: list[str] = ["highway"]
-osm_xml_way_attrs: list[str] = ["id", "timestamp", "uid", "user", "version", "visible", "changeset"]
-osm_xml_way_tags: list[str] = ["highway", "lanes", "maxspeed", "name", "oneway"]
 overpass_endpoint: str = "https://overpass-api.de/api"
 overpass_rate_limit: bool = True
 overpass_settings: str = "[out:json][timeout:{timeout}]{maxsize}"

@@ -31,6 +31,17 @@ if TYPE_CHECKING:
     import geopandas as gpd
 
 
+# default values for node/way elements' attrs required to meet OSM XML spec
+ATTR_DEFAULTS = {
+    "changeset": "1",
+    "timestamp": utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}"),
+    "uid": "1",
+    "user": "OSMnx",
+    "version": "1",
+    "visible": "true",
+}
+
+
 class _OSMContentHandler(ContentHandler):
     """
     SAX content handler for OSM XML.
@@ -186,16 +197,8 @@ def _save_graph_xml(
     bounds = dict(zip(["minlon", "minlat", "maxlon", "maxlat"], coords))
 
     # add default values (if missing) for required attrs to meet OSM XML spec
-    attr_defaults = {
-        "changeset": "1",
-        "timestamp": utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}"),
-        "uid": "1",
-        "user": "OSMnx",
-        "version": "1",
-        "visible": "true",
-    }
     for gdf in (gdf_nodes, gdf_edges):
-        for col, value in attr_defaults.items():
+        for col, value in ATTR_DEFAULTS.items():
             if col not in gdf.columns:
                 gdf[col] = value
             else:
@@ -204,20 +207,18 @@ def _save_graph_xml(
     # transform nodes gdf to meet OSM XML spec
     # 1) reset index (osmid) then rename osmid, x, and y columns
     # 2) round lat/lon coordinates
-    # 3) retain only node cols corresponding to configured node attrs and tags
+    # 3) drop unnecessary geometry column
     gdf_nodes = gdf_nodes.reset_index().rename(columns={"osmid": "id", "x": "lon", "y": "lat"})
     gdf_nodes[["lon", "lat"]] = gdf_nodes[["lon", "lat"]].round(PRECISION)
-    node_cols = list(set(settings.osm_xml_node_attrs) | set(settings.osm_xml_node_tags))
-    gdf_nodes = gdf_nodes[node_cols]
+    gdf_nodes = gdf_nodes.drop(columns=["geometry"])
 
     # transform edges gdf to meet OSM XML spec
     # 1) fill and convert oneway bools to strings
     # 2) rename osmid column (but keep (u, v, k) index for processing)
-    # 3) retain only edge cols corresponding to configured edge attrs and tags
+    # 3) drop unnecessary geometry column
     if "oneway" in gdf_edges.columns:
         gdf_edges["oneway"] = gdf_edges["oneway"].fillna(ONEWAY).replace({True: "yes", False: "no"})
-    edge_cols = list(set(settings.osm_xml_way_attrs) | set(settings.osm_xml_way_tags))
-    gdf_edges = gdf_edges.rename(columns={"osmid": "id"})[edge_cols]
+    gdf_edges = gdf_edges.rename(columns={"osmid": "id"}).drop(columns=["geometry"])
 
     # create parent XML element then add bounds, nodes, ways as sub elements
     element = Element("osm", attrib={"version": API_VERSION, "generator": f"OSMnx {__version__}"})
@@ -249,8 +250,8 @@ def _add_nodes_xml(
     -------
     None
     """
-    node_attrs = set(settings.osm_xml_node_attrs)
-    node_tags = set(settings.osm_xml_node_tags)
+    node_tags = set(settings.useful_tags_node)
+    node_attrs = {"id", "lat", "lon"}.union(ATTR_DEFAULTS)
 
     # convert gdf rows to generator of col:val dicts with null vals removed
     rows = gdf_nodes.where(gdf_nodes.isna(), gdf_nodes.astype(str)).to_dict(orient="records")
@@ -258,11 +259,11 @@ def _add_nodes_xml(
 
     # add each node attr dict as a SubElement of parent
     for node in nodes:
-        node_attr = {k: node[k] for k in node.keys() & node_attrs}
+        node_attr = {k: node[k] for k in node_attrs}
         node_element = SubElement(parent, "node", attrib=node_attr)
 
         # add each tag key:value dict as a SubElement of the node SubElement
-        for k in node.keys() & node_tags:
+        for k in node_tags.intersection(node):
             node_tag = {"k": k, "v": node[k]}
             _ = SubElement(node_element, "tag", attrib=node_tag)
 
@@ -296,10 +297,13 @@ def _add_ways_xml(
     -------
     None
     """
+    way_tags = set(settings.useful_tags_way)
+    way_attrs = list({"id"}.union(ATTR_DEFAULTS))
+
     for osmid, way in gdf_edges.groupby("id"):
         # STEP 1: add the way and its attrs as a "way" sub element of the
         # parent element
-        attrs = way[settings.osm_xml_way_attrs].iloc[0].astype(str).to_dict()
+        attrs = way[way_attrs].iloc[0].astype(str).to_dict()
         way_element = SubElement(parent, "way", attrib=attrs)
 
         # STEP 2: add the way's edges' node IDs as "nd" sub elements of
@@ -316,7 +320,7 @@ def _add_ways_xml(
         # sub element. if an agg function was provided for a tag, apply it
         # to the values of the edges in the way. if no agg function was
         # provided for a tag, just use the value from first edge in way.
-        for tag in settings.osm_xml_way_tags:
+        for tag in way_tags.intersection(way.columns):
             if way_tags_agg is not None and tag in way_tags_agg:
                 value = way[tag].agg(way_tags_agg[tag])
             else:
