@@ -31,6 +31,9 @@ def _get_network_filter(network_type: str) -> str:
     """
     Create a filter to query Overpass for the specified network type.
 
+    The filter searches for every OSM way with a "highway" tag, excluding
+    certain ways that are incompatible with the network type.
+
     Parameters
     ----------
     network_type
@@ -39,7 +42,7 @@ def _get_network_filter(network_type: str) -> str:
 
     Returns
     -------
-    overpass_filter
+    way_filter
         The Overpass query filter.
     """
     # define built-in queries to send to the API. specifying way["highway"]
@@ -106,12 +109,12 @@ def _get_network_filter(network_type: str) -> str:
     )
 
     if network_type in filters:
-        overpass_filter = filters[network_type]
+        way_filter = filters[network_type]
     else:  # pragma: no cover
         msg = f"Unrecognized network_type {network_type!r}."
         raise ValueError(msg)
 
-    return overpass_filter
+    return way_filter
 
 
 def _get_overpass_pause(
@@ -342,7 +345,7 @@ def _download_overpass_network(
     """
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type, if provided, otherwise use custom_filter
-    osm_filter = custom_filter if custom_filter is not None else _get_network_filter(network_type)
+    way_filter = custom_filter if custom_filter is not None else _get_network_filter(network_type)
 
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
@@ -355,7 +358,7 @@ def _download_overpass_network(
     # pass exterior coordinates of each polygon in list to API, one at a time
     # the '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
-        query_str = f"{overpass_settings};(way{osm_filter}(poly:{polygon_coord_str!r});>;);out;"
+        query_str = f"{overpass_settings};(way{way_filter}(poly:{polygon_coord_str!r});>;);out;"
         yield _overpass_request(OrderedDict(data=query_str))
 
 
