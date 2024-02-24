@@ -23,7 +23,7 @@ from . import settings
 from . import utils
 from . import utils_graph
 from ._errors import GraphSimplificationError
-from ._version import __version__
+from ._version import __version__ as osmnx_version
 
 if TYPE_CHECKING:
     from xml.sax.xmlreader import AttributesImpl
@@ -41,6 +41,16 @@ ATTR_DEFAULTS = {
     "visible": "true",
 }
 
+# default values for osm element meta attributes required to meet OSM XML spec
+# current OSM editing API version: https://wiki.openstreetmap.org/wiki/API
+META_ATTR_DEFAULTS = {
+    "attribution": "https://www.openstreetmap.org/copyright",
+    "copyright": "OpenStreetMap and contributors",
+    "generator": f"OSMnx {osmnx_version}",
+    "license": "https://opendatacommons.org/licenses/odbl/1-0/",
+    "version": "0.6",
+}
+
 
 class _OSMContentHandler(ContentHandler):
     """
@@ -56,12 +66,12 @@ class _OSMContentHandler(ContentHandler):
         self.object: dict[str, Any] = {"elements": []}
 
     def startElement(self, name: str, attrs: AttributesImpl) -> None:  # noqa: ANN101,N802
+        # identify node/way/relation attrs to convert from string to numeric
         float_attrs = {"lat", "lon"}
-        int_attrs = {"id", "uid", "version", "changeset"}
-        meta_attrs = {"version", "generator"}
+        int_attrs = {"changeset", "id", "uid", "version"}
 
         if name == "osm":
-            self.object.update({k: v for k, v in attrs.items() if k in meta_attrs})
+            self.object.update({k: v for k, v in attrs.items() if k in META_ATTR_DEFAULTS})
 
         elif name in {"node", "way"}:
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
@@ -170,9 +180,6 @@ def _save_graph_xml(
     # default "oneway" value used to fill this tag where missing
     ONEWAY = False
 
-    # current OSM editing API version: https://wiki.openstreetmap.org/wiki/API
-    API_VERSION = "0.6"
-
     # round lat/lon coordinates to 7 decimals (approx 5 to 10 mm resolution)
     PRECISION = 7
 
@@ -221,7 +228,7 @@ def _save_graph_xml(
     gdf_edges = gdf_edges.rename(columns={"osmid": "id"}).drop(columns=["geometry"])
 
     # create parent XML element then add bounds, nodes, ways as sub elements
-    element = Element("osm", attrib={"version": API_VERSION, "generator": f"OSMnx {__version__}"})
+    element = Element("osm", attrib=META_ATTR_DEFAULTS)
     _ = SubElement(element, "bounds", attrib=bounds)
     _add_nodes_xml(element, gdf_nodes)
     _add_ways_xml(element, gdf_edges, way_tags_agg)
