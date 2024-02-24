@@ -263,6 +263,8 @@ def save_graph_xml(
     downloaded or generated elsewhere, use the `graph.graph_from_xml`
     function.
 
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which tags your graph is created and saved with.
     This function merges graph edges such that each OSM way has one entry in
     the XML output, with the way's nodes topologically sorted. `G` must be
     unsimplified to save as OSM XML: otherwise, one edge could comprise
