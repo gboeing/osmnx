@@ -263,45 +263,26 @@ def save_graph_xml(
     downloaded or generated elsewhere, use the `graph.graph_from_xml`
     function.
 
-    Graph must be unsimplified to save as OSM XML. Otherwise, one edge can
-    comprise multiple OSM ways, making it impossible to group edges by way ID.
-    And graph should be created with `ox.settings.all_oneway=True` for this
-    function to behave properly. Due to the iteration required to generate the
-    XML sub-elements, this function can take a long time to run for large
-    graphs. Before using this function, make sure you configured OSMnx as
-    described in the example below when you created the graph.
-
-    Example
-    -------
-    >>> import osmnx as ox
-    >>> utn = ox.settings.useful_tags_node
-    >>> oxna = ox.settings.osm_xml_node_attrs
-    >>> oxnt = ox.settings.osm_xml_node_tags
-    >>> utw = ox.settings.useful_tags_way
-    >>> oxwa = ox.settings.osm_xml_way_attrs
-    >>> oxwt = ox.settings.osm_xml_way_tags
-    >>> ox.settings.all_oneway = True
-    >>> ox.settings.useful_tags_node = list(set(utn + oxna + oxnt))
-    >>> ox.settings.useful_tags_way = list(set(utw + oxwa + oxwt))
-    >>> G = ox.graph_from_place('Piedmont, CA, USA', network_type='drive')
-    >>> ox.save_graph_xml(G, filepath='./data/graph.osm')
+    This function merges graph edges such that each OSM way has one entry in
+    the XML output, with the way's nodes topologically sorted. `G` must be
+    unsimplified to save as OSM XML: otherwise, one edge could comprise
+    multiple OSM ways, making it impossible to properly group edges by way.
+    `G` should also have been created with `ox.settings.all_oneway=True` for
+    this function to behave properly.
 
     Parameters
     ----------
     G
-        The graph to save.
+        Unsimplified graph to save as an OSM XML file.
     filepath
-        Path to the OSM XML file including extension. If None, use default
+        Path to the saved file including extension. If None, use default
         `settings.data_folder/graph.osm`.
     way_tags_agg
-        Specify edge attributes to aggregate such that the merged OSM way
-        entry tags accurately represent the sum total of their component edge
-        attributes. For example, if the user wants the OSM way to have a
-        "length" attribute, the user must specify
-        `way_tags_agg={"length": "sum"}` in order to tell this function to
-        aggregate the lengths of the individual component edges. Otherwise,
-        the length attribute will simply reflect the length of the first edge
-        associated with the way.
+        Keys are OSM way tag keys and values are aggregation functions
+        (anything accepted as an argument by pandas.agg). Allows user to
+        aggregate graph edge attribute values into single OSM way values. If
+        None, or if some tag's key does not exist in the dict, the way
+        attribute will be assigned the value of the first edge of the way.
 
     Returns
     -------

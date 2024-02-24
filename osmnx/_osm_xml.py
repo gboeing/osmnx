@@ -31,7 +31,8 @@ if TYPE_CHECKING:
     import geopandas as gpd
 
 
-# default values for node/way elements' attrs required to meet OSM XML spec
+# default values for node/way subelements' attrs required to meet OSM XML spec
+# see OSM XML format notes at: https://wiki.openstreetmap.org/wiki/OSM_XML
 ATTR_DEFAULTS = {
     "changeset": "1",
     "timestamp": utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}"),
@@ -151,27 +152,19 @@ def _save_graph_xml(
     """
     Save graph to disk as an OSM XML file.
 
-    See format notes at: https://wiki.openstreetmap.org/wiki/OSM_XML
-
-    This function merges graph edges such that each OSM way has one entry in
-    the XML output, with the way's nodes topologically sorted.
-
     Parameters
     ----------
     G
-        The graph to save.
+        Unsimplified graph to save as an OSM XML file.
     filepath
-        Path to the OSM XML file including extension. If None, use default
+        Path to the saved file including extension. If None, use default
         `settings.data_folder/graph.osm`.
     way_tags_agg
-        Specify edge attributes to aggregate such that the merged OSM way
-        entry tags accurately represent the sum total of their component edge
-        attributes. For example, if the user wants the OSM way to have a
-        "length" attribute, the user must specify
-        `way_tags_agg={"length": "sum"}` in order to tell this function to
-        aggregate the lengths of the individual component edges. Otherwise,
-        the length attribute will simply reflect the length of the first edge
-        associated with the way.
+        Keys are OSM way tag keys and values are aggregation functions
+        (anything accepted as an argument by pandas.agg). Allows user to
+        aggregate graph edge attribute values into single OSM way values. If
+        None, or if some tag's key does not exist in the dict, the way
+        attribute will be assigned the value of the first edge of the way.
 
     Returns
     -------
@@ -291,14 +284,11 @@ def _add_ways_xml(
         A GeoDataFrame of graph edges with OSM way "id" column for grouping
         edges into ways.
     way_tags_agg
-        Specify edge attributes to aggregate such that the merged OSM way
-        entry tags accurately represent the sum total of their component edge
-        attributes. For example, if the user wants the OSM way to have a
-        "length" attribute, the user must specify
-        `way_tags_agg={"length": "sum"}` in order to tell this function to
-        aggregate the lengths of the individual component edges. Otherwise,
-        the length attribute will simply reflect the length of the first edge
-        associated with the way.
+        Keys are OSM way tag keys and values are aggregation functions
+        (anything accepted as an argument by pandas.agg). Allows user to
+        aggregate graph edge attribute values into single OSM way values. If
+        None, or if some tag's key does not exist in the dict, the way
+        attribute will be assigned the value of the first edge of the way.
 
     Returns
     -------
@@ -345,7 +335,7 @@ def _sort_nodes(G: nx.MultiDiGraph, osmid: int) -> list[int]:
     G
         The graph representing the OSM way.
     osmid
-        The OSM way ID (only used for logging).
+        The OSM way ID.
 
     Returns
     -------
