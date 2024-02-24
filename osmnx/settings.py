@@ -161,7 +161,7 @@ overpass_settings: str = "[out:json][timeout:{timeout}]{maxsize}"
 requests_kwargs: dict[str, Any] = {}
 timeout: float = 180
 use_cache: bool = True
-useful_tags_node: list[str] = ["ref", "highway"]
+useful_tags_node: list[str] = ["highway", "ref"]
 useful_tags_way: list[str] = [
     "access",
     "area",
