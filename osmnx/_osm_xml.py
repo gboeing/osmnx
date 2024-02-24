@@ -148,6 +148,7 @@ def _save_graph_xml(
     G: nx.MultiDiGraph,
     filepath: str | Path | None,
     way_tags_agg: dict[str, Any] | None,
+    encoding: str = "utf-8",
 ) -> None:
     """
     Save graph to disk as an OSM XML file.
@@ -165,6 +166,8 @@ def _save_graph_xml(
         aggregate graph edge attribute values into single OSM way values. If
         None, or if some tag's key does not exist in the dict, the way
         attribute will be assigned the value of the first edge of the way.
+    encoding
+        The character encoding of the saved OSM XML file.
 
     Returns
     -------
@@ -227,7 +230,7 @@ def _save_graph_xml(
     _add_ways_xml(element, gdf_edges, way_tags_agg)
 
     # write to disk
-    ElementTree(element).write(filepath, encoding="utf-8", xml_declaration=True)
+    ElementTree(element).write(filepath, encoding=encoding, xml_declaration=True)
     msg = f"Saved graph as OSM XML file at {str(filepath)!r}"
     utils.log(msg, level=lg.INFO)
 

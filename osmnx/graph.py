@@ -529,7 +529,7 @@ def graph_from_xml(
         If True, return the entire graph even if it is not connected. If
         False, retain only the largest weakly connected component.
     encoding
-        The XML file's character encoding.
+        The OSM XML file's character encoding.
 
     Returns
     -------
