@@ -256,19 +256,15 @@ def _add_nodes_xml(
     node_tags = set(settings.useful_tags_node)
     node_attrs = {"id", "lat", "lon"}.union(ATTR_DEFAULTS)
 
-    # convert gdf rows to generator of col:val dicts with null vals removed
-    rows = gdf_nodes.where(gdf_nodes.isna(), gdf_nodes.astype(str)).to_dict(orient="records")
-    nodes = ({k: v for k, v in d.items() if pd.notna(v)} for d in rows)
+    # add each node attrs dict as a SubElement of parent
+    for node in gdf_nodes.to_dict(orient="records"):
+        attrs = {k: str(node[k]) for k in node_attrs if pd.notna(node[k])}
+        node_element = SubElement(parent, "node", attrib=attrs)
 
-    # add each node attr dict as a SubElement of parent
-    for node in nodes:
-        node_attr = {k: node[k] for k in node_attrs}
-        node_element = SubElement(parent, "node", attrib=node_attr)
-
-        # add each tag key:value dict as a SubElement of the node SubElement
-        for k in node_tags.intersection(node):
-            node_tag = {"k": k, "v": node[k]}
-            _ = SubElement(node_element, "tag", attrib=node_tag)
+        # add each node tag dict as its own SubElement of the node SubElement
+        tags = ({"k": k, "v": str(node[k])} for k in node_tags if pd.notna(node[k]))
+        for tag in tags:
+            _ = SubElement(node_element, "tag", attrib=tag)
 
 
 def _add_ways_xml(
