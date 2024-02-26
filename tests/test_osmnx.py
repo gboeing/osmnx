@@ -617,7 +617,7 @@ def test_features():
     """Test downloading features from Overpass."""
     # geometries_from_bbox - bounding box query to return no data
     with pytest.raises(ox._errors.InsufficientResponseError):
-        gdf = ox.geometries_from_bbox(0.009, -0.009, 0.009, -0.009, tags={"building": True})
+        gdf = ox.geometries_from_bbox(-2.000, -2.001, -2.000, -2.001, tags={"building": True})
 
     # geometries_from_bbox - successful
     north, south, east, west = ox.utils_geo.bbox_from_point(location_point, dist=500)
