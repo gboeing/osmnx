@@ -262,7 +262,7 @@ def _add_nodes_xml(
         node_element = SubElement(parent, "node", attrib=attrs)
 
         # add each node tag dict as its own SubElement of the node SubElement
-        tags = ({"k": k, "v": str(node[k])} for k in node_tags if pd.notna(node[k]))
+        tags = ({"k": k, "v": str(node[k])} for k in node_tags & node.keys() if pd.notna(node[k]))
         for tag in tags:
             _ = SubElement(node_element, "tag", attrib=tag)
 
