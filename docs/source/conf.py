@@ -39,7 +39,7 @@ autodoc_mock_imports = [
 ]
 
 # linkcheck for stackoverflow gets HTTP 403 in CI environment
-linkcheck_ignore = [r"https://stackoverflow/"]
+linkcheck_ignore = [r"stackoverflow\.com"]
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
