@@ -304,11 +304,11 @@ def _add_ways_xml(
 
         # STEP 2: add the way's edges' node IDs as "nd" subelements of the
         # "way" subelement. if way contains more than 1 edge, sort the nodes
-        # topologically, otherwise no need to sort.
-        if len(way) > 1:  # noqa: SIM108
-            nodes = _sort_nodes(nx.MultiDiGraph(way.index.to_list()), osmid)
-        else:
+        # topologically, otherwise just add node "u" then "v" from index.
+        if len(way) == 1:
             nodes = way.index[0][:2]
+        else:
+            nodes = _sort_nodes(nx.MultiDiGraph(way.index.to_list()), osmid)
         for node in nodes:
             _ = SubElement(way_element, "nd", attrib={"ref": str(node)})
 
