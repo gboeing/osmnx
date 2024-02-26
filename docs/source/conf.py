@@ -38,6 +38,10 @@ autodoc_mock_imports = [
     "sklearn",
 ]
 
+# linkcheck for stackoverflow gets HTTP 403 in CI environment
+linkcheck_ignore = [r"https://stackoverflow\.com/.*"]
+
+# type annotations configuration
 autodoc_typehints = "description"
 napoleon_use_param = True
 napoleon_use_rtype = False
