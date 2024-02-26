@@ -38,6 +38,9 @@ autodoc_mock_imports = [
     "sklearn",
 ]
 
+# linkcheck for stackoverflow gets HTTP 403 in CI environment
+linkcheck_ignore = [r"https://stackoverflow/"]
+
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
