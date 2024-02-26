@@ -21,6 +21,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
+from lxml import etree
 from requests.exceptions import ConnectionError
 from shapely import wkt
 from shapely.geometry import Point
@@ -167,10 +168,14 @@ def test_osm_xml() -> None:
     fp = Path(ox.settings.data_folder) / "graph.osm"
     ox.io.save_graph_xml(G, filepath=fp, way_tag_aggs={"lanes": "sum"})
 
-    default_all_oneway = ox.settings.all_oneway
-    ox.settings.all_oneway = True
+    # validate saved XML against XSD schema
+    xsd_filepath = "./tests/input_data/osm.xsd"
+    parser = etree.XMLParser(schema=etree.XMLSchema(file=xsd_filepath))
+    _ = etree.parse(fp, parser=parser)  # noqa: S320
 
     # test roundabout handling
+    default_all_oneway = ox.settings.all_oneway
+    ox.settings.all_oneway = True
     default_overpass_settings = ox.settings.overpass_settings
     ox.settings.overpass_settings += '[date:"2023-04-01T00:00:00Z"]'
     point = (39.0290346, -84.4696884)
@@ -178,7 +183,9 @@ def test_osm_xml() -> None:
     with pytest.raises(ox._errors.GraphSimplificationError):
         ox.io.save_graph_xml(G)
     G = ox.graph_from_point(point, dist=500, dist_type="bbox", network_type="drive", simplify=False)
+    nx.set_node_attributes(G, 0, name="uid")
     ox.io.save_graph_xml(G)
+    _ = etree.parse(fp, parser=parser)  # noqa: S320
     G = ox.graph_from_xml(fp)  # issues UserWarning
 
     # restore settings
