@@ -1,4 +1,8 @@
-"""Read/write OSM XML files."""
+"""
+Read/write OSM XML files.
+
+For file format information see https://wiki.openstreetmap.org/wiki/OSM_XML
+"""
 
 from __future__ import annotations
 
@@ -31,8 +35,8 @@ if TYPE_CHECKING:
     import geopandas as gpd
 
 
-# default values for node/way subelements' attrs required to meet OSM XML spec
-# see OSM XML format notes at: https://wiki.openstreetmap.org/wiki/OSM_XML
+# default values for standard "node" and "way" XML subelement attributes
+# see: https://wiki.openstreetmap.org/wiki/Elements#Common_attributes
 ATTR_DEFAULTS = {
     "changeset": "1",
     "timestamp": utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}"),
@@ -42,9 +46,9 @@ ATTR_DEFAULTS = {
     "visible": "true",
 }
 
-# default values for osm element meta attributes required to meet OSM XML spec
+# default values for standard "osm" root XML element attributes
 # current OSM editing API version: https://wiki.openstreetmap.org/wiki/API
-META_ATTR_DEFAULTS = {
+ROOT_ATTR_DEFAULTS = {
     "attribution": "https://www.openstreetmap.org/copyright",
     "copyright": "OpenStreetMap and contributors",
     "generator": f"OSMnx {osmnx_version}",
@@ -72,7 +76,7 @@ class _OSMContentHandler(ContentHandler):
         int_attrs = {"changeset", "id", "uid", "version"}
 
         if name == "osm":
-            self.object.update({k: v for k, v in attrs.items() if k in META_ATTR_DEFAULTS})
+            self.object.update({k: v for k, v in attrs.items() if k in ROOT_ATTR_DEFAULTS})
 
         elif name in {"node", "way"}:
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
@@ -199,7 +203,7 @@ def _save_graph_xml(
     coords = [str(round(c, PRECISION)) for c in gdf_nodes.unary_union.bounds]
     bounds = dict(zip(["minlon", "minlat", "maxlon", "maxlat"], coords))
 
-    # add default values (if missing) for required attrs to meet OSM XML spec
+    # add default values (if missing) for standard attrs
     for gdf in (gdf_nodes, gdf_edges):
         for col, value in ATTR_DEFAULTS.items():
             if col not in gdf.columns:
@@ -224,7 +228,7 @@ def _save_graph_xml(
     gdf_edges = gdf_edges.rename(columns={"osmid": "id"}).drop(columns=["geometry"])
 
     # create parent XML element then add bounds, nodes, ways as subelements
-    element = Element("osm", attrib=META_ATTR_DEFAULTS)
+    element = Element("osm", attrib=ROOT_ATTR_DEFAULTS)
     _ = SubElement(element, "bounds", attrib=bounds)
     _add_nodes_xml(element, gdf_nodes)
     _add_ways_xml(element, gdf_edges, way_tag_aggs)
