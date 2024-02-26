@@ -223,7 +223,7 @@ def _save_graph_xml(
         gdf_edges["oneway"] = gdf_edges["oneway"].fillna(ONEWAY).replace({True: "yes", False: "no"})
     gdf_edges = gdf_edges.rename(columns={"osmid": "id"}).drop(columns=["geometry"])
 
-    # create parent XML element then add bounds, nodes, ways as sub elements
+    # create parent XML element then add bounds, nodes, ways as subelements
     element = Element("osm", attrib=META_ATTR_DEFAULTS)
     _ = SubElement(element, "bounds", attrib=bounds)
     _add_nodes_xml(element, gdf_nodes)
@@ -240,7 +240,7 @@ def _add_nodes_xml(
     gdf_nodes: gpd.GeoDataFrame,
 ) -> None:
     """
-    Add graph nodes as sub elements of XML parent element.
+    Add graph nodes as subelements of an XML parent element.
 
     Parameters
     ----------
@@ -273,7 +273,7 @@ def _add_ways_xml(
     way_tags_agg: dict[str, Any] | None,
 ) -> None:
     """
-    Add graph edges (grouped as ways) as sub elements of XML parent element.
+    Add graph edges (grouped as ways) as subelements of an XML parent element.
 
     Parameters
     ----------
@@ -297,14 +297,14 @@ def _add_ways_xml(
     way_attrs = list({"id"}.union(ATTR_DEFAULTS))
 
     for osmid, way in gdf_edges.groupby("id"):
-        # STEP 1: add the way and its attrs as a "way" sub element of the
+        # STEP 1: add the way and its attrs as a "way" subelement of the
         # parent element
         attrs = way[way_attrs].iloc[0].astype(str).to_dict()
         way_element = SubElement(parent, "way", attrib=attrs)
 
-        # STEP 2: add the way's edges' node IDs as "nd" sub elements of
-        # the "way" sub element. if way contains more than 1 edge, sort
-        # the nodes topologically, otherwise no need to sort.
+        # STEP 2: add the way's edges' node IDs as "nd" subelements of the
+        # "way" subelement. if way contains more than 1 edge, sort the nodes
+        # topologically, otherwise no need to sort.
         if len(way) > 1:  # noqa: SIM108
             nodes = _sort_nodes(nx.MultiDiGraph(way.index.to_list()), osmid)
         else:
@@ -312,10 +312,10 @@ def _add_ways_xml(
         for node in nodes:
             _ = SubElement(way_element, "nd", attrib={"ref": str(node)})
 
-        # STEP 3: add way's edges' tags as "tag" sub elements of the "way"
-        # sub element. if an agg function was provided for a tag, apply it
-        # to the values of the edges in the way. if no agg function was
-        # provided for a tag, just use the value from first edge in way.
+        # STEP 3: add way's edges' tags as "tag" subelements of the "way"
+        # subelement. if an agg function was provided for a tag, apply it to
+        # the values of the edges in the way. if no agg function was provided
+        # for a tag, just use the value from first edge in way.
         for tag in way_tags.intersection(way.columns):
             if way_tags_agg is not None and tag in way_tags_agg:
                 value = way[tag].agg(way_tags_agg[tag])
