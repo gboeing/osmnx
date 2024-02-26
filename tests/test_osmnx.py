@@ -598,7 +598,7 @@ def test_features() -> None:
 
     # features_from_bbox - bounding box query to return no data
     with pytest.raises(ox._errors.InsufficientResponseError):
-        gdf = ox.features_from_bbox(bbox=(0.009, -0.009, 0.009, -0.009), tags={"building": True})
+        gdf = ox.features_from_bbox(bbox=(-2.000, -2.001, -2.000, -2.001), tags={"building": True})
 
     # features_from_bbox - successful
     gdf = ox.features_from_bbox(bbox, tags=tags1)
