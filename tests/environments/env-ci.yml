@@ -21,6 +21,7 @@ dependencies:
   - scipy
 
   # testing
+  - lxml
   - pre-commit
   - pytest
   - pytest-cov
