@@ -169,7 +169,7 @@ def test_osm_xml() -> None:
     ox.io.save_graph_xml(G, filepath=fp, way_tag_aggs={"lanes": "sum"})
 
     # validate saved XML against XSD schema
-    xsd_filepath = "./tests/input_data/osm.xsd"
+    xsd_filepath = "./tests/input_data/osm_schema.xsd"
     parser = etree.XMLParser(schema=etree.XMLSchema(file=xsd_filepath))
     _ = etree.parse(fp, parser=parser)  # noqa: S320
 
