@@ -165,7 +165,7 @@ def test_osm_xml() -> None:
     # test .osm xml saving
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
     fp = Path(ox.settings.data_folder) / "graph.osm"
-    ox.io.save_graph_xml(G, filepath=fp, way_tags_agg={"lanes": "sum"})
+    ox.io.save_graph_xml(G, filepath=fp, way_tag_aggs={"lanes": "sum"})
 
     default_all_oneway = ox.settings.all_oneway
     ox.settings.all_oneway = True

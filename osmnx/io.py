@@ -249,7 +249,7 @@ def save_graph_xml(
     G: nx.MultiDiGraph,
     *,
     filepath: str | Path | None = None,
-    way_tags_agg: dict[str, Any] | None = None,
+    way_tag_aggs: dict[str, Any] | None = None,
     encoding: str = "utf-8",
 ) -> None:
     """
@@ -280,7 +280,7 @@ def save_graph_xml(
     filepath
         Path to the saved file including extension. If None, use default
         `settings.data_folder/graph.osm`.
-    way_tags_agg
+    way_tag_aggs
         Keys are OSM way tag keys and values are aggregation functions
         (anything accepted as an argument by pandas.agg). Allows user to
         aggregate graph edge attribute values into single OSM way values. If
@@ -293,7 +293,7 @@ def save_graph_xml(
     -------
     None
     """
-    _osm_xml._save_graph_xml(G, filepath, way_tags_agg, encoding)
+    _osm_xml._save_graph_xml(G, filepath, way_tag_aggs, encoding)
 
 
 def _convert_graph_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.MultiDiGraph:

@@ -147,7 +147,7 @@ def _overpass_json_from_xml(filepath: str | Path, encoding: str) -> dict[str, An
 def _save_graph_xml(
     G: nx.MultiDiGraph,
     filepath: str | Path | None,
-    way_tags_agg: dict[str, Any] | None,
+    way_tag_aggs: dict[str, Any] | None,
     encoding: str = "utf-8",
 ) -> None:
     """
@@ -160,7 +160,7 @@ def _save_graph_xml(
     filepath
         Path to the saved file including extension. If None, use default
         `settings.data_folder/graph.osm`.
-    way_tags_agg
+    way_tag_aggs
         Keys are OSM way tag keys and values are aggregation functions
         (anything accepted as an argument by pandas.agg). Allows user to
         aggregate graph edge attribute values into single OSM way values. If
@@ -227,7 +227,7 @@ def _save_graph_xml(
     element = Element("osm", attrib=META_ATTR_DEFAULTS)
     _ = SubElement(element, "bounds", attrib=bounds)
     _add_nodes_xml(element, gdf_nodes)
-    _add_ways_xml(element, gdf_edges, way_tags_agg)
+    _add_ways_xml(element, gdf_edges, way_tag_aggs)
 
     # write to disk
     ElementTree(element).write(filepath, encoding=encoding, xml_declaration=True)
@@ -270,7 +270,7 @@ def _add_nodes_xml(
 def _add_ways_xml(
     parent: Element,
     gdf_edges: gpd.GeoDataFrame,
-    way_tags_agg: dict[str, Any] | None,
+    way_tag_aggs: dict[str, Any] | None,
 ) -> None:
     """
     Add graph edges (grouped as ways) as subelements of an XML parent element.
@@ -282,7 +282,7 @@ def _add_ways_xml(
     gdf_edges
         A GeoDataFrame of graph edges with OSM way "id" column for grouping
         edges into ways.
-    way_tags_agg
+    way_tag_aggs
         Keys are OSM way tag keys and values are aggregation functions
         (anything accepted as an argument by pandas.agg). Allows user to
         aggregate graph edge attribute values into single OSM way values. If
@@ -317,8 +317,8 @@ def _add_ways_xml(
         # the values of the edges in the way. if no agg function was provided
         # for a tag, just use the value from first edge in way.
         for tag in way_tags.intersection(way.columns):
-            if way_tags_agg is not None and tag in way_tags_agg:
-                value = way[tag].agg(way_tags_agg[tag])
+            if way_tag_aggs is not None and tag in way_tag_aggs:
+                value = way[tag].agg(way_tag_aggs[tag])
             else:
                 value = way[tag].iloc[0]
             if pd.notna(value):
