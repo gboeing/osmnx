@@ -278,11 +278,11 @@ def _elevation_request(url: str, pause: float) -> dict[str, Any]:
     time.sleep(pause)
 
     # transmit the HTTP GET request
-    msg = f"Get {url} with timeout={settings.timeout}"
+    msg = f"Get {url} with timeout={settings.requests_timeout}"
     utils.log(msg, level=lg.INFO)
     response = requests.get(
         url,
-        timeout=settings.timeout,
+        timeout=settings.requests_timeout,
         headers=_http._get_http_headers(),
         **settings.requests_kwargs,
     )

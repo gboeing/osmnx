@@ -154,7 +154,7 @@ def _get_overpass_pause(
         response = requests.get(
             url,
             headers=_http._get_http_headers(),
-            timeout=settings.timeout,
+            timeout=settings.requests_timeout,
             **settings.requests_kwargs,
         )
         status = response.text.split("\n")[4]
@@ -211,8 +211,8 @@ def _make_overpass_settings() -> str:
         The `settings.overpass_settings` string formatted with "timeout" and
         "maxsize" values.
     """
-    maxsize = "" if settings.memory is None else f"[maxsize:{settings.memory}]"
-    return settings.overpass_settings.format(timeout=settings.timeout, maxsize=maxsize)
+    maxsize = "" if settings.overpass_memory is None else f"[maxsize:{settings.overpass_memory}]"
+    return settings.overpass_settings.format(timeout=settings.requests_timeout, maxsize=maxsize)
 
 
 def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list[str]:
@@ -435,12 +435,12 @@ def _overpass_request(
     time.sleep(this_pause)
 
     # transmit the HTTP POST request
-    msg = f"Post {prepared_url} with timeout={settings.timeout}"
+    msg = f"Post {prepared_url} with timeout={settings.requests_timeout}"
     utils.log(msg, level=lg.INFO)
     response = requests.post(
         url,
         data=data,
-        timeout=settings.timeout,
+        timeout=settings.requests_timeout,
         headers=_http._get_http_headers(),
         **settings.requests_kwargs,
     )

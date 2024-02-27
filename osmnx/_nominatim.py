@@ -125,12 +125,12 @@ def _nominatim_request(
     time.sleep(pause)
 
     # transmit the HTTP GET request
-    msg = f"Get {prepared_url} with timeout={settings.timeout}"
+    msg = f"Get {prepared_url} with timeout={settings.requests_timeout}"
     utils.log(msg, level=lg.INFO)
     response = requests.get(
         url,
         params=params,
-        timeout=settings.timeout,
+        timeout=settings.requests_timeout,
         headers=_http._get_http_headers(),
         **settings.requests_kwargs,
     )

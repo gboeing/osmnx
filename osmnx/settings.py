@@ -13,7 +13,7 @@ bidirectional_network_types : list[str]
     Default is `["walk"]`.
 cache_folder : str | Path
     Path to folder to save/load HTTP response cache files, if the `use_cache`
-    setting is `True`. Default is `"./cache"`.
+    setting is True. Default is `"./cache"`.
 cache_only_mode : bool
     If True, download network data from Overpass then raise a
     `CacheOnlyModeInterrupt` error for user to catch. This prevents graph
@@ -76,10 +76,6 @@ max_query_area_size : float
     Maximum area for any part of the geometry in meters: any polygon bigger
     than this will get divided up for multiple queries to the API. Default is
     `2500000000`.
-memory : int | None
-    Overpass server memory allocation size for the query, in bytes. If
-    None, server will use its default allocation size. Use with caution.
-    Default is `None`.
 nominatim_endpoint : str
     The base API url to use for Nominatim queries. Default is
     `"https://nominatim.openstreetmap.org/"`.
@@ -89,6 +85,10 @@ nominatim_key : str | None
 overpass_endpoint : str
     The base API url to use for Overpass queries. Default is
     `"https://overpass-api.de/api"`.
+overpass_memory : int | None
+    Overpass server memory allocation size for the query, in bytes. If
+    None, server will choose its default allocation size. Use with caution.
+    Default is `None`.
 overpass_rate_limit : bool
     If True, check the Overpass server status endpoint for how long to
     pause before making request. Necessary if server uses slot management,
@@ -106,9 +106,9 @@ requests_kwargs : dict[str, Any]
     a local certificate file. More info on options such as auth, cert,
     verify, and proxies can be found in the requests package advanced docs.
     Default is `{}`.
-timeout : int
+requests_timeout : int
     The timeout interval in seconds for HTTP requests, and (when applicable)
-    for API to use while running the query. Default is `180`.
+    for API server to use while running the query. Default is `180`.
 use_cache : bool
     If True, cache HTTP responses locally in `cache_folder` instead of calling
     API repeatedly for the same request. Default is `True`.
@@ -152,14 +152,14 @@ log_level: int = lg.INFO
 log_name: str = "OSMnx"
 logs_folder: str | Path = "./logs"
 max_query_area_size: float = 50 * 1000 * 50 * 1000
-memory: int | None = None
 nominatim_endpoint: str = "https://nominatim.openstreetmap.org/"
 nominatim_key: str | None = None
 overpass_endpoint: str = "https://overpass-api.de/api"
+overpass_memory: int | None = None
 overpass_rate_limit: bool = True
 overpass_settings: str = "[out:json][timeout:{timeout}]{maxsize}"
 requests_kwargs: dict[str, Any] = {}
-timeout: float = 180
+requests_timeout: float = 180
 use_cache: bool = True
 useful_tags_node: list[str] = ["highway", "ref"]
 useful_tags_way: list[str] = [

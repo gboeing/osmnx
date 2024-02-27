@@ -361,14 +361,14 @@ def test_find_nearest() -> None:
 
 def test_api_endpoints() -> None:
     """Test different API endpoints."""
-    default_timeout = ox.settings.timeout
+    default_timeout = ox.settings.requests_timeout
     default_key = ox.settings.nominatim_key
     default_nominatim_endpoint = ox.settings.nominatim_endpoint
     default_overpass_endpoint = ox.settings.overpass_endpoint
     default_overpass_rate_limit = ox.settings.overpass_rate_limit
 
     # test good and bad DNS resolution
-    ox.settings.timeout = 1
+    ox.settings.requests_timeout = 1
     ip = ox._http._resolve_host_via_doh("overpass-api.de")
     ip = ox._http._resolve_host_via_doh("AAAAAAAAAAA")
     _doh_url_template_default = ox.settings.doh_url_template
@@ -386,7 +386,7 @@ def test_api_endpoints() -> None:
         G = ox.graph_from_place(place1, network_type="all")
 
     ox.settings.overpass_rate_limit = default_overpass_rate_limit
-    ox.settings.timeout = default_timeout
+    ox.settings.requests_timeout = default_timeout
 
     params: OrderedDict[str, int | str] = OrderedDict()
     params["format"] = "json"
@@ -565,7 +565,7 @@ def test_graph_from_functions() -> None:
         network_type="all",
     )
 
-    ox.settings.memory = 1073741824
+    ox.settings.overpass_memory = 1073741824
     G = ox.graph_from_point(
         location_point,
         dist=500,

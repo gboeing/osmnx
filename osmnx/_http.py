@@ -208,7 +208,7 @@ def _resolve_host_via_doh(hostname: str) -> str:
     err_msg = f"Failed to resolve {hostname!r} IP via DoH, requesting host by name"
     try:
         url = settings.doh_url_template.format(hostname=hostname)
-        response = requests.get(url, timeout=settings.timeout)
+        response = requests.get(url, timeout=settings.requests_timeout)
         data = response.json()
 
     # if we cannot reach DoH server or resolve host, return hostname itself
