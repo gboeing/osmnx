@@ -52,17 +52,18 @@ polygon = wkt.loads(p)
 
 def test_logging() -> None:
     """Test the logger."""
-    ox.log("test a fake default message")
-    ox.log("test a fake debug", level=lg.DEBUG)
-    ox.log("test a fake info", level=lg.INFO)
-    ox.log("test a fake warning", level=lg.WARNING)
-    ox.log("test a fake error", level=lg.ERROR)
+    ox.utils.log("test a fake default message")
+    ox.utils.log("test a fake debug", level=lg.DEBUG)
+    ox.utils.log("test a fake info", level=lg.INFO)
+    ox.utils.log("test a fake warning", level=lg.WARNING)
+    ox.utils.log("test a fake error", level=lg.ERROR)
 
-    ox.citation(style="apa")
-    ox.citation(style="bibtex")
-    ox.citation(style="ieee")
-    ox.ts(style="date")
-    ox.ts(style="time")
+    ox.utils.citation(style="apa")
+    ox.utils.citation(style="bibtex")
+    ox.utils.citation(style="ieee")
+    ox.utils.ts(style="iso8601")
+    ox.utils.ts(style="date")
+    ox.utils.ts(style="time")
 
 
 def test_exceptions() -> None:

@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 # see: https://wiki.openstreetmap.org/wiki/Elements#Common_attributes
 ATTR_DEFAULTS = {
     "changeset": "1",
-    "timestamp": utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}"),
+    "timestamp": utils.ts(style="iso8601"),
     "uid": "1",
     "user": "OSMnx",
     "version": "1",
