@@ -337,7 +337,7 @@ def test_plots() -> None:
     fig, ax = ox.plot_figure_ground(G=G)
 
 
-def test_find_nearest() -> None:
+def test_nearest() -> None:
     """Test nearest node/edge searching."""
     # get graph and x/y coords to search
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
@@ -359,7 +359,7 @@ def test_find_nearest() -> None:
     _ = ox.distance.nearest_edges(Gp, X[0], Y[0], return_dist=True)
 
 
-def test_api_endpoints() -> None:
+def test_endpoints() -> None:
     """Test different API endpoints."""
     default_timeout = ox.settings.requests_timeout
     default_key = ox.settings.nominatim_key
@@ -433,7 +433,7 @@ def test_api_endpoints() -> None:
     ox.settings.overpass_endpoint = default_overpass_endpoint
 
 
-def test_graph_save_load() -> None:  # noqa: PLR0915
+def test_save_load() -> None:  # noqa: PLR0915
     """Test saving/loading graphs to/from disk."""
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
 
@@ -520,7 +520,7 @@ def test_graph_save_load() -> None:  # noqa: PLR0915
     G = ox.load_graphml(graphml_str=data, node_dtypes=nd, edge_dtypes=ed)
 
 
-def test_graph_from_functions() -> None:
+def test_graph_from() -> None:
     """Test downloading graphs from Overpass."""
     # test subdividing a large geometry (raises a UserWarning)
     bbox = ox.utils_geo.bbox_from_point((0, 0), dist=1e5, project_utm=True)
