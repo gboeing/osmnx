@@ -2,34 +2,34 @@
 Global settings that can be configured by the user.
 
 all_oneway : bool
-    Only use if specifically saving to .osm XML file with the `save_graph_xml`
-    function. If True, forces all ways to be loaded as oneway ways, preserving
-    the original order of nodes stored in the OSM way XML. This also retains
-    original OSM string values for oneway attribute values, rather than
-    converting them to a True/False bool. Default is `False`.
+    Only use if subsequently saving graph to an OSM XML file via the
+    `save_graph_xml` function. If True, forces all ways to be added as one-way
+    ways, preserving the original order of the nodes in the OSM way. This also
+    retains the original OSM way's oneway tag's string value as edge attribute
+    values, rather than converting them to True/False bool values. Default is
+    `False`.
 bidirectional_network_types : list[str]
     Network types for which a fully bidirectional graph will be created.
     Default is `["walk"]`.
 cache_folder : str | Path
-    Path to folder in which to save/load HTTP response cache, if the
-    `use_cache` setting equals `True`. Default is `"./cache"`.
+    Path to folder to save/load HTTP response cache files, if the `use_cache`
+    setting is `True`. Default is `"./cache"`.
 cache_only_mode : bool
     If True, download network data from Overpass then raise a
     `CacheOnlyModeInterrupt` error for user to catch. This prevents graph
-    building from taking place and instead just saves OSM response data to
+    building from taking place and instead just saves Overpass response to
     cache. Useful for sequentially caching lots of raw data (as you can
     only query Overpass one request at a time) then using the local cache to
     quickly build many graphs simultaneously with multiprocessing. Default is
     `False`.
 data_folder : str | Path
-    Path to folder in which to save/load graph files by default. Default is
-    `"./data"`.
+    Path to folder to save/load graph files by default. Default is `"./data"`.
 default_access : str
-    Filter for the OSM "access" key. Default is `'["access"!~"private"]'`.
+    Filter for the OSM "access" tag. Default is `'["access"!~"private"]'`.
     Note that also filtering out "access=no" ways prevents including
     transit-only bridges (e.g., Tilikum Crossing) from appearing in drivable
     road network (e.g., `'["access"!~"private|no"]'`). However, some drivable
-    tollroads have "access=no" plus a "access:conditional" key to clarify when
+    tollroads have "access=no" plus a "access:conditional" tag to clarify when
     it is accessible, so we can't filter out all "access=no" ways by default.
     Best to be permissive here then remove complicated combinations of tags
     programatically after the full graph is downloaded and constructed.
@@ -110,8 +110,8 @@ timeout : int
     The timeout interval in seconds for HTTP requests, and (when applicable)
     for API to use while running the query. Default is `180`.
 use_cache : bool
-    If True, cache HTTP responses locally instead of calling API repeatedly
-    for the same request. Default is `True`.
+    If True, cache HTTP responses locally in `cache_folder` instead of calling
+    API repeatedly for the same request. Default is `True`.
 useful_tags_node : list[str]
     OSM "node" tags to add as graph node attributes, when present in the data
     retrieved from OSM. Default is `["ref", "highway"]`.
