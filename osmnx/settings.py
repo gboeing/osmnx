@@ -108,7 +108,7 @@ requests_kwargs : dict[str, Any]
     Default is `{}`.
 requests_timeout : int
     The timeout interval in seconds for HTTP requests, and (when applicable)
-    for API server to use while running the query. Default is `180`.
+    for Overpass server to use for executing the query. Default is `180`.
 use_cache : bool
     If True, cache HTTP responses locally in `cache_folder` instead of calling
     API repeatedly for the same request. Default is `True`.
