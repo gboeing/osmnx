@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 
 def save_graph_geopackage(
     G: nx.MultiDiGraph,
-    *,
     filepath: str | Path | None = None,
+    *,
     directed: bool = False,
     encoding: str = "utf-8",
 ) -> None:
@@ -74,8 +74,8 @@ def save_graph_geopackage(
 
 def save_graphml(
     G: nx.MultiDiGraph,
-    *,
     filepath: str | Path | None = None,
+    *,
     gephi: bool = False,
     encoding: str = "utf-8",
 ) -> None:
@@ -135,6 +135,7 @@ def save_graphml(
 
 def load_graphml(
     filepath: str | Path | None = None,
+    *,
     graphml_str: str | None = None,
     node_dtypes: dict[str, Any] | None = None,
     edge_dtypes: dict[str, Any] | None = None,
@@ -247,8 +248,8 @@ def load_graphml(
 
 def save_graph_xml(
     G: nx.MultiDiGraph,
-    *,
     filepath: str | Path | None = None,
+    *,
     way_tag_aggs: dict[str, Any] | None = None,
     encoding: str = "utf-8",
 ) -> None:
