@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.2 (TBD)
+
+- deprecate settings module's default_accept_language, default_referer, default_user_agent, memory, and timeout settings
+- deprecate settings module's osm_xml_node_attrs, osm_xml_node_tags, osm_xml_way_attrs, and osm_xml_way_tags settings
+- deprecate save_graph_xml function's node_tags, node_attrs, edge_tags, edge_attrs, edge_tag_aggs, merge_edges, oneway, api_version, and precision parameters
+
 ## 1.9.1 (2024-02-01)
 
 - fix deprecation warning in simplification.simplify_graph function (#1126)

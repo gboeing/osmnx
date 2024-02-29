@@ -3,6 +3,7 @@
 import datetime as dt
 import logging as lg
 import time
+from warnings import warn
 
 import numpy as np
 import requests
@@ -122,6 +123,15 @@ def _get_overpass_pause(base_endpoint, recursive_delay=5, default_duration=60):
     -------
     pause : int
     """
+    if settings.timeout is None:
+        settings.timeout = settings.requests_timeout
+    else:
+        msg = (
+            "`settings.timeout` is deprecated and will be removed in the "
+            "v2.0.0 release: use `settings.requests_timeout` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     if not settings.overpass_rate_limit:
         # if overpass rate limiting is False, then there is zero pause
         return 0
@@ -183,6 +193,24 @@ def _make_overpass_settings():
     -------
     string
     """
+    if settings.timeout is None:
+        settings.timeout = settings.requests_timeout
+    else:
+        msg = (
+            "`settings.timeout` is deprecated and will be removed in the "
+            "v2.0.0 release: use `settings.requests_timeout` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if settings.memory is None:
+        settings.memory = settings.overpass_memory
+    else:
+        msg = (
+            "`settings.memory` is deprecated and will be removed in the "
+            " v2.0.0 release: use `settings.overpass_memory` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     maxsize = "" if settings.memory is None else f"[maxsize:{settings.memory}]"
     return settings.overpass_settings.format(timeout=settings.timeout, maxsize=maxsize)
 
@@ -371,6 +399,15 @@ def _overpass_request(data, pause=None, error_pause=60):
     -------
     response_json : dict
     """
+    if settings.timeout is None:
+        settings.timeout = settings.requests_timeout
+    else:
+        msg = (
+            "`settings.timeout` is deprecated and will be removed in the "
+            "v2.0.0 release: use `settings.requests_timeout` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     # resolve url to same IP even if there is server round-robin redirecting
     _downloader._config_dns(settings.overpass_endpoint)
 

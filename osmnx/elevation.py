@@ -293,6 +293,15 @@ def _elevation_request(url, pause):
     -------
     response_json : dict
     """
+    if settings.timeout is None:
+        settings.timeout = settings.requests_timeout
+    else:
+        msg = (
+            "`settings.timeout` is deprecated and will be removed in the v2.0.0 "
+            "release: use `settings.requests_timeout` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     # check if request already exists in cache
     cached_response_json = _downloader._retrieve_from_cache(url)
     if cached_response_json is not None:

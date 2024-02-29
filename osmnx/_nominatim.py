@@ -3,6 +3,7 @@
 import logging as lg
 import time
 from collections import OrderedDict
+from warnings import warn
 
 import requests
 
@@ -84,6 +85,15 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
     -------
     response_json : dict
     """
+    if settings.timeout is None:
+        settings.timeout = settings.requests_timeout
+    else:
+        msg = (
+            "`settings.timeout` is deprecated and will be removed in the v2.0.0 "
+            "release: use `settings.requests_timeout` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
         msg = 'Nominatim request_type must be "search", "reverse", or "lookup"'
         raise ValueError(msg)

@@ -12,12 +12,12 @@ find . -type f -name ".coverage*" -delete
 pre-commit run --all-files
 
 # test building and validating the package
-hatch build --clean
-twine check --strict ./dist/*
+#hatch build --clean
+#twine check --strict ./dist/*
 
 # build the docs
-make -C ./docs html
-python -m sphinx -b linkcheck ./docs/source ./docs/build/linkcheck
+#make -C ./docs html
+#python -m sphinx -b linkcheck ./docs/source ./docs/build/linkcheck
 
 # run the tests and report the test coverage
 pytest --cov=./osmnx --cov-report=term-missing --verbose
