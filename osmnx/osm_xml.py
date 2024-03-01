@@ -238,7 +238,7 @@ def _save_graph_xml(  # noqa: C901
     None
     """
     if settings.osm_xml_node_attrs is None:
-        settings.osm_xml_node_attrs = [
+        osm_xml_node_attrs = [
             "id",
             "timestamp",
             "uid",
@@ -249,6 +249,7 @@ def _save_graph_xml(  # noqa: C901
             "lon",
         ]
     else:
+        osm_xml_node_attrs = settings.osm_xml_node_attrs
         msg = (
             "`settings.osm_xml_node_attrs` is deprecated and will be removed "
             "in the v2.0.0 release"
@@ -256,8 +257,9 @@ def _save_graph_xml(  # noqa: C901
         warn(msg, FutureWarning, stacklevel=2)
 
     if settings.osm_xml_node_tags is None:
-        settings.osm_xml_node_tags = ["highway"]
+        osm_xml_node_tags = ["highway"]
     else:
+        osm_xml_node_tags = settings.osm_xml_node_tags
         msg = (
             "`settings.osm_xml_node_tags` is deprecated and will be removed "
             "in the v2.0.0 release"
@@ -265,8 +267,9 @@ def _save_graph_xml(  # noqa: C901
         warn(msg, FutureWarning, stacklevel=2)
 
     if settings.osm_xml_way_attrs is None:
-        settings.osm_xml_way_attrs = ["id", "timestamp", "uid", "user", "version", "changeset"]
+        osm_xml_way_attrs = ["id", "timestamp", "uid", "user", "version", "changeset"]
     else:
+        osm_xml_way_attrs = settings.osm_xml_way_attrs
         msg = (
             "`settings.osm_xml_way_attrs` is deprecated and will be removed "
             "in the v2.0.0 release"
@@ -274,13 +277,14 @@ def _save_graph_xml(  # noqa: C901
         warn(msg, FutureWarning, stacklevel=2)
 
     if settings.osm_xml_way_tags is None:
-        settings.osm_xml_way_tags = ["highway", "lanes", "maxspeed", "name", "oneway"]
+        osm_xml_way_tags = ["highway", "lanes", "maxspeed", "name", "oneway"]
     else:
+        osm_xml_way_tags = settings.osm_xml_way_tags
         msg = "`settings.osm_xml_way_tags` is deprecated and will be removed in the v2.0.0 release"
         warn(msg, FutureWarning, stacklevel=2)
 
     if node_tags is None:
-        node_tags = settings.osm_xml_node_tags
+        node_tags = osm_xml_node_tags
     else:
         msg = (
             "the `node_tags` parameter is deprecated and will be removed in the v2.0.0 release: "
@@ -289,13 +293,13 @@ def _save_graph_xml(  # noqa: C901
         warn(msg, FutureWarning, stacklevel=2)
 
     if node_attrs is None:
-        node_attrs = settings.osm_xml_node_attrs
+        node_attrs = osm_xml_node_attrs
     else:
         msg = "the `node_attrs` parameter is deprecated and will be removed in the v2.0.0 release"
         warn(msg, FutureWarning, stacklevel=2)
 
     if edge_tags is None:
-        edge_tags = settings.osm_xml_way_tags
+        edge_tags = osm_xml_way_tags
     else:
         msg = (
             "the `edge_tags` parameter is deprecated and will be removed in the v2.0.0 release: "
@@ -304,7 +308,7 @@ def _save_graph_xml(  # noqa: C901
         warn(msg, FutureWarning, stacklevel=2)
 
     if edge_attrs is None:
-        edge_attrs = settings.osm_xml_way_attrs
+        edge_attrs = osm_xml_way_attrs
     else:
         msg = "the `edge_attrs` parameter is deprecated and will be removed in the v2.0.0 release"
         warn(msg, FutureWarning, stacklevel=2)

@@ -124,8 +124,9 @@ def _get_overpass_pause(base_endpoint, recursive_delay=5, default_duration=60):
     pause : int
     """
     if settings.timeout is None:
-        settings.timeout = settings.requests_timeout
+        timeout = settings.requests_timeout
     else:
+        timeout = settings.timeout
         msg = (
             "`settings.timeout` is deprecated and will be removed in the "
             "v2.0.0 release: use `settings.requests_timeout` instead"
@@ -141,7 +142,7 @@ def _get_overpass_pause(base_endpoint, recursive_delay=5, default_duration=60):
         response = requests.get(
             url,
             headers=_downloader._get_http_headers(),
-            timeout=settings.timeout,
+            timeout=timeout,
             **settings.requests_kwargs,
         )
         status = response.text.split("\n")[4]
@@ -194,8 +195,9 @@ def _make_overpass_settings():
     string
     """
     if settings.timeout is None:
-        settings.timeout = settings.requests_timeout
+        timeout = settings.requests_timeout
     else:
+        timeout = settings.timeout
         msg = (
             "`settings.timeout` is deprecated and will be removed in the "
             "v2.0.0 release: use `settings.requests_timeout` instead"
@@ -203,16 +205,17 @@ def _make_overpass_settings():
         warn(msg, FutureWarning, stacklevel=2)
 
     if settings.memory is None:
-        settings.memory = settings.overpass_memory
+        memory = settings.overpass_memory
     else:
+        memory = settings.memory
         msg = (
             "`settings.memory` is deprecated and will be removed in the "
             " v2.0.0 release: use `settings.overpass_memory` instead"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
-    maxsize = "" if settings.memory is None else f"[maxsize:{settings.memory}]"
-    return settings.overpass_settings.format(timeout=settings.timeout, maxsize=maxsize)
+    maxsize = "" if memory is None else f"[maxsize:{memory}]"
+    return settings.overpass_settings.format(timeout=timeout, maxsize=maxsize)
 
 
 def _make_overpass_polygon_coord_strs(polygon):
@@ -400,8 +403,9 @@ def _overpass_request(data, pause=None, error_pause=60):
     response_json : dict
     """
     if settings.timeout is None:
-        settings.timeout = settings.requests_timeout
+        timeout = settings.requests_timeout
     else:
+        timeout = settings.timeout
         msg = (
             "`settings.timeout` is deprecated and will be removed in the "
             "v2.0.0 release: use `settings.requests_timeout` instead"
@@ -436,11 +440,11 @@ def _overpass_request(data, pause=None, error_pause=60):
     time.sleep(this_pause)
 
     # transmit the HTTP POST request
-    utils.log(f"Post {prepared_url} with timeout={settings.timeout}")
+    utils.log(f"Post {prepared_url} with timeout={timeout}")
     response = requests.post(
         url,
         data=data,
-        timeout=settings.timeout,
+        timeout=timeout,
         headers=_downloader._get_http_headers(),
         **settings.requests_kwargs,
     )

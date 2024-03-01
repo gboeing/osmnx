@@ -86,8 +86,9 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
     response_json : dict
     """
     if settings.timeout is None:
-        settings.timeout = settings.requests_timeout
+        timeout = settings.requests_timeout
     else:
+        timeout = settings.timeout
         msg = (
             "`settings.timeout` is deprecated and will be removed in the v2.0.0 "
             "release: use `settings.requests_timeout` instead"
@@ -122,11 +123,11 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
     time.sleep(pause)
 
     # transmit the HTTP GET request
-    utils.log(f"Get {prepared_url} with timeout={settings.timeout}")
+    utils.log(f"Get {prepared_url} with timeout={timeout}")
     response = requests.get(
         url,
         params=params,
-        timeout=settings.timeout,
+        timeout=timeout,
         headers=_downloader._get_http_headers(),
         **settings.requests_kwargs,
     )

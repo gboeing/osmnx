@@ -294,8 +294,9 @@ def _elevation_request(url, pause):
     response_json : dict
     """
     if settings.timeout is None:
-        settings.timeout = settings.requests_timeout
+        timeout = settings.requests_timeout
     else:
+        timeout = settings.timeout
         msg = (
             "`settings.timeout` is deprecated and will be removed in the v2.0.0 "
             "release: use `settings.requests_timeout` instead"
@@ -313,10 +314,10 @@ def _elevation_request(url, pause):
     time.sleep(pause)
 
     # transmit the HTTP GET request
-    utils.log(f"Get {url} with timeout={settings.timeout}")
+    utils.log(f"Get {url} with timeout={timeout}")
     response = requests.get(
         url,
-        timeout=settings.timeout,
+        timeout=timeout,
         headers=_downloader._get_http_headers(),
         **settings.requests_kwargs,
     )
