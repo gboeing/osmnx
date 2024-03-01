@@ -130,7 +130,7 @@ def save_graph_xml(
     Parameters
     ----------
     data : networkx.MultiDiGraph
-        the input graph
+        do not use, deprecated
     filepath : string or pathlib.Path
         do not use, deprecated
     node_tags : list
@@ -152,11 +152,7 @@ def save_graph_xml(
     precision : int
         do not use, deprecated
     way_tag_aggs : dict
-        Keys are OSM way tag keys and values are aggregation functions
-        (anything accepted as an argument by pandas.agg). Allows user to
-        aggregate graph edge attribute values into single OSM way values. If
-        None, or if some tag's key does not exist in the dict, the way
-        attribute will be assigned the value of the first edge of the way.
+        do not use, deprecated
 
     Returns
     -------
