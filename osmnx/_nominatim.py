@@ -112,7 +112,7 @@ def _nominatim_request(
         params["key"] = settings.nominatim_key
 
     # prepare Nominatim API URL and see if request already exists in cache
-    url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
+    url = settings.nominatim_url.rstrip("/") + "/" + request_type
     prepared_url = str(requests.Request("GET", url, params=params).prepare().url)
     cached_response_json = _http._retrieve_from_cache(prepared_url)
     if isinstance(cached_response_json, list):

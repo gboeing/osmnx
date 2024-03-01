@@ -76,15 +76,12 @@ max_query_area_size : float
     Maximum area for any part of the geometry in meters: any polygon bigger
     than this will get divided up for multiple queries to the API. Default is
     `2500000000`.
-nominatim_endpoint : str
-    The base API url to use for Nominatim queries. Default is
-    `"https://nominatim.openstreetmap.org/"`.
 nominatim_key : str | None
     Your Nominatim API key, if you are using an API instance that requires
     one. Default is `None`.
-overpass_endpoint : str
-    The base API url to use for Overpass queries. Default is
-    `"https://overpass-api.de/api"`.
+nominatim_url : str
+    The base API url to use for Nominatim queries. Default is
+    `"https://nominatim.openstreetmap.org/"`.
 overpass_memory : int | None
     Overpass server memory allocation size for the query, in bytes. If
     None, server will choose its default allocation size. Use with caution.
@@ -100,6 +97,9 @@ overpass_settings : str
     {maxsize} values are set dynamically by OSMnx when used.
     To query, for example, historical OSM data as of a certain date:
     `'[out:json][timeout:90][date:"2019-10-28T19:20:00Z"]'`. Use with caution.
+overpass_url : str
+    The base API url to use for Overpass queries. Default is
+    `"https://overpass-api.de/api"`.
 requests_kwargs : dict[str, Any]
     Optional keyword args to pass to the requests package when connecting
     to APIs, for example to configure authentication or provide a path to
@@ -152,12 +152,12 @@ log_level: int = lg.INFO
 log_name: str = "OSMnx"
 logs_folder: str | Path = "./logs"
 max_query_area_size: float = 50 * 1000 * 50 * 1000
-nominatim_endpoint: str = "https://nominatim.openstreetmap.org/"
 nominatim_key: str | None = None
-overpass_endpoint: str = "https://overpass-api.de/api"
+nominatim_url: str = "https://nominatim.openstreetmap.org/"
 overpass_memory: int | None = None
 overpass_rate_limit: bool = True
 overpass_settings: str = "[out:json][timeout:{timeout}]{maxsize}"
+overpass_url: str = "https://overpass-api.de/api"
 requests_kwargs: dict[str, Any] = {}
 requests_timeout: float = 180
 use_cache: bool = True

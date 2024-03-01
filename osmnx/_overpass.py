@@ -417,10 +417,10 @@ def _overpass_request(
     response_json
     """
     # resolve url to same IP even if there is server round-robin redirecting
-    _http._config_dns(settings.overpass_endpoint)
+    _http._config_dns(settings.overpass_url)
 
     # prepare the Overpass API URL and see if request already exists in cache
-    url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
+    url = settings.overpass_url.rstrip("/") + "/interpreter"
     prepared_url = str(requests.Request("GET", url, params=data).prepare().url)
     cached_response_json = _http._retrieve_from_cache(prepared_url)
     if isinstance(cached_response_json, dict):
@@ -428,7 +428,7 @@ def _overpass_request(
 
     # pause then request this URL
     if pause is None:
-        this_pause = _get_overpass_pause(settings.overpass_endpoint)
+        this_pause = _get_overpass_pause(settings.overpass_url)
     domain = _http._hostname_from_url(url)
     msg = f"Pausing {this_pause} second(s) before making HTTP POST request to {domain!r}"
     utils.log(msg, level=lg.INFO)
@@ -447,7 +447,7 @@ def _overpass_request(
 
     # handle 429 and 504 errors by pausing then recursively re-trying request
     if response.status_code in {429, 504}:  # pragma: no cover
-        this_pause = error_pause + _get_overpass_pause(settings.overpass_endpoint)
+        this_pause = error_pause + _get_overpass_pause(settings.overpass_url)
         msg = (
             f"{domain!r} responded {response.status_code} {response.reason}: "
             f"we'll retry in {this_pause} secs"

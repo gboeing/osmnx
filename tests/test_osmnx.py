@@ -361,10 +361,10 @@ def test_nearest() -> None:
 
 def test_endpoints() -> None:
     """Test different API endpoints."""
-    default_timeout = ox.settings.requests_timeout
+    default_requests_timeout = ox.settings.requests_timeout
     default_key = ox.settings.nominatim_key
-    default_nominatim_endpoint = ox.settings.nominatim_endpoint
-    default_overpass_endpoint = ox.settings.overpass_endpoint
+    default_nominatim_url = ox.settings.nominatim_url
+    default_overpass_url = ox.settings.overpass_url
     default_overpass_rate_limit = ox.settings.overpass_rate_limit
 
     # test good and bad DNS resolution
@@ -381,12 +381,12 @@ def test_endpoints() -> None:
     # Test changing the Overpass endpoint.
     # This should fail because we didn't provide a valid endpoint
     ox.settings.overpass_rate_limit = False
-    ox.settings.overpass_endpoint = "http://NOT_A_VALID_ENDPOINT/api/"
+    ox.settings.overpass_url = "http://NOT_A_VALID_ENDPOINT/api/"
     with pytest.raises(ConnectionError, match="Max retries exceeded with url"):
         G = ox.graph_from_place(place1, network_type="all")
 
     ox.settings.overpass_rate_limit = default_overpass_rate_limit
-    ox.settings.requests_timeout = default_timeout
+    ox.settings.requests_timeout = default_requests_timeout
 
     params: OrderedDict[str, int | str] = OrderedDict()
     params["format"] = "json"
@@ -429,8 +429,8 @@ def test_endpoints() -> None:
     response_json = ox._nominatim._nominatim_request(params=params, request_type="lookup")
 
     ox.settings.nominatim_key = default_key
-    ox.settings.nominatim_endpoint = default_nominatim_endpoint
-    ox.settings.overpass_endpoint = default_overpass_endpoint
+    ox.settings.nominatim_url = default_nominatim_url
+    ox.settings.overpass_url = default_overpass_url
 
 
 def test_save_load() -> None:  # noqa: PLR0915
