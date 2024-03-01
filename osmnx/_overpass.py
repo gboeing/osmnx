@@ -408,11 +408,21 @@ def _overpass_request(data, pause=None, error_pause=60):
         )
         warn(msg, FutureWarning, stacklevel=2)
 
+    if settings.overpass_endpoint is None:
+        overpass_endpoint = settings.overpass_url
+    else:
+        overpass_endpoint = settings.overpass_endpoint
+        msg = (
+            "`settings.overpass_endpoint` is deprecated and will be removed in the "
+            "v2.0.0 release: use `settings.overpass_url` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     # resolve url to same IP even if there is server round-robin redirecting
-    _downloader._config_dns(settings.overpass_endpoint)
+    _downloader._config_dns(overpass_endpoint)
 
     # prepare the Overpass API URL and see if request already exists in cache
-    url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
+    url = overpass_endpoint.rstrip("/") + "/interpreter"
     prepared_url = requests.Request("GET", url, params=data).prepare().url
     cached_response_json = _downloader._retrieve_from_cache(prepared_url)
     if cached_response_json is not None:
@@ -420,7 +430,7 @@ def _overpass_request(data, pause=None, error_pause=60):
 
     # pause then request this URL
     if pause is None:
-        this_pause = _get_overpass_pause(settings.overpass_endpoint)
+        this_pause = _get_overpass_pause(overpass_endpoint)
     domain = _downloader._hostname_from_url(url)
     utils.log(f"Pausing {this_pause} second(s) before making HTTP POST request to {domain!r}")
     time.sleep(this_pause)
@@ -437,7 +447,7 @@ def _overpass_request(data, pause=None, error_pause=60):
 
     # handle 429 and 504 errors by pausing then recursively re-trying request
     if response.status_code in {429, 504}:  # pragma: no cover
-        this_pause = error_pause + _get_overpass_pause(settings.overpass_endpoint)
+        this_pause = error_pause + _get_overpass_pause(overpass_endpoint)
         msg = (
             f"{domain!r} responded {response.status_code} {response.reason}: "
             f"we'll retry in {this_pause} secs"

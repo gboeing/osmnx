@@ -85,11 +85,13 @@ max_query_area_size : int
 memory : int
     Do not use, deprecated. Use `overpass_memory` instead.
 nominatim_endpoint : str
-    The base API url to use for Nominatim queries. Default is
-    `"https://nominatim.openstreetmap.org/"`.
+    Do not use, deprecated. Use `nominatim_url` instead.
 nominatim_key : str
     Your Nominatim API key, if you are using an API instance that requires
     one. Default is `None`.
+nominatim_url : str
+    The base API url to use for Nominatim queries. Default is
+    `"https://nominatim.openstreetmap.org/"`.
 osm_xml_node_attrs : list
     Do not use, deprecated.
 osm_xml_node_tags : list
@@ -99,8 +101,7 @@ osm_xml_way_attrs : list
 osm_xml_way_tags : list
     Do not use, deprecated.
 overpass_endpoint : str
-    The base API url to use for Overpass queries. Default is
-    `"https://overpass-api.de/api"`.
+    Do not use, deprecated. Use `overpass_url` instead.
 overpass_memory : int | None
     Overpass server memory allocation size for the query, in bytes. If
     None, server will choose its default allocation size. Use with caution.
@@ -116,6 +117,9 @@ overpass_settings : str
     {maxsize} values are set dynamically by OSMnx when used.
     To query, for example, historical OSM data as of a certain date:
     `'[out:json][timeout:90][date:"2019-10-28T19:20:00Z"]'`. Use with caution.
+overpass_url : str
+    The base API url to use for Overpass queries. Default is
+    `"https://overpass-api.de/api"`.
 requests_kwargs : dict
     Optional keyword args to pass to the requests package when connecting
     to APIs, for example to configure authentication or provide a path to
@@ -168,16 +172,18 @@ log_name = "OSMnx"
 logs_folder = "./logs"
 max_query_area_size = 50 * 1000 * 50 * 1000
 memory = None
-nominatim_endpoint = "https://nominatim.openstreetmap.org/"
+nominatim_endpoint = None
 nominatim_key = None
+nominatim_url = "https://nominatim.openstreetmap.org/"
 osm_xml_node_attrs = None
 osm_xml_node_tags = None
 osm_xml_way_attrs = None
 osm_xml_way_tags = None
-overpass_endpoint = "https://overpass-api.de/api"
+overpass_endpoint = None
 overpass_memory = None
 overpass_rate_limit = True
 overpass_settings = "[out:json][timeout:{timeout}]{maxsize}"
+overpass_url = "https://overpass-api.de/api"
 requests_kwargs: dict = {}
 requests_timeout = 180
 timeout = None
