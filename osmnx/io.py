@@ -270,14 +270,14 @@ def save_graph_xml(
     This function merges graph edges such that each OSM way has one entry in
     the XML output, with the way's nodes topologically sorted. `G` must be
     unsimplified to save as OSM XML: otherwise, one edge could comprise
-    multiple OSM ways, making it impossible to properly group edges by way.
+    multiple OSM ways, making it impossible to group and sort edges in way.
     `G` should also have been created with `ox.settings.all_oneway=True` for
     this function to behave properly.
 
     Parameters
     ----------
     G
-        Unsimplified graph to save as an OSM XML file.
+        Unsimplified, unprojected graph to save as an OSM XML file.
     filepath
         Path to the saved file including extension. If None, use default
         `settings.data_folder/graph.osm`.

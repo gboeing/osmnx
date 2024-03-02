@@ -164,7 +164,7 @@ def test_osm_xml() -> None:
 
     Path.unlink(Path(temp_filename))
 
-    # test .osm xml saving
+    # test OSM xml saving
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
     fp = Path(ox.settings.data_folder) / "graph.osm"
     ox.io.save_graph_xml(G, filepath=fp, way_tag_aggs={"lanes": "sum"})
@@ -180,14 +180,20 @@ def test_osm_xml() -> None:
     default_overpass_settings = ox.settings.overpass_settings
     ox.settings.overpass_settings += '[date:"2023-04-01T00:00:00Z"]'
     point = (39.0290346, -84.4696884)
-    G = ox.graph_from_point(point, dist=500, dist_type="bbox", network_type="drive", simplify=True)
-    with pytest.raises(ox._errors.GraphSimplificationError):
-        ox.io.save_graph_xml(G)
     G = ox.graph_from_point(point, dist=500, dist_type="bbox", network_type="drive", simplify=False)
-    nx.set_node_attributes(G, 0, name="uid")
     ox.io.save_graph_xml(G)
     _ = etree.parse(fp, parser=parser)  # noqa: S320
-    G = ox.graph_from_xml(fp)  # issues UserWarning
+
+    # raise error if trying to save a simplified graph
+    with pytest.raises(ox._errors.GraphSimplificationError):
+        ox.io.save_graph_xml(ox.simplification.simplify_graph(G))
+
+    # save a projected/consolidated graph as OSM XML
+    Gc = ox.simplification.consolidate_intersections(ox.projection.project_graph(G))
+    nx.set_node_attributes(Gc, 0, name="uid")
+    ox.io.save_graph_xml(Gc, fp)  # issues UserWarning
+    Gc = ox.graph.graph_from_xml(fp)  # issues UserWarning
+    _ = etree.parse(fp, parser=parser)  # noqa: S320
 
     # restore settings
     ox.settings.overpass_settings = default_overpass_settings

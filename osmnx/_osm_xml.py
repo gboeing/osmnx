@@ -23,6 +23,7 @@ from xml.sax.handler import ContentHandler
 import networkx as nx
 import pandas as pd
 
+from . import projection
 from . import settings
 from . import utils
 from . import utils_graph
@@ -160,7 +161,7 @@ def _save_graph_xml(
     Parameters
     ----------
     G
-        Unsimplified graph to save as an OSM XML file.
+        Unsimplified, unprojected graph to save as an OSM XML file.
     filepath
         Path to the saved file including extension. If None, use default
         `settings.data_folder/graph.osm`.
@@ -210,6 +211,18 @@ def _save_graph_xml(
                 gdf[col] = value
             else:
                 gdf[col] = gdf[col].fillna(value)
+
+    # warn user if graph is projected then remove lat/lon gdf_nodes columns if
+    # they exist, as x/y cols will be saved as lat/lon node attributes instead
+    if projection.is_projected(G.graph["crs"]):
+        msg = (
+            "Graph should be unprojected: the existing lat-lon node attributes will "
+            "be discarded and the projected x-y coordinates will be saved as lat-lon "
+            "node attributes instead. Project your graph back to lat-lon to avoid this."
+        )
+        warn(msg, category=UserWarning, stacklevel=2)
+    for col in set(gdf_nodes.columns) & {"lat", "lon"}:
+        gdf_nodes = gdf_nodes.drop(columns=[col])
 
     # transform nodes gdf to meet OSM XML spec
     # 1) reset index (osmid) then rename osmid, x, and y columns
