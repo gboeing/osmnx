@@ -48,7 +48,7 @@ elevation_url_template : str
     `"https://api.opentopodata.org/v1/aster30m?locations={locations}&key={key}"`
 http_accept_language : str
     HTTP header accept-language. Default is `"en"`. Note that Nominatim's
-    default language is "en" and it can sort result importance scores
+    default language is "en" and it may sort its results' importance scores
     differently if a different language is specified.
 http_referer : str
     HTTP header referer. Default is
@@ -114,12 +114,12 @@ use_cache : bool
     API repeatedly for the same request. Default is `True`.
 useful_tags_node : list[str]
     OSM "node" tags to add as graph node attributes, when present in the data
-    retrieved from OSM. Default is `["ref", "highway"]`.
+    retrieved from OSM. Default is `["highway", "ref"]`.
 useful_tags_way : list[str]
     OSM "way" tags to add as graph edge attributes, when present in the data
-    retrieved from OSM. Default is `["bridge", "tunnel", "oneway", "lanes",
-    "ref", "name", "highway", "maxspeed", "service", "access", "area",
-    "landuse", "width", "est_width", "junction"]`.
+    retrieved from OSM. Default is `["access", "area", "bridge", "est_width",
+    "highway", "junction", "landuse", "lanes", "maxspeed", "name", "oneway",
+    "ref", "service", "tunnel", "width"]`.
 """
 
 from __future__ import annotations
