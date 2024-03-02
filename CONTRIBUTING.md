@@ -24,3 +24,5 @@ Ensure you have followed the installation instructions in the [documentation](ht
 - Fork the repo, make your change, update the [changelog](./CHANGELOG.md), run the [tests](./tests), and submit a pull request.
 - Adhere to the project's code and docstring standards by running its [pre-commit](.pre-commit-config.yaml) hooks.
 - Respond to code review.
+
+The OSMnx project follows three principles when adding new functionality: 1) it is useful for a broad set of users, 2) it generalizes well, and 3) it is not trivially easy for users to implement themselves.
