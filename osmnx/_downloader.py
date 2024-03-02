@@ -6,6 +6,7 @@ import socket
 from hashlib import sha1
 from pathlib import Path
 from urllib.parse import urlparse
+from warnings import warn
 
 import requests
 from requests.exceptions import JSONDecodeError
@@ -150,12 +151,42 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
     -------
     headers : dict
     """
+    if settings.default_accept_language is None:
+        default_accept_language = settings.http_accept_language
+    else:
+        default_accept_language = settings.default_accept_language
+        msg = (
+            "`settings.default_accept_language` is deprecated and will be removed "
+            "in the v2.0.0 release: use `settings.http_accept_language` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if settings.default_referer is None:
+        default_referer = settings.http_referer
+    else:
+        default_referer = settings.default_referer
+        msg = (
+            "`settings.default_referer` is deprecated and will be removed in the "
+            "v2.0.0 release: use `settings.http_referer` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if settings.default_user_agent is None:
+        default_user_agent = settings.http_user_agent
+    else:
+        default_user_agent = settings.default_user_agent
+        msg = (
+            "`settings.default_user_agent` is deprecated and will be removed in "
+            "the v2.0.0 release: use `settings.http_user_agent` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     if user_agent is None:
-        user_agent = settings.default_user_agent
+        user_agent = default_user_agent
     if referer is None:
-        referer = settings.default_referer
+        referer = default_referer
     if accept_language is None:
-        accept_language = settings.default_accept_language
+        accept_language = default_accept_language
 
     headers = requests.utils.default_headers()
     headers.update(
@@ -185,6 +216,16 @@ def _resolve_host_via_doh(hostname):
     ip_address : string
         resolved IP address of host, or hostname itself if resolution failed
     """
+    if settings.timeout is None:
+        timeout = settings.requests_timeout
+    else:
+        timeout = settings.timeout
+        msg = (
+            "`settings.timeout` is deprecated and will be removed in the v2.0.0 "
+            "release: use `settings.requests_timeout` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     if settings.doh_url_template is None:
         # if user has set the url template to None, return hostname itself
         utils.log("User set `doh_url_template=None`, requesting host by name", level=lg.WARNING)
@@ -193,7 +234,7 @@ def _resolve_host_via_doh(hostname):
     err_msg = f"Failed to resolve {hostname!r} IP via DoH, requesting host by name"
     try:
         url = settings.doh_url_template.format(hostname=hostname)
-        response = requests.get(url, timeout=settings.timeout)
+        response = requests.get(url, timeout=timeout)
         data = response.json()
 
     # if we cannot reach DoH server or resolve host, return hostname itself

@@ -3,6 +3,7 @@
 import logging as lg
 import time
 from collections import OrderedDict
+from warnings import warn
 
 import requests
 
@@ -84,12 +85,32 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
     -------
     response_json : dict
     """
+    if settings.timeout is None:
+        timeout = settings.requests_timeout
+    else:
+        timeout = settings.timeout
+        msg = (
+            "`settings.timeout` is deprecated and will be removed in the v2.0.0 "
+            "release: use `settings.requests_timeout` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if settings.nominatim_endpoint is None:
+        nominatim_endpoint = settings.nominatim_url
+    else:
+        nominatim_endpoint = settings.nominatim_endpoint
+        msg = (
+            "`settings.nominatim_endpoint` is deprecated and will be removed in the "
+            "v2.0.0 release: use `settings.nominatim_url` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
         msg = 'Nominatim request_type must be "search", "reverse", or "lookup"'
         raise ValueError(msg)
 
     # prepare Nominatim API URL and see if request already exists in cache
-    url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
+    url = nominatim_endpoint.rstrip("/") + "/" + request_type
     params["key"] = settings.nominatim_key
     prepared_url = requests.Request("GET", url, params=params).prepare().url
     cached_response_json = _downloader._retrieve_from_cache(prepared_url)
@@ -102,11 +123,11 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
     time.sleep(pause)
 
     # transmit the HTTP GET request
-    utils.log(f"Get {prepared_url} with timeout={settings.timeout}")
+    utils.log(f"Get {prepared_url} with timeout={timeout}")
     response = requests.get(
         url,
         params=params,
-        timeout=settings.timeout,
+        timeout=timeout,
         headers=_downloader._get_http_headers(),
         **settings.requests_kwargs,
     )

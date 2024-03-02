@@ -276,15 +276,16 @@ def load_graphml(
 def save_graph_xml(
     data,
     filepath=None,
-    node_tags=settings.osm_xml_node_tags,
-    node_attrs=settings.osm_xml_node_attrs,
-    edge_tags=settings.osm_xml_way_tags,
-    edge_attrs=settings.osm_xml_way_attrs,
-    oneway=False,
-    merge_edges=True,
+    node_tags=None,
+    node_attrs=None,
+    edge_tags=None,
+    edge_attrs=None,
+    oneway=None,
+    merge_edges=None,
     edge_tag_aggs=None,
-    api_version=0.6,
-    precision=6,
+    api_version=None,
+    precision=None,
+    way_tag_aggs=None,
 ):
     """
     Save graph to disk as an OSM-formatted XML .osm file.
@@ -298,62 +299,36 @@ def save_graph_xml(
     you have downloaded or generated elsewhere, use the `graph.graph_from_xml`
     function.
 
-    Note: for large networks this function can take a long time to run. Before
-    using this function, make sure you configured OSMnx as described in the
-    example below when you created the graph.
-
-    Example
-    -------
-    >>> import osmnx as ox
-    >>> utn = ox.settings.useful_tags_node
-    >>> oxna = ox.settings.osm_xml_node_attrs
-    >>> oxnt = ox.settings.osm_xml_node_tags
-    >>> utw = ox.settings.useful_tags_way
-    >>> oxwa = ox.settings.osm_xml_way_attrs
-    >>> oxwt = ox.settings.osm_xml_way_tags
-    >>> utn = list(set(utn + oxna + oxnt))
-    >>> utw = list(set(utw + oxwa + oxwt))
-    >>> ox.settings.all_oneway = True
-    >>> ox.settings.useful_tags_node = utn
-    >>> ox.settings.useful_tags_way = utw
-    >>> G = ox.graph_from_place('Piedmont, CA, USA', network_type='drive')
-    >>> ox.save_graph_xml(G, filepath='./data/graph.osm')
-
     Parameters
     ----------
-    data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
-        geopandas GeoDataFrames
+    data : networkx.MultiDiGraph
+        the input graph
     filepath : string or pathlib.Path
-        path to the .osm file including extension. if None, use default data
-        folder + graph.osm
+        do not use, deprecated
     node_tags : list
-        osm node tags to include in output OSM XML
+        do not use, deprecated
     node_attrs: list
-        osm node attributes to include in output OSM XML
+        do not use, deprecated
     edge_tags : list
-        osm way tags to include in output OSM XML
+        do not use, deprecated
     edge_attrs : list
-        osm way attributes to include in output OSM XML
+        do not use, deprecated
     oneway : bool
-        the default oneway value used to fill this tag where missing
+        do not use, deprecated
     merge_edges : bool
-        if True merges graph edges such that each OSM way has one entry
-        and one entry only in the OSM XML. Otherwise, every OSM way
-        will have a separate entry for each node pair it contains.
-    edge_tag_aggs : list of length-2 string tuples
-        useful only if merge_edges is True, this argument allows the user
-        to specify edge attributes to aggregate such that the merged
-        OSM way entry tags accurately represent the sum total of
-        their component edge attributes. For example, if the user
-        wants the OSM way to have a "length" attribute, the user must
-        specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
-        this method to aggregate the lengths of the individual
-        component edges. Otherwise, the length attribute will simply
-        reflect the length of the first edge associated with the way.
+        do not use, deprecated
+    edge_tag_aggs : tuple
+        do not use, deprecated
     api_version : float
-        OpenStreetMap API version to write to the XML file header
+        do not use, deprecated
     precision : int
-        number of decimal places to round latitude and longitude values
+        do not use, deprecated
+    way_tag_aggs : dict
+        Keys are OSM way tag keys and values are aggregation functions
+        (anything accepted as an argument by pandas.agg). Allows user to
+        aggregate graph edge attribute values into single OSM way values. If
+        None, or if some tag's key does not exist in the dict, the way
+        attribute will be assigned the value of the first edge of the way.
 
     Returns
     -------
@@ -371,6 +346,7 @@ def save_graph_xml(
         edge_tag_aggs,
         api_version,
         precision,
+        way_tag_aggs,
     )
 
 

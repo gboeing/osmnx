@@ -109,15 +109,16 @@ def _overpass_json_from_file(filepath, encoding):
 def save_graph_xml(
     data,
     filepath=None,
-    node_tags=settings.osm_xml_node_tags,
-    node_attrs=settings.osm_xml_node_attrs,
-    edge_tags=settings.osm_xml_way_tags,
-    edge_attrs=settings.osm_xml_way_attrs,
-    oneway=False,
-    merge_edges=True,
+    node_tags=None,
+    node_attrs=None,
+    edge_tags=None,
+    edge_attrs=None,
+    oneway=None,
+    merge_edges=None,
     edge_tag_aggs=None,
-    api_version=0.6,
-    precision=6,
+    api_version=None,
+    precision=None,
+    way_tag_aggs=None,
 ):
     """
     Do not use: deprecated.
@@ -128,7 +129,7 @@ def save_graph_xml(
 
     Parameters
     ----------
-    data : networkx.multidigraph
+    data : networkx.MultiDiGraph
         do not use, deprecated
     filepath : string or pathlib.Path
         do not use, deprecated
@@ -144,11 +145,13 @@ def save_graph_xml(
         do not use, deprecated
     merge_edges : bool
         do not use, deprecated
-    edge_tag_aggs : list of length-2 string tuples
+    edge_tag_aggs : tuple
         do not use, deprecated
     api_version : float
         do not use, deprecated
     precision : int
+        do not use, deprecated
+    way_tag_aggs : dict
         do not use, deprecated
 
     Returns
@@ -174,65 +177,179 @@ def save_graph_xml(
         edge_tag_aggs,
         api_version,
         precision,
+        way_tag_aggs,
     )
 
 
-def _save_graph_xml(
+def _save_graph_xml(  # noqa: C901
     data,
-    filepath=None,
-    node_tags=settings.osm_xml_node_tags,
-    node_attrs=settings.osm_xml_node_attrs,
-    edge_tags=settings.osm_xml_way_tags,
-    edge_attrs=settings.osm_xml_way_attrs,
-    oneway=False,
-    merge_edges=True,
-    edge_tag_aggs=None,
-    api_version=0.6,
-    precision=6,
+    filepath,
+    node_tags,
+    node_attrs,
+    edge_tags,
+    edge_attrs,
+    oneway,
+    merge_edges,
+    edge_tag_aggs,
+    api_version,
+    precision,
+    way_tag_aggs,
 ):
     """
     Save graph to disk as an OSM-formatted UTF-8 encoded XML .osm file.
 
     Parameters
     ----------
-    data : networkx multi(di)graph OR a length 2 iterable of nodes/edges
-        geopandas GeoDataFrames
+    data : networkx.MultiDiGraph
+        the input graph
     filepath : string or pathlib.Path
-        path to the .osm file including extension. if None, use default data
-        folder + graph.osm
+        do not use, deprecated
     node_tags : list
-        osm node tags to include in output OSM XML
+        do not use, deprecated
     node_attrs: list
-        osm node attributes to include in output OSM XML
+        do not use, deprecated
     edge_tags : list
-        osm way tags to include in output OSM XML
+        do not use, deprecated
     edge_attrs : list
-        osm way attributes to include in output OSM XML
+        do not use, deprecated
     oneway : bool
-        the default oneway value used to fill this tag where missing
+        do not use, deprecated
     merge_edges : bool
-        if True merges graph edges such that each OSM way has one entry
-        and one entry only in the OSM XML. Otherwise, every OSM way
-        will have a separate entry for each node pair it contains.
-    edge_tag_aggs : list of length-2 string tuples
-        useful only if merge_edges is True, this argument allows the user
-        to specify edge attributes to aggregate such that the merged
-        OSM way entry tags accurately represent the sum total of
-        their component edge attributes. For example, if the user
-        wants the OSM way to have a "length" attribute, the user must
-        specify `edge_tag_aggs=[('length', 'sum')]` in order to tell
-        this method to aggregate the lengths of the individual
-        component edges. Otherwise, the length attribute will simply
-        reflect the length of the first edge associated with the way.
+        do not use, deprecated
+    edge_tag_aggs : tuple
+        do not use, deprecated
     api_version : float
-        OpenStreetMap API version to write to the XML file header
+        do not use, deprecated
     precision : int
-        number of decimal places to round latitude and longitude values
+        do not use, deprecated
+    way_tag_aggs : dict
+        Keys are OSM way tag keys and values are aggregation functions
+        (anything accepted as an argument by pandas.agg). Allows user to
+        aggregate graph edge attribute values into single OSM way values. If
+        None, or if some tag's key does not exist in the dict, the way
+        attribute will be assigned the value of the first edge of the way.
 
     Returns
     -------
     None
     """
+    if settings.osm_xml_node_attrs is None:
+        osm_xml_node_attrs = [
+            "id",
+            "timestamp",
+            "uid",
+            "user",
+            "version",
+            "changeset",
+            "lat",
+            "lon",
+        ]
+    else:
+        osm_xml_node_attrs = settings.osm_xml_node_attrs
+        msg = (
+            "`settings.osm_xml_node_attrs` is deprecated and will be removed "
+            "in the v2.0.0 release"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if settings.osm_xml_node_tags is None:
+        osm_xml_node_tags = ["highway"]
+    else:
+        osm_xml_node_tags = settings.osm_xml_node_tags
+        msg = (
+            "`settings.osm_xml_node_tags` is deprecated and will be removed "
+            "in the v2.0.0 release"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if settings.osm_xml_way_attrs is None:
+        osm_xml_way_attrs = ["id", "timestamp", "uid", "user", "version", "changeset"]
+    else:
+        osm_xml_way_attrs = settings.osm_xml_way_attrs
+        msg = (
+            "`settings.osm_xml_way_attrs` is deprecated and will be removed "
+            "in the v2.0.0 release"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if settings.osm_xml_way_tags is None:
+        osm_xml_way_tags = ["highway", "lanes", "maxspeed", "name", "oneway"]
+    else:
+        osm_xml_way_tags = settings.osm_xml_way_tags
+        msg = "`settings.osm_xml_way_tags` is deprecated and will be removed in the v2.0.0 release"
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if node_tags is None:
+        node_tags = osm_xml_node_tags
+    else:
+        msg = (
+            "the `node_tags` parameter is deprecated and will be removed in the v2.0.0 release: "
+            "use `settings.useful_tags_node` instead starting in v2.0.0"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if node_attrs is None:
+        node_attrs = osm_xml_node_attrs
+    else:
+        msg = "the `node_attrs` parameter is deprecated and will be removed in the v2.0.0 release"
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if edge_tags is None:
+        edge_tags = osm_xml_way_tags
+    else:
+        msg = (
+            "the `edge_tags` parameter is deprecated and will be removed in the v2.0.0 release: "
+            "use `settings.useful_tags_way` instead starting in v2.0.0"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if edge_attrs is None:
+        edge_attrs = osm_xml_way_attrs
+    else:
+        msg = "the `edge_attrs` parameter is deprecated and will be removed in the v2.0.0 release"
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if oneway is None:
+        oneway = False
+    else:
+        msg = "the `oneway` parameter is deprecated and will be removed in the v2.0.0 release"
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if merge_edges is None:
+        merge_edges = True
+    else:
+        msg = "the `merge_edges` parameter is deprecated and will be removed in the v2.0.0 release"
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if edge_tag_aggs is None:
+        if way_tag_aggs is not None:
+            edge_tag_aggs = way_tag_aggs.items()
+    else:
+        msg = (
+            "the `edge_tag_aggs` parameter is deprecated and will be removed in the v2.0.0 release: "
+            "use `way_tag_aggs` instead"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if api_version is None:
+        api_version = 0.6
+    else:
+        msg = "the `api_version` parameter is deprecated and will be removed in the v2.0.0 release"
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if precision is None:
+        precision = 6
+    else:
+        msg = "the `precision` parameter is deprecated and will be removed in the v2.0.0 release"
+        warn(msg, FutureWarning, stacklevel=2)
+
+    if not isinstance(data, nx.MultiDiGraph):
+        msg = "the graph to save as XML must be of type MultiDiGraph, starting in v2.0.0"
+        warn(msg, FutureWarning, stacklevel=2)
+    elif data.graph.get("simplified", False):
+        msg = "starting in v2.0.0, graph must be unsimplified to save as OSM XML"
+        warn(msg, FutureWarning, stacklevel=2)
+
     # default filepath if none was provided
     filepath = Path(settings.data_folder) / "graph.osm" if filepath is None else Path(filepath)
 
