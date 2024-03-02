@@ -407,21 +407,21 @@ def consolidate_intersections(
 
     Merges nearby nodes and returns either their centroids or a rebuilt graph
     with consolidated intersections and reconnected edge geometries. The
-    tolerance argument should be adjusted to approximately match street design
-    standards in the specific street network, and you should always use a
-    projected graph to work in meaningful and consistent units like meters.
-    Note the tolerance represents a per-node buffering radius: for example, to
-    consolidate nodes within 10 meters of each other, use tolerance=5.
+    `tolerance` argument should be adjusted to approximately match street
+    design standards in the specific street network, and you should always use
+    a projected graph to work in meaningful and consistent units like meters.
+    Note `tolerance` represents a per-node buffering radius: for example, to
+    consolidate nodes within 10 meters of each other, use `tolerance=5`.
 
-    When rebuild_graph=False, it uses a purely geometrical (and relatively
+    When `rebuild_graph` is False, it uses a purely geometric (and relatively
     fast) algorithm to identify "geometrically close" nodes, merge them, and
-    return just the merged intersections' centroids. When rebuild_graph=True,
+    return the merged intersections' centroids. When `rebuild_graph` is True,
     it uses a topological (and slower but more accurate) algorithm to identify
     "topologically close" nodes, merge them, then rebuild/return the graph.
-    Returned graph's node IDs represent clusters rather than osmids. Refer to
-    nodes' osmid_original attributes for original osmids. If multiple nodes
-    were merged together, the osmid_original attribute is a list of merged
-    nodes' osmids.
+    Returned graph's node IDs represent clusters rather than "osmid" values.
+    Refer to nodes' "osmid_original" attributes for original "osmid" values.
+    If multiple nodes were merged together, the "osmid_original" attribute is
+    a list of merged nodes' "osmid" values.
 
     Divided roads are often represented by separate centerline edges. The
     intersection of two divided roads thus creates 4 nodes, representing where
@@ -522,14 +522,14 @@ def _consolidate_intersections_rebuild_graph(  # noqa: PLR0912,PLR0915
     Merge nodes and return a rebuilt graph with consolidated intersections and
     reconnected edge geometries.
 
-    The tolerance argument should be adjusted to approximately match street
+    The `tolerance` argument should be adjusted to approximately match street
     design standards in the specific street network, and you should always use
     a projected graph to work in meaningful and consistent units like meters.
 
-    Returned graph's node IDs represent clusters rather than osmids. Refer to
-    nodes' osmid_original attributes for original osmids. If multiple nodes
-    were merged together, the osmid_original attribute is a list of merged
-    nodes' osmids.
+    Returned graph's node IDs represent clusters rather than "osmid" values.
+    Refer to nodes' "osmid_original" attributes for original "osmid" values.
+    If multiple nodes were merged together, the "osmid_original" attribute is
+    a list of merged nodes' "osmid" values.
 
     Parameters
     ----------
