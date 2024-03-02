@@ -1,5 +1,5 @@
 """
-Download OpenStreetMap geospatial features' geometries and attributes.
+Download and create GeoDataFrames from OpenStreetMap geospatial features.
 
 Retrieve points of interest, building footprints, transit lines/stops, or any
 other map features from OSM, including their geometries and attribute data,
@@ -91,13 +91,13 @@ def features_from_bbox(
     tags: dict[str, bool | str | list[str]],
 ) -> gpd.GeoDataFrame:
     """
-    Create a GeoDataFrame of OSM features within a N, S, E, W bounding box.
+    Download OSM features within a lat-lon bounding box.
 
     You can use the `settings` module to retrieve a snapshot of historical OSM
     data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
-
-    For more details, see: https://wiki.openstreetmap.org/wiki/Map_features
+    memory allocation, and other custom settings. This function searches for
+    features using tags. For more details, see:
+    https://wiki.openstreetmap.org/wiki/Map_features
 
     Parameters
     ----------
@@ -132,13 +132,13 @@ def features_from_point(
     dist: float,
 ) -> gpd.GeoDataFrame:
     """
-    Create GeoDataFrame of OSM features within some distance N, S, E, W of a point.
+    Download OSM features within some distance of a lat-lon point.
 
     You can use the `settings` module to retrieve a snapshot of historical OSM
     data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
-
-    For more details, see: https://wiki.openstreetmap.org/wiki/Map_features
+    memory allocation, and other custom settings. This function searches for
+    features using tags. For more details, see:
+    https://wiki.openstreetmap.org/wiki/Map_features
 
     Parameters
     ----------
@@ -177,13 +177,13 @@ def features_from_address(
     dist: float,
 ) -> gpd.GeoDataFrame:
     """
-    Create GeoDataFrame of OSM features within some distance N, S, E, W of address.
+    Download OSM features within some distance of an address.
 
     You can use the `settings` module to retrieve a snapshot of historical OSM
     data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
-
-    For more details, see: https://wiki.openstreetmap.org/wiki/Map_features
+    memory allocation, and other custom settings. This function searches for
+    features using tags. For more details, see:
+    https://wiki.openstreetmap.org/wiki/Map_features
 
     Parameters
     ----------
@@ -221,7 +221,7 @@ def features_from_place(
     which_result: int | None | list[int | None] = None,
 ) -> gpd.GeoDataFrame:
     """
-    Create GeoDataFrame of OSM features within boundaries of some place(s).
+    Download OSM features within the boundaries of some place(s).
 
     The query must be geocodable and OSM must have polygon boundaries for the
     geocode result. If OSM does not have a polygon for this place, you can
@@ -238,9 +238,9 @@ def features_from_place(
 
     You can use the `settings` module to retrieve a snapshot of historical OSM
     data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
-
-    For more details, see: https://wiki.openstreetmap.org/wiki/Map_features
+    memory allocation, and other custom settings. This function searches for
+    features using tags. For more details, see:
+    https://wiki.openstreetmap.org/wiki/Map_features
 
     Parameters
     ----------
@@ -281,13 +281,13 @@ def features_from_polygon(
     tags: dict[str, bool | str | list[str]],
 ) -> gpd.GeoDataFrame:
     """
-    Create GeoDataFrame of OSM features within boundaries of a (multi)polygon.
+    Download OSM features within the boundaries of a (Multi)Polygon.
 
     You can use the `settings` module to retrieve a snapshot of historical OSM
     data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
-
-    For more details, see: https://wiki.openstreetmap.org/wiki/Map_features
+    memory allocation, and other custom settings. This function searches for
+    features using tags. For more details, see:
+    https://wiki.openstreetmap.org/wiki/Map_features
 
     Parameters
     ----------
@@ -338,14 +338,14 @@ def features_from_xml(
     encoding: str = "utf-8",
 ) -> gpd.GeoDataFrame:
     """
-    Create a GeoDataFrame of OSM features from an OSM-formatted XML file.
+    Create a GeoDataFrame of OSM features from data in an OSM XML file.
 
-    Because this function creates a GeoDataFrame of features from an
-    OSM-formatted XML file that has already been downloaded (i.e., no query is
-    made to the Overpass API) the polygon and tags arguments are not required.
-    If they are not passed, this will return features for all of the tagged
-    elements in the file. If they are passed, they will be used to filter the
-    final GeoDataFrame.
+    Because this function creates a GeoDataFrame of features from an OSM XML
+    file that has already been downloaded (i.e., no query is made to the
+    Overpass API) the polygon and tags arguments are not required. If they are
+    not passed, this will return features for all of the tagged elements in
+    the file. If they are passed, they will be used to filter the final
+    GeoDataFrame.
 
     Parameters
     ----------
@@ -373,7 +373,7 @@ def features_from_xml(
     gdf
     """
     # transmogrify OSM XML file to JSON then create GeoDataFrame from it
-    response_jsons = [_osm_xml._overpass_json_from_file(filepath, encoding)]
+    response_jsons = [_osm_xml._overpass_json_from_xml(filepath, encoding)]
     return _create_gdf(response_jsons, polygon, tags)
 
 

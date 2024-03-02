@@ -97,12 +97,15 @@ def _consolidate_subdivide_geometry(geometry: Polygon | MultiPolygon) -> MultiPo
 
     Consolidate a geometry into a convex hull, then subdivide it into smaller
     sub-polygons if its area exceeds max size (in geometry's units). Configure
-    the max size via `max_query_area_size` in the `settings` module.
+    the max size via the `settings` module's `max_query_area_size`. Geometries
+    with areas much larger than `max_query_area_size` may take a long time to
+    process.
 
     When the geometry has a very large area relative to its vertex count,
     the resulting MultiPolygon's boundary may differ somewhat from the input,
     due to the way long straight lines are projected. You can interpolate
-    additional vertices along your input geometry's exterior to mitigate this.
+    additional vertices along your input geometry's exterior to mitigate this
+    if necessary.
 
     Parameters
     ----------

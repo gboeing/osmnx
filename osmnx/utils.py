@@ -74,7 +74,7 @@ def ts(style: str = "datetime", template: str | None = None) -> str:
     Parameters
     ----------
     style
-        {"datetime", "date", "time"}
+        {"datetime", "iso8601", "date", "time"}
         Format the timestamp with this built-in style.
     template
         If not None, format the timestamp with this format string instead of
@@ -87,6 +87,8 @@ def ts(style: str = "datetime", template: str | None = None) -> str:
     if template is None:
         if style == "datetime":
             template = "{:%Y-%m-%d %H:%M:%S}"
+        elif style == "iso8601":
+            template = "{:%Y-%m-%dT%H:%M:%SZ}"
         elif style == "date":
             template = "{:%Y-%m-%d}"
         elif style == "time":

@@ -32,6 +32,7 @@ typeguard
 types-requests
 
 # linting/testing
+lxml
 nbdime
 nbqa
 pre-commit

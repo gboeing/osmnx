@@ -1,10 +1,13 @@
-"""Read/write .osm formatted XML files."""
+"""
+Read/write OSM XML files.
+
+For file format information see https://wiki.openstreetmap.org/wiki/OSM_XML
+"""
 
 from __future__ import annotations
 
 import bz2
 import logging as lg
-import xml.sax
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
@@ -14,21 +17,47 @@ from xml.etree.ElementTree import Element
 from xml.etree.ElementTree import ElementTree
 from xml.etree.ElementTree import SubElement
 from xml.etree.ElementTree import parse as etree_parse
+from xml.sax import parse as sax_parse
+from xml.sax.handler import ContentHandler
 
 import networkx as nx
-import numpy as np
+import pandas as pd
 
 from . import settings
 from . import utils
 from . import utils_graph
-from ._version import __version__
+from ._errors import GraphSimplificationError
+from ._version import __version__ as osmnx_version
 
 if TYPE_CHECKING:
+    from xml.sax.xmlreader import AttributesImpl
+
     import geopandas as gpd
-    import pandas as pd
 
 
-class _OSMContentHandler(xml.sax.handler.ContentHandler):
+# default values for standard "node" and "way" XML subelement attributes
+# see: https://wiki.openstreetmap.org/wiki/Elements#Common_attributes
+ATTR_DEFAULTS = {
+    "changeset": "1",
+    "timestamp": utils.ts(style="iso8601"),
+    "uid": "1",
+    "user": "OSMnx",
+    "version": "1",
+    "visible": "true",
+}
+
+# default values for standard "osm" root XML element attributes
+# current OSM editing API version: https://wiki.openstreetmap.org/wiki/API
+ROOT_ATTR_DEFAULTS = {
+    "attribution": "https://www.openstreetmap.org/copyright",
+    "copyright": "OpenStreetMap and contributors",
+    "generator": f"OSMnx {osmnx_version}",
+    "license": "https://opendatacommons.org/licenses/odbl/1-0/",
+    "version": "0.6",
+}
+
+
+class _OSMContentHandler(ContentHandler):
     """
     SAX content handler for OSM XML.
 
@@ -41,22 +70,22 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
         self._element: dict[str, Any] | None = None
         self.object: dict[str, Any] = {"elements": []}
 
-    def startElement(self, name: str, attrs: xml.sax.xmlreader.AttributesImpl) -> None:  # noqa: ANN101,N802
+    def startElement(self, name: str, attrs: AttributesImpl) -> None:  # noqa: ANN101,N802
+        # identify node/way/relation attrs to convert from string to numeric
+        float_attrs = {"lat", "lon"}
+        int_attrs = {"changeset", "id", "uid", "version"}
+
         if name == "osm":
-            self.object.update({k: v for k, v in attrs.items() if k in {"version", "generator"}})
+            self.object.update({k: v for k, v in attrs.items() if k in ROOT_ATTR_DEFAULTS})
 
         elif name in {"node", "way"}:
             self._element = dict(type=name, tags={}, nodes=[], **attrs)
-            self._element.update({k: float(v) for k, v in attrs.items() if k in {"lat", "lon"}})
-            self._element.update(
-                {k: int(v) for k, v in attrs.items() if k in {"id", "uid", "version", "changeset"}},
-            )
+            self._element.update({k: float(v) for k, v in attrs.items() if k in float_attrs})
+            self._element.update({k: int(v) for k, v in attrs.items() if k in int_attrs})
 
         elif name == "relation":
             self._element = dict(type=name, tags={}, members=[], **attrs)
-            self._element.update(
-                {k: int(v) for k, v in attrs.items() if k in {"id", "uid", "version", "changeset"}},
-            )
+            self._element.update({k: int(v) for k, v in attrs.items() if k in int_attrs})
 
         elif name == "tag":
             self._element["tags"].update({attrs["k"]: attrs["v"]})  # type: ignore[index]
@@ -74,9 +103,9 @@ class _OSMContentHandler(xml.sax.handler.ContentHandler):
             self.object["elements"].append(self._element)
 
 
-def _overpass_json_from_file(filepath: str | Path, encoding: str) -> dict[str, Any]:
+def _overpass_json_from_xml(filepath: str | Path, encoding: str) -> dict[str, Any]:
     """
-    Read OSM XML from file and return Overpass-like JSON.
+    Read OSM XML data from file and return Overpass-like JSON.
 
     Parameters
     ----------
@@ -115,408 +144,264 @@ def _overpass_json_from_file(filepath: str | Path, encoding: str) -> dict[str, A
     # parse the XML to Overpass-like JSON
     with _opener(Path(filepath), encoding) as f:
         handler = _OSMContentHandler()
-        xml.sax.parse(f, handler)  # noqa: S317
+        sax_parse(f, handler)  # noqa: S317
         return handler.object
 
 
-def _save_graph_xml(  # noqa: PLR0913
-    data: nx.MultiDiGraph | tuple[gpd.GeoDataFrame, gpd.GeoDataFrame],
+def _save_graph_xml(
+    G: nx.MultiDiGraph,
     filepath: str | Path | None,
-    node_tags: list[str],
-    node_attrs: list[str],
-    edge_tags: list[str],
-    edge_attrs: list[str],
-    oneway: bool,  # noqa: FBT001
-    merge_edges: bool,  # noqa: FBT001
-    edge_tag_aggs: list[tuple[str, str]] | None,
-    api_version: str,
-    precision: int,
+    way_tag_aggs: dict[str, Any] | None,
+    encoding: str = "utf-8",
 ) -> None:
     """
-    Save graph to disk as an OSM-formatted XML .osm file.
+    Save graph to disk as an OSM XML file.
 
     Parameters
     ----------
-    data
-        Either a MultiDiGraph or (gdf_nodes, gdf_edges) tuple.
+    G
+        Unsimplified graph to save as an OSM XML file.
     filepath
-        Path to the .osm file including extension. If None, use default
+        Path to the saved file including extension. If None, use default
         `settings.data_folder/graph.osm`.
-    node_tags
-        OSM node tags to include in output OSM XML.
-    node_attrs
-        OSM node attributes to include in output OSM XML.
-    edge_tags
-        OSM way tags to include in output OSM XML.
-    edge_attrs
-        OSM way attributes to include in output OSM XML.
-    oneway
-        The default oneway value used to fill this tag where missing.
-    merge_edges
-        If True, merge graph edges such that each OSM way has one entry and
-        one entry only in the OSM XML. Otherwise, every OSM way will have a
-        separate entry for each node pair it contains.
-    edge_tag_aggs
-        Useful only if `merge_edges` is True, this argument allows the user to
-        specify edge attributes to aggregate such that the merged OSM way
-        entry tags accurately represent the sum total of their component edge
-        attributes. For example, if the user wants the OSM way to have a
-        "length" attribute, the user must specify
-        `edge_tag_aggs=[('length', 'sum')]` in order to tell this function to
-        aggregate the lengths of the individual component edges. Otherwise,
-        the length attribute will simply reflect the length of the first edge
-        associated with the way.
-    api_version
-        OpenStreetMap API version to save in the XML file header.
-    precision
-        Number of decimal places to round latitude and longitude values.
+    way_tag_aggs
+        Keys are OSM way tag keys and values are aggregation functions
+        (anything accepted as an argument by pandas.agg). Allows user to
+        aggregate graph edge attribute values into single OSM way values. If
+        None, or if some tag's key does not exist in the dict, the way
+        attribute will be assigned the value of the first edge of the way.
+    encoding
+        The character encoding of the saved OSM XML file.
 
     Returns
     -------
     None
     """
-    # default filepath if none was provided
-    filepath = Path(settings.data_folder) / "graph.osm" if filepath is None else Path(filepath)
+    # default "oneway" value used to fill this tag where missing
+    ONEWAY = False
 
-    # if save folder does not already exist, create it
-    filepath.parent.mkdir(parents=True, exist_ok=True)
+    # round lat/lon coordinates to 7 decimals (approx 5 to 10 mm resolution)
+    PRECISION = 7
 
+    # warn user if ox.settings.all_oneway is not currently True (but maybe it
+    # was when they created the graph)
     if not settings.all_oneway:
-        msg = (
-            "For the `save_graph_xml` function to behave properly, the graph "
-            "must have been created with `ox.settings.all_oneway=True`."
-        )
+        msg = "Make sure graph was created with `ox.settings.all_oneway=True` to save as OSM XML."
         warn(msg, category=UserWarning, stacklevel=2)
 
-    if isinstance(data, nx.MultiDiGraph):
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(
-            data,
-            node_geometry=False,
-            fill_edge_geometry=False,
-        )
-    elif isinstance(data, tuple):
-        gdf_nodes, gdf_edges = data
-    else:
-        msg = "`data` must be a MultiDiGraph or a tuple of node/edge GeoDataFrames."
-        raise TypeError(msg)
+    # raise error if graph has been simplified
+    if G.graph.get("simplified", False):
+        msg = "Graph must be unsimplified to save as OSM XML."
+        raise GraphSimplificationError(msg)
 
-    # rename columns per osm specification
-    gdf_nodes = gdf_nodes.rename(columns={"x": "lon", "y": "lat"})
-    gdf_nodes["lon"] = gdf_nodes["lon"].round(precision)
-    gdf_nodes["lat"] = gdf_nodes["lat"].round(precision)
-    gdf_nodes = gdf_nodes.reset_index().rename(columns={"osmid": "id"})
-    if "id" in gdf_edges.columns:
-        gdf_edges = gdf_edges[[col for col in gdf_edges if col != "id"]]
-    if "uniqueid" in gdf_edges.columns:
-        gdf_edges = gdf_edges.rename(columns={"uniqueid": "id"})
-    else:
-        gdf_edges = gdf_edges.reset_index().reset_index().rename(columns={"index": "id"})
+    # set default filepath if None was provided
+    filepath = Path(settings.data_folder) / "graph.osm" if filepath is None else Path(filepath)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
 
-    # add default values for required attributes
-    for table in (gdf_nodes, gdf_edges):
-        table["uid"] = "1"
-        table["user"] = "OSMnx"
-        table["version"] = "1"
-        table["changeset"] = "1"
-        table["timestamp"] = utils.ts(template="{:%Y-%m-%dT%H:%M:%SZ}")
+    # convert graph to node/edge gdfs and create dict of spatial bounds
+    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G, fill_edge_geometry=False)
+    coords = [str(round(c, PRECISION)) for c in gdf_nodes.unary_union.bounds]
+    bounds = dict(zip(["minlon", "minlat", "maxlon", "maxlat"], coords))
 
-    # string replacement to meet OSM XML spec
+    # add default values (if missing) for standard attrs
+    for gdf in (gdf_nodes, gdf_edges):
+        for col, value in ATTR_DEFAULTS.items():
+            if col not in gdf.columns:
+                gdf[col] = value
+            else:
+                gdf[col] = gdf[col].fillna(value)
+
+    # transform nodes gdf to meet OSM XML spec
+    # 1) reset index (osmid) then rename osmid, x, and y columns
+    # 2) round lat/lon coordinates
+    # 3) drop unnecessary geometry column
+    gdf_nodes = gdf_nodes.reset_index().rename(columns={"osmid": "id", "x": "lon", "y": "lat"})
+    gdf_nodes[["lon", "lat"]] = gdf_nodes[["lon", "lat"]].round(PRECISION)
+    gdf_nodes = gdf_nodes.drop(columns=["geometry"])
+
+    # transform edges gdf to meet OSM XML spec
+    # 1) fill and convert oneway bools to strings
+    # 2) rename osmid column (but keep (u, v, k) index for processing)
+    # 3) drop unnecessary geometry column
     if "oneway" in gdf_edges.columns:
-        gdf_edges["oneway"] = gdf_edges["oneway"].fillna(oneway).replace({True: "yes", False: "no"})
+        gdf_edges["oneway"] = gdf_edges["oneway"].fillna(ONEWAY).replace({True: "yes", False: "no"})
+    gdf_edges = gdf_edges.rename(columns={"osmid": "id"}).drop(columns=["geometry"])
 
-    # initialize XML tree with an OSM root element then append nodes/edges
-    root = Element("osm", attrib={"version": api_version, "generator": f"OSMnx {__version__}"})
-    root = _append_nodes_xml_tree(root, gdf_nodes, node_attrs, node_tags)
-    root = _append_edges_xml_tree(
-        root,
-        gdf_edges,
-        edge_attrs,
-        edge_tags,
-        edge_tag_aggs,
-        merge_edges,
-    )
+    # create parent XML element then add bounds, nodes, ways as subelements
+    element = Element("osm", attrib=ROOT_ATTR_DEFAULTS)
+    _ = SubElement(element, "bounds", attrib=bounds)
+    _add_nodes_xml(element, gdf_nodes)
+    _add_ways_xml(element, gdf_edges, way_tag_aggs)
 
     # write to disk
-    ElementTree(root).write(filepath, encoding="utf-8", xml_declaration=True)
-    msg = f"Saved graph as .osm file at {filepath!r}"
+    ElementTree(element).write(filepath, encoding=encoding, xml_declaration=True)
+    msg = f"Saved graph as OSM XML file at {str(filepath)!r}"
     utils.log(msg, level=lg.INFO)
 
 
-def _append_nodes_xml_tree(
-    root: Element,
+def _add_nodes_xml(
+    parent: Element,
     gdf_nodes: gpd.GeoDataFrame,
-    node_attrs: list[str],
-    node_tags: list[str],
-) -> Element:
+) -> None:
     """
-    Append nodes to an XML tree.
+    Add graph nodes as subelements of an XML parent element.
 
     Parameters
     ----------
-    root
-        The XML tree.
+    parent
+        The XML parent element.
     gdf_nodes
         A GeoDataFrame of graph nodes.
-    node_attrs
-        OSM way attributes to include in output OSM XML.
-    node_tags
-        OSM way tags to include in output OSM XML.
 
     Returns
     -------
-    root
-        The XML tree with nodes appended.
+    None
     """
-    for _, row in gdf_nodes.iterrows():
-        row_str = row.dropna().astype(str)
-        node = SubElement(root, "node", attrib=row_str[node_attrs].to_dict())
+    node_tags = set(settings.useful_tags_node)
+    node_attrs = {"id", "lat", "lon"}.union(ATTR_DEFAULTS)
 
-        for tag in node_tags:
-            if tag in row_str:
-                SubElement(node, "tag", attrib={"k": tag, "v": row_str[tag]})
-    return root
+    # add each node attrs dict as a SubElement of parent
+    for node in gdf_nodes.to_dict(orient="records"):
+        attrs = {k: str(node[k]) for k in node_attrs if pd.notna(node[k])}
+        node_element = SubElement(parent, "node", attrib=attrs)
+
+        # add each node tag dict as its own SubElement of the node SubElement
+        tags = ({"k": k, "v": str(node[k])} for k in node_tags & node.keys() if pd.notna(node[k]))
+        for tag in tags:
+            _ = SubElement(node_element, "tag", attrib=tag)
 
 
-def _create_way_for_each_edge(
-    root: Element,
+def _add_ways_xml(
+    parent: Element,
     gdf_edges: gpd.GeoDataFrame,
-    edge_attrs: list[str],
-    edge_tags: list[str],
+    way_tag_aggs: dict[str, Any] | None,
 ) -> None:
     """
-    Append a new way to an empty XML tree graph for each edge in way.
-
-    This will generate separate OSM ways for each network edge, even if the
-    edges are all part of the same original OSM way. As such, each way will be
-    composed of two nodes, and there will be many ways with the same OSM ID.
-    This does not conform to the OSM XML schema standard, but the data will
-    still comprise a valid network and will be readable by most OSM tools.
+    Add graph edges (grouped as ways) as subelements of an XML parent element.
 
     Parameters
     ----------
-    root
-        An empty XML tree.
+    parent
+        The XML parent element.
     gdf_edges
-        A GeoDataFrame of graph edges.
-    edge_attrs
-        OSM way attributes to include in output OSM XML.
-    edge_tags
-        OSM way tags to include in output OSM XML.
+        A GeoDataFrame of graph edges with OSM way "id" column for grouping
+        edges into ways.
+    way_tag_aggs
+        Keys are OSM way tag keys and values are aggregation functions
+        (anything accepted as an argument by pandas.agg). Allows user to
+        aggregate graph edge attribute values into single OSM way values. If
+        None, or if some tag's key does not exist in the dict, the way
+        attribute will be assigned the value of the first edge of the way.
 
     Returns
     -------
     None
     """
-    for _, row in gdf_edges.iterrows():
-        row_str = row.dropna().astype(str)
-        edge = SubElement(root, "way", attrib=row_str[edge_attrs].to_dict())
-        SubElement(edge, "nd", attrib={"ref": row_str["u"]})
-        SubElement(edge, "nd", attrib={"ref": row_str["v"]})
-        for tag in edge_tags:
-            if tag in row_str:
-                SubElement(edge, "tag", attrib={"k": tag, "v": row_str[tag]})
+    way_tags = set(settings.useful_tags_way)
+    way_attrs = list({"id"}.union(ATTR_DEFAULTS))
+
+    for osmid, way in gdf_edges.groupby("id"):
+        # STEP 1: add the way and its attrs as a "way" subelement of the
+        # parent element
+        attrs = way[way_attrs].iloc[0].astype(str).to_dict()
+        way_element = SubElement(parent, "way", attrib=attrs)
+
+        # STEP 2: add the way's edges' node IDs as "nd" subelements of the
+        # "way" subelement. if way contains more than 1 edge, sort the nodes
+        # topologically, otherwise just add node "u" then "v" from index.
+        if len(way) == 1:
+            nodes = way.index[0][:2]
+        else:
+            nodes = _sort_nodes(nx.MultiDiGraph(way.index.to_list()), osmid)
+        for node in nodes:
+            _ = SubElement(way_element, "nd", attrib={"ref": str(node)})
+
+        # STEP 3: add way's edges' tags as "tag" subelements of the "way"
+        # subelement. if an agg function was provided for a tag, apply it to
+        # the values of the edges in the way. if no agg function was provided
+        # for a tag, just use the value from first edge in way.
+        for tag in way_tags.intersection(way.columns):
+            if way_tag_aggs is not None and tag in way_tag_aggs:
+                value = way[tag].agg(way_tag_aggs[tag])
+            else:
+                value = way[tag].iloc[0]
+            if pd.notna(value):
+                _ = SubElement(way_element, "tag", attrib={"k": tag, "v": str(value)})
 
 
-def _append_merged_edge_attrs(
-    xml_edge: Element,
-    sample_edge: dict[str, Any],
-    all_edges_df: pd.DataFrame,
-    edge_tags: list[str],
-    edge_tag_aggs: list[tuple[str, str]] | None,
-) -> None:
+def _sort_nodes(G: nx.MultiDiGraph, osmid: int) -> list[int]:
     """
-    Extract edge attributes and append to XML edge.
+    Topologically sort the nodes of an OSM way.
 
     Parameters
     ----------
-    xml_edge
-        XML representation of an output graph edge.
-    sample_edge
-        Dict of sample row from the the dataframe of way edges.
-    all_edges_df
-        A DataFrame with one row for each edge in an OSM way.
-    edge_tags
-        OSM way tags to include in output OSM XML.
-    edge_tag_aggs
-        Useful only if `merge_edges` is True, this argument allows the user to
-        specify edge attributes to aggregate such that the merged OSM way
-        entry tags accurately represent the sum total of their component edge
-        attributes. For example, if the user wants the OSM way to have a
-        "length" attribute, the user must specify
-        `edge_tag_aggs=[('length', 'sum')]` in order to tell this function to
-        aggregate the lengths of the individual component edges. Otherwise,
-        the length attribute will simply reflect the length of the first edge
-        associated with the way.
+    G
+        The graph representing the OSM way.
+    osmid
+        The OSM way ID.
 
     Returns
     -------
-    None
+    ordered_nodes
+        The way's node IDs in topologically sorted order.
     """
-    if edge_tag_aggs is None:
-        for tag in edge_tags:
-            if tag in sample_edge:
-                SubElement(xml_edge, "tag", attrib={"k": tag, "v": sample_edge[tag]})
-    else:
-        for tag in edge_tags:
-            if (tag in sample_edge) and (tag not in (t for t, agg in edge_tag_aggs)):
-                SubElement(xml_edge, "tag", attrib={"k": tag, "v": sample_edge[tag]})
+    try:
+        ordered_nodes = list(nx.topological_sort(G))
 
-        for tag, agg in edge_tag_aggs:
-            if tag in all_edges_df.columns:
-                SubElement(
-                    xml_edge,
-                    "tag",
-                    attrib={
-                        "k": tag,
-                        "v": str(all_edges_df[tag].aggregate(agg)),
-                    },
-                )
+    except nx.NetworkXUnfeasible:
+        # if it couldn't topologically sort the nodes, the way probably
+        # contains a cycle. try removing an edge to break the cycle. first,
+        # look for multiple edges emanating from the same source node
+        insert_before = True
+        edges = [
+            edge
+            for source in [node for node, degree in G.out_degree() if degree > 1]
+            for edge in G.out_edges(source, keys=True)
+        ]
 
+        # if none found, then look for multiple edges pointing at the same
+        # target node instead
+        if len(edges) == 0:
+            insert_before = False
+            edges = [
+                edge
+                for target in [node for node, degree in G.in_degree() if degree > 1]
+                for edge in G.in_edges(target, keys=True)
+            ]
 
-def _append_nodes_as_edge_attrs(
-    xml_edge: Element,
-    sample_edge: dict[str, Any],
-    all_edges_df: pd.DataFrame,
-) -> None:
-    """
-    Extract list of ordered nodes and append as attributes of XML edge.
+            # if still none, then take the first edge of the way: the entire
+            # way could just be a cycle in which each node appears once
+            if len(edges) == 0:
+                edges = [next(iter(G.edges))]
 
-    Parameters
-    ----------
-    xml_edge
-        XML representation of an output graph edge.
-    sample_edge
-        Sample row from the the DataFrame of way edges.
-    all_edges_df: pandas.DataFrame
-        A DataFrame with one row for each edge in an OSM way.
+        # remove one edge at a time and, if the graph remains connected, exit
+        # the loop and check if we are able to topologically sort the nodes
+        for edge in edges:
+            G_ = G.copy()
+            G_.remove_edge(*edge)
+            if nx.is_weakly_connected(G_):
+                break
 
-    Returns
-    -------
-    None
-    """
-    if len(all_edges_df) == 1:
-        SubElement(xml_edge, "nd", attrib={"ref": sample_edge["u"]})
-        SubElement(xml_edge, "nd", attrib={"ref": sample_edge["v"]})
-    else:
-        # topological sort
-        all_edges_df = all_edges_df.reset_index()
         try:
-            ordered_nodes = _get_unique_nodes_ordered_from_way(all_edges_df)
+            ordered_nodes = list(nx.topological_sort(G_))
+
+            # re-insert (before or after its neighbor as needed) the duplicate
+            # source or target node from the edge we removed
+            dupe_node = edge[0] if insert_before else edge[1]
+            neighbor = edge[1] if insert_before else edge[0]
+            position = ordered_nodes.index(neighbor)
+            position = position if insert_before else position + 1
+            ordered_nodes.insert(position, dupe_node)
+
         except nx.NetworkXUnfeasible:
-            first_node = all_edges_df.iloc[0]["u"]
-            ordered_nodes = _get_unique_nodes_ordered_from_way(all_edges_df.iloc[1:])
-            ordered_nodes = [first_node, *ordered_nodes]
-        for node in ordered_nodes:
-            SubElement(xml_edge, "nd", attrib={"ref": str(node)})
+            # if it failed again, this way probably contains multiple cycles,
+            # so remove a cycle then try to sort the nodes again, recursively.
+            # note this is destructive and will be missing in the saved data.
+            G_ = G.copy()
+            G_.remove_edges_from(nx.find_cycle(G_))
+            G_ = utils_graph.remove_isolated_nodes(G_)
+            ordered_nodes = _sort_nodes(G_, osmid)
+            msg = f"Had to remove a cycle from way {str(osmid)!r} for topological sort"
+            utils.log(msg, level=lg.WARNING)
 
-
-def _append_edges_xml_tree(
-    root: Element,
-    gdf_edges: gpd.GeoDataFrame,
-    edge_attrs: list[str],
-    edge_tags: list[str],
-    edge_tag_aggs: list[tuple[str, str]] | None,
-    merge_edges: bool,  # noqa: FBT001
-) -> Element:
-    """
-    Append edges to an XML tree.
-
-    Parameters
-    ----------
-    root
-        An XML tree.
-    gdf_edges
-        A GeoDataFrame of graph edges.
-    edge_attrs
-        OSM way attributes to include in output OSM XML.
-    edge_tags
-        OSM way tags to include in output OSM XML.
-    edge_tag_aggs
-        Useful only if `merge_edges` is True, this argument allows the user to
-        specify edge attributes to aggregate such that the merged OSM way
-        entry tags accurately represent the sum total of their component edge
-        attributes. For example, if the user wants the OSM way to have a
-        "length" attribute, the user must specify
-        `edge_tag_aggs=[('length', 'sum')]` in order to tell this function to
-        aggregate the lengths of the individual component edges. Otherwise,
-        the length attribute will simply reflect the length of the first edge
-        associated with the way.
-    merge_edges
-        If True, merge graph edges such that each OSM way has one entry and
-        one entry only in the OSM XML. Otherwise, every OSM way will have a
-        separate entry for each node pair it contains.
-
-    Returns
-    -------
-    root
-        XML tree with edges appended.
-    """
-    gdf_edges = gdf_edges.reset_index()
-    if merge_edges:
-        for _, all_way_edges in gdf_edges.groupby("id"):
-            first = all_way_edges.iloc[0].dropna().astype(str)
-            edge = SubElement(root, "way", attrib=first[edge_attrs].dropna().to_dict())
-            _append_nodes_as_edge_attrs(
-                xml_edge=edge,
-                sample_edge=first.to_dict(),
-                all_edges_df=all_way_edges,
-            )
-            _append_merged_edge_attrs(
-                xml_edge=edge,
-                sample_edge=first.to_dict(),
-                edge_tags=edge_tags,
-                edge_tag_aggs=edge_tag_aggs,
-                all_edges_df=all_way_edges,
-            )
-
-    else:
-        _create_way_for_each_edge(
-            root=root,
-            gdf_edges=gdf_edges,
-            edge_attrs=edge_attrs,
-            edge_tags=edge_tags,
-        )
-
-    return root
-
-
-def _get_unique_nodes_ordered_from_way(df_way_edges: pd.DataFrame) -> list[Any]:
-    """
-    Recover original node order from edges associated with a single OSM way.
-
-    Parameters
-    ----------
-    df_way_edges
-        Dataframe containing columns 'u' and 'v' corresponding to origin and
-        destination nodes.
-
-    Returns
-    -------
-    unique_ordered_nodes
-        An ordered list of unique node IDs. If the edges do not all connect
-        (e.g. [(1, 2), (2,3), (10, 11), (11, 12), (12, 13)]), then this method
-        will return only those nodes associated with the largest component of
-        connected edges, even if subsequent connected chunks are contain more
-        total nodes. This ensures a proper topological representation of nodes
-        in the XML way records because if there are unconnected components,
-        the sorting algorithm cannot recover their original order. We would
-        not likely ever encounter this kind of disconnected structure of nodes
-        within a given way, but it is not explicitly forbidden in the OSM XML
-        design schema.
-    """
-    G = nx.MultiDiGraph()
-    all_nodes = list(df_way_edges["u"].to_numpy()) + list(df_way_edges["v"].to_numpy())
-
-    G.add_nodes_from(all_nodes)
-    G.add_edges_from(df_way_edges[["u", "v"]].to_numpy())
-
-    # copy nodes into new graph
-    H = utils_graph.get_largest_component(G, strongly=False)
-    unique_ordered_nodes = list(nx.topological_sort(H))
-    num_unique_nodes = len(np.unique(all_nodes))
-
-    if len(unique_ordered_nodes) < num_unique_nodes:
-        msg = f"Recovered order for {len(unique_ordered_nodes)} of {num_unique_nodes} nodes"
-        utils.log(msg, level=lg.INFO)
-
-    return unique_ordered_nodes
+    return ordered_nodes

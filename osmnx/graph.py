@@ -1,9 +1,6 @@
 """
 Download and create graphs from OpenStreetMap data.
 
-This module uses filters to query the Overpass API: you can either specify a
-built-in network type or provide your own custom filter with Overpass QL.
-
 Refer to the Getting Started guide for usage limitations.
 """
 
@@ -51,11 +48,17 @@ def graph_from_bbox(
     custom_filter: str | None = None,
 ) -> nx.MultiDiGraph:
     """
-    Download and create a graph within some bounding box.
+    Download and create a graph within a lat-lon bounding box.
 
-    You can use the `settings` module to retrieve a snapshot of historical OSM
-    data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
+    This function uses filters to query the Overpass API: you can either
+    specify a pre-defined `network_type` or provide your own `custom_filter`
+    with Overpass QL.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes. You can also use the `settings` module to retrieve a snapshot
+    of historical OSM data as of a certain date, or to configure the Overpass
+    server timeout, memory allocation, and other custom settings.
 
     Parameters
     ----------
@@ -119,11 +122,17 @@ def graph_from_point(
     custom_filter: str | None = None,
 ) -> nx.MultiDiGraph:
     """
-    Download and create a graph within some distance of a (lat, lon) point.
+    Download and create a graph within some distance of a lat-lon point.
 
-    You can use the `settings` module to retrieve a snapshot of historical OSM
-    data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
+    This function uses filters to query the Overpass API: you can either
+    specify a pre-defined `network_type` or provide your own `custom_filter`
+    with Overpass QL.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes. You can also use the `settings` module to retrieve a snapshot
+    of historical OSM data as of a certain date, or to configure the Overpass
+    server timeout, memory allocation, and other custom settings.
 
     Parameters
     ----------
@@ -208,9 +217,15 @@ def graph_from_address(
     """
     Download and create a graph within some distance of an address.
 
-    You can use the `settings` module to retrieve a snapshot of historical OSM
-    data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
+    This function uses filters to query the Overpass API: you can either
+    specify a pre-defined `network_type` or provide your own `custom_filter`
+    with Overpass QL.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes. You can also use the `settings` module to retrieve a snapshot
+    of historical OSM data as of a certain date, or to configure the Overpass
+    server timeout, memory allocation, and other custom settings.
 
     Parameters
     ----------
@@ -287,19 +302,26 @@ def graph_from_place(
 
     The query must be geocodable and OSM must have polygon boundaries for the
     geocode result. If OSM does not have a polygon for this place, you can
-    instead get its street network using the graph_from_address function,
+    instead get its street network using the `graph_from_address` function,
     which geocodes the place name to a point and gets the network within some
     distance of that point.
 
     If OSM does have polygon boundaries for this place but you're not finding
     it, try to vary the query string, pass in a structured query dict, or vary
-    the which_result argument to use a different geocode result. If you know
+    the `which_result` argument to use a different geocode result. If you know
     the OSM ID of the place, you can retrieve its boundary polygon using the
-    geocode_to_gdf function, then pass it to the graph_from_polygon function.
+    `geocode_to_gdf` function, then pass it to the `features_from_polygon`
+    function.
 
-    You can use the `settings` module to retrieve a snapshot of historical OSM
-    data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
+    This function uses filters to query the Overpass API: you can either
+    specify a pre-defined `network_type` or provide your own `custom_filter`
+    with Overpass QL.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes. You can also use the `settings` module to retrieve a snapshot
+    of historical OSM data as of a certain date, or to configure the Overpass
+    server timeout, memory allocation, and other custom settings.
 
     Parameters
     ----------
@@ -367,11 +389,17 @@ def graph_from_polygon(
     custom_filter: str | None = None,
 ) -> nx.MultiDiGraph:
     """
-    Download and create a graph within the boundaries of a (multi)polygon.
+    Download and create a graph within the boundaries of a (Multi)Polygon.
 
-    You can use the `settings` module to retrieve a snapshot of historical OSM
-    data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
+    This function uses filters to query the Overpass API: you can either
+    specify a pre-defined `network_type` or provide your own `custom_filter`
+    with Overpass QL.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes. You can also use the `settings` module to retrieve a snapshot
+    of historical OSM data as of a certain date, or to configure the Overpass
+    server timeout, memory allocation, and other custom settings.
 
     Parameters
     ----------
@@ -478,12 +506,16 @@ def graph_from_xml(
     encoding: str = "utf-8",
 ) -> nx.MultiDiGraph:
     """
-    Create a graph from data in an OSM-formatted XML file.
+    Create a graph from data in an OSM XML file.
 
     Do not load an XML file previously generated by OSMnx: this use case is
     not supported and may not behave as expected. To save/load graphs to/from
     disk for later use in OSMnx, use the `io.save_graphml` and
     `io.load_graphml` functions instead.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes.
 
     Parameters
     ----------
@@ -497,14 +529,14 @@ def graph_from_xml(
         If True, return the entire graph even if it is not connected. If
         False, retain only the largest weakly connected component.
     encoding
-        The XML file's character encoding.
+        The OSM XML file's character encoding.
 
     Returns
     -------
     G
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [_osm_xml._overpass_json_from_file(filepath, encoding)]
+    response_jsons = [_osm_xml._overpass_json_from_xml(filepath, encoding)]
 
     # create graph using this response JSON
     G = _create_graph(response_jsons, retain_all, bidirectional)

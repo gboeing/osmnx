@@ -3,42 +3,42 @@ build-backend = "hatchling.build"
 requires = ["hatchling"]
 
 [project]
-authors = [{name = "Geoff Boeing", email = "boeing@usc.edu"}]
+authors = [{ name = "Geoff Boeing", email = "boeing@usc.edu" }]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Scientific/Engineering :: GIS",
-    "Topic :: Scientific/Engineering :: Information Analysis",
-    "Topic :: Scientific/Engineering :: Mathematics",
-    "Topic :: Scientific/Engineering :: Physics",
-    "Topic :: Scientific/Engineering :: Visualization",
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: GIS",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+  "Topic :: Scientific/Engineering :: Mathematics",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Scientific/Engineering :: Visualization",
 ]
 dependencies = [
-    "geopandas>=0.12",
-    "networkx>=2.5",
-    "numpy>=1.21",
-    "pandas>=1.1",
-    "requests>=2.27",
-    "shapely>=2.0",
+  "geopandas>=0.12",
+  "networkx>=2.5",
+  "numpy>=1.21",
+  "pandas>=1.1",
+  "requests>=2.27",
+  "shapely>=2.0",
 ]
 description = "Download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap"
 dynamic = ["version"]
 keywords = ["GIS", "Networks", "OpenStreetMap", "Routing"]
-license = {text = "MIT License"}
-maintainers = [{name = "OSMnx contributors"}]
+license = { text = "MIT License" }
+maintainers = [{ name = "OSMnx contributors" }]
 name = "osmnx"
 readme = "README.md"
-requires-python = ">=3.9"  # match classifiers above and ruff/mypy versions below
+requires-python = ">=3.9" # match classifiers above and ruff/mypy versions below
 
 [project.optional-dependencies]
 entropy = ["scipy>=1.5"]
@@ -85,7 +85,7 @@ force-single-line = true
 max-complexity = 14
 
 [tool.ruff.lint.pycodestyle]
-max-line-length = 110  # line length + 10% since it isn't a hard upper bound
+max-line-length = 110 # line length + 10% since it isn't a hard upper bound
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

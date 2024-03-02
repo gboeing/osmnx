@@ -15,13 +15,13 @@ import os
 import tempfile
 from collections import OrderedDict
 from pathlib import Path
-from xml.etree import ElementTree
 
 import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
 import pytest
+from lxml import etree
 from requests.exceptions import ConnectionError
 from shapely import wkt
 from shapely.geometry import Point
@@ -52,17 +52,18 @@ polygon = wkt.loads(p)
 
 def test_logging() -> None:
     """Test the logger."""
-    ox.log("test a fake default message")
-    ox.log("test a fake debug", level=lg.DEBUG)
-    ox.log("test a fake info", level=lg.INFO)
-    ox.log("test a fake warning", level=lg.WARNING)
-    ox.log("test a fake error", level=lg.ERROR)
+    ox.utils.log("test a fake default message")
+    ox.utils.log("test a fake debug", level=lg.DEBUG)
+    ox.utils.log("test a fake info", level=lg.INFO)
+    ox.utils.log("test a fake warning", level=lg.WARNING)
+    ox.utils.log("test a fake error", level=lg.ERROR)
 
-    ox.citation(style="apa")
-    ox.citation(style="bibtex")
-    ox.citation(style="ieee")
-    ox.ts(style="date")
-    ox.ts(style="time")
+    ox.utils.citation(style="apa")
+    ox.utils.citation(style="bibtex")
+    ox.utils.citation(style="ieee")
+    ox.utils.ts(style="iso8601")
+    ox.utils.ts(style="date")
+    ox.utils.ts(style="time")
 
 
 def test_exceptions() -> None:
@@ -164,36 +165,29 @@ def test_osm_xml() -> None:
     Path.unlink(Path(temp_filename))
 
     # test .osm xml saving
-    G = ox.graph_from_point(location_point, dist=500, network_type="drive")
+    G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
     fp = Path(ox.settings.data_folder) / "graph.osm"
-    ox.save_graph_xml(G, merge_edges=False, filepath=fp)  # issues UserWarning
-    G = ox.graph_from_xml(fp)  # issues UserWarning
+    ox.io.save_graph_xml(G, filepath=fp, way_tag_aggs={"lanes": "sum"})
 
-    # test osm xml output merge edges
-    default_all_oneway = ox.settings.all_oneway
-    ox.settings.all_oneway = True
-    ox.io.save_graph_xml(G, merge_edges=True, edge_tag_aggs=[("length", "sum")], precision=5)
-
-    # test osm xml output from gdfs
-    nodes, edges = ox.graph_to_gdfs(G)
-    ox.io.save_graph_xml((nodes, edges))
-
-    # test ordered nodes from way
-    df_uv = pd.DataFrame({"u": [54, 2, 5, 3, 10, 19, 20], "v": [76, 3, 8, 10, 5, 20, 15]})
-    ordered_nodes = ox._osm_xml._get_unique_nodes_ordered_from_way(df_uv)
-    assert ordered_nodes == [2, 3, 10, 5, 8]
+    # validate saved XML against XSD schema
+    xsd_filepath = "./tests/input_data/osm_schema.xsd"
+    parser = etree.XMLParser(schema=etree.XMLSchema(file=xsd_filepath))
+    _ = etree.parse(fp, parser=parser)  # noqa: S320
 
     # test roundabout handling
+    default_all_oneway = ox.settings.all_oneway
+    ox.settings.all_oneway = True
     default_overpass_settings = ox.settings.overpass_settings
     ox.settings.overpass_settings += '[date:"2023-04-01T00:00:00Z"]'
     point = (39.0290346, -84.4696884)
+    G = ox.graph_from_point(point, dist=500, dist_type="bbox", network_type="drive", simplify=True)
+    with pytest.raises(ox._errors.GraphSimplificationError):
+        ox.io.save_graph_xml(G)
     G = ox.graph_from_point(point, dist=500, dist_type="bbox", network_type="drive", simplify=False)
-    gdf_edges = ox.graph_to_gdfs(G, nodes=False)
-    gdf_way = gdf_edges[gdf_edges["osmid"] == 570883705]  # roundabout
-    first = gdf_way.iloc[0].dropna().astype(str)
-    root = ElementTree.Element("osm", attrib={"version": "0.6", "generator": "OSMnx"})
-    edge = ElementTree.SubElement(root, "way")
-    ox._osm_xml._append_nodes_as_edge_attrs(edge, first.to_dict(), gdf_way)
+    nx.set_node_attributes(G, 0, name="uid")
+    ox.io.save_graph_xml(G)
+    _ = etree.parse(fp, parser=parser)  # noqa: S320
+    G = ox.graph_from_xml(fp)  # issues UserWarning
 
     # restore settings
     ox.settings.overpass_settings = default_overpass_settings
