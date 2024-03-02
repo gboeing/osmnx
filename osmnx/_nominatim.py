@@ -112,7 +112,7 @@ def _nominatim_request(
         params["key"] = settings.nominatim_key
 
     # prepare Nominatim API URL and see if request already exists in cache
-    url = settings.nominatim_endpoint.rstrip("/") + "/" + request_type
+    url = settings.nominatim_url.rstrip("/") + "/" + request_type
     prepared_url = str(requests.Request("GET", url, params=params).prepare().url)
     cached_response_json = _http._retrieve_from_cache(prepared_url)
     if isinstance(cached_response_json, list):
@@ -125,12 +125,12 @@ def _nominatim_request(
     time.sleep(pause)
 
     # transmit the HTTP GET request
-    msg = f"Get {prepared_url} with timeout={settings.timeout}"
+    msg = f"Get {prepared_url} with timeout={settings.requests_timeout}"
     utils.log(msg, level=lg.INFO)
     response = requests.get(
         url,
         params=params,
-        timeout=settings.timeout,
+        timeout=settings.requests_timeout,
         headers=_http._get_http_headers(),
         **settings.requests_kwargs,
     )

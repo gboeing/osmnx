@@ -337,7 +337,7 @@ def test_plots() -> None:
     fig, ax = ox.plot_figure_ground(G=G)
 
 
-def test_find_nearest() -> None:
+def test_nearest() -> None:
     """Test nearest node/edge searching."""
     # get graph and x/y coords to search
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
@@ -359,16 +359,16 @@ def test_find_nearest() -> None:
     _ = ox.distance.nearest_edges(Gp, X[0], Y[0], return_dist=True)
 
 
-def test_api_endpoints() -> None:
+def test_endpoints() -> None:
     """Test different API endpoints."""
-    default_timeout = ox.settings.timeout
+    default_requests_timeout = ox.settings.requests_timeout
     default_key = ox.settings.nominatim_key
-    default_nominatim_endpoint = ox.settings.nominatim_endpoint
-    default_overpass_endpoint = ox.settings.overpass_endpoint
+    default_nominatim_url = ox.settings.nominatim_url
+    default_overpass_url = ox.settings.overpass_url
     default_overpass_rate_limit = ox.settings.overpass_rate_limit
 
     # test good and bad DNS resolution
-    ox.settings.timeout = 1
+    ox.settings.requests_timeout = 1
     ip = ox._http._resolve_host_via_doh("overpass-api.de")
     ip = ox._http._resolve_host_via_doh("AAAAAAAAAAA")
     _doh_url_template_default = ox.settings.doh_url_template
@@ -381,12 +381,12 @@ def test_api_endpoints() -> None:
     # Test changing the Overpass endpoint.
     # This should fail because we didn't provide a valid endpoint
     ox.settings.overpass_rate_limit = False
-    ox.settings.overpass_endpoint = "http://NOT_A_VALID_ENDPOINT/api/"
+    ox.settings.overpass_url = "http://NOT_A_VALID_ENDPOINT/api/"
     with pytest.raises(ConnectionError, match="Max retries exceeded with url"):
         G = ox.graph_from_place(place1, network_type="all")
 
     ox.settings.overpass_rate_limit = default_overpass_rate_limit
-    ox.settings.timeout = default_timeout
+    ox.settings.requests_timeout = default_requests_timeout
 
     params: OrderedDict[str, int | str] = OrderedDict()
     params["format"] = "json"
@@ -429,11 +429,11 @@ def test_api_endpoints() -> None:
     response_json = ox._nominatim._nominatim_request(params=params, request_type="lookup")
 
     ox.settings.nominatim_key = default_key
-    ox.settings.nominatim_endpoint = default_nominatim_endpoint
-    ox.settings.overpass_endpoint = default_overpass_endpoint
+    ox.settings.nominatim_url = default_nominatim_url
+    ox.settings.overpass_url = default_overpass_url
 
 
-def test_graph_save_load() -> None:  # noqa: PLR0915
+def test_save_load() -> None:  # noqa: PLR0915
     """Test saving/loading graphs to/from disk."""
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
 
@@ -520,7 +520,7 @@ def test_graph_save_load() -> None:  # noqa: PLR0915
     G = ox.load_graphml(graphml_str=data, node_dtypes=nd, edge_dtypes=ed)
 
 
-def test_graph_from_functions() -> None:
+def test_graph_from() -> None:
     """Test downloading graphs from Overpass."""
     # test subdividing a large geometry (raises a UserWarning)
     bbox = ox.utils_geo.bbox_from_point((0, 0), dist=1e5, project_utm=True)
@@ -565,7 +565,7 @@ def test_graph_from_functions() -> None:
         network_type="all",
     )
 
-    ox.settings.memory = 1073741824
+    ox.settings.overpass_memory = 1073741824
     G = ox.graph_from_point(
         location_point,
         dist=500,

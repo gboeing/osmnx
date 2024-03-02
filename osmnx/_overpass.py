@@ -154,7 +154,7 @@ def _get_overpass_pause(
         response = requests.get(
             url,
             headers=_http._get_http_headers(),
-            timeout=settings.timeout,
+            timeout=settings.requests_timeout,
             **settings.requests_kwargs,
         )
         status = response.text.split("\n")[4]
@@ -211,8 +211,8 @@ def _make_overpass_settings() -> str:
         The `settings.overpass_settings` string formatted with "timeout" and
         "maxsize" values.
     """
-    maxsize = "" if settings.memory is None else f"[maxsize:{settings.memory}]"
-    return settings.overpass_settings.format(timeout=settings.timeout, maxsize=maxsize)
+    maxsize = "" if settings.overpass_memory is None else f"[maxsize:{settings.overpass_memory}]"
+    return settings.overpass_settings.format(timeout=settings.requests_timeout, maxsize=maxsize)
 
 
 def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list[str]:
@@ -417,10 +417,10 @@ def _overpass_request(
     response_json
     """
     # resolve url to same IP even if there is server round-robin redirecting
-    _http._config_dns(settings.overpass_endpoint)
+    _http._config_dns(settings.overpass_url)
 
     # prepare the Overpass API URL and see if request already exists in cache
-    url = settings.overpass_endpoint.rstrip("/") + "/interpreter"
+    url = settings.overpass_url.rstrip("/") + "/interpreter"
     prepared_url = str(requests.Request("GET", url, params=data).prepare().url)
     cached_response_json = _http._retrieve_from_cache(prepared_url)
     if isinstance(cached_response_json, dict):
@@ -428,26 +428,26 @@ def _overpass_request(
 
     # pause then request this URL
     if pause is None:
-        this_pause = _get_overpass_pause(settings.overpass_endpoint)
+        this_pause = _get_overpass_pause(settings.overpass_url)
     domain = _http._hostname_from_url(url)
     msg = f"Pausing {this_pause} second(s) before making HTTP POST request to {domain!r}"
     utils.log(msg, level=lg.INFO)
     time.sleep(this_pause)
 
     # transmit the HTTP POST request
-    msg = f"Post {prepared_url} with timeout={settings.timeout}"
+    msg = f"Post {prepared_url} with timeout={settings.requests_timeout}"
     utils.log(msg, level=lg.INFO)
     response = requests.post(
         url,
         data=data,
-        timeout=settings.timeout,
+        timeout=settings.requests_timeout,
         headers=_http._get_http_headers(),
         **settings.requests_kwargs,
     )
 
     # handle 429 and 504 errors by pausing then recursively re-trying request
     if response.status_code in {429, 504}:  # pragma: no cover
-        this_pause = error_pause + _get_overpass_pause(settings.overpass_endpoint)
+        this_pause = error_pause + _get_overpass_pause(settings.overpass_url)
         msg = (
             f"{domain!r} responded {response.status_code} {response.reason}: "
             f"we'll retry in {this_pause} secs"
