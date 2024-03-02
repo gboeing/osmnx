@@ -24,12 +24,17 @@ Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123)
 - fix bug in \_downloader.\_save_to_cache function usage (#1107)
 - fix bug in handling requests ConnectionError when querying Overpass status endpoint (#1113)
 - fix minor bugs throughout to address inconsistencies revealed by type enforcement (#1107 #1114)
-- rename truncate.truncate_graph_dist max_dist argument to dist (#1134)
+- rename truncate.truncate_graph_dist max_dist argument to dist for consistency with rest of package (#1134)
 - rename settings module's default_accept_language, default_referer, and default_user_agent settings (#1129)
 - rename settings module's memory, nominatim_endpoint, overpass_endpoint, and timeout settings (#1136)
 - rename osm_xml module to \_osm_xml to make it private, as all its functions are private (#1113)
 - rename private \_downloader module to \_http (#1114)
 - remove unnecessary private \_api module (#1114)
+
+## 1.9.2 (TBD)
+
+- deprecate settings module's renamed or obsolete settings (#1138)
+- deprecate save_graph_xml function's renamed or obsolete parameters (#1138)
 
 ## 1.9.1 (2024-02-01)
 
