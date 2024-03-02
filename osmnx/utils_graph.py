@@ -19,18 +19,17 @@ from . import utils
 
 
 # nodes and edges are both missing (therefore both default true)
-@overload  # pragma: no cover
+@overload
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     *,
     node_geometry: bool = True,
     fill_edge_geometry: bool = True,
-) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
-    ...
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]: ...
 
 
 # both present/True
-@overload  # pragma: no cover
+@overload
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     *,
@@ -38,12 +37,11 @@ def graph_to_gdfs(
     edges: Literal[True],
     node_geometry: bool = True,
     fill_edge_geometry: bool = True,
-) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
-    ...
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]: ...
 
 
 # both present, nodes true, edges false
-@overload  # pragma: no cover
+@overload
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     *,
@@ -51,12 +49,11 @@ def graph_to_gdfs(
     edges: Literal[False],
     node_geometry: bool = True,
     fill_edge_geometry: bool = True,
-) -> gpd.GeoDataFrame:
-    ...
+) -> gpd.GeoDataFrame: ...
 
 
 # both present, nodes false, edges true
-@overload  # pragma: no cover
+@overload
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     *,
@@ -64,36 +61,33 @@ def graph_to_gdfs(
     edges: Literal[True],
     node_geometry: bool = True,
     fill_edge_geometry: bool = True,
-) -> gpd.GeoDataFrame:
-    ...
+) -> gpd.GeoDataFrame: ...
 
 
 # nodes missing (therefore default true), edges present/true
-@overload  # pragma: no cover
+@overload
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     *,
     edges: Literal[True],
     node_geometry: bool = True,
     fill_edge_geometry: bool = True,
-) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
-    ...
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]: ...
 
 
 # nodes missing (therefore default true), edges present/false
-@overload  # pragma: no cover
+@overload
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     *,
     edges: Literal[False],
     node_geometry: bool = True,
     fill_edge_geometry: bool = True,
-) -> gpd.GeoDataFrame:
-    ...
+) -> gpd.GeoDataFrame: ...
 
 
 # nodes present/true, edges missing (therefore default true)
-@overload  # pragma: no cover
+@overload
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     *,
@@ -101,12 +95,11 @@ def graph_to_gdfs(
     edges: bool = True,
     node_geometry: bool = True,
     fill_edge_geometry: bool = True,
-) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
-    ...
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]: ...
 
 
 # nodes present/false, edges missing (therefore default true)
-@overload  # pragma: no cover
+@overload
 def graph_to_gdfs(
     G: nx.MultiGraph | nx.MultiDiGraph,
     *,
@@ -114,8 +107,7 @@ def graph_to_gdfs(
     edges: bool = True,
     node_geometry: bool = True,
     fill_edge_geometry: bool = True,
-) -> gpd.GeoDataFrame:
-    ...
+) -> gpd.GeoDataFrame: ...
 
 
 def graph_to_gdfs(

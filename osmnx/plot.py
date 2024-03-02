@@ -994,25 +994,23 @@ def _config_ax(ax: Axes, crs: Any, bbox: tuple[float, float, float, float], padd
 
 
 # if polar = False, return Axes
-@overload  # pragma: no cover
+@overload
 def _get_fig_ax(
     ax: Axes | None,
     figsize: tuple[float, float],
     bgcolor: str | None,
     polar: Literal[False],
-) -> tuple[Figure, Axes]:
-    ...
+) -> tuple[Figure, Axes]: ...
 
 
 # if polar = True, return PolarAxes
-@overload  # pragma: no cover
+@overload
 def _get_fig_ax(
     ax: Axes | None,
     figsize: tuple[float, float],
     bgcolor: str | None,
     polar: Literal[True],
-) -> tuple[Figure, PolarAxes]:
-    ...
+) -> tuple[Figure, PolarAxes]: ...
 
 
 def _get_fig_ax(

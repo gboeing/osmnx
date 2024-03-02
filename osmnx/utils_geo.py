@@ -246,104 +246,95 @@ def _intersect_index_quadrats(
 
 
 # dist present, project_utm missing/False, return_crs missing/False
-@overload  # pragma: no cover
+@overload
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
-) -> tuple[float, float, float, float]:
-    ...
+) -> tuple[float, float, float, float]: ...
 
 
 # dist present, project_utm missing/False, return_crs present/True
-@overload  # pragma: no cover
+@overload
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
     *,
     return_crs: Literal[True],
-) -> tuple[float, float, float, float]:
-    ...
+) -> tuple[float, float, float, float]: ...
 
 
 # dist present, project_utm missing/False, return_crs present/False
-@overload  # pragma: no cover
+@overload
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
     *,
     return_crs: Literal[False],
-) -> tuple[float, float, float, float]:
-    ...
+) -> tuple[float, float, float, float]: ...
 
 
 # dist present, project_utm present/True, return_crs missing/False
-@overload  # pragma: no cover
+@overload
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
     *,
     project_utm: Literal[True],
-) -> tuple[float, float, float, float]:
-    ...
+) -> tuple[float, float, float, float]: ...
 
 
 # dist present, project_utm present/True, return_crs present/True
-@overload  # pragma: no cover
+@overload
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
     *,
     project_utm: Literal[True],
     return_crs: Literal[True],
-) -> tuple[tuple[float, float, float, float], Any]:
-    ...
+) -> tuple[tuple[float, float, float, float], Any]: ...
 
 
 # dist present, project_utm present/True, return_crs present/False
-@overload  # pragma: no cover
+@overload
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
     *,
     project_utm: Literal[True],
     return_crs: Literal[False],
-) -> tuple[float, float, float, float]:
-    ...
+) -> tuple[float, float, float, float]: ...
 
 
 # dist present, project_utm present/False, return_crs missing/False
-@overload  # pragma: no cover
+@overload
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
     *,
     project_utm: Literal[False],
-) -> tuple[float, float, float, float]:
-    ...
+) -> tuple[float, float, float, float]: ...
 
 
 # dist present, project_utm present/False, return_crs present/True
-@overload  # pragma: no cover
+@overload
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
     *,
     project_utm: Literal[False],
     return_crs: Literal[True],
-) -> tuple[float, float, float, float]:
-    ...
+) -> tuple[float, float, float, float]: ...
 
 
 # dist present, project_utm present/False, return_crs present/False
-@overload  # pragma: no cover
+@overload
 def bbox_from_point(
     point: tuple[float, float],
     dist: float,
     *,
     project_utm: Literal[False],
     return_crs: Literal[False],
-) -> tuple[float, float, float, float]:
-    ...
+) -> tuple[float, float, float, float]: ...
 
 
 def bbox_from_point(

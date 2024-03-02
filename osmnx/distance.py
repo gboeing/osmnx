@@ -33,38 +33,40 @@ EARTH_RADIUS_M = 6_371_009
 
 
 # if coords are all floats, return float
-@overload  # pragma: no cover
-def great_circle(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    ...
+@overload
+def great_circle(lat1: float, lon1: float, lat2: float, lon2: float) -> float: ...
 
 
 # if coords are all floats (and optional arg is provided), return float
-@overload  # pragma: no cover
-def great_circle(lat1: float, lon1: float, lat2: float, lon2: float, earth_radius: float) -> float:
-    ...
+@overload
+def great_circle(
+    lat1: float,
+    lon1: float,
+    lat2: float,
+    lon2: float,
+    earth_radius: float,
+) -> float: ...
 
 
 # if coords are all arrays, return array
-@overload  # pragma: no cover
+@overload
 def great_circle(
     lat1: npt.NDArray[np.float64],
     lon1: npt.NDArray[np.float64],
     lat2: npt.NDArray[np.float64],
     lon2: npt.NDArray[np.float64],
-) -> npt.NDArray[np.float64]:
-    ...
+) -> npt.NDArray[np.float64]: ...
 
 
 # if coords are all arrays (and optional arg is provided), return array
-@overload  # pragma: no cover
+@overload
 def great_circle(
     lat1: npt.NDArray[np.float64],
     lon1: npt.NDArray[np.float64],
     lat2: npt.NDArray[np.float64],
     lon2: npt.NDArray[np.float64],
     earth_radius: float,
-) -> npt.NDArray[np.float64]:
-    ...
+) -> npt.NDArray[np.float64]: ...
 
 
 def great_circle(
@@ -119,20 +121,18 @@ def great_circle(
 
 
 # if coords are all floats, return float
-@overload  # pragma: no cover
-def euclidean(y1: float, x1: float, y2: float, x2: float) -> float:
-    ...
+@overload
+def euclidean(y1: float, x1: float, y2: float, x2: float) -> float: ...
 
 
 # if coords are all arrays, return array
-@overload  # pragma: no cover
+@overload
 def euclidean(
     y1: npt.NDArray[np.float64],
     x1: npt.NDArray[np.float64],
     y2: npt.NDArray[np.float64],
     x2: npt.NDArray[np.float64],
-) -> npt.NDArray[np.float64]:
-    ...
+) -> npt.NDArray[np.float64]: ...
 
 
 def euclidean(
@@ -234,61 +234,61 @@ def add_edge_lengths(
 
 
 # if X and Y are floats and return_dist is not provided (defaults False)
-@overload  # pragma: no cover
-def nearest_nodes(G: nx.MultiDiGraph, X: float, Y: float) -> int:
-    ...
+@overload
+def nearest_nodes(G: nx.MultiDiGraph, X: float, Y: float) -> int: ...
 
 
 # if X and Y are floats and return_dist is provided/False
-@overload  # pragma: no cover
-def nearest_nodes(G: nx.MultiDiGraph, X: float, Y: float, *, return_dist: Literal[False]) -> int:
-    ...
+@overload
+def nearest_nodes(
+    G: nx.MultiDiGraph,
+    X: float,
+    Y: float,
+    *,
+    return_dist: Literal[False],
+) -> int: ...
 
 
 # if X and Y are floats and return_dist is provided/True
-@overload  # pragma: no cover
+@overload
 def nearest_nodes(
     G: nx.MultiDiGraph,
     X: float,
     Y: float,
     *,
     return_dist: Literal[True],
-) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]:
-    ...
+) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]: ...
 
 
 # if X and Y are iterable and return_dist is not provided (defaults False)
-@overload  # pragma: no cover
+@overload
 def nearest_nodes(
     G: nx.MultiDiGraph,
     X: Iterable[float],
     Y: Iterable[float],
-) -> npt.NDArray[np.int64]:
-    ...
+) -> npt.NDArray[np.int64]: ...
 
 
 # if X and Y are iterable and return_dist is provided/False
-@overload  # pragma: no cover
+@overload
 def nearest_nodes(
     G: nx.MultiDiGraph,
     X: Iterable[float],
     Y: Iterable[float],
     *,
     return_dist: Literal[False],
-) -> npt.NDArray[np.int64]:
-    ...
+) -> npt.NDArray[np.int64]: ...
 
 
 # if X and Y are iterable and return_dist is provided/True
-@overload  # pragma: no cover
+@overload
 def nearest_nodes(
     G: nx.MultiDiGraph,
     X: Iterable[float],
     Y: Iterable[float],
     *,
     return_dist: Literal[True],
-) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]:
-    ...
+) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.float64]]: ...
 
 
 def nearest_nodes(
@@ -391,67 +391,61 @@ def nearest_nodes(
 
 
 # if X and Y are floats and return_dist is not provided (defaults False)
-@overload  # pragma: no cover
-def nearest_edges(G: nx.MultiDiGraph, X: float, Y: float) -> tuple[int, int, int]:
-    ...
+@overload
+def nearest_edges(G: nx.MultiDiGraph, X: float, Y: float) -> tuple[int, int, int]: ...
 
 
 # if X and Y are floats and return_dist is provided/False
-@overload  # pragma: no cover
+@overload
 def nearest_edges(
     G: nx.MultiDiGraph,
     X: float,
     Y: float,
     *,
     return_dist: Literal[False],
-) -> tuple[int, int, int]:
-    ...
+) -> tuple[int, int, int]: ...
 
 
 # if X and Y are floats and return_dist is provided/True
-@overload  # pragma: no cover
+@overload
 def nearest_edges(
     G: nx.MultiDiGraph,
     X: float,
     Y: float,
     *,
     return_dist: Literal[True],
-) -> tuple[tuple[int, int, int], float]:
-    ...
+) -> tuple[tuple[int, int, int], float]: ...
 
 
 # if X and Y are iterable and return_dist is not provided (defaults False)
-@overload  # pragma: no cover
+@overload
 def nearest_edges(
     G: nx.MultiDiGraph,
     X: Iterable[float],
     Y: Iterable[float],
-) -> npt.NDArray[np.object_]:
-    ...
+) -> npt.NDArray[np.object_]: ...
 
 
 # if X and Y are iterable and return_dist is provided/False
-@overload  # pragma: no cover
+@overload
 def nearest_edges(
     G: nx.MultiDiGraph,
     X: Iterable[float],
     Y: Iterable[float],
     *,
     return_dist: Literal[False],
-) -> npt.NDArray[np.object_]:
-    ...
+) -> npt.NDArray[np.object_]: ...
 
 
 # if X and Y are iterable and return_dist is provided/True
-@overload  # pragma: no cover
+@overload
 def nearest_edges(
     G: nx.MultiDiGraph,
     X: Iterable[float],
     Y: Iterable[float],
     *,
     return_dist: Literal[True],
-) -> tuple[npt.NDArray[np.object_], npt.NDArray[np.float64]]:
-    ...
+) -> tuple[npt.NDArray[np.object_], npt.NDArray[np.float64]]: ...
 
 
 def nearest_edges(

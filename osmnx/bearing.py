@@ -18,25 +18,23 @@ except ImportError:  # pragma: no cover
 
 
 # if coords are all floats, return float
-@overload  # pragma: no cover
+@overload
 def calculate_bearing(
     lat1: float,
     lon1: float,
     lat2: float,
     lon2: float,
-) -> float:
-    ...
+) -> float: ...
 
 
 # if coords are all arrays, return array
-@overload  # pragma: no cover
+@overload
 def calculate_bearing(
     lat1: npt.NDArray[np.float64],
     lon1: npt.NDArray[np.float64],
     lat2: npt.NDArray[np.float64],
     lon2: npt.NDArray[np.float64],
-) -> npt.NDArray[np.float64]:
-    ...
+) -> npt.NDArray[np.float64]: ...
 
 
 def calculate_bearing(

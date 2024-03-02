@@ -121,6 +121,7 @@ useful_tags_way : list[str]
     "ref", "name", "highway", "maxspeed", "service", "access", "area",
     "landuse", "width", "est_width", "junction"]`.
 """
+
 from __future__ import annotations
 
 import logging as lg

@@ -18,7 +18,7 @@ from . import utils_graph
 
 
 # orig/dest int, weight present, cpus present
-@overload  # pragma: no cover
+@overload
 def shortest_path(
     G: nx.MultiDiGraph,
     orig: int,
@@ -26,46 +26,42 @@ def shortest_path(
     *,
     weight: str,
     cpus: int | None,
-) -> list[int] | None:
-    ...
+) -> list[int] | None: ...
 
 
 # orig/dest int, weight missing, cpus present
-@overload  # pragma: no cover
+@overload
 def shortest_path(
     G: nx.MultiDiGraph,
     orig: int,
     dest: int,
     *,
     cpus: int | None,
-) -> list[int] | None:
-    ...
+) -> list[int] | None: ...
 
 
 # orig/dest int, weight present, cpus missing
-@overload  # pragma: no cover
+@overload
 def shortest_path(
     G: nx.MultiDiGraph,
     orig: int,
     dest: int,
     *,
     weight: str,
-) -> list[int] | None:
-    ...
+) -> list[int] | None: ...
 
 
 # orig/dest int, weight missing, cpus missing
-@overload  # pragma: no cover
+@overload
 def shortest_path(
     G: nx.MultiDiGraph,
     orig: int,
     dest: int,
-) -> list[int] | None:
-    ...
+) -> list[int] | None: ...
 
 
 # orig/dest Iterable, weight present, cpus present
-@overload  # pragma: no cover
+@overload
 def shortest_path(
     G: nx.MultiDiGraph,
     orig: Iterable[int],
@@ -73,42 +69,38 @@ def shortest_path(
     *,
     weight: str,
     cpus: int | None,
-) -> list[list[int] | None]:
-    ...
+) -> list[list[int] | None]: ...
 
 
 # orig/dest Iterable, weight missing, cpus present
-@overload  # pragma: no cover
+@overload
 def shortest_path(
     G: nx.MultiDiGraph,
     orig: Iterable[int],
     dest: Iterable[int],
     *,
     cpus: int | None,
-) -> list[list[int] | None]:
-    ...
+) -> list[list[int] | None]: ...
 
 
 # orig/dest Iterable, weight present, cpus missing
-@overload  # pragma: no cover
+@overload
 def shortest_path(
     G: nx.MultiDiGraph,
     orig: Iterable[int],
     dest: Iterable[int],
     *,
     weight: str,
-) -> list[list[int] | None]:
-    ...
+) -> list[list[int] | None]: ...
 
 
 # orig/dest Iterable, weight missing, cpus missing
-@overload  # pragma: no cover
+@overload
 def shortest_path(
     G: nx.MultiDiGraph,
     orig: Iterable[int],
     dest: Iterable[int],
-) -> list[list[int] | None]:
-    ...
+) -> list[list[int] | None]: ...
 
 
 def shortest_path(
