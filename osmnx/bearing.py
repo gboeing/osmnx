@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import overload
+from warnings import warn
 
 import networkx as nx
 import numpy as np
@@ -169,20 +170,22 @@ def orientation_entropy(
 
 
 def _extract_edge_bearings(
-    Gu: nx.MultiGraph,
+    Gu: nx.MultiGraph | nx.MultiDiGraph,
     min_length: float,
     weight: str | None,
 ) -> npt.NDArray[np.float64]:
     """
-    Extract undirected graph's bidirectional edge bearings.
+    Extract graph's edge bearings.
 
-    For example, if an edge has a bearing of 90 degrees then we will record
+    A MultiGraph input receives bidirectional bearings.
+    For example, if an undirected edge has a bearing of 90 degrees then we will record
     bearings of both 90 degrees and 270 degrees for this edge.
+    For MultiDiGraph input, record only one bearing per edge.
 
     Parameters
     ----------
     Gu
-        Undirected, unprojected graph with `bearing` attributes on each edge.
+        Unprojected graph with `bearing` attributes on each edge.
     min_length
         Ignore edges with `length` attributes less than `min_length`. Useful
         to ignore the noise of many very short edges.
@@ -195,10 +198,10 @@ def _extract_edge_bearings(
     Returns
     -------
     bearings
-        The bidirectional edge bearings of `Gu`.
+        The edge bearings of `Gu`.
     """
     if nx.is_directed(Gu) or projection.is_projected(Gu.graph["crs"]):  # pragma: no cover
-        msg = "Graph must be undirected and unprojected to analyze edge bearings."
+        msg = "Graph must be unprojected to analyze edge bearings."
         raise ValueError(msg)
     bearings = []
     for u, v, data in Gu.edges(data=True):
@@ -211,15 +214,25 @@ def _extract_edge_bearings(
                 # don't weight bearings, just take one value per edge
                 bearings.append(data["bearing"])
 
-    # drop any nulls, calculate reverse bearings, concatenate and return
+    # drop any nulls
     bearings_array = np.array(bearings)
     bearings_array = bearings_array[~np.isnan(bearings_array)]
+    if nx.is_directed(Gu):
+        # https://github.com/gboeing/osmnx/issues/1137
+        msg = (
+            "Extracting directional bearings (one bearing per edge) due to MultiDiGraph input. "
+            "To extract bidirectional bearings (two bearings per edge, including the reverse bearing), "
+            "supply an undirected graph instead via `Gu.to_undirected()`."
+        )
+        warn(msg, category=UserWarning, stacklevel=2)
+        return bearings_array
+    # for undirected graphs, add reverse bearings and return
     bearings_array_r = (bearings_array - 180) % 360
     return np.concatenate([bearings_array, bearings_array_r])
 
 
 def _bearings_distribution(
-    Gu: nx.MultiGraph,
+    Gu: nx.MultiGraph | nx.MultiDiGraph,
     num_bins: int,
     min_length: float,
     weight: str | None,
@@ -236,7 +249,7 @@ def _bearings_distribution(
     Parameters
     ----------
     Gu
-        Undirected, unprojected graph with `bearing` attributes on each edge.
+        Unprojected graph with `bearing` attributes on each edge.
     num_bins
         Number of bins for the bearing histogram.
     min_length
