@@ -319,13 +319,13 @@ def features_from_polygon(
     if not isinstance(polygon, (Polygon, MultiPolygon)):
         msg = (
             "Boundaries must be a shapely Polygon or MultiPolygon. If you "
-            "requested features from place name, make sure your query resolves "
+            "requested features from place name, make sure your query geocodes "
             "to a Polygon or MultiPolygon, and not some other geometry like a "
-            "Point. See the OSMnx documentation for details."
+            "Point. See the documentation for details."
         )
         raise TypeError(msg)
 
-    # download the data from OSM then turn it into a GeoDataFrame
+    # retrieve the data from Overpass then turn it into a GeoDataFrame
     response_jsons = _overpass._download_overpass_features(polygon, tags)
     return _create_gdf(response_jsons, polygon, tags)
 
@@ -366,7 +366,7 @@ def features_from_xml(
     polygon
         Optional spatial boundaries to filter elements.
     encoding
-        The XML file's character encoding.
+        The OSM XML file's character encoding.
 
     Returns
     -------
