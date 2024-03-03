@@ -123,18 +123,21 @@ def add_edge_bearings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
 
 def orientation_entropy(
-    Gu: nx.MultiGraph,
+    Gu: nx.MultiGraph | nx.MultiDiGraph,
     *,
     num_bins: int = 36,
     min_length: float = 0,
     weight: str | None = None,
 ) -> float:
     """
-    Calculate undirected graph's orientation entropy.
+    Calculate graph's orientation entropy.
 
     Orientation entropy is the Shannon entropy of the graphs' edges'
-    bidirectional bearings across evenly spaced bins. Ignores self-loop edges
+    bearings across evenly spaced bins. Ignores self-loop edges
     as their bearings are undefined.
+
+    For MultiGraph input, calculates entropy of bidirectional bearings.
+    For MultiDiGraph input, calculates entropy of directional bearings.
 
     For more info see: Boeing, G. 2019. "Urban Spatial Order: Street Network
     Orientation, Configuration, and Entropy." Applied Network Science, 4 (1),
@@ -143,7 +146,7 @@ def orientation_entropy(
     Parameters
     ----------
     Gu
-        Undirected, unprojected graph with `bearing` attributes on each edge.
+        Unprojected graph with `bearing` attributes on each edge.
     num_bins
         Number of bins. For example, if `num_bins=36` is provided, then each
         bin will represent 10 degrees around the compass.
