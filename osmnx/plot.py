@@ -664,7 +664,7 @@ def plot_footprints(  # noqa: PLR0913
 
 
 def plot_orientation(  # noqa: PLR0913
-    Gu: nx.MultiGraph | nx.MultiDiGraph,
+    G: nx.MultiGraph,
     *,
     num_bins: int = 36,
     min_length: float = 0,
@@ -696,7 +696,7 @@ def plot_orientation(  # noqa: PLR0913
 
     Parameters
     ----------
-    Gu
+    G
         Unprojected graph with `bearing` attributes on each edge.
     num_bins
         Number of bins. For example, if `num_bins=36` is provided, then each
@@ -750,7 +750,7 @@ def plot_orientation(  # noqa: PLR0913
 
     # get the bearings' distribution's bin counts and edges
     bin_counts, bin_edges = bearing._bearings_distribution(
-        Gu,
+        G,
         num_bins,
         min_length=min_length,
         weight=weight,

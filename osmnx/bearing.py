@@ -123,7 +123,7 @@ def add_edge_bearings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
 
 def orientation_entropy(
-    Gu: nx.MultiGraph | nx.MultiDiGraph,
+    G: nx.MultiGraph,
     *,
     num_bins: int = 36,
     min_length: float = 0,
@@ -145,7 +145,7 @@ def orientation_entropy(
 
     Parameters
     ----------
-    Gu
+    G
         Unprojected graph with `bearing` attributes on each edge.
     num_bins
         Number of bins. For example, if `num_bins=36` is provided, then each
@@ -161,19 +161,19 @@ def orientation_entropy(
     Returns
     -------
     entropy
-        The orientation entropy of `Gu`.
+        The orientation entropy of `G`.
     """
     # check if we were able to import scipy
     if scipy is None:  # pragma: no cover
         msg = "scipy must be installed as an optional dependency to calculate entropy."
         raise ImportError(msg)
-    bin_counts, _ = _bearings_distribution(Gu, num_bins, min_length, weight)
+    bin_counts, _ = _bearings_distribution(G, num_bins, min_length, weight)
     entropy: float = scipy.stats.entropy(bin_counts)
     return entropy
 
 
 def _extract_edge_bearings(
-    Gu: nx.MultiGraph | nx.MultiDiGraph,
+    G: nx.MultiGraph,
     min_length: float,
     weight: str | None,
 ) -> npt.NDArray[np.float64]:
@@ -187,7 +187,7 @@ def _extract_edge_bearings(
 
     Parameters
     ----------
-    Gu
+    G
         Unprojected graph with `bearing` attributes on each edge.
     min_length
         Ignore edges with `length` attributes less than `min_length`. Useful
@@ -203,11 +203,11 @@ def _extract_edge_bearings(
     bearings
         The edge bearings of `Gu`.
     """
-    if nx.is_directed(Gu) or projection.is_projected(Gu.graph["crs"]):  # pragma: no cover
+    if projection.is_projected(G.graph["crs"]):  # pragma: no cover
         msg = "Graph must be unprojected to analyze edge bearings."
         raise ValueError(msg)
     bearings = []
-    for u, v, data in Gu.edges(data=True):
+    for u, v, data in G.edges(data=True):
         # ignore self-loops and any edges below min_length
         if u != v and data["length"] >= min_length:
             if weight:
@@ -220,12 +220,12 @@ def _extract_edge_bearings(
     # drop any nulls
     bearings_array = np.array(bearings)
     bearings_array = bearings_array[~np.isnan(bearings_array)]
-    if nx.is_directed(Gu):
+    if nx.is_directed(G):
         # https://github.com/gboeing/osmnx/issues/1137
         msg = (
             "Extracting directional bearings (one bearing per edge) due to MultiDiGraph input. "
             "To extract bidirectional bearings (two bearings per edge, including the reverse bearing), "
-            "supply an undirected graph instead via `Gu.to_undirected()`."
+            "supply an undirected graph instead via `osmnx.get_undirected(G)`."
         )
         warn(msg, category=UserWarning, stacklevel=2)
         return bearings_array
@@ -235,7 +235,7 @@ def _extract_edge_bearings(
 
 
 def _bearings_distribution(
-    Gu: nx.MultiGraph | nx.MultiDiGraph,
+    G: nx.MultiGraph,
     num_bins: int,
     min_length: float,
     weight: str | None,
@@ -251,7 +251,7 @@ def _bearings_distribution(
 
     Parameters
     ----------
-    Gu
+    G
         Unprojected graph with `bearing` attributes on each edge.
     num_bins
         Number of bins for the bearing histogram.
@@ -272,7 +272,7 @@ def _bearings_distribution(
     n = num_bins * 2
     bins = np.arange(n + 1) * 360 / n
 
-    bearings = _extract_edge_bearings(Gu, min_length, weight)
+    bearings = _extract_edge_bearings(G, min_length, weight)
     count, bin_edges = np.histogram(bearings, bins=bins)
 
     # move last bin to front, so eg 0.01 degrees and 359.99 degrees will be

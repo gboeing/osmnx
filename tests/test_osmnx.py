@@ -29,7 +29,6 @@ from shapely.geometry import Polygon
 from typeguard import TypeCheckError
 
 import osmnx as ox
-from osmnx.bearing import _extract_edge_bearings
 
 ox.settings.log_console = True
 ox.settings.log_file = True
@@ -145,17 +144,14 @@ def test_stats() -> None:
 def test_extract_edge_bearings_directionality() -> None:
     """Test support of edge bearings for directed and undirected graphs."""
     G = nx.MultiDiGraph(crs="epsg:4326")
-    lon_0, lat_0 = 0.0, 0.0
-    lon_1, lat_1 = 0.0, 1.0
-    G.add_edge(
-        (lon_0, lat_0),
-        (lon_1, lat_1),
-    )
+    G.add_node("point_1", x=0.0, y=0.0)
+    G.add_node("point_2", x=0.0, y=1.0)  # latitude increases northward
+    G.add_edge("point_1", "point_2")
     G = ox.add_edge_bearings(G)
     with pytest.warns(UserWarning, match="Extracting directional bearings"):
-        bearings = _extract_edge_bearings(G, min_length=0.0, weight=None)
+        bearings = ox.bearing._extract_edge_bearings(G, min_length=0.0, weight=None)
     assert list(bearings) == [0.0]  # north
-    bearings = _extract_edge_bearings(G.to_undirected(), min_length=0.0, weight=None)
+    bearings = ox.bearing._extract_edge_bearings(G.to_undirected(), min_length=0.0, weight=None)
     assert list(bearings) == [0.0, 180.0]  # north and south
 
 
