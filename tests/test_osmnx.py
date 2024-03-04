@@ -147,6 +147,7 @@ def test_extract_edge_bearings_directionality() -> None:
     G.add_node("point_1", x=0.0, y=0.0)
     G.add_node("point_2", x=0.0, y=1.0)  # latitude increases northward
     G.add_edge("point_1", "point_2")
+    G = ox.distance.add_edge_lengths(G)
     G = ox.add_edge_bearings(G)
     with pytest.warns(UserWarning, match="Extracting directional bearings"):
         bearings = ox.bearing._extract_edge_bearings(G, min_length=0.0, weight=None)
