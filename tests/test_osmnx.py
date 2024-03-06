@@ -141,6 +141,21 @@ def test_stats() -> None:
     G_clean = ox.consolidate_intersections(G, rebuild_graph=False)
 
 
+def test_extract_edge_bearings_directionality() -> None:
+    """Test support of edge bearings for directed and undirected graphs."""
+    G = nx.MultiDiGraph(crs="epsg:4326")
+    G.add_node("point_1", x=0.0, y=0.0)
+    G.add_node("point_2", x=0.0, y=1.0)  # latitude increases northward
+    G.add_edge("point_1", "point_2")
+    G = ox.distance.add_edge_lengths(G)
+    G = ox.add_edge_bearings(G)
+    with pytest.warns(UserWarning, match="Extracting directional bearings"):
+        bearings = ox.bearing._extract_edge_bearings(G, min_length=0.0, weight=None)
+    assert list(bearings) == [0.0]  # north
+    bearings = ox.bearing._extract_edge_bearings(G.to_undirected(), min_length=0.0, weight=None)
+    assert list(bearings) == [0.0, 180.0]  # north and south
+
+
 def test_osm_xml() -> None:
     """Test working with .osm XML data."""
     # test loading a graph from a local .osm xml file

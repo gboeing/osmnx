@@ -664,7 +664,7 @@ def plot_footprints(  # noqa: PLR0913
 
 
 def plot_orientation(  # noqa: PLR0913
-    Gu: nx.MultiGraph,
+    G: nx.MultiGraph,
     *,
     num_bins: int = 36,
     min_length: float = 0,
@@ -682,7 +682,10 @@ def plot_orientation(  # noqa: PLR0913
     xtick_font: dict[str, Any] | None = None,
 ) -> tuple[Figure, PolarAxes]:
     """
-    Plot a polar histogram of a spatial network's bidirectional edge bearings.
+    Plot a polar histogram of a spatial network's edge bearings.
+
+    A MultiGraph input receives bidirectional bearings, while a MultiDiGraph
+    input receives directional bearings (one bearing per edge).
 
     Ignores self-loop edges as their bearings are undefined. See also the
     `bearings` module.
@@ -693,8 +696,8 @@ def plot_orientation(  # noqa: PLR0913
 
     Parameters
     ----------
-    Gu
-        Undirected, unprojected graph with `bearing` attributes on each edge.
+    G
+        Unprojected graph with `bearing` attributes on each edge.
     num_bins
         Number of bins. For example, if `num_bins=36` is provided, then each
         bin will represent 10 degrees around the compass.
@@ -747,7 +750,7 @@ def plot_orientation(  # noqa: PLR0913
 
     # get the bearings' distribution's bin counts and edges
     bin_counts, bin_edges = bearing._bearings_distribution(
-        Gu,
+        G,
         num_bins,
         min_length=min_length,
         weight=weight,
