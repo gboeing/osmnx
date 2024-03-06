@@ -664,7 +664,7 @@ def plot_footprints(  # noqa: PLR0913
 
 
 def plot_orientation(  # noqa: PLR0913
-    G: nx.MultiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     *,
     num_bins: int = 36,
     min_length: float = 0,
@@ -684,10 +684,10 @@ def plot_orientation(  # noqa: PLR0913
     """
     Plot a polar histogram of a spatial network's edge bearings.
 
-    A MultiGraph input receives bidirectional bearings, while a MultiDiGraph
-    input receives directional bearings (one bearing per edge).
-
-    Ignores self-loop edges as their bearings are undefined. See also the
+    Ignores self-loop edges as their bearings are undefined. If `G` is a
+    MultiGraph, all edge bearings will be bidirectional (ie, two reciprocal
+    bearings per undirected edge). If `G` is a MultiDiGraph, all edge bearings
+    will be directional (ie, one bearing per directed edge). See also the
     `bearings` module.
 
     For more info see: Boeing, G. 2019. "Urban Spatial Order: Street Network

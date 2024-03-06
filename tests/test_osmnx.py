@@ -107,8 +107,6 @@ def test_stats() -> None:
     # create graph, add a new node, add bearings, project it
     G = ox.graph_from_place(place1, network_type="all")
     G.add_node(0, x=location_point[1], y=location_point[0], street_count=0)
-    _ = ox.bearing.calculate_bearing(0, 0, 1, 1)
-    G = ox.add_edge_bearings(G)
     G_proj = ox.project_graph(G)
     G_proj = ox.distance.add_edge_lengths(G_proj, edges=tuple(G_proj.edges)[0:3])
 
@@ -117,13 +115,6 @@ def test_stats() -> None:
     stats = ox.basic_stats(G)
     stats = ox.basic_stats(G, area=1000)
     stats = ox.basic_stats(G_proj, area=1000, clean_int_tol=15)
-
-    # calculate entropy
-    Gu = ox.get_undirected(G)
-    entropy = ox.bearing.orientation_entropy(Gu, weight="length")
-
-    fig, ax = ox.plot.plot_orientation(Gu, area=True, title="Title")
-    fig, ax = ox.plot.plot_orientation(Gu, ax=ax, area=False, title="Title")
 
     # test cleaning and rebuilding graph
     G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=True, dead_ends=True)
@@ -141,18 +132,35 @@ def test_stats() -> None:
     G_clean = ox.consolidate_intersections(G, rebuild_graph=False)
 
 
-def test_extract_edge_bearings_directionality() -> None:
-    """Test support of edge bearings for directed and undirected graphs."""
+def test_bearings() -> None:
+    """Test bearings and orientation entropy."""
+    G = ox.graph_from_place(place1, network_type="all")
+    G.add_node(0, x=location_point[1], y=location_point[0], street_count=0)
+    _ = ox.bearing.calculate_bearing(0, 0, 1, 1)
+    G = ox.add_edge_bearings(G)
+    G_proj = ox.project_graph(G)
+
+    # calculate entropy
+    Gu = ox.get_undirected(G)
+    entropy = ox.bearing.orientation_entropy(Gu, weight="length")
+    fig, ax = ox.plot.plot_orientation(Gu, area=True, title="Title")
+    fig, ax = ox.plot.plot_orientation(Gu, ax=ax, area=False, title="Title")
+
+    # test support of edge bearings for directed and undirected graphs
     G = nx.MultiDiGraph(crs="epsg:4326")
     G.add_node("point_1", x=0.0, y=0.0)
     G.add_node("point_2", x=0.0, y=1.0)  # latitude increases northward
     G.add_edge("point_1", "point_2")
     G = ox.distance.add_edge_lengths(G)
     G = ox.add_edge_bearings(G)
-    with pytest.warns(UserWarning, match="Extracting directional bearings"):
-        bearings = ox.bearing._extract_edge_bearings(G, min_length=0.0, weight=None)
+    with pytest.warns(UserWarning, match="edge bearings will be directional"):
+        bearings = ox.bearing._extract_edge_bearings(G, min_length=0, weight=None)
     assert list(bearings) == [0.0]  # north
-    bearings = ox.bearing._extract_edge_bearings(G.to_undirected(), min_length=0.0, weight=None)
+    bearings = ox.bearing._extract_edge_bearings(
+        ox.utils_graph.get_undirected(G),
+        min_length=0,
+        weight=None,
+    )
     assert list(bearings) == [0.0, 180.0]  # north and south
 
 

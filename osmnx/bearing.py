@@ -123,7 +123,7 @@ def add_edge_bearings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
 
 def orientation_entropy(
-    G: nx.MultiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     *,
     num_bins: int = 36,
     min_length: float = 0,
@@ -132,12 +132,12 @@ def orientation_entropy(
     """
     Calculate graph's orientation entropy.
 
-    Orientation entropy is the Shannon entropy of the graphs' edges'
-    bearings across evenly spaced bins. Ignores self-loop edges
-    as their bearings are undefined.
-
-    For MultiGraph input, calculates entropy of bidirectional bearings.
-    For MultiDiGraph input, calculates entropy of directional bearings.
+    Orientation entropy is the Shannon entropy of the graphs' edges' bearings
+    across evenly spaced bins. Ignores self-loop edges as their bearings are
+    undefined. If `G` is a MultiGraph, all edge bearings will be bidirectional
+    (ie, two reciprocal bearings per undirected edge). If `G` is a
+    MultiDiGraph, all edge bearings will be directional (ie, one bearing per
+    directed edge).
 
     For more info see: Boeing, G. 2019. "Urban Spatial Order: Street Network
     Orientation, Configuration, and Entropy." Applied Network Science, 4 (1),
@@ -173,17 +173,19 @@ def orientation_entropy(
 
 
 def _extract_edge_bearings(
-    G: nx.MultiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     min_length: float,
     weight: str | None,
 ) -> npt.NDArray[np.float64]:
     """
     Extract graph's edge bearings.
 
-    A MultiGraph input receives bidirectional bearings.
-    For example, if an undirected edge has a bearing of 90 degrees then we will record
+    Ignores self-loop edges as their bearings are undefined. If `G` is a
+    MultiGraph, all edge bearings will be bidirectional (ie, two reciprocal
+    bearings per undirected edge). If `G` is a MultiDiGraph, all edge bearings
+    will be directional (ie, one bearing per directed edge). For example, if
+    an undirected edge has a bearing of 90 degrees then we will record
     bearings of both 90 degrees and 270 degrees for this edge.
-    For MultiDiGraph input, record only one bearing per edge.
 
     Parameters
     ----------
@@ -221,11 +223,10 @@ def _extract_edge_bearings(
     bearings_array = np.array(bearings)
     bearings_array = bearings_array[~np.isnan(bearings_array)]
     if nx.is_directed(G):
-        # https://github.com/gboeing/osmnx/issues/1137
         msg = (
-            "Extracting directional bearings (one bearing per edge) due to MultiDiGraph input. "
-            "To extract bidirectional bearings (two bearings per edge, including the reverse bearing), "
-            "supply an undirected graph instead via `osmnx.get_undirected(G)`."
+            "`G` is a MultiDiGraph, so edge bearings will be directional (one per "
+            "edge). If you want bidirectional edge bearings (two reciprocal bearings "
+            "per edge), pass a MultiGraph instead. Use `utils_graph.get_undirected`."
         )
         warn(msg, category=UserWarning, stacklevel=2)
         return bearings_array
@@ -235,7 +236,7 @@ def _extract_edge_bearings(
 
 
 def _bearings_distribution(
-    G: nx.MultiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     num_bins: int,
     min_length: float,
     weight: str | None,
