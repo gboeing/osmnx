@@ -163,12 +163,6 @@ def project_graph(
     # STEP 1: PROJECT THE NODES
     gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False)
 
-    # create new lat/lon columns to preserve lat/lon for later reference if
-    # cols do not already exist (ie, don't overwrite in later re-projections)
-    if "lon" not in gdf_nodes.columns or "lat" not in gdf_nodes.columns:
-        gdf_nodes["lon"] = gdf_nodes["x"]
-        gdf_nodes["lat"] = gdf_nodes["y"]
-
     # project the nodes GeoDataFrame and extract the projected x/y values
     gdf_nodes_proj = project_gdf(gdf_nodes, to_crs=to_crs)
     gdf_nodes_proj["x"] = gdf_nodes_proj["geometry"].x
