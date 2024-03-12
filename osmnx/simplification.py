@@ -228,7 +228,9 @@ def _remove_rings(G, endpoint_attrs):
     return G
 
 
-def simplify_graph(G, strict=None, endpoint_attrs=None, remove_rings=True, track_merged=False):  # noqa: C901
+def simplify_graph(  # noqa: C901
+    G, strict=None, edge_attrs=None, endpoint_attrs=None, remove_rings=True, track_merged=False
+):
     """
     Simplify a graph's topology by removing interstitial nodes.
 
@@ -243,8 +245,8 @@ def simplify_graph(G, strict=None, endpoint_attrs=None, remove_rings=True, track
     simplified edges can receive a `merged_edges` attribute that contains a
     list of all the (u, v) node pairs that were merged together.
 
-    Use the `endpoint_attrs` parameter to relax simplification strictness. For
-    example, `endpoint_attrs=['osmid']` will retain every node whose incident
+    Use the `edge_attrs` parameter to relax simplification strictness. For
+    example, `edge_attrs=['osmid']` will retain every node whose incident
     edges have different OSM IDs. This lets you keep nodes at elbow two-way
     intersections (but be aware that sometimes individual blocks have multiple
     OSM IDs within them too). You could also use this parameter to retain
@@ -256,11 +258,13 @@ def simplify_graph(G, strict=None, endpoint_attrs=None, remove_rings=True, track
         input graph
     strict : bool
         deprecated, do not use
-    endpoint_attrs : iterable
+    edge_attrs : iterable
         An iterable of edge attribute names for relaxing the strictness of
         endpoint determination. If not None, a node is an endpoint if its
         incident edges have different values then each other for any of the
-        edge attributes in `endpoint_attrs`.
+        edge attributes in `edge_attrs`.
+    endpoint_attrs : iterable
+        deprecated, do not use
     remove_rings : bool
         if True, remove isolated self-contained rings that have no endpoints
     track_merged : bool
@@ -273,17 +277,25 @@ def simplify_graph(G, strict=None, endpoint_attrs=None, remove_rings=True, track
         topologically simplified graph, with a new `geometry` attribute on
         each simplified edge
     """
+    if endpoint_attrs is not None:
+        msg = (
+            "The `endpoint_attrs` parameter has been deprecated and will be removed "
+            "in the v2.0.0 release. Use the `edge_attrs` parameter instead."
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+        edge_attrs = endpoint_attrs
+
     if strict is not None:
         msg = (
             "The `strict` parameter has been deprecated and will be removed in "
-            "the v2.0.0 release. Use the `endpoint_attrs` parameter instead to "
-            "relax simplification strictness. For example, `endpoint_attrs=None` "
-            "reproduces the old `strict=True` behvavior and `endpoint_attrs=['osmid']` "
+            "the v2.0.0 release. Use the `edge_attrs` parameter instead to "
+            "relax simplification strictness. For example, `edge_attrs=None` "
+            "reproduces the old `strict=True` behvavior and `edge_attrs=['osmid']` "
             "reproduces the old `strict=False` behavior."
         )
         warn(msg, FutureWarning, stacklevel=2)
         # maintain old behavior if strict is passed during deprecation
-        endpoint_attrs = None if strict else ["osmid"]
+        edge_attrs = None if strict else ["osmid"]
 
     if "simplified" in G.graph and G.graph["simplified"]:  # pragma: no cover
         msg = "This graph has already been simplified, cannot simplify it again."
@@ -302,7 +314,7 @@ def simplify_graph(G, strict=None, endpoint_attrs=None, remove_rings=True, track
     all_edges_to_add = []
 
     # generate each path that needs to be simplified
-    for path in _get_paths_to_simplify(G, endpoint_attrs):
+    for path in _get_paths_to_simplify(G, edge_attrs):
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
         merged_edges = []
@@ -372,7 +384,7 @@ def simplify_graph(G, strict=None, endpoint_attrs=None, remove_rings=True, track
     G.remove_nodes_from(set(all_nodes_to_remove))
 
     if remove_rings:
-        G = _remove_rings(G, endpoint_attrs)
+        G = _remove_rings(G, edge_attrs)
 
     # mark the graph as having been simplified
     G.graph["simplified"] = True
