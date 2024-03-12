@@ -291,7 +291,7 @@ def simplify_graph(  # noqa: PLR0912
 
     Note that only simplified edges receive a `geometry` attribute. Some of
     the resulting consolidated edges may comprise multiple OSM ways, and if
-    so, their multiple attribute values are stored as a list. Optionally, the
+    so, their unique attribute values are stored as a list. Optionally, the
     simplified edges can receive a `merged_edges` attribute that contains a
     list of all the (u, v) node pairs that were merged together.
 
