@@ -114,7 +114,7 @@ use_cache : bool
     API repeatedly for the same request. Default is `True`.
 useful_tags_node : list[str]
     OSM "node" tags to add as graph node attributes, when present in the data
-    retrieved from OSM. Default is `["highway", "ref"]`.
+    retrieved from OSM. Default is `["highway", "junction", "railway", "ref"]`.
 useful_tags_way : list[str]
     OSM "way" tags to add as graph edge attributes, when present in the data
     retrieved from OSM. Default is `["access", "area", "bridge", "est_width",
@@ -162,7 +162,7 @@ overpass_url: str = "https://overpass-api.de/api"
 requests_kwargs: dict[str, Any] = {}
 requests_timeout: float = 180
 use_cache: bool = True
-useful_tags_node: list[str] = ["highway", "ref"]
+useful_tags_node: list[str] = ["highway", "junction", "railway", "ref"]
 useful_tags_way: list[str] = [
     "access",
     "area",
