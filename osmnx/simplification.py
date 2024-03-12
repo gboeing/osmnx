@@ -24,14 +24,19 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
-def _is_endpoint(G: nx.MultiDiGraph, node: int, edge_attrs: Iterable[str] | None) -> bool:
+def _is_endpoint(
+    G: nx.MultiDiGraph,
+    node: int,
+    node_attrs: Iterable[str] | None,
+    edge_attrs: Iterable[str] | None,
+) -> bool:
     """
     Determine if a node is a true endpoint of an edge.
 
     Return True if the node is a "true" endpoint of an edge in the network,
     otherwise False. OpenStreetMap data includes many nodes that exist only as
-    geometric vertices to allow ways to curve. A true edge endpoint is a node
-    that satisfies at least 1 of the following 4 rules:
+    geometric vertices to allow ways to curve. `node` is a true edge endpoint
+    if it satisfies at least 1 of the following 5 rules:
 
     1) It is its own neighbor (ie, it self-loops).
 
@@ -40,19 +45,25 @@ def _is_endpoint(G: nx.MultiDiGraph, node: int, edge_attrs: Iterable[str] | None
 
     3) Or, it does not have exactly two neighbors and degree of 2 or 4.
 
-    4) Or, if `edge_attrs` is not None, and its incident edges have
-    different values than each other for any of the edge attributes in
-    `edge_attrs`.
+    4) Or, if `node_attrs` is not None and it has one or more of the
+    attributes in `node_attrs`
+
+    5) Or, if `edge_attrs` is not None and its incident edges have different
+    values than each other for any of the edge attributes in `edge_attrs`.
 
     Parameters
     ----------
     G
         Input graph.
     node
-        The node to examine.
+        The ID of the node.
+    node_attrs
+        Node attribute names for relaxing the strictness of endpoint
+        determination. If not None, the node is an endpoint if it has one or
+        more of the attributes in `node_attrs`.
     edge_attrs
         Edge attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is an endpoint if its incident
+        determination. If not None, the node is an endpoint if its incident
         edges have different values then each other for any of the edge
         attributes in `edge_attrs`.
 
@@ -85,6 +96,11 @@ def _is_endpoint(G: nx.MultiDiGraph, node: int, edge_attrs: Iterable[str] | None
         return True
 
     # RULE 4
+    # non-strict mode: does it contain an attr denoting that it is an endpoint
+    if node_attrs is not None and len(set(node_attrs) & G.nodes[node].keys()) > 0:
+        return True
+
+    # RULE 5
     # non-strict mode: do its incident edges have different attr values? for
     # each attribute to check, collect the attribute's values in all inbound
     # and outbound edges. if there is more than 1 unique value then then this
@@ -177,6 +193,7 @@ def _build_path(
 
 def _get_paths_to_simplify(
     G: nx.MultiDiGraph,
+    node_attrs: Iterable[str] | None,
     edge_attrs: Iterable[str] | None,
 ) -> Iterator[list[int]]:
     """
@@ -189,6 +206,10 @@ def _get_paths_to_simplify(
     ----------
     G
         Input graph.
+    node_attrs
+        Node attribute names for relaxing the strictness of endpoint
+        determination. If not None, a node is an endpoint if it has one or
+        more of the attributes in `node_attrs`.
     edge_attrs
         Edge attribute names for relaxing the strictness of endpoint
         determination. If not None, a node is an endpoint if its incident
@@ -200,7 +221,7 @@ def _get_paths_to_simplify(
     path_to_simplify
     """
     # first identify all the nodes that are endpoints
-    endpoints = {n for n in G.nodes if _is_endpoint(G, n, edge_attrs)}
+    endpoints = {n for n in G.nodes if _is_endpoint(G, n, node_attrs, edge_attrs)}
     msg = f"Identified {len(endpoints):,} edge endpoints"
     utils.log(msg, level=lg.INFO)
 
@@ -214,7 +235,11 @@ def _get_paths_to_simplify(
                 yield _build_path(G, endpoint, successor, endpoints)
 
 
-def _remove_rings(G: nx.MultiDiGraph, edge_attrs: Iterable[str] | None) -> nx.MultiDiGraph:
+def _remove_rings(
+    G: nx.MultiDiGraph,
+    node_attrs: Iterable[str] | None,
+    edge_attrs: Iterable[str] | None,
+) -> nx.MultiDiGraph:
     """
     Remove all self-contained rings from a graph.
 
@@ -225,6 +250,10 @@ def _remove_rings(G: nx.MultiDiGraph, edge_attrs: Iterable[str] | None) -> nx.Mu
     ----------
     G
         Input graph.
+    node_attrs
+        Node attribute names for relaxing the strictness of endpoint
+        determination. If not None, a node is an endpoint if it has one or
+        more of the attributes in `node_attrs`.
     edge_attrs
         Edge attribute names for relaxing the strictness of endpoint
         determination. If not None, a node is an endpoint if its incident
@@ -238,7 +267,7 @@ def _remove_rings(G: nx.MultiDiGraph, edge_attrs: Iterable[str] | None) -> nx.Mu
     """
     nodes_in_rings = set()
     for wcc in nx.weakly_connected_components(G):
-        if not any(_is_endpoint(G, n, edge_attrs) for n in wcc):
+        if not any(_is_endpoint(G, n, node_attrs, edge_attrs) for n in wcc):
             nodes_in_rings.update(wcc)
     G.remove_nodes_from(nodes_in_rings)
     return G
@@ -247,6 +276,7 @@ def _remove_rings(G: nx.MultiDiGraph, edge_attrs: Iterable[str] | None) -> nx.Mu
 def simplify_graph(  # noqa: PLR0912
     G: nx.MultiDiGraph,
     *,
+    node_attrs: Iterable[str] | None = None,
     edge_attrs: Iterable[str] | None = None,
     remove_rings: bool = True,
     track_merged: bool = False,
@@ -265,17 +295,22 @@ def simplify_graph(  # noqa: PLR0912
     simplified edges can receive a `merged_edges` attribute that contains a
     list of all the (u, v) node pairs that were merged together.
 
-    Use the `edge_attrs` parameter to relax simplification strictness. For
-    example, `edge_attrs=["osmid"]` will retain every node whose incident
-    edges have different OSM IDs. This lets you keep nodes at elbow two-way
-    intersections (but be aware that sometimes individual blocks have multiple
-    OSM IDs within them too). You could also use this parameter to retain
-    nodes where sidewalks or bike lanes begin/end in the middle of a block.
+    Use the `node_attrs` or `edge_attrs` parameters to relax simplification
+    strictness. For example, `edge_attrs=["osmid"]` will retain every node
+    whose incident edges have different OSM IDs. This lets you keep nodes at
+    elbow two-way intersections (but be aware that sometimes individual blocks
+    have multiple OSM IDs within them too). You could also use this parameter
+    to retain nodes where sidewalks or bike lanes begin/end in the middle of a
+    block.
 
     Parameters
     ----------
     G
         Input graph.
+    node_attrs
+        Node attribute names for relaxing the strictness of endpoint
+        determination. If not None, a node is an endpoint if it has one or
+        more of the attributes in `node_attrs`.
     edge_attrs
         Edge attribute names for relaxing the strictness of endpoint
         determination. If not None, a node is an endpoint if its incident
@@ -311,7 +346,7 @@ def simplify_graph(  # noqa: PLR0912
     all_edges_to_add = []
 
     # generate each path that needs to be simplified
-    for path in _get_paths_to_simplify(G, edge_attrs):
+    for path in _get_paths_to_simplify(G, node_attrs, edge_attrs):
         # add the interstitial edges we're removing to a list so we can retain
         # their spatial geometry
         merged_edges = []
@@ -382,7 +417,7 @@ def simplify_graph(  # noqa: PLR0912
     G.remove_nodes_from(set(all_nodes_to_remove))
 
     if remove_rings:
-        G = _remove_rings(G, edge_attrs)
+        G = _remove_rings(G, node_attrs, edge_attrs)
 
     # mark the graph as having been simplified
     G.graph["simplified"] = True
