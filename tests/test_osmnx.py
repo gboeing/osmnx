@@ -575,7 +575,7 @@ def test_graph_from() -> None:
 
     # graph from polygon
     G = ox.graph_from_polygon(polygon, network_type="walk", truncate_by_edge=True, simplify=False)
-    G = ox.simplify_graph(G, endpoint_attrs=["osmid"], remove_rings=False, track_merged=True)
+    G = ox.simplify_graph(G, edge_attrs=["osmid"], remove_rings=False, track_merged=True)
 
     # test custom query filter
     cf = (
