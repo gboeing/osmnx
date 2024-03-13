@@ -150,18 +150,20 @@ def test_bearings() -> None:
     G = nx.MultiDiGraph(crs="epsg:4326")
     G.add_node("point_1", x=0.0, y=0.0)
     G.add_node("point_2", x=0.0, y=1.0)  # latitude increases northward
-    G.add_edge("point_1", "point_2")
+    G.add_edge("point_1", "point_2", weight=2.0)
     G = ox.distance.add_edge_lengths(G)
     G = ox.add_edge_bearings(G)
     with pytest.warns(UserWarning, match="edge bearings will be directional"):
-        bearings = ox.bearing._extract_edge_bearings(G, min_length=0, weight=None)
+        bearings, weights = ox.bearing._extract_edge_bearings(G, min_length=0, weight=None)
     assert list(bearings) == [0.0]  # north
-    bearings = ox.bearing._extract_edge_bearings(
+    assert list(weights) == [1.0]
+    bearings, weights = ox.bearing._extract_edge_bearings(
         ox.utils_graph.get_undirected(G),
         min_length=0,
-        weight=None,
+        weight="weight",
     )
     assert list(bearings) == [0.0, 180.0]  # north and south
+    assert list(weights) == [2.0, 2.0]
 
 
 def test_osm_xml() -> None:
