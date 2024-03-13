@@ -587,7 +587,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
 
     Returns
     -------
-    H
+    Gc
         A rebuilt graph with consolidated intersections and reconnected edge
         geometries.
     """
@@ -636,8 +636,8 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
 
     # STEP 4
     # create new empty graph and copy over misc graph data
-    H = nx.MultiDiGraph()
-    H.graph = G.graph
+    Gc = nx.MultiDiGraph()
+    Gc.graph = G.graph
 
     # STEP 5
     # create a new node for each cluster of merged nodes
@@ -648,7 +648,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         if len(osmids) == 1:
             # if cluster is a single node, add that node to new graph
             osmid = osmids[0]
-            H.add_node(cluster_label, osmid_original=osmid, **G.nodes[osmid])
+            Gc.add_node(cluster_label, osmid_original=osmid, **G.nodes[osmid])
         else:
             # if cluster is multiple merged nodes, create one new node with
             # attributes to represent the merged nodes' non-null values
@@ -666,17 +666,17 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
                 elif len(unique_vals) > 1:
                     # if there are multiple unique values, keep all uniques
                     node_attrs[col] = unique_vals
-            H.add_node(cluster_label, **node_attrs)
+            Gc.add_node(cluster_label, **node_attrs)
 
     # calculate street_count attribute for all nodes lacking it
-    null_nodes = [n for n, sc in H.nodes(data="street_count") if sc is None]
-    street_count = stats.count_streets_per_node(H, nodes=null_nodes)
-    nx.set_node_attributes(H, street_count, name="street_count")
+    null_nodes = [n for n, sc in Gc.nodes(data="street_count") if sc is None]
+    street_count = stats.count_streets_per_node(Gc, nodes=null_nodes)
+    nx.set_node_attributes(Gc, street_count, name="street_count")
 
     if len(G.edges) == 0 or not reconnect_edges:
         # if reconnect_edges is False or there are no edges in original graph
         # (after dead-end removed), then skip edges and return new graph as-is
-        return H
+        return Gc
 
     # STEP 6
     # create new edge from cluster to cluster for each edge in original graph
@@ -692,7 +692,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
             data["v_original"] = v
             if "geometry" not in data:
                 data["geometry"] = gdf_edges.loc[(u, v, k), "geometry"]
-            H.add_edge(u2, v2, **data)
+            Gc.add_edge(u2, v2, **data)
 
     # STEP 7
     # for every group of merged nodes with more than 1 node in it, extend the
@@ -703,21 +703,21 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         if len(nodes_subset) > 1:
             # get coords of merged nodes point centroid to prepend or
             # append to the old edge geom's coords
-            x = H.nodes[cluster_label]["x"]
-            y = H.nodes[cluster_label]["y"]
+            x = Gc.nodes[cluster_label]["x"]
+            y = Gc.nodes[cluster_label]["y"]
             xy = [(x, y)]
 
             # for each edge incident on this new merged node, update its
             # geometry to extend to/from the new node's point coords
-            in_edges = set(H.in_edges(cluster_label, keys=True))
-            out_edges = set(H.out_edges(cluster_label, keys=True))
+            in_edges = set(Gc.in_edges(cluster_label, keys=True))
+            out_edges = set(Gc.out_edges(cluster_label, keys=True))
             for u, v, k in in_edges | out_edges:
-                old_coords = list(H.edges[u, v, k]["geometry"].coords)
+                old_coords = list(Gc.edges[u, v, k]["geometry"].coords)
                 new_coords = xy + old_coords if cluster_label == u else old_coords + xy
                 new_geom = LineString(new_coords)
-                H.edges[u, v, k]["geometry"] = new_geom
+                Gc.edges[u, v, k]["geometry"] = new_geom
 
                 # update the edge length attribute, given the new geometry
-                H.edges[u, v, k]["length"] = new_geom.length
+                Gc.edges[u, v, k]["length"] = new_geom.length
 
-    return H
+    return Gc

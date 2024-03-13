@@ -454,7 +454,7 @@ def get_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
 
     Returns
     -------
-    G
+    Gu
     """
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
@@ -476,32 +476,32 @@ def get_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
 
     # convert MultiDiGraph to MultiGraph, retaining edges in both directions
     # of parallel edges and self-loops for now
-    H = nx.MultiGraph(**G.graph)
-    H.add_nodes_from(G.nodes(data=True))
-    H.add_edges_from(G.edges(keys=True, data=True))
+    Gu = nx.MultiGraph(**G.graph)
+    Gu.add_nodes_from(G.nodes(data=True))
+    Gu.add_edges_from(G.edges(keys=True, data=True))
 
     # the previous operation added all directed edges from G as undirected
-    # edges in H. we now have duplicate edges for every bidirectional parallel
+    # edges in Gu. we now have duplicate edges for each bidirectional parallel
     # edge or self-loop. so, look through the edges and remove any duplicates.
     duplicate_edges = set()
-    for u1, v1, key1, data1 in H.edges(keys=True, data=True):
+    for u1, v1, key1, data1 in Gu.edges(keys=True, data=True):
         # if we haven't already flagged this edge as a duplicate
         if (u1, v1, key1) not in duplicate_edges:
             # look at every other edge between u and v, one at a time
-            for key2 in H[u1][v1]:
+            for key2 in Gu[u1][v1]:
                 # don't compare this edge to itself
                 if key1 != key2:
                     # compare the first edge's data to the second's
                     # if they match up, flag the duplicate for removal
-                    data2 = H.edges[u1, v1, key2]
+                    data2 = Gu.edges[u1, v1, key2]
                     if _is_duplicate_edge(data1, data2):
                         duplicate_edges.add((u1, v1, key2))
 
-    H.remove_edges_from(duplicate_edges)
+    Gu.remove_edges_from(duplicate_edges)
     msg = "Converted MultiDiGraph to undirected MultiGraph"
     utils.log(msg, level=lg.INFO)
 
-    return H
+    return Gu
 
 
 def _is_duplicate_edge(data1: dict[str, Any], data2: dict[str, Any]) -> bool:
