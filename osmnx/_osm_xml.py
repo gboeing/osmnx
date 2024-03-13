@@ -190,6 +190,15 @@ def _save_graph_xml(
         msg = "Make sure graph was created with `ox.settings.all_oneway=True` to save as OSM XML."
         warn(msg, category=UserWarning, stacklevel=2)
 
+    # warn user if graph is projected
+    if projection.is_projected(G.graph["crs"]):
+        msg = (
+            "Graph should be unprojected to save as OSM XML: the existing "
+            "projected x-y coordinates will be saved as lat-lon node attributes. "
+            "Project your graph back to lat-lon to avoid this."
+        )
+        warn(msg, category=UserWarning, stacklevel=2)
+
     # raise error if graph has been simplified
     if G.graph.get("simplified", False):
         msg = "Graph must be unsimplified to save as OSM XML."
@@ -211,15 +220,6 @@ def _save_graph_xml(
                 gdf[col] = value
             else:
                 gdf[col] = gdf[col].fillna(value)
-
-    # warn user if graph is projected
-    if projection.is_projected(G.graph["crs"]):
-        msg = (
-            "Graph should be unprojected: the existing projected x-y coordinates "
-            "will be saved as lat-lon node attributes. Project your graph back to "
-            "lat-lon to avoid this."
-        )
-        warn(msg, category=UserWarning, stacklevel=2)
 
     # transform nodes gdf to meet OSM XML spec
     # 1) reset index (osmid) then rename osmid, x, and y columns
