@@ -577,8 +577,8 @@ def test_graph_from() -> None:
     G = ox.graph_from_polygon(polygon, network_type="walk", truncate_by_edge=True, simplify=False)
     G = ox.simplify_graph(
         G,
-        node_attrs=["junction", "ref"],
-        edge_attrs=["osmid"],
+        node_attrs_include=["junction", "ref"],
+        edge_attrs_differ=["osmid"],
         remove_rings=False,
         track_merged=True,
     )
