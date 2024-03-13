@@ -4,7 +4,7 @@
 
 - deprecate settings module's renamed or obsolete settings (#1138)
 - deprecate save_graph_xml function's renamed or obsolete parameters (#1138)
-- deprecate simplify_graph function's endpoint_attrs argument: renamed to edge_attrs (#1146)
+- deprecate simplify_graph function's endpoint_attrs argument: renamed to edge_attrs_differ (#1146)
 
 ## 1.9.1 (2024-02-01)
 
