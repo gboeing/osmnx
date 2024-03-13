@@ -254,7 +254,7 @@ def k_shortest_paths(
     """
     _verify_edge_attribute(G, weight)
     paths_gen = nx.shortest_simple_paths(
-        G=convert.get_digraph(G, weight=weight),
+        G=convert.to_digraph(G, weight=weight),
         source=orig,
         target=dest,
         weight=weight,

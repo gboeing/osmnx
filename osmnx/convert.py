@@ -309,12 +309,12 @@ def graph_from_gdfs(
     return G
 
 
-def get_digraph(G: nx.MultiDiGraph, *, weight: str = "length") -> nx.DiGraph:
+def to_digraph(G: nx.MultiDiGraph, *, weight: str = "length") -> nx.DiGraph:
     """
     Convert MultiDiGraph to DiGraph.
 
     Chooses between parallel edges by minimizing `weight` attribute value. See
-    also `get_undirected` to convert MultiDiGraph to MultiGraph.
+    also `to_undirected` to convert MultiDiGraph to MultiGraph.
 
     Parameters
     ----------
@@ -347,12 +347,12 @@ def get_digraph(G: nx.MultiDiGraph, *, weight: str = "length") -> nx.DiGraph:
     return nx.DiGraph(G)
 
 
-def get_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
+def to_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
     """
     Convert MultiDiGraph to undirected MultiGraph.
 
     Maintains parallel edges only if their geometries differ. See also
-    `get_digraph` to convert MultiDiGraph to DiGraph.
+    `to_digraph` to convert MultiDiGraph to DiGraph.
 
     Parameters
     ----------

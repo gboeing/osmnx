@@ -65,7 +65,7 @@ def truncate_graph_dist(
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
     if not retain_all:
-        G = get_largest_component(remove_isolated_nodes(G))
+        G = largest_component(remove_isolated_nodes(G))
 
     msg = f"Truncated graph by {weight}-weighted network distance"
     utils.log(msg, level=lg.INFO)
@@ -174,7 +174,7 @@ def truncate_graph_polygon(
     utils.log(msg, level=lg.INFO)
 
     if not retain_all:
-        G = get_largest_component(remove_isolated_nodes(G))
+        G = largest_component(remove_isolated_nodes(G))
 
     msg = "Truncated graph by polygon"
     utils.log(msg, level=lg.INFO)
@@ -207,7 +207,7 @@ def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     return G
 
 
-def get_largest_component(G: nx.MultiDiGraph, *, strongly: bool = False) -> nx.MultiDiGraph:
+def largest_component(G: nx.MultiDiGraph, *, strongly: bool = False) -> nx.MultiDiGraph:
     """
     Return subgraph of `G`'s largest weakly or strongly connected component.
 

@@ -372,7 +372,7 @@ def basic_stats(
           - `streets_per_node_counts` - see `streets_per_node_counts` function documentation
           - `streets_per_node_proportions` - see `streets_per_node_proportions` function documentation
     """
-    Gu = convert.get_undirected(G)
+    Gu = convert.to_undirected(G)
     stats: dict[str, Any] = {}
 
     stats["n"] = len(G.nodes)

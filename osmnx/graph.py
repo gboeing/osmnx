@@ -621,7 +621,7 @@ def _create_graph(
 
     # retain only the largest connected component if retain_all=False
     if not retain_all:
-        G = truncate.get_largest_component(G)
+        G = truncate.largest_component(G)
 
     msg = f"Created graph with {len(G):,} nodes and {len(G.edges):,} edges"
     utils.log(msg, level=lg.INFO)

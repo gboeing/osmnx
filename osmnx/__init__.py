@@ -9,10 +9,10 @@ from ._version import __version__ as __version__
 # by exposing these functions directly in the package's namespace.
 from .bearing import add_edge_bearings as add_edge_bearings
 from .bearing import orientation_entropy as orientation_entropy
-from .convert import get_digraph as get_digraph
-from .convert import get_undirected as get_undirected
 from .convert import graph_from_gdfs as graph_from_gdfs
 from .convert import graph_to_gdfs as graph_to_gdfs
+from .convert import to_digraph as to_digraph
+from .convert import to_undirected as to_undirected
 from .distance import nearest_edges as nearest_edges
 from .distance import nearest_nodes as nearest_nodes
 from .elevation import add_edge_grades as add_edge_grades

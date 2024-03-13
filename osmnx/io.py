@@ -60,7 +60,7 @@ def save_graph_geopackage(
     if directed:
         gdf_nodes, gdf_edges = convert.graph_to_gdfs(G)
     else:
-        gdf_nodes, gdf_edges = convert.graph_to_gdfs(convert.get_undirected(G))
+        gdf_nodes, gdf_edges = convert.graph_to_gdfs(convert.to_undirected(G))
     gdf_nodes = _stringify_nonnumeric_cols(gdf_nodes)
     gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
 
