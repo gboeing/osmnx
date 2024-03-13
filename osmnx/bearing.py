@@ -195,15 +195,15 @@ def _extract_edge_bearings(
         Ignore edges with `length` attributes less than `min_length`. Useful
         to ignore the noise of many very short edges.
     weight
-        If not None, weight edges' bearings by this (non-null) edge attribute.
-        For example, if "length" is provided, this will return 1 bearing
-        observation per meter per street (which could result in a very large
-        `bearings` array).
+        If None, return equal weight for each bearing. Otherwise,
+        weight edges' bearings by this (non-null) edge attribute.
+        For example, if "length" is provided, this will weight each bearing
+        observation by the meter length of each street.
 
     Returns
     -------
-    bearings
-        The edge bearings of `Gu`.
+    bearings, weights
+        The edge bearings of `G` and their corresponding weights.
     """
     if projection.is_projected(G.graph["crs"]):  # pragma: no cover
         msg = "Graph must be unprojected to analyze edge bearings."
@@ -219,10 +219,10 @@ def _extract_edge_bearings(
 
     # drop any nulls
     bearings_array = np.array(bearings)
-    weights_array = np.array(bearings)
+    weights_array = np.array(weights)
     keep_idx = ~np.isnan(bearings_array)
-    weights_array = weights_array[keep_idx]
     bearings_array = bearings_array[keep_idx]
+    weights_array = weights_array[keep_idx]
     if nx.is_directed(G):
         msg = (
             "`G` is a MultiDiGraph, so edge bearings will be directional (one per "
@@ -262,10 +262,10 @@ def _bearings_distribution(
         Ignore edges with `length` attributes less than `min_length`. Useful
         to ignore the noise of many very short edges.
     weight
-        If not None, weight edges' bearings by this (non-null) edge attribute.
-        For example, if "length" is provided, this will return 1 bearing
-        observation per meter per street (which could result in a very large
-        `bearings` array).
+        If None, apply equal weight for each bearing. Otherwise,
+        weight edges' bearings by this (non-null) edge attribute.
+        For example, if "length" is provided, this will weight each bearing
+        observation by the meter length of each street.
 
     Returns
     -------
