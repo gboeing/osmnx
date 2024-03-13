@@ -226,7 +226,7 @@ def _extract_edge_bearings(
         msg = (
             "`G` is a MultiDiGraph, so edge bearings will be directional (one per "
             "edge). If you want bidirectional edge bearings (two reciprocal bearings "
-            "per edge), pass a MultiGraph instead. Use `utils_graph.get_undirected`."
+            "per edge), pass a MultiGraph instead. Use `convert.get_undirected`."
         )
         warn(msg, category=UserWarning, stacklevel=2)
         return bearings_array

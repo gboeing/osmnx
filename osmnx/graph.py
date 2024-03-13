@@ -28,7 +28,6 @@ from . import stats
 from . import truncate
 from . import utils
 from . import utils_geo
-from . import utils_graph
 from ._errors import CacheOnlyInterruptError
 from ._errors import InsufficientResponseError
 from ._version import __version__
@@ -622,7 +621,7 @@ def _create_graph(
 
     # retain only the largest connected component if retain_all=False
     if not retain_all:
-        G = utils_graph.get_largest_component(G)
+        G = truncate.get_largest_component(G)
 
     msg = f"Created graph with {len(G):,} nodes and {len(G.edges):,} edges"
     utils.log(msg, level=lg.INFO)

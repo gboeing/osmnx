@@ -11,6 +11,14 @@ osmnx.bearing module
     :private-members:
     :noindex:
 
+osmnx.convert module
+---------------------
+
+.. automodule:: osmnx.convert
+    :members:
+    :private-members:
+    :noindex:
+
 osmnx.distance module
 ---------------------
 
@@ -139,14 +147,6 @@ osmnx.simplification module
     :private-members:
     :noindex:
 
-osmnx.speed module
-------------------
-
-.. automodule:: osmnx.speed
-    :members:
-    :private-members:
-    :noindex:
-
 osmnx.stats module
 ------------------
 
@@ -175,14 +175,6 @@ osmnx.utils_geo module
 ----------------------
 
 .. automodule:: osmnx.utils_geo
-    :members:
-    :private-members:
-    :noindex:
-
-osmnx.utils_graph module
-------------------------
-
-.. automodule:: osmnx.utils_graph
     :members:
     :private-members:
     :noindex:

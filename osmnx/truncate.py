@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 
 import networkx as nx
 
+from . import convert
 from . import utils
 from . import utils_geo
-from . import utils_graph
 
 if TYPE_CHECKING:
     from shapely.geometry import MultiPolygon
@@ -65,8 +65,7 @@ def truncate_graph_dist(
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
     if not retain_all:
-        G = utils_graph.remove_isolated_nodes(G)
-        G = utils_graph.get_largest_component(G)
+        G = get_largest_component(remove_isolated_nodes(G))
 
     msg = f"Truncated graph by {weight}-weighted network distance"
     utils.log(msg, level=lg.INFO)
@@ -142,7 +141,7 @@ def truncate_graph_polygon(
     utils.log(msg, level=lg.INFO)
 
     # first identify all nodes whose point geometries lie within the polygon
-    gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)["geometry"]
+    gs_nodes = convert.graph_to_gdfs(G, edges=False)["geometry"]
     to_keep = utils_geo._intersect_index_quadrats(gs_nodes, polygon)
 
     if len(to_keep) == 0:
@@ -175,10 +174,74 @@ def truncate_graph_polygon(
     utils.log(msg, level=lg.INFO)
 
     if not retain_all:
-        # remove any isolated nodes and retain only the largest component
-        G = utils_graph.remove_isolated_nodes(G)
-        G = utils_graph.get_largest_component(G)
+        G = get_largest_component(remove_isolated_nodes(G))
 
     msg = "Truncated graph by polygon"
     utils.log(msg, level=lg.INFO)
+    return G
+
+
+def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
+    """
+    Remove from a graph all nodes that have no incident edges.
+
+    Parameters
+    ----------
+    G
+        Graph from which to remove isolated nodes.
+
+    Returns
+    -------
+    G
+        Graph with all isolated nodes removed.
+    """
+    # make a copy to not mutate original graph object caller passed in
+    G = G.copy()
+
+    # get the set of all isolated nodes, then remove them
+    isolated_nodes = {node for node, degree in G.degree() if degree < 1}
+    G.remove_nodes_from(isolated_nodes)
+
+    msg = f"Removed {len(isolated_nodes):,} isolated nodes"
+    utils.log(msg, level=lg.INFO)
+    return G
+
+
+def get_largest_component(G: nx.MultiDiGraph, *, strongly: bool = False) -> nx.MultiDiGraph:
+    """
+    Return subgraph of `G`'s largest weakly or strongly connected component.
+
+    Parameters
+    ----------
+    G
+        Input graph.
+    strongly
+        If True, return the largest strongly connected component. Otherwise
+        return the largest weakly connected component.
+
+    Returns
+    -------
+    G
+        The largest connected component subgraph of the original graph.
+    """
+    if strongly:
+        kind = "strongly"
+        is_connected = nx.is_strongly_connected
+        connected_components = nx.strongly_connected_components
+    else:
+        kind = "weakly"
+        is_connected = nx.is_weakly_connected
+        connected_components = nx.weakly_connected_components
+
+    if not is_connected(G):
+        # get all the connected components in graph then identify the largest
+        largest_cc = max(connected_components(G), key=len)
+        n = len(G)
+
+        # induce (frozen) subgraph then unfreeze it by making new MultiDiGraph
+        G = nx.MultiDiGraph(G.subgraph(largest_cc))
+
+        msg = f"Got largest {kind} connected component ({len(G):,} of {n:,} total nodes)"
+        utils.log(msg, level=lg.INFO)
+
     return G

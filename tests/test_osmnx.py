@@ -157,7 +157,7 @@ def test_bearings() -> None:
         bearings = ox.bearing._extract_edge_bearings(G, min_length=0, weight=None)
     assert list(bearings) == [0.0]  # north
     bearings = ox.bearing._extract_edge_bearings(
-        ox.utils_graph.get_undirected(G),
+        ox.convert.get_undirected(G),
         min_length=0,
         weight=None,
     )
@@ -263,20 +263,20 @@ def test_routing() -> None:
     G = ox.add_edge_travel_times(G)
 
     # test value cleaning
-    assert ox.speed._clean_maxspeed("100,2") == 100.2
-    assert ox.speed._clean_maxspeed("100.2") == 100.2
-    assert ox.speed._clean_maxspeed("100 km/h") == 100.0
-    assert ox.speed._clean_maxspeed("100 mph") == pytest.approx(160.934)
-    assert ox.speed._clean_maxspeed("60|100") == 80
-    assert ox.speed._clean_maxspeed("60|100 mph") == pytest.approx(128.7472)
-    assert ox.speed._clean_maxspeed("signal") is None
-    assert ox.speed._clean_maxspeed("100;70") is None
+    assert ox.routing._clean_maxspeed("100,2") == 100.2
+    assert ox.routing._clean_maxspeed("100.2") == 100.2
+    assert ox.routing._clean_maxspeed("100 km/h") == 100.0
+    assert ox.routing._clean_maxspeed("100 mph") == pytest.approx(160.934)
+    assert ox.routing._clean_maxspeed("60|100") == 80
+    assert ox.routing._clean_maxspeed("60|100 mph") == pytest.approx(128.7472)
+    assert ox.routing._clean_maxspeed("signal") is None
+    assert ox.routing._clean_maxspeed("100;70") is None
 
     # test collapsing multiple mph values to single kph value
-    assert ox.speed._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44.25685
+    assert ox.routing._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44.25685
 
     # test collapsing invalid values: should return None
-    assert ox.speed._collapse_multiple_maxspeed_values(["mph", "kph"], np.mean) is None
+    assert ox.routing._collapse_multiple_maxspeed_values(["mph", "kph"], np.mean) is None
 
     orig_x = np.array([-122.404771])
     dest_x = np.array([-122.401429])
@@ -306,7 +306,7 @@ def test_routing() -> None:
     route5 = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
     assert route5 is not None
 
-    route_edges = ox.utils_graph.route_to_gdf(G, route5, weight="travel_time")
+    route_edges = ox.routing.route_to_gdf(G, route5, weight="travel_time")
 
     fig, ax = ox.plot_graph_route(G, route5, save=True)
 
@@ -565,7 +565,7 @@ def test_graph_from() -> None:
     # truncate graph by bounding box
     bbox = ox.utils_geo.bbox_from_point(location_point, dist=400)
     G = ox.truncate.truncate_graph_bbox(G, bbox)
-    G = ox.utils_graph.get_largest_component(G, strongly=True)
+    G = ox.truncate.get_largest_component(G, strongly=True)
 
     # graph from address
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
