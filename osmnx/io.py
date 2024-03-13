@@ -190,8 +190,6 @@ def load_graphml(
     default_node_dtypes = {
         "elevation": float,
         "elevation_res": float,
-        "lat": float,
-        "lon": float,
         "osmid": int,
         "street_count": int,
         "x": float,

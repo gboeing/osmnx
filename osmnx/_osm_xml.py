@@ -212,17 +212,14 @@ def _save_graph_xml(
             else:
                 gdf[col] = gdf[col].fillna(value)
 
-    # warn user if graph is projected then remove lat/lon gdf_nodes columns if
-    # they exist, as x/y cols will be saved as lat/lon node attributes instead
+    # warn user if graph is projected
     if projection.is_projected(G.graph["crs"]):
         msg = (
-            "Graph should be unprojected: the existing lat-lon node attributes will "
-            "be discarded and the projected x-y coordinates will be saved as lat-lon "
-            "node attributes instead. Project your graph back to lat-lon to avoid this."
+            "Graph should be unprojected: the existing projected x-y coordinates "
+            "will be saved as lat-lon node attributes. Project your graph back to "
+            "lat-lon to avoid this."
         )
         warn(msg, category=UserWarning, stacklevel=2)
-    for col in set(gdf_nodes.columns) & {"lat", "lon"}:
-        gdf_nodes = gdf_nodes.drop(columns=[col])
 
     # transform nodes gdf to meet OSM XML spec
     # 1) reset index (osmid) then rename osmid, x, and y columns
@@ -279,7 +276,12 @@ def _add_nodes_xml(
         node_element = SubElement(parent, "node", attrib=attrs)
 
         # add each node tag dict as its own SubElement of the node SubElement
-        tags = ({"k": k, "v": str(node[k])} for k in node_tags & node.keys() if pd.notna(node[k]))
+        # for vals that are non-null (or list if node consolidation was done)
+        tags = (
+            {"k": k, "v": str(node[k])}
+            for k in node_tags & node.keys()
+            if isinstance(node[k], list) or pd.notna(node[k])
+        )
         for tag in tags:
             _ = SubElement(node_element, "tag", attrib=tag)
 

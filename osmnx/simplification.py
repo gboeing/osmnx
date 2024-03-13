@@ -13,6 +13,7 @@ from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 
+from . import settings
 from . import stats
 from . import utils
 from . import utils_graph
@@ -511,7 +512,7 @@ def _merge_nodes_geometric(G: nx.MultiDiGraph, tolerance: float) -> gpd.GeoSerie
     return gpd.GeoSeries(merged.geoms, crs=G.graph["crs"])
 
 
-def _consolidate_intersections_rebuild_graph(  # noqa: PLR0912,PLR0915
+def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     G: nx.MultiDiGraph,
     tolerance: float,
     reconnect_edges: bool,  # noqa: FBT001
@@ -563,7 +564,9 @@ def _consolidate_intersections_rebuild_graph(  # noqa: PLR0912,PLR0915
     # attach each node to its cluster of merged nodes. first get the original
     # graph's node points then spatial join to give each node the label of
     # cluster it's within. make cluster labels type string.
-    node_points = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
+    node_points = utils_graph.graph_to_gdfs(G, edges=False)
+    cols = set(node_points.columns).intersection(["geometry", *settings.useful_tags_node])
+    node_points = node_points[list(cols)]
     gdf = gpd.sjoin(node_points, node_clusters, how="left", predicate="within")
     gdf = gdf.drop(columns="geometry").rename(columns={"index_right": "cluster"})
     gdf["cluster"] = gdf["cluster"].astype(str)
@@ -608,14 +611,23 @@ def _consolidate_intersections_rebuild_graph(  # noqa: PLR0912,PLR0915
             osmid = osmids[0]
             H.add_node(cluster_label, osmid_original=osmid, **G.nodes[osmid])
         else:
-            # if cluster is multiple merged nodes, create one new node to
-            # represent them
-            H.add_node(
-                cluster_label,
-                osmid_original=str(osmids),
-                x=nodes_subset["x"].iloc[0],
-                y=nodes_subset["y"].iloc[0],
-            )
+            # if cluster is multiple merged nodes, create one new node with
+            # attributes to represent them
+            node_attrs = {
+                "osmid_original": osmids,
+                "x": nodes_subset["x"].iloc[0],
+                "y": nodes_subset["y"].iloc[0],
+            }
+            for col in set(nodes_subset.columns).intersection(settings.useful_tags_node):
+                # get the unique non-null values (we won't add null attrs)
+                unique_vals = list(set(nodes_subset[col].dropna()))
+                if len(unique_vals) == 1:
+                    # if there's 1 unique value for this attribute, keep it
+                    node_attrs[col] = unique_vals[0]
+                elif len(unique_vals) > 1:
+                    # if there are multiple unique values, keep all uniques
+                    node_attrs[col] = unique_vals
+            H.add_node(cluster_label, **node_attrs)
 
     # calculate street_count attribute for all nodes lacking it
     null_nodes = [n for n, sc in H.nodes(data="street_count") if sc is None]
