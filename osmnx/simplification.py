@@ -622,8 +622,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
                 # get the unique non-null values (we won't add null attrs)
                 unique_vals = list(set(nodes_subset[col].dropna()))
                 if len(unique_vals) == 1:
-                    # if there's 1 unique value for this attribute, keep that
-                    # one value
+                    # if there's 1 unique value for this attribute, keep it
                     node_attrs[col] = unique_vals[0]
                 elif len(unique_vals) > 1:
                     # if there are multiple unique values, keep all uniques
