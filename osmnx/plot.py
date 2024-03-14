@@ -26,7 +26,7 @@ except ImportError:  # pragma: no cover
     cm = colors = plt = colormaps = None  # type: ignore[assignment]
 
 
-def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=False):
+def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=None):
     """
     Get `n` evenly-spaced colors from a matplotlib colormap.
 
