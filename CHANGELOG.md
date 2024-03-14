@@ -2,10 +2,17 @@
 
 ## 1.9.2 (TBD)
 
-- deprecate settings module's renamed or obsolete settings in advance of v2 (#1138)
-- deprecate save_graph_xml function's renamed or obsolete parameters in advance of v2 (#1138)
-- deprecate simplify_graph function's renamed endpoint_attrs argument in advance of v2 (#1146)
-- deprecate speed and utils_graph modules (functionality moved to other modules) in advance of v2 (#1146)
+- deprecate settings module's renamed or obsolete settings (#1138)
+- deprecate save_graph_xml function's renamed or obsolete parameters (#1138)
+- deprecate simplify_graph function's renamed endpoint_attrs argument (#1146)
+- deprecate utils_graph.get_digraph function and replace it with covert.to_digraph function (#1146)
+- deprecate utils_graph.get_undirected function and replace it with covert.to_undirected function (#1146)
+- deprecate utils_graph.graph_to_gdfs function and replace it with covert.graph_to_gdfs function (#1146)
+- deprecate utils_graph.graph_from_gdfs function and replace it with covert.graph_from_gdfs function (#1146)
+- deprecate utils_graph.remove_isolated_nodes function and replace it with truncate.remove_isolated_nodes function (#1146)
+- deprecate utils_graph.get_largest_component function and replace it with truncate.largest_component function (#1146)
+- deprecate utils_graph.route_to_gdf function and replace it with routing.route_to_gdf function (#1146)
+- deprecate speed module and move all of its functionality to the routing module (#1146)
 
 ## 1.9.1 (2024-02-01)
 
