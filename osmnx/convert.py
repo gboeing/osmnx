@@ -1,4 +1,4 @@
-"""Convert NetworkX spatial graphs to/from different data types."""
+"""Convert spatial graphs to/from different data types."""
 
 from __future__ import annotations
 
