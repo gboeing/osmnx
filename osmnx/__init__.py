@@ -11,8 +11,6 @@ from .bearing import add_edge_bearings as add_edge_bearings
 from .bearing import orientation_entropy as orientation_entropy
 from .convert import graph_from_gdfs as graph_from_gdfs
 from .convert import graph_to_gdfs as graph_to_gdfs
-from .convert import to_digraph as to_digraph
-from .convert import to_undirected as to_undirected
 from .distance import nearest_edges as nearest_edges
 from .distance import nearest_nodes as nearest_nodes
 from .elevation import add_edge_grades as add_edge_grades
@@ -42,7 +40,6 @@ from .plot import plot_graph as plot_graph
 from .plot import plot_graph_route as plot_graph_route
 from .plot import plot_graph_routes as plot_graph_routes
 from .plot import plot_orientation as plot_orientation
-from .projection import project_gdf as project_gdf
 from .projection import project_graph as project_graph
 from .routing import add_edge_speeds as add_edge_speeds
 from .routing import add_edge_travel_times as add_edge_travel_times
