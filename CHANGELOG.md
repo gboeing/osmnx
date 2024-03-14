@@ -2,9 +2,10 @@
 
 ## 1.9.2 (TBD)
 
-- deprecate settings module's renamed or obsolete settings (#1138)
-- deprecate save_graph_xml function's renamed or obsolete parameters (#1138)
-- deprecate simplify_graph function's endpoint_attrs argument: renamed to edge_attrs_differ (#1146)
+- deprecate settings module's renamed or obsolete settings in advance of v2 (#1138)
+- deprecate save_graph_xml function's renamed or obsolete parameters in advance of v2 (#1138)
+- deprecate simplify_graph function's renamed endpoint_attrs argument in advance of v2 (#1146)
+- deprecate speed and utils_graph modules (functionality moved to other modules) in advance of v2 (#1146)
 
 ## 1.9.1 (2024-02-01)
 
