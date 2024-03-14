@@ -537,7 +537,7 @@ def plot_figure_ground(
             truncate_by_edge=True,
             return_coords=True,
         )
-        G = simplification.simplify_graph(G, strict=False)
+        G = simplification.simplify_graph(G, edge_attrs_differ=["osmid"])
     elif point is not None:
         warn(dep_msg, FutureWarning, stacklevel=2)
         G = graph.graph_from_point(
@@ -548,7 +548,7 @@ def plot_figure_ground(
             simplify=False,
             truncate_by_edge=True,
         )
-        G = simplification.simplify_graph(G, strict=False)
+        G = simplification.simplify_graph(G, edge_attrs_differ=["osmid"])
     else:  # pragma: no cover
         msg = "You must pass an address or lat-lon point or graph."
         raise ValueError(msg)
