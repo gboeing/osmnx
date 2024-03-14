@@ -41,6 +41,7 @@ Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123)
 
 - deprecate settings module's renamed or obsolete settings (#1138)
 - deprecate save_graph_xml function's renamed or obsolete parameters (#1138)
+- deprecate graph_from_xml tags and polygon function parameters (#1146)
 - deprecate simplify_graph function's renamed endpoint_attrs argument (#1146)
 - deprecate utils_graph.get_digraph function and replace it with covert.to_digraph function (#1146)
 - deprecate utils_graph.get_undirected function and replace it with covert.to_undirected function (#1146)
