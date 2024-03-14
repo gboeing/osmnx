@@ -25,10 +25,10 @@ def truncate_graph_dist(
     retain_all: bool = False,
 ) -> nx.MultiDiGraph:
     """
-    Remove every node farther than some network distance from `source_node`.
+    Remove from a graph every node beyond some network distance from a node.
 
-    This function can be slow for large graphs, as it must calculate shortest
-    path distances between `source_node` and every other graph node.
+    This function must calculate shortest path distances between `source_node`
+    and every other graph node, which can be slow on large graphs.
 
     Parameters
     ----------
@@ -62,8 +62,7 @@ def truncate_graph_dist(
     G = G.copy()
     G.remove_nodes_from(distant_nodes | unreachable_nodes)
 
-    # remove any isolated nodes and retain only the largest component (if
-    # retain_all is True)
+    # keep only the largest weakly connected component if retain_all is False
     if not retain_all:
         G = largest_component(remove_isolated_nodes(G))
 
@@ -80,7 +79,7 @@ def truncate_graph_bbox(
     retain_all: bool = False,
 ) -> nx.MultiDiGraph:
     """
-    Remove every node in graph that falls outside a bounding box.
+    Remove from a graph every node that falls outside a bounding box.
 
     Parameters
     ----------
@@ -117,7 +116,7 @@ def truncate_graph_polygon(
     truncate_by_edge: bool = False,
 ) -> nx.MultiDiGraph:
     """
-    Remove every node in graph that falls outside a (Multi)Polygon.
+    Remove from a graph every node that falls outside a (Multi)Polygon.
 
     Parameters
     ----------
@@ -173,6 +172,7 @@ def truncate_graph_polygon(
     msg = f"Removed {len(nodes_to_remove):,} nodes outside polygon"
     utils.log(msg, level=lg.INFO)
 
+    # keep only the largest weakly connected component if retain_all is False
     if not retain_all:
         G = largest_component(remove_isolated_nodes(G))
 
@@ -181,35 +181,9 @@ def truncate_graph_polygon(
     return G
 
 
-def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
-    """
-    Remove from a graph all nodes that have no incident edges.
-
-    Parameters
-    ----------
-    G
-        Graph from which to remove isolated nodes.
-
-    Returns
-    -------
-    G
-        Graph with all isolated nodes removed.
-    """
-    # make a copy to not mutate original graph object caller passed in
-    G = G.copy()
-
-    # get the set of all isolated nodes, then remove them
-    isolated_nodes = {node for node, degree in G.degree() if degree < 1}
-    G.remove_nodes_from(isolated_nodes)
-
-    msg = f"Removed {len(isolated_nodes):,} isolated nodes"
-    utils.log(msg, level=lg.INFO)
-    return G
-
-
 def largest_component(G: nx.MultiDiGraph, *, strongly: bool = False) -> nx.MultiDiGraph:
     """
-    Return subgraph of `G`'s largest weakly or strongly connected component.
+    Return `G`'s largest weakly or strongly connected component as a graph.
 
     Parameters
     ----------
@@ -244,4 +218,30 @@ def largest_component(G: nx.MultiDiGraph, *, strongly: bool = False) -> nx.Multi
         msg = f"Got largest {kind} connected component ({len(G):,} of {n:,} total nodes)"
         utils.log(msg, level=lg.INFO)
 
+    return G
+
+
+def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
+    """
+    Remove from a graph all 0-degree nodes (i.e., no incident edges).
+
+    Parameters
+    ----------
+    G
+        Graph from which to remove 0-degree nodes.
+
+    Returns
+    -------
+    G
+        Graph with all 0-degree nodes removed.
+    """
+    # make a copy to not mutate original graph object caller passed in
+    G = G.copy()
+
+    # get the set of all 0-degree nodes, then remove them
+    isolated_nodes = {node for node, degree in G.degree() if degree < 1}
+    G.remove_nodes_from(isolated_nodes)
+
+    msg = f"Removed {len(isolated_nodes):,} 0-degree nodes"
+    utils.log(msg, level=lg.INFO)
     return G
