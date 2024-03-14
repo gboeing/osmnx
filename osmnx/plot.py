@@ -554,7 +554,7 @@ def plot_figure_ground(
         raise ValueError(msg)
 
     # we need an undirected graph to find every edge incident on a node
-    Gu = convert.get_undirected(G)
+    Gu = convert.to_undirected(G)
 
     # for each edge, get a linewidth according to street type
     edge_linewidths = []
