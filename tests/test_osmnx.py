@@ -32,6 +32,7 @@ from shapely.geometry import Point
 from shapely.geometry import Polygon
 
 import osmnx as ox
+import osmnx.speed
 
 ox.config(log_console=True)
 ox.settings.log_console = True
@@ -270,26 +271,26 @@ def test_routing():
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
 
     # give each edge speed and travel time attributes
-    G = ox.add_edge_speeds(G)
+    G = ox.speed.add_edge_speeds(G)
     G = ox.add_edge_speeds(G, hwy_speeds={"motorway": 100}, precision=2)
-    G = ox.add_edge_travel_times(G)
+    G = ox.speed.add_edge_travel_times(G)
     G = ox.add_edge_travel_times(G, precision=2)
 
     # test value cleaning
-    assert ox.speed._clean_maxspeed("100,2") == 100.2
-    assert ox.speed._clean_maxspeed("100.2") == 100.2
-    assert ox.speed._clean_maxspeed("100 km/h") == 100.0
-    assert ox.speed._clean_maxspeed("100 mph") == pytest.approx(160.934)
-    assert ox.speed._clean_maxspeed("60|100") == 80
-    assert ox.speed._clean_maxspeed("60|100 mph") == pytest.approx(128.7472)
-    assert ox.speed._clean_maxspeed("signal") is None
-    assert ox.speed._clean_maxspeed("100;70") is None
+    assert ox.routing._clean_maxspeed("100,2") == 100.2
+    assert ox.routing._clean_maxspeed("100.2") == 100.2
+    assert ox.routing._clean_maxspeed("100 km/h") == 100.0
+    assert ox.routing._clean_maxspeed("100 mph") == pytest.approx(160.934)
+    assert ox.routing._clean_maxspeed("60|100") == 80
+    assert ox.routing._clean_maxspeed("60|100 mph") == pytest.approx(128.7472)
+    assert ox.routing._clean_maxspeed("signal") is None
+    assert ox.routing._clean_maxspeed("100;70") is None
 
     # test collapsing multiple mph values to single kph value
-    assert ox.speed._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44
+    assert ox.routing._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44
 
     # test collapsing invalid values: should return None
-    assert ox.speed._collapse_multiple_maxspeed_values(["mph", "kph"], np.mean) is None
+    assert ox.routing._collapse_multiple_maxspeed_values(["mph", "kph"], np.mean) is None
 
     orig_x = np.array([-122.404771])
     dest_x = np.array([-122.401429])

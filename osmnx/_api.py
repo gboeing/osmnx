@@ -1,8 +1,11 @@
 # ruff: noqa: F401
 """Expose most common parts of public API directly in package namespace."""
 
+from . import speed
 from .bearing import add_edge_bearings
 from .bearing import orientation_entropy
+from .convert import graph_from_gdfs
+from .convert import graph_to_gdfs
 from .distance import nearest_edges
 from .distance import nearest_nodes
 from .elevation import add_edge_grades
@@ -43,12 +46,12 @@ from .plot import plot_graph_routes
 from .plot import plot_orientation
 from .projection import project_gdf
 from .projection import project_graph
+from .routing import add_edge_speeds
+from .routing import add_edge_travel_times
 from .routing import k_shortest_paths
 from .routing import shortest_path
 from .simplification import consolidate_intersections
 from .simplification import simplify_graph
-from .speed import add_edge_speeds
-from .speed import add_edge_travel_times
 from .stats import basic_stats
 from .utils import citation
 from .utils import config
@@ -56,5 +59,3 @@ from .utils import log
 from .utils import ts
 from .utils_graph import get_digraph
 from .utils_graph import get_undirected
-from .utils_graph import graph_from_gdfs
-from .utils_graph import graph_to_gdfs
