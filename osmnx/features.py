@@ -387,6 +387,15 @@ def features_from_xml(filepath, polygon=None, tags=None, encoding="utf-8"):
     -------
     gdf : geopandas.GeoDataFrame
     """
+    if polygon is not None or tags is not None:
+        msg = (
+            "The `polygon` and `tags` function parameters are deprecated and will "
+            "be removed in the v2.0.0 release. You can filter the features GeoDataFrame. "
+            "manually after construction. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     # transmogrify file of OSM XML data into JSON
     response_jsons = [osm_xml._overpass_json_from_file(filepath, encoding)]
 
