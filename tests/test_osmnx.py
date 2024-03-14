@@ -88,7 +88,7 @@ def test_geocoder() -> None:
     city = ox.geocode_to_gdf("R2999176", by_osmid=True)
     city = ox.geocode_to_gdf(place1, which_result=1)
     city = ox.geocode_to_gdf(place2)
-    city_projected = ox.project_gdf(city, to_crs="epsg:3395")
+    city_projected = ox.projection.project_gdf(city, to_crs="epsg:3395")
 
     # test geocoding a bad query: should raise exception
     with pytest.raises(ox._errors.InsufficientResponseError):
@@ -141,7 +141,7 @@ def test_bearings() -> None:
     G_proj = ox.project_graph(G)
 
     # calculate entropy
-    Gu = ox.to_undirected(G)
+    Gu = ox.convert.to_undirected(G)
     entropy = ox.bearing.orientation_entropy(Gu, weight="length")
     fig, ax = ox.plot.plot_orientation(Gu, area=True, title="Title")
     fig, ax = ox.plot.plot_orientation(Gu, ax=ax, area=False, title="Title")
@@ -371,7 +371,7 @@ def test_nearest() -> None:
     # get graph and x/y coords to search
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
     Gp = ox.project_graph(G)
-    points = ox.utils_geo.sample_points(ox.to_undirected(Gp), 5)
+    points = ox.utils_geo.sample_points(ox.convert.to_undirected(Gp), 5)
     X = points.x.to_numpy()
     Y = points.y.to_numpy()
 
