@@ -10,9 +10,9 @@ from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 
+from . import convert
 from . import stats
 from . import utils
-from . import utils_graph
 from ._errors import GraphSimplificationError
 
 
@@ -285,7 +285,8 @@ def simplify_graph(  # noqa: C901
     if endpoint_attrs is not None:
         msg = (
             "The `endpoint_attrs` parameter has been deprecated and will be removed "
-            "in the v2.0.0 release. Use the `edge_attrs_differ` parameter instead."
+            "in the v2.0.0 release. Use the `edge_attrs_differ` parameter instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
         edge_attrs_differ = endpoint_attrs
@@ -296,7 +297,8 @@ def simplify_graph(  # noqa: C901
             "the v2.0.0 release. Use the `edge_attrs_differ` parameter instead to "
             "relax simplification strictness. For example, `edge_attrs_differ=None` "
             "reproduces the old `strict=True` behvavior and `edge_attrs_differ=['osmid']` "
-            "reproduces the old `strict=False` behavior."
+            "reproduces the old `strict=False` behavior. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
         # maintain old behavior if strict is passed during deprecation
@@ -508,7 +510,7 @@ def _merge_nodes_geometric(G, tolerance):
         the merged overlapping polygons of the buffered nodes
     """
     # buffer nodes GeoSeries then get unary union to merge overlaps
-    merged = utils_graph.graph_to_gdfs(G, edges=False)["geometry"].buffer(tolerance).unary_union
+    merged = convert.graph_to_gdfs(G, edges=False)["geometry"].buffer(tolerance).unary_union
 
     # if only a single node results, make it iterable to convert to GeoSeries
     merged = MultiPolygon([merged]) if isinstance(merged, Polygon) else merged
@@ -563,7 +565,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     # attach each node to its cluster of merged nodes. first get the original
     # graph's node points then spatial join to give each node the label of
     # cluster it's within. make cluster labels type string.
-    node_points = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
+    node_points = convert.graph_to_gdfs(G, edges=False)[["geometry"]]
     gdf = gpd.sjoin(node_points, node_clusters, how="left", predicate="within")
     gdf = gdf.drop(columns="geometry").rename(columns={"index_right": "cluster"})
     gdf["cluster"] = gdf["cluster"].astype(str)
@@ -629,7 +631,7 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
 
     # STEP 6
     # create new edge from cluster to cluster for each edge in original graph
-    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)
+    gdf_edges = convert.graph_to_gdfs(G, nodes=False)
     for u, v, k, data in G.edges(keys=True, data=True):
         u2 = gdf.loc[u, "cluster"]
         v2 = gdf.loc[v, "cluster"]

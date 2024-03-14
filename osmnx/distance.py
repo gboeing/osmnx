@@ -8,11 +8,11 @@ import pandas as pd
 from shapely.geometry import Point
 from shapely.strtree import STRtree
 
+from . import convert
 from . import projection
 from . import routing
 from . import utils
 from . import utils_geo
-from . import utils_graph
 
 # scipy is optional dependency for projected nearest-neighbor search
 try:
@@ -130,7 +130,8 @@ def great_circle_vec(lat1, lng1, lat2, lng2, earth_radius=EARTH_RADIUS_M):
     """
     warn(
         "The `great_circle_vec` function has been renamed `great_circle`. Calling "
-        "`great_circle_vec` will raise an error starting in the v2.0.0 release.",
+        "`great_circle_vec` will raise an error starting in the v2.0.0 release. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
         FutureWarning,
         stacklevel=2,
     )
@@ -162,7 +163,8 @@ def euclidean_dist_vec(y1, x1, y2, x2):
     """
     warn(
         "The `euclidean_dist_vec` function has been renamed `euclidean`. Calling "
-        "`euclidean_dist_vec` will raise an error starting in the v2.0.0 release.",
+        "`euclidean_dist_vec` will raise an error starting in the v2.0.0 release. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
         FutureWarning,
         stacklevel=2,
     )
@@ -208,7 +210,8 @@ def add_edge_lengths(G, precision=None, edges=None):
         precision = 3
     else:
         warn(
-            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
+            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -279,7 +282,7 @@ def nearest_nodes(G, X, Y, return_dist=False):
     if np.isnan(X).any() or np.isnan(Y).any():  # pragma: no cover
         msg = "`X` and `Y` cannot contain nulls"
         raise ValueError(msg)
-    nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
+    nodes = convert.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
 
     if projection.is_projected(G.graph["crs"]):
         # if projected, use k-d tree for euclidean nearest-neighbor search
@@ -356,7 +359,7 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     if np.isnan(X).any() or np.isnan(Y).any():  # pragma: no cover
         msg = "`X` and `Y` cannot contain nulls"
         raise ValueError(msg)
-    geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
+    geoms = convert.graph_to_gdfs(G, nodes=False)["geometry"]
 
     # if no interpolation distance was provided
     if interpolate is None:
@@ -376,7 +379,8 @@ def nearest_edges(G, X, Y, interpolate=None, return_dist=False):
     else:
         warn(
             "The `interpolate` parameter has been deprecated and will be "
-            "removed in the v2.0.0 release.",
+            "removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -450,7 +454,8 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
     """
     warn(
         "The `shortest_path` function has moved to the `routing` module. Calling it "
-        "via the `distance` module will raise an error starting in the v2.0.0 release.",
+        "via the `distance` module will raise an error starting in the v2.0.0 release. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
         FutureWarning,
         stacklevel=2,
     )
@@ -486,7 +491,8 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
     """
     warn(
         "The `k_shortest_paths` function has moved to the `routing` module. "
-        "Calling it via the `distance` module will raise an error in the v2.0.0 release.",
+        "Calling it via the `distance` module will raise an error in the v2.0.0 release. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
         FutureWarning,
         stacklevel=2,
     )

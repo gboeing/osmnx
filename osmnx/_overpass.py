@@ -129,7 +129,8 @@ def _get_overpass_pause(base_endpoint, recursive_delay=5, default_duration=60):
         timeout = settings.timeout
         msg = (
             "`settings.timeout` is deprecated and will be removed in the "
-            "v2.0.0 release: use `settings.requests_timeout` instead"
+            "v2.0.0 release: use `settings.requests_timeout` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
@@ -200,7 +201,8 @@ def _make_overpass_settings():
         timeout = settings.timeout
         msg = (
             "`settings.timeout` is deprecated and will be removed in the "
-            "v2.0.0 release: use `settings.requests_timeout` instead"
+            "v2.0.0 release: use `settings.requests_timeout` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
@@ -210,7 +212,8 @@ def _make_overpass_settings():
         memory = settings.memory
         msg = (
             "`settings.memory` is deprecated and will be removed in the "
-            " v2.0.0 release: use `settings.overpass_memory` instead"
+            " v2.0.0 release: use `settings.overpass_memory` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
@@ -408,7 +411,8 @@ def _overpass_request(data, pause=None, error_pause=60):
         timeout = settings.timeout
         msg = (
             "`settings.timeout` is deprecated and will be removed in the "
-            "v2.0.0 release: use `settings.requests_timeout` instead"
+            "v2.0.0 release: use `settings.requests_timeout` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
@@ -418,7 +422,8 @@ def _overpass_request(data, pause=None, error_pause=60):
         overpass_endpoint = settings.overpass_endpoint
         msg = (
             "`settings.overpass_endpoint` is deprecated and will be removed in the "
-            "v2.0.0 release: use `settings.overpass_url` instead"
+            "v2.0.0 release: use `settings.overpass_url` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 

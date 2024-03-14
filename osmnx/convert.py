@@ -191,7 +191,7 @@ def to_digraph(G, weight="length"):
     Convert MultiDiGraph to DiGraph.
 
     Chooses between parallel edges by minimizing `weight` attribute value.
-    Note: see also `get_undirected` to convert MultiDiGraph to MultiGraph.
+    Note: see also `to_undirected` to convert MultiDiGraph to MultiGraph.
 
     Parameters
     ----------
@@ -228,7 +228,7 @@ def to_undirected(G):
     Convert MultiDiGraph to undirected MultiGraph.
 
     Maintains parallel edges only if their geometries differ. Note: see also
-    `get_digraph` to convert MultiDiGraph to DiGraph.
+    `to_digraph` to convert MultiDiGraph to DiGraph.
 
     Parameters
     ----------

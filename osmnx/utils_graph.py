@@ -33,7 +33,8 @@ def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geome
     msg = (
         "The `graph_to_gdfs` function has moved to the `convert` module. Calling "
         "`utils_graph.graph_to_gdfs` is deprecated and will be removed in the "
-        "v2.0.0 release. Call it via `convert.graph_to_gdfs` instead."
+        "v2.0.0 release. Call it via `convert.graph_to_gdfs` instead. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
     )
     warn(msg, FutureWarning, stacklevel=2)
     return convert.graph_to_gdfs(G, nodes, edges, node_geometry, fill_edge_geometry)
@@ -61,7 +62,8 @@ def graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs=None):
     msg = (
         "The `graph_from_gdfs` function has moved to the `convert` module. Calling "
         "`utils_graph.graph_from_gdfs` is deprecated and will be removed in the "
-        "v2.0.0 release. Call it via `convert.graph_from_gdfs` instead."
+        "v2.0.0 release. Call it via `convert.graph_from_gdfs` instead. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
     )
     warn(msg, FutureWarning, stacklevel=2)
     return convert.graph_from_gdfs(gdf_nodes, gdf_edges, graph_attrs)
@@ -89,7 +91,8 @@ def route_to_gdf(G, route, weight="length"):
     msg = (
         "The `route_to_gdf` function has moved to the `routing` module. Calling "
         "`utils_graph.route_to_gdf` is deprecated and will be removed in the "
-        "v2.0.0 release. Call it via `routing.route_to_gdf` instead."
+        "v2.0.0 release. Call it via `routing.route_to_gdf` instead. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
     )
     warn(msg, FutureWarning, stacklevel=2)
     return routing.route_to_gdf(G, route, weight)
@@ -122,7 +125,8 @@ def get_route_edge_attributes(
     """
     warn(
         "The `get_route_edge_attributes` function has been deprecated and will "
-        "be removed in the v2.0.0 release. Use the `routing.route_to_gdf` function instead.",
+        "be removed in the v2.0.0 release. Use the `routing.route_to_gdf` function instead. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
         FutureWarning,
         stacklevel=2,
     )
@@ -159,7 +163,8 @@ def remove_isolated_nodes(G):
     msg = (
         "The `remove_isolated_nodes` function has moved to the `truncate` module. Calling "
         "`utils_graph.remove_isolated_nodes` is deprecated and will be removed in the "
-        "v2.0.0 release. Call it via `truncate.remove_isolated_nodes` instead."
+        "v2.0.0 release. Call it via `truncate.remove_isolated_nodes` instead. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
     )
     warn(msg, FutureWarning, stacklevel=2)
     return truncate.remove_isolated_nodes(G)
@@ -184,7 +189,8 @@ def get_largest_component(G, strongly=False):
     """
     msg = (
         "The `get_largest_component` function is deprecated and will be removed in the "
-        "v2.0.0 release. Replace it with `truncate.largest_component` instead."
+        "v2.0.0 release. Replace it with `truncate.largest_component` instead. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
     )
     warn(msg, FutureWarning, stacklevel=2)
     return truncate.largest_component(G, strongly)
@@ -209,7 +215,8 @@ def get_digraph(G, weight="length"):
     """
     msg = (
         "The `get_digraph` function is deprecated and will be removed in the "
-        "v2.0.0 release. Replace it with `convert.to_digraph` instead."
+        "v2.0.0 release. Replace it with `convert.to_digraph` instead. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
     )
     warn(msg, FutureWarning, stacklevel=2)
     return convert.to_digraph(G, weight)
@@ -232,7 +239,8 @@ def get_undirected(G):
     """
     msg = (
         "The `get_undirected` function is deprecated and will be removed in the "
-        "v2.0.0 release. Replace it with `convert.to_undirected` instead."
+        "v2.0.0 release. Replace it with `convert.to_undirected` instead. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
     )
     warn(msg, FutureWarning, stacklevel=2)
     return convert.to_undirected(G)

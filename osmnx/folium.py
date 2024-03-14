@@ -10,7 +10,7 @@ examples gallery for complete details and demonstrations.
 import json
 from warnings import warn
 
-from . import utils_graph
+from . import convert
 
 # folium is an optional dependency for the folium plotting functions
 try:
@@ -67,7 +67,7 @@ def plot_graph_folium(
         stacklevel=2,
     )
     # create gdf of all graph edges
-    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)
+    gdf_edges = convert.graph_to_gdfs(G, nodes=False)
     return _plot_folium(gdf_edges, graph_map, popup_attribute, tiles, zoom, fit_bounds, **kwargs)
 
 
@@ -124,7 +124,7 @@ def plot_route_folium(
     # create gdf of the route edges in order
     node_pairs = zip(route[:-1], route[1:])
     uvk = ((u, v, min(G[u][v].items(), key=lambda k: k[1]["length"])[0]) for u, v in node_pairs)
-    gdf_edges = utils_graph.graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
+    gdf_edges = convert.graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
     return _plot_folium(gdf_edges, route_map, popup_attribute, tiles, zoom, fit_bounds, **kwargs)
 
 

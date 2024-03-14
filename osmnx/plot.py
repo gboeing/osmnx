@@ -8,13 +8,13 @@ import numpy as np
 import pandas as pd
 
 from . import bearing
+from . import convert
 from . import graph
 from . import projection
 from . import settings
 from . import simplification
 from . import utils
 from . import utils_geo
-from . import utils_graph
 
 # matplotlib is an optional dependency needed for visualization
 try:
@@ -55,7 +55,8 @@ def get_colors(n, cmap="viridis", start=0.0, stop=1.0, alpha=1.0, return_hex=Fal
     else:
         warn(
             "The `return_hex` parameter has been deprecated and will be removed "
-            "in the v2.0.0 release.",
+            "in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -238,12 +239,12 @@ def plot_graph(
 
     if max_edge_lw > 0:
         # plot the edges' geometries
-        gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
+        gdf_edges = convert.graph_to_gdfs(G, nodes=False)["geometry"]
         ax = gdf_edges.plot(ax=ax, color=edge_color, lw=edge_linewidth, alpha=edge_alpha, zorder=1)
 
     if max_node_size > 0:
         # scatter plot the nodes' x/y coordinates
-        gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
+        gdf_nodes = convert.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
         ax.scatter(
             x=gdf_nodes["x"],
             y=gdf_nodes["y"],
@@ -482,7 +483,8 @@ def plot_figure_ground(
     else:
         msg = (
             "The `edge_color` parameter is deprecated and will be removed in the "
-            "v2.0.0 release. Use `color` instead."
+            "v2.0.0 release. Use `color` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
@@ -491,7 +493,8 @@ def plot_figure_ground(
     else:
         msg = (
             "The `smooth_joints` parameter is deprecated and will be removed in the "
-            "v2.0.0 release. In the future this function will behave as though True."
+            "v2.0.0 release. In the future this function will behave as though True. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
@@ -510,12 +513,13 @@ def plot_figure_ground(
     multiplier = 1.2
     dep_msg = (
         "The `address`, `point`, and `network_type` parameters are deprecated "
-        "and will be removed in the v2.0.0 release. Pass `G` instead."
+        "and will be removed in the v2.0.0 release. Pass `G` instead. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
     )
 
     # if G was passed in, plot it centered on its node centroid
     if G is not None:
-        gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=True)
+        gdf_nodes = convert.graph_to_gdfs(G, edges=False, node_geometry=True)
         lonlat_point = gdf_nodes.unary_union.centroid.coords[0]
         point = tuple(reversed(lonlat_point))
 
@@ -550,7 +554,7 @@ def plot_figure_ground(
         raise ValueError(msg)
 
     # we need an undirected graph to find every edge incident on a node
-    Gu = utils_graph.get_undirected(G)
+    Gu = convert.get_undirected(G)
 
     # for each edge, get a linewidth according to street type
     edge_linewidths = []

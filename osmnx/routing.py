@@ -11,7 +11,6 @@ import pandas as pd
 
 from . import convert
 from . import utils
-from . import utils_graph
 
 
 def route_to_gdf(G, route, weight="length"):
@@ -135,7 +134,7 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
         is a list of node IDs.
     """
     _verify_edge_attribute(G, weight)
-    paths_gen = nx.shortest_simple_paths(utils_graph.get_digraph(G, weight), orig, dest, weight)
+    paths_gen = nx.shortest_simple_paths(convert.to_digraph(G, weight), orig, dest, weight)
     yield from itertools.islice(paths_gen, 0, k)
 
 
@@ -249,7 +248,8 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
         precision = 1
     else:
         warn(
-            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
+            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -257,7 +257,7 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
     if fallback is None:
         fallback = np.nan
 
-    edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
+    edges = convert.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
 
     # collapse any highway lists (can happen during graph simplification)
     # into string values simply by keeping just the first element of the list
@@ -338,12 +338,13 @@ def add_edge_travel_times(G, precision=None):
         precision = 1
     else:
         warn(
-            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
+            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
 
-    edges = utils_graph.graph_to_gdfs(G, nodes=False)
+    edges = convert.graph_to_gdfs(G, nodes=False)
 
     # verify edge length and speed_kph attributes exist
     if not ("length" in edges.columns and "speed_kph" in edges.columns):  # pragma: no cover

@@ -81,7 +81,8 @@ def add_edge_bearings(G, precision=None):
         precision = 1
     else:
         warn(
-            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
+            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -300,7 +301,8 @@ def plot_orientation(
     """
     warn(
         "The `plot_orientation` function moved to the `plot` module. Calling it "
-        "via the `bearing` module will raise an exception starting with the v2.0.0 release.",
+        "via the `bearing` module will raise an exception starting with the v2.0.0 release. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
         FutureWarning,
         stacklevel=2,
     )

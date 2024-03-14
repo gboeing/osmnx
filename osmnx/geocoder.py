@@ -101,7 +101,8 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
     if buffer_dist is not None:
         warn(
             "The buffer_dist argument has been deprecated and will be removed "
-            "in the v2.0.0 release. Buffer your results directly, if desired.",
+            "in the v2.0.0 release. Buffer your results directly, if desired. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )

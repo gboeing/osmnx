@@ -4,9 +4,9 @@ from warnings import warn
 
 import networkx as nx
 
+from . import convert
 from . import utils
 from . import utils_geo
-from . import utils_graph
 
 
 def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_all=False):
@@ -50,8 +50,8 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
     if not retain_all:
-        G = utils_graph.remove_isolated_nodes(G)
-        G = utils_graph.get_largest_component(G)
+        G = remove_isolated_nodes(G)
+        G = largest_component(G)
 
     utils.log(f"Truncated graph by {weight}-weighted network distance")
     return G
@@ -105,7 +105,8 @@ def truncate_graph_bbox(
     if not (north is None and south is None and east is None and west is None):
         msg = (
             "The `north`, `south`, `east`, and `west` parameters are deprecated and "
-            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
+            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
         bbox = (north, south, east, west)
@@ -156,7 +157,8 @@ def truncate_graph_polygon(
     if quadrat_width is not None or min_num is not None:
         warn(
             "The `quadrat_width` and `min_num` parameters are deprecated and "
-            "will be removed in the v2.0.0 release.",
+            "will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -164,7 +166,7 @@ def truncate_graph_polygon(
     utils.log("Identifying all nodes that lie outside the polygon...")
 
     # first identify all nodes whose point geometries lie within the polygon
-    gs_nodes = utils_graph.graph_to_gdfs(G, edges=False)[["geometry"]]
+    gs_nodes = convert.graph_to_gdfs(G, edges=False)[["geometry"]]
     to_keep = utils_geo._intersect_index_quadrats(gs_nodes, polygon)
 
     if not to_keep:
@@ -197,8 +199,8 @@ def truncate_graph_polygon(
 
     if not retain_all:
         # remove any isolated nodes and retain only the largest component
-        G = utils_graph.remove_isolated_nodes(G)
-        G = utils_graph.get_largest_component(G)
+        G = remove_isolated_nodes(G)
+        G = largest_component(G)
 
     utils.log("Truncated graph by polygon")
     return G

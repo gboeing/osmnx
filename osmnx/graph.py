@@ -25,7 +25,6 @@ from . import stats
 from . import truncate
 from . import utils
 from . import utils_geo
-from . import utils_graph
 from ._errors import CacheOnlyInterruptError
 from ._errors import InsufficientResponseError
 from ._version import __version__
@@ -94,7 +93,8 @@ def graph_from_bbox(
     if not (north is None and south is None and east is None and west is None):
         msg = (
             "The `north`, `south`, `east`, and `west` parameters are deprecated and "
-            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
+            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
         bbox = (north, south, east, west)
@@ -269,7 +269,8 @@ def graph_from_address(
         warn(
             "The `return_coords` argument has been deprecated and will be removed in "
             "the v2.0.0 release. Future behavior will be as though `return_coords=False`. "
-            "If you want the address's geocoded coordinates, use the `geocode` function.",
+            "If you want the address's geocoded coordinates, use the `geocode` function. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -367,7 +368,8 @@ def graph_from_place(
     if buffer_dist is not None:
         warn(
             "The buffer_dist argument has been deprecated and will be removed "
-            "in the v2.0.0 release. Buffer your query area directly, if desired.",
+            "in the v2.0.0 release. Buffer your query area directly, if desired. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -459,7 +461,8 @@ def graph_from_polygon(
     else:
         warn(
             "The clean_periphery argument has been deprecated and will be removed in "
-            "the v2.0.0 release. Future behavior will be as though clean_periphery=True.",
+            "the v2.0.0 release. Future behavior will be as though clean_periphery=True. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -658,7 +661,7 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
 
     # retain only the largest connected component if retain_all=False
     if not retain_all:
-        G = utils_graph.get_largest_component(G)
+        G = truncate.largest_component(G)
 
     utils.log(f"Created graph with {len(G):,} nodes and {len(G.edges):,} edges")
 
