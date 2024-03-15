@@ -88,7 +88,7 @@ def test_geocoder() -> None:
     city = ox.geocode_to_gdf("R2999176", by_osmid=True)
     city = ox.geocode_to_gdf(place1, which_result=1)
     city = ox.geocode_to_gdf(place2)
-    city_projected = ox.project_gdf(city, to_crs="epsg:3395")
+    city_projected = ox.projection.project_gdf(city, to_crs="epsg:3395")
 
     # test geocoding a bad query: should raise exception
     with pytest.raises(ox._errors.InsufficientResponseError):
@@ -141,7 +141,7 @@ def test_bearings() -> None:
     G_proj = ox.project_graph(G)
 
     # calculate entropy
-    Gu = ox.get_undirected(G)
+    Gu = ox.convert.to_undirected(G)
     entropy = ox.bearing.orientation_entropy(Gu, weight="length")
     fig, ax = ox.plot.plot_orientation(Gu, area=True, title="Title")
     fig, ax = ox.plot.plot_orientation(Gu, ax=ax, area=False, title="Title")
@@ -158,7 +158,7 @@ def test_bearings() -> None:
     assert list(bearings) == [0.0]  # north
     assert list(weights) == [1.0]
     bearings, weights = ox.bearing._extract_edge_bearings(
-        ox.utils_graph.get_undirected(G),
+        ox.convert.to_undirected(G),
         min_length=0,
         weight="weight",
     )
@@ -265,20 +265,20 @@ def test_routing() -> None:
     G = ox.add_edge_travel_times(G)
 
     # test value cleaning
-    assert ox.speed._clean_maxspeed("100,2") == 100.2
-    assert ox.speed._clean_maxspeed("100.2") == 100.2
-    assert ox.speed._clean_maxspeed("100 km/h") == 100.0
-    assert ox.speed._clean_maxspeed("100 mph") == pytest.approx(160.934)
-    assert ox.speed._clean_maxspeed("60|100") == 80
-    assert ox.speed._clean_maxspeed("60|100 mph") == pytest.approx(128.7472)
-    assert ox.speed._clean_maxspeed("signal") is None
-    assert ox.speed._clean_maxspeed("100;70") is None
+    assert ox.routing._clean_maxspeed("100,2") == 100.2
+    assert ox.routing._clean_maxspeed("100.2") == 100.2
+    assert ox.routing._clean_maxspeed("100 km/h") == 100.0
+    assert ox.routing._clean_maxspeed("100 mph") == pytest.approx(160.934)
+    assert ox.routing._clean_maxspeed("60|100") == 80
+    assert ox.routing._clean_maxspeed("60|100 mph") == pytest.approx(128.7472)
+    assert ox.routing._clean_maxspeed("signal") is None
+    assert ox.routing._clean_maxspeed("100;70") is None
 
     # test collapsing multiple mph values to single kph value
-    assert ox.speed._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44.25685
+    assert ox.routing._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44.25685
 
     # test collapsing invalid values: should return None
-    assert ox.speed._collapse_multiple_maxspeed_values(["mph", "kph"], np.mean) is None
+    assert ox.routing._collapse_multiple_maxspeed_values(["mph", "kph"], np.mean) is None
 
     orig_x = np.array([-122.404771])
     dest_x = np.array([-122.401429])
@@ -308,7 +308,7 @@ def test_routing() -> None:
     route5 = ox.shortest_path(G, orig_node, dest_node, weight="travel_time")
     assert route5 is not None
 
-    route_edges = ox.utils_graph.route_to_gdf(G, route5, weight="travel_time")
+    route_edges = ox.routing.route_to_gdf(G, route5, weight="travel_time")
 
     fig, ax = ox.plot_graph_route(G, route5, save=True)
 
@@ -373,7 +373,7 @@ def test_nearest() -> None:
     # get graph and x/y coords to search
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
     Gp = ox.project_graph(G)
-    points = ox.utils_geo.sample_points(ox.get_undirected(Gp), 5)
+    points = ox.utils_geo.sample_points(ox.convert.to_undirected(Gp), 5)
     X = points.x.to_numpy()
     Y = points.y.to_numpy()
 
@@ -567,7 +567,7 @@ def test_graph_from() -> None:
     # truncate graph by bounding box
     bbox = ox.utils_geo.bbox_from_point(location_point, dist=400)
     G = ox.truncate.truncate_graph_bbox(G, bbox)
-    G = ox.utils_graph.get_largest_component(G, strongly=True)
+    G = ox.truncate.largest_component(G, strongly=True)
 
     # graph from address
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
@@ -577,7 +577,13 @@ def test_graph_from() -> None:
 
     # graph from polygon
     G = ox.graph_from_polygon(polygon, network_type="walk", truncate_by_edge=True, simplify=False)
-    G = ox.simplify_graph(G, endpoint_attrs=["osmid"], remove_rings=False, track_merged=True)
+    G = ox.simplify_graph(
+        G,
+        node_attrs_include=["junction", "ref"],
+        edge_attrs_differ=["osmid"],
+        remove_rings=False,
+        track_merged=True,
+    )
 
     # test custom query filter
     cf = (

@@ -8,9 +8,9 @@ from typing import Any
 
 import geopandas as gpd
 
+from . import convert
 from . import settings
 from . import utils
-from . import utils_graph
 
 if TYPE_CHECKING:
     import networkx as nx
@@ -161,13 +161,7 @@ def project_graph(
         to_crs = settings.default_crs
 
     # STEP 1: PROJECT THE NODES
-    gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False)
-
-    # create new lat/lon columns to preserve lat/lon for later reference if
-    # cols do not already exist (ie, don't overwrite in later re-projections)
-    if "lon" not in gdf_nodes.columns or "lat" not in gdf_nodes.columns:
-        gdf_nodes["lon"] = gdf_nodes["x"]
-        gdf_nodes["lat"] = gdf_nodes["y"]
+    gdf_nodes = convert.graph_to_gdfs(G, edges=False)
 
     # project the nodes GeoDataFrame and extract the projected x/y values
     gdf_nodes_proj = project_gdf(gdf_nodes, to_crs=to_crs)
@@ -178,17 +172,17 @@ def project_graph(
     # STEP 2: PROJECT THE EDGES
     if G.graph.get("simplified"):
         # if graph has previously been simplified, project the edge geometries
-        gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
+        gdf_edges = convert.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
         gdf_edges_proj = project_gdf(gdf_edges, to_crs=to_crs)
     else:
         # if not, you don't have to project these edges because the nodes
         # contain all the spatial data in the graph (unsimplified edges have
         # no geometry attributes)
-        gdf_edges_proj = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
+        gdf_edges_proj = convert.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
 
     # STEP 3: REBUILD GRAPH
     # turn projected node/edge gdfs into a graph and update its CRS attribute
-    G_proj = utils_graph.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj, graph_attrs=G.graph)
+    G_proj = convert.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj, graph_attrs=G.graph)
     G_proj.graph["crs"] = to_crs
 
     msg = f"Projected graph with {len(G)} nodes and {len(G.edges)} edges"

@@ -9,6 +9,8 @@ from ._version import __version__ as __version__
 # by exposing these functions directly in the package's namespace.
 from .bearing import add_edge_bearings as add_edge_bearings
 from .bearing import orientation_entropy as orientation_entropy
+from .convert import graph_from_gdfs as graph_from_gdfs
+from .convert import graph_to_gdfs as graph_to_gdfs
 from .distance import nearest_edges as nearest_edges
 from .distance import nearest_nodes as nearest_nodes
 from .elevation import add_edge_grades as add_edge_grades
@@ -38,19 +40,14 @@ from .plot import plot_graph as plot_graph
 from .plot import plot_graph_route as plot_graph_route
 from .plot import plot_graph_routes as plot_graph_routes
 from .plot import plot_orientation as plot_orientation
-from .projection import project_gdf as project_gdf
 from .projection import project_graph as project_graph
+from .routing import add_edge_speeds as add_edge_speeds
+from .routing import add_edge_travel_times as add_edge_travel_times
 from .routing import k_shortest_paths as k_shortest_paths
 from .routing import shortest_path as shortest_path
 from .simplification import consolidate_intersections as consolidate_intersections
 from .simplification import simplify_graph as simplify_graph
-from .speed import add_edge_speeds as add_edge_speeds
-from .speed import add_edge_travel_times as add_edge_travel_times
 from .stats import basic_stats as basic_stats
 from .utils import citation as citation
 from .utils import log as log
 from .utils import ts as ts
-from .utils_graph import get_digraph as get_digraph
-from .utils_graph import get_undirected as get_undirected
-from .utils_graph import graph_from_gdfs as graph_from_gdfs
-from .utils_graph import graph_to_gdfs as graph_to_gdfs
