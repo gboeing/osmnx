@@ -456,18 +456,17 @@ def graph_from_polygon(
 
     # create buffered graph from the downloaded data
     bidirectional = network_type in settings.bidirectional_network_types
-    G_buff = _create_graph(response_jsons, retain_all, bidirectional)
+    G_buff = _create_graph(response_jsons, bidirectional)
 
     # truncate buffered graph to the buffered polygon and retain_all for
     # now. needed because overpass returns entire ways that also include
     # nodes outside the poly if the way (that is, a way with a single OSM
     # ID) has a node inside the poly at some point.
-    G_buff = truncate.truncate_graph_polygon(
-        G_buff,
-        poly_buff,
-        retain_all=True,
-        truncate_by_edge=truncate_by_edge,
-    )
+    G_buff = truncate.truncate_graph_polygon(G_buff, poly_buff, truncate_by_edge=truncate_by_edge)
+
+    # keep only the largest weakly connected component if retain_all is False
+    if not retain_all:
+        G_buff = truncate.largest_component(G_buff, strongly=False)
 
     # simplify the graph topology
     if simplify:
@@ -478,12 +477,13 @@ def graph_from_polygon(
     # intersections along the street that may now only connect 2 street
     # segments in the network, but in reality also connect to an
     # intersection just outside the polygon
-    G = truncate.truncate_graph_polygon(
-        G_buff,
-        polygon,
-        retain_all=retain_all,
-        truncate_by_edge=truncate_by_edge,
-    )
+    G = truncate.truncate_graph_polygon(G_buff, polygon, truncate_by_edge=truncate_by_edge)
+
+    # keep only the largest weakly connected component if retain_all is False
+    # we're doing this again in case the last truncate disconnected anything
+    # on the periphery
+    if not retain_all:
+        G = truncate.largest_component(G, strongly=False)
 
     # count how many physical streets in buffered graph connect to each
     # intersection in un-buffered graph, to retain true counts for each
@@ -538,7 +538,11 @@ def graph_from_xml(
     response_jsons = [_osm_xml._overpass_json_from_xml(filepath, encoding)]
 
     # create graph using this response JSON
-    G = _create_graph(response_jsons, retain_all, bidirectional)
+    G = _create_graph(response_jsons, bidirectional)
+
+    # keep only the largest weakly connected component if retain_all is False
+    if not retain_all:
+        G = truncate.largest_component(G, strongly=False)
 
     # simplify the graph topology as the last step
     if simplify:
@@ -551,7 +555,6 @@ def graph_from_xml(
 
 def _create_graph(
     response_jsons: Iterable[dict[str, Any]],
-    retain_all: bool,  # noqa: FBT001
     bidirectional: bool,  # noqa: FBT001
 ) -> nx.MultiDiGraph:
     """
@@ -618,10 +621,6 @@ def _create_graph(
     utils.log(msg, level=lg.INFO)
     G.add_nodes_from(nodes.items())
     _add_paths(G, paths.values(), bidirectional)
-
-    # retain only the largest connected component if retain_all=False
-    if not retain_all:
-        G = truncate.largest_component(G)
 
     msg = f"Created graph with {len(G):,} nodes and {len(G.edges):,} edges"
     utils.log(msg, level=lg.INFO)

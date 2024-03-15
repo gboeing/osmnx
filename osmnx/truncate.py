@@ -22,7 +22,6 @@ def truncate_graph_dist(
     dist: float,
     *,
     weight: str = "length",
-    retain_all: bool = False,
 ) -> nx.MultiDiGraph:
     """
     Remove from a graph every node beyond some network distance from a node.
@@ -42,9 +41,6 @@ def truncate_graph_dist(
         `source_node`.
     weight
         Graph edge attribute to use to measure distance.
-    retain_all
-        If True, return the entire graph even if it is not connected.
-        Otherwise, retain only the largest weakly connected component.
 
     Returns
     -------
@@ -62,10 +58,6 @@ def truncate_graph_dist(
     G = G.copy()
     G.remove_nodes_from(distant_nodes | unreachable_nodes)
 
-    # keep only the largest weakly connected component if retain_all is False
-    if not retain_all:
-        G = largest_component(remove_isolated_nodes(G))
-
     msg = f"Truncated graph by {weight}-weighted network distance"
     utils.log(msg, level=lg.INFO)
     return G
@@ -76,7 +68,6 @@ def truncate_graph_bbox(
     bbox: tuple[float, float, float, float],
     *,
     truncate_by_edge: bool = False,
-    retain_all: bool = False,
 ) -> nx.MultiDiGraph:
     """
     Remove from a graph every node that falls outside a bounding box.
@@ -90,9 +81,6 @@ def truncate_graph_bbox(
     truncate_by_edge
         If True, retain nodes outside bounding box if at least one of node's
         neighbors is within the bounding box.
-    retain_all
-        If True, return the entire graph even if it is not connected.
-        Otherwise, retain only the largest weakly connected component.
 
     Returns
     -------
@@ -101,7 +89,7 @@ def truncate_graph_bbox(
     """
     # convert bounding box to a polygon, then truncate
     polygon = utils_geo.bbox_to_poly(bbox=bbox)
-    G = truncate_graph_polygon(G, polygon, retain_all=retain_all, truncate_by_edge=truncate_by_edge)
+    G = truncate_graph_polygon(G, polygon, truncate_by_edge=truncate_by_edge)
 
     msg = "Truncated graph by bounding box"
     utils.log(msg, level=lg.INFO)
@@ -112,7 +100,6 @@ def truncate_graph_polygon(
     G: nx.MultiDiGraph,
     polygon: Polygon | MultiPolygon,
     *,
-    retain_all: bool = False,
     truncate_by_edge: bool = False,
 ) -> nx.MultiDiGraph:
     """
@@ -124,9 +111,6 @@ def truncate_graph_polygon(
         Input graph.
     polygon
         Only retain nodes in graph that lie within this geometry.
-    retain_all
-        If True, return the entire graph even if it is not connected.
-        Otherwise, retain only the largest weakly connected component.
     truncate_by_edge
         If True, retain nodes outside boundary polygon if at least one of
         node's neighbors is within the polygon.
@@ -171,10 +155,6 @@ def truncate_graph_polygon(
     G.remove_nodes_from(nodes_to_remove)
     msg = f"Removed {len(nodes_to_remove):,} nodes outside polygon"
     utils.log(msg, level=lg.INFO)
-
-    # keep only the largest weakly connected component if retain_all is False
-    if not retain_all:
-        G = largest_component(remove_isolated_nodes(G))
 
     msg = "Truncated graph by polygon"
     utils.log(msg, level=lg.INFO)
@@ -223,7 +203,7 @@ def largest_component(G: nx.MultiDiGraph, *, strongly: bool = False) -> nx.Multi
 
 def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     """
-    Remove from a graph all 0-degree nodes (i.e., no incident edges).
+    Remove from a graph all 0-degree nodes (i.e., with no incident edges).
 
     Parameters
     ----------
