@@ -121,7 +121,8 @@ def features_from_bbox(north=None, south=None, east=None, west=None, bbox=None, 
     if not (north is None and south is None and east is None and west is None):
         msg = (
             "The `north`, `south`, `east`, and `west` parameters are deprecated and "
-            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
+            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
         bbox = (north, south, east, west)
@@ -269,7 +270,8 @@ def features_from_place(query, tags, which_result=None, buffer_dist=None):
     if buffer_dist is not None:
         warn(
             "The buffer_dist argument has been deprecated and will be removed "
-            "in the v2.0.0 release. Buffer your query area directly, if desired.",
+            "in the v2.0.0 release. Buffer your query area directly, if desired. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -385,6 +387,15 @@ def features_from_xml(filepath, polygon=None, tags=None, encoding="utf-8"):
     -------
     gdf : geopandas.GeoDataFrame
     """
+    if polygon is not None or tags is not None:
+        msg = (
+            "The `polygon` and `tags` function parameters are deprecated and will "
+            "be removed in the v2.0.0 release. You can filter the features GeoDataFrame. "
+            "manually after construction. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     # transmogrify file of OSM XML data into JSON
     response_jsons = [osm_xml._overpass_json_from_file(filepath, encoding)]
 

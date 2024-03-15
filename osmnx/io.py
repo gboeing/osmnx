@@ -9,10 +9,10 @@ import networkx as nx
 import pandas as pd
 from shapely import wkt
 
+from . import convert
 from . import osm_xml
 from . import settings
 from . import utils
-from . import utils_graph
 
 
 def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
@@ -45,9 +45,9 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
 
     # convert graph to gdfs and stringify non-numeric columns
     if directed:
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
+        gdf_nodes, gdf_edges = convert.graph_to_gdfs(G)
     else:
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
+        gdf_nodes, gdf_edges = convert.graph_to_gdfs(convert.to_undirected(G))
     gdf_nodes = _stringify_nonnumeric_cols(gdf_nodes)
     gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
 
@@ -86,7 +86,8 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
     warn(
         "The `save_graph_shapefile` function is deprecated and will be removed "
         "in the v2.0.0 release. Instead, use the `save_graph_geopackage` function "
-        "to save graphs as GeoPackage files for subsequent GIS analysis.",
+        "to save graphs as GeoPackage files for subsequent GIS analysis. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
         FutureWarning,
         stacklevel=2,
     )
@@ -104,9 +105,9 @@ def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
 
     # convert graph to gdfs and stringify non-numeric columns
     if directed:
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
+        gdf_nodes, gdf_edges = convert.graph_to_gdfs(G)
     else:
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
+        gdf_nodes, gdf_edges = convert.graph_to_gdfs(convert.to_undirected(G))
     gdf_nodes = _stringify_nonnumeric_cols(gdf_nodes)
     gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
 

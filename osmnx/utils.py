@@ -212,7 +212,8 @@ def config(
         "The `utils.config` function is deprecated and will be removed in "
         "the v2.0.0 release. Instead, use the `settings` module directly to "
         "configure a global setting's value. For example, "
-        "`ox.settings.log_console=True`.",
+        "`ox.settings.log_console=True`. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
         FutureWarning,
         stacklevel=2,
     )

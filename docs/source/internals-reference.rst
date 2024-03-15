@@ -19,6 +19,14 @@ osmnx.bearing module
     :private-members:
     :noindex:
 
+osmnx.convert module
+--------------------
+
+.. automodule:: osmnx.convert
+    :members:
+    :private-members:
+    :noindex:
+
 osmnx.distance module
 ---------------------
 

@@ -91,7 +91,8 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
         timeout = settings.timeout
         msg = (
             "`settings.timeout` is deprecated and will be removed in the v2.0.0 "
-            "release: use `settings.requests_timeout` instead"
+            "release: use `settings.requests_timeout` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
@@ -101,7 +102,8 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
         nominatim_endpoint = settings.nominatim_endpoint
         msg = (
             "`settings.nominatim_endpoint` is deprecated and will be removed in the "
-            "v2.0.0 release: use `settings.nominatim_url` instead"
+            "v2.0.0 release: use `settings.nominatim_url` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 

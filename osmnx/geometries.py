@@ -13,7 +13,8 @@ DEP_MSG = (
     "The `geometries` module and `geometries_from_X` functions have been "
     "renamed the `features` module and `features_from_X` functions. Use these "
     "instead. The `geometries` module and function names are deprecated and "
-    "will be removed in the v2.0.0 release."
+    "will be removed in the v2.0.0 release. "
+    "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
 )
 
 

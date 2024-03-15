@@ -12,9 +12,9 @@ import pandas as pd
 import requests
 
 from . import _downloader
+from . import convert
 from . import settings
 from . import utils
-from . import utils_graph
 from ._errors import InsufficientResponseError
 
 # rasterio and gdal are optional dependencies for raster querying
@@ -54,7 +54,8 @@ def add_edge_grades(G, add_absolute=True, precision=None):
         precision = 3
     else:
         warn(
-            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
+            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -144,7 +145,7 @@ def add_node_elevations_raster(G, filepath, band=1, cpus=None):
         gdal.UseExceptions()
         gdal.BuildVRT(filepath, filepaths).FlushCache()
 
-    nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
+    nodes = convert.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
     if cpus == 1:
         elevs = dict(_query_raster(nodes, filepath, band))
     else:
@@ -211,7 +212,8 @@ def add_node_elevations_google(
     else:
         warn(
             "The `max_locations_per_batch` parameter is deprecated and will be "
-            "removed the v2.0.0 release, use the `batch_size` parameter instead",
+            "removed the v2.0.0 release, use the `batch_size` parameter instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -220,7 +222,8 @@ def add_node_elevations_google(
         precision = 3
     else:
         warn(
-            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release.",
+            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -231,7 +234,8 @@ def add_node_elevations_google(
         warn(
             "The `url_template` parameter is deprecated and will be removed "
             "in the v2.0.0 release. Configure the `settings` module's "
-            "`elevation_url_template` instead",
+            "`elevation_url_template` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
             FutureWarning,
             stacklevel=2,
         )
@@ -299,7 +303,8 @@ def _elevation_request(url, pause):
         timeout = settings.timeout
         msg = (
             "`settings.timeout` is deprecated and will be removed in the v2.0.0 "
-            "release: use `settings.requests_timeout` instead"
+            "release: use `settings.requests_timeout` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 

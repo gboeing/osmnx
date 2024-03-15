@@ -157,7 +157,8 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
         default_accept_language = settings.default_accept_language
         msg = (
             "`settings.default_accept_language` is deprecated and will be removed "
-            "in the v2.0.0 release: use `settings.http_accept_language` instead"
+            "in the v2.0.0 release: use `settings.http_accept_language` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
@@ -167,7 +168,8 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
         default_referer = settings.default_referer
         msg = (
             "`settings.default_referer` is deprecated and will be removed in the "
-            "v2.0.0 release: use `settings.http_referer` instead"
+            "v2.0.0 release: use `settings.http_referer` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
@@ -177,7 +179,8 @@ def _get_http_headers(user_agent=None, referer=None, accept_language=None):
         default_user_agent = settings.default_user_agent
         msg = (
             "`settings.default_user_agent` is deprecated and will be removed in "
-            "the v2.0.0 release: use `settings.http_user_agent` instead"
+            "the v2.0.0 release: use `settings.http_user_agent` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
@@ -222,7 +225,8 @@ def _resolve_host_via_doh(hostname):
         timeout = settings.timeout
         msg = (
             "`settings.timeout` is deprecated and will be removed in the v2.0.0 "
-            "release: use `settings.requests_timeout` instead"
+            "release: use `settings.requests_timeout` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 

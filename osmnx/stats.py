@@ -19,11 +19,11 @@ from collections import Counter
 import networkx as nx
 import numpy as np
 
+from . import convert
 from . import distance
 from . import projection
 from . import simplification
 from . import utils
-from . import utils_graph
 
 
 def streets_per_node(G):
@@ -352,7 +352,7 @@ def basic_stats(G, area=None, clean_int_tol=None):
           - `streets_per_node_counts` - see `streets_per_node_counts` function documentation
           - `streets_per_node_proportions` - see `streets_per_node_proportions` function documentation
     """
-    Gu = utils_graph.get_undirected(G)
+    Gu = convert.to_undirected(G)
     stats = {}
 
     stats["n"] = len(G.nodes)

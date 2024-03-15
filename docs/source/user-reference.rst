@@ -13,6 +13,12 @@ osmnx.bearing module
 .. automodule:: osmnx.bearing
     :members:
 
+osmnx.convert module
+--------------------
+
+.. automodule:: osmnx.convert
+    :members:
+
 osmnx.distance module
 ---------------------
 

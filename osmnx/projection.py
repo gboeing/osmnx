@@ -2,9 +2,9 @@
 
 import geopandas as gpd
 
+from . import convert
 from . import settings
 from . import utils
-from . import utils_graph
 
 
 def is_projected(crs):
@@ -133,7 +133,7 @@ def project_graph(G, to_crs=None, to_latlong=False):
         to_crs = settings.default_crs
 
     # STEP 1: PROJECT THE NODES
-    gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False)
+    gdf_nodes = convert.graph_to_gdfs(G, edges=False)
 
     # create new lat/lon columns to preserve lat/lon for later reference if
     # cols do not already exist (ie, don't overwrite in later re-projections)
@@ -151,19 +151,19 @@ def project_graph(G, to_crs=None, to_latlong=False):
     # STEP 2: PROJECT THE EDGES
     if "simplified" in G.graph and G.graph["simplified"]:
         # if graph has previously been simplified, project the edge geometries
-        gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
+        gdf_edges = convert.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
         gdf_edges_proj = project_gdf(gdf_edges, to_crs=to_crs)
     else:
         # if not, you don't have to project these edges because the nodes
         # contain all the spatial data in the graph (unsimplified edges have
         # no geometry attributes)
-        gdf_edges_proj = utils_graph.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False).drop(
+        gdf_edges_proj = convert.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False).drop(
             columns=["geometry"]
         )
 
     # STEP 3: REBUILD GRAPH
     # turn projected node/edge gdfs into a graph and update its CRS attribute
-    G_proj = utils_graph.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj, G.graph)
+    G_proj = convert.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj, G.graph)
     G_proj.graph["crs"] = to_crs
 
     utils.log(f"Projected graph with {len(G)} nodes and {len(G.edges)} edges")

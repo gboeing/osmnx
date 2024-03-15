@@ -2,9 +2,18 @@
 
 ## 1.9.2 (TBD)
 
-- deprecate settings module's default_accept_language, default_referer, default_user_agent, memory, nominatim_endpoint, overpass_endpoint, and timeout settings (#1138)
-- deprecate settings module's osm_xml_node_attrs, osm_xml_node_tags, osm_xml_way_attrs, and osm_xml_way_tags settings (#1138)
-- deprecate save_graph_xml function's node_tags, node_attrs, edge_tags, edge_attrs, edge_tag_aggs, merge_edges, oneway, api_version, and precision parameters (#1138)
+- deprecate settings module's renamed or obsolete settings (#1138)
+- deprecate save_graph_xml function's renamed or obsolete parameters (#1138)
+- deprecate graph_from_xml tags and polygon function parameters (#1146)
+- deprecate simplify_graph function's renamed endpoint_attrs argument (#1146)
+- deprecate utils_graph.get_digraph function and replace it with covert.to_digraph function (#1146)
+- deprecate utils_graph.get_undirected function and replace it with covert.to_undirected function (#1146)
+- deprecate utils_graph.graph_to_gdfs function and replace it with covert.graph_to_gdfs function (#1146)
+- deprecate utils_graph.graph_from_gdfs function and replace it with covert.graph_from_gdfs function (#1146)
+- deprecate utils_graph.remove_isolated_nodes function and replace it with truncate.remove_isolated_nodes function (#1146)
+- deprecate utils_graph.get_largest_component function and replace it with truncate.largest_component function (#1146)
+- deprecate utils_graph.route_to_gdf function and replace it with routing.route_to_gdf function (#1146)
+- deprecate speed module and move all of its functionality to the routing module (#1146)
 
 ## 1.9.1 (2024-02-01)
 

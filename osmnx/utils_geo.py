@@ -12,10 +12,10 @@ from shapely.geometry import Point
 from shapely.geometry import Polygon
 from shapely.ops import split
 
+from . import convert
 from . import projection
 from . import settings
 from . import utils
-from . import utils_graph
 
 
 def sample_points(G, n):
@@ -44,7 +44,7 @@ def sample_points(G, n):
     """
     if nx.is_directed(G):  # pragma: no cover
         warn("graph should be undirected to avoid oversampling bidirectional edges", stacklevel=2)
-    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
+    gdf_edges = convert.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
     weights = gdf_edges["length"] / gdf_edges["length"].sum()
     idx = np.random.default_rng().choice(gdf_edges.index, size=n, p=weights)
     lines = gdf_edges.loc[idx, "geometry"]
@@ -214,7 +214,8 @@ def round_geometry_coords(geom, precision):
     """
     warn(
         "The `round_geometry_coords` function is deprecated and will be "
-        "removed in the v2.0.0 release.",
+        "removed in the v2.0.0 release. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
         FutureWarning,
         stacklevel=2,
     )
@@ -458,7 +459,8 @@ def bbox_to_poly(north=None, south=None, east=None, west=None, bbox=None):
     if not (north is None and south is None and east is None and west is None):
         msg = (
             "The `north`, `south`, `east`, and `west` parameters are deprecated and "
-            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead."
+            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
     else:

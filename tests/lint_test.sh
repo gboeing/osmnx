@@ -16,7 +16,7 @@ pre-commit run --all-files
 #twine check --strict ./dist/*
 
 # build the docs
-#make -C ./docs html
+make -C ./docs html
 #python -m sphinx -b linkcheck ./docs/source ./docs/build/linkcheck
 
 # run the tests and report the test coverage

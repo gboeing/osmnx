@@ -10,9 +10,10 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 
+from . import convert
 from . import settings
+from . import truncate
 from . import utils
-from . import utils_graph
 from ._version import __version__
 
 
@@ -161,7 +162,8 @@ def save_graph_xml(
     warn(
         "The save_graph_xml function has moved from the osm_xml module to the io module. "
         "osm_xml.save_graph_xml has been deprecated and will be removed in the v2.0.0 "
-        "release. Access the function via the io module instead.",
+        "release. Access the function via the io module instead. "
+        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
         FutureWarning,
         stacklevel=2,
     )
@@ -248,7 +250,8 @@ def _save_graph_xml(  # noqa: C901
         osm_xml_node_attrs = settings.osm_xml_node_attrs
         msg = (
             "`settings.osm_xml_node_attrs` is deprecated and will be removed "
-            "in the v2.0.0 release"
+            "in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
@@ -258,7 +261,8 @@ def _save_graph_xml(  # noqa: C901
         osm_xml_node_tags = settings.osm_xml_node_tags
         msg = (
             "`settings.osm_xml_node_tags` is deprecated and will be removed "
-            "in the v2.0.0 release"
+            "in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
@@ -268,7 +272,8 @@ def _save_graph_xml(  # noqa: C901
         osm_xml_way_attrs = settings.osm_xml_way_attrs
         msg = (
             "`settings.osm_xml_way_attrs` is deprecated and will be removed "
-            "in the v2.0.0 release"
+            "in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
@@ -276,7 +281,10 @@ def _save_graph_xml(  # noqa: C901
         osm_xml_way_tags = ["highway", "lanes", "maxspeed", "name", "oneway"]
     else:
         osm_xml_way_tags = settings.osm_xml_way_tags
-        msg = "`settings.osm_xml_way_tags` is deprecated and will be removed in the v2.0.0 release"
+        msg = (
+            "`settings.osm_xml_way_tags` is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
+        )
         warn(msg, FutureWarning, stacklevel=2)
 
     if node_tags is None:
@@ -284,14 +292,18 @@ def _save_graph_xml(  # noqa: C901
     else:
         msg = (
             "the `node_tags` parameter is deprecated and will be removed in the v2.0.0 release: "
-            "use `settings.useful_tags_node` instead starting in v2.0.0"
+            "use `settings.useful_tags_node` instead starting in v2.0.0. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
     if node_attrs is None:
         node_attrs = osm_xml_node_attrs
     else:
-        msg = "the `node_attrs` parameter is deprecated and will be removed in the v2.0.0 release"
+        msg = (
+            "the `node_attrs` parameter is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
+        )
         warn(msg, FutureWarning, stacklevel=2)
 
     if edge_tags is None:
@@ -299,26 +311,36 @@ def _save_graph_xml(  # noqa: C901
     else:
         msg = (
             "the `edge_tags` parameter is deprecated and will be removed in the v2.0.0 release: "
-            "use `settings.useful_tags_way` instead starting in v2.0.0"
+            "use `settings.useful_tags_way` instead starting in v2.0.0. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
     if edge_attrs is None:
         edge_attrs = osm_xml_way_attrs
     else:
-        msg = "the `edge_attrs` parameter is deprecated and will be removed in the v2.0.0 release"
+        msg = (
+            "the `edge_attrs` parameter is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
+        )
         warn(msg, FutureWarning, stacklevel=2)
 
     if oneway is None:
         oneway = False
     else:
-        msg = "the `oneway` parameter is deprecated and will be removed in the v2.0.0 release"
+        msg = (
+            "the `oneway` parameter is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
+        )
         warn(msg, FutureWarning, stacklevel=2)
 
     if merge_edges is None:
         merge_edges = True
     else:
-        msg = "the `merge_edges` parameter is deprecated and will be removed in the v2.0.0 release"
+        msg = (
+            "the `merge_edges` parameter is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
+        )
         warn(msg, FutureWarning, stacklevel=2)
 
     if edge_tag_aggs is None:
@@ -327,27 +349,40 @@ def _save_graph_xml(  # noqa: C901
     else:
         msg = (
             "the `edge_tag_aggs` parameter is deprecated and will be removed in the v2.0.0 release: "
-            "use `way_tag_aggs` instead"
+            "use `way_tag_aggs` instead. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)
 
     if api_version is None:
         api_version = 0.6
     else:
-        msg = "the `api_version` parameter is deprecated and will be removed in the v2.0.0 release"
+        msg = (
+            "the `api_version` parameter is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
+        )
         warn(msg, FutureWarning, stacklevel=2)
 
     if precision is None:
         precision = 6
     else:
-        msg = "the `precision` parameter is deprecated and will be removed in the v2.0.0 release"
+        msg = (
+            "the `precision` parameter is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
+        )
         warn(msg, FutureWarning, stacklevel=2)
 
     if not isinstance(data, nx.MultiDiGraph):
-        msg = "the graph to save as XML must be of type MultiDiGraph, starting in v2.0.0"
+        msg = (
+            "the graph to save as XML must be of type MultiDiGraph, starting in v2.0.0. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
+        )
         warn(msg, FutureWarning, stacklevel=2)
     elif data.graph.get("simplified", False):
-        msg = "starting in v2.0.0, graph must be unsimplified to save as OSM XML"
+        msg = (
+            "starting in v2.0.0, graph must be unsimplified to save as OSM XML. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
+        )
         warn(msg, FutureWarning, stacklevel=2)
 
     # default filepath if none was provided
@@ -366,7 +401,7 @@ def _save_graph_xml(  # noqa: C901
     try:
         gdf_nodes, gdf_edges = data
     except ValueError:
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(
+        gdf_nodes, gdf_edges = convert.graph_to_gdfs(
             data, node_geometry=False, fill_edge_geometry=False
         )
 
@@ -641,7 +676,7 @@ def _get_unique_nodes_ordered_from_way(df_way_edges):
     G.add_edges_from(df_way_edges[["u", "v"]].to_numpy())
 
     # copy nodes into new graph
-    H = utils_graph.get_largest_component(G, strongly=False)
+    H = truncate.largest_component(G, strongly=False)
     unique_ordered_nodes = list(nx.topological_sort(H))
     num_unique_nodes = len(np.unique(all_nodes))
 
