@@ -143,10 +143,10 @@ def graph_from_point(
         Retain only those nodes within this many meters of `center_point`,
         measuring distance according to `dist_type`.
     dist_type
-        {"network", "bbox"}
-        If "bbox", retain only those nodes within a bounding box of `dist`. If
-        "network", retain only those nodes within `dist` network distance from
-        the centermost node.
+        {"bbox", "network"}
+        If "bbox", retain only those nodes within a bounding box of `dist`
+        length/width. If "network", retain only those nodes within `dist`
+        network distance of the nearest node to `center_point`.
     network_type
         {"all_private", "all", "bike", "drive", "drive_service", "walk"}
         What type of street network to retrieve if `custom_filter` is None.
@@ -192,10 +192,13 @@ def graph_from_point(
     )
 
     if dist_type == "network":
-        # if dist_type is network, find node in graph nearest to center point
-        # then truncate graph by network dist from it
+        # find node nearest to center then truncate graph by dist from it
         node = distance.nearest_nodes(G, X=center_point[1], Y=center_point[0])
         G = truncate.truncate_graph_dist(G, node, dist)
+
+        # keep only the largest weakly connected component if retain_all is False
+        if not retain_all:
+            G = truncate.largest_component(G, strongly=False)
 
     msg = f"graph_from_point returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
     utils.log(msg, level=lg.INFO)
