@@ -16,9 +16,9 @@ import pandas as pd
 import requests
 
 from . import _http
+from . import convert
 from . import settings
 from . import utils
-from . import utils_graph
 from ._errors import InsufficientResponseError
 
 if TYPE_CHECKING:
@@ -155,7 +155,7 @@ def add_node_elevations_raster(
         gdal.UseExceptions()
         gdal.BuildVRT(filepath, filepaths).FlushCache()
 
-    nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
+    nodes = convert.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
     if cpus == 1:
         elevs = dict(_query_raster(nodes, filepath, band))
     else:

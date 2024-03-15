@@ -22,11 +22,11 @@ from typing import Any
 import networkx as nx
 import numpy as np
 
+from . import convert
 from . import distance
 from . import projection
 from . import simplification
 from . import utils
-from . import utils_graph
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -372,7 +372,7 @@ def basic_stats(
           - `streets_per_node_counts` - see `streets_per_node_counts` function documentation
           - `streets_per_node_proportions` - see `streets_per_node_proportions` function documentation
     """
-    Gu = utils_graph.get_undirected(G)
+    Gu = convert.to_undirected(G)
     stats: dict[str, Any] = {}
 
     stats["n"] = len(G.nodes)

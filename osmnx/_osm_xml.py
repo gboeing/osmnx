@@ -23,10 +23,11 @@ from xml.sax.handler import ContentHandler
 import networkx as nx
 import pandas as pd
 
+from . import convert
 from . import projection
 from . import settings
+from . import truncate
 from . import utils
-from . import utils_graph
 from ._errors import GraphSimplificationError
 from ._version import __version__ as osmnx_version
 
@@ -209,7 +210,7 @@ def _save_graph_xml(
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
     # convert graph to node/edge gdfs and create dict of spatial bounds
-    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G, fill_edge_geometry=False)
+    gdf_nodes, gdf_edges = convert.graph_to_gdfs(G, fill_edge_geometry=False)
     coords = [str(round(c, PRECISION)) for c in gdf_nodes.unary_union.bounds]
     bounds = dict(zip(["minlon", "minlat", "maxlon", "maxlat"], coords))
 
@@ -414,7 +415,7 @@ def _sort_nodes(G: nx.MultiDiGraph, osmid: int) -> list[int]:
             # note this is destructive and will be missing in the saved data.
             G_ = G.copy()
             G_.remove_edges_from(nx.find_cycle(G_))
-            G_ = utils_graph.remove_isolated_nodes(G_)
+            G_ = truncate.remove_isolated_nodes(G_)
             ordered_nodes = _sort_nodes(G_, osmid)
             msg = f"Had to remove a cycle from way {str(osmid)!r} for topological sort"
             utils.log(msg, level=lg.WARNING)

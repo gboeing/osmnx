@@ -1,4 +1,4 @@
-"""Graph utility functions."""
+"""Convert spatial graphs to/from different data types."""
 
 from __future__ import annotations
 
@@ -309,105 +309,12 @@ def graph_from_gdfs(
     return G
 
 
-def route_to_gdf(
-    G: nx.MultiDiGraph,
-    route: list[int],
-    *,
-    weight: str = "length",
-) -> gpd.GeoDataFrame:
-    """
-    Return a GeoDataFrame of the edges in a path, in order.
-
-    Parameters
-    ----------
-    G
-        Input graph.
-    route
-        Node IDs constituting the path.
-    weight
-        Attribute value to minimize when choosing between parallel edges.
-
-    Returns
-    -------
-    gdf_edges
-    """
-    pairs = zip(route[:-1], route[1:])
-    uvk = ((u, v, min(G[u][v].items(), key=lambda i: i[1][weight])[0]) for u, v in pairs)
-    return graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
-
-
-def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
-    """
-    Remove from a graph all nodes that have no incident edges.
-
-    Parameters
-    ----------
-    G
-        Graph from which to remove isolated nodes.
-
-    Returns
-    -------
-    G
-        Graph with all isolated nodes removed.
-    """
-    # make a copy to not mutate original graph object caller passed in
-    G = G.copy()
-
-    # get the set of all isolated nodes, then remove them
-    isolated_nodes = {node for node, degree in G.degree() if degree < 1}
-    G.remove_nodes_from(isolated_nodes)
-
-    msg = f"Removed {len(isolated_nodes):,} isolated nodes"
-    utils.log(msg, level=lg.INFO)
-    return G
-
-
-def get_largest_component(G: nx.MultiDiGraph, *, strongly: bool = False) -> nx.MultiDiGraph:
-    """
-    Return subgraph of `G`'s largest weakly or strongly connected component.
-
-    Parameters
-    ----------
-    G
-        Input graph.
-    strongly
-        If True, return the largest strongly connected component. Otherwise
-        return the largest weakly connected component.
-
-    Returns
-    -------
-    G
-        The largest connected component subgraph of the original graph.
-    """
-    if strongly:
-        kind = "strongly"
-        is_connected = nx.is_strongly_connected
-        connected_components = nx.strongly_connected_components
-    else:
-        kind = "weakly"
-        is_connected = nx.is_weakly_connected
-        connected_components = nx.weakly_connected_components
-
-    if not is_connected(G):
-        # get all the connected components in graph then identify the largest
-        largest_cc = max(connected_components(G), key=len)
-        n = len(G)
-
-        # induce (frozen) subgraph then unfreeze it by making new MultiDiGraph
-        G = nx.MultiDiGraph(G.subgraph(largest_cc))
-
-        msg = f"Got largest {kind} connected component ({len(G):,} of {n:,} total nodes)"
-        utils.log(msg, level=lg.INFO)
-
-    return G
-
-
-def get_digraph(G: nx.MultiDiGraph, *, weight: str = "length") -> nx.DiGraph:
+def to_digraph(G: nx.MultiDiGraph, *, weight: str = "length") -> nx.DiGraph:
     """
     Convert MultiDiGraph to DiGraph.
 
     Chooses between parallel edges by minimizing `weight` attribute value. See
-    also `get_undirected` to convert MultiDiGraph to MultiGraph.
+    also `to_undirected` to convert MultiDiGraph to MultiGraph.
 
     Parameters
     ----------
@@ -440,12 +347,12 @@ def get_digraph(G: nx.MultiDiGraph, *, weight: str = "length") -> nx.DiGraph:
     return nx.DiGraph(G)
 
 
-def get_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
+def to_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
     """
     Convert MultiDiGraph to undirected MultiGraph.
 
     Maintains parallel edges only if their geometries differ. See also
-    `get_digraph` to convert MultiDiGraph to DiGraph.
+    `to_digraph` to convert MultiDiGraph to DiGraph.
 
     Parameters
     ----------

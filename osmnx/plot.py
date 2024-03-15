@@ -16,11 +16,11 @@ import numpy as np
 import pandas as pd
 
 from . import bearing
+from . import convert
 from . import projection
 from . import settings
 from . import utils
 from . import utils_geo
-from . import utils_graph
 
 if TYPE_CHECKING:
     import geopandas as gpd
@@ -252,12 +252,12 @@ def plot_graph(  # noqa: PLR0913
 
     if max_edge_lw > 0:
         # plot the edges' geometries
-        gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
+        gdf_edges = convert.graph_to_gdfs(G, nodes=False)["geometry"]
         ax = gdf_edges.plot(ax=ax, color=edge_color, lw=edge_linewidth, alpha=edge_alpha, zorder=1)
 
     if max_node_size > 0:
         # scatter plot the nodes' x/y coordinates
-        gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
+        gdf_nodes = convert.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
         ax.scatter(  # type: ignore[union-attr]
             x=gdf_nodes["x"],
             y=gdf_nodes["y"],
@@ -510,7 +510,7 @@ def plot_figure_ground(
         }
 
     # we need an undirected graph to find every edge incident on a node
-    Gu = utils_graph.get_undirected(G)
+    Gu = convert.to_undirected(G)
 
     # for each edge, get a linewidth according to street type
     edge_linewidths = []
@@ -553,7 +553,7 @@ def plot_figure_ground(
     node_sizes: list[float] | float = [node_widths[node] for node in Gu.nodes]
 
     # define the view extents of the plotting figure
-    node_geoms = utils_graph.graph_to_gdfs(Gu, edges=False, node_geometry=True).unary_union
+    node_geoms = convert.graph_to_gdfs(Gu, edges=False, node_geometry=True).unary_union
     lonlat_point = node_geoms.centroid.coords[0]
     latlon_point = tuple(reversed(lonlat_point))
     bbox = utils_geo.bbox_from_point(latlon_point, dist=dist, project_utm=False)
