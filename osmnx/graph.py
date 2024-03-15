@@ -196,10 +196,6 @@ def graph_from_point(
         node = distance.nearest_nodes(G, X=center_point[1], Y=center_point[0])
         G = truncate.truncate_graph_dist(G, node, dist)
 
-        # keep only the largest weakly connected component if retain_all is False
-        if not retain_all:
-            G = truncate.largest_component(G, strongly=False)
-
     msg = f"graph_from_point returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
     utils.log(msg, level=lg.INFO)
     return G
