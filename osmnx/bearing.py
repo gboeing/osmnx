@@ -176,7 +176,7 @@ def _extract_edge_bearings(
     G: nx.MultiGraph | nx.MultiDiGraph,
     min_length: float,
     weight: str | None,
-) -> npt.NDArray[np.float64]:
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
     """
     Extract graph's edge bearings.
 
@@ -195,33 +195,33 @@ def _extract_edge_bearings(
         Ignore edges with `length` attributes less than `min_length`. Useful
         to ignore the noise of many very short edges.
     weight
-        If not None, weight edges' bearings by this (non-null) edge attribute.
-        For example, if "length" is provided, this will return 1 bearing
-        observation per meter per street (which could result in a very large
-        `bearings` array).
+        If None, return equal weight for each bearing. Otherwise,
+        weight edges' bearings by this (non-null) edge attribute.
+        For example, if "length" is provided, this will weight each bearing
+        observation by the meter length of each street.
 
     Returns
     -------
-    bearings
-        The edge bearings of `Gu`.
+    bearings, weights
+        The edge bearings of `G` and their corresponding weights.
     """
     if projection.is_projected(G.graph["crs"]):  # pragma: no cover
         msg = "Graph must be unprojected to analyze edge bearings."
         raise ValueError(msg)
     bearings = []
+    weights = []
     for u, v, data in G.edges(data=True):
         # ignore self-loops and any edges below min_length
         if u != v and data["length"] >= min_length:
-            if weight:
-                # weight edges' bearings by some edge attribute value
-                bearings.extend([data["bearing"]] * int(data[weight]))
-            else:
-                # don't weight bearings, just take one value per edge
-                bearings.append(data["bearing"])
+            bearings.append(data["bearing"])
+            weights.append(data[weight] if weight is not None else 1.0)
 
     # drop any nulls
     bearings_array = np.array(bearings)
-    bearings_array = bearings_array[~np.isnan(bearings_array)]
+    weights_array = np.array(weights)
+    keep_idx = ~np.isnan(bearings_array)
+    bearings_array = bearings_array[keep_idx]
+    weights_array = weights_array[keep_idx]
     if nx.is_directed(G):
         msg = (
             "`G` is a MultiDiGraph, so edge bearings will be directional (one per "
@@ -229,10 +229,11 @@ def _extract_edge_bearings(
             "per edge), pass a MultiGraph instead. Use `convert.to_undirected`."
         )
         warn(msg, category=UserWarning, stacklevel=2)
-        return bearings_array
-    # for undirected graphs, add reverse bearings and return
-    bearings_array_r = (bearings_array - 180) % 360
-    return np.concatenate([bearings_array, bearings_array_r])
+        return bearings_array, weights_array
+    # for undirected graphs, add reverse bearings
+    bearings_array = np.concatenate([bearings_array, (bearings_array - 180) % 360])
+    weights_array = np.concatenate([weights_array, weights_array])
+    return bearings_array, weights_array
 
 
 def _bearings_distribution(
@@ -260,10 +261,10 @@ def _bearings_distribution(
         Ignore edges with `length` attributes less than `min_length`. Useful
         to ignore the noise of many very short edges.
     weight
-        If not None, weight edges' bearings by this (non-null) edge attribute.
-        For example, if "length" is provided, this will return 1 bearing
-        observation per meter per street (which could result in a very large
-        `bearings` array).
+        If None, apply equal weight for each bearing. Otherwise,
+        weight edges' bearings by this (non-null) edge attribute.
+        For example, if "length" is provided, this will weight each bearing
+        observation by the meter length of each street.
 
     Returns
     -------
@@ -273,8 +274,8 @@ def _bearings_distribution(
     n = num_bins * 2
     bins = np.arange(n + 1) * 360 / n
 
-    bearings = _extract_edge_bearings(G, min_length, weight)
-    count, bin_edges = np.histogram(bearings, bins=bins)
+    bearings, weights = _extract_edge_bearings(G, min_length, weight)
+    count, bin_edges = np.histogram(bearings, bins=bins, weights=weights)
 
     # move last bin to front, so eg 0.01 degrees and 359.99 degrees will be
     # binned together
