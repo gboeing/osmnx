@@ -211,11 +211,10 @@ def _extract_edge_bearings(
     bearings = []
     weights = []
     for u, v, data in G.edges(data=True):
-        if u == v or data["length"] < min_length:
-            # ignore self-loops and any edges below min_length
-            continue
-        bearings.append(data["bearing"])
-        weights.append(data[weight] if weight is not None else 1.0)
+        # ignore self-loops and any edges below min_length
+        if u != v and data["length"] >= min_length:
+            bearings.append(data["bearing"])
+            weights.append(data[weight] if weight is not None else 1.0)
 
     # drop any nulls
     bearings_array = np.array(bearings)
