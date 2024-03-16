@@ -268,8 +268,9 @@ def _bearings_distribution(
 
     Returns
     -------
-    bin_counts, bin_edges
-        Counts of bearings per bin and the bins edges.
+    bin_counts, bin_centers
+        Counts of bearings per bin and the bins' centers in degrees.
+        Both arrays are of length `num_bins`.
     """
     n = num_bins * 2
     bins = np.arange(n + 1) * 360 / n
@@ -282,6 +283,6 @@ def _bearings_distribution(
     count = np.roll(count, 1)
     bin_counts = count[::2] + count[1::2]
 
-    # because we merged the bins, their edges are now only every other one
-    bin_edges = bin_edges[range(0, len(bin_edges), 2)]
-    return bin_counts, bin_edges
+    # because we merged the bins, their centers are now only every other one
+    bin_centers = bin_edges[range(0, len(bin_edges) - 1, 2)]
+    return bin_counts, bin_centers
