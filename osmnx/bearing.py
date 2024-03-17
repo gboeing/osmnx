@@ -272,17 +272,24 @@ def _bearings_distribution(
         Counts of bearings per bin and the bins' centers in degrees.
         Both arrays are of length `num_bins`.
     """
-    n = num_bins * 2
-    bins = np.arange(n + 1) * 360 / n
+    # Split bins in half to prevent bin-edge effects around common values.
+    # Bins will be merged in pairs after the histogram is computed.
+    # The last bin edge is the same as the first (i.e., 0 degrees = 360 degrees).
+    num_split_bins = num_bins * 2
+    split_bin_edges = np.arange(num_split_bins + 1) * 360 / num_split_bins
 
     bearings, weights = _extract_edge_bearings(G, min_length, weight)
-    count, bin_edges = np.histogram(bearings, bins=bins, weights=weights)
+    split_bin_counts, split_bin_edges = np.histogram(
+        bearings,
+        bins=split_bin_edges,
+        weights=weights,
+    )
 
-    # move last bin to front, so eg 0.01 degrees and 359.99 degrees will be
-    # binned together
-    count = np.roll(count, 1)
-    bin_counts = count[::2] + count[1::2]
+    # Move last bin to front, so eg 0.01 degrees and 359.99 degrees will be
+    # binned together. Then combine counts from pairs of split bins.
+    split_bin_counts = np.roll(split_bin_counts, 1)
+    bin_counts = split_bin_counts[::2] + split_bin_counts[1::2]
 
-    # because we merged the bins, their centers are now only every other one
-    bin_centers = bin_edges[range(0, len(bin_edges) - 1, 2)]
+    # Every other edge of the split bins is the center of a merged bin.
+    bin_centers = split_bin_edges[range(0, num_split_bins - 1, 2)]
     return bin_counts, bin_centers
