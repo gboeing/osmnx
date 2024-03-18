@@ -165,6 +165,24 @@ def test_bearings() -> None:
     assert list(bearings) == [0.0, 180.0]  # north and south
     assert list(weights) == [2.0, 2.0]
 
+    # test _bearings_distribution split bin implementation
+    bin_counts, bin_centers = ox.bearing._bearings_distribution(
+        G,
+        num_bins=1,
+        min_length=0,
+        weight=None,
+    )
+    assert list(bin_counts) == [1.0]
+    assert list(bin_centers) == [0.0]
+    bin_counts, bin_centers = ox.bearing._bearings_distribution(
+        G,
+        num_bins=2,
+        min_length=0,
+        weight=None,
+    )
+    assert list(bin_counts) == [1.0, 0.0]
+    assert list(bin_centers) == [0.0, 180.0]
+
 
 def test_osm_xml() -> None:
     """Test working with .osm XML data."""

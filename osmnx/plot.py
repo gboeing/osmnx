@@ -748,17 +748,16 @@ def plot_orientation(  # noqa: PLR0913
             "zorder": 3,
         }
 
-    # get the bearings' distribution's bin counts and edges
-    bin_counts, bin_edges = bearing._bearings_distribution(
+    # get the bearing distribution's bin counts and center values in degrees
+    bin_counts, bin_centers = bearing._bearings_distribution(
         G,
         num_bins,
         min_length=min_length,
         weight=weight,
     )
 
-    # positions: where to center each bar. ignore the last bin edge, because
-    # it's the same as the first (i.e., 0 degrees = 360 degrees)
-    positions = np.radians(bin_edges[:-1])
+    # positions: where to center each bar
+    positions = np.radians(bin_centers)
 
     # width: make bars fill the circumference without gaps or overlaps
     width = 2 * np.pi / num_bins
