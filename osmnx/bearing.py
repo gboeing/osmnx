@@ -154,9 +154,10 @@ def orientation_entropy(
         Ignore edges with "length" attributes less than `min_length`. Useful
         to ignore the noise of many very short edges.
     weight
-        If not None, weight edges' bearings by this (non-null) edge attribute.
-        For example, if "length" is provided, this will return 1 bearing
-        observation per meter per street.
+        If None, apply equal weight for each bearing. Otherwise, weight edges'
+        bearings by this (non-null) edge attribute. For example, if "length"
+        is provided, each edge's bearing observation will be weighted by its
+        "length" attribute value.
 
     Returns
     -------
@@ -195,10 +196,10 @@ def _extract_edge_bearings(
         Ignore edges with `length` attributes less than `min_length`. Useful
         to ignore the noise of many very short edges.
     weight
-        If None, return equal weight for each bearing. Otherwise,
-        weight edges' bearings by this (non-null) edge attribute.
-        For example, if "length" is provided, this will weight each bearing
-        observation by the meter length of each street.
+        If None, apply equal weight for each bearing. Otherwise, weight edges'
+        bearings by this (non-null) edge attribute. For example, if "length"
+        is provided, each edge's bearing observation will be weighted by its
+        "length" attribute value.
 
     Returns
     -------
@@ -261,20 +262,20 @@ def _bearings_distribution(
         Ignore edges with `length` attributes less than `min_length`. Useful
         to ignore the noise of many very short edges.
     weight
-        If None, apply equal weight for each bearing. Otherwise,
-        weight edges' bearings by this (non-null) edge attribute.
-        For example, if "length" is provided, this will weight each bearing
-        observation by the meter length of each street.
+        If None, apply equal weight for each bearing. Otherwise, weight edges'
+        bearings by this (non-null) edge attribute. For example, if "length"
+        is provided, each edge's bearing observation will be weighted by its
+        "length" attribute value.
 
     Returns
     -------
     bin_counts, bin_centers
-        Counts of bearings per bin and the bins' centers in degrees.
-        Both arrays are of length `num_bins`.
+        Counts of bearings per bin and the bins' centers in degrees. Both
+        arrays are of length `num_bins`.
     """
     # Split bins in half to prevent bin-edge effects around common values.
-    # Bins will be merged in pairs after the histogram is computed.
-    # The last bin edge is the same as the first (i.e., 0 degrees = 360 degrees).
+    # Bins will be merged in pairs after the histogram is computed. The last
+    # bin edge is the same as the first (i.e., 0 degrees = 360 degrees).
     num_split_bins = num_bins * 2
     split_bin_edges = np.arange(num_split_bins + 1) * 360 / num_split_bins
 
