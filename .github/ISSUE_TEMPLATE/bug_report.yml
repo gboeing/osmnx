@@ -19,7 +19,7 @@ body:
     id: documentation_examples
     attributes:
       label: Documentation
-      description: Before you proceed, review the [documentation](https://osmnx.readthedocs.io/) and [OSMnx examples](https://github.com/gboeing/osmnx-examples) gallery, which cover key concepts, installation, and package usage.
+      description: Before you proceed, review the [documentation](https://osmnx.readthedocs.io/) and [examples gallery](https://github.com/gboeing/osmnx-examples), which cover key concepts, installation, and package usage.
       options:
         - label: My problem is not addressed by the documentation or examples
           required: true

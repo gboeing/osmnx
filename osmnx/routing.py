@@ -1,8 +1,17 @@
-"""Calculate weighted shortest paths between graph nodes."""
+"""Calculate edge speeds, travel times, and weighted shortest paths."""
+
+from __future__ import annotations
 
 import itertools
+import logging as lg
 import multiprocessing as mp
 import re
+from collections.abc import Iterable
+from collections.abc import Iterator
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Callable
+from typing import overload
 from warnings import warn
 
 import networkx as nx
@@ -12,31 +21,131 @@ import pandas as pd
 from . import convert
 from . import utils
 
+if TYPE_CHECKING:
+    import geopandas as gpd
 
-def route_to_gdf(G, route, weight="length"):
+
+def route_to_gdf(
+    G: nx.MultiDiGraph,
+    route: list[int],
+    *,
+    weight: str = "length",
+) -> gpd.GeoDataFrame:
     """
     Return a GeoDataFrame of the edges in a path, in order.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    route : list
-        list of node IDs constituting the path
-    weight : string
-        if there are parallel edges between two nodes, choose lowest weight
+    G
+        Input graph.
+    route
+        Node IDs constituting the path.
+    weight
+        Attribute value to minimize when choosing between parallel edges.
 
     Returns
     -------
-    gdf_edges : geopandas.GeoDataFrame
-        GeoDataFrame of the edges
+    gdf_edges
     """
     pairs = zip(route[:-1], route[1:])
     uvk = ((u, v, min(G[u][v].items(), key=lambda i: i[1][weight])[0]) for u, v in pairs)
     return convert.graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
 
 
-def shortest_path(G, orig, dest, weight="length", cpus=1):
+# orig/dest int, weight present, cpus present
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+    *,
+    weight: str,
+    cpus: int | None,
+) -> list[int] | None: ...
+
+
+# orig/dest int, weight missing, cpus present
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+    *,
+    cpus: int | None,
+) -> list[int] | None: ...
+
+
+# orig/dest int, weight present, cpus missing
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+    *,
+    weight: str,
+) -> list[int] | None: ...
+
+
+# orig/dest int, weight missing, cpus missing
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+) -> list[int] | None: ...
+
+
+# orig/dest Iterable, weight present, cpus present
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: Iterable[int],
+    dest: Iterable[int],
+    *,
+    weight: str,
+    cpus: int | None,
+) -> list[list[int] | None]: ...
+
+
+# orig/dest Iterable, weight missing, cpus present
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: Iterable[int],
+    dest: Iterable[int],
+    *,
+    cpus: int | None,
+) -> list[list[int] | None]: ...
+
+
+# orig/dest Iterable, weight present, cpus missing
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: Iterable[int],
+    dest: Iterable[int],
+    *,
+    weight: str,
+) -> list[list[int] | None]: ...
+
+
+# orig/dest Iterable, weight missing, cpus missing
+@overload
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: Iterable[int],
+    dest: Iterable[int],
+) -> list[list[int] | None]: ...
+
+
+def shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int | Iterable[int],
+    dest: int | Iterable[int],
+    *,
+    weight: str = "length",
+    cpus: int | None = 1,
+) -> list[int] | None | list[list[int] | None]:
     """
     Solve shortest path from origin node(s) to destination node(s).
 
@@ -54,44 +163,49 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    orig : int or list
-        origin node ID, or a list of origin node IDs
-    dest : int or list
-        destination node ID, or a list of destination node IDs
-    weight : string
-        edge attribute to minimize when solving shortest path
-    cpus : int
-        how many CPU cores to use; if None, use all available
+    G
+        Input graph,
+    orig
+        Origin node ID(s).
+    dest
+        Destination node ID(s).
+    weight
+        Edge attribute to minimize when solving shortest path.
+    cpus
+        How many CPU cores to use. If None, use all available.
 
     Returns
     -------
-    path : list
-        list of node IDs constituting the shortest path, or, if orig and dest
-        are lists, then a list of path lists
+    path
+        The node IDs constituting the shortest path, or, if `orig` and `dest`
+        are both iterable, then a list of such paths.
     """
     _verify_edge_attribute(G, weight)
 
     # if neither orig nor dest is iterable, just return the shortest path
-    if not (hasattr(orig, "__iter__") or hasattr(dest, "__iter__")):
+    if not (isinstance(orig, Iterable) or isinstance(dest, Iterable)):
         return _single_shortest_path(G, orig, dest, weight)
 
     # if only 1 of orig or dest is iterable and the other is not, raise error
-    if not (hasattr(orig, "__iter__") and hasattr(dest, "__iter__")):
-        msg = "orig and dest must either both be iterable or neither must be iterable"
-        raise ValueError(msg)
+    if not (isinstance(orig, Iterable) and isinstance(dest, Iterable)):
+        msg = "`orig` and `dest` must either both be iterable or neither must be iterable."
+        raise TypeError(msg)
 
-    # if both orig and dest are iterable, ensure they have same lengths
+    # if both orig and dest are iterable, make them lists (so we're guaranteed
+    # to be able to get their sizes) then ensure they have same lengths
+    orig = list(orig)
+    dest = list(dest)
     if len(orig) != len(dest):  # pragma: no cover
-        msg = "orig and dest must be of equal length"
+        msg = "`orig` and `dest` must be of equal length."
         raise ValueError(msg)
 
     # determine how many cpu cores to use
     if cpus is None:
         cpus = mp.cpu_count()
     cpus = min(cpus, mp.cpu_count())
-    utils.log(f"Solving {len(orig)} paths with {cpus} CPUs...")
+
+    msg = f"Solving {len(orig)} paths with {cpus} CPUs..."
+    utils.log(msg, level=lg.INFO)
 
     # if single-threading, calculate each shortest path one at a time
     if cpus == 1:
@@ -106,7 +220,14 @@ def shortest_path(G, orig, dest, weight="length", cpus=1):
     return paths
 
 
-def k_shortest_paths(G, orig, dest, k, weight="length"):
+def k_shortest_paths(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+    k: int,
+    *,
+    weight: str = "length",
+) -> Iterator[list[int]]:
     """
     Solve `k` shortest paths from an origin node to a destination node.
 
@@ -115,88 +236,104 @@ def k_shortest_paths(G, orig, dest, k, weight="length"):
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    orig : int
-        origin node ID
-    dest : int
-        destination node ID
-    k : int
-        number of shortest paths to solve
-    weight : string
-        edge attribute to minimize when solving shortest paths. default is
-        edge length in meters.
+    G
+        Input graph.
+    orig
+        Origin node ID.
+    dest
+        Destination node ID.
+    k
+        Number of shortest paths to solve.
+    weight
+        Edge attribute to minimize when solving shortest paths.
 
     Yields
     ------
-    path : list
-        a generator of `k` shortest paths ordered by total weight. each path
-        is a list of node IDs.
+    path
+        The node IDs constituting the next-shortest path.
     """
     _verify_edge_attribute(G, weight)
-    paths_gen = nx.shortest_simple_paths(convert.to_digraph(G, weight), orig, dest, weight)
+    paths_gen = nx.shortest_simple_paths(
+        G=convert.to_digraph(G, weight=weight),
+        source=orig,
+        target=dest,
+        weight=weight,
+    )
     yield from itertools.islice(paths_gen, 0, k)
 
 
-def _single_shortest_path(G, orig, dest, weight):
+def _single_shortest_path(
+    G: nx.MultiDiGraph,
+    orig: int,
+    dest: int,
+    weight: str,
+) -> list[int] | None:
     """
     Solve the shortest path from an origin node to a destination node.
 
-    This function is a convenience wrapper around networkx.shortest_path, with
-    exception handling for unsolvable paths. It uses Dijkstra's algorithm.
+    This function uses Dijkstra's algorithm. It is a convenience wrapper
+    around `networkx.shortest_path`, with exception handling for unsolvable
+    paths. If the path is unsolvable, it returns None.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    orig : int
-        origin node ID
-    dest : int
-        destination node ID
-    weight : string
-        edge attribute to minimize when solving shortest path
+    G
+        Input graph.
+    orig
+        Origin node ID.
+    dest
+        Destination node ID.
+    weight
+        Edge attribute to minimize when solving shortest path.
 
     Returns
     -------
-    path : list
-        list of node IDs constituting the shortest path
+    path
+        The node IDs constituting the shortest path.
     """
     try:
-        return nx.shortest_path(G, orig, dest, weight=weight, method="dijkstra")
+        return list(nx.shortest_path(G, orig, dest, weight=weight, method="dijkstra"))
     except nx.exception.NetworkXNoPath:  # pragma: no cover
-        utils.log(f"Cannot solve path from {orig} to {dest}")
+        msg = f"Cannot solve path from {orig} to {dest}"
+        utils.log(msg, level=lg.WARNING)
         return None
 
 
-def _verify_edge_attribute(G, attr):
+def _verify_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
     """
     Verify attribute values are numeric and non-null across graph edges.
 
-    Raises a `ValueError` if attribute contains non-numeric values and raises
-    a warning if attribute is missing or null on any edges.
+    Raises a ValueError if this attribute contains non-numeric values, and
+    issues a UserWarning if this attribute is missing or null on any edges.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    attr : string
-        edge attribute to verify
+    G
+        Input graph.
+    attr
+        Name of the edge attribute to verify.
 
     Returns
     -------
     None
     """
     try:
-        values = np.array(tuple(G.edges(data=attr)))[:, 2]
-        values_float = values.astype(float)
+        values_float = (np.array(tuple(G.edges(data=attr)))[:, 2]).astype(float)
         if np.isnan(values_float).any():
-            warn(f"The attribute {attr!r} is missing or null on some edges.", stacklevel=2)
+            msg = f"The attribute {attr!r} is missing or null on some edges."
+            warn(msg, category=UserWarning, stacklevel=2)
     except ValueError as e:
         msg = f"The edge attribute {attr!r} contains non-numeric values."
         raise ValueError(msg) from e
 
 
-def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.mean):
+def add_edge_speeds(
+    G: nx.MultiDiGraph,
+    *,
+    hwy_speeds: dict[str, float] | None = None,
+    fallback: float | None = None,
+    agg: Callable[[Any], Any] = np.mean,
+) -> nx.MultiDiGraph:
     """
     Add edge speeds (km per hour) to graph as new `speed_kph` edge attributes.
 
@@ -220,40 +357,28 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    hwy_speeds : dict
-        dict keys = OSM highway types and values = typical speeds (km per
+    G
+        Input graph.
+    hwy_speeds
+        Dict keys are OSM highway types and values are typical speeds (km per
         hour) to assign to edges of that highway type for any edges missing
         speed data. Any edges with highway type not in `hwy_speeds` will be
-        assigned the mean preexisting speed value of all edges of that highway
-        type.
-    fallback : numeric
-        default speed value (km per hour) to assign to edges whose highway
-        type did not appear in `hwy_speeds` and had no preexisting speed
-        values on any edge
-    precision : int
-        deprecated, do not use
-    agg : function
-        aggregation function to impute missing values from observed values.
-        the default is numpy.mean, but you might also consider for example
-        numpy.median, numpy.nanmedian, or your own custom function
+        assigned the mean pre-existing speed value of all edges of that
+        highway type.
+    fallback
+        Default speed value (km per hour) to assign to edges whose highway
+        type did not appear in `hwy_speeds` and had no pre-existing speed
+        attribute values on any edge.
+    agg
+        Aggregation function to impute missing values from observed values.
+        The default is `numpy.mean`, but you might also consider for example
+        `numpy.median`, `numpy.nanmedian`, or your own custom function.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        graph with speed_kph attributes on all edges
+    G
+        Graph with `speed_kph` attributes on all edges.
     """
-    if precision is None:
-        precision = 1
-    else:
-        warn(
-            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
-            FutureWarning,
-            stacklevel=2,
-        )
-
     if fallback is None:
         fallback = np.nan
 
@@ -301,19 +426,19 @@ def add_edge_speeds(G, hwy_speeds=None, fallback=None, precision=None, agg=np.me
     # caller did not pass in hwy_speeds or fallback arguments
     if pd.isna(speed_kph).all():
         msg = (
-            "this graph's edges have no preexisting `maxspeed` attribute "
+            "This graph's edges have no preexisting 'maxspeed' attribute "
             "values so you must pass `hwy_speeds` or `fallback` arguments."
         )
         raise ValueError(msg)
 
     # add speed kph attribute to graph edges
-    edges["speed_kph"] = speed_kph.round(precision).to_numpy()
+    edges["speed_kph"] = speed_kph.to_numpy()
     nx.set_edge_attributes(G, values=edges["speed_kph"], name="speed_kph")
 
     return G
 
 
-def add_edge_travel_times(G, precision=None):
+def add_edge_travel_times(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     """
     Add edge travel time (seconds) to graph as new `travel_time` edge attributes.
 
@@ -324,36 +449,24 @@ def add_edge_travel_times(G, precision=None):
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    precision : int
-        deprecated, do not use
+    G
+        Input graph.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
-        graph with travel_time attributes on all edges
+    G
+        Graph with `travel_time` attributes on all edges.
     """
-    if precision is None:
-        precision = 1
-    else:
-        warn(
-            "The `precision` parameter is deprecated and will be removed in the v2.0.0 release. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
-            FutureWarning,
-            stacklevel=2,
-        )
-
     edges = convert.graph_to_gdfs(G, nodes=False)
 
     # verify edge length and speed_kph attributes exist
     if not ("length" in edges.columns and "speed_kph" in edges.columns):  # pragma: no cover
-        msg = "all edges must have `length` and `speed_kph` attributes."
+        msg = "All edges must have 'length' and 'speed_kph' attributes."
         raise KeyError(msg)
 
     # verify edge length and speed_kph attributes contain no nulls
     if pd.isna(edges["length"]).any() or pd.isna(edges["speed_kph"]).any():  # pragma: no cover
-        msg = "edge `length` and `speed_kph` values must be non-null."
+        msg = "Edge 'length' and 'speed_kph' values must be non-null."
         raise ValueError(msg)
 
     # convert distance meters to km, and speed km per hour to km per second
@@ -364,13 +477,18 @@ def add_edge_travel_times(G, precision=None):
     travel_time = distance_km / speed_km_sec
 
     # add travel time attribute to graph edges
-    edges["travel_time"] = travel_time.round(precision).to_numpy()
+    edges["travel_time"] = travel_time.to_numpy()
     nx.set_edge_attributes(G, values=edges["travel_time"], name="travel_time")
 
     return G
 
 
-def _clean_maxspeed(maxspeed, agg=np.mean, convert_mph=True):
+def _clean_maxspeed(
+    maxspeed: str | float,
+    *,
+    agg: Callable[[Any], Any] = np.mean,
+    convert_mph: bool = True,
+) -> float | None:
     """
     Clean a maxspeed string and convert mph to kph if necessary.
 
@@ -381,19 +499,24 @@ def _clean_maxspeed(maxspeed, agg=np.mean, convert_mph=True):
 
     Parameters
     ----------
-    maxspeed : string
-        a valid OpenStreetMap way maxspeed value
-    agg : function
-        aggregation function if maxspeed contains multiple values (default
-        is numpy.mean)
-    convert_mph : bool
-        if True, convert miles per hour to km per hour
+    maxspeed
+        An OSM way "maxspeed" attribute value. Null values are expected to be
+        of type float (`numpy.nan`), and non-null values are strings.
+    agg
+        Aggregation function if `maxspeed` contains multiple values (default
+        is `numpy.mean`).
+    convert_mph
+        If True, convert miles per hour to kilometers per hour.
 
     Returns
     -------
-    clean_value : string
+    clean_value
+        Clean value resulting from `agg` function.
     """
     MILES_TO_KM = 1.60934
+    if not isinstance(maxspeed, str):
+        return None
+
     # regex adapted from OSM wiki
     pattern = "^([0-9][\\.,0-9]+?)(?:[ ]?(?:km/h|kmh|kph|mph|knots))?$"
     values = re.split(r"\|", maxspeed)  # creates a list even if it's a single value
@@ -401,33 +524,40 @@ def _clean_maxspeed(maxspeed, agg=np.mean, convert_mph=True):
         clean_values = []
         for value in values:
             match = re.match(pattern, value)
-            clean_value = float(match.group(1).replace(",", "."))
+            clean_value = float(match.group(1).replace(",", "."))  # type: ignore[union-attr]
             if convert_mph and "mph" in maxspeed.lower():
                 clean_value = clean_value * MILES_TO_KM
             clean_values.append(clean_value)
-        return agg(clean_values)
+        return float(agg(clean_values))
 
     except (ValueError, AttributeError):
         # if invalid input, return None
         return None
 
 
-def _collapse_multiple_maxspeed_values(value, agg):
+def _collapse_multiple_maxspeed_values(
+    value: str | float | list[str | float],
+    agg: Callable[[Any], Any],
+) -> float | str | None:
     """
     Collapse a list of maxspeed values to a single value.
 
+    Returns None if a ValueError is encountered.
+
     Parameters
     ----------
-    value : list or string
-        an OSM way maxspeed value, or a list of them
-    agg : function
-        the aggregation function to reduce the list to a single value
+    value
+        An OSM way "maxspeed" attribute value. Null values are expected to be
+        of type float (`numpy.nan`), and non-null values are strings.
+    agg
+        The aggregation function to reduce the list to a single value.
 
     Returns
     -------
-    agg_value : int
-        an integer representation of the aggregated value in the list,
-        converted to kph if original value was in mph.
+    collapsed
+        If `value` was a string or null, it is just returned directly.
+        Otherwise, the return is a float representation of the aggregated
+        value in the list (converted to kph if original value was in mph).
     """
     # if this isn't a list, just return it right back to the caller
     if not isinstance(value, list):
@@ -438,6 +568,10 @@ def _collapse_multiple_maxspeed_values(value, agg):
         # clean each value in list and convert to kph if it is mph then
         # return a single aggregated value
         values = [_clean_maxspeed(x) for x in value]
-        return int(agg(pd.Series(values).dropna()))
+        collapsed = float(agg(pd.Series(values).dropna()))
+        if pd.isna(collapsed):
+            return None
+        # otherwise
+        return collapsed  # noqa: TRY300
     except ValueError:
         return None

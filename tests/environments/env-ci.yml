@@ -14,7 +14,6 @@ dependencies:
   - shapely
 
   # extras
-  - folium
   - gdal
   - matplotlib
   - rasterio
@@ -22,12 +21,13 @@ dependencies:
   - scipy
 
   # testing
-  - hatch
+  - lxml
   - pre-commit
   - pytest
   - pytest-cov
-  - twine
+  - typeguard
 
   # docs
   - furo
   - sphinx=7
+  - sphinx-autodoc-typehints

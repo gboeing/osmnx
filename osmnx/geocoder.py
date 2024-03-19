@@ -6,38 +6,39 @@ details see https://wiki.openstreetmap.org/wiki/Elements and
 https://nominatim.org/.
 """
 
+from __future__ import annotations
+
 import logging as lg
 from collections import OrderedDict
-from warnings import warn
+from typing import Any
 
 import geopandas as gpd
 import pandas as pd
 
 from . import _nominatim
-from . import projection
 from . import settings
 from . import utils
 from ._errors import InsufficientResponseError
 
 
-def geocode(query):
+def geocode(query: str) -> tuple[float, float]:
     """
-    Geocode place names or addresses to (lat, lon) with the Nominatim API.
+    Geocode place names or addresses to `(lat, lon)` with the Nominatim API.
 
     This geocodes the query via the Nominatim "search" endpoint.
 
     Parameters
     ----------
-    query : string
-        the query string to geocode
+    query
+        The query string to geocode.
 
     Returns
     -------
-    point : tuple
-        the (lat, lon) coordinates returned by the geocoder
+    point
+        The `(lat, lon)` coordinates returned by the geocoder.
     """
     # define the parameters
-    params = OrderedDict()
+    params: OrderedDict[str, int | str] = OrderedDict()
     params["format"] = "json"
     params["limit"] = 1
     params["dedupe"] = 0  # prevent deduping to get precise number of results
@@ -49,15 +50,22 @@ def geocode(query):
         lat = float(response_json[0]["lat"])
         lon = float(response_json[0]["lon"])
         point = (lat, lon)
-        utils.log(f"Geocoded {query!r} to {point}")
+
+        msg = f"Geocoded {query!r} to {point}"
+        utils.log(msg, level=lg.INFO)
         return point
 
     # otherwise we got no results back
-    msg = f"Nominatim could not geocode query {query!r}"
+    msg = f"Nominatim could not geocode query {query!r}."
     raise InsufficientResponseError(msg)
 
 
-def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
+def geocode_to_gdf(
+    query: str | dict[str, str] | list[str | dict[str, str]],
+    *,
+    which_result: int | None | list[int | None] = None,
+    by_osmid: bool = False,
+) -> gpd.GeoDataFrame:
     """
     Retrieve OSM elements by place name or OSM ID with the Nominatim API.
 
@@ -74,115 +82,85 @@ def geocode_to_gdf(query, which_result=None, by_osmid=False, buffer_dist=None):
     or relation (R) in accordance with the Nominatim API format. For example,
     `query=["R2192363", "N240109189", "W427818536"]`.
 
-    If `query` is a list, then `which_result` must be either a single value or
-    a list with the same length as `query`. The queries you provide must be
+    If `query` is a list, then `which_result` must be either an int or a list
+    with the same length as `query`. The queries you provide must be
     resolvable to elements in the Nominatim database. The resulting
     GeoDataFrame's geometry column contains place boundaries if they exist.
 
     Parameters
     ----------
-    query : string or dict or list of strings/dicts
-        query string(s) or structured dict(s) to geocode
-    which_result : int
-        which search result to return. if None, auto-select the first
-        (Multi)Polygon or raise an error if OSM doesn't return one. to get
-        the top match regardless of geometry type, set which_result=1.
-        ignored if by_osmid=True.
-    by_osmid : bool
-        if True, treat query as an OSM ID lookup rather than text search
-    buffer_dist : float
-        deprecated, do not use
+    query
+        The query string(s) or structured dict(s) to geocode.
+    which_result
+        Which search result to return. If None, auto-select the first
+        (Multi)Polygon or raise an error if OSM doesn't return one. To get
+        the top match regardless of geometry type, set `which_result=1`.
+        Ignored if `by_osmid=True`.
+    by_osmid
+        If True, treat query as an OSM ID lookup rather than text search.
 
     Returns
     -------
-    gdf : geopandas.GeoDataFrame
-        a GeoDataFrame with one row for each query
+    gdf
+        GeoDataFrame with one row for each query result.
     """
-    if buffer_dist is not None:
-        warn(
-            "The buffer_dist argument has been deprecated and will be removed "
-            "in the v2.0.0 release. Buffer your results directly, if desired. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
-            FutureWarning,
-            stacklevel=2,
-        )
-
-    if not isinstance(query, (str, dict, list)):  # pragma: no cover
-        msg = "query must be a string or dict or list"
-        raise TypeError(msg)
-
-    # if caller passed a list of queries but a scalar which_result value, then
-    # turn which_result into a list with same length as query list
-    if isinstance(query, list) and (isinstance(which_result, int) or which_result is None):
-        which_result = [which_result] * len(query)
-
-    # turn query and which_result into lists if they're not already
-    if not isinstance(query, list):
-        query = [query]
-    if not isinstance(which_result, list):
-        which_result = [which_result]
+    if isinstance(query, list):
+        # if query is a list of queries but which_result is int/None, then
+        # turn which_result into a list with same length as query list
+        q_list = query
+        wr_list = which_result if isinstance(which_result, list) else [which_result] * len(query)
+    else:
+        # if query is not already a list, turn it into one
+        # if which_result was a list, take 0th element, otherwise make it list
+        q_list = [query]
+        wr_list = [which_result[0]] if isinstance(which_result, list) else [which_result]
 
     # ensure same length
-    if len(query) != len(which_result):  # pragma: no cover
-        msg = "which_result length must equal query length"
+    if len(q_list) != len(wr_list):  # pragma: no cover
+        msg = "`which_result` length must equal `query` length."
         raise ValueError(msg)
 
-    # ensure query type of each item
-    for q in query:
-        if not isinstance(q, (str, dict)):  # pragma: no cover
-            msg = "each query must be a dict or a string"
-            raise TypeError(msg)
+    # geocode each query, concat as GeoDataFrame rows, then set the CRS
+    results = (_geocode_query_to_gdf(q, wr, by_osmid) for q, wr in zip(q_list, wr_list))
+    gdf = pd.concat(results, ignore_index=True).set_crs(settings.default_crs)
 
-    # geocode each query and add to GeoDataFrame as a new row
-    gdf = gpd.GeoDataFrame()
-    for q, wr in zip(query, which_result):
-        gdf = pd.concat([gdf, _geocode_query_to_gdf(q, wr, by_osmid)])
-
-    # reset GeoDataFrame index and set its CRS
-    gdf = gdf.reset_index(drop=True)
-    gdf = gdf.set_crs(settings.default_crs)
-
-    # if buffer_dist was passed in, project the geometry to UTM, buffer it in
-    # meters, then project it back to lat-lon
-    if buffer_dist is not None and len(gdf) > 0:
-        gdf_utm = projection.project_gdf(gdf)
-        gdf_utm["geometry"] = gdf_utm["geometry"].buffer(buffer_dist)
-        gdf = projection.project_gdf(gdf_utm, to_latlong=True)
-        utils.log(f"Buffered GeoDataFrame to {buffer_dist} meters")
-
-    utils.log(f"Created GeoDataFrame with {len(gdf)} rows from {len(query)} queries")
+    msg = f"Created GeoDataFrame with {len(gdf)} rows from {len(q_list)} queries"
+    utils.log(msg, level=lg.INFO)
     return gdf
 
 
-def _geocode_query_to_gdf(query, which_result, by_osmid):
+def _geocode_query_to_gdf(
+    query: str | dict[str, str],
+    which_result: int | None,
+    by_osmid: bool,  # noqa: FBT001
+) -> gpd.GeoDataFrame:
     """
     Geocode a single place query to a GeoDataFrame.
 
     Parameters
     ----------
-    query : string or dict
-        query string or structured dict to geocode
-    which_result : int
-        which geocoding result to use. if None, auto-select the first
-        (Multi)Polygon or raise an error if OSM doesn't return one. to get
-        the top match regardless of geometry type, set which_result=1.
-        ignored if by_osmid=True.
-    by_osmid : bool
-        if True, handle query as an OSM ID for lookup rather than text search
+    query
+        Query string or structured dict to geocode.
+    which_result
+        Which search result to return. If None, auto-select the first
+        (Multi)Polygon or raise an error if OSM doesn't return one. To get
+        the top match regardless of geometry type, set `which_result=1`.
+        Ignored if `by_osmid=True`.
+    by_osmid
+        If True, treat query as an OSM ID lookup rather than text search.
 
     Returns
     -------
-    gdf : geopandas.GeoDataFrame
-        a GeoDataFrame with one row containing the result of geocoding
+    gdf
+        GeoDataFrame with one row containing the geocoding result.
     """
     limit = 50 if which_result is None else which_result
-
     results = _nominatim._download_nominatim_element(query, by_osmid=by_osmid, limit=limit)
 
     # choose the right result from the JSON response
-    if not results:
+    if len(results) == 0:
         # if no results were returned, raise error
-        msg = f"Nominatim geocoder returned 0 results for query {query!r}"
+        msg = f"Nominatim geocoder returned 0 results for query {query!r}."
         raise InsufficientResponseError(msg)
 
     if by_osmid:
@@ -191,7 +169,11 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
 
     elif which_result is None:
         # else, if which_result=None, auto-select the first (Multi)Polygon
-        result = _get_first_polygon(results, query)
+        try:
+            result = _get_first_polygon(results)
+        except TypeError as e:
+            msg = f"Nominatim did not geocode query {query!r} to a geometry of type (Multi)Polygon."
+            raise TypeError(msg) from e
 
     elif len(results) >= which_result:
         # else, if we got at least which_result results, choose that one
@@ -199,7 +181,7 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
 
     else:  # pragma: no cover
         # else, we got fewer results than which_result, raise error
-        msg = f"Nominatim returned {len(results)} result(s) but which_result={which_result}"
+        msg = f"Nominatim returned {len(results)} result(s) but `which_result={which_result}`."
         raise InsufficientResponseError(msg)
 
     # if we got a non (Multi)Polygon geometry type (like a point), log warning
@@ -233,27 +215,25 @@ def _geocode_query_to_gdf(query, which_result, by_osmid):
     return gdf
 
 
-def _get_first_polygon(results, query):
+def _get_first_polygon(results: list[dict[str, Any]]) -> dict[str, Any]:
     """
     Choose first result of geometry type (Multi)Polygon from list of results.
 
     Parameters
     ----------
-    results : list
-        list of results from _downloader._osm_place_download
-    query : str
-        the query string or structured dict that was geocoded
+    results
+        Results from the Nominatim API.
 
     Returns
     -------
-    result : dict
-        the chosen result
+    result
+        The chosen result.
     """
     polygon_types = {"Polygon", "MultiPolygon"}
+
     for result in results:
         if "geojson" in result and result["geojson"]["type"] in polygon_types:
             return result
 
-    # if we never found a polygon, throw an error
-    msg = f"Nominatim could not geocode query {query!r} to a geometry of type (Multi)Polygon"
-    raise TypeError(msg)
+    # if we never found a polygon, raise an error
+    raise TypeError

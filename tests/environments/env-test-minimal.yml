@@ -7,17 +7,16 @@ channels:
   - conda-forge
 
 dependencies:
-  # required dependencies pinned to minimum versions from /pyproject.toml
+  # required (pinned to min versions from /pyproject.toml)
   - geopandas=0.12
   - networkx=2.5
-  - numpy=1.20
+  - numpy=1.21
   - pandas=1.1
-  - python=3.8 # pin to minimum version from /pyproject.toml
+  - python=3.9
   - requests=2.27
   - shapely=2.0
 
-  # extras pinned to minimum versions from /pyproject.toml
-  - folium
+  # extras (pinned to min versions from /pyproject.toml)
   - gdal
   - matplotlib=3.5
   - rasterio=1.3
@@ -25,12 +24,13 @@ dependencies:
   - scipy=1.5
 
   # testing
-  - hatch
+  - lxml
   - pre-commit
   - pytest
   - pytest-cov
-  - twine
+  - typeguard
 
-  # docs
+  # docs (sphinx pinned to version from /docs/requirements.txt)
   - furo
-  - sphinx=7 # pin to version from /docs/requirements.txt
+  - sphinx=7
+  - sphinx-autodoc-typehints

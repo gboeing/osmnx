@@ -1,23 +1,26 @@
 """
 Download and create graphs from OpenStreetMap data.
 
-This module uses filters to query the Overpass API: you can either specify a
-built-in network type or provide your own custom filter with Overpass QL.
-
 Refer to the Getting Started guide for usage limitations.
 """
 
-import itertools
-from warnings import warn
+from __future__ import annotations
+
+import logging as lg
+from collections.abc import Iterable
+from itertools import groupby
+from pathlib import Path
+from typing import TYPE_CHECKING
+from typing import Any
 
 import networkx as nx
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
 
+from . import _osm_xml
 from . import _overpass
 from . import distance
 from . import geocoder
-from . import osm_xml
 from . import projection
 from . import settings
 from . import simplification
@@ -29,60 +32,58 @@ from ._errors import CacheOnlyInterruptError
 from ._errors import InsufficientResponseError
 from ._version import __version__
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+    from pathlib import Path
+
 
 def graph_from_bbox(
-    north=None,
-    south=None,
-    east=None,
-    west=None,
-    bbox=None,
-    network_type="all_private",
-    simplify=True,
-    retain_all=False,
-    truncate_by_edge=False,
-    clean_periphery=None,
-    custom_filter=None,
-):
+    bbox: tuple[float, float, float, float],
+    *,
+    network_type: str = "all_private",
+    simplify: bool = True,
+    retain_all: bool = False,
+    truncate_by_edge: bool = False,
+    custom_filter: str | None = None,
+) -> nx.MultiDiGraph:
     """
-    Download and create a graph within some bounding box.
+    Download and create a graph within a lat-lon bounding box.
 
-    You can use the `settings` module to retrieve a snapshot of historical OSM
-    data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
+    This function uses filters to query the Overpass API: you can either
+    specify a pre-defined `network_type` or provide your own `custom_filter`
+    with Overpass QL.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes. You can also use the `settings` module to retrieve a snapshot
+    of historical OSM data as of a certain date, or to configure the Overpass
+    server timeout, memory allocation, and other custom settings.
 
     Parameters
     ----------
-    north : float
-        deprecated, do not use
-    south : float
-        deprecated, do not use
-    east : float
-        deprecated, do not use
-    west : float
-        deprecated, do not use
-    bbox : tuple of floats
-        bounding box as (north, south, east, west)
-    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
-        what type of street network to get if custom_filter is None
-    simplify : bool
-        if True, simplify graph topology with the `simplify_graph` function
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    truncate_by_edge : bool
-        if True, retain nodes outside bounding box if at least one of node's
-        neighbors is within the bounding box
-    clean_periphery : bool
-        deprecated, do not use
-    custom_filter : string
-        a custom ways filter to be used instead of the network_type presets
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
-        in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bi-directional.
+    bbox
+        Bounding box as `(north, south, east, west)`. Coordinates should be in
+        unprojected latitude-longitude degrees (EPSG:4326).
+    network_type
+        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        What type of street network to retrieve if `custom_filter` is None.
+    simplify
+        If True, simplify graph topology via the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+    truncate_by_edge
+        If True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box.
+    custom_filter
+        A custom ways filter to be used instead of the `network_type` presets,
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
+        in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
 
     Notes
     -----
@@ -90,17 +91,8 @@ def graph_from_bbox(
     function to automatically make multiple requests: see that function's
     documentation for caveats.
     """
-    if not (north is None and south is None and east is None and west is None):
-        msg = (
-            "The `north`, `south`, `east`, and `west` parameters are deprecated and "
-            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
-        )
-        warn(msg, FutureWarning, stacklevel=2)
-        bbox = (north, south, east, west)
-
     # convert bounding box to a polygon
-    polygon = utils_geo.bbox_to_poly(bbox=bbox)
+    polygon = utils_geo.bbox_to_poly(bbox)
 
     # create graph using this polygon geometry
     G = graph_from_polygon(
@@ -109,64 +101,72 @@ def graph_from_bbox(
         simplify=simplify,
         retain_all=retain_all,
         truncate_by_edge=truncate_by_edge,
-        clean_periphery=clean_periphery,
         custom_filter=custom_filter,
     )
 
-    utils.log(f"graph_from_bbox returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
+    msg = f"graph_from_bbox returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
 def graph_from_point(
-    center_point,
-    dist=1000,
-    dist_type="bbox",
-    network_type="all_private",
-    simplify=True,
-    retain_all=False,
-    truncate_by_edge=False,
-    clean_periphery=None,
-    custom_filter=None,
-):
+    center_point: tuple[float, float],
+    dist: float,
+    *,
+    dist_type: str = "bbox",
+    network_type: str = "all_private",
+    simplify: bool = True,
+    retain_all: bool = False,
+    truncate_by_edge: bool = False,
+    custom_filter: str | None = None,
+) -> nx.MultiDiGraph:
     """
-    Download and create a graph within some distance of a (lat, lon) point.
+    Download and create a graph within some distance of a lat-lon point.
 
-    You can use the `settings` module to retrieve a snapshot of historical OSM
-    data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
+    This function uses filters to query the Overpass API: you can either
+    specify a pre-defined `network_type` or provide your own `custom_filter`
+    with Overpass QL.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes. You can also use the `settings` module to retrieve a snapshot
+    of historical OSM data as of a certain date, or to configure the Overpass
+    server timeout, memory allocation, and other custom settings.
 
     Parameters
     ----------
-    center_point : tuple
-        the (lat, lon) center point around which to construct the graph
-    dist : int
-        retain only those nodes within this many meters of the center of the
-        graph, with distance determined according to dist_type argument
-    dist_type : string {"network", "bbox"}
-        if "bbox", retain only those nodes within a bounding box of the
-        distance parameter. if "network", retain only those nodes within some
-        network distance from the center-most node.
-    network_type : string, {"all_private", "all", "bike", "drive", "drive_service", "walk"}
-        what type of street network to get if custom_filter is None
-    simplify : bool
-        if True, simplify graph topology with the `simplify_graph` function
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    truncate_by_edge : bool
-        if True, retain nodes outside bounding box if at least one of node's
-        neighbors is within the bounding box
-    clean_periphery : bool,
-        deprecated, do not use
-    custom_filter : string
-        a custom ways filter to be used instead of the network_type presets
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
-        in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bi-directional.
+    center_point
+        The `(lat, lon)` center point around which to construct the graph.
+        Coordinates should be in unprojected latitude-longitude degrees
+        (EPSG:4326).
+    dist
+        Retain only those nodes within this many meters of `center_point`,
+        measuring distance according to `dist_type`.
+    dist_type
+        {"bbox", "network"}
+        If "bbox", retain only those nodes within a bounding box of `dist`
+        length/width. If "network", retain only those nodes within `dist`
+        network distance of the nearest node to `center_point`.
+    network_type
+        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        What type of street network to retrieve if `custom_filter` is None.
+    simplify
+        If True, simplify graph topology with the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+    truncate_by_edge
+        If True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box.
+    custom_filter
+        A custom ways filter to be used instead of the `network_type` presets,
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
+        in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
 
     Notes
     -----
@@ -175,7 +175,7 @@ def graph_from_point(
     documentation for caveats.
     """
     if dist_type not in {"bbox", "network"}:  # pragma: no cover
-        msg = 'dist_type must be "bbox" or "network"'
+        msg = "`dist_type` must be 'bbox' or 'network'."
         raise ValueError(msg)
 
     # create bounding box from center point and distance in each direction
@@ -183,79 +183,81 @@ def graph_from_point(
 
     # create a graph from the bounding box
     G = graph_from_bbox(
-        bbox=bbox,
+        bbox,
         network_type=network_type,
         simplify=simplify,
         retain_all=retain_all,
         truncate_by_edge=truncate_by_edge,
-        clean_periphery=clean_periphery,
         custom_filter=custom_filter,
     )
 
     if dist_type == "network":
-        # if dist_type is network, find node in graph nearest to center point
-        # then truncate graph by network dist from it
-        node = distance.nearest_nodes(G, X=[center_point[1]], Y=[center_point[0]])[0]
-        G = truncate.truncate_graph_dist(G, node, max_dist=dist)
+        # find node nearest to center then truncate graph by dist from it
+        node = distance.nearest_nodes(G, X=center_point[1], Y=center_point[0])
+        G = truncate.truncate_graph_dist(G, node, dist)
 
-    utils.log(f"graph_from_point returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
+    msg = f"graph_from_point returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
 def graph_from_address(
-    address,
-    dist=1000,
-    dist_type="bbox",
-    network_type="all_private",
-    simplify=True,
-    retain_all=False,
-    truncate_by_edge=False,
-    return_coords=None,
-    clean_periphery=None,
-    custom_filter=None,
-):
+    address: str,
+    dist: float,
+    *,
+    dist_type: str = "bbox",
+    network_type: str = "all_private",
+    simplify: bool = True,
+    retain_all: bool = False,
+    truncate_by_edge: bool = False,
+    custom_filter: str | None = None,
+) -> nx.MultiDiGraph | tuple[nx.MultiDiGraph, tuple[float, float]]:
     """
     Download and create a graph within some distance of an address.
 
-    You can use the `settings` module to retrieve a snapshot of historical OSM
-    data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
+    This function uses filters to query the Overpass API: you can either
+    specify a pre-defined `network_type` or provide your own `custom_filter`
+    with Overpass QL.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes. You can also use the `settings` module to retrieve a snapshot
+    of historical OSM data as of a certain date, or to configure the Overpass
+    server timeout, memory allocation, and other custom settings.
 
     Parameters
     ----------
-    address : string
-        the address to geocode and use as the central point around which to
-        construct the graph
-    dist : int
-        retain only those nodes within this many meters of the center of the
-        graph
-    dist_type : string {"network", "bbox"}
-        if "bbox", retain only those nodes within a bounding box of the
-        distance parameter. if "network", retain only those nodes within some
-        network distance from the center-most node.
-    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
-        what type of street network to get if custom_filter is None
-    simplify : bool
-        if True, simplify graph topology with the `simplify_graph` function
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    truncate_by_edge : bool
-        if True, retain nodes outside bounding box if at least one of node's
-        neighbors is within the bounding box
-    return_coords : bool
-        deprecated, do not use
-    clean_periphery : bool
-        deprecated, do not use
-    custom_filter : string
-        a custom ways filter to be used instead of the network_type presets
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
-        in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bi-directional.
+    address
+        The address to geocode and use as the central point around which to
+        construct the graph.
+    dist
+        Retain only those nodes within this many meters of `center_point`,
+        measuring distance according to `dist_type`.
+    dist_type
+        {"network", "bbox"}
+        If "bbox", retain only those nodes within a bounding box of `dist`. If
+        "network", retain only those nodes within `dist` network distance from
+        the centermost node.
+    network_type
+        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        What type of street network to retrieve if `custom_filter` is None.
+    simplify
+        If True, simplify graph topology with the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+    truncate_by_edge
+        If True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box.
+    custom_filter
+        A custom ways filter to be used instead of the `network_type` presets,
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
+        in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional.
 
     Returns
     -------
-    networkx.MultiDiGraph or optionally (networkx.MultiDiGraph, (lat, lon))
+    G or (G, (lat, lon))
 
     Notes
     -----
@@ -263,101 +265,89 @@ def graph_from_address(
     function to automatically make multiple requests: see that function's
     documentation for caveats.
     """
-    if return_coords is None:
-        return_coords = False
-    else:
-        warn(
-            "The `return_coords` argument has been deprecated and will be removed in "
-            "the v2.0.0 release. Future behavior will be as though `return_coords=False`. "
-            "If you want the address's geocoded coordinates, use the `geocode` function. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
-            FutureWarning,
-            stacklevel=2,
-        )
     # geocode the address string to a (lat, lon) point
-    point = geocoder.geocode(query=address)
+    point = geocoder.geocode(address)
 
     # then create a graph from this point
     G = graph_from_point(
         point,
         dist,
-        dist_type,
+        dist_type=dist_type,
         network_type=network_type,
         simplify=simplify,
         retain_all=retain_all,
         truncate_by_edge=truncate_by_edge,
-        clean_periphery=clean_periphery,
         custom_filter=custom_filter,
     )
-    utils.log(f"graph_from_address returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
 
-    if return_coords:
-        return G, point
-
-    # otherwise
+    msg = f"graph_from_address returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
 def graph_from_place(
-    query,
-    network_type="all_private",
-    simplify=True,
-    retain_all=False,
-    truncate_by_edge=False,
-    which_result=None,
-    buffer_dist=None,
-    clean_periphery=None,
-    custom_filter=None,
-):
+    query: str | dict[str, str] | list[str | dict[str, str]],
+    *,
+    network_type: str = "all_private",
+    simplify: bool = True,
+    retain_all: bool = False,
+    truncate_by_edge: bool = False,
+    which_result: int | None | list[int | None] = None,
+    custom_filter: str | None = None,
+) -> nx.MultiDiGraph:
     """
     Download and create a graph within the boundaries of some place(s).
 
     The query must be geocodable and OSM must have polygon boundaries for the
     geocode result. If OSM does not have a polygon for this place, you can
-    instead get its street network using the graph_from_address function,
+    instead get its street network using the `graph_from_address` function,
     which geocodes the place name to a point and gets the network within some
     distance of that point.
 
     If OSM does have polygon boundaries for this place but you're not finding
     it, try to vary the query string, pass in a structured query dict, or vary
-    the which_result argument to use a different geocode result. If you know
+    the `which_result` argument to use a different geocode result. If you know
     the OSM ID of the place, you can retrieve its boundary polygon using the
-    geocode_to_gdf function, then pass it to the graph_from_polygon function.
+    `geocode_to_gdf` function, then pass it to the `features_from_polygon`
+    function.
 
-    You can use the `settings` module to retrieve a snapshot of historical OSM
-    data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
+    This function uses filters to query the Overpass API: you can either
+    specify a pre-defined `network_type` or provide your own `custom_filter`
+    with Overpass QL.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes. You can also use the `settings` module to retrieve a snapshot
+    of historical OSM data as of a certain date, or to configure the Overpass
+    server timeout, memory allocation, and other custom settings.
 
     Parameters
     ----------
-    query : string or dict or list
-        the query or queries to geocode to get place boundary polygon(s)
-    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
-        what type of street network to get if custom_filter is None
-    simplify : bool
-        if True, simplify graph topology with the `simplify_graph` function
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    truncate_by_edge : bool
-        if True, retain nodes outside boundary polygon if at least one of
-        node's neighbors is within the polygon
-    which_result : int
+    query
+        The query or queries to geocode to retrieve place boundary polygon(s).
+    network_type
+        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        What type of street network to retrieve if `custom_filter` is None.
+    simplify
+        If True, simplify graph topology with the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+    truncate_by_edge
+        If True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box.
+    which_result
         which geocoding result to use. if None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one.
-    buffer_dist : float
-        deprecated, do not use
-    clean_periphery : bool
-        deprecated, do not use
-    custom_filter : string
-        a custom ways filter to be used instead of the network_type presets
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
-        in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bi-directional.
+    custom_filter
+        A custom ways filter to be used instead of the `network_type` presets,
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
+        in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
 
     Notes
     -----
@@ -365,32 +355,12 @@ def graph_from_place(
     function to automatically make multiple requests: see that function's
     documentation for caveats.
     """
-    if buffer_dist is not None:
-        warn(
-            "The buffer_dist argument has been deprecated and will be removed "
-            "in the v2.0.0 release. Buffer your query area directly, if desired. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
-            FutureWarning,
-            stacklevel=2,
-        )
-
-    # create a GeoDataFrame with the spatial boundaries of the place(s)
-    if isinstance(query, (str, dict)):
-        # if it is a string (place name) or dict (structured place query),
-        # then it is a single place
-        gdf_place = geocoder.geocode_to_gdf(
-            query, which_result=which_result, buffer_dist=buffer_dist
-        )
-    elif isinstance(query, list):
-        # if it is a list, it contains multiple places to get
-        gdf_place = geocoder.geocode_to_gdf(query, buffer_dist=buffer_dist)
-    else:  # pragma: no cover
-        msg = "query must be dict, string, or list of strings"
-        raise TypeError(msg)
-
-    # extract the geometry from the GeoDataFrame to use in API query
+    # extract the geometry from the GeoDataFrame to use in query
+    gdf_place = geocoder.geocode_to_gdf(query, which_result=which_result)
     polygon = gdf_place["geometry"].unary_union
-    utils.log("Constructed place geometry polygon(s) to query API")
+
+    msg = "Constructed place geometry polygon(s) to query Overpass"
+    utils.log(msg, level=lg.INFO)
 
     # create graph using this polygon(s) geometry
     G = graph_from_polygon(
@@ -399,56 +369,61 @@ def graph_from_place(
         simplify=simplify,
         retain_all=retain_all,
         truncate_by_edge=truncate_by_edge,
-        clean_periphery=clean_periphery,
         custom_filter=custom_filter,
     )
 
-    utils.log(f"graph_from_place returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
+    msg = f"graph_from_place returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
 def graph_from_polygon(
-    polygon,
-    network_type="all_private",
-    simplify=True,
-    retain_all=False,
-    truncate_by_edge=False,
-    clean_periphery=None,
-    custom_filter=None,
-):
+    polygon: Polygon | MultiPolygon,
+    *,
+    network_type: str = "all_private",
+    simplify: bool = True,
+    retain_all: bool = False,
+    truncate_by_edge: bool = False,
+    custom_filter: str | None = None,
+) -> nx.MultiDiGraph:
     """
-    Download and create a graph within the boundaries of a (multi)polygon.
+    Download and create a graph within the boundaries of a (Multi)Polygon.
 
-    You can use the `settings` module to retrieve a snapshot of historical OSM
-    data as of a certain date, or to configure the Overpass server timeout,
-    memory allocation, and other custom settings.
+    This function uses filters to query the Overpass API: you can either
+    specify a pre-defined `network_type` or provide your own `custom_filter`
+    with Overpass QL.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes. You can also use the `settings` module to retrieve a snapshot
+    of historical OSM data as of a certain date, or to configure the Overpass
+    server timeout, memory allocation, and other custom settings.
 
     Parameters
     ----------
-    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the shape to get network data within. coordinates should be in
-        unprojected latitude-longitude degrees (EPSG:4326).
-    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
-        what type of street network to get if custom_filter is None
-    simplify : bool
-        if True, simplify graph topology with the `simplify_graph` function
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    truncate_by_edge : bool
-        if True, retain nodes outside boundary polygon if at least one of
-        node's neighbors is within the polygon
-    clean_periphery : bool
-        deprecated, do not use
-    custom_filter : string
-        a custom ways filter to be used instead of the network_type presets
-        e.g., '["power"~"line"]' or '["highway"~"motorway|trunk"]'. Also pass
-        in a network_type that is in settings.bidirectional_network_types if
-        you want graph to be fully bi-directional.
+    polygon
+        The geometry within which to construct the graph. Coordinates should
+        be in unprojected latitude-longitude degrees (EPSG:4326).
+    network_type
+        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        What type of street network to retrieve if `custom_filter` is None.
+    simplify
+        If True, simplify graph topology with the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+    truncate_by_edge
+        If True, retain nodes outside bounding box if at least one of node's
+        neighbors is within the bounding box.
+    custom_filter
+        A custom ways filter to be used instead of the `network_type` presets,
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
+        in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
 
     Notes
     -----
@@ -456,21 +431,10 @@ def graph_from_polygon(
     function to automatically make multiple requests: see that function's
     documentation for caveats.
     """
-    if clean_periphery is None:
-        clean_periphery = True
-    else:
-        warn(
-            "The clean_periphery argument has been deprecated and will be removed in "
-            "the v2.0.0 release. Future behavior will be as though clean_periphery=True. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
-            FutureWarning,
-            stacklevel=2,
-        )
-
     # verify that the geometry is valid and is a shapely Polygon/MultiPolygon
     # before proceeding
     if not polygon.is_valid:  # pragma: no cover
-        msg = "The geometry to query within is invalid"
+        msg = "The geometry of `polygon` is invalid."
         raise ValueError(msg)
     if not isinstance(polygon, (Polygon, MultiPolygon)):  # pragma: no cover
         msg = (
@@ -481,124 +445,119 @@ def graph_from_polygon(
         )
         raise TypeError(msg)
 
-    if clean_periphery:
-        # create a new buffered polygon 0.5km around the desired one
-        buffer_dist = 500
-        poly_proj, crs_utm = projection.project_geometry(polygon)
-        poly_proj_buff = poly_proj.buffer(buffer_dist)
-        poly_buff, _ = projection.project_geometry(poly_proj_buff, crs=crs_utm, to_latlong=True)
+    # create a new buffered polygon 0.5km around the desired one
+    poly_proj, crs_utm = projection.project_geometry(polygon)
+    poly_proj_buff = poly_proj.buffer(500)
+    poly_buff, _ = projection.project_geometry(poly_proj_buff, crs=crs_utm, to_latlong=True)
 
-        # download the network data from OSM within buffered polygon
-        response_jsons = _overpass._download_overpass_network(
-            poly_buff, network_type, custom_filter
-        )
+    # download the network data from OSM within buffered polygon
+    response_jsons = _overpass._download_overpass_network(poly_buff, network_type, custom_filter)
 
-        # create buffered graph from the downloaded data
-        bidirectional = network_type in settings.bidirectional_network_types
-        G_buff = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
+    # create buffered graph from the downloaded data
+    bidirectional = network_type in settings.bidirectional_network_types
+    G_buff = _create_graph(response_jsons, bidirectional)
 
-        # truncate buffered graph to the buffered polygon and retain_all for
-        # now. needed because overpass returns entire ways that also include
-        # nodes outside the poly if the way (that is, a way with a single OSM
-        # ID) has a node inside the poly at some point.
-        G_buff = truncate.truncate_graph_polygon(G_buff, poly_buff, True, truncate_by_edge)
+    # truncate buffered graph to the buffered polygon and retain_all for
+    # now. needed because overpass returns entire ways that also include
+    # nodes outside the poly if the way (that is, a way with a single OSM
+    # ID) has a node inside the poly at some point.
+    G_buff = truncate.truncate_graph_polygon(G_buff, poly_buff, truncate_by_edge=truncate_by_edge)
 
-        # simplify the graph topology
-        if simplify:
-            G_buff = simplification.simplify_graph(G_buff)
+    # keep only the largest weakly connected component if retain_all is False
+    if not retain_all:
+        G_buff = truncate.largest_component(G_buff, strongly=False)
 
-        # truncate graph by original polygon to return graph within polygon
-        # caller wants. don't simplify again: this allows us to retain
-        # intersections along the street that may now only connect 2 street
-        # segments in the network, but in reality also connect to an
-        # intersection just outside the polygon
-        G = truncate.truncate_graph_polygon(G_buff, polygon, retain_all, truncate_by_edge)
+    # simplify the graph topology
+    if simplify:
+        G_buff = simplification.simplify_graph(G_buff)
 
-        # count how many physical streets in buffered graph connect to each
-        # intersection in un-buffered graph, to retain true counts for each
-        # intersection, even if some of its neighbors are outside the polygon
-        spn = stats.count_streets_per_node(G_buff, nodes=G.nodes)
-        nx.set_node_attributes(G, values=spn, name="street_count")
+    # truncate graph by original polygon to return graph within polygon
+    # caller wants. don't simplify again: this allows us to retain
+    # intersections along the street that may now only connect 2 street
+    # segments in the network, but in reality also connect to an
+    # intersection just outside the polygon
+    G = truncate.truncate_graph_polygon(G_buff, polygon, truncate_by_edge=truncate_by_edge)
 
-    # if clean_periphery=False, just use the polygon as provided
-    else:
-        # download the network data from OSM
-        response_jsons = _overpass._download_overpass_network(polygon, network_type, custom_filter)
+    # keep only the largest weakly connected component if retain_all is False
+    # we're doing this again in case the last truncate disconnected anything
+    # on the periphery
+    if not retain_all:
+        G = truncate.largest_component(G, strongly=False)
 
-        # create graph from the downloaded data
-        bidirectional = network_type in settings.bidirectional_network_types
-        G = _create_graph(response_jsons, retain_all=True, bidirectional=bidirectional)
+    # count how many physical streets in buffered graph connect to each
+    # intersection in un-buffered graph, to retain true counts for each
+    # intersection, even if some of its neighbors are outside the polygon
+    spn = stats.count_streets_per_node(G_buff, nodes=G.nodes)
+    nx.set_node_attributes(G, values=spn, name="street_count")
 
-        # truncate the graph to the extent of the polygon
-        G = truncate.truncate_graph_polygon(G, polygon, retain_all, truncate_by_edge)
-
-        # simplify the graph topology after truncation. don't truncate after
-        # simplifying or you may have simplified out to an endpoint beyond the
-        # truncation distance, which would strip out the entire edge
-        if simplify:
-            G = simplification.simplify_graph(G)
-
-        # count how many physical streets connect to each intersection/deadend
-        # note this will be somewhat inaccurate due to periphery effects, so
-        # it's best to parameterize function with clean_periphery=True
-        spn = stats.count_streets_per_node(G)
-        nx.set_node_attributes(G, values=spn, name="street_count")
-        warn(
-            "the graph-level street_count attribute will likely be inaccurate "
-            "when you set clean_periphery=False",
-            stacklevel=2,
-        )
-
-    utils.log(f"graph_from_polygon returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
+    msg = f"graph_from_polygon returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
 def graph_from_xml(
-    filepath, bidirectional=False, simplify=True, retain_all=False, encoding="utf-8"
-):
+    filepath: str | Path,
+    *,
+    bidirectional: bool = False,
+    simplify: bool = True,
+    retain_all: bool = False,
+    encoding: str = "utf-8",
+) -> nx.MultiDiGraph:
     """
-    Create a graph from data in a .osm formatted XML file.
+    Create a graph from data in an OSM XML file.
 
-    Do not load an XML file generated by OSMnx: this use case is not supported
-    and may not behave as expected. To save/load graphs to/from disk for later
-    use in OSMnx, use the `io.save_graphml` and `io.load_graphml` functions
-    instead.
+    Do not load an XML file previously generated by OSMnx: this use case is
+    not supported and may not behave as expected. To save/load graphs to/from
+    disk for later use in OSMnx, use the `io.save_graphml` and
+    `io.load_graphml` functions instead.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes.
 
     Parameters
     ----------
-    filepath : string or pathlib.Path
-        path to file containing OSM XML data
-    bidirectional : bool
-        if True, create bi-directional edges for one-way streets
-    simplify : bool
-        if True, simplify graph topology with the `simplify_graph` function
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    encoding : string
-        the XML file's character encoding
+    filepath
+        Path to file containing OSM XML data.
+    bidirectional
+        If True, create bidirectional edges for one-way streets.
+    simplify
+        If True, simplify graph topology with the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+    encoding
+        The OSM XML file's character encoding.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [osm_xml._overpass_json_from_file(filepath, encoding)]
+    response_jsons = [_osm_xml._overpass_json_from_xml(filepath, encoding)]
 
     # create graph using this response JSON
-    G = _create_graph(response_jsons, bidirectional=bidirectional, retain_all=retain_all)
+    G = _create_graph(response_jsons, bidirectional)
+
+    # keep only the largest weakly connected component if retain_all is False
+    if not retain_all:
+        G = truncate.largest_component(G, strongly=False)
 
     # simplify the graph topology as the last step
     if simplify:
         G = simplification.simplify_graph(G)
 
-    utils.log(f"graph_from_xml returned graph with {len(G):,} nodes and {len(G.edges):,} edges")
+    msg = f"graph_from_xml returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
-def _create_graph(response_jsons, retain_all=False, bidirectional=False):
+def _create_graph(
+    response_jsons: Iterable[dict[str, Any]],
+    bidirectional: bool,  # noqa: FBT001
+) -> nx.MultiDiGraph:
     """
-    Create a networkx MultiDiGraph from Overpass API responses.
+    Create a NetworkX MultiDiGraph from Overpass API responses.
 
     Adds length attributes in meters (great-circle distance between endpoints)
     to all of the graph's (pre-simplified, straight-line) edges via the
@@ -606,23 +565,24 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
 
     Parameters
     ----------
-    response_jsons : iterable
-        iterable of dicts of JSON responses from from the Overpass API
-    retain_all : bool
-        if True, return the entire graph even if it is not connected.
-        otherwise, retain only the largest weakly connected component.
-    bidirectional : bool
-        if True, create bi-directional edges for one-way streets
+    response_jsons
+        Iterable of JSON responses from the Overpass API.
+    retain_all
+        If True, return the entire graph even if it is not connected.
+        Otherwise, retain only the largest weakly connected component.
+    bidirectional
+        If True, create bidirectional edges for one-way streets.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
-    response_count = 0
-    nodes = {}
-    paths = {}
+    # each dict's keys are OSM IDs and values are dicts of attributes
+    nodes: dict[int, dict[str, Any]] = {}
+    paths: dict[int, dict[str, Any]] = {}
 
     # consume response_jsons generator to download data from server
+    response_count = 0
     for response_json in response_jsons:
         response_count += 1
 
@@ -635,10 +595,11 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
         nodes.update(nodes_temp)
         paths.update(paths_temp)
 
-    utils.log(f"Retrieved all data from API in {response_count} request(s)")
+    msg = f"Retrieved all data from API in {response_count} request(s)"
+    utils.log(msg, level=lg.INFO)
     if settings.cache_only_mode:  # pragma: no cover
         # after consuming all response_jsons in loop, raise exception to catch
-        msg = "Interrupted because `settings.cache_only_mode=True`"
+        msg = "Interrupted because `settings.cache_only_mode=True`."
         raise CacheOnlyInterruptError(msg)
 
     # ensure we got some node/way data back from the server request(s)
@@ -655,15 +616,13 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     G = nx.MultiDiGraph(**metadata)
 
     # add each OSM node and way (a path of edges) to the graph
-    utils.log(f"Creating graph from {len(nodes):,} OSM nodes and {len(paths):,} OSM ways...")
+    msg = f"Creating graph from {len(nodes):,} OSM nodes and {len(paths):,} OSM ways..."
+    utils.log(msg, level=lg.INFO)
     G.add_nodes_from(nodes.items())
     _add_paths(G, paths.values(), bidirectional)
 
-    # retain only the largest connected component if retain_all=False
-    if not retain_all:
-        G = truncate.largest_component(G)
-
-    utils.log(f"Created graph with {len(G):,} nodes and {len(G.edges):,} edges")
+    msg = f"Created graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
 
     # add length (great-circle distance between nodes) attribute to each edge
     if len(G.edges) > 0:
@@ -672,18 +631,18 @@ def _create_graph(response_jsons, retain_all=False, bidirectional=False):
     return G
 
 
-def _convert_node(element):
+def _convert_node(element: dict[str, Any]) -> dict[str, Any]:
     """
-    Convert an OSM node element into the format for a networkx node.
+    Convert an OSM node element into the format for a NetworkX node.
 
     Parameters
     ----------
-    element : dict
-        an OSM node element
+    element
+        OSM element of type "node".
 
     Returns
     -------
-    node : dict
+    node
     """
     node = {"y": element["lat"], "x": element["lon"]}
     if "tags" in element:
@@ -693,23 +652,23 @@ def _convert_node(element):
     return node
 
 
-def _convert_path(element):
+def _convert_path(element: dict[str, Any]) -> dict[str, Any]:
     """
-    Convert an OSM way element into the format for a networkx path.
+    Convert an OSM way element into the format for a NetworkX path.
 
     Parameters
     ----------
-    element : dict
-        an OSM way element
+    element
+        OSM element of type "way".
 
     Returns
     -------
-    path : dict
+    path
     """
     path = {"osmid": element["id"]}
 
     # remove any consecutive duplicate elements in the list of nodes
-    path["nodes"] = [group[0] for group in itertools.groupby(element["nodes"])]
+    path["nodes"] = [group[0] for group in groupby(element["nodes"])]
 
     if "tags" in element:
         for useful_tag in settings.useful_tags_way:
@@ -718,19 +677,21 @@ def _convert_path(element):
     return path
 
 
-def _parse_nodes_paths(response_json):
+def _parse_nodes_paths(
+    response_json: dict[str, Any],
+) -> tuple[dict[int, dict[str, Any]], dict[int, dict[str, Any]]]:
     """
     Construct dicts of nodes and paths from an Overpass response.
 
     Parameters
     ----------
-    response_json : dict
-        JSON response from the Overpass API
+    response_json
+        JSON response from the Overpass API.
 
     Returns
     -------
-    nodes, paths : tuple of dicts
-        dicts' keys = osmid and values = dict of attributes
+    nodes, paths
+        Each dict's keys are OSM IDs and values are dicts of attributes.
     """
     nodes = {}
     paths = {}
@@ -743,22 +704,22 @@ def _parse_nodes_paths(response_json):
     return nodes, paths
 
 
-def _is_path_one_way(path, bidirectional, oneway_values):
+def _is_path_one_way(attrs: dict[str, Any], bidirectional: bool, oneway_values: set[str]) -> bool:  # noqa: FBT001
     """
     Determine if a path of nodes allows travel in only one direction.
 
     Parameters
     ----------
-    path : dict
-        a path's `tag:value` attribute data
-    bidirectional : bool
-        whether this is a bi-directional network type
-    oneway_values : set
-        the values OSM uses in its 'oneway' tag to denote True
+    attrs
+        A path's `tag:value` attribute data.
+    bidirectional
+        Whether this is a bidirectional network type.
+    oneway_values
+        The values OSM uses in its "oneway" tag to denote True.
 
     Returns
     -------
-    bool
+    is_one_way
     """
     # rule 1
     if settings.all_oneway:
@@ -767,22 +728,22 @@ def _is_path_one_way(path, bidirectional, oneway_values):
 
     # rule 2
     if bidirectional:
-        # if this is a bi-directional network type, then nothing in it is
+        # if this is a bidirectional network type, then nothing in it is
         # considered one-way. eg, if this is a walking network, this may very
         # well be a one-way street (as cars/bikes go), but in a walking-only
-        # network it is a bi-directional edge (you can walk both directions on
+        # network it is a bidirectional edge (you can walk both directions on
         # a one-way street). so we will add this path (in both directions) to
         # the graph and set its oneway attribute to False.
         return False
 
     # rule 3
-    if "oneway" in path and path["oneway"] in oneway_values:
-        # if this path is tagged as one-way and if it is not a bi-directional
+    if "oneway" in attrs and attrs["oneway"] in oneway_values:
+        # if this path is tagged as one-way and if it is not a bidirectional
         # network type then we'll add the path in one direction only
         return True
 
     # rule 4
-    if "junction" in path and path["junction"] == "roundabout":
+    if "junction" in attrs and attrs["junction"] == "roundabout":
         # roundabouts are also one-way but are not explicitly tagged as such
         return True
 
@@ -790,37 +751,41 @@ def _is_path_one_way(path, bidirectional, oneway_values):
     return False
 
 
-def _is_path_reversed(path, reversed_values):
+def _is_path_reversed(attrs: dict[str, Any], reversed_values: set[str]) -> bool:
     """
     Determine if the order of nodes in a path should be reversed.
 
     Parameters
     ----------
-    path : dict
-        a path's `tag:value` attribute data
-    reversed_values : set
-        the values OSM uses in its 'oneway' tag to denote travel can only
-        occur in the opposite direction of the node order
+    attrs
+        A path's `tag:value` attribute data.
+    reversed_values
+        The values OSM uses in its 'oneway' tag to denote travel can only
+        occur in the opposite direction of the node order.
 
     Returns
     -------
-    bool
+    is_reversed
     """
-    return "oneway" in path and path["oneway"] in reversed_values
+    return "oneway" in attrs and attrs["oneway"] in reversed_values
 
 
-def _add_paths(G, paths, bidirectional=False):
+def _add_paths(
+    G: nx.MultiDiGraph,
+    paths: Iterable[dict[str, Any]],
+    bidirectional: bool,  # noqa: FBT001
+) -> None:
     """
-    Add a list of paths to the graph as edges.
+    Add OSM paths to the graph as edges.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        graph to add paths to
-    paths : list
-        list of paths' `tag:value` attribute data dicts
-    bidirectional : bool
-        if True, create bi-directional edges for one-way streets
+    G
+        The graph to add paths to.
+    paths
+        Iterable of paths' `tag:value` attribute data dicts.
+    bidirectional
+        If True, create bidirectional edges for one-way streets.
 
     Returns
     -------

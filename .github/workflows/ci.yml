@@ -4,9 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, v2]
   schedule:
-    - cron: "0 6 * * 1" # Every Monday at 06:00 UTC
+    - cron: "0 5 * * 1" # every monday at 05:00 UTC
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
         os: [ubuntu-latest]
 
     defaults:
@@ -43,14 +43,16 @@ jobs:
           conda list
           conda info --all
 
-      - name: Lint code
+      - name: Run pre-commit checks
         run: SKIP=no-commit-to-branch pre-commit run --all-files
 
       - name: Test docs
-        run: make -C ./docs html
+        run: make -C ./docs html SPHINXOPTS="-E -W --keep-going"
 
-      - name: Test code
-        run: pytest --cov=./osmnx --cov-report=xml --cov-report=term-missing --verbose
+      - name: Test code and coverage
+        run: pytest --verbose --maxfail=1 --typeguard-packages=osmnx --cov=osmnx --cov-report=xml
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
