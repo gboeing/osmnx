@@ -23,10 +23,11 @@ from xml.sax.handler import ContentHandler
 import networkx as nx
 import pandas as pd
 
+from . import convert
 from . import projection
 from . import settings
+from . import truncate
 from . import utils
-from . import utils_graph
 from ._errors import GraphSimplificationError
 from ._version import __version__ as osmnx_version
 
@@ -190,6 +191,15 @@ def _save_graph_xml(
         msg = "Make sure graph was created with `ox.settings.all_oneway=True` to save as OSM XML."
         warn(msg, category=UserWarning, stacklevel=2)
 
+    # warn user if graph is projected
+    if projection.is_projected(G.graph["crs"]):
+        msg = (
+            "Graph should be unprojected to save as OSM XML: the existing "
+            "projected x-y coordinates will be saved as lat-lon node attributes. "
+            "Project your graph back to lat-lon to avoid this."
+        )
+        warn(msg, category=UserWarning, stacklevel=2)
+
     # raise error if graph has been simplified
     if G.graph.get("simplified", False):
         msg = "Graph must be unsimplified to save as OSM XML."
@@ -200,7 +210,7 @@ def _save_graph_xml(
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
     # convert graph to node/edge gdfs and create dict of spatial bounds
-    gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G, fill_edge_geometry=False)
+    gdf_nodes, gdf_edges = convert.graph_to_gdfs(G, fill_edge_geometry=False)
     coords = [str(round(c, PRECISION)) for c in gdf_nodes.unary_union.bounds]
     bounds = dict(zip(["minlon", "minlat", "maxlon", "maxlat"], coords))
 
@@ -211,18 +221,6 @@ def _save_graph_xml(
                 gdf[col] = value
             else:
                 gdf[col] = gdf[col].fillna(value)
-
-    # warn user if graph is projected then remove lat/lon gdf_nodes columns if
-    # they exist, as x/y cols will be saved as lat/lon node attributes instead
-    if projection.is_projected(G.graph["crs"]):
-        msg = (
-            "Graph should be unprojected: the existing lat-lon node attributes will "
-            "be discarded and the projected x-y coordinates will be saved as lat-lon "
-            "node attributes instead. Project your graph back to lat-lon to avoid this."
-        )
-        warn(msg, category=UserWarning, stacklevel=2)
-    for col in set(gdf_nodes.columns) & {"lat", "lon"}:
-        gdf_nodes = gdf_nodes.drop(columns=[col])
 
     # transform nodes gdf to meet OSM XML spec
     # 1) reset index (osmid) then rename osmid, x, and y columns
@@ -279,7 +277,12 @@ def _add_nodes_xml(
         node_element = SubElement(parent, "node", attrib=attrs)
 
         # add each node tag dict as its own SubElement of the node SubElement
-        tags = ({"k": k, "v": str(node[k])} for k in node_tags & node.keys() if pd.notna(node[k]))
+        # for vals that are non-null (or list if node consolidation was done)
+        tags = (
+            {"k": k, "v": str(node[k])}
+            for k in node_tags & node.keys()
+            if isinstance(node[k], list) or pd.notna(node[k])
+        )
         for tag in tags:
             _ = SubElement(node_element, "tag", attrib=tag)
 
@@ -412,7 +415,7 @@ def _sort_nodes(G: nx.MultiDiGraph, osmid: int) -> list[int]:
             # note this is destructive and will be missing in the saved data.
             G_ = G.copy()
             G_.remove_edges_from(nx.find_cycle(G_))
-            G_ = utils_graph.remove_isolated_nodes(G_)
+            G_ = truncate.remove_isolated_nodes(G_)
             ordered_nodes = _sort_nodes(G_, osmid)
             msg = f"Had to remove a cycle from way {str(osmid)!r} for topological sort"
             utils.log(msg, level=lg.WARNING)

@@ -13,9 +13,9 @@ import numpy.typing as npt
 from shapely.geometry import Point
 from shapely.strtree import STRtree
 
+from . import convert
 from . import projection
 from . import utils
-from . import utils_graph
 
 # scipy is optional dependency for projected nearest-neighbor search
 try:
@@ -350,7 +350,7 @@ def nearest_nodes(
         msg = "`X` and `Y` cannot contain nulls."
         raise ValueError(msg)
 
-    nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
+    nodes = convert.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
     nn_array: npt.NDArray[np.int64]
     dist_array: npt.NDArray[np.float64]
 
@@ -502,7 +502,7 @@ def nearest_edges(
     if np.isnan(X_arr).any() or np.isnan(Y_arr).any():  # pragma: no cover
         msg = "`X` and `Y` cannot contain nulls."
         raise ValueError(msg)
-    geoms = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
+    geoms = convert.graph_to_gdfs(G, nodes=False)["geometry"]
     ne_array: npt.NDArray[np.object_]  # array of tuple[int, int, int]
     dist_array: npt.NDArray[np.float64]
 

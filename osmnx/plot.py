@@ -16,11 +16,11 @@ import numpy as np
 import pandas as pd
 
 from . import bearing
+from . import convert
 from . import projection
 from . import settings
 from . import utils
 from . import utils_geo
-from . import utils_graph
 
 if TYPE_CHECKING:
     import geopandas as gpd
@@ -252,12 +252,12 @@ def plot_graph(  # noqa: PLR0913
 
     if max_edge_lw > 0:
         # plot the edges' geometries
-        gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)["geometry"]
+        gdf_edges = convert.graph_to_gdfs(G, nodes=False)["geometry"]
         ax = gdf_edges.plot(ax=ax, color=edge_color, lw=edge_linewidth, alpha=edge_alpha, zorder=1)
 
     if max_node_size > 0:
         # scatter plot the nodes' x/y coordinates
-        gdf_nodes = utils_graph.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
+        gdf_nodes = convert.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
         ax.scatter(  # type: ignore[union-attr]
             x=gdf_nodes["x"],
             y=gdf_nodes["y"],
@@ -510,7 +510,7 @@ def plot_figure_ground(
         }
 
     # we need an undirected graph to find every edge incident on a node
-    Gu = utils_graph.get_undirected(G)
+    Gu = convert.to_undirected(G)
 
     # for each edge, get a linewidth according to street type
     edge_linewidths = []
@@ -553,7 +553,7 @@ def plot_figure_ground(
     node_sizes: list[float] | float = [node_widths[node] for node in Gu.nodes]
 
     # define the view extents of the plotting figure
-    node_geoms = utils_graph.graph_to_gdfs(Gu, edges=False, node_geometry=True).unary_union
+    node_geoms = convert.graph_to_gdfs(Gu, edges=False, node_geometry=True).unary_union
     lonlat_point = node_geoms.centroid.coords[0]
     latlon_point = tuple(reversed(lonlat_point))
     bbox = utils_geo.bbox_from_point(latlon_point, dist=dist, project_utm=False)
@@ -664,7 +664,7 @@ def plot_footprints(  # noqa: PLR0913
 
 
 def plot_orientation(  # noqa: PLR0913
-    Gu: nx.MultiGraph,
+    G: nx.MultiGraph | nx.MultiDiGraph,
     *,
     num_bins: int = 36,
     min_length: float = 0,
@@ -682,9 +682,12 @@ def plot_orientation(  # noqa: PLR0913
     xtick_font: dict[str, Any] | None = None,
 ) -> tuple[Figure, PolarAxes]:
     """
-    Plot a polar histogram of a spatial network's bidirectional edge bearings.
+    Plot a polar histogram of a spatial network's edge bearings.
 
-    Ignores self-loop edges as their bearings are undefined. See also the
+    Ignores self-loop edges as their bearings are undefined. If `G` is a
+    MultiGraph, all edge bearings will be bidirectional (ie, two reciprocal
+    bearings per undirected edge). If `G` is a MultiDiGraph, all edge bearings
+    will be directional (ie, one bearing per directed edge). See also the
     `bearings` module.
 
     For more info see: Boeing, G. 2019. "Urban Spatial Order: Street Network
@@ -693,8 +696,8 @@ def plot_orientation(  # noqa: PLR0913
 
     Parameters
     ----------
-    Gu
-        Undirected, unprojected graph with `bearing` attributes on each edge.
+    G
+        Unprojected graph with `bearing` attributes on each edge.
     num_bins
         Number of bins. For example, if `num_bins=36` is provided, then each
         bin will represent 10 degrees around the compass.
@@ -745,17 +748,16 @@ def plot_orientation(  # noqa: PLR0913
             "zorder": 3,
         }
 
-    # get the bearings' distribution's bin counts and edges
-    bin_counts, bin_edges = bearing._bearings_distribution(
-        Gu,
+    # get the bearing distribution's bin counts and center values in degrees
+    bin_counts, bin_centers = bearing._bearings_distribution(
+        G,
         num_bins,
         min_length=min_length,
         weight=weight,
     )
 
-    # positions: where to center each bar. ignore the last bin edge, because
-    # it's the same as the first (i.e., 0 degrees = 360 degrees)
-    positions = np.radians(bin_edges[:-1])
+    # positions: where to center each bar
+    positions = np.radians(bin_centers)
 
     # width: make bars fill the circumference without gaps or overlaps
     width = 2 * np.pi / num_bins

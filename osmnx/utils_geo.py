@@ -16,10 +16,10 @@ from shapely.geometry import MultiPolygon
 from shapely.geometry import Polygon
 from shapely.ops import split
 
+from . import convert
 from . import projection
 from . import settings
 from . import utils
-from . import utils_graph
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -54,7 +54,7 @@ def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
     if nx.is_directed(G):  # pragma: no cover
         msg = "`G` should be undirected to avoid oversampling bidirectional edges."
         warn(msg, category=UserWarning, stacklevel=2)
-    gdf_edges = utils_graph.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
+    gdf_edges = convert.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
     weights = gdf_edges["length"] / gdf_edges["length"].sum()
     idx = np.random.default_rng().choice(gdf_edges.index, size=n, p=weights)
     lines = gdf_edges.loc[idx, "geometry"]

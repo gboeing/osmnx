@@ -1,4 +1,4 @@
-"""Read/write graphs from/to files on disk."""
+"""File I/O functions to save/load graphs to/from files on disk."""
 
 from __future__ import annotations
 
@@ -14,9 +14,9 @@ import pandas as pd
 from shapely import wkt
 
 from . import _osm_xml
+from . import convert
 from . import settings
 from . import utils
-from . import utils_graph
 
 if TYPE_CHECKING:
     import geopandas as gpd
@@ -58,9 +58,9 @@ def save_graph_geopackage(
 
     # convert graph to gdfs and stringify non-numeric columns
     if directed:
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(G)
+        gdf_nodes, gdf_edges = convert.graph_to_gdfs(G)
     else:
-        gdf_nodes, gdf_edges = utils_graph.graph_to_gdfs(utils_graph.get_undirected(G))
+        gdf_nodes, gdf_edges = convert.graph_to_gdfs(convert.to_undirected(G))
     gdf_nodes = _stringify_nonnumeric_cols(gdf_nodes)
     gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
 
@@ -190,8 +190,6 @@ def load_graphml(
     default_node_dtypes = {
         "elevation": float,
         "elevation_res": float,
-        "lat": float,
-        "lon": float,
         "osmid": int,
         "street_count": int,
         "x": float,
