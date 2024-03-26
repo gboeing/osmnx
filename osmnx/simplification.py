@@ -274,13 +274,14 @@ def _remove_rings(
     return G
 
 
-def simplify_graph(  # noqa: PLR0912
+def simplify_graph(  # noqa: C901, PLR0912
     G: nx.MultiDiGraph,
     *,
     node_attrs_include: Iterable[str] | None = None,
     edge_attrs_differ: Iterable[str] | None = None,
     remove_rings: bool = True,
     track_merged: bool = False,
+    edge_attrs_agg: dict[str, Any] | None = None,
 ) -> nx.MultiDiGraph:
     """
     Simplify a graph's topology by removing interstitial nodes.
@@ -339,8 +340,9 @@ def simplify_graph(  # noqa: PLR0912
     msg = "Begin topologically simplifying the graph..."
     utils.log(msg, level=lg.INFO)
 
-    # define edge segment attributes to sum upon edge simplification
-    attrs_to_sum = {"length", "travel_time"}
+    # define edge segment attributes to aggregate upon edge simplification
+    if edge_attrs_agg is None:
+        edge_attrs_agg = {"length": sum, "travel_time": sum}
 
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
@@ -386,9 +388,10 @@ def simplify_graph(  # noqa: PLR0912
 
         # consolidate the path's edge segments' attribute values
         for attr in path_attributes:
-            if attr in attrs_to_sum:
-                # if this attribute must be summed, sum it now
-                path_attributes[attr] = sum(path_attributes[attr])
+            if attr in edge_attrs_agg:
+                # if this attribute's values must be aggregated, do so now
+                agg_func = edge_attrs_agg[attr]
+                path_attributes[attr] = agg_func(path_attributes[attr])
             elif len(set(path_attributes[attr])) == 1:
                 # if there's only 1 unique value in this attribute list,
                 # consolidate it to the single value (the zero-th):
