@@ -399,11 +399,10 @@ def simplify_graph(  # noqa: C901, PLR0912
                 agg_func = edge_attrs_agg[attr]
                 path_attributes[attr] = agg_func(path_attributes[attr])
             elif len(set(path_attributes[attr])) == 1:
-                # if there's only 1 unique value in this attribute list,
-                # consolidate it to the single value (the zero-th):
+                # if there's only 1 unique value, keep that single value
                 path_attributes[attr] = path_attributes[attr][0]
             else:
-                # otherwise, if there are multiple values, keep one of each
+                # otherwise, if there are multiple uniques, keep one of each
                 path_attributes[attr] = list(set(path_attributes[attr]))
 
         # construct the new consolidated edge's geometry for this path
@@ -450,6 +449,7 @@ def consolidate_intersections(
     rebuild_graph: bool = True,
     dead_ends: bool = False,
     reconnect_edges: bool = True,
+    node_attrs_agg: dict[str, Any] | None = None,
 ) -> nx.MultiDiGraph | gpd.GeoSeries:
     """
     Consolidate intersections comprising clusters of nearby nodes.
@@ -500,6 +500,11 @@ def consolidate_intersections(
         False, the returned graph has no edges (which is faster if you just
         need topologically consolidated intersection counts). Ignored if
         `rebuild_graph` is not True.
+    node_attrs_agg
+        Allows user to aggregate node attributes values when consolidating a
+        nodes. Keys are node attribute names and values are aggregation
+        functions (anything accepted as an argument by `pandas.agg`). If None,
+        merge node attributes contain unique values across the merged nodes.
 
     Returns
     -------
@@ -524,7 +529,12 @@ def consolidate_intersections(
             return G
 
         # otherwise
-        return _consolidate_intersections_rebuild_graph(G, tolerance, reconnect_edges)
+        return _consolidate_intersections_rebuild_graph(
+            G,
+            tolerance,
+            reconnect_edges,
+            node_attrs_agg,
+        )
 
     # otherwise, if we're not rebuilding the graph
     if len(G) == 0:
@@ -564,6 +574,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     G: nx.MultiDiGraph,
     tolerance: float,
     reconnect_edges: bool,  # noqa: FBT001
+    node_attrs_agg: dict[str, Any] | None,
 ) -> nx.MultiDiGraph:
     """
     Consolidate intersections comprising clusters of nearby nodes.
@@ -593,6 +604,11 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         False, the returned graph has no edges (which is faster if you just
         need topologically consolidated intersection counts). Ignored if
         `rebuild_graph` is not True.
+    node_attrs_agg
+        Allows user to aggregate node attributes values when consolidating a
+        nodes. Keys are node attribute names and values are aggregation
+        functions (anything accepted as an argument by `pandas.agg`). If None,
+        merge node attributes contain unique values across the merged nodes.
 
     Returns
     -------
@@ -669,11 +685,14 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
             for col in set(nodes_subset.columns).intersection(settings.useful_tags_node):
                 # get the unique non-null values (we won't add null attrs)
                 unique_vals = list(set(nodes_subset[col].dropna()))
-                if len(unique_vals) == 1:
+                if len(unique_vals) > 0 and node_attrs_agg is not None and col in node_attrs_agg:
+                    # if this attribute's values must be aggregated, do so now
+                    node_attrs[col] = nodes_subset[col].agg(node_attrs_agg[col])
+                elif len(unique_vals) == 1:
                     # if there's 1 unique value for this attribute, keep it
                     node_attrs[col] = unique_vals[0]
                 elif len(unique_vals) > 1:
-                    # if there are multiple unique values, keep all uniques
+                    # if there are multiple unique values, keep one of each
                     node_attrs[col] = unique_vals
             Gc.add_node(cluster_label, **node_attrs)
 
