@@ -60,13 +60,13 @@ def _is_endpoint(
         The ID of the node.
     node_attrs_include
         Node attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if it has one
-        or more of the attributes in `node_attrs_include`.
+        determination. A node is always an endpoint if it possesses one or
+        more of the attributes in `node_attrs_include`.
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if its
-        incident edges have different values than each other for any of the
-        edge attributes in `edge_attrs_differ`.
+        determination. A node is always an endpoint if its incident edges have
+        different values than each other for any of the edge attributes in
+        `edge_attrs_differ`.
 
     Returns
     -------
@@ -209,13 +209,13 @@ def _get_paths_to_simplify(
         Input graph.
     node_attrs_include
         Node attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if it has one
-        or more of the attributes in `node_attrs_include`.
+        determination. A node is always an endpoint if it possesses one or
+        more of the attributes in `node_attrs_include`.
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if its
-        incident edges have different values than each other for any of the
-        edge attributes in `edge_attrs_differ`.
+        determination. A node is always an endpoint if its incident edges have
+        different values than each other for any of the edge attributes in
+        `edge_attrs_differ`.
 
     Yields
     ------
@@ -253,13 +253,13 @@ def _remove_rings(
         Input graph.
     node_attrs_include
         Node attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if it has one
-        or more of the attributes in `node_attrs_include`.
+        determination. A node is always an endpoint if it possesses one or
+        more of the attributes in `node_attrs_include`.
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if its
-        incident edges have different values than each other for any of the
-        edge attributes in `edge_attrs_differ`.
+        determination. A node is always an endpoint if its incident edges have
+        different values than each other for any of the edge attributes in
+        `edge_attrs_differ`.
 
     Returns
     -------
@@ -286,7 +286,7 @@ def simplify_graph(  # noqa: C901, PLR0912
     """
     Simplify a graph's topology by removing interstitial nodes.
 
-    This simplifies graph topology by removing all nodes that are not
+    This simplifies the graph's topology by removing all nodes that are not
     intersections or dead-ends, by creating an edge directly between the end
     points that encapsulate them while retaining the full geometry of the
     original edges, saved as a new `geometry` attribute on the new edge.
@@ -313,19 +313,25 @@ def simplify_graph(  # noqa: C901, PLR0912
         Input graph.
     node_attrs_include
         Node attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if it has one
-        or more of the attributes in `node_attrs_include`.
+        determination. A node is always an endpoint if it possesses one or
+        more of the attributes in `node_attrs_include`.
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if its
-        incident edges have different values than each other for any of the
-        edge attributes in `edge_attrs_differ`.
+        determination. A node is always an endpoint if its incident edges have
+        different values than each other for any of the edge attributes in
+        `edge_attrs_differ`.
     remove_rings
         If True, remove any graph components that consist only of a single
         chordless cycle (i.e., an isolated self-contained ring).
     track_merged
         If True, add `merged_edges` attribute on simplified edges, containing
         a list of all the `(u, v)` node pairs that were merged together.
+    edge_attrs_agg
+        Allows user to aggregate edge segment attributes when simplifying an
+        edge. Keys are edge attribute names and values are aggregation
+        functions to apply to these attributes when they exist for a set of
+        edges being simplified. If None, this will default to a value of:
+        `{"length": sum, "travel_time": sum}`.
 
     Returns
     -------
