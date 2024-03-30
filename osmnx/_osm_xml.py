@@ -168,7 +168,7 @@ def _save_graph_xml(
         `settings.data_folder/graph.osm`.
     way_tag_aggs
         Keys are OSM way tag keys and values are aggregation functions
-        (anything accepted as an argument by pandas.agg). Allows user to
+        (anything accepted as an argument by `pandas.agg`). Allows user to
         aggregate graph edge attribute values into single OSM way values. If
         None, or if some tag's key does not exist in the dict, the way
         attribute will be assigned the value of the first edge of the way.
@@ -304,7 +304,7 @@ def _add_ways_xml(
         edges into ways.
     way_tag_aggs
         Keys are OSM way tag keys and values are aggregation functions
-        (anything accepted as an argument by pandas.agg). Allows user to
+        (anything accepted as an argument by `pandas.agg`). Allows user to
         aggregate graph edge attribute values into single OSM way values. If
         None, or if some tag's key does not exist in the dict, the way
         attribute will be assigned the value of the first edge of the way.
