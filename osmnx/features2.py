@@ -597,13 +597,14 @@ def _build_relation_geometry(
     for member in members:
         if member["type"] == "way":
             geom = way_geoms[member["ref"]]
-            if member["role"] == "outer" and geom.geom_type == "LineString":
+            role = member["role"]
+            if role == "outer" and geom.geom_type == "LineString":
                 outer_linestrings.append(geom)
-            elif member["role"] == "outer" and geom.geom_type == "Polygon":
+            elif role == "outer" and geom.geom_type == "Polygon":
                 outer_polygons.append(geom)
-            elif member["role"] == "inner" and geom.geom_type == "LineString":
+            elif role == "inner" and geom.geom_type == "LineString":
                 inner_linestrings.append(geom)
-            elif member["role"] == "inner" and geom.geom_type == "Polygon":
+            elif role == "inner" and geom.geom_type == "Polygon":
                 inner_polygons.append(geom)
 
     # merge/polygonize outer linestring fragments then add to outer polygons
