@@ -604,8 +604,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         If True, reconnect edges (and their geometries) to the consolidated
         nodes in rebuilt graph, and update the edge length attributes. If
         False, the returned graph has no edges (which is faster if you just
-        need topologically consolidated intersection counts). Ignored if
-        `rebuild_graph` is not True.
+        need topologically consolidated intersection counts).
     node_attr_aggs
         Allows user to aggregate node attributes values when merging nodes.
         Keys are node attribute names and values are aggregation functions
@@ -704,11 +703,6 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
                     node_attrs[col] = unique_vals
             Gc.add_node(cluster_label, **node_attrs)
 
-    # calculate street_count attribute for all nodes lacking it
-    null_nodes = [n for n, sc in Gc.nodes(data="street_count") if sc is None]
-    street_count = stats.count_streets_per_node(Gc, nodes=null_nodes)
-    nx.set_node_attributes(Gc, street_count, name="street_count")
-
     if len(G.edges) == 0 or not reconnect_edges:
         # if reconnect_edges is False or there are no edges in original graph
         # (after dead-end removed), then skip edges and return new graph as-is
@@ -755,5 +749,10 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
 
                 # update the edge length attribute, given the new geometry
                 Gc.edges[u, v, k]["length"] = new_geom.length
+
+    # calculate street_count attribute for all nodes lacking it
+    null_nodes = [n for n, sc in Gc.nodes(data="street_count") if sc is None]
+    street_counts = stats.count_streets_per_node(Gc, nodes=null_nodes)
+    nx.set_node_attributes(Gc, street_counts, name="street_count")
 
     return Gc
