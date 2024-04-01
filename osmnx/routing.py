@@ -685,7 +685,7 @@ def _clean_maxspeed(
         return float(agg(clean_values))
 
     except (ValueError, AttributeError):
-         # if not valid numeric string, try looking it up as implicit value
+        # if not valid numeric string, try looking it up as implicit value
         return _IMPLICIT_MAXSPEEDS.get(maxspeed)
 
 
