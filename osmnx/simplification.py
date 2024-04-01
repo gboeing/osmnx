@@ -14,7 +14,6 @@ from shapely.geometry import Point
 from shapely.geometry import Polygon
 
 from . import convert
-from . import settings
 from . import stats
 from . import utils
 from ._errors import GraphSimplificationError
@@ -346,7 +345,7 @@ def simplify_graph(  # noqa: C901, PLR0912
     msg = "Begin topologically simplifying the graph..."
     utils.log(msg, level=lg.INFO)
 
-    # define edge segment attributes to aggregate upon edge simplification
+    # default edge segment attributes to aggregate upon simplification
     if edge_attrs_agg is None:
         edge_attrs_agg = {"length": sum, "travel_time": sum}
 
@@ -616,6 +615,10 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         A rebuilt graph with consolidated intersections and reconnected edge
         geometries.
     """
+    # default node attributes to aggregate upon consolidation
+    if node_attrs_agg is None:
+        node_attrs_agg = {"elevation": "mean"}
+
     # STEP 1
     # buffer nodes to passed-in distance and merge overlaps. turn merged nodes
     # into gdf and get centroids of each cluster as x, y
@@ -628,9 +631,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     # attach each node to its cluster of merged nodes. first get the original
     # graph's node points then spatial join to give each node the label of
     # cluster it's within. make cluster labels type string.
-    node_points = convert.graph_to_gdfs(G, edges=False)
-    cols = set(node_points.columns).intersection(["geometry", *settings.useful_tags_node])
-    node_points = node_points[list(cols)]
+    node_points = convert.graph_to_gdfs(G, edges=False).drop(columns=["x", "y"])
     gdf = gpd.sjoin(node_points, node_clusters, how="left", predicate="within")
     gdf = gdf.drop(columns="geometry").rename(columns={"index_right": "cluster"})
     gdf["cluster"] = gdf["cluster"].astype(str)
@@ -640,8 +641,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     # move each component to its own cluster (otherwise you will connect
     # nodes together that are not truly connected, e.g., nearby deadends or
     # surface streets with bridge).
-    groups = gdf.groupby("cluster")
-    for cluster_label, nodes_subset in groups:
+    for cluster_label, nodes_subset in gdf.groupby("cluster"):
         if len(nodes_subset) > 1:
             # identify all the (weakly connected) component in cluster
             wccs = list(nx.weakly_connected_components(G.subgraph(nodes_subset.index)))
@@ -682,12 +682,16 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
                 "x": nodes_subset["x"].iloc[0],
                 "y": nodes_subset["y"].iloc[0],
             }
-            for col in set(nodes_subset.columns).intersection(settings.useful_tags_node):
+            for col in set(nodes_subset.columns):
                 # get the unique non-null values (we won't add null attrs)
                 unique_vals = list(set(nodes_subset[col].dropna()))
-                if len(unique_vals) > 0 and node_attrs_agg is not None and col in node_attrs_agg:
+                if len(unique_vals) > 0 and col in node_attrs_agg:
                     # if this attribute's values must be aggregated, do so now
                     node_attrs[col] = nodes_subset[col].agg(node_attrs_agg[col])
+                elif col == "street_count":
+                    # if user doesn't specifically handle street_count with an
+                    # agg function, just skip it here then calculate it later
+                    continue
                 elif len(unique_vals) == 1:
                     # if there's 1 unique value for this attribute, keep it
                     node_attrs[col] = unique_vals[0]

@@ -37,9 +37,10 @@ def add_edge_grades(G: nx.MultiDiGraph, *, add_absolute: bool = True) -> nx.Mult
     """
     Calculate and add `grade` attributes to all graph edges.
 
-    Vectorized function to calculate the directed grade (ie, rise over run)
+    Vectorized function to calculate the directed grade (i.e., rise over run)
     for each edge in the graph and add it to the edge as an attribute. Nodes
-    must already have `elevation` attributes before using this function.
+    must already have `elevation` and `length` attributes before using this
+    function.
 
     See also the `add_node_elevations_raster` and `add_node_elevations_google`
     functions.

@@ -269,6 +269,9 @@ def test_elevation() -> None:
     G = ox.elevation.add_node_elevations_raster(G, rasters)
     assert pd.notna(pd.Series(dict(G.nodes(data="elevation")))).all()
 
+    # consolidate nodes with elevation (by default will aggregate via mean)
+    G = ox.simplification.consolidate_intersections(G)
+
     # add edge grades and their absolute values
     G = ox.add_edge_grades(G, add_absolute=True)
 
