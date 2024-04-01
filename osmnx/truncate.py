@@ -199,29 +199,3 @@ def largest_component(G: nx.MultiDiGraph, *, strongly: bool = False) -> nx.Multi
         utils.log(msg, level=lg.INFO)
 
     return G
-
-
-def remove_isolated_nodes(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
-    """
-    Remove from a graph all 0-degree nodes (i.e., with no incident edges).
-
-    Parameters
-    ----------
-    G
-        Graph from which to remove 0-degree nodes.
-
-    Returns
-    -------
-    G
-        Graph with all 0-degree nodes removed.
-    """
-    # make a copy to not mutate original graph object caller passed in
-    G = G.copy()
-
-    # get the set of all 0-degree nodes, then remove them
-    isolated_nodes = {node for node, degree in G.degree() if degree < 1}
-    G.remove_nodes_from(isolated_nodes)
-
-    msg = f"Removed {len(isolated_nodes):,} 0-degree nodes"
-    utils.log(msg, level=lg.INFO)
-    return G
