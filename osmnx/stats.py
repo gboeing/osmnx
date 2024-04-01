@@ -13,9 +13,9 @@ You can use NetworkX directly for additional topological network measures.
 
 from __future__ import annotations
 
-import itertools
 import logging as lg
 from collections import Counter
+from itertools import chain
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -34,7 +34,9 @@ if TYPE_CHECKING:
 
 def streets_per_node(G: nx.MultiDiGraph) -> dict[int, int]:
     """
-    Count streets (undirected edges) incident on each node.
+    Retrieve nodes' `street_count` attribute values.
+
+    See also the `count_streets_per_node` function for the calculation.
 
     Parameters
     ----------
@@ -303,7 +305,7 @@ def count_streets_per_node(
     # appear twice in the undirected graph (u,v,0 and u,v,1 where u=v), but
     # one-way self-loops will appear only once
     Gu = G.to_undirected(reciprocal=False, as_view=True)
-    self_loop_edges = set(nx.selfloop_edges(Gu))
+    self_loop_edges = set(nx.selfloop_edges(Gu, keys=False))
 
     # get all non-self-loop undirected edges, including parallel edges
     non_self_loop_edges = [e for e in Gu.edges(keys=False) if e not in self_loop_edges]
@@ -313,7 +315,7 @@ def count_streets_per_node(
     all_unique_edges = non_self_loop_edges + list(self_loop_edges)
 
     # flatten list of (u, v) edge tuples to count how often each node appears
-    edges_flat = itertools.chain.from_iterable(all_unique_edges)
+    edges_flat = chain.from_iterable(all_unique_edges)
     counts = Counter(edges_flat)
     streets_per_node = {node: counts[node] for node in nodes}
 

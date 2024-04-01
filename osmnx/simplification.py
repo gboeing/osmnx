@@ -8,13 +8,13 @@ from typing import Any
 
 import geopandas as gpd
 import networkx as nx
+import numpy as np
 from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
 from shapely.geometry import Polygon
 
 from . import convert
-from . import settings
 from . import stats
 from . import utils
 from ._errors import GraphSimplificationError
@@ -60,13 +60,13 @@ def _is_endpoint(
         The ID of the node.
     node_attrs_include
         Node attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if it has one
-        or more of the attributes in `node_attrs_include`.
+        determination. A node is always an endpoint if it possesses one or
+        more of the attributes in `node_attrs_include`.
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if its
-        incident edges have different values than each other for any of the
-        edge attributes in `edge_attrs_differ`.
+        determination. A node is always an endpoint if its incident edges have
+        different values than each other for any attribute in
+        `edge_attrs_differ`.
 
     Returns
     -------
@@ -209,13 +209,13 @@ def _get_paths_to_simplify(
         Input graph.
     node_attrs_include
         Node attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if it has one
-        or more of the attributes in `node_attrs_include`.
+        determination. A node is always an endpoint if it possesses one or
+        more of the attributes in `node_attrs_include`.
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if its
-        incident edges have different values than each other for any of the
-        edge attributes in `edge_attrs_differ`.
+        determination. A node is always an endpoint if its incident edges have
+        different values than each other for any attribute in
+        `edge_attrs_differ`.
 
     Yields
     ------
@@ -253,13 +253,13 @@ def _remove_rings(
         Input graph.
     node_attrs_include
         Node attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if it has one
-        or more of the attributes in `node_attrs_include`.
+        determination. A node is always an endpoint if it possesses one or
+        more of the attributes in `node_attrs_include`.
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if its
-        incident edges have different values than each other for any of the
-        edge attributes in `edge_attrs_differ`.
+        determination. A node is always an endpoint if its incident edges have
+        different values than each other for any attribute in
+        `edge_attrs_differ`.
 
     Returns
     -------
@@ -274,18 +274,19 @@ def _remove_rings(
     return G
 
 
-def simplify_graph(  # noqa: PLR0912
+def simplify_graph(  # noqa: C901, PLR0912
     G: nx.MultiDiGraph,
     *,
     node_attrs_include: Iterable[str] | None = None,
     edge_attrs_differ: Iterable[str] | None = None,
     remove_rings: bool = True,
     track_merged: bool = False,
+    edge_attr_aggs: dict[str, Any] | None = None,
 ) -> nx.MultiDiGraph:
     """
     Simplify a graph's topology by removing interstitial nodes.
 
-    This simplifies graph topology by removing all nodes that are not
+    This simplifies the graph's topology by removing all nodes that are not
     intersections or dead-ends, by creating an edge directly between the end
     points that encapsulate them while retaining the full geometry of the
     original edges, saved as a new `geometry` attribute on the new edge.
@@ -312,19 +313,26 @@ def simplify_graph(  # noqa: PLR0912
         Input graph.
     node_attrs_include
         Node attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if it has one
-        or more of the attributes in `node_attrs_include`.
+        determination. A node is always an endpoint if it possesses one or
+        more of the attributes in `node_attrs_include`.
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
-        determination. If not None, a node is always an endpoint if its
-        incident edges have different values than each other for any of the
-        edge attributes in `edge_attrs_differ`.
+        determination. A node is always an endpoint if its incident edges have
+        different values than each other for any attribute in
+        `edge_attrs_differ`.
     remove_rings
         If True, remove any graph components that consist only of a single
         chordless cycle (i.e., an isolated self-contained ring).
     track_merged
         If True, add `merged_edges` attribute on simplified edges, containing
         a list of all the `(u, v)` node pairs that were merged together.
+    edge_attr_aggs
+        Allows user to aggregate edge segment attributes when simplifying an
+        edge. Keys are edge attribute names and values are aggregation
+        functions to apply to these attributes when they exist for a set of
+        edges being merged. Edge attributes not in `edge_attr_aggs` will
+        contain the unique values across the merged edge segments. If None,
+        defaults to `{"length": sum, "travel_time": sum}`.
 
     Returns
     -------
@@ -339,8 +347,9 @@ def simplify_graph(  # noqa: PLR0912
     msg = "Begin topologically simplifying the graph..."
     utils.log(msg, level=lg.INFO)
 
-    # define edge segment attributes to sum upon edge simplification
-    attrs_to_sum = {"length", "travel_time"}
+    # default edge segment attributes to aggregate upon simplification
+    if edge_attr_aggs is None:
+        edge_attr_aggs = {"length": sum, "travel_time": sum}
 
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
@@ -386,15 +395,15 @@ def simplify_graph(  # noqa: PLR0912
 
         # consolidate the path's edge segments' attribute values
         for attr in path_attributes:
-            if attr in attrs_to_sum:
-                # if this attribute must be summed, sum it now
-                path_attributes[attr] = sum(path_attributes[attr])
+            if attr in edge_attr_aggs:
+                # if this attribute's values must be aggregated, do so now
+                agg_func = edge_attr_aggs[attr]
+                path_attributes[attr] = agg_func(path_attributes[attr])
             elif len(set(path_attributes[attr])) == 1:
-                # if there's only 1 unique value in this attribute list,
-                # consolidate it to the single value (the zero-th):
+                # if there's only 1 unique value, keep that single value
                 path_attributes[attr] = path_attributes[attr][0]
             else:
-                # otherwise, if there are multiple values, keep one of each
+                # otherwise, if there are multiple uniques, keep one of each
                 path_attributes[attr] = list(set(path_attributes[attr]))
 
         # construct the new consolidated edge's geometry for this path
@@ -441,6 +450,7 @@ def consolidate_intersections(
     rebuild_graph: bool = True,
     dead_ends: bool = False,
     reconnect_edges: bool = True,
+    node_attr_aggs: dict[str, Any] | None = None,
 ) -> nx.MultiDiGraph | gpd.GeoSeries:
     """
     Consolidate intersections comprising clusters of nearby nodes.
@@ -491,6 +501,12 @@ def consolidate_intersections(
         False, the returned graph has no edges (which is faster if you just
         need topologically consolidated intersection counts). Ignored if
         `rebuild_graph` is not True.
+    node_attr_aggs
+        Allows user to aggregate node attributes values when merging nodes.
+        Keys are node attribute names and values are aggregation functions
+        (anything accepted as an argument by `pandas.agg`). Node attributes
+        not in `node_attr_aggs` will contain the unique values across the
+        merged nodes. If None, defaults to `{"elevation": numpy.mean}`.
 
     Returns
     -------
@@ -515,7 +531,12 @@ def consolidate_intersections(
             return G
 
         # otherwise
-        return _consolidate_intersections_rebuild_graph(G, tolerance, reconnect_edges)
+        return _consolidate_intersections_rebuild_graph(
+            G,
+            tolerance,
+            reconnect_edges,
+            node_attr_aggs,
+        )
 
     # otherwise, if we're not rebuilding the graph
     if len(G) == 0:
@@ -555,6 +576,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     G: nx.MultiDiGraph,
     tolerance: float,
     reconnect_edges: bool,  # noqa: FBT001
+    node_attr_aggs: dict[str, Any] | None,
 ) -> nx.MultiDiGraph:
     """
     Consolidate intersections comprising clusters of nearby nodes.
@@ -582,8 +604,13 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         If True, reconnect edges (and their geometries) to the consolidated
         nodes in rebuilt graph, and update the edge length attributes. If
         False, the returned graph has no edges (which is faster if you just
-        need topologically consolidated intersection counts). Ignored if
-        `rebuild_graph` is not True.
+        need topologically consolidated intersection counts).
+    node_attr_aggs
+        Allows user to aggregate node attributes values when merging nodes.
+        Keys are node attribute names and values are aggregation functions
+        (anything accepted as an argument by `pandas.agg`). Node attributes
+        not in `node_attr_aggs` will contain the unique values across the
+        merged nodes. If None, defaults to `{"elevation": numpy.mean}`.
 
     Returns
     -------
@@ -591,6 +618,10 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         A rebuilt graph with consolidated intersections and reconnected edge
         geometries.
     """
+    # default node attributes to aggregate upon consolidation
+    if node_attr_aggs is None:
+        node_attr_aggs = {"elevation": np.mean}
+
     # STEP 1
     # buffer nodes to passed-in distance and merge overlaps. turn merged nodes
     # into gdf and get centroids of each cluster as x, y
@@ -603,9 +634,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     # attach each node to its cluster of merged nodes. first get the original
     # graph's node points then spatial join to give each node the label of
     # cluster it's within. make cluster labels type string.
-    node_points = convert.graph_to_gdfs(G, edges=False)
-    cols = set(node_points.columns).intersection(["geometry", *settings.useful_tags_node])
-    node_points = node_points[list(cols)]
+    node_points = convert.graph_to_gdfs(G, edges=False).drop(columns=["x", "y"])
     gdf = gpd.sjoin(node_points, node_clusters, how="left", predicate="within")
     gdf = gdf.drop(columns="geometry").rename(columns={"index_right": "cluster"})
     gdf["cluster"] = gdf["cluster"].astype(str)
@@ -615,8 +644,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     # move each component to its own cluster (otherwise you will connect
     # nodes together that are not truly connected, e.g., nearby deadends or
     # surface streets with bridge).
-    groups = gdf.groupby("cluster")
-    for cluster_label, nodes_subset in groups:
+    for cluster_label, nodes_subset in gdf.groupby("cluster"):
         if len(nodes_subset) > 1:
             # identify all the (weakly connected) component in cluster
             wccs = list(nx.weakly_connected_components(G.subgraph(nodes_subset.index)))
@@ -657,21 +685,23 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
                 "x": nodes_subset["x"].iloc[0],
                 "y": nodes_subset["y"].iloc[0],
             }
-            for col in set(nodes_subset.columns).intersection(settings.useful_tags_node):
+            for col in set(nodes_subset.columns):
                 # get the unique non-null values (we won't add null attrs)
                 unique_vals = list(set(nodes_subset[col].dropna()))
-                if len(unique_vals) == 1:
+                if len(unique_vals) > 0 and col in node_attr_aggs:
+                    # if this attribute's values must be aggregated, do so now
+                    node_attrs[col] = nodes_subset[col].agg(node_attr_aggs[col])
+                elif col == "street_count":
+                    # if user doesn't specifically handle street_count with an
+                    # agg function, just skip it here then calculate it later
+                    continue
+                elif len(unique_vals) == 1:
                     # if there's 1 unique value for this attribute, keep it
                     node_attrs[col] = unique_vals[0]
                 elif len(unique_vals) > 1:
-                    # if there are multiple unique values, keep all uniques
+                    # if there are multiple unique values, keep one of each
                     node_attrs[col] = unique_vals
             Gc.add_node(cluster_label, **node_attrs)
-
-    # calculate street_count attribute for all nodes lacking it
-    null_nodes = [n for n, sc in Gc.nodes(data="street_count") if sc is None]
-    street_count = stats.count_streets_per_node(Gc, nodes=null_nodes)
-    nx.set_node_attributes(Gc, street_count, name="street_count")
 
     if len(G.edges) == 0 or not reconnect_edges:
         # if reconnect_edges is False or there are no edges in original graph
@@ -719,5 +749,10 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
 
                 # update the edge length attribute, given the new geometry
                 Gc.edges[u, v, k]["length"] = new_geom.length
+
+    # calculate street_count attribute for all nodes lacking it
+    null_nodes = [n for n, sc in Gc.nodes(data="street_count") if sc is None]
+    street_counts = stats.count_streets_per_node(Gc, nodes=null_nodes)
+    nx.set_node_attributes(Gc, street_counts, name="street_count")
 
     return Gc
