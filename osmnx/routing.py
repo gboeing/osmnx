@@ -24,6 +24,158 @@ from . import utils
 if TYPE_CHECKING:
     import geopandas as gpd
 
+# Dict that is used by `add_edge_speeds` to convert implicit values
+# to numbers, based on https://wiki.openstreetmap.org/wiki/Key:maxspeed
+_IMPLICIT_MAXSPEEDS: dict[str, float] = {
+    "AR:rural": 110.0,
+    "AR:urban": 40.0,
+    "AR:urban:primary": 60.0,
+    "AR:urban:secondary": 60.0,
+    "AT:bicycle_road": 30.0,
+    "AT:motorway": 130.0,
+    "AT:rural": 100.0,
+    "AT:trunk": 100.0,
+    "AT:urban": 50.0,
+    "BE-BRU:rural": 70.0,
+    "BE-BRU:urban": 30.0,
+    "BE-VLG:rural": 70.0,
+    "BE-VLG:urban": 50.0,
+    "BE-WAL:rural": 90.0,
+    "BE-WAL:urban": 50.0,
+    "BE:cyclestreet": 30.0,
+    "BE:living_street": 20.0,
+    "BE:motorway": 120.0,
+    "BE:trunk": 120.0,
+    "BE:zone30": 30.0,
+    "BG:living_street": 20.0,
+    "BG:motorway": 140.0,
+    "BG:rural": 90.0,
+    "BG:trunk": 120.0,
+    "BG:urban": 50.0,
+    "BY:living_street": 20.0,
+    "BY:motorway": 110.0,
+    "BY:rural": 90.0,
+    "BY:urban": 60.0,
+    "CA-AB:rural": 90.0,
+    "CA-AB:urban": 65.0,
+    "CA-BC:rural": 80.0,
+    "CA-BC:urban": 50.0,
+    "CA-MB:rural": 90.0,
+    "CA-MB:urban": 50.0,
+    "CA-ON:rural": 80.0,
+    "CA-ON:urban": 50.0,
+    "CA-QC:motorway": 100.0,
+    "CA-QC:rural": 75.0,
+    "CA-QC:urban": 50.0,
+    "CA-SK:nsl": 80.0,
+    "CH:motorway": 120.0,
+    "CH:rural": 80.0,
+    "CH:trunk": 100.0,
+    "CH:urban": 50.0,
+    "CZ:living_street": 20.0,
+    "CZ:motorway": 130.0,
+    "CZ:pedestrian_zone": 20.0,
+    "CZ:rural": 90.0,
+    "CZ:trunk": 110.0,
+    "CZ:urban": 50.0,
+    "CZ:urban_motorway": 80.0,
+    "CZ:urban_trunk": 80.0,
+    "DE:bicycle_road": 30.0,
+    "DE:living_street": 15.0,
+    "DE:motorway": 120.0,
+    "DE:rural": 80.0,
+    "DE:urban": 50.0,
+    "DK:motorway": 130.0,
+    "DK:rural": 80.0,
+    "DK:urban": 50.0,
+    "EE:rural": 90.0,
+    "EE:urban": 50.0,
+    "ES:living_street": 20.0,
+    "ES:motorway": 120.0,
+    "ES:rural": 90.0,
+    "ES:trunk": 90.0,
+    "ES:urban": 50.0,
+    "ES:zone30": 30.0,
+    "FI:motorway": 120.0,
+    "FI:rural": 80.0,
+    "FI:trunk": 100.0,
+    "FI:urban": 50.0,
+    "FR:motorway": 120.0,
+    "FR:rural": 80.0,
+    "FR:urban": 50.0,
+    "FR:zone30": 30.0,
+    "GB:nsl_restricted": 48.28,
+    "GR:motorway": 130.0,
+    "GR:rural": 90.0,
+    "GR:trunk": 110.0,
+    "GR:urban": 50.0,
+    "HU:living_street": 20.0,
+    "HU:motorway": 130.0,
+    "HU:rural": 90.0,
+    "HU:trunk": 110.0,
+    "HU:urban": 50.0,
+    "IT:motorway": 130.0,
+    "IT:rural": 90.0,
+    "IT:trunk": 110.0,
+    "IT:urban": 50.0,
+    "JP:express": 100.0,
+    "JP:nsl": 60.0,
+    "LT:rural": 90.0,
+    "LT:urban": 50.0,
+    "NO:rural": 80.0,
+    "NO:urban": 50.0,
+    "PH:express": 100.0,
+    "PH:rural": 80.0,
+    "PH:urban": 30.0,
+    "PT:motorway": 120.0,
+    "PT:rural": 90.0,
+    "PT:trunk": 100.0,
+    "PT:urban": 50.0,
+    "RO:motorway": 130.0,
+    "RO:rural": 90.0,
+    "RO:trunk": 100.0,
+    "RO:urban": 50.0,
+    "RS:living_street": 10.0,
+    "RS:motorway": 130.0,
+    "RS:rural": 80.0,
+    "RS:trunk": 100.0,
+    "RS:urban": 50.0,
+    "RU:living_street": 20.0,
+    "RU:motorway": 110.0,
+    "RU:rural": 90.0,
+    "RU:urban": 60.0,
+    "SE:rural": 70.0,
+    "SE:urban": 50.0,
+    "SI:motorway": 130.0,
+    "SI:rural": 90.0,
+    "SI:trunk": 110.0,
+    "SI:urban": 50.0,
+    "SK:living_street": 20.0,
+    "SK:motorway": 130.0,
+    "SK:motorway_urban": 90.0,
+    "SK:rural": 90.0,
+    "SK:trunk": 90.0,
+    "SK:urban": 50.0,
+    "TR:living_street": 20.0,
+    "TR:motorway": 130.0,
+    "TR:rural": 90.0,
+    "TR:trunk": 110.0,
+    "TR:urban": 50.0,
+    "TR:zone30": 30.0,
+    "UA:living_street": 20.0,
+    "UA:motorway": 130.0,
+    "UA:rural": 90.0,
+    "UA:trunk": 110.0,
+    "UA:urban": 50.0,
+    "UK:motorway": 112.65,
+    "UK:nsl_dual": 112.65,
+    "UK:nsl_single": 96.56,
+    "UZ:living_street": 30.0,
+    "UZ:motorway": 110.0,
+    "UZ:rural": 100.0,
+    "UZ:urban": 70.0,
+}
+
 
 def route_to_gdf(
     G: nx.MultiDiGraph,
@@ -493,9 +645,11 @@ def _clean_maxspeed(
     Clean a maxspeed string and convert mph to kph if necessary.
 
     If present, splits maxspeed on "|" (which denotes that the value contains
-    different speeds per lane) then aggregates the resulting values. Invalid
-    inputs return None. See https://wiki.openstreetmap.org/wiki/Key:maxspeed
-    for details on values and formats.
+    different speeds per lane) then aggregates the resulting values. If given
+    string is not a valid numeric string, tries to look up its value in
+    implicit maxspeed values mapping. Invalid inputs return None. See
+    https://wiki.openstreetmap.org/wiki/Key:maxspeed for details on values and
+    formats.
 
     Parameters
     ----------
@@ -531,8 +685,8 @@ def _clean_maxspeed(
         return float(agg(clean_values))
 
     except (ValueError, AttributeError):
-        # if invalid input, return None
-        return None
+         # if not valid numeric string, try looking it up as implicit value
+        return _IMPLICIT_MAXSPEEDS.get(maxspeed)
 
 
 def _collapse_multiple_maxspeed_values(
