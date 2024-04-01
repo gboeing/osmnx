@@ -25,8 +25,8 @@ if TYPE_CHECKING:
     import geopandas as gpd
 
 # Dict that is used by `add_edge_speeds` to convert implicit values
-# to numbers, based on https://wiki.openstreetmap.org/wiki/Key:maxspeed.
-_IMPLICIT_MAXSPEED_VALUES: dict[str, float] = {
+# to numbers, based on https://wiki.openstreetmap.org/wiki/Key:maxspeed
+_IMPLICIT_MAXSPEEDS: dict[str, float] = {
     "AR:rural": 110.0,
     "AR:urban": 40.0,
     "AR:urban:primary": 60.0,
@@ -685,8 +685,8 @@ def _clean_maxspeed(
         return float(agg(clean_values))
 
     except (ValueError, AttributeError):
-        # if input is not a valid numeric string, look it up in implicit speed mapping
-        return _IMPLICIT_MAXSPEED_VALUES.get(maxspeed)
+         # if not valid numeric string, try looking it up as implicit value
+        return _IMPLICIT_MAXSPEEDS.get(maxspeed)
 
 
 def _collapse_multiple_maxspeed_values(
