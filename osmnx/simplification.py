@@ -8,6 +8,7 @@ from typing import Any
 
 import geopandas as gpd
 import networkx as nx
+import numpy as np
 from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
@@ -64,7 +65,7 @@ def _is_endpoint(
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
         determination. A node is always an endpoint if its incident edges have
-        different values than each other for any of the edge attributes in
+        different values than each other for any attribute in
         `edge_attrs_differ`.
 
     Returns
@@ -213,7 +214,7 @@ def _get_paths_to_simplify(
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
         determination. A node is always an endpoint if its incident edges have
-        different values than each other for any of the edge attributes in
+        different values than each other for any attribute in
         `edge_attrs_differ`.
 
     Yields
@@ -257,7 +258,7 @@ def _remove_rings(
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
         determination. A node is always an endpoint if its incident edges have
-        different values than each other for any of the edge attributes in
+        different values than each other for any attribute in
         `edge_attrs_differ`.
 
     Returns
@@ -280,7 +281,7 @@ def simplify_graph(  # noqa: C901, PLR0912
     edge_attrs_differ: Iterable[str] | None = None,
     remove_rings: bool = True,
     track_merged: bool = False,
-    edge_attrs_agg: dict[str, Any] | None = None,
+    edge_attr_aggs: dict[str, Any] | None = None,
 ) -> nx.MultiDiGraph:
     """
     Simplify a graph's topology by removing interstitial nodes.
@@ -317,7 +318,7 @@ def simplify_graph(  # noqa: C901, PLR0912
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
         determination. A node is always an endpoint if its incident edges have
-        different values than each other for any of the edge attributes in
+        different values than each other for any attribute in
         `edge_attrs_differ`.
     remove_rings
         If True, remove any graph components that consist only of a single
@@ -325,12 +326,13 @@ def simplify_graph(  # noqa: C901, PLR0912
     track_merged
         If True, add `merged_edges` attribute on simplified edges, containing
         a list of all the `(u, v)` node pairs that were merged together.
-    edge_attrs_agg
+    edge_attr_aggs
         Allows user to aggregate edge segment attributes when simplifying an
         edge. Keys are edge attribute names and values are aggregation
         functions to apply to these attributes when they exist for a set of
-        edges being simplified. If None, this will default to a value of:
-        `{"length": sum, "travel_time": sum}`.
+        edges being merged. Edge attributes not in `edge_attr_aggs` will
+        contain the unique values across the merged edge segments. If None,
+        defaults to `{"length": sum, "travel_time": sum}`.
 
     Returns
     -------
@@ -346,8 +348,8 @@ def simplify_graph(  # noqa: C901, PLR0912
     utils.log(msg, level=lg.INFO)
 
     # default edge segment attributes to aggregate upon simplification
-    if edge_attrs_agg is None:
-        edge_attrs_agg = {"length": sum, "travel_time": sum}
+    if edge_attr_aggs is None:
+        edge_attr_aggs = {"length": sum, "travel_time": sum}
 
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
@@ -393,9 +395,9 @@ def simplify_graph(  # noqa: C901, PLR0912
 
         # consolidate the path's edge segments' attribute values
         for attr in path_attributes:
-            if attr in edge_attrs_agg:
+            if attr in edge_attr_aggs:
                 # if this attribute's values must be aggregated, do so now
-                agg_func = edge_attrs_agg[attr]
+                agg_func = edge_attr_aggs[attr]
                 path_attributes[attr] = agg_func(path_attributes[attr])
             elif len(set(path_attributes[attr])) == 1:
                 # if there's only 1 unique value, keep that single value
@@ -448,7 +450,7 @@ def consolidate_intersections(
     rebuild_graph: bool = True,
     dead_ends: bool = False,
     reconnect_edges: bool = True,
-    node_attrs_agg: dict[str, Any] | None = None,
+    node_attr_aggs: dict[str, Any] | None = None,
 ) -> nx.MultiDiGraph | gpd.GeoSeries:
     """
     Consolidate intersections comprising clusters of nearby nodes.
@@ -499,11 +501,12 @@ def consolidate_intersections(
         False, the returned graph has no edges (which is faster if you just
         need topologically consolidated intersection counts). Ignored if
         `rebuild_graph` is not True.
-    node_attrs_agg
-        Allows user to aggregate node attributes values when consolidating a
-        nodes. Keys are node attribute names and values are aggregation
-        functions (anything accepted as an argument by `pandas.agg`). If None,
-        merge node attributes contain unique values across the merged nodes.
+    node_attr_aggs
+        Allows user to aggregate node attributes values when merging nodes.
+        Keys are node attribute names and values are aggregation functions
+        (anything accepted as an argument by `pandas.agg`). Node attributes
+        not in `node_attr_aggs` will contain the unique values across the
+        merged nodes. If None, defaults to `{"elevation": numpy.mean}`.
 
     Returns
     -------
@@ -532,7 +535,7 @@ def consolidate_intersections(
             G,
             tolerance,
             reconnect_edges,
-            node_attrs_agg,
+            node_attr_aggs,
         )
 
     # otherwise, if we're not rebuilding the graph
@@ -573,7 +576,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     G: nx.MultiDiGraph,
     tolerance: float,
     reconnect_edges: bool,  # noqa: FBT001
-    node_attrs_agg: dict[str, Any] | None,
+    node_attr_aggs: dict[str, Any] | None,
 ) -> nx.MultiDiGraph:
     """
     Consolidate intersections comprising clusters of nearby nodes.
@@ -603,11 +606,12 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         False, the returned graph has no edges (which is faster if you just
         need topologically consolidated intersection counts). Ignored if
         `rebuild_graph` is not True.
-    node_attrs_agg
-        Allows user to aggregate node attributes values when consolidating a
-        nodes. Keys are node attribute names and values are aggregation
-        functions (anything accepted as an argument by `pandas.agg`). If None,
-        merge node attributes contain unique values across the merged nodes.
+    node_attr_aggs
+        Allows user to aggregate node attributes values when merging nodes.
+        Keys are node attribute names and values are aggregation functions
+        (anything accepted as an argument by `pandas.agg`). Node attributes
+        not in `node_attr_aggs` will contain the unique values across the
+        merged nodes. If None, defaults to `{"elevation": numpy.mean}`.
 
     Returns
     -------
@@ -616,8 +620,8 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         geometries.
     """
     # default node attributes to aggregate upon consolidation
-    if node_attrs_agg is None:
-        node_attrs_agg = {"elevation": "mean"}
+    if node_attr_aggs is None:
+        node_attr_aggs = {"elevation": np.mean}
 
     # STEP 1
     # buffer nodes to passed-in distance and merge overlaps. turn merged nodes
@@ -685,9 +689,9 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
             for col in set(nodes_subset.columns):
                 # get the unique non-null values (we won't add null attrs)
                 unique_vals = list(set(nodes_subset[col].dropna()))
-                if len(unique_vals) > 0 and col in node_attrs_agg:
+                if len(unique_vals) > 0 and col in node_attr_aggs:
                     # if this attribute's values must be aggregated, do so now
-                    node_attrs[col] = nodes_subset[col].agg(node_attrs_agg[col])
+                    node_attrs[col] = nodes_subset[col].agg(node_attr_aggs[col])
                 elif col == "street_count":
                     # if user doesn't specifically handle street_count with an
                     # agg function, just skip it here then calculate it later
