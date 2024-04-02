@@ -5,6 +5,7 @@ from warnings import warn
 from . import convert
 from . import routing
 from . import truncate
+from . import utils
 
 
 def graph_to_gdfs(G, nodes=True, edges=True, node_geometry=True, fill_edge_geometry=True):
@@ -145,29 +146,33 @@ def get_route_edge_attributes(
     return attribute_values
 
 
-def remove_isolated_nodes(G):
+def remove_isolated_nodes(G, warn=True):
     """
     Do not use: deprecated.
-
-    Use the `truncate.remove_isolated_nodes` function instead.
 
     Parameters
     ----------
     G : networkx.MultiDiGraph
+        deprecated, do not use
+    warn : bool
         deprecated, do not use
 
     Returns
     -------
     G : networkx.MultiDiGraph
     """
-    msg = (
-        "The `remove_isolated_nodes` function has moved to the `truncate` module. Calling "
-        "`utils_graph.remove_isolated_nodes` is deprecated and will be removed in the "
-        "v2.0.0 release. Call it via `truncate.remove_isolated_nodes` instead. "
-        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
-    )
-    warn(msg, FutureWarning, stacklevel=2)
-    return truncate.remove_isolated_nodes(G)
+    if warn:
+        msg = "The `remove_isolated_nodes` function is deprecated and will be removed in the v2.0.0 release."
+        warn(msg, FutureWarning, stacklevel=2)
+
+    # make a copy to not mutate original graph object caller passed in
+    G = G.copy()
+
+    # get the set of all isolated nodes, then remove them
+    isolated_nodes = {node for node, degree in G.degree() if degree < 1}
+    G.remove_nodes_from(isolated_nodes)
+    utils.log(f"Removed {len(isolated_nodes):,} isolated nodes")
+    return G
 
 
 def get_largest_component(G, strongly=False):
