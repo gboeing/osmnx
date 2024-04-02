@@ -168,7 +168,7 @@ def _save_graph_xml(
         `settings.data_folder/graph.osm`.
     way_tag_aggs
         Keys are OSM way tag keys and values are aggregation functions
-        (anything accepted as an argument by pandas.agg). Allows user to
+        (anything accepted as an argument by `pandas.agg`). Allows user to
         aggregate graph edge attribute values into single OSM way values. If
         None, or if some tag's key does not exist in the dict, the way
         attribute will be assigned the value of the first edge of the way.
@@ -304,7 +304,7 @@ def _add_ways_xml(
         edges into ways.
     way_tag_aggs
         Keys are OSM way tag keys and values are aggregation functions
-        (anything accepted as an argument by pandas.agg). Allows user to
+        (anything accepted as an argument by `pandas.agg`). Allows user to
         aggregate graph edge attribute values into single OSM way values. If
         None, or if some tag's key does not exist in the dict, the way
         attribute will be assigned the value of the first edge of the way.
@@ -415,7 +415,7 @@ def _sort_nodes(G: nx.MultiDiGraph, osmid: int) -> list[int]:
             # note this is destructive and will be missing in the saved data.
             G_ = G.copy()
             G_.remove_edges_from(nx.find_cycle(G_))
-            G_ = truncate.remove_isolated_nodes(G_)
+            G_ = truncate.largest_component(G_)
             ordered_nodes = _sort_nodes(G_, osmid)
             msg = f"Had to remove a cycle from way {str(osmid)!r} for topological sort"
             utils.log(msg, level=lg.WARNING)

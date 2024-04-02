@@ -269,6 +269,9 @@ def test_elevation() -> None:
     G = ox.elevation.add_node_elevations_raster(G, rasters)
     assert pd.notna(pd.Series(dict(G.nodes(data="elevation")))).all()
 
+    # consolidate nodes with elevation (by default will aggregate via mean)
+    G = ox.simplification.consolidate_intersections(G)
+
     # add edge grades and their absolute values
     G = ox.add_edge_grades(G, add_absolute=True)
 
@@ -291,6 +294,7 @@ def test_routing() -> None:
     assert ox.routing._clean_maxspeed("60|100 mph") == pytest.approx(128.7472)
     assert ox.routing._clean_maxspeed("signal") is None
     assert ox.routing._clean_maxspeed("100;70") is None
+    assert ox.routing._clean_maxspeed("FR:urban") == 50.0
 
     # test collapsing multiple mph values to single kph value
     assert ox.routing._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44.25685
