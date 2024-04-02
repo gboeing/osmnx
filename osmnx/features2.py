@@ -26,6 +26,7 @@ from shapely import MultiLineString
 from shapely import MultiPolygon
 from shapely import Point
 from shapely import Polygon
+from shapely.errors import GEOSException
 from shapely.ops import linemerge
 from shapely.ops import polygonize
 from shapely.ops import unary_union
@@ -332,8 +333,8 @@ def features_from_polygon(
 def features_from_xml(
     filepath: str | Path,
     *,
-    tags: dict[str, bool | str | list[str]] | None = None,
     polygon: Polygon | MultiPolygon | None = None,
+    tags: dict[str, bool | str | list[str]] | None = None,
     encoding: str = "utf-8",
 ) -> gpd.GeoDataFrame:
     """
@@ -341,29 +342,17 @@ def features_from_xml(
 
     Because this function creates a GeoDataFrame of features from an OSM XML
     file that has already been downloaded (i.e., no query is made to the
-    Overpass API) the polygon and tags arguments are not required. If they are
-    not passed, this will return features for all of the tagged elements in
-    the file. If they are passed, they will be used to filter the final
-    GeoDataFrame.
+    Overpass API), the `polygon` and `tags` arguments are optional. If they
+    are None, filtering will be skipped.
 
     Parameters
     ----------
     filepath
         Path to file containing OSM XML data.
     tags
-        Optional dict of tags for filtering elements from the XML. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'building': True}` would return all building footprints in
-        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
+        Query tags to optionally filter the final GeoDataFrame.
     polygon
-        Optional spatial boundaries to filter elements.
+        Spatial boundaries to optionally filter the final GeoDataFrame.
     encoding
         The OSM XML file's character encoding.
 
@@ -371,11 +360,19 @@ def features_from_xml(
     -------
     gdf
     """
-    # transmogrify OSM XML file to JSON then create GeoDataFrame from it
-    response_jsons = [_osm_xml._overpass_json_from_xml(filepath, encoding)]
+    # if tags or polygon is None, create an empty object to skip filtering
     if tags is None:
         tags = {}
-    return _create_gdf(response_jsons, polygon, tags)
+    if polygon is None:
+        polygon = Polygon()
+
+    # transmogrify OSM XML file to JSON then create GeoDataFrame from it
+    response_jsons = [_osm_xml._overpass_json_from_xml(filepath, encoding)]
+    gdf = _create_gdf(response_jsons, polygon, tags)
+
+    # drop misc element attrs that might have been added from OSM XML file
+    to_drop = set(gdf.columns) & {"changeset", "timestamp", "uid", "user", "version"}
+    return gdf.drop(columns=to_drop)
 
 
 def _create_gdf(
@@ -384,26 +381,21 @@ def _create_gdf(
     tags: dict[str, bool | str | list[str]],
 ) -> gpd.GeoDataFrame:
     """
-    Parse JSON responses from the Overpass API to a GeoDataFrame.
-
-    Note: the `polygon` and `tags` arguments can both be `None` and the
-    GeoDataFrame will still be created but it won't be filtered at the end
-    i.e. the final GeoDataFrame will contain all tagged features in
-    `response_jsons`.
+    Convert Overpass API JSON responses to a GeoDataFrame of features.
 
     Parameters
     ----------
     response_jsons
-        Iterable of JSON response dicts from from the Overpass API.
+        Iterable of Overpass API JSON responses.
     polygon
-        Optional spatial boundaries to filter final GeoDataFrame.
+        Spatial boundaries to optionally filter the final GeoDataFrame.
     tags
-        Optional dict of tags to filter the final GeoDataFrame.
+        Query tags to optionally filter the final GeoDataFrame.
 
     Returns
     -------
     gdf
-        GeoDataFrame of features and their associated tags
+        GeoDataFrame of features and their tag data.
     """
     # consume response_jsons generator to download data from server
     elements = []
@@ -420,31 +412,11 @@ def _create_gdf(
         raise CacheOnlyInterruptError(msg)
 
     # convert the elements into a GeoDataFrame of features with geometries
-    idx = ["element_type", "id"]
+    idx = ["element", "id"]
     features = _process_features(elements, set(tags.keys()))
     gdf = gpd.GeoDataFrame(features, geometry="geometry", crs=settings.default_crs).set_index(idx)
 
-    # remove any null or empty geometries and fix any invalid geometries
-    gdf = gdf[~(gdf.geometry.isna() | gdf.geometry.is_empty)]
-    if not gdf.geometry.is_valid.all():
-        gdf["geometry"] = gdf.geometry.make_valid()
-
-    geom_filter = pd.Series(data=True, index=gdf.index)
-    geom_filter = gdf.intersects(polygon)
-
-    tags_filter = pd.Series(data=True, index=gdf.index)
-    tags_filter[:] = False
-    cols_values = {col: value for col, value in tags.items() if col in set(gdf.columns)}
-    for col, value in cols_values.items():
-        if value is True:
-            tag_filter = gdf[col].notna()
-        elif isinstance(value, str):
-            tag_filter = gdf[col] == value
-        elif isinstance(value, list):
-            tag_filter = gdf[col].isin(value)
-        tags_filter |= tag_filter
-
-    gdf = gdf[geom_filter | tags_filter]
+    gdf = _filter_features(gdf, polygon, tags)
     msg = f"{len(gdf)} features in the final GeoDataFrame"
     utils.log(msg, level=lg.INFO)
     return gdf
@@ -452,7 +424,7 @@ def _create_gdf(
 
 def _process_features(
     elements: list[dict[str, Any]],
-    tags_keys: set[str],
+    query_tag_keys: set[str],
 ) -> list[dict[str, Any]]:
     """
     Convert node/way/relation elements into features with geometries.
@@ -461,7 +433,7 @@ def _process_features(
     ----------
     elements
         The node/way/relation elements retrieved from the server.
-    tags_keys
+    query_tag_keys
         The keys of the tags the user used to query for matching features.
 
     Returns
@@ -488,27 +460,33 @@ def _process_features(
         elif et == "relation" and element.get("tags", {}).get("type") in RELATION_TYPES:
             relations.append(element)
 
-    # extract all node coords then process nodes with queried tags and add to features
+    # extract all nodes' coords, then add to features any nodes with tags that
+    # match the passed query tags, or with any tags if no query tags passed
     for node in nodes:
         node_coords[node["id"]] = (node["lon"], node["lat"])
-        if len(tags_keys & node.get("tags", {}).keys()) > 0:
-            node["element_type"] = node.pop("type")
+        if (len(query_tag_keys) == 0 and len(node.get("tags", {}).keys()) > 0) or (
+            len(query_tag_keys & node.get("tags", {}).keys()) > 0
+        ):
+            node["element"] = node.pop("type")
             node["geometry"] = Point(node.pop("lon"), node.pop("lat"))
             node.update(node.pop("tags"))
             feature_nodes.append(node)
 
-    # build all way geoms then process ways with queried tags and add to features
+    # build all ways' geometries, then add to features any ways with tags that
+    # match the passed query tags, or with any tags if no query tags passed
     for way in ways:
-        way["geometry"] = _build_way_geometry(way, node_coords)
+        way["geometry"] = _build_way_geometry(way.pop("nodes"), way.get("tags", {}), node_coords)
         way_geoms[way["id"]] = way["geometry"]
-        if len(tags_keys & way.get("tags", {}).keys()) > 0:
-            way["element_type"] = way.pop("type")
+        if (len(query_tag_keys) == 0 and len(way.get("tags", {}).keys()) > 0) or (
+            len(query_tag_keys & way.get("tags", {}).keys()) > 0
+        ):
+            way["element"] = way.pop("type")
             way.update(way.pop("tags"))
             feature_ways.append(way)
 
-    # process relations and build their geoms
+    # process relations and build their geometries
     for relation in relations:
-        relation["element_type"] = "relation"
+        relation["element"] = "relation"
         relation.update(relation.pop("tags"))
         relation["geometry"] = _build_relation_geometry(relation.pop("members"), way_geoms)
 
@@ -521,8 +499,9 @@ def _process_features(
 
 
 def _build_way_geometry(
-    way: dict[str, Any],
-    node_coords: dict[str, tuple[float, float]],
+    way_nodes: list[int],
+    way_tags: dict[str, Any],
+    node_coords: dict[int, tuple[float, float]],
 ) -> LineString | Polygon:
     """
     Build a way's geometry from its constituent nodes' coordinates.
@@ -533,10 +512,12 @@ def _build_way_geometry(
 
     Parameters
     ----------
-    way
-        The way's attributes and tags.
+    way_nodes
+        The way's constituent nodes.
+    way_tags
+        The way's tags.
     node_coords
-        All the `(lat, lon)` node coordinate tuples retrieved from the server.
+        Keyed by OSM node ID with values of `(lat, lon)` coordinate tuples.
 
     Returns
     -------
@@ -545,26 +526,30 @@ def _build_way_geometry(
     # a way is a LineString by default, but if it's a closed way and it's not
     # tagged area=no, check if any of its tags denote it as a polygon instead
     geom_type = LineString
-    if way["nodes"][0] == way["nodes"][-1] and way.get("tags", {}).get("area") != "no":
-        for tag in way.get("tags", {}).keys() & _POLYGON_FEATURES.keys():
+    if way_nodes[0] == way_nodes[-1] and way_tags.get("area") != "no":
+        for tag in way_tags.keys() & _POLYGON_FEATURES.keys():
             rule = _POLYGON_FEATURES[tag]["polygon"]
             values = _POLYGON_FEATURES[tag].get("values", set())
-            value = way["tags"][tag]
             if (
                 rule == "all"
-                or (rule == "passlist" and value in values)
-                or (rule == "blocklist" and value not in values)
+                or (rule == "passlist" and way_tags[tag] in values)
+                or (rule == "blocklist" and way_tags[tag] not in values)
             ):
                 geom_type = Polygon
                 break
 
     # create the way geometry from its constituent nodes' coordinates
-    return geom_type(node_coords[node] for node in way["nodes"])
+    try:
+        return geom_type(node_coords[node] for node in way_nodes)
+    except (GEOSException, KeyError, ValueError):
+        msg = "Could not create way geometry."
+        utils.log(msg, level=lg.WARNING)
+        return geom_type()
 
 
 def _build_relation_geometry(
     members: list[dict[str, Any]],
-    way_geoms: dict[str, LineString | Polygon],
+    way_geoms: dict[int, LineString | Polygon],
 ) -> Polygon | MultiPolygon:
     """
     Build a relation's geometry from its constituent member ways' geometries.
@@ -582,7 +567,7 @@ def _build_relation_geometry(
     members
         The members constituting the relation.
     way_geoms
-        All the way geometries retrieved from the server.
+        Keyed by OSM way ID with values of their geometries.
 
     Returns
     -------
@@ -621,11 +606,7 @@ def _build_relation_geometry(
     for merged_inner_linestring in merged_inner_linestrings.geoms:
         inner_polygons += polygonize(merged_inner_linestring)
 
-    # if there are no holes, just return the union of outer polygons
-    if len(inner_polygons) == 0:
-        return unary_union(outer_polygons)
-
-    # otherwise, remove holes from polygons
+    # remove holes from polygons, if any, then retun
     return _remove_polygon_holes(outer_polygons, inner_polygons)
 
 
@@ -649,10 +630,74 @@ def _remove_polygon_holes(
     -------
     geometry
     """
-    polygons_with_holes = []
-    for outer in outer_polygons:
-        for inner in inner_polygons:
-            if outer.contains(inner):
-                outer = outer.difference(inner)  # noqa: PLW2901
-        polygons_with_holes.append(outer)
-    return unary_union(polygons_with_holes)
+    if len(inner_polygons) == 0:
+        # if there are no holes to remove, geom is the union of outer polygons
+        geometry = unary_union(outer_polygons)
+    else:
+        # otherwise, remove from each outer poly each inner poly it contains
+        polygons_with_holes = []
+        for outer in outer_polygons:
+            for inner in inner_polygons:
+                if outer.contains(inner):
+                    outer = outer.difference(inner)  # noqa: PLW2901
+            polygons_with_holes.append(outer)
+        geometry = unary_union(polygons_with_holes)
+
+    # ensure returned geometry is a (Multi)Polygon
+    if isinstance(geometry, (Polygon, MultiPolygon)):
+        return geometry
+    return Polygon()
+
+
+def _filter_features(
+    gdf: gpd.GeoDataFrame,
+    polygon: Polygon | MultiPolygon,
+    tags: dict[str, bool | str | list[str]],
+) -> gpd.GeoDataFrame:
+    """
+    Filter final features GeoDataFrame by spatial boundaries and query tags.
+
+    If the `polygon` and `tags` arguments are empty, the final GeoDataFrame
+    will not be filtered accordingly.
+
+    Parameters
+    ----------
+    gdf
+        Original GeoDataFrame of features.
+    polygon
+        If not empty, the spatial boundaries to filter the GeoDataFrame.
+    tags
+        If not empty, the query tags to filter the GeoDataFrame.
+
+    Returns
+    -------
+    gdf
+        Final filtered GeoDataFrame of features.
+    """
+    # remove any null or empty geometries then fix any invalid geometries
+    gdf = gdf[~(gdf.geometry.isna() | gdf.geometry.is_empty)]
+    gdf.loc[:, "geometry"] = gdf.geometry.make_valid()
+
+    # retain rows with geometries that intersect the polygon
+    if polygon.is_empty:
+        geom_filter = pd.Series(data=True, index=gdf.index)
+    else:
+        idx = utils_geo._intersect_index_quadrats(gdf["geometry"], polygon)
+        geom_filter = gdf.index.isin(idx)
+
+    # retain rows that have any of their tag filters satisfied
+    if len(tags) == 0:
+        tags_filter = pd.Series(data=True, index=gdf.index)
+    else:
+        tags_filter = pd.Series(data=False, index=gdf.index)
+        for col in set(gdf.columns) & tags.keys():
+            value = tags[col]
+            if value is True:
+                tags_filter |= gdf[col].notna()
+            elif isinstance(value, str):
+                tags_filter |= gdf[col] == value
+            elif isinstance(value, list):
+                tags_filter |= gdf[col].isin(set(value))
+
+    # filter gdf then drop any columns with just nulls left after filtering
+    return gdf[geom_filter & tags_filter].dropna(axis="columns", how="all")
