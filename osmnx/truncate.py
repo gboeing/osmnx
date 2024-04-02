@@ -7,6 +7,7 @@ import networkx as nx
 from . import convert
 from . import utils
 from . import utils_geo
+from . import utils_graph
 
 
 def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_all=False):
@@ -50,7 +51,7 @@ def truncate_graph_dist(G, source_node, max_dist=1000, weight="length", retain_a
     # remove any isolated nodes and retain only the largest component (if
     # retain_all is True)
     if not retain_all:
-        G = remove_isolated_nodes(G)
+        G = utils_graph.remove_isolated_nodes(G, warn=False)
         G = largest_component(G)
 
     utils.log(f"Truncated graph by {weight}-weighted network distance")
@@ -199,34 +200,10 @@ def truncate_graph_polygon(
 
     if not retain_all:
         # remove any isolated nodes and retain only the largest component
-        G = remove_isolated_nodes(G)
+        G = utils_graph.remove_isolated_nodes(G, warn=False)
         G = largest_component(G)
 
     utils.log("Truncated graph by polygon")
-    return G
-
-
-def remove_isolated_nodes(G):
-    """
-    Remove from a graph all nodes that have no incident edges.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        graph from which to remove isolated nodes
-
-    Returns
-    -------
-    G : networkx.MultiDiGraph
-        graph with all isolated nodes removed
-    """
-    # make a copy to not mutate original graph object caller passed in
-    G = G.copy()
-
-    # get the set of all isolated nodes, then remove them
-    isolated_nodes = {node for node, degree in G.degree() if degree < 1}
-    G.remove_nodes_from(isolated_nodes)
-    utils.log(f"Removed {len(isolated_nodes):,} isolated nodes")
     return G
 
 
