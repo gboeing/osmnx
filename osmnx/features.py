@@ -44,8 +44,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from pathlib import Path
 
-# dict of tags to determine if closed ways should be polygons, based on JSON
-# from https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features
+# OSM tags to determine if closed ways should be polygons, based on JSON from
+# https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features
 _POLYGON_FEATURES: dict[str, dict[str, str | set[str]]] = {
     "aeroway": {"polygon": "blocklist", "values": {"taxiway"}},
     "amenity": {"polygon": "all"},
@@ -60,7 +60,7 @@ _POLYGON_FEATURES: dict[str, dict[str, str | set[str]]] = {
     "building:part": {"polygon": "all"},
     "craft": {"polygon": "all"},
     "golf": {"polygon": "all"},
-    "highway": {"polygon": "passlist", "values": {"services", "rest_area", "escape", "elevator"}},
+    "highway": {"polygon": "passlist", "values": {"elevator", "escape", "rest_area", "services"}},
     "historic": {"polygon": "all"},
     "indoor": {"polygon": "all"},
     "landuse": {"polygon": "all"},
@@ -69,20 +69,20 @@ _POLYGON_FEATURES: dict[str, dict[str, str | set[str]]] = {
     "military": {"polygon": "all"},
     "natural": {
         "polygon": "blocklist",
-        "values": {"coastline", "cliff", "ridge", "arete", "tree_row"},
+        "values": {"arete", "cliff", "coastline", "ridge", "tree_row"},
     },
     "office": {"polygon": "all"},
     "place": {"polygon": "all"},
-    "power": {"polygon": "passlist", "values": {"plant", "substation", "generator", "transformer"}},
+    "power": {"polygon": "passlist", "values": {"generator", "plant", "substation", "transformer"}},
     "public_transport": {"polygon": "all"},
     "railway": {
         "polygon": "passlist",
-        "values": {"station", "turntable", "roundhouse", "platform"},
+        "values": {"platform", "roundhouse", "station", "turntable"},
     },
     "ruins": {"polygon": "all"},
     "shop": {"polygon": "all"},
     "tourism": {"polygon": "all"},
-    "waterway": {"polygon": "passlist", "values": {"riverbank", "dock", "boatyard", "dam"}},
+    "waterway": {"polygon": "passlist", "values": {"boatyard", "dam", "dock", "riverbank"}},
 }
 
 
@@ -105,17 +105,16 @@ def features_from_bbox(
         Bounding box as `(north, south, east, west)`. Coordinates should be in
         unprojected latitude-longitude degrees (EPSG:4326).
     tags
-        Dict of tags used for finding elements in the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'building': True}` would return all building footprints in
-        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
+        Tags for finding elements in the selected area. Results are the union,
+        not intersection of the tags and each result matches at least one tag.
+        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
+        and the values can be either `True` to retrieve all elements matching
+        the tag, or a string to retrieve a single tag:value combination, or a
+        list of strings to retrieve multiple values for the tag. For example,
+        `tags = {'building': True}` would return all buildings in the area.
+        Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, any landuse=retail,
+        any landuse=commercial, and any highway=bus_stop.
 
     Returns
     -------
@@ -147,17 +146,16 @@ def features_from_point(
         Coordinates should be in unprojected latitude-longitude degrees
         (EPSG:4326).
     tags
-        Dict of tags used for finding elements in the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'building': True}` would return all building footprints in
-        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
+        Tags for finding elements in the selected area. Results are the union,
+        not intersection of the tags and each result matches at least one tag.
+        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
+        and the values can be either `True` to retrieve all elements matching
+        the tag, or a string to retrieve a single tag:value combination, or a
+        list of strings to retrieve multiple values for the tag. For example,
+        `tags = {'building': True}` would return all buildings in the area.
+        Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, any landuse=retail,
+        any landuse=commercial, and any highway=bus_stop.
     dist
         Distance in meters from `center_point` to create a bounding box to
         query.
@@ -191,17 +189,16 @@ def features_from_address(
         The address to geocode and use as the center point around which to
         retrieve the features.
     tags
-        Dict of tags used for finding elements in the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'building': True}` would return all building footprints in
-        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
+        Tags for finding elements in the selected area. Results are the union,
+        not intersection of the tags and each result matches at least one tag.
+        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
+        and the values can be either `True` to retrieve all elements matching
+        the tag, or a string to retrieve a single tag:value combination, or a
+        list of strings to retrieve multiple values for the tag. For example,
+        `tags = {'building': True}` would return all buildings in the area.
+        Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, any landuse=retail,
+        any landuse=commercial, and any highway=bus_stop.
     dist
         Distance in meters from `address` to create a bounding box to query.
 
@@ -247,17 +244,16 @@ def features_from_place(
     query
         The query or queries to geocode to retrieve place boundary polygon(s).
     tags
-        Dict of tags used for finding elements in the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'building': True}` would return all building footprints in
-        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
+        Tags for finding elements in the selected area. Results are the union,
+        not intersection of the tags and each result matches at least one tag.
+        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
+        and the values can be either `True` to retrieve all elements matching
+        the tag, or a string to retrieve a single tag:value combination, or a
+        list of strings to retrieve multiple values for the tag. For example,
+        `tags = {'building': True}` would return all buildings in the area.
+        Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, any landuse=retail,
+        any landuse=commercial, and any highway=bus_stop.
     which_result
         Which search result to return. If None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one.
@@ -295,17 +291,16 @@ def features_from_polygon(
         The geometry within which to retrieve features. Coordinates should be
         in unprojected latitude-longitude degrees (EPSG:4326).
     tags
-        Dict of tags used for finding elements in the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'building': True}` would return all building footprints in
-        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
+        Tags for finding elements in the selected area. Results are the union,
+        not intersection of the tags and each result matches at least one tag.
+        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
+        and the values can be either `True` to retrieve all elements matching
+        the tag, or a string to retrieve a single tag:value combination, or a
+        list of strings to retrieve multiple values for the tag. For example,
+        `tags = {'building': True}` would return all buildings in the area.
+        Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, any landuse=retail,
+        any landuse=commercial, and any highway=bus_stop.
 
     Returns
     -------
@@ -318,10 +313,9 @@ def features_from_polygon(
 
     if not isinstance(polygon, (Polygon, MultiPolygon)):
         msg = (
-            "Boundaries must be a shapely Polygon or MultiPolygon. If you "
-            "requested features from place name, make sure your query geocodes "
-            "to a Polygon or MultiPolygon, and not some other geometry like a "
-            "Point. See the documentation for details."
+            "Boundaries must be a Polygon or MultiPolygon. If you requested "
+            "`features_from_place`, ensure your query geocodes to a Polygon "
+            "or MultiPolygon. See the documentation for details."
         )
         raise TypeError(msg)
 
@@ -395,7 +389,7 @@ def _create_gdf(
     Returns
     -------
     gdf
-        GeoDataFrame of features and their tag data.
+        GeoDataFrame of features with tags and geometry columns.
     """
     # consume response_jsons generator to download data from server
     elements = []
@@ -411,13 +405,13 @@ def _create_gdf(
         msg = "Interrupted because `settings.cache_only_mode=True`."
         raise CacheOnlyInterruptError(msg)
 
-    # convert the elements into a GeoDataFrame of features with geometries
+    # convert the elements into a GeoDataFrame of features
     idx = ["element", "id"]
     features = _process_features(elements, set(tags.keys()))
     gdf = gpd.GeoDataFrame(features, geometry="geometry", crs=settings.default_crs).set_index(idx)
 
     gdf = _filter_features(gdf, polygon, tags)
-    msg = f"{len(gdf)} features in the final GeoDataFrame"
+    msg = f"{len(gdf):,} features in the final GeoDataFrame"
     utils.log(msg, level=lg.INFO)
     return gdf
 
@@ -434,13 +428,15 @@ def _process_features(
     elements
         The node/way/relation elements retrieved from the server.
     query_tag_keys
-        The keys of the tags the user used to query for matching features.
+        The keys of the tags used to query for matching features.
 
     Returns
     -------
     features
     """
+    # define what types of OSM relations we currently handle
     RELATION_TYPES = {"boundary", "multipolygon"}
+
     nodes = []  # all nodes, including ones that just compose ways
     feature_nodes = []  # nodes that possibly match our query tags
     node_coords = {}  # hold node lon,lat tuples to create way geoms
@@ -542,7 +538,7 @@ def _build_way_geometry(
     try:
         return geom_type(node_coords[node] for node in way_nodes)
     except (GEOSException, KeyError, ValueError):
-        msg = "Could not create way geometry."
+        msg = "Could not create the way's geometry."
         utils.log(msg, level=lg.WARNING)
         return geom_type()
 
@@ -700,4 +696,8 @@ def _filter_features(
                 tags_filter |= gdf[col].isin(set(value))
 
     # filter gdf then drop any columns with just nulls left after filtering
-    return gdf[geom_filter & tags_filter].dropna(axis="columns", how="all")
+    gdf = gdf[geom_filter & tags_filter].dropna(axis="columns", how="all")
+    if len(gdf) == 0:
+        msg = "No matching features. Check query location, tags, and log."
+        raise InsufficientResponseError(msg)
+    return gdf
