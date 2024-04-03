@@ -697,7 +697,7 @@ def _filter_features(
 
     # filter gdf then drop any columns with just nulls left after filtering
     gdf = gdf[geom_filter & tags_filter].dropna(axis="columns", how="all")
-    if len(gdf) == 0:
+    if len(gdf) == 0:  # pragma: no cover
         msg = "No matching features. Check query location, tags, and log."
         raise InsufficientResponseError(msg)
     return gdf
