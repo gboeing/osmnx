@@ -41,7 +41,7 @@ Pull requests trigger continuous integration tests via GitHub Actions. See the [
 To package and release a new version, update `CHANGELOG.md` and edit the version number in `osmnx/_version.py`. If necessary, update the dates in `LICENSE.txt` and `docs/source/conf.py` and the dependency versions in `pyproject.toml`. Then change directories to the repository's root and run:
 
 ```shell
-bash ./tests/packaging.sh
+bash -i ./tests/packaging.sh
 ```
 
 This will tag the repository with the new version number, upload the PyPI distribution, and update the conda-forge feedstock. Then, open a pull request at the [feedstock](https://github.com/conda-forge/osmnx-feedstock) to release on conda-forge. Finally, when the new version is available on conda-forge, update the [Docker image](../environments/docker) and the OSMnx [Examples Gallery](https://github.com/gboeing/osmnx-examples) to use the new version.
