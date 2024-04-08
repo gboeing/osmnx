@@ -8,7 +8,7 @@ Get Started in 4 Steps
 
 2. Read ":ref:`Introducing OSMnx`" below on this page.
 
-3. Work through the `OSMnx Examples`_ gallery for step-by-step tutorials and sample code.
+3. Work through the OSMnx `Examples Gallery`_ for step-by-step tutorials and sample code.
 
 4. Consult the :doc:`user-reference` for complete details on using the package.
 
@@ -34,7 +34,7 @@ OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of 
 * Impute missing speeds and calculate graph edge travel times
 * Simplify and correct the network's topology to clean-up nodes and consolidate complex intersections
 * Fast map-matching of points, routes, or trajectories to nearest graph edges or nodes
-* Save/load network to/from disk as GraphML, GeoPackage, or .osm XML file
+* Save/load network to/from disk as GraphML, GeoPackage, or OSM XML file
 * Conduct topological and spatial analyses to automatically calculate dozens of indicators
 * Calculate and visualize street bearings and orientations
 * Calculate and visualize shortest-path routes that minimize distance, travel time, elevation, etc
@@ -42,7 +42,7 @@ OSMnx is pronounced as the initialism: "oh-ess-em-en-ex". It is built on top of 
 * Visualize travel distance and travel time with isoline and isochrone maps
 * Plot figure-ground diagrams of street networks and building footprints
 
-The `OSMnx Examples`_ gallery contains tutorials and demonstrations of all these features, and package usage is detailed in the :doc:`user-reference`.
+The OSMnx `Examples Gallery`_ contains tutorials and demonstrations of all these features, and package usage is detailed in the :doc:`user-reference`.
 
 Configuration
 ^^^^^^^^^^^^^
@@ -75,37 +75,35 @@ Topology Clean-Up
 
 The :code:`simplification` module automatically processes the network's topology from the original raw OpenStreetMap data, such that nodes represent intersections/dead-ends and edges represent the street segments that link them. This takes two primary forms: graph simplification and intersection consolidation.
 
-**Graph simplification** cleans up the graph's topology so that nodes represent intersections or dead-ends and edges represent street segments. This is important because in OpenStreetMap raw data, ways comprise sets of straight-line segments between nodes: that is, nodes are vertices for streets' curving line geometries, not just intersections and dead-ends. By default, OSMnx simplifies this topology by discarding non-intersection/dead-end nodes while retaining the complete true edge geometry as an edge attribute. When multiple OpenStreetMap ways are merged into a single graph edge, the ways' attribute values are collapsed into a single edge attribute value if they are all the same, or a list of unique values if any of them differ.
+**Graph simplification** cleans up the graph's topology so that nodes represent intersections or dead-ends and edges represent street segments. This is important because in OpenStreetMap raw data, ways comprise sets of straight-line segments between nodes: that is, nodes are vertices for streets' curving line geometries, not just intersections and dead-ends. By default, OSMnx simplifies this topology by discarding non-intersection/dead-end nodes while retaining the complete true edge geometry as an edge attribute. When multiple OpenStreetMap ways are merged into a single graph edge, the ways' attribute values can be aggregated into a single value.
 
-**Intersection consolidation** is important because many real-world street networks feature complex intersections and traffic circles, resulting in a cluster of graph nodes where there is really just one true intersection as we would think of it in transportation or urban design. Similarly, divided roads are often represented by separate centerline edges: the intersection of two divided roads thus creates 4 nodes, representing where each edge intersects a perpendicular edge, but these 4 nodes represent a single intersection in the real world. OSMnx can consolidate such complex intersections into a single node and optionally rebuild the graph's edge topology accordingly.
+**Intersection consolidation** is important because many real-world street networks feature complex intersections and traffic circles, resulting in a cluster of graph nodes where there is really just one true intersection as we would think of it in transportation or urban design. Similarly, divided roads are often represented by separate centerline edges: the intersection of two divided roads thus creates 4 nodes, representing where each edge intersects a perpendicular edge, but these 4 nodes represent a single intersection in the real world. OSMnx can consolidate such complex intersections into a single node and optionally rebuild the graph's edge topology accordingly. When multiple OpenStreetMap nodes are merged into a single graph node, the nodes' attribute values can be aggregated into a single value.
 
 Converting, Projecting, Saving
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-OSMnx can convert a MultiDiGraph to a `MultiGraph`_ if you prefer an undirected representation of the network, or to a `DiGraph`_ if you prefer a directed representation without any parallel edges. It can also convert a MultiDiGraph to/from GeoPandas node and edge `GeoDataFrames`_. The nodes GeoDataFrame is indexed by OSM ID and the edges GeoDataFrame is multi-indexed by :code:`u, v, key` just like a NetworkX edge. This allows you to load arbitrary node/edge ShapeFiles or GeoPackage layers as GeoDataFrames then model them as a MultiDiGraph for graph analysis.
+OSMnx's :code:`convert` module can convert a MultiDiGraph to a `MultiGraph`_ if you prefer an undirected representation of the network, or to a `DiGraph`_ if you prefer a directed representation without any parallel edges. It can also convert a MultiDiGraph to/from GeoPandas node and edge `GeoDataFrames`_. The nodes GeoDataFrame is indexed by OSM ID and the edges GeoDataFrame is multi-indexed by :code:`u, v, key` just like a NetworkX edge. This allows you to load arbitrary node/edge ShapeFiles or GeoPackage layers as GeoDataFrames then model them as a MultiDiGraph for graph analysis.
 
 You can easily project your graph to different coordinate reference systems using the :code:`projection` module. If you're unsure which `CRS`_ you want to project to, OSMnx can automatically determine an appropriate UTM CRS for you.
 
-Using the :code:`io` module, you can save your graph to disk as a GraphML file (to load into other network analysis software) or a GeoPackage (to load into other GIS software). Use the GraphML format whenever saving a graph for later work with OSMnx.
+Using the :code:`io` module, you can save your graph to disk as a GraphML file (to load into other network analysis software), a GeoPackage (to load into other GIS software), or an OSM XML file. Use the GraphML format whenever saving a graph for later work with OSMnx.
 
 Working with Elevation
 ^^^^^^^^^^^^^^^^^^^^^^
 
 The :code:`elevation` module lets you automatically attach elevations to the graph's nodes from a local raster file or a web service like the Google Maps `Elevation API`_. You can also calculate edge grades (i.e., rise-over-run) and analyze the steepness of certain streets or routes.
 
-Network Statistics
-^^^^^^^^^^^^^^^^^^
+Network Measures
+^^^^^^^^^^^^^^^^
 
-You can use the :code:`stats` module to calculate a variety of geometric and topological measures as well as street network bearing/orientation statistics. These measures define streets as the edges in an undirected representation of the graph to prevent double-counting bidirectional edges of a two-way street. You can easily generate common stats in transportation studies, urban design, and network science, including intersection density, circuity, average node degree (connectedness), betweenness centrality, and much more.
+You can use the :code:`stats` module to calculate a variety of geometric and topological measures as well as street network bearing and orientation statistics. These measures define streets as the edges in an undirected representation of the graph to prevent double-counting bidirectional edges of a two-way street. You can easily generate common stats in transportation studies, urban design, and network science, including intersection density, circuity, average node degree (connectedness), betweenness centrality, and much more.
 
 You can also use NetworkX directly to calculate additional topological network measures.
 
 Routing
 ^^^^^^^
 
-The :code:`speed` module can impute missing speeds to the graph edges. This imputation can obviously be imprecise, and the user can override it by passing in arguments that define local speed limits. It can also calculate free-flow travel times for each edge.
-
-The :code:`distance` module can find the nearest node(s) or edge(s) to coordinates using a fast spatial index. The :code:`routing` module can solve shortest paths for network routing, parallelized with multiprocessing, using different weights (e.g., distance, travel time, elevation change, etc).
+The :code:`distance` module can find the nearest node(s) or edge(s) to coordinates using a fast spatial index. The :code:`routing` module can solve shortest paths for network routing, parallelized with multiprocessing, using different weights (e.g., distance, travel time, elevation change, etc). It can also impute missing speeds to the graph edges. This imputation can obviously be imprecise, so the user can override it by passing in arguments that define local speed limits. It can also calculate free-flow travel times for each edge.
 
 Visualization
 ^^^^^^^^^^^^^
@@ -115,14 +113,14 @@ You can plot graphs, routes, network figure-ground diagrams, building footprints
 More Info
 ---------
 
-All of this functionality is demonstrated step-by-step in the `OSMnx Examples`_ gallery, and usage is detailed in the :doc:`user-reference`. More feature development details are in the `Changelog`_. Consult the :doc:`further-reading` resources for additional technical details and research.
+All of this functionality is demonstrated step-by-step in the OSMnx `Examples Gallery`_, and usage is detailed in the :doc:`user-reference`. More feature development details are in the `Changelog`_. Consult the :doc:`further-reading` resources for additional technical details and research.
 
 Frequently Asked Questions
 --------------------------
 
 *How do I install OSMnx?* Follow the :doc:`installation` guide.
 
-*How do I use OSMnx?* Check out the step-by-step tutorials in the `OSMnx Examples`_ gallery.
+*How do I use OSMnx?* Check out the step-by-step tutorials in the OSMnx `Examples Gallery`_.
 
 *How does this or that function work?* Consult the :doc:`user-reference`.
 
@@ -132,7 +130,7 @@ Frequently Asked Questions
 
 *Are there any usage limitations?* Yes. Refer to the `Nominatim Usage Policy`_ and `Overpass Commons`_ documentation for usage limitations and restrictions that you must adhere to at all times. If you use an alternative Nominatim/Overpass instance, ensure you understand and obey their usage policies. If you need to exceed these limitations, consider installing your own hosted instance and setting OSMnx to use it.
 
-.. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
+.. _Examples Gallery: https://github.com/gboeing/osmnx-examples
 .. _GeoPandas: https://geopandas.org
 .. _NetworkX: https://networkx.org
 .. _OpenStreetMap: https://www.openstreetmap.org
