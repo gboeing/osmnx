@@ -409,11 +409,7 @@ def _create_gdf(
     idx = ["element", "id"]
     features = _process_features(elements, set(tags.keys()))
     gdf = gpd.GeoDataFrame(features, geometry="geometry", crs=settings.default_crs).set_index(idx)
-
-    gdf = _filter_features(gdf, polygon, tags)
-    msg = f"{len(gdf):,} features in the final GeoDataFrame"
-    utils.log(msg, level=lg.INFO)
-    return gdf
+    return _filter_features(gdf, polygon, tags)
 
 
 def _process_features(
@@ -613,14 +609,14 @@ def _remove_polygon_holes(
     """
     Subtract inner holes from outer polygons.
 
-    This allows possible island polygons inside some larger polygon's holes.
+    This allows possible island polygons within a larger polygon's holes.
 
     Parameters
     ----------
     outer_polygons
-        Polygons, including possible islands inside a larger polygon's holes.
+        Polygons, including possible islands within a larger polygon's holes.
     inner_polygons
-        Holes to subtract from the polygons that contain them.
+        Inner holes to subtract from the outer polygons that contain them.
 
     Returns
     -------
@@ -639,7 +635,7 @@ def _remove_polygon_holes(
             polygons_with_holes.append(outer)
         geometry = unary_union(polygons_with_holes)
 
-    # ensure returned geometry is a (Multi)Polygon
+    # ensure returned geometry is a Polygon or MultiPolygon
     if isinstance(geometry, (Polygon, MultiPolygon)):
         return geometry
     return Polygon()
@@ -651,10 +647,10 @@ def _filter_features(
     tags: dict[str, bool | str | list[str]],
 ) -> gpd.GeoDataFrame:
     """
-    Filter final features GeoDataFrame by spatial boundaries and query tags.
+    Filter features GeoDataFrame by spatial boundaries and query tags.
 
-    If the `polygon` and `tags` arguments are empty, the final GeoDataFrame
-    will not be filtered accordingly.
+    If the `polygon` and `tags` arguments are empty objects, the final
+    GeoDataFrame will not be filtered accordingly.
 
     Parameters
     ----------
@@ -668,11 +664,11 @@ def _filter_features(
     Returns
     -------
     gdf
-        Final filtered GeoDataFrame of features.
+        Filtered GeoDataFrame of features.
     """
     # remove any null or empty geometries then fix any invalid geometries
-    gdf = gdf[~(gdf.geometry.isna() | gdf.geometry.is_empty)]
-    gdf.loc[:, "geometry"] = gdf.geometry.make_valid()
+    gdf = gdf[~(gdf["geometry"].isna() | gdf["geometry"].is_empty)]
+    gdf.loc[:, "geometry"] = gdf["geometry"].make_valid()
 
     # retain rows with geometries that intersect the polygon
     if polygon.is_empty:
@@ -695,9 +691,12 @@ def _filter_features(
             elif isinstance(value, list):
                 tags_filter |= gdf[col].isin(set(value))
 
-    # filter gdf then drop any columns with just nulls left after filtering
+    # filter gdf then drop any columns with only nulls left after filtering
     gdf = gdf[geom_filter & tags_filter].dropna(axis="columns", how="all")
     if len(gdf) == 0:  # pragma: no cover
         msg = "No matching features. Check query location, tags, and log."
         raise InsufficientResponseError(msg)
+
+    msg = f"{len(gdf):,} features in the final GeoDataFrame"
+    utils.log(msg, level=lg.INFO)
     return gdf
