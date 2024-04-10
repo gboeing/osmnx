@@ -44,6 +44,9 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from pathlib import Path
 
+# define what types of OSM relations we currently handle
+_RELATION_TYPES = {"boundary", "multipolygon"}
+
 # OSM tags to determine if closed ways should be polygons, based on JSON from
 # https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features
 _POLYGON_FEATURES: dict[str, dict[str, str | set[str]]] = {
@@ -366,7 +369,7 @@ def features_from_xml(
 
     # drop misc element attrs that might have been added from OSM XML file
     to_drop = set(gdf.columns) & {"changeset", "timestamp", "uid", "user", "version"}
-    return gdf.drop(columns=to_drop)
+    return gdf.drop(columns=list(to_drop))
 
 
 def _create_gdf(
@@ -430,9 +433,6 @@ def _process_features(
     -------
     features
     """
-    # define what types of OSM relations we currently handle
-    RELATION_TYPES = {"boundary", "multipolygon"}
-
     nodes = []  # all nodes, including ones that just compose ways
     feature_nodes = []  # nodes that possibly match our query tags
     node_coords = {}  # hold node lon,lat tuples to create way geoms
@@ -449,7 +449,7 @@ def _process_features(
             nodes.append(element)
         elif et == "way":
             ways.append(element)
-        elif et == "relation" and element.get("tags", {}).get("type") in RELATION_TYPES:
+        elif et == "relation" and element.get("tags", {}).get("type") in _RELATION_TYPES:
             relations.append(element)
 
     # extract all nodes' coords, then add to features any nodes with tags that
