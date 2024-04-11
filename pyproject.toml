@@ -72,7 +72,6 @@ warn_unreachable = true
 cache-dir = "~/.cache/ruff"
 exclude = ["build/*"]
 line-length = 100
-target-version = "py39"
 
 [tool.ruff.lint]
 extend-ignore = ["N803", "N806", "SLF001"]
