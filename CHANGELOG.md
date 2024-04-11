@@ -38,7 +38,7 @@ Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123)
 - rename private \_downloader module to \_http (#1114)
 - remove unnecessary private \_api module (#1114)
 
-## 1.9.2 (TBD)
+## 1.9.2 (2024-04-02)
 
 - deprecate and replace settings module's default_accept_language, default_referer, and default_user_agent settings (#1138)
 - deprecate and replace settings module's memory, nominatim_endpoint, overpass_endpoint, and timeout settings (#1138)
