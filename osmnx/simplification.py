@@ -522,10 +522,8 @@ def _merge_nodes_geometric(G, tolerance, tolerance_column):
     gdf_nodes = convert.graph_to_gdfs(G, edges=False)
 
     if tolerance_column and tolerance_column in gdf_nodes.columns:
-        # Use the values from the tolerance_column as an array for buffering
-        buffer_distances = gdf_nodes[tolerance_column].values
         # If a node does not have a value in the tolerance_column, use the default tolerance
-        buffer_distances[np.isnan(buffer_distances)] = tolerance
+        buffer_distances = gdf_nodes[tolerance_column].fillna(tolerance)
         # Buffer nodes to the specified distances and merge them
         merged = gdf_nodes['geometry'].buffer(distance=buffer_distances).unary_union
     else:
