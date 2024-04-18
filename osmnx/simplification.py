@@ -405,7 +405,12 @@ def simplify_graph(  # noqa: C901
 
 
 def consolidate_intersections(
-    G, tolerance=10, rebuild_graph=True, dead_ends=False, reconnect_edges=True, tolerance_attribute=None
+    G,
+    tolerance=10,
+    rebuild_graph=True,
+    dead_ends=False,
+    reconnect_edges=True,
+    tolerance_attribute=None,
 ):
     """
     Consolidate intersections comprising clusters of nearby nodes.
@@ -489,7 +494,9 @@ def consolidate_intersections(
             return G
 
         # otherwise
-        return _consolidate_intersections_rebuild_graph(G, tolerance, reconnect_edges, tolerance_attribute)
+        return _consolidate_intersections_rebuild_graph(
+            G, tolerance, reconnect_edges, tolerance_attribute
+        )
 
     # otherwise, if we're not rebuilding the graph
     if not G:
@@ -526,17 +533,19 @@ def _merge_nodes_geometric(G, tolerance, tolerance_attribute):
         # If a node does not have a value in the tolerance_attribute, use the default tolerance
         buffer_distances = gdf_nodes[tolerance_attribute].fillna(tolerance)
         # Buffer nodes to the specified distances and merge them
-        merged = gdf_nodes['geometry'].buffer(distance=buffer_distances).unary_union
+        merged = gdf_nodes["geometry"].buffer(distance=buffer_distances).unary_union
     else:
         # Use the default tolerance for all nodes
-        merged = gdf_nodes['geometry'].buffer(distance=tolerance).unary_union
+        merged = gdf_nodes["geometry"].buffer(distance=tolerance).unary_union
 
     # if only a single node results, make it iterable to convert to GeoSeries
     merged = MultiPolygon([merged]) if isinstance(merged, Polygon) else merged
     return gpd.GeoSeries(merged.geoms, crs=G.graph["crs"])
 
 
-def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=True, tolerance_attribute=None):
+def _consolidate_intersections_rebuild_graph(
+    G, tolerance=10, reconnect_edges=True, tolerance_attribute=None
+):
     """
     Consolidate intersections comprising clusters of nearby nodes.
 
@@ -578,7 +587,9 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
     # STEP 1
     # buffer nodes to passed-in distance and merge overlaps. turn merged nodes
     # into gdf and get centroids of each cluster as x, y
-    node_clusters = gpd.GeoDataFrame(geometry=_merge_nodes_geometric(G, tolerance, tolerance_attribute))
+    node_clusters = gpd.GeoDataFrame(
+        geometry=_merge_nodes_geometric(G, tolerance, tolerance_attribute)
+    )
     centroids = node_clusters.centroid
     node_clusters["x"] = centroids.x
     node_clusters["y"] = centroids.y
