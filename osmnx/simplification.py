@@ -5,7 +5,6 @@ from warnings import warn
 
 import geopandas as gpd
 import networkx as nx
-import numpy as np
 from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
@@ -512,6 +511,9 @@ def _merge_nodes_geometric(G, tolerance, tolerance_attribute):
     tolerance : float
         buffer nodes to this distance (in graph's geometry's units) then merge
         overlapping polygons into a single polygon via a unary union operation
+    tolerance_attribute : str, optional
+        The name of the attribute that contains individual tolerance values for
+        each node. If None, the default tolerance is used for all nodes.
 
     Returns
     -------
@@ -563,6 +565,9 @@ def _consolidate_intersections_rebuild_graph(G, tolerance=10, reconnect_edges=Tr
         edge length attributes; if False, returned graph has no edges (which
         is faster if you just need topologically consolidated intersection
         counts).
+    tolerance_attribute : str, optional
+        The name of the attribute that contains individual tolerance values for
+        each node. If None, the default tolerance is used for all nodes.
 
     Returns
     -------
