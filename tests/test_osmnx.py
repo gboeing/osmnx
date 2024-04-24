@@ -26,7 +26,7 @@ from requests.exceptions import ConnectionError
 from shapely import wkt
 from shapely.geometry import Point
 from shapely.geometry import Polygon
-from typeguard import TypeCheckError
+from typeguard import suppress_type_checks
 
 import osmnx as ox
 
@@ -640,7 +640,7 @@ def test_features() -> None:
 
     with pytest.raises(ValueError, match="The geometry of `polygon` is invalid."):
         ox.features.features_from_polygon(Polygon(((0, 0), (0, 0), (0, 0), (0, 0))), tags={})
-    with pytest.raises(TypeCheckError), pytest.raises(TypeError):
+    with suppress_type_checks(), pytest.raises(TypeError):
         ox.features.features_from_polygon(Point(0, 0), tags={})
 
     # test cache_only_mode

@@ -81,7 +81,9 @@ class _OSMContentHandler(ContentHandler):
             self.object.update({k: v for k, v in attrs.items() if k in ROOT_ATTR_DEFAULTS})
 
         elif name in {"node", "way"}:
-            self._element = dict(type=name, tags={}, nodes=[], **attrs)
+            self._element = dict(type=name, tags={}, **attrs)
+            if name == "way":
+                self._element["nodes"] = []
             self._element.update({k: float(v) for k, v in attrs.items() if k in float_attrs})
             self._element.update({k: int(v) for k, v in attrs.items() if k in int_attrs})
 
