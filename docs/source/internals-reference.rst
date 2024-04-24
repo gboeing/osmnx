@@ -3,14 +3,6 @@ Internals Reference
 
 This is the complete OSMnx internals reference for developers, including private internal modules and functions. If you are instead looking for a user guide to OSMnx's public API, see the :doc:`user-reference`.
 
-osmnx._api module
------------------
-
-.. automodule:: osmnx._api
-    :members:
-    :private-members:
-    :noindex:
-
 osmnx.bearing module
 --------------------
 
@@ -20,7 +12,7 @@ osmnx.bearing module
     :noindex:
 
 osmnx.convert module
---------------------
+---------------------
 
 .. automodule:: osmnx.convert
     :members:
@@ -31,14 +23,6 @@ osmnx.distance module
 ---------------------
 
 .. automodule:: osmnx.distance
-    :members:
-    :private-members:
-    :noindex:
-
-osmnx._downloader module
-------------------------
-
-.. automodule:: osmnx._downloader
     :members:
     :private-members:
     :noindex:
@@ -67,14 +51,6 @@ osmnx.features module
     :private-members:
     :noindex:
 
-osmnx.folium module
--------------------
-
-.. automodule:: osmnx.folium
-    :members:
-    :private-members:
-    :noindex:
-
 osmnx.geocoder module
 ---------------------
 
@@ -83,18 +59,18 @@ osmnx.geocoder module
     :private-members:
     :noindex:
 
-osmnx.geometries module
------------------------
-
-.. automodule:: osmnx.geometries
-    :members:
-    :private-members:
-    :noindex:
-
 osmnx.graph module
 ------------------
 
 .. automodule:: osmnx.graph
+    :members:
+    :private-members:
+    :noindex:
+
+osmnx._http module
+------------------
+
+.. automodule:: osmnx._http
     :members:
     :private-members:
     :noindex:
@@ -115,10 +91,10 @@ osmnx._nominatim module
     :private-members:
     :noindex:
 
-osmnx.osm_xml module
---------------------
+osmnx._osm_xml module
+---------------------
 
-.. automodule:: osmnx.osm_xml
+.. automodule:: osmnx._osm_xml
     :members:
     :private-members:
     :noindex:
@@ -171,14 +147,6 @@ osmnx.simplification module
     :private-members:
     :noindex:
 
-osmnx.speed module
-------------------
-
-.. automodule:: osmnx.speed
-    :members:
-    :private-members:
-    :noindex:
-
 osmnx.stats module
 ------------------
 
@@ -207,14 +175,6 @@ osmnx.utils_geo module
 ----------------------
 
 .. automodule:: osmnx.utils_geo
-    :members:
-    :private-members:
-    :noindex:
-
-osmnx.utils_graph module
-------------------------
-
-.. automodule:: osmnx.utils_graph
     :members:
     :private-members:
     :noindex:

@@ -85,12 +85,6 @@ osmnx.simplification module
 .. automodule:: osmnx.simplification
     :members:
 
-osmnx.speed module
-------------------
-
-.. automodule:: osmnx.speed
-    :members:
-
 osmnx.stats module
 ------------------
 
@@ -113,10 +107,4 @@ osmnx.utils_geo module
 ----------------------
 
 .. automodule:: osmnx.utils_geo
-    :members:
-
-osmnx.utils_graph module
-------------------------
-
-.. automodule:: osmnx.utils_graph
     :members:

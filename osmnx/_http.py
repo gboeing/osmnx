@@ -1,12 +1,14 @@
 """Handle HTTP requests to web APIs."""
 
+from __future__ import annotations
+
 import json
 import logging as lg
 import socket
 from hashlib import sha1
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
-from warnings import warn
 
 import requests
 from requests.exceptions import JSONDecodeError
@@ -20,15 +22,19 @@ from ._errors import ResponseStatusCodeError
 _original_getaddrinfo = socket.getaddrinfo
 
 
-def _save_to_cache(url, response_json, ok):
+def _save_to_cache(
+    url: str,
+    response_json: dict[str, Any] | list[dict[str, Any]],
+    ok: bool,  # noqa: FBT001
+) -> None:
     """
     Save a HTTP response JSON object to a file in the cache folder.
 
-    Function calculates the checksum of url to generate the cache file's name.
-    If the request was sent to server via POST instead of GET, then URL should
-    be a GET-style representation of request. Response is only saved to a
-    cache file if settings.use_cache is True, response_json is not None, and
-    ok is True.
+    This calculates the checksum of `url` to generate the cache file name. If
+    the request was sent to server via POST instead of GET, then `url` should
+    be a GET-style representation of the request. Response is only saved to a
+    cache file if `settings.use_cache` is True, `response_json` is not None,
+    and `ok` is True.
 
     Users should always pass OrderedDicts instead of dicts of parameters into
     request functions, so the parameters remain in the same order each time,
@@ -38,12 +44,12 @@ def _save_to_cache(url, response_json, ok):
 
     Parameters
     ----------
-    url : string
-        the URL of the request
-    response_json : dict
-        the JSON response
-    ok : bool
-        requests response.ok value
+    url
+        The URL of the request.
+    response_json
+        The JSON response from the server.
+    ok
+        A `requests.response.ok` value.
 
     Returns
     -------
@@ -51,11 +57,8 @@ def _save_to_cache(url, response_json, ok):
     """
     if settings.use_cache:
         if not ok:  # pragma: no cover
-            utils.log("Did not save to cache because response status_code is not OK")
-
-        elif response_json is None:  # pragma: no cover
-            utils.log("Did not save to cache because response_json is None")
-
+            msg = "Did not save to cache because HTTP status code is not OK"
+            utils.log(msg, level=lg.WARNING)
         else:
             # create the folder on the disk if it doesn't already exist
             cache_folder = Path(settings.cache_folder)
@@ -63,142 +66,119 @@ def _save_to_cache(url, response_json, ok):
 
             # hash the url to make the filename succinct but unique
             # sha1 digest is 160 bits = 20 bytes = 40 hexadecimal characters
-            filename = sha1(url.encode("utf-8")).hexdigest() + ".json"
-            cache_filepath = cache_folder / filename
+            checksum = sha1(url.encode("utf-8")).hexdigest()  # noqa: S324
+            cache_filepath = cache_folder / f"{checksum}.json"
 
             # dump to json, and save to file
             cache_filepath.write_text(json.dumps(response_json), encoding="utf-8")
-            utils.log(f"Saved response to cache file {str(cache_filepath)!r}")
+            msg = f"Saved response to cache file {str(cache_filepath)!r}"
+            utils.log(msg, level=lg.INFO)
 
 
-def _url_in_cache(url):
+def _url_in_cache(url: str) -> Path | None:
     """
     Determine if a URL's response exists in the cache.
 
-    Calculates the checksum of url to determine the cache file's name.
+    Calculates the checksum of `url` to determine the cache file's name.
+    Returns None if it cannot be found in the cache.
 
     Parameters
     ----------
-    url : string
-        the URL to look for in the cache
+    url
+        The URL to look for in the cache.
 
     Returns
     -------
-    filepath : pathlib.Path
-        path to cached response for url if it exists, otherwise None
+    cache_filepath
+        Path to cached response for `url` if it exists, otherwise None.
     """
     # hash the url to generate the cache filename
-    filename = sha1(url.encode("utf-8")).hexdigest() + ".json"
-    filepath = Path(settings.cache_folder) / filename
+    checksum = sha1(url.encode("utf-8")).hexdigest()  # noqa: S324
+    cache_filepath = Path(settings.cache_folder) / f"{checksum}.json"
 
     # if this file exists in the cache, return its full path
-    return filepath if filepath.is_file() else None
+    return cache_filepath if cache_filepath.is_file() else None
 
 
-def _retrieve_from_cache(url, check_remark=True):
+def _retrieve_from_cache(url: str) -> dict[str, Any] | list[dict[str, Any]] | None:
     """
-    Retrieve a HTTP response JSON object from the cache, if it exists.
+    Retrieve a HTTP response JSON object from the cache if it exists.
+
+    Returns None if there is a server remark in the cached response.
 
     Parameters
     ----------
-    url : string
-        the URL of the request
-    check_remark : string
-        if True, only return filepath if cached response does not have a
-        remark key indicating a server warning
+    url
+        The URL of the request.
 
     Returns
     -------
-    response_json : dict
-        cached response for url if it exists in the cache, otherwise None
+    response_json
+        Cached response for `url` if it exists in the cache and does not
+        contain a server remark, otherwise None.
     """
     # if the tool is configured to use the cache
     if settings.use_cache:
         # return cached response for this url if exists, otherwise return None
         cache_filepath = _url_in_cache(url)
         if cache_filepath is not None:
-            response_json = json.loads(cache_filepath.read_text(encoding="utf-8"))
+            response_json: dict[str, Any] | list[dict[str, Any]] = json.loads(
+                cache_filepath.read_text(encoding="utf-8"),
+            )
 
-            # return None if check_remark is True and there is a server
-            # remark in the cached response
-            if check_remark and "remark" in response_json:  # pragma: no cover
-                utils.log(
+            # return None if there is a server remark in the cached response
+            if isinstance(response_json, dict) and ("remark" in response_json):  # pragma: no cover
+                msg = (
                     f"Ignoring cache file {str(cache_filepath)!r} because "
                     f"it contains a remark: {response_json['remark']!r}"
                 )
+                utils.log(msg, lg.WARNING)
                 return None
 
-            utils.log(f"Retrieved response from cache file {str(cache_filepath)!r}")
+            msg = f"Retrieved response from cache file {str(cache_filepath)!r}"
+            utils.log(msg, lg.INFO)
             return response_json
+
     return None
 
 
-def _get_http_headers(user_agent=None, referer=None, accept_language=None):
+def _get_http_headers(
+    *,
+    user_agent: str | None = None,
+    referer: str | None = None,
+    accept_language: str | None = None,
+) -> dict[str, str]:
     """
-    Update the default requests HTTP headers with OSMnx info.
+    Update the default requests HTTP headers with OSMnx information.
 
     Parameters
     ----------
-    user_agent : string
-        the user agent string, if None will set with OSMnx default
-    referer : string
-        the referer string, if None will set with OSMnx default
-    accept_language : string
-        make accept-language explicit e.g. for consistent nominatim result
-        sorting
+    user_agent
+        The user agent. If None, use `settings.http_user_agent` value.
+    referer
+        The referer. If None, use `settings.http_referer` value.
+    accept_language
+        The accept language. If None, use `settings.http_accept_language`
+        value.
 
     Returns
     -------
-    headers : dict
+    headers
     """
-    if settings.default_accept_language is None:
-        default_accept_language = settings.http_accept_language
-    else:
-        default_accept_language = settings.default_accept_language
-        msg = (
-            "`settings.default_accept_language` is deprecated and will be removed "
-            "in the v2.0.0 release: use `settings.http_accept_language` instead. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
-        )
-        warn(msg, FutureWarning, stacklevel=2)
-
-    if settings.default_referer is None:
-        default_referer = settings.http_referer
-    else:
-        default_referer = settings.default_referer
-        msg = (
-            "`settings.default_referer` is deprecated and will be removed in the "
-            "v2.0.0 release: use `settings.http_referer` instead. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
-        )
-        warn(msg, FutureWarning, stacklevel=2)
-
-    if settings.default_user_agent is None:
-        default_user_agent = settings.http_user_agent
-    else:
-        default_user_agent = settings.default_user_agent
-        msg = (
-            "`settings.default_user_agent` is deprecated and will be removed in "
-            "the v2.0.0 release: use `settings.http_user_agent` instead. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
-        )
-        warn(msg, FutureWarning, stacklevel=2)
-
     if user_agent is None:
-        user_agent = default_user_agent
+        user_agent = settings.http_user_agent
     if referer is None:
-        referer = default_referer
+        referer = settings.http_referer
     if accept_language is None:
-        accept_language = default_accept_language
+        accept_language = settings.http_accept_language
 
-    headers = requests.utils.default_headers()
-    headers.update(
-        {"User-Agent": user_agent, "referer": referer, "Accept-Language": accept_language}
-    )
+    info = {"User-Agent": user_agent, "referer": referer, "Accept-Language": accept_language}
+    headers = dict(requests.utils.default_headers())
+    headers.update(info)
     return headers
 
 
-def _resolve_host_via_doh(hostname):
+def _resolve_host_via_doh(hostname: str) -> str:
     """
     Resolve hostname to IP address via Google's public DNS-over-HTTPS API.
 
@@ -211,34 +191,24 @@ def _resolve_host_via_doh(hostname):
 
     Parameters
     ----------
-    hostname : string
-        the hostname to consistently resolve the IP address of
+    hostname
+        The hostname to consistently resolve the IP address of.
 
     Returns
     -------
-    ip_address : string
-        resolved IP address of host, or hostname itself if resolution failed
+    ip_address
+        Resolved IP address of host, or hostname itself if resolution failed.
     """
-    if settings.timeout is None:
-        timeout = settings.requests_timeout
-    else:
-        timeout = settings.timeout
-        msg = (
-            "`settings.timeout` is deprecated and will be removed in the v2.0.0 "
-            "release: use `settings.requests_timeout` instead. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
-        )
-        warn(msg, FutureWarning, stacklevel=2)
-
     if settings.doh_url_template is None:
         # if user has set the url template to None, return hostname itself
-        utils.log("User set `doh_url_template=None`, requesting host by name", level=lg.WARNING)
+        msg = "User set `doh_url_template=None`, requesting host by name"
+        utils.log(msg, level=lg.WARNING)
         return hostname
 
     err_msg = f"Failed to resolve {hostname!r} IP via DoH, requesting host by name"
     try:
         url = settings.doh_url_template.format(hostname=hostname)
-        response = requests.get(url, timeout=timeout)
+        response = requests.get(url, timeout=settings.requests_timeout)
         data = response.json()
 
     # if we cannot reach DoH server or resolve host, return hostname itself
@@ -246,11 +216,12 @@ def _resolve_host_via_doh(hostname):
         utils.log(err_msg, level=lg.ERROR)
         return hostname
 
-    # if there were no exceptions, return
+    # if there were no request exceptions, return
     else:
         if response.ok and data["Status"] == 0:
             # status 0 means NOERROR, so return the IP address
-            return data["Answer"][0]["data"]
+            ip_address: str = data["Answer"][0]["data"]
+            return ip_address
 
         # otherwise, if we cannot reach DoH server or cannot resolve host
         # just return the hostname itself
@@ -258,7 +229,7 @@ def _resolve_host_via_doh(hostname):
         return hostname
 
 
-def _config_dns(url):
+def _config_dns(url: str) -> None:
     """
     Force socket.getaddrinfo to use IP address instead of hostname.
 
@@ -277,8 +248,8 @@ def _config_dns(url):
 
     Parameters
     ----------
-    url : string
-        the URL to consistently resolve the IP address of
+    url
+        The URL to consistently resolve the IP address of.
 
     Returns
     -------
@@ -289,16 +260,15 @@ def _config_dns(url):
         ip = socket.gethostbyname(hostname)
     except socket.gaierror:  # pragma: no cover
         # may occur when using a proxy, so instead resolve IP address via DoH
-        utils.log(
-            f"Encountered gaierror while trying to resolve {hostname!r}, trying again via DoH...",
-            level=lg.ERROR,
-        )
+        msg = f"Encountered gaierror while trying to resolve {hostname!r}, trying again via DoH..."
+        utils.log(msg, level=lg.ERROR)
         ip = _resolve_host_via_doh(hostname)
 
     # mutate socket.getaddrinfo to map hostname -> IP address
-    def _getaddrinfo(*args, **kwargs):
+    def _getaddrinfo(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
         if args[0] == hostname:
-            utils.log(f"Resolved {hostname!r} to {ip!r}")
+            msg = f"Resolved {hostname!r} to {ip!r}"
+            utils.log(msg, level=lg.INFO)
             return _original_getaddrinfo(ip, *args[1:], **kwargs)
 
         # otherwise
@@ -307,44 +277,47 @@ def _config_dns(url):
     socket.getaddrinfo = _getaddrinfo
 
 
-def _hostname_from_url(url):
+def _hostname_from_url(url: str) -> str:
     """
     Extract the hostname (domain) from a URL.
 
     Parameters
     ----------
-    url : string
-        the url from which to extract the hostname
+    url
+        The url from which to extract the hostname.
 
     Returns
     -------
-    hostname : string
-        the extracted hostname (domain)
+    hostname
+        The extracted hostname (domain).
     """
     return urlparse(url).netloc.split(":")[0]
 
 
-def _parse_response(response):
+def _parse_response(response: requests.Response) -> dict[str, Any] | list[dict[str, Any]]:
     """
     Parse JSON from a requests response and log the details.
 
     Parameters
     ----------
-    response : requests.response
-        the response object
+    response
+        The response object.
 
     Returns
     -------
-    response_json : dict
+    response_json
+        Value will be a dict if the response is from the Google or Overpass
+        APIs, and a list if the response is from the Nominatim API.
     """
     # log the response size and domain
     domain = _hostname_from_url(response.url)
     size_kb = len(response.content) / 1000
-    utils.log(f"Downloaded {size_kb:,.1f}kB from {domain!r} with status {response.status_code}")
+    msg = f"Downloaded {size_kb:,.1f}kB from {domain!r} with status {response.status_code}"
+    utils.log(msg, level=lg.INFO)
 
     # parse the response to JSON and log/raise exceptions
     try:
-        response_json = response.json()
+        response_json: dict[str, Any] | list[dict[str, Any]] = response.json()
     except JSONDecodeError as e:  # pragma: no cover
         msg = f"{domain!r} responded: {response.status_code} {response.reason} {response.text}"
         utils.log(msg, level=lg.ERROR)
@@ -353,7 +326,13 @@ def _parse_response(response):
         raise ResponseStatusCodeError(msg) from e
 
     # log any remarks if they exist
-    if "remark" in response_json:  # pragma: no cover
-        utils.log(f'{domain!r} remarked: {response_json["remark"]!r}', level=lg.WARNING)
+    if isinstance(response_json, dict) and "remark" in response_json:  # pragma: no cover
+        msg = f"{domain!r} remarked: {response_json['remark']!r}"
+        utils.log(msg, level=lg.WARNING)
+
+    # log if the response status_code is not OK
+    if not response.ok:
+        msg = f"{domain!r} returned HTTP status code {response.status_code}"
+        utils.log(msg, level=lg.WARNING)
 
     return response_json

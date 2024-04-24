@@ -3,43 +3,42 @@ build-backend = "hatchling.build"
 requires = ["hatchling"]
 
 [project]
-authors = [{name = "Geoff Boeing", email = "boeing@usc.edu"}]
+authors = [{ name = "Geoff Boeing", email = "boeing@usc.edu" }]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Scientific/Engineering :: GIS",
-    "Topic :: Scientific/Engineering :: Information Analysis",
-    "Topic :: Scientific/Engineering :: Mathematics",
-    "Topic :: Scientific/Engineering :: Physics",
-    "Topic :: Scientific/Engineering :: Visualization",
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: GIS",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+  "Topic :: Scientific/Engineering :: Mathematics",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Scientific/Engineering :: Visualization",
 ]
 dependencies = [
-    "geopandas>=0.12",
-    "networkx>=2.5",
-    "numpy>=1.20",
-    "pandas>=1.1",
-    "requests>=2.27",
-    "shapely>=2.0",
+  "geopandas>=0.12",
+  "networkx>=2.5",
+  "numpy>=1.21",
+  "pandas>=1.1",
+  "requests>=2.27",
+  "shapely>=2.0",
 ]
 description = "Download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap"
 dynamic = ["version"]
 keywords = ["GIS", "Networks", "OpenStreetMap", "Routing"]
-license = {text = "MIT License"}
-maintainers = [{name = "OSMnx contributors"}]
+license = { text = "MIT License" }
+maintainers = [{ name = "OSMnx contributors" }]
 name = "osmnx"
 readme = "README.md"
-requires-python = ">=3.8"  # match classifiers above and ruff target-version below
+requires-python = ">=3.9" # match classifiers above and ruff/mypy versions below
 
 [project.optional-dependencies]
 entropy = ["scipy>=1.5"]
@@ -52,56 +51,31 @@ Documentation = "https://osmnx.readthedocs.io"
 "Code Repository" = "https://github.com/gboeing/osmnx"
 "Examples Gallery" = "https://github.com/gboeing/osmnx-examples"
 
+[tool.coverage.report]
+exclude_also = ["@overload", "if TYPE_CHECKING:"]
+
 [tool.hatch.build]
 packages = ["osmnx"]
 
 [tool.hatch.version]
 path = "osmnx/_version.py"
 
+[tool.mypy]
+cache_dir = "~/.cache/mypy"
+ignore_missing_imports = true
+python_version = "3.9"
+strict = true
+warn_no_return = true
+warn_unreachable = true
+
 [tool.ruff]
 cache-dir = "~/.cache/ruff"
 exclude = ["build/*"]
 line-length = 100
-target-version = "py38"
 
 [tool.ruff.lint]
-extend-ignore = ["PLR091"]  # ignore PLR complexity checks (we check mccabe with C9)
-extend-select = [
-    "A",    # check python builtins being used as variables or parameters
-    "ARG",  # check unused function arguments
-    "B",    # check common design problems a la flake8-bugbear
-    "BLE",  # check blind exception catching
-    "C4",   # check proper comprehensions
-    "C9",   # check mccabe complexity
-    "D",    # check docstring conventions a la pydocstyle
-    "D417", # check missing args in docstrings (disabled by default for numpy convention)
-    "DTZ",  # check unsafe naive datetime use a la flake8-datetimez
-    "E",    # check code style conventions a la pycodestyle errors
-    "EM",   # check raw literals inside exception raising
-    "ERA",  # check commented-out code from python files a la eradicate
-    "F",    # check python source code for errors a la pyflakes
-    "FA",   # check from __future__ import annotations
-    "FIX",  # check temporary developer notes a la flake8-fixme
-   #"FURB", # check code improvements a la refurb (preview)
-    "G",    # check logging string formatting a la flake8-logging-format
-    "I",    # check isort imports
-   #"LOG",  # check logging module usage a la flake8-logging (preview)
-    "NPY",  # check numpy usage
-    "PD",   # check pandas linting a la pandas-vet
-    "PERF", # check performance anti-patterns a la perflint
-    "PGH",  # check pygrep hooks
-    "PIE",  # check misc lints a la flake8-pie
-    "PL",   # check code errors and smells a la pylint
-    "PT",   # check common pytest issues
-    "PTH",  # check pathlib usage
-    "RET",  # check return statements a la flake8-return
-    "RSE",  # check exception raise statements via flake8-raise
-    "SIM",  # check code simplicity a la flake8-simplify
-    "T20",  # check for any print statements
-    "TRY",  # check exception handling anti-patterns a la tryceratops
-    "UP",   # check outdated syntax a la pyupgrade
-    "W",    # check code style conventions a la pycodestyle warnings
-]
+extend-ignore = ["N803", "N806", "SLF001"]
+extend-select = ["ALL"]
 
 [tool.ruff.lint.isort]
 force-single-line = true
@@ -110,7 +84,10 @@ force-single-line = true
 max-complexity = 14
 
 [tool.ruff.lint.pycodestyle]
-max-line-length = 110  # line length + 10% since it isn't a hard upper bound
+max-line-length = 110 # line length + 10% since it isn't a hard upper bound
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
+
+[tool.ruff.lint.pylint]
+max-args = 8
