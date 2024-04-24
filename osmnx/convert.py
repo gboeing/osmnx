@@ -12,8 +12,8 @@ from warnings import warn
 import geopandas as gpd
 import networkx as nx
 import pandas as pd
-from shapely.geometry import LineString
-from shapely.geometry import Point
+from shapely import LineString
+from shapely import Point
 
 from . import utils
 

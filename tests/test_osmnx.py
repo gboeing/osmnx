@@ -23,9 +23,9 @@ import pandas as pd
 import pytest
 from lxml import etree
 from requests.exceptions import ConnectionError
+from shapely import Point
+from shapely import Polygon
 from shapely import wkt
-from shapely.geometry import Point
-from shapely.geometry import Polygon
 from typeguard import suppress_type_checks
 
 import osmnx as ox

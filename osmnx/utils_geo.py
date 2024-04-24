@@ -11,9 +11,9 @@ from warnings import warn
 
 import networkx as nx
 import numpy as np
-from shapely.geometry import LineString
-from shapely.geometry import MultiPolygon
-from shapely.geometry import Polygon
+from shapely import LineString
+from shapely import MultiPolygon
+from shapely import Polygon
 from shapely.ops import split
 
 from . import convert

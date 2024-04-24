@@ -23,8 +23,8 @@ from ._errors import InsufficientResponseError
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from shapely.geometry import MultiPolygon
-    from shapely.geometry import Polygon
+    from shapely import MultiPolygon
+    from shapely import Polygon
 
 
 def _get_network_filter(network_type: str) -> str:

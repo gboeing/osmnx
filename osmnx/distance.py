@@ -10,7 +10,7 @@ from typing import overload
 import networkx as nx
 import numpy as np
 import numpy.typing as npt
-from shapely.geometry import Point
+from shapely import Point
 from shapely.strtree import STRtree
 
 from . import convert

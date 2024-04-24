@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING
 from typing import Any
 
 import networkx as nx
-from shapely.geometry import MultiPolygon
-from shapely.geometry import Polygon
+from shapely import MultiPolygon
+from shapely import Polygon
 
 from . import _osm_xml
 from . import _overpass

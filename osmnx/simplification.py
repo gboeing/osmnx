@@ -9,10 +9,10 @@ from typing import Any
 import geopandas as gpd
 import networkx as nx
 import numpy as np
-from shapely.geometry import LineString
-from shapely.geometry import MultiPolygon
-from shapely.geometry import Point
-from shapely.geometry import Polygon
+from shapely import LineString
+from shapely import MultiPolygon
+from shapely import Point
+from shapely import Polygon
 
 from . import convert
 from . import stats
