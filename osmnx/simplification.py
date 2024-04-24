@@ -451,7 +451,7 @@ def consolidate_intersections(
     dead_ends: bool = False,
     reconnect_edges: bool = True,
     node_attr_aggs: dict[str, Any] | None = None,
-    tolerance_attribute=None,
+    tolerance_attribute: str | None = None,
 ) -> nx.MultiDiGraph | gpd.GeoSeries:
     """
     Consolidate intersections comprising clusters of nearby nodes.
@@ -558,7 +558,7 @@ def consolidate_intersections(
 
 
 def _merge_nodes_geometric(
-    G: nx.MultiDiGraph, tolerance: float, tolerance_attribute: str | None = None
+    G: nx.MultiDiGraph, tolerance: float, tolerance_attribute: str | None = None,
 ) -> gpd.GeoSeries:
     """
     Geometrically merge nodes within some distance of each other.
