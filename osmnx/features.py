@@ -467,7 +467,12 @@ def _process_features(
     # build all ways' geometries, then add to features any ways with tags that
     # match the passed query tags, or with any tags if no query tags passed
     for way in ways:
-        way["geometry"] = _build_way_geometry(way.pop("nodes"), way.get("tags", {}), node_coords)
+        way["geometry"] = _build_way_geometry(
+            way["id"],
+            way.pop("nodes"),
+            way.get("tags", {}),
+            node_coords,
+        )
         way_geoms[way["id"]] = way["geometry"]
         if (len(query_tag_keys) == 0 and len(way.get("tags", {}).keys()) > 0) or (
             len(query_tag_keys & way.get("tags", {}).keys()) > 0
@@ -491,6 +496,7 @@ def _process_features(
 
 
 def _build_way_geometry(
+    way_id: int,
     way_nodes: list[int],
     way_tags: dict[str, Any],
     node_coords: dict[int, tuple[float, float]],
@@ -504,6 +510,8 @@ def _build_way_geometry(
 
     Parameters
     ----------
+    way_id
+        The way's OSM ID.
     way_nodes
         The way's constituent nodes.
     way_tags
@@ -533,8 +541,8 @@ def _build_way_geometry(
     # create the way geometry from its constituent nodes' coordinates
     try:
         return geom_type(node_coords[node] for node in way_nodes)
-    except (GEOSException, KeyError, ValueError):
-        msg = "Could not create the way's geometry."
+    except (GEOSException, KeyError, ValueError) as e:
+        msg = f"Could not build geometry of way {way_id}: {e!r}"
         utils.log(msg, level=lg.WARNING)
         return geom_type()
 
