@@ -465,9 +465,8 @@ def consolidate_intersections(
     consolidate nodes within 10 meters of each other, use `tolerance=5`.
 
     It's also possible to specify difference tolerances for each node. This can
-    be done by adding an attribute to each node with contains the tolerance, and
-    passing the name of that argument as tolerance_attribute argument. If a node
-    does not have a value in the tolerance_attribute, the default tolerance is used.
+    be done by passing a dictionary mapping node IDs to individual tolerance
+    values, like `tolerance={1: 5, 2: 10}`.
 
     When `rebuild_graph` is False, it uses a purely geometric (and relatively
     fast) algorithm to identify "geometrically close" nodes, merge them, and
@@ -583,7 +582,7 @@ def _merge_nodes_geometric(
         tolerances = pd.Series(tolerance).reindex(gdf_nodes.index)
         # Buffer nodes to the specified distance
         buffered_geoms = gdf_nodes.geometry.buffer(tolerances)
-        # Replace POLYGON EMPTY with original geometries if buffer distance was effectively zero or missing
+        # Replace the missing values with the original points
         buffered_geoms = buffered_geoms.fillna(gdf_nodes["geometry"])
     else:
         # Buffer nodes to the specified distance
@@ -593,7 +592,7 @@ def _merge_nodes_geometric(
     merged = buffered_geoms.unary_union
 
     # if only a single node results, make it iterable to convert to GeoSeries
-    merged = MultiPolygon([merged]) if isinstance(merged, Polygon) else merged
+    merged = merged.geoms if hasattr(merged, "geoms") else merged
     return gpd.GeoSeries(merged.geoms, crs=G.graph["crs"])
 
 
