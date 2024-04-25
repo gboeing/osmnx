@@ -9,10 +9,9 @@ from typing import Any
 import geopandas as gpd
 import networkx as nx
 import numpy as np
+import pandas as pd
 from shapely import LineString
-from shapely import MultiPolygon
 from shapely import Point
-from shapely import Polygon
 
 from . import convert
 from . import stats
@@ -446,7 +445,7 @@ def simplify_graph(  # noqa: C901, PLR0912
 def consolidate_intersections(
     G: nx.MultiDiGraph,
     *,
-    tolerance: float = 10,
+    tolerance: float | dict[int, float] = 10,
     rebuild_graph: bool = True,
     dead_ends: bool = False,
     reconnect_edges: bool = True,
@@ -462,6 +461,10 @@ def consolidate_intersections(
     a projected graph to work in meaningful and consistent units like meters.
     Note `tolerance` represents a per-node buffering radius: for example, to
     consolidate nodes within 10 meters of each other, use `tolerance=5`.
+
+    It's also possible to specify difference tolerances for each node. This can
+    be done by passing a dictionary mapping node IDs to individual tolerance
+    values, like `tolerance={1: 5, 2: 10}`.
 
     When `rebuild_graph` is False, it uses a purely geometric (and relatively
     fast) algorithm to identify "geometrically close" nodes, merge them, and
@@ -487,7 +490,8 @@ def consolidate_intersections(
         A projected graph.
     tolerance
         Nodes are buffered to this distance (in graph's geometry's units) and
-        subsequent overlaps are dissolved into a single node.
+        subsequent overlaps are dissolved into a single node. Can be a float
+        value or a dictionary mapping node IDs to individual tolerance values.
     rebuild_graph
         If True, consolidate the nodes topologically, rebuild the graph, and
         return as MultiDiGraph. Otherwise, consolidate the nodes geometrically
@@ -547,7 +551,10 @@ def consolidate_intersections(
     return _merge_nodes_geometric(G, tolerance).centroid
 
 
-def _merge_nodes_geometric(G: nx.MultiDiGraph, tolerance: float) -> gpd.GeoSeries:
+def _merge_nodes_geometric(
+    G: nx.MultiDiGraph,
+    tolerance: float | dict[int, float],
+) -> gpd.GeoSeries:
     """
     Geometrically merge nodes within some distance of each other.
 
@@ -558,23 +565,38 @@ def _merge_nodes_geometric(G: nx.MultiDiGraph, tolerance: float) -> gpd.GeoSerie
     tolerance
         Buffer nodes to this distance (in graph's geometry's units) then merge
         overlapping polygons into a single polygon via unary union operation.
+        Can be a float value or a dictionary mapping node IDs to individual
+        tolerance values.
 
     Returns
     -------
     merged
         The merged overlapping polygons of the buffered nodes.
     """
-    # buffer nodes GeoSeries then get unary union to merge overlaps
-    merged = convert.graph_to_gdfs(G, edges=False)["geometry"].buffer(tolerance).unary_union
+    gdf_nodes = convert.graph_to_gdfs(G, edges=False)
 
-    # if only a single node results, make it iterable to convert to GeoSeries
-    merged = MultiPolygon([merged]) if isinstance(merged, Polygon) else merged
-    return gpd.GeoSeries(merged.geoms, crs=G.graph["crs"])
+    if isinstance(tolerance, dict):
+        # Create a Series of tolerances, reindexed to match the nodes
+        tolerances = pd.Series(tolerance).reindex(gdf_nodes.index)
+        # Buffer nodes to the specified distance
+        buffered_geoms = gdf_nodes.geometry.buffer(tolerances)
+        # Replace the missing values with the original points
+        buffered_geoms = buffered_geoms.fillna(gdf_nodes["geometry"])
+    else:
+        # Buffer nodes to the specified distance
+        buffered_geoms = gdf_nodes.geometry.buffer(tolerance)
+
+    # Merge overlapping geometries into a single geometry
+    merged = buffered_geoms.unary_union
+
+    # extract the member geometries if it's a multi-geometry
+    merged = merged.geoms if hasattr(merged, "geoms") else merged
+    return gpd.GeoSeries(merged, crs=G.graph["crs"])
 
 
 def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     G: nx.MultiDiGraph,
-    tolerance: float,
+    tolerance: float | dict[int, float],
     reconnect_edges: bool,  # noqa: FBT001
     node_attr_aggs: dict[str, Any] | None,
 ) -> nx.MultiDiGraph:
@@ -599,7 +621,8 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         A projected graph.
     tolerance
         Nodes are buffered to this distance (in graph's geometry's units) and
-        subsequent overlaps are dissolved into a single node.
+        subsequent overlaps are dissolved into a single node. Can be a float
+        value or a dictionary mapping node IDs to individual tolerance values.
     reconnect_edges
         If True, reconnect edges (and their geometries) to the consolidated
         nodes in rebuilt graph, and update the edge length attributes. If
