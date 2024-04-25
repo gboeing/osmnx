@@ -131,6 +131,11 @@ def test_stats() -> None:
     G_clean = ox.consolidate_intersections(G, rebuild_graph=True)
     G_clean = ox.consolidate_intersections(G, rebuild_graph=False)
 
+    # test passing dict of tolerances to consolidate_intersections
+    tolerance_dict = {node: 10 for node in G.nodes}
+    G_clean = ox.consolidate_intersections(G_proj, tolerance={0: 10}, rebuild_graph=True)
+    G_clean = ox.consolidate_intersections(G_proj, tolerance=tolerance_dict, rebuild_graph=True)
+
 
 def test_bearings() -> None:
     """Test bearings and orientation entropy."""
