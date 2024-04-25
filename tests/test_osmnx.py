@@ -125,6 +125,7 @@ def test_stats() -> None:
         reconnect_edges=False,
     )
     G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=False)
+    G_clean = ox.consolidate_intersections(G_proj, tolerance=50000, rebuild_graph=True)
 
     # try consolidating an empty graph
     G = nx.MultiDiGraph(crs="epsg:4326")
@@ -132,9 +133,16 @@ def test_stats() -> None:
     G_clean = ox.consolidate_intersections(G, rebuild_graph=False)
 
     # test passing dict of tolerances to consolidate_intersections
-    tolerance_dict = {node: 10 for node in G.nodes}
-    G_clean = ox.consolidate_intersections(G_proj, tolerance={0: 10}, rebuild_graph=True)
-    G_clean = ox.consolidate_intersections(G_proj, tolerance=tolerance_dict, rebuild_graph=True)
+    tols: dict[int, float]
+    # every node present
+    tols = {node: 5 for node in G_proj.nodes}
+    G_clean = ox.consolidate_intersections(G_proj, tolerance=tols, rebuild_graph=True)
+    # one node missing
+    tols.popitem()
+    G_clean = ox.consolidate_intersections(G_proj, tolerance=tols, rebuild_graph=True)
+    # one node 0
+    tols[next(iter(tols))] = 0
+    G_clean = ox.consolidate_intersections(G_proj, tolerance=tols, rebuild_graph=True)
 
 
 def test_bearings() -> None:
