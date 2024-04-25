@@ -11,9 +11,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from shapely.geometry import LineString
-from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
-from shapely.geometry import Polygon
 
 from . import convert
 from . import stats
