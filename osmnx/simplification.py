@@ -552,8 +552,7 @@ def consolidate_intersections(
 
 
 def _merge_nodes_geometric(
-    G: nx.MultiDiGraph,
-    tolerance: float | dict[int, float],
+    G: nx.MultiDiGraph, tolerance: float | dict[int, float]
 ) -> gpd.GeoSeries:
     """
     Geometrically merge nodes within some distance of each other.
@@ -648,9 +647,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     # STEP 1
     # buffer nodes to passed-in distance and merge overlaps. turn merged nodes
     # into gdf and get centroids of each cluster as x, y
-    node_clusters = gpd.GeoDataFrame(
-        geometry=_merge_nodes_geometric(G, tolerance),
-    )
+    node_clusters = gpd.GeoDataFrame(geometry=_merge_nodes_geometric(G, tolerance))
     centroids = node_clusters.centroid
     node_clusters["x"] = centroids.x
     node_clusters["y"] = centroids.y
