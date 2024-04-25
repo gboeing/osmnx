@@ -1,4 +1,4 @@
-"""Simplify, correct, and consolidate spatial network topology."""
+"""Simplify, correct, and consolidate spatial graph nodes and edges."""
 
 from __future__ import annotations
 
@@ -456,15 +456,12 @@ def consolidate_intersections(
 
     Merges nearby nodes and returns either their centroids or a rebuilt graph
     with consolidated intersections and reconnected edge geometries. The
-    `tolerance` argument should be adjusted to approximately match street
-    design standards in the specific street network, and you should always use
+    `tolerance` argument can be a single value applied to all nodes or
+    individual per-node values. It should be adjusted to approximately match
+    street design standards in the specific street network, and you should use
     a projected graph to work in meaningful and consistent units like meters.
-    Note `tolerance` represents a per-node buffering radius: for example, to
+    Note: `tolerance` represents a per-node buffering radius. For example, to
     consolidate nodes within 10 meters of each other, use `tolerance=5`.
-
-    It's also possible to specify difference tolerances for each node. This can
-    be done by passing a dictionary mapping node IDs to individual tolerance
-    values, like `tolerance={1: 5, 2: 10}`.
 
     When `rebuild_graph` is False, it uses a purely geometric (and relatively
     fast) algorithm to identify "geometrically close" nodes, merge them, and
@@ -490,8 +487,10 @@ def consolidate_intersections(
         A projected graph.
     tolerance
         Nodes are buffered to this distance (in graph's geometry's units) and
-        subsequent overlaps are dissolved into a single node. Can be a float
-        value or a dictionary mapping node IDs to individual tolerance values.
+        subsequent overlaps are dissolved into a single node. If scalar, then
+        that single value will be used for all nodes. If dict (mapping node
+        IDs to individual values), then those values will be used per node and
+        any missing node IDs will not be buffered.
     rebuild_graph
         If True, consolidate the nodes topologically, rebuild the graph, and
         return as MultiDiGraph. Otherwise, consolidate the nodes geometrically
@@ -563,10 +562,11 @@ def _merge_nodes_geometric(
     G
         A projected graph.
     tolerance
-        Buffer nodes to this distance (in graph's geometry's units) then merge
-        overlapping polygons into a single polygon via unary union operation.
-        Can be a float value or a dictionary mapping node IDs to individual
-        tolerance values.
+        Nodes are buffered to this distance (in graph's geometry's units) and
+        subsequent overlaps are dissolved into a single node. If scalar, then
+        that single value will be used for all nodes. If dict (mapping node
+        IDs to individual values), then those values will be used per node and
+        any missing node IDs will not be buffered.
 
     Returns
     -------
@@ -576,18 +576,14 @@ def _merge_nodes_geometric(
     gdf_nodes = convert.graph_to_gdfs(G, edges=False)
 
     if isinstance(tolerance, dict):
-        # Create a Series of tolerances, reindexed to match the nodes
-        tolerances = pd.Series(tolerance).reindex(gdf_nodes.index)
-        # Buffer nodes to the specified distance
-        buffered_geoms = gdf_nodes.geometry.buffer(tolerances)
-        # Replace the missing values with the original points
-        buffered_geoms = buffered_geoms.fillna(gdf_nodes["geometry"])
+        # create series of tolerances reindexed like nodes, then buffer, then
+        # fill nulls (resulting from missing tolerances) with original points,
+        # then merge overlapping geometries
+        tols = pd.Series(tolerance).reindex(gdf_nodes.index)
+        merged = gdf_nodes.buffer(tols).fillna(gdf_nodes["geometry"]).unary_union
     else:
-        # Buffer nodes to the specified distance
-        buffered_geoms = gdf_nodes.geometry.buffer(tolerance)
-
-    # Merge overlapping geometries into a single geometry
-    merged = buffered_geoms.unary_union
+        # buffer nodes then merge overlapping geometries
+        merged = gdf_nodes.buffer(tolerance).unary_union
 
     # extract the member geometries if it's a multi-geometry
     merged = merged.geoms if hasattr(merged, "geoms") else merged
@@ -606,23 +602,16 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     Merge nodes and return a rebuilt graph with consolidated intersections and
     reconnected edge geometries.
 
-    The `tolerance` argument should be adjusted to approximately match street
-    design standards in the specific street network, and you should always use
-    a projected graph to work in meaningful and consistent units like meters.
-
-    Returned graph's node IDs represent clusters rather than "osmid" values.
-    Refer to nodes' "osmid_original" attributes for original "osmid" values.
-    If multiple nodes were merged together, the "osmid_original" attribute is
-    a list of merged nodes' "osmid" values.
-
     Parameters
     ----------
     G
         A projected graph.
     tolerance
         Nodes are buffered to this distance (in graph's geometry's units) and
-        subsequent overlaps are dissolved into a single node. Can be a float
-        value or a dictionary mapping node IDs to individual tolerance values.
+        subsequent overlaps are dissolved into a single node. If scalar, then
+        that single value will be used for all nodes. If dict (mapping node
+        IDs to individual values), then those values will be used per node and
+        any missing node IDs will not be buffered.
     reconnect_edges
         If True, reconnect edges (and their geometries) to the consolidated
         nodes in rebuilt graph, and update the edge length attributes. If
@@ -638,8 +627,8 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     Returns
     -------
     Gc
-        A rebuilt graph with consolidated intersections and reconnected edge
-        geometries.
+        A rebuilt graph with consolidated intersections and (optionally)
+        reconnected edge geometries.
     """
     # default node attributes to aggregate upon consolidation
     if node_attr_aggs is None:
