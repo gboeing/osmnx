@@ -10,8 +10,8 @@ import geopandas as gpd
 import networkx as nx
 import numpy as np
 import pandas as pd
-from shapely.geometry import LineString
-from shapely.geometry import Point
+from shapely import LineString
+from shapely import Point
 
 from . import convert
 from . import stats
@@ -552,7 +552,8 @@ def consolidate_intersections(
 
 
 def _merge_nodes_geometric(
-    G: nx.MultiDiGraph, tolerance: float | dict[int, float]
+    G: nx.MultiDiGraph,
+    tolerance: float | dict[int, float],
 ) -> gpd.GeoSeries:
     """
     Geometrically merge nodes within some distance of each other.
@@ -588,9 +589,9 @@ def _merge_nodes_geometric(
     # Merge overlapping geometries into a single geometry
     merged = buffered_geoms.unary_union
 
-    # if only a single node results, make it iterable to convert to GeoSeries
+    # extract the member geometries if it's a multi-geometry
     merged = merged.geoms if hasattr(merged, "geoms") else merged
-    return gpd.GeoSeries(merged.geoms, crs=G.graph["crs"])
+    return gpd.GeoSeries(merged, crs=G.graph["crs"])
 
 
 def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
