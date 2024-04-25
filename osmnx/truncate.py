@@ -12,8 +12,8 @@ from . import utils
 from . import utils_geo
 
 if TYPE_CHECKING:
-    from shapely.geometry import MultiPolygon
-    from shapely.geometry import Polygon
+    from shapely import MultiPolygon
+    from shapely import Polygon
 
 
 def truncate_graph_dist(

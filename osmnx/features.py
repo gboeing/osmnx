@@ -16,20 +16,20 @@ Refer to the Getting Started guide for usage limitations.
 from __future__ import annotations
 
 import logging as lg
-import warnings
 from typing import TYPE_CHECKING
 from typing import Any
 
 import geopandas as gpd
 import pandas as pd
+from shapely import LineString
+from shapely import MultiLineString
+from shapely import MultiPolygon
+from shapely import Point
+from shapely import Polygon
 from shapely.errors import GEOSException
-from shapely.errors import TopologicalError
-from shapely.geometry import LineString
-from shapely.geometry import MultiPolygon
-from shapely.geometry import Point
-from shapely.geometry import Polygon
 from shapely.ops import linemerge
 from shapely.ops import polygonize
+from shapely.ops import unary_union
 
 from . import _osm_xml
 from . import _overpass
@@ -44,45 +44,48 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
     from pathlib import Path
 
-# dict of tags to determine if closed ways should be polygons, based on JSON
-# from https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features
-_POLYGON_FEATURES: dict[str, dict[str, str | list[str]]] = {
-    "building": {"polygon": "all"},
-    "highway": {"polygon": "passlist", "values": ["services", "rest_area", "escape", "elevator"]},
-    "natural": {
-        "polygon": "blocklist",
-        "values": ["coastline", "cliff", "ridge", "arete", "tree_row"],
-    },
-    "landuse": {"polygon": "all"},
-    "waterway": {"polygon": "passlist", "values": ["riverbank", "dock", "boatyard", "dam"]},
+# define what types of OSM relations we currently handle
+_RELATION_TYPES = {"boundary", "multipolygon"}
+
+# OSM tags to determine if closed ways should be polygons, based on JSON from
+# https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features
+_POLYGON_FEATURES: dict[str, dict[str, str | set[str]]] = {
+    "aeroway": {"polygon": "blocklist", "values": {"taxiway"}},
     "amenity": {"polygon": "all"},
-    "leisure": {"polygon": "all"},
+    "area": {"polygon": "all"},
+    "area:highway": {"polygon": "all"},
     "barrier": {
         "polygon": "passlist",
-        "values": ["city_wall", "ditch", "hedge", "retaining_wall", "spikes"],
+        "values": {"city_wall", "ditch", "hedge", "retaining_wall", "spikes"},
     },
-    "railway": {
-        "polygon": "passlist",
-        "values": ["station", "turntable", "roundhouse", "platform"],
-    },
-    "area": {"polygon": "all"},
     "boundary": {"polygon": "all"},
-    "man_made": {"polygon": "blocklist", "values": ["cutline", "embankment", "pipeline"]},
-    "power": {"polygon": "passlist", "values": ["plant", "substation", "generator", "transformer"]},
-    "place": {"polygon": "all"},
-    "shop": {"polygon": "all"},
-    "aeroway": {"polygon": "blocklist", "values": ["taxiway"]},
-    "tourism": {"polygon": "all"},
-    "historic": {"polygon": "all"},
-    "public_transport": {"polygon": "all"},
-    "office": {"polygon": "all"},
+    "building": {"polygon": "all"},
     "building:part": {"polygon": "all"},
-    "military": {"polygon": "all"},
-    "ruins": {"polygon": "all"},
-    "area:highway": {"polygon": "all"},
     "craft": {"polygon": "all"},
     "golf": {"polygon": "all"},
+    "highway": {"polygon": "passlist", "values": {"elevator", "escape", "rest_area", "services"}},
+    "historic": {"polygon": "all"},
     "indoor": {"polygon": "all"},
+    "landuse": {"polygon": "all"},
+    "leisure": {"polygon": "all"},
+    "man_made": {"polygon": "blocklist", "values": {"cutline", "embankment", "pipeline"}},
+    "military": {"polygon": "all"},
+    "natural": {
+        "polygon": "blocklist",
+        "values": {"arete", "cliff", "coastline", "ridge", "tree_row"},
+    },
+    "office": {"polygon": "all"},
+    "place": {"polygon": "all"},
+    "power": {"polygon": "passlist", "values": {"generator", "plant", "substation", "transformer"}},
+    "public_transport": {"polygon": "all"},
+    "railway": {
+        "polygon": "passlist",
+        "values": {"platform", "roundhouse", "station", "turntable"},
+    },
+    "ruins": {"polygon": "all"},
+    "shop": {"polygon": "all"},
+    "tourism": {"polygon": "all"},
+    "waterway": {"polygon": "passlist", "values": {"boatyard", "dam", "dock", "riverbank"}},
 }
 
 
@@ -105,17 +108,16 @@ def features_from_bbox(
         Bounding box as `(north, south, east, west)`. Coordinates should be in
         unprojected latitude-longitude degrees (EPSG:4326).
     tags
-        Dict of tags used for finding elements in the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'building': True}` would return all building footprints in
-        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
+        Tags for finding elements in the selected area. Results are the union,
+        not intersection of the tags and each result matches at least one tag.
+        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
+        and the values can be either `True` to retrieve all elements matching
+        the tag, or a string to retrieve a single tag:value combination, or a
+        list of strings to retrieve multiple values for the tag. For example,
+        `tags = {'building': True}` would return all buildings in the area.
+        Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, any landuse=retail,
+        any landuse=commercial, and any highway=bus_stop.
 
     Returns
     -------
@@ -147,17 +149,16 @@ def features_from_point(
         Coordinates should be in unprojected latitude-longitude degrees
         (EPSG:4326).
     tags
-        Dict of tags used for finding elements in the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'building': True}` would return all building footprints in
-        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
+        Tags for finding elements in the selected area. Results are the union,
+        not intersection of the tags and each result matches at least one tag.
+        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
+        and the values can be either `True` to retrieve all elements matching
+        the tag, or a string to retrieve a single tag:value combination, or a
+        list of strings to retrieve multiple values for the tag. For example,
+        `tags = {'building': True}` would return all buildings in the area.
+        Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, any landuse=retail,
+        any landuse=commercial, and any highway=bus_stop.
     dist
         Distance in meters from `center_point` to create a bounding box to
         query.
@@ -191,17 +192,16 @@ def features_from_address(
         The address to geocode and use as the center point around which to
         retrieve the features.
     tags
-        Dict of tags used for finding elements in the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'building': True}` would return all building footprints in
-        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
+        Tags for finding elements in the selected area. Results are the union,
+        not intersection of the tags and each result matches at least one tag.
+        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
+        and the values can be either `True` to retrieve all elements matching
+        the tag, or a string to retrieve a single tag:value combination, or a
+        list of strings to retrieve multiple values for the tag. For example,
+        `tags = {'building': True}` would return all buildings in the area.
+        Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, any landuse=retail,
+        any landuse=commercial, and any highway=bus_stop.
     dist
         Distance in meters from `address` to create a bounding box to query.
 
@@ -247,17 +247,16 @@ def features_from_place(
     query
         The query or queries to geocode to retrieve place boundary polygon(s).
     tags
-        Dict of tags used for finding elements in the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'building': True}` would return all building footprints in
-        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
+        Tags for finding elements in the selected area. Results are the union,
+        not intersection of the tags and each result matches at least one tag.
+        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
+        and the values can be either `True` to retrieve all elements matching
+        the tag, or a string to retrieve a single tag:value combination, or a
+        list of strings to retrieve multiple values for the tag. For example,
+        `tags = {'building': True}` would return all buildings in the area.
+        Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, any landuse=retail,
+        any landuse=commercial, and any highway=bus_stop.
     which_result
         Which search result to return. If None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one.
@@ -295,17 +294,16 @@ def features_from_polygon(
         The geometry within which to retrieve features. Coordinates should be
         in unprojected latitude-longitude degrees (EPSG:4326).
     tags
-        Dict of tags used for finding elements in the selected area. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'building': True}` would return all building footprints in
-        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
+        Tags for finding elements in the selected area. Results are the union,
+        not intersection of the tags and each result matches at least one tag.
+        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
+        and the values can be either `True` to retrieve all elements matching
+        the tag, or a string to retrieve a single tag:value combination, or a
+        list of strings to retrieve multiple values for the tag. For example,
+        `tags = {'building': True}` would return all buildings in the area.
+        Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
+        'highway':'bus_stop'}` would return all amenities, any landuse=retail,
+        any landuse=commercial, and any highway=bus_stop.
 
     Returns
     -------
@@ -318,14 +316,13 @@ def features_from_polygon(
 
     if not isinstance(polygon, (Polygon, MultiPolygon)):
         msg = (
-            "Boundaries must be a shapely Polygon or MultiPolygon. If you "
-            "requested features from place name, make sure your query resolves "
-            "to a Polygon or MultiPolygon, and not some other geometry like a "
-            "Point. See the OSMnx documentation for details."
+            "Boundaries must be a Polygon or MultiPolygon. If you requested "
+            "`features_from_place`, ensure your query geocodes to a Polygon "
+            "or MultiPolygon. See the documentation for details."
         )
         raise TypeError(msg)
 
-    # download the data from OSM then turn it into a GeoDataFrame
+    # retrieve the data from Overpass then turn it into a GeoDataFrame
     response_jsons = _overpass._download_overpass_features(polygon, tags)
     return _create_gdf(response_jsons, polygon, tags)
 
@@ -333,8 +330,8 @@ def features_from_polygon(
 def features_from_xml(
     filepath: str | Path,
     *,
-    tags: dict[str, bool | str | list[str]] | None = None,
     polygon: Polygon | MultiPolygon | None = None,
+    tags: dict[str, bool | str | list[str]] | None = None,
     encoding: str = "utf-8",
 ) -> gpd.GeoDataFrame:
     """
@@ -342,730 +339,372 @@ def features_from_xml(
 
     Because this function creates a GeoDataFrame of features from an OSM XML
     file that has already been downloaded (i.e., no query is made to the
-    Overpass API) the polygon and tags arguments are not required. If they are
-    not passed, this will return features for all of the tagged elements in
-    the file. If they are passed, they will be used to filter the final
-    GeoDataFrame.
+    Overpass API), the `polygon` and `tags` arguments are optional. If they
+    are None, filtering will be skipped.
 
     Parameters
     ----------
     filepath
         Path to file containing OSM XML data.
     tags
-        Optional dict of tags for filtering elements from the XML. Results
-        returned are the union, not intersection of each individual tag.
-        Each result matches at least one given tag. The dict keys should be
-        OSM tags, (e.g., `building`, `landuse`, `highway`, etc) and the dict
-        values should be either `True` to retrieve all items with the given
-        tag, or a string to get a single tag-value combination, or a list of
-        strings to get multiple values for the given tag. For example,
-        `tags = {'building': True}` would return all building footprints in
-        the area. `tags = {'amenity':True, 'landuse':['retail','commercial'],
-        'highway':'bus_stop'}` would return all amenities, landuse=retail,
-        landuse=commercial, and highway=bus_stop.
+        Query tags to optionally filter the final GeoDataFrame.
     polygon
-        Optional spatial boundaries to filter elements.
+        Spatial boundaries to optionally filter the final GeoDataFrame.
     encoding
-        The XML file's character encoding.
+        The OSM XML file's character encoding.
 
     Returns
     -------
     gdf
     """
+    # if tags or polygon is None, create an empty object to skip filtering
+    if tags is None:
+        tags = {}
+    if polygon is None:
+        polygon = Polygon()
+
     # transmogrify OSM XML file to JSON then create GeoDataFrame from it
     response_jsons = [_osm_xml._overpass_json_from_xml(filepath, encoding)]
-    return _create_gdf(response_jsons, polygon, tags)
+    gdf = _create_gdf(response_jsons, polygon, tags)
+
+    # drop misc element attrs that might have been added from OSM XML file
+    to_drop = set(gdf.columns) & {"changeset", "timestamp", "uid", "user", "version"}
+    return gdf.drop(columns=list(to_drop))
 
 
-def _create_gdf(  # noqa: PLR0912
+def _create_gdf(
     response_jsons: Iterable[dict[str, Any]],
-    polygon: Polygon | MultiPolygon | None,
-    tags: dict[str, bool | str | list[str]] | None,
+    polygon: Polygon | MultiPolygon,
+    tags: dict[str, bool | str | list[str]],
 ) -> gpd.GeoDataFrame:
     """
-    Parse JSON responses from the Overpass API to a GeoDataFrame.
-
-    Note: the `polygon` and `tags` arguments can both be `None` and the
-    GeoDataFrame will still be created but it won't be filtered at the end
-    i.e. the final GeoDataFrame will contain all tagged features in
-    `response_jsons`.
+    Convert Overpass API JSON responses to a GeoDataFrame of features.
 
     Parameters
     ----------
     response_jsons
-        Iterable of JSON response dicts from from the Overpass API.
+        Iterable of Overpass API JSON responses.
     polygon
-        Optional spatial boundaries to filter final GeoDataFrame.
+        Spatial boundaries to optionally filter the final GeoDataFrame.
     tags
-        Optional dict of tags to filter the final GeoDataFrame.
+        Query tags to optionally filter the final GeoDataFrame.
 
     Returns
     -------
     gdf
-        GeoDataFrame of features and their associated tags
+        GeoDataFrame of features with tags and geometry columns.
     """
+    # consume response_jsons generator to download data from server
+    elements = []
     response_count = 0
+    for response_json in response_jsons:
+        response_count += 1
+        if not settings.cache_only_mode:
+            elements.extend(response_json["elements"])
+
+    msg = f"Retrieved {len(elements):,} elements from API in {response_count} request(s)"
+    utils.log(msg, level=lg.INFO)
     if settings.cache_only_mode:
-        # if cache_only_mode, consume response_jsons then interrupt
-        for _ in response_jsons:
-            response_count += 1
-        msg = f"Retrieved all data from API in {response_count} request(s)"
-        utils.log(msg, level=lg.INFO)
         msg = "Interrupted because `settings.cache_only_mode=True`."
         raise CacheOnlyInterruptError(msg)
 
-    # Dictionaries to hold nodes and complete geometries
-    coords = {}
-    geometries = {}
+    # convert the elements into a GeoDataFrame of features
+    idx = ["element", "id"]
+    features = _process_features(elements, set(tags.keys()))
+    gdf = gpd.GeoDataFrame(features, geometry="geometry", crs=settings.default_crs).set_index(idx)
+    return _filter_features(gdf, polygon, tags)
 
-    # Set to hold the unique IDs of elements that do not have tags
-    untagged_element_ids = set()
 
-    # identify which relation types to parse to (multi)polygons
-    relation_types = {"boundary", "multipolygon"}
+def _process_features(
+    elements: list[dict[str, Any]],
+    query_tag_keys: set[str],
+) -> list[dict[str, Any]]:
+    """
+    Convert node/way/relation elements into features with geometries.
 
-    # extract geometries from the downloaded osm data
-    for response_json in response_jsons:
-        response_count += 1
+    Parameters
+    ----------
+    elements
+        The node/way/relation elements retrieved from the server.
+    query_tag_keys
+        The keys of the tags used to query for matching features.
 
-        # Parses the JSON of OSM nodes, ways and (multipolygon) relations
-        # to dictionaries of coordinates, Shapely Points, LineStrings,
-        # Polygons and MultiPolygons
-        for element in response_json["elements"]:
-            # id numbers are only unique within element types
-            # create unique id from combination of type and id
-            unique_id = f"{element['type']}/{element['id']}"
+    Returns
+    -------
+    features
+    """
+    nodes = []  # all nodes, including ones that just compose ways
+    feature_nodes = []  # nodes that possibly match our query tags
+    node_coords = {}  # hold node lon,lat tuples to create way geoms
+    ways = []  # all ways, including ones that just compose relations
+    feature_ways = []  # ways that possibly match our query tags
+    way_geoms = {}  # hold way geoms to create relation geoms
+    relations = []  # all relations
 
-            # add elements that are not nodes and that are without tags or
-            # with empty tags to the untagged_element_ids set (untagged
-            # nodes are not added to the geometries dict at all)
-            if (element["type"] != "node") and (("tags" not in element) or (not element["tags"])):
-                untagged_element_ids.add(unique_id)
+    # sort elements by node, way, and relation. only retain relations that
+    # match the relation types we currently handle
+    for element in elements:
+        et = element["type"]
+        if et == "node":
+            nodes.append(element)
+        elif et == "way":
+            ways.append(element)
+        elif et == "relation" and element.get("tags", {}).get("type") in _RELATION_TYPES:
+            relations.append(element)
 
-            if element["type"] == "node":
-                # Parse all nodes to coords
-                coords[element["id"]] = _parse_node_to_coords(element=element)
+    # extract all nodes' coords, then add to features any nodes with tags that
+    # match the passed query tags, or with any tags if no query tags passed
+    for node in nodes:
+        node_coords[node["id"]] = (node["lon"], node["lat"])
+        if (len(query_tag_keys) == 0 and len(node.get("tags", {}).keys()) > 0) or (
+            len(query_tag_keys & node.get("tags", {}).keys()) > 0
+        ):
+            node["element"] = node.pop("type")
+            node["geometry"] = Point(node.pop("lon"), node.pop("lat"))
+            node.update(node.pop("tags"))
+            feature_nodes.append(node)
 
-                # If the node has tags and the tags are not empty parse it
-                # to a Point. Empty check is necessary for JSONs created
-                # from XML where nodes without tags are assigned tags={}
-                if "tags" in element and len(element["tags"]) > 0:
-                    point = _parse_node_to_point(element=element)
-                    geometries[unique_id] = point
+    # build all ways' geometries, then add to features any ways with tags that
+    # match the passed query tags, or with any tags if no query tags passed
+    for way in ways:
+        way["geometry"] = _build_way_geometry(
+            way["id"],
+            way.pop("nodes"),
+            way.get("tags", {}),
+            node_coords,
+        )
+        way_geoms[way["id"]] = way["geometry"]
+        if (len(query_tag_keys) == 0 and len(way.get("tags", {}).keys()) > 0) or (
+            len(query_tag_keys & way.get("tags", {}).keys()) > 0
+        ):
+            way["element"] = way.pop("type")
+            way.update(way.pop("tags"))
+            feature_ways.append(way)
 
-            elif element["type"] == "way":
-                # Parse all ways to linestrings or polygons
-                linestring_or_polygon = _parse_way_to_linestring_or_polygon(
-                    element=element,
-                    coords=coords,
-                )
-                geometries[unique_id] = linestring_or_polygon
+    # process relations and build their geometries
+    for relation in relations:
+        relation["element"] = "relation"
+        relation.update(relation.pop("tags"))
+        relation["geometry"] = _build_relation_geometry(relation.pop("members"), way_geoms)
 
-            elif (
-                element["type"] == "relation" and element.get("tags").get("type") in relation_types
-            ):
-                # parse relations to (multi)polygons
-                multipolygon = _parse_relation_to_multipolygon(
-                    element=element,
-                    geometries=geometries,
-                )
-                geometries[unique_id] = multipolygon
-
-    msg = f"Retrieved all data from API in {response_count} request(s)"
-    utils.log(msg, level=lg.INFO)
-
-    # ensure we got some node/way data back from the server request(s)
-    if len(geometries) == 0:  # pragma: no cover
-        msg = "No data elements in server response. Check log and query location/tags."
+    features = [*feature_nodes, *feature_ways, *relations]
+    if len(features) == 0:
+        msg = "No matching features. Check query location, tags, and log."
         raise InsufficientResponseError(msg)
 
-    # remove untagged elements from the final dict of geometries
-    msg = f"{len(geometries)} geometries created in the dict"
-    utils.log(msg, level=lg.INFO)
-    for untagged_element_id in untagged_element_ids:
-        geometries.pop(untagged_element_id, None)
-    msg = f"{len(untagged_element_ids)} untagged features removed"
-    utils.log(msg, level=lg.INFO)
-
-    # create GeoDataFrame, ensure it has geometry, then set crs
-    gdf = gpd.GeoDataFrame.from_dict(geometries, orient="index")
-    if "geometry" not in gdf.columns:
-        # if there is no geometry column, create a null column
-        gdf = gdf.set_geometry([None] * len(gdf))
-    gdf = gdf.set_crs(settings.default_crs)
-
-    # Apply .buffer(0) to any invalid geometries
-    gdf = _buffer_invalid_geometries(gdf)
-
-    # Filter final gdf to requested tags and query polygon
-    gdf = _filter_gdf_by_polygon_and_tags(gdf, polygon=polygon, tags=tags)
-
-    # bug in geopandas <0.9 raises a TypeError if trying to plot empty
-    # geometries but missing geometries (gdf['geometry'] = None) cannot be
-    # projected e.g. gdf.to_crs(). Remove rows with empty (e.g. Point())
-    # or missing (e.g. None) geometry, and suppress gpd warning caused by
-    # calling gdf["geometry"].isna() on GeoDataFrame with empty geometries
-    if not gdf.empty:
-        warnings.filterwarnings("ignore", "GeoSeries.isna", UserWarning)
-        gdf = gdf[~(gdf["geometry"].is_empty | gdf["geometry"].isna())].copy()
-        warnings.resetwarnings()
-
-    msg = f"{len(gdf)} features in the final GeoDataFrame"
-    utils.log(msg, level=lg.INFO)
-    return gdf
+    return features
 
 
-def _parse_node_to_coords(element: dict[str, Any]) -> dict[str, Any]:
+def _build_way_geometry(
+    way_id: int,
+    way_nodes: list[int],
+    way_tags: dict[str, Any],
+    node_coords: dict[int, tuple[float, float]],
+) -> LineString | Polygon:
     """
-    Parse coordinates from a node in the Overpass response.
+    Build a way's geometry from its constituent nodes' coordinates.
 
-    The coords are only used to create LineStrings and Polygons.
+    A way can be a LineString (open or closed way) or a Polygon (closed way)
+    but multi-geometries and polygons with holes are represented as relations.
+    See documentation: https://wiki.openstreetmap.org/wiki/Way#Types_of_way
 
     Parameters
     ----------
-    element
-        Element of type "node" from Overpass response JSON.
-
-    Returns
-    -------
-    coords
-        Dict of latitude/longitude coordinates.
-    """
-    # return the coordinates of a single node element
-    return {"lat": element["lat"], "lon": element["lon"]}
-
-
-def _parse_node_to_point(element: dict[str, Any]) -> dict[str, Any]:
-    """
-    Parse point from a tagged node in the Overpass response.
-
-    The points are geometries.
-
-    Parameters
-    ----------
-    element
-        Element of type "node" from Overpass response JSON.
-
-    Returns
-    -------
-    point
-        Dict of OSM ID, element type, tags, and geometry.
-    """
-    point = {}
-    point["osmid"] = element["id"]
-    point["element_type"] = "node"
-
-    if "tags" in element:
-        for tag in element["tags"]:
-            point[tag] = element["tags"][tag]
-
-    point["geometry"] = Point(element["lon"], element["lat"])
-    return point
-
-
-def _parse_way_to_linestring_or_polygon(
-    element: dict[str, Any],
-    coords: dict[int, Any],
-) -> dict[str, Any]:
-    """
-    Parse open LineString, closed LineString, or Polygon from OSM way.
-
-    See https://wiki.openstreetmap.org/wiki/Overpass_turbo/Polygon_Features
-    for more information on which tags should be parsed to polygons
-
-    Parameters
-    ----------
-    element
-        Element of type "way" from Overpass response JSON.
-    coords
-        Dict of node IDs and their latitude/longitude coordinates.
-
-    Returns
-    -------
-    linestring_or_polygon
-        Dict of OSM ID, OSM element type, nodes, tags and geometry.
-    """
-    nodes = element["nodes"]
-
-    linestring_or_polygon = {}
-    linestring_or_polygon["osmid"] = element["id"]
-    linestring_or_polygon["element_type"] = "way"
-    linestring_or_polygon["nodes"] = nodes
-
-    # un-nest individual tags
-    if "tags" in element:
-        for tag in element["tags"]:
-            linestring_or_polygon[tag] = element["tags"][tag]
-
-    # if the OSM element is an open way (i.e. first and last nodes are not the
-    # same) the geometry should be a Shapely LineString
-    if element["nodes"][0] != element["nodes"][-1]:
-        try:
-            geometry = LineString([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
-        except KeyError as e:  # pragma: no cover
-            # XMLs may include geometries that are incomplete, in which case
-            # return an empty geometry
-            msg = (
-                f"node/{e} was not found in `coords`.\n"
-                f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
-            )
-            utils.log(msg, level=lg.WARNING)
-            geometry = LineString()
-
-    # if the OSM element is a closed way (i.e. first and last nodes are the
-    # same) depending upon the tags the geometry could be a Shapely LineString
-    # or Polygon
-    elif element["nodes"][0] == element["nodes"][-1]:
-        # determine if closed way represents LineString or Polygon
-        if _is_closed_way_a_polygon(element):
-            # if it is a Polygon
-            try:
-                geometry = Polygon([(coords[node]["lon"], coords[node]["lat"]) for node in nodes])
-            except (GEOSException, ValueError) as e:
-                # XMLs may include geometries that are incomplete, in which
-                # case return an empty geometry
-                msg = (
-                    f"{e}. The geometry for "
-                    f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
-                )
-                utils.log(msg, level=lg.WARNING)
-                geometry = Polygon()
-        else:
-            # if it is a LineString
-            try:
-                geometry = LineString(
-                    [(coords[node]["lon"], coords[node]["lat"]) for node in nodes],
-                )
-            except (GEOSException, ValueError) as e:
-                # XMLs may include geometries that are incomplete, in which
-                # case return an empty geometry
-                msg = (
-                    f"{e}. The geometry for "
-                    f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
-                )
-                utils.log(msg, level=lg.WARNING)
-                geometry = LineString()
-
-    linestring_or_polygon["geometry"] = geometry
-    return linestring_or_polygon
-
-
-def _is_closed_way_a_polygon(element: dict[str, Any]) -> bool:
-    """
-    Determine whether a closed OSM way represents a Polygon, not a LineString.
-
-    Closed OSM ways may represent LineStrings (e.g. a roundabout or hedge
-    round a field) or Polygons (e.g. a building footprint or land use area)
-    depending on the tags applied to them.
-
-    The starting assumption is that it is not a polygon, however any polygon
-    type tagging will return a polygon unless explicitly tagged with area:no.
-
-    It is possible for a single closed OSM way to have both LineString and
-    Polygon type tags (e.g. both barrier=fence and landuse=agricultural).
-    OSMnx will return a single Polygon for elements tagged in this way.
-    For more information see:
-    https://wiki.openstreetmap.org/wiki/One_feature,_one_OSM_element)
-
-    Parameters
-    ----------
-    element
-        Closed element of type "way" from Overpass response JSON.
-
-    Returns
-    -------
-    is_polygon
-        True if the tags are for a polygon type geometry, otherwise False.
-    """
-    # the _POLYGON_FEATURES dict determines which ways should become Polygons
-    # therefore the starting assumption is that the geometry is a LineString
-    is_polygon = False
-
-    # get the element's tags
-    element_tags = element.get("tags")
-
-    # if the element doesn't have any tags leave it as a Linestring
-    if element_tags is not None:
-        # if the element is specifically tagged 'area':'no' -> LineString
-        if element_tags.get("area") == "no":
-            pass
-
-        # if the element has tags and is not tagged 'area':'no'
-        # compare its tags with the _POLYGON_FEATURES dict
-        else:
-            # identify common keys in element's tags and _POLYGON_FEATURES dict
-            intersecting_keys = element_tags.keys() & _POLYGON_FEATURES.keys()
-
-            # for each key in the intersecting keys (if any found)
-            for key in intersecting_keys:
-                # Get the key's value from the element's tags
-                key_value = element_tags.get(key)
-
-                # Determine if the key is for a blocklist or passlist in
-                # _POLYGON_FEATURES dict
-                blocklist_or_passlist = _POLYGON_FEATURES[key].get("polygon")
-
-                # Get values for the key from the _POLYGON_FEATURES dict
-                polygon_features_values = _POLYGON_FEATURES[key].get("values")
-
-                # if all features with that key should be polygons -> Polygon
-                if blocklist_or_passlist == "all":
-                    is_polygon = True
-
-                # if the key is for a blocklist i.e. tags that should not
-                # become Polygons
-                elif blocklist_or_passlist == "blocklist":
-                    # if the value for that key in the element is not in
-                    # the blocklist -> Polygon
-                    if key_value not in polygon_features_values:  # type: ignore[operator]
-                        is_polygon = True
-
-                # if the key is for a passlist i.e. specific tags should
-                # become Polygons, and if the value for that key in the
-                # element is in the passlist -> Polygon
-                elif (blocklist_or_passlist == "passlist") and (
-                    key_value in polygon_features_values  # type: ignore[operator]
-                ):
-                    is_polygon = True
-
-    return is_polygon
-
-
-def _parse_relation_to_multipolygon(
-    element: dict[str, Any],
-    geometries: dict[str, Any],
-) -> dict[str, Any]:
-    """
-    Parse MultiPolygon from OSM relation (type:MultiPolygon).
-
-    See more information about relations from OSM documentation:
-    https://wiki.openstreetmap.org/wiki/Relation
-
-    Parameters
-    ----------
-    element
-        Element of type "relation" from Overpass response JSON.
-    geometries
-        Dict containing all linestrings and polygons generated from OSM ways.
-
-    Returns
-    -------
-    multipolygon
-        Dict of tags and geometry for a single MultiPolygon.
-    """
-    multipolygon = {}
-    multipolygon["osmid"] = element["id"]
-    multipolygon["element_type"] = "relation"
-
-    # Parse member 'way' ids
-    member_way_refs = [member["ref"] for member in element["members"] if member["type"] == "way"]
-    multipolygon["ways"] = member_way_refs
-
-    # Add the tags
-    if "tags" in element:
-        for tag in element["tags"]:
-            multipolygon[tag] = element["tags"][tag]
-
-    # Extract the ways from the geometries dict using their unique id.
-    # XMLs exported from the openstreetmap.org homepage with a bounding box
-    # may include the relation but not the ways outside the bounding box.
-    try:
-        member_ways = [geometries[f"way/{member_way_ref}"] for member_way_ref in member_way_refs]
-    except KeyError as e:  # pragma: no cover
-        msg = (
-            f"{e} was not found in `geometries`.\nThe geometry for "
-            f"https://www.openstreetmap.org/{element['type']}/{element['id']} was not created."
-        )
-        utils.log(msg, level=lg.WARNING)
-        multipolygon["geometry"] = MultiPolygon()
-        return multipolygon
-
-    # Extract the nodes of those ways
-    member_nodes = [[member_way["nodes"] for member_way in member_ways]]
-    multipolygon["nodes"] = member_nodes
-
-    # Assemble MultiPolygon component polygons from component LineStrings and
-    # Polygons
-    outer_polygons, inner_polygons = _assemble_multipolygon_component_polygons(element, geometries)
-
-    # Subtract inner polygons from outer polygons
-    geometry = _subtract_inner_polygons_from_outer_polygons(element, outer_polygons, inner_polygons)
-
-    multipolygon["geometry"] = geometry
-    return multipolygon
-
-
-def _assemble_multipolygon_component_polygons(  # noqa: PLR0912
-    element: dict[str, Any],
-    geometries: dict[str, Any],
-) -> tuple[list[Polygon], list[Polygon]]:
-    """
-    Assemble a MultiPolygon from its component LineStrings and Polygons.
-
-    Returns lists of the MultiPolygons inner and outer Polygon components.
-    The OSM wiki suggests an algorithm for assembling MultiPolygon geometries
-    https://wiki.openstreetmap.org/wiki/Relation:multipolygon/Algorithm.
-    This method takes a simpler approach relying on the accurate tagging
-    of component ways with "inner" and "outer" roles as required on this page
-    https://wiki.openstreetmap.org/wiki/Relation:multipolygon.
-
-    Parameters
-    ----------
-    element
-        Element of type "relation" from Overpass response JSON.
-    geometries
-        Dict containing all LineStrings and Polygons generated from OSM ways.
-
-    Returns
-    -------
-    polygons
-    """
-    outer_polygons = []
-    inner_polygons = []
-    outer_linestrings = []
-    inner_linestrings = []
-
-    # get the linestrings and polygons that make up the multipolygon
-    for member in element["members"]:
-        # get the member's geometry from linestrings_and_polygons
-        if (member.get("type") == "way") and (
-            (linestring_or_polygon := geometries.get(f"way/{member['ref']}")) is not None
-        ):
-            # sort it into one of the lists according to its role and geometry
-            if (member.get("role") == "outer") and (
-                linestring_or_polygon["geometry"].geom_type == "Polygon"
-            ):
-                outer_polygons.append(linestring_or_polygon["geometry"])
-            elif (member.get("role") == "inner") and (
-                linestring_or_polygon["geometry"].geom_type == "Polygon"
-            ):
-                inner_polygons.append(linestring_or_polygon["geometry"])
-            elif (member.get("role") == "outer") and (
-                linestring_or_polygon["geometry"].geom_type == "LineString"
-            ):
-                outer_linestrings.append(linestring_or_polygon["geometry"])
-            elif (member.get("role") == "inner") and (
-                linestring_or_polygon["geometry"].geom_type == "LineString"
-            ):
-                inner_linestrings.append(linestring_or_polygon["geometry"])
-
-    # Merge outer linestring fragments.
-    # Returns a single LineString or MultiLineString collection
-    merged_outer_linestrings = linemerge(outer_linestrings)
-
-    # polygonize each linestring separately and append to list of outer polygons
-    if merged_outer_linestrings.geom_type == "LineString":
-        outer_polygons += polygonize(merged_outer_linestrings)
-    elif merged_outer_linestrings.geom_type == "MultiLineString":
-        for merged_outer_linestring in list(merged_outer_linestrings.geoms):
-            outer_polygons += polygonize(merged_outer_linestring)
-
-    # Merge inner linestring fragments.
-    # Returns a single LineString or MultiLineString collection
-    merged_inner_linestrings = linemerge(inner_linestrings)
-
-    # polygonize each linestring separately and append to list of inner polygons
-    if merged_inner_linestrings.geom_type == "LineString":
-        inner_polygons += polygonize(merged_inner_linestrings)
-    elif merged_inner_linestrings.geom_type == "MultiLineString":
-        for merged_inner_linestring in merged_inner_linestrings.geoms:
-            inner_polygons += polygonize(merged_inner_linestring)
-
-    if len(outer_polygons) == 0:
-        msg = (
-            "No outer polygons were created for"
-            f" https://www.openstreetmap.org/{element['type']}/{element['id']}"
-        )
-        utils.log(msg, level=lg.WARNING)
-
-    return outer_polygons, inner_polygons
-
-
-def _subtract_inner_polygons_from_outer_polygons(
-    element: dict[str, Any],
-    outer_polygons: list[Polygon],
-    inner_polygons: list[Polygon],
-) -> Polygon | MultiPolygon:
-    """
-    Subtract inner Polygons from outer Polygons.
-
-    Creates a Polygon or MultiPolygon with holes.
-
-    Parameters
-    ----------
-    element
-        Element of type "relation" from Overpass response JSON.
-    outer_polygons
-        Outer Polygons that are part of a MultiPolygon.
-    inner_polygons
-        Inner Polygons that are part of a MultiPolygon.
+    way_id
+        The way's OSM ID.
+    way_nodes
+        The way's constituent nodes.
+    way_tags
+        The way's tags.
+    node_coords
+        Keyed by OSM node ID with values of `(lat, lon)` coordinate tuples.
 
     Returns
     -------
     geometry
-        A single Polygon or MultiPolygon.
     """
-    # create a new list to hold the outer polygons with the inner polygons
-    # subtracted
-    outer_polygons_with_holes = []
+    # a way is a LineString by default, but if it's a closed way and it's not
+    # tagged area=no, check if any of its tags denote it as a polygon instead
+    geom_type = LineString
+    if way_nodes[0] == way_nodes[-1] and way_tags.get("area") != "no":
+        for tag in way_tags.keys() & _POLYGON_FEATURES.keys():
+            rule = _POLYGON_FEATURES[tag]["polygon"]
+            values = _POLYGON_FEATURES[tag].get("values", set())
+            if (
+                rule == "all"
+                or (rule == "passlist" and way_tags[tag] in values)
+                or (rule == "blocklist" and way_tags[tag] not in values)
+            ):
+                geom_type = Polygon
+                break
 
-    # loop through the outer polygons subtracting the inner polygons and
-    # appending to the list
-    for outer_polygon in outer_polygons:
-        outer_polygon_diff = outer_polygon
-        for inner_polygon in inner_polygons:
-            if inner_polygon.within(outer_polygon):
-                try:
-                    outer_polygon_diff = outer_polygon_diff.difference(inner_polygon)
-                except TopologicalError:  # pragma: no cover
-                    msg = (
-                        f"relation https://www.openstreetmap.org/relation/{element['id']} "
-                        "caused a TopologicalError, trying with zero buffer."
-                    )
-                    utils.log(msg, level=lg.WARNING)
-                    outer_polygon_diff = outer_polygon.buffer(0).difference(inner_polygon.buffer(0))
-
-        # note: .buffer(0) can return either a Polygon or MultiPolygon
-        # if it returns a MultiPolygon we need to extract the component
-        # sub Polygons to add to outer_polygons_with_holes
-        if outer_polygon_diff.geom_type == "Polygon":
-            outer_polygons_with_holes.append(outer_polygon_diff)
-        elif outer_polygon_diff.geom_type == "MultiPolygon":
-            outer_polygons_with_holes.extend(list(outer_polygon_diff.geoms))
-
-    # if only one polygon with holes was created, return that single polygon
-    if len(outer_polygons_with_holes) == 1:
-        geometry = outer_polygons_with_holes[0]
-    # otherwise create a multipolygon from list of outer polygons with holes
-    else:
-        geometry = MultiPolygon(outer_polygons_with_holes)
-
-    return geometry
+    # create the way geometry from its constituent nodes' coordinates
+    try:
+        return geom_type(node_coords[node] for node in way_nodes)
+    except (GEOSException, KeyError, ValueError) as e:
+        msg = f"Could not build geometry of way {way_id}: {e!r}"
+        utils.log(msg, level=lg.WARNING)
+        return geom_type()
 
 
-def _buffer_invalid_geometries(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+def _build_relation_geometry(
+    members: list[dict[str, Any]],
+    way_geoms: dict[int, LineString | Polygon],
+) -> Polygon | MultiPolygon:
     """
-    Buffer any invalid geometries remaining in the GeoDataFrame.
+    Build a relation's geometry from its constituent member ways' geometries.
 
-    Invalid geometries in the GeoDataFrame (which may accurately reproduce
-    invalid geometries in OpenStreetMap) can cause the filtering to the query
-    polygon and other subsequent geometric operations to fail. This function
-    logs the ids of the invalid geometries and applies a buffer of zero to try
-    to make them valid.
-
-    Note: the resulting geometries may differ from the originals.
+    OSM represents simple polygons as closed ways (see `_build_way_geometry`),
+    but it uses relations to represent multipolygons (with or without holes)
+    and polygons with holes. For the former, the relation contains multiple
+    members with role "outer". For the latter, the relation contains at least
+    one member with role "outer" representing the shell(s), and at least one
+    member with role "inner" representing the hole(s). For documentation, see
+    https://wiki.openstreetmap.org/wiki/Relation:multipolygon
 
     Parameters
     ----------
-    gdf
-        A GeoDataFrame with possibly invalid geometries.
+    members
+        The members constituting the relation.
+    way_geoms
+        Keyed by OSM way ID with values of their geometries.
 
     Returns
     -------
-    gdf
-        The GeoDataFrame with zero-buffer applied to invalid geometries.
+    geometry
     """
-    # only apply the filters if the GeoDataFrame is not empty
-    if not gdf.empty:
-        # create a filter for rows with invalid geometries
-        invalid_geometry_filter = ~gdf["geometry"].is_valid
+    inner_linestrings = []
+    outer_linestrings = []
+    inner_polygons = []
+    outer_polygons = []
 
-        # if there are invalid geometries
-        if invalid_geometry_filter.any():
-            # get their unique_ids from the index
-            invalid_geometry_ids = gdf.loc[invalid_geometry_filter].index.to_list()
+    # sort member geometries by member role and geometry type
+    for member in members:
+        if member["type"] == "way":
+            geom = way_geoms[member["ref"]]
+            role = member["role"]
+            if role == "outer" and geom.geom_type == "LineString":
+                outer_linestrings.append(geom)
+            elif role == "outer" and geom.geom_type == "Polygon":
+                outer_polygons.append(geom)
+            elif role == "inner" and geom.geom_type == "LineString":
+                inner_linestrings.append(geom)
+            elif role == "inner" and geom.geom_type == "Polygon":
+                inner_polygons.append(geom)
 
-            # create a list of their urls and log them
-            osm_url = "https://www.openstreetmap.org/"
-            invalid_geom_urls = [osm_url + unique_id for unique_id in invalid_geometry_ids]
-            msg = (
-                f"{len(invalid_geometry_ids)} invalid geometries"
-                f".buffer(0) applied to {invalid_geom_urls}"
-            )
-            utils.log(msg, level=lg.INFO)
+    # merge/polygonize outer linestring fragments then add to outer polygons
+    merged_outer_linestrings = linemerge(outer_linestrings)
+    if merged_outer_linestrings.geom_type == "LineString":
+        merged_outer_linestrings = MultiLineString([merged_outer_linestrings])
+    for merged_outer_linestring in merged_outer_linestrings.geoms:
+        outer_polygons += polygonize(merged_outer_linestring)
 
-            gdf.loc[invalid_geometry_filter, "geometry"] = gdf.loc[
-                invalid_geometry_filter,
-                "geometry",
-            ].buffer(0)
+    # merge/polygonize inner linestring fragments then add to inner polygons
+    merged_inner_linestrings = linemerge(inner_linestrings)
+    if merged_inner_linestrings.geom_type == "LineString":
+        merged_inner_linestrings = MultiLineString([merged_inner_linestrings])
+    for merged_inner_linestring in merged_inner_linestrings.geoms:
+        inner_polygons += polygonize(merged_inner_linestring)
 
-    return gdf
+    # remove holes from polygons, if any, then retun
+    return _remove_polygon_holes(outer_polygons, inner_polygons)
 
 
-def _filter_gdf_by_polygon_and_tags(
+def _remove_polygon_holes(
+    outer_polygons: list[Polygon],
+    inner_polygons: list[Polygon],
+) -> Polygon | MultiPolygon:
+    """
+    Subtract inner holes from outer polygons.
+
+    This allows possible island polygons within a larger polygon's holes.
+
+    Parameters
+    ----------
+    outer_polygons
+        Polygons, including possible islands within a larger polygon's holes.
+    inner_polygons
+        Inner holes to subtract from the outer polygons that contain them.
+
+    Returns
+    -------
+    geometry
+    """
+    if len(inner_polygons) == 0:
+        # if there are no holes to remove, geom is the union of outer polygons
+        geometry = unary_union(outer_polygons)
+    else:
+        # otherwise, remove from each outer poly each inner poly it contains
+        polygons_with_holes = []
+        for outer in outer_polygons:
+            for inner in inner_polygons:
+                if outer.contains(inner):
+                    outer = outer.difference(inner)  # noqa: PLW2901
+            polygons_with_holes.append(outer)
+        geometry = unary_union(polygons_with_holes)
+
+    # ensure returned geometry is a Polygon or MultiPolygon
+    if isinstance(geometry, (Polygon, MultiPolygon)):
+        return geometry
+    return Polygon()
+
+
+def _filter_features(
     gdf: gpd.GeoDataFrame,
-    polygon: Polygon | MultiPolygon | None,
-    tags: dict[str, bool | str | list[str]] | None,
+    polygon: Polygon | MultiPolygon,
+    tags: dict[str, bool | str | list[str]],
 ) -> gpd.GeoDataFrame:
     """
-    Filter the GeoDataFrame to the requested bounding polygon and tags.
+    Filter features GeoDataFrame by spatial boundaries and query tags.
 
-    Filters GeoDataFrame to query polygon and tags. Removes columns of all
-    NaNs (that held values only in rows removed by the filters). Resets the
-    index of GeoDataFrame, writing it into a new column called 'unique_id'.
+    If the `polygon` and `tags` arguments are empty objects, the final
+    GeoDataFrame will not be filtered accordingly.
 
     Parameters
     ----------
     gdf
-        The GeoDataFrame to filter.
+        Original GeoDataFrame of features.
     polygon
-        Polygon defining the boundary of the requested area.
+        If not empty, the spatial boundaries to filter the GeoDataFrame.
     tags
-        The tags requested.
+        If not empty, the query tags to filter the GeoDataFrame.
 
     Returns
     -------
     gdf
-        Final filtered GeoDataFrame.
+        Filtered GeoDataFrame of features.
     """
-    # only apply the filters if the GeoDataFrame is not empty
-    if not gdf.empty:
-        # create two filters, initially all True
-        polygon_filter = pd.Series(data=True, index=gdf.index)
-        combined_tag_filter = pd.Series(data=True, index=gdf.index)
+    # remove any null or empty geometries then fix any invalid geometries
+    gdf = gdf[~(gdf["geometry"].isna() | gdf["geometry"].is_empty)]
+    gdf.loc[:, "geometry"] = gdf["geometry"].make_valid()
 
-        # if a polygon was supplied, create a filter that is True for
-        # features that intersect with the polygon
-        if polygon is not None:
-            # get set of index labels of features that intersect polygon
-            gdf_indices_in_polygon = utils_geo._intersect_index_quadrats(gdf["geometry"], polygon)
-            # create boolean series, True for features whose index is in set
-            polygon_filter = gdf.index.isin(gdf_indices_in_polygon)
+    # retain rows with geometries that intersect the polygon
+    if polygon.is_empty:
+        geom_filter = pd.Series(data=True, index=gdf.index)
+    else:
+        idx = utils_geo._intersect_index_quadrats(gdf["geometry"], polygon)
+        geom_filter = gdf.index.isin(idx)
 
-            msg = f"{sum(~polygon_filter)} features removed by the polygon filter"
-            utils.log(msg, level=lg.INFO)
+    # retain rows that have any of their tag filters satisfied
+    if len(tags) == 0:
+        tags_filter = pd.Series(data=True, index=gdf.index)
+    else:
+        tags_filter = pd.Series(data=False, index=gdf.index)
+        for col in set(gdf.columns) & tags.keys():
+            value = tags[col]
+            if value is True:
+                tags_filter |= gdf[col].notna()
+            elif isinstance(value, str):
+                tags_filter |= gdf[col] == value
+            elif isinstance(value, list):
+                tags_filter |= gdf[col].isin(set(value))
 
-        # if tags were supplied, create filter that is True for features
-        # that have at least one of the requested tags
-        if tags:
-            # Reset all values in the combined_tag_filter to False
-            combined_tag_filter[:] = False
+    # filter gdf then drop any columns with only nulls left after filtering
+    gdf = gdf[geom_filter & tags_filter].dropna(axis="columns", how="all")
+    if len(gdf) == 0:  # pragma: no cover
+        msg = "No matching features. Check query location, tags, and log."
+        raise InsufficientResponseError(msg)
 
-            # reduce the tags to those that are actually present in the
-            # GeoDataFrame columns
-            tags_in_columns = {key: tags[key] for key in tags if key in gdf.columns}
-
-            for key, value in tags_in_columns.items():
-                if value is True:
-                    tag_filter = gdf[key].notna()
-                elif isinstance(value, str):
-                    tag_filter = gdf[key] == value
-                elif isinstance(value, list):
-                    tag_filter = gdf[key].isin(value)
-
-                combined_tag_filter = combined_tag_filter | tag_filter
-
-            msg = f"{sum(~combined_tag_filter)} features removed by the tag filter"
-            utils.log(msg, level=lg.INFO)
-
-        # apply the filters
-        gdf = gdf[polygon_filter & combined_tag_filter].copy()
-
-        # remove columns of all nulls (created by discarded component features)
-        gdf = gdf.dropna(axis="columns", how="all")
-
-    # multi-index gdf by element_type and osmid then return
-    idx_cols = ["element_type", "osmid"]
-    if all(c in gdf.columns for c in idx_cols):
-        gdf = gdf.set_index(idx_cols)
+    msg = f"{len(gdf):,} features in the final GeoDataFrame"
+    utils.log(msg, level=lg.INFO)
     return gdf
