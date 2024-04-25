@@ -9,6 +9,7 @@ from typing import Any
 import geopandas as gpd
 import networkx as nx
 import numpy as np
+import pandas as pd
 from shapely.geometry import LineString
 from shapely.geometry import MultiPolygon
 from shapely.geometry import Point
@@ -578,14 +579,18 @@ def _merge_nodes_geometric(
     gdf_nodes = convert.graph_to_gdfs(G, edges=False)
 
     if isinstance(tolerance, dict):
-        # Map tolerances to node IDs, using NaN for nodes not in the dictionary, and fill NaN with zero
-        buffer_distances = gdf_nodes.index.to_series().map(tolerance).fillna(0)
+        # Create a Series of tolerances, reindexed to match the nodes
+        tolerances = pd.Series(tolerance).reindex(gdf_nodes.index)
+        # Buffer nodes to the specified distance
+        buffered_geoms = gdf_nodes.geometry.buffer(tolerances)
+        # Replace POLYGON EMPTY with original geometries if buffer distance was effectively zero or missing
+        buffered_geoms = buffered_geoms.fillna(gdf_nodes["geometry"])
     else:
-        # Use the default tolerance for all nodes
-        buffer_distances = tolerance
+        # Buffer nodes to the specified distance
+        buffered_geoms = gdf_nodes.geometry.buffer(tolerance)
 
-    # Buffer nodes to the specified distances and merge them
-    merged = gdf_nodes.geometry.buffer(distance=buffer_distances).unary_union
+    # Merge overlapping geometries into a single geometry
+    merged = buffered_geoms.unary_union
 
     # if only a single node results, make it iterable to convert to GeoSeries
     merged = MultiPolygon([merged]) if isinstance(merged, Polygon) else merged
