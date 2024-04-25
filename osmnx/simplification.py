@@ -446,12 +446,11 @@ def simplify_graph(  # noqa: C901, PLR0912
 def consolidate_intersections(
     G: nx.MultiDiGraph,
     *,
-    tolerance: float = 10,
+    tolerance: float | dict[int, float] = 10,
     rebuild_graph: bool = True,
     dead_ends: bool = False,
     reconnect_edges: bool = True,
     node_attr_aggs: dict[str, Any] | None = None,
-    tolerance_attribute: str | None = None,
 ) -> nx.MultiDiGraph | gpd.GeoSeries:
     """
     Consolidate intersections comprising clusters of nearby nodes.
@@ -493,7 +492,8 @@ def consolidate_intersections(
         A projected graph.
     tolerance
         Nodes are buffered to this distance (in graph's geometry's units) and
-        subsequent overlaps are dissolved into a single node.
+        subsequent overlaps are dissolved into a single node. Can be a float
+        value or a dictionary mapping node IDs to individual tolerance values.
     rebuild_graph
         If True, consolidate the nodes topologically, rebuild the graph, and
         return as MultiDiGraph. Otherwise, consolidate the nodes geometrically
@@ -513,9 +513,6 @@ def consolidate_intersections(
         (anything accepted as an argument by `pandas.agg`). Node attributes
         not in `node_attr_aggs` will contain the unique values across the
         merged nodes. If None, defaults to `{"elevation": numpy.mean}`.
-    tolerance_attribute : str, optional
-        The name of the attribute that contains individual tolerance values for
-        each node. If None, the default tolerance is used for all nodes.
 
     Returns
     -------
@@ -545,7 +542,6 @@ def consolidate_intersections(
             tolerance,
             reconnect_edges,
             node_attr_aggs,
-            tolerance_attribute,
         )
 
     # otherwise, if we're not rebuilding the graph
@@ -554,11 +550,12 @@ def consolidate_intersections(
         return gpd.GeoSeries(crs=G.graph["crs"])
 
     # otherwise, return the centroids of the merged intersection polygons
-    return _merge_nodes_geometric(G, tolerance, tolerance_attribute).centroid
+    return _merge_nodes_geometric(G, tolerance).centroid
 
 
 def _merge_nodes_geometric(
-    G: nx.MultiDiGraph, tolerance: float, tolerance_attribute: str | None = None,
+    G: nx.MultiDiGraph,
+    tolerance: float | dict[int, float],
 ) -> gpd.GeoSeries:
     """
     Geometrically merge nodes within some distance of each other.
@@ -570,9 +567,8 @@ def _merge_nodes_geometric(
     tolerance
         Buffer nodes to this distance (in graph's geometry's units) then merge
         overlapping polygons into a single polygon via unary union operation.
-    tolerance_attribute : str, optional
-        The name of the attribute that contains individual tolerance values for
-        each node. If None, the default tolerance is used for all nodes.
+        Can be a float value or a dictionary mapping node IDs to individual
+        tolerance values.
 
     Returns
     -------
@@ -581,14 +577,15 @@ def _merge_nodes_geometric(
     """
     gdf_nodes = convert.graph_to_gdfs(G, edges=False)
 
-    if tolerance_attribute and tolerance_attribute in gdf_nodes.columns:
-        # If a node does not have a value in the tolerance_attribute, use the default tolerance
-        buffer_distances = gdf_nodes[tolerance_attribute].fillna(tolerance)
-        # Buffer nodes to the specified distances and merge them
-        merged = gdf_nodes["geometry"].buffer(distance=buffer_distances).unary_union
+    if isinstance(tolerance, dict):
+        # Map tolerances to node IDs, using NaN for nodes not in the dictionary, and fill NaN with zero
+        buffer_distances = gdf_nodes.index.to_series().map(tolerance).fillna(0)
     else:
         # Use the default tolerance for all nodes
-        merged = gdf_nodes["geometry"].buffer(distance=tolerance).unary_union
+        buffer_distances = tolerance
+
+    # Buffer nodes to the specified distances and merge them
+    merged = gdf_nodes.geometry.buffer(distance=buffer_distances).unary_union
 
     # if only a single node results, make it iterable to convert to GeoSeries
     merged = MultiPolygon([merged]) if isinstance(merged, Polygon) else merged
@@ -597,10 +594,9 @@ def _merge_nodes_geometric(
 
 def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     G: nx.MultiDiGraph,
-    tolerance: float,
+    tolerance: float | dict[int, float],
     reconnect_edges: bool,  # noqa: FBT001
     node_attr_aggs: dict[str, Any] | None,
-    tolerance_attribute: str | None = None,
 ) -> nx.MultiDiGraph:
     """
     Consolidate intersections comprising clusters of nearby nodes.
@@ -623,7 +619,8 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         A projected graph.
     tolerance
         Nodes are buffered to this distance (in graph's geometry's units) and
-        subsequent overlaps are dissolved into a single node.
+        subsequent overlaps are dissolved into a single node. Can be a float
+        value or a dictionary mapping node IDs to individual tolerance values.
     reconnect_edges
         If True, reconnect edges (and their geometries) to the consolidated
         nodes in rebuilt graph, and update the edge length attributes. If
@@ -635,9 +632,6 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         (anything accepted as an argument by `pandas.agg`). Node attributes
         not in `node_attr_aggs` will contain the unique values across the
         merged nodes. If None, defaults to `{"elevation": numpy.mean}`.
-    tolerance_attribute : str, optional
-        The name of the attribute that contains individual tolerance values for
-        each node. If None, the default tolerance is used for all nodes.
 
     Returns
     -------
@@ -653,7 +647,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     # buffer nodes to passed-in distance and merge overlaps. turn merged nodes
     # into gdf and get centroids of each cluster as x, y
     node_clusters = gpd.GeoDataFrame(
-        geometry=_merge_nodes_geometric(G, tolerance, tolerance_attribute),
+        geometry=_merge_nodes_geometric(G, tolerance),
     )
     centroids = node_clusters.centroid
     node_clusters["x"] = centroids.x
