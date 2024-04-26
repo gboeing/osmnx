@@ -332,7 +332,7 @@ def to_digraph(G: nx.MultiDiGraph, *, weight: str = "length") -> nx.DiGraph:
     to_remove: list[tuple[int, int, int]] = []
 
     # identify all the parallel edges in the MultiDiGraph
-    parallels = ((u, v) for u, v in G.edges(keys=False) if len(G.get_edge_data(u, v)) > 1)
+    parallels = ((u, v) for u, v in G.edges(keys=False) if G.number_of_edges(u, v) > 1)
 
     # among all sets of parallel edges, remove all except the one with the
     # minimum "weight" attribute value
