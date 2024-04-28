@@ -634,7 +634,7 @@ def test_graph_from() -> None:
         dist=500,
         custom_filter=cf,
         dist_type="bbox",
-        network_type="all",
+        network_type="all_public",
     )
 
     ox.settings.overpass_memory = 1073741824
@@ -642,7 +642,7 @@ def test_graph_from() -> None:
         location_point,
         dist=500,
         dist_type="network",
-        network_type="all_private",
+        network_type="all",
     )
 
 
