@@ -22,13 +22,21 @@ def _get_osm_filter(network_type):
 
     Parameters
     ----------
-    network_type : string {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+    network_type : string {"all", "all_public", "bike", "drive", "drive_service", "walk"}
         what type of street network to get
 
     Returns
     -------
     string
     """
+    if network_type == "all_private":
+        msg = (
+            "The 'all_private' network type has been renamed 'all'. The old "
+            "'all_private' naming is deprecated and will be removed in the v2.0.0 release. "
+            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     # define built-in queries to send to the API. specifying way["highway"]
     # means that all ways returned must have a highway tag. the filters then
     # remove ways by tag/value.
@@ -79,7 +87,7 @@ def _get_osm_filter(network_type):
 
     # to download all ways, just filter out everything not currently in use or
     # that is private-access only
-    filters["all"] = (
+    filters["all_public"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|construction|no|planned|platform|proposed|raceway|razed"]'
         f'["service"!~"private"]'
@@ -87,7 +95,7 @@ def _get_osm_filter(network_type):
 
     # to download all ways, including private-access ones, just filter out
     # everything not currently in use
-    filters["all_private"] = (
+    filters["all"] = (
         '["highway"]["area"!~"yes"]["highway"!~"abandoned|construction|no|planned|platform|'
         'proposed|raceway|razed"]'
     )
