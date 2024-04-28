@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.3 (TBD)
+
+- deprecate the "all_private" network_type in favor of its new name "all" (#1164)
+
 ## 1.9.2 (2024-04-02)
 
 - deprecate and replace settings module's default_accept_language, default_referer, and default_user_agent settings (#1138)
