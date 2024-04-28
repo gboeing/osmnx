@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 def graph_from_bbox(
     bbox: tuple[float, float, float, float],
     *,
-    network_type: str = "all_private",
+    network_type: str = "all",
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
@@ -65,7 +65,7 @@ def graph_from_bbox(
         Bounding box as `(north, south, east, west)`. Coordinates should be in
         unprojected latitude-longitude degrees (EPSG:4326).
     network_type
-        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        {"all", "all_public", "bike", "drive", "drive_service", "walk"}
         What type of street network to retrieve if `custom_filter` is None.
     simplify
         If True, simplify graph topology via the `simplify_graph` function.
@@ -114,7 +114,7 @@ def graph_from_point(
     dist: float,
     *,
     dist_type: str = "bbox",
-    network_type: str = "all_private",
+    network_type: str = "all",
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
@@ -148,7 +148,7 @@ def graph_from_point(
         length/width. If "network", retain only those nodes within `dist`
         network distance of the nearest node to `center_point`.
     network_type
-        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        {"all", "all_public", "bike", "drive", "drive_service", "walk"}
         What type of street network to retrieve if `custom_filter` is None.
     simplify
         If True, simplify graph topology with the `simplify_graph` function.
@@ -206,7 +206,7 @@ def graph_from_address(
     dist: float,
     *,
     dist_type: str = "bbox",
-    network_type: str = "all_private",
+    network_type: str = "all",
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
@@ -239,7 +239,7 @@ def graph_from_address(
         "network", retain only those nodes within `dist` network distance from
         the centermost node.
     network_type
-        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        {"all", "all_public", "bike", "drive", "drive_service", "walk"}
         What type of street network to retrieve if `custom_filter` is None.
     simplify
         If True, simplify graph topology with the `simplify_graph` function.
@@ -288,7 +288,7 @@ def graph_from_address(
 def graph_from_place(
     query: str | dict[str, str] | list[str | dict[str, str]],
     *,
-    network_type: str = "all_private",
+    network_type: str = "all",
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
@@ -326,7 +326,7 @@ def graph_from_place(
     query
         The query or queries to geocode to retrieve place boundary polygon(s).
     network_type
-        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        {"all", "all_public", "bike", "drive", "drive_service", "walk"}
         What type of street network to retrieve if `custom_filter` is None.
     simplify
         If True, simplify graph topology with the `simplify_graph` function.
@@ -380,7 +380,7 @@ def graph_from_place(
 def graph_from_polygon(
     polygon: Polygon | MultiPolygon,
     *,
-    network_type: str = "all_private",
+    network_type: str = "all",
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
@@ -405,7 +405,7 @@ def graph_from_polygon(
         The geometry within which to construct the graph. Coordinates should
         be in unprojected latitude-longitude degrees (EPSG:4326).
     network_type
-        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        {"all", "all_public", "bike", "drive", "drive_service", "walk"}
         What type of street network to retrieve if `custom_filter` is None.
     simplify
         If True, simplify graph topology with the `simplify_graph` function.

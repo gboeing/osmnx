@@ -31,13 +31,32 @@ def _get_network_filter(network_type: str) -> str:
     """
     Create a filter to query Overpass for the specified network type.
 
-    The filter searches for every OSM way with a "highway" tag, excluding
-    certain ways that are incompatible with the network type.
+    The filter queries Overpass for every OSM way with a "highway" tag but
+    excludes ways that are incompatible with the requested network type. You
+    can choose from the following types:
+
+    "all" retrieves all public and private-access ways currently in use.
+
+    "all_public" retrieves all public ways currently in use.
+
+    "bike" retrieves public bikeable ways and excludes foot ways, motor ways,
+    and anything tagged biking=no.
+
+    "drive" retrieves public drivable streets and excludes service roads,
+    anything tagged motor=no, and certain non-service roads tagged as
+    providing certain services (such as alleys or driveways).
+
+    "drive_service" retrieves public drivable streets including service roads
+    but excludes certain services (such as parking or emergency access).
+
+    "walk" retrieves public walkable ways and excludes cycle ways, motor ways,
+    and anything tagged foot=no. It includes service roads like parking lot
+    aisles and alleys that you can walk on even if they are unpleasant walks.
 
     Parameters
     ----------
     network_type
-        {"all_private", "all", "bike", "drive", "drive_service", "walk"}
+        {"all", "all_public", "bike", "drive", "drive_service", "walk"}
         What type of street network to retrieve.
 
     Returns
@@ -51,8 +70,8 @@ def _get_network_filter(network_type: str) -> str:
     filters = {}
 
     # driving: filter out un-drivable roads, service roads, private ways, and
-    # anything specifying motor=no. also filter out any non-service roads that
-    # are tagged as providing certain services
+    # anything tagged motor=no. also filter out any non-service roads that are
+    # tagged as providing certain services
     filters["drive"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
@@ -73,10 +92,10 @@ def _get_network_filter(network_type: str) -> str:
     )
 
     # walking: filter out cycle ways, motor ways, private ways, and anything
-    # specifying foot=no. allow service roads, permitting things like parking
-    # lot lanes, alleys, etc that you *can* walk on even if they're not
-    # exactly pleasant walks. some cycleways may allow pedestrians, but this
-    # filter ignores such cycleways.
+    # tagged foot=no. allow service roads, permitting things like parking lot
+    # aisles, alleys, etc that you *can* walk on even if they're not exactly
+    # pleasant walks. some cycleways may allow pedestrians, but this filter
+    # ignores such cycleways.
     filters["walk"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|bus_guideway|construction|cycleway|motor|no|planned|platform|'
@@ -85,7 +104,7 @@ def _get_network_filter(network_type: str) -> str:
     )
 
     # biking: filter out foot ways, motor ways, private ways, and anything
-    # specifying biking=no
+    # tagged biking=no
     filters["bike"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|bus_guideway|construction|corridor|elevator|escalator|footway|'
@@ -93,9 +112,9 @@ def _get_network_filter(network_type: str) -> str:
         f'["bicycle"!~"no"]["service"!~"private"]'
     )
 
-    # to download all ways, just filter out everything not currently in use or
-    # that is private-access only
-    filters["all"] = (
+    # to download all public ways, just filter out everything not currently in
+    # use or that is private-access only
+    filters["all_public"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|construction|no|planned|platform|proposed|raceway|razed"]'
         f'["service"!~"private"]'
@@ -103,7 +122,7 @@ def _get_network_filter(network_type: str) -> str:
 
     # to download all ways, including private-access ones, just filter out
     # everything not currently in use
-    filters["all_private"] = (
+    filters["all"] = (
         '["highway"]["area"!~"yes"]["highway"!~"abandoned|construction|no|planned|platform|'
         'proposed|raceway|razed"]'
     )
