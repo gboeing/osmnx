@@ -30,6 +30,7 @@ def _get_osm_filter(network_type):
     string
     """
     if network_type == "all_private":
+        network_type = "all"
         msg = (
             "The 'all_private' network type has been renamed 'all'. The old "
             "'all_private' naming is deprecated and will be removed in the v2.0.0 release. "
