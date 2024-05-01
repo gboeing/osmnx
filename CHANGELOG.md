@@ -11,7 +11,6 @@ Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123)
 - improve docstrings throughout package (#1116)
 - improve logging and warnings throughout package (#1125)
 - improve error messages throughout package (#1131)
-- rename network_types "all" -> "all_public" and "all_private" -> "all" for clarity (#1163)
 - refactor features module for speed improvement and memory efficiency (#1157)
 - refactor save_graph_xml function and \_osm_xml module for speed improvement and bug fixes (#1135)
 - make save_graph_xml function accept only an unsimplified MultiDiGraph as its input data (#1135)
@@ -39,6 +38,12 @@ Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123)
 - rename osm_xml module to \_osm_xml to make it private, as all its functions are private (#1113)
 - rename private \_downloader module to \_http (#1114)
 - remove unnecessary private \_api module (#1114)
+
+## 1.9.3 (2024-05-01)
+
+- update the official package reference paper (#1169)
+- rename network_types "all" -> "all_public" and "all_private" -> "all" for clarity (#1164)
+- deprecate the obsolete "all_private" network_type name (#1164)
 
 ## 1.9.2 (2024-04-02)
 
