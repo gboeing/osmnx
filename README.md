@@ -1,4 +1,4 @@
-# OSMnx
+# OSMnx (v1 maintenance branch)
 
 [![PyPI Version](https://badge.fury.io/py/osmnx.svg)](https://pypi.org/project/osmnx/)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/osmnx?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=downloads)](https://pepy.tech/project/osmnx)
