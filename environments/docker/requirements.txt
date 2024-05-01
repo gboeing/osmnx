@@ -2,19 +2,13 @@
 osmnx
 python == 3.11.*
 
-# helpful
-beautifulsoup4
-bokeh
+# helpful extras
 bottleneck
 cartopy
-contextily
-cython
 folium
 jupyterlab
-mapclassify
 numexpr
 pillow
-psycopg2
 pysal
 python-igraph
 seaborn
@@ -23,6 +17,7 @@ statsmodels
 # docs
 furo
 sphinx
+sphinx-autodoc-typehints
 
 # packaging
 conda-smithy
@@ -30,7 +25,14 @@ hatch
 pip
 twine
 
+# typing
+mypy
+pandas-stubs
+typeguard
+types-requests
+
 # linting/testing
+lxml
 nbdime
 nbqa
 pre-commit

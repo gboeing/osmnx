@@ -1,6 +1,5 @@
 .temp
 .pytest_cache
-tests/run_tests.bat
 *.vrt
 .DS_Store
 

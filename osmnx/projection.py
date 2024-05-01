@@ -1,57 +1,73 @@
 """Project a graph, GeoDataFrame, or geometry to a different CRS."""
 
+from __future__ import annotations
+
+import logging as lg
+from typing import TYPE_CHECKING
+from typing import Any
+
 import geopandas as gpd
 
 from . import convert
 from . import settings
 from . import utils
 
+if TYPE_CHECKING:
+    import networkx as nx
+    from shapely import Geometry
 
-def is_projected(crs):
+
+def is_projected(crs: Any) -> bool:  # noqa: ANN401
     """
     Determine if a coordinate reference system is projected or not.
 
     Parameters
     ----------
-    crs : string or pyproj.CRS
-        the identifier of the coordinate reference system, which can be
-        anything accepted by `pyproj.CRS.from_user_input()` such as an
-        authority string or a WKT string
+    crs
+        The identifier of the coordinate reference system. This can be
+        anything accepted by `pyproj.CRS.from_user_input()`, such as an
+        authority string or a WKT string.
 
     Returns
     -------
-    projected : bool
-        True if crs is projected, otherwise False
+    projected
+        True if `crs` is projected, otherwise False
     """
-    return gpd.GeoSeries(crs=crs).crs.is_projected
+    return bool(gpd.GeoSeries(crs=crs).crs.is_projected)
 
 
-def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
+def project_geometry(
+    geometry: Geometry,
+    *,
+    crs: Any | None = None,  # noqa: ANN401
+    to_crs: Any | None = None,  # noqa: ANN401
+    to_latlong: bool = False,
+) -> tuple[Geometry, Any]:
     """
     Project a Shapely geometry from its current CRS to another.
 
-    If `to_latlong` is `True`, this projects the GeoDataFrame to the CRS
-    defined by `settings.default_crs`, otherwise it projects it to the CRS
-    defined by `to_crs`. If `to_crs` is `None`, it projects it to the CRS of
-    an appropriate UTM zone given `geometry`'s bounds.
+    If `to_latlong` is True, this projects the geometry to the coordinate
+    reference system defined by `settings.default_crs`. Otherwise it projects
+    it to the CRS defined by `to_crs`. If `to_crs` is `None`, it projects it
+    to the CRS of an appropriate UTM zone given `geometry`'s bounds.
 
     Parameters
     ----------
-    geometry : shapely geometry
-        the geometry to be projected
-    crs : string or pyproj.CRS
-        the initial CRS of `geometry`. if None, it will be set to
-        `settings.default_crs`
-    to_crs : string or pyproj.CRS
-        if None, project to an appropriate UTM zone, otherwise project to
-        this CRS
-    to_latlong : bool
-        if True, project to `settings.default_crs` and ignore `to_crs`
+    geometry
+        The geometry to be projected.
+    crs
+        The initial CRS of `geometry`. If None, it will be set to
+        `settings.default_crs`.
+    to_crs
+        If None, project to an appropriate UTM zone. Otherwise project to this
+        CRS.
+    to_latlong
+        If True, project to `settings.default_crs` and ignore `to_crs`.
 
     Returns
     -------
-    geometry_proj, crs : tuple
-        the projected geometry and its new CRS
+    geometry_proj, crs
+        The projected geometry and its new CRS.
     """
     if crs is None:
         crs = settings.default_crs
@@ -62,32 +78,37 @@ def project_geometry(geometry, crs=None, to_crs=None, to_latlong=False):
     return geometry_proj, gdf_proj.crs
 
 
-def project_gdf(gdf, to_crs=None, to_latlong=False):
+def project_gdf(
+    gdf: gpd.GeoDataFrame,
+    *,
+    to_crs: Any | None = None,  # noqa: ANN401
+    to_latlong: bool = False,
+) -> gpd.GeoDataFrame:
     """
     Project a GeoDataFrame from its current CRS to another.
 
-    If `to_latlong` is `True`, this projects the GeoDataFrame to the CRS
-    defined by `settings.default_crs`, otherwise it projects it to the CRS
-    defined by `to_crs`. If `to_crs` is `None`, it projects it to the CRS of
-    an appropriate UTM zone given `gdf`'s bounds.
+    If `to_latlong` is True, this projects the GeoDataFrame to the coordinate
+    reference system defined by `settings.default_crs`. Otherwise it projects
+    it to the CRS defined by `to_crs`. If `to_crs` is `None`, it projects it
+    to the CRS of an appropriate UTM zone given `geometry`'s bounds.
 
     Parameters
     ----------
-    gdf : geopandas.GeoDataFrame
-        the GeoDataFrame to be projected
-    to_crs : string or pyproj.CRS
-        if None, project to an appropriate UTM zone, otherwise project to
-        this CRS
-    to_latlong : bool
-        if True, project to `settings.default_crs` and ignore `to_crs`
+    gdf
+        The GeoDataFrame to be projected.
+    to_crs
+        If None, project to an appropriate UTM zone. Otherwise project to
+        this CRS.
+    to_latlong
+        If True, project to `settings.default_crs` and ignore `to_crs`.
 
     Returns
     -------
-    gdf_proj : geopandas.GeoDataFrame
-        the projected GeoDataFrame
+    gdf_proj
+        The projected GeoDataFrame.
     """
-    if gdf.crs is None or len(gdf) < 1:  # pragma: no cover
-        msg = "GeoDataFrame must have a valid CRS and cannot be empty"
+    if gdf.crs is None or len(gdf) == 0:  # pragma: no cover
+        msg = "`gdf` must have a valid CRS and cannot be empty."
         raise ValueError(msg)
 
     # if to_latlong is True, project the gdf to the default_crs
@@ -101,33 +122,40 @@ def project_gdf(gdf, to_crs=None, to_latlong=False):
     # project the gdf
     gdf_proj = gdf.to_crs(to_crs)
     crs_desc = f"{gdf_proj.crs.to_string()} / {gdf_proj.crs.name}"
-    utils.log(f"Projected GeoDataFrame to {crs_desc!r}")
+
+    msg = f"Projected GeoDataFrame to {crs_desc!r}"
+    utils.log(msg, level=lg.INFO)
     return gdf_proj
 
 
-def project_graph(G, to_crs=None, to_latlong=False):
+def project_graph(
+    G: nx.MultiDiGraph,
+    *,
+    to_crs: Any | None = None,  # noqa: ANN401
+    to_latlong: bool = False,
+) -> nx.MultiDiGraph:
     """
     Project a graph from its current CRS to another.
 
-    If `to_latlong` is `True`, this projects the GeoDataFrame to the CRS
-    defined by `settings.default_crs`, otherwise it projects it to the CRS
-    defined by `to_crs`. If `to_crs` is `None`, it projects it to the CRS of
-    an appropriate UTM zone given `G`'s bounds.
+    If `to_latlong` is True, this projects the graph to the coordinate
+    reference system defined by `settings.default_crs`. Otherwise it projects
+    it to the CRS defined by `to_crs`. If `to_crs` is `None`, it projects it
+    to the CRS of an appropriate UTM zone given `geometry`'s bounds.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        the graph to be projected
-    to_crs : string or pyproj.CRS
-        if None, project to an appropriate UTM zone, otherwise project to
-        this CRS
-    to_latlong : bool
-        if True, project to `settings.default_crs` and ignore `to_crs`
+    G
+        The graph to be projected.
+    to_crs
+        If None, project to an appropriate UTM zone. Otherwise project to
+        this CRS.
+    to_latlong
+        If True, project to `settings.default_crs` and ignore `to_crs`.
 
     Returns
     -------
-    G_proj : networkx.MultiDiGraph
-        the projected graph
+    G_proj
+        The projected graph.
     """
     if to_latlong:
         to_crs = settings.default_crs
@@ -135,21 +163,14 @@ def project_graph(G, to_crs=None, to_latlong=False):
     # STEP 1: PROJECT THE NODES
     gdf_nodes = convert.graph_to_gdfs(G, edges=False)
 
-    # create new lat/lon columns to preserve lat/lon for later reference if
-    # cols do not already exist (ie, don't overwrite in later re-projections)
-    if "lon" not in gdf_nodes.columns or "lat" not in gdf_nodes.columns:
-        gdf_nodes["lon"] = gdf_nodes["x"]
-        gdf_nodes["lat"] = gdf_nodes["y"]
-
     # project the nodes GeoDataFrame and extract the projected x/y values
     gdf_nodes_proj = project_gdf(gdf_nodes, to_crs=to_crs)
     gdf_nodes_proj["x"] = gdf_nodes_proj["geometry"].x
     gdf_nodes_proj["y"] = gdf_nodes_proj["geometry"].y
     to_crs = gdf_nodes_proj.crs
-    gdf_nodes_proj = gdf_nodes_proj.drop(columns=["geometry"])
 
     # STEP 2: PROJECT THE EDGES
-    if "simplified" in G.graph and G.graph["simplified"]:
+    if G.graph.get("simplified"):
         # if graph has previously been simplified, project the edge geometries
         gdf_edges = convert.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
         gdf_edges_proj = project_gdf(gdf_edges, to_crs=to_crs)
@@ -157,14 +178,13 @@ def project_graph(G, to_crs=None, to_latlong=False):
         # if not, you don't have to project these edges because the nodes
         # contain all the spatial data in the graph (unsimplified edges have
         # no geometry attributes)
-        gdf_edges_proj = convert.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False).drop(
-            columns=["geometry"]
-        )
+        gdf_edges_proj = convert.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
 
     # STEP 3: REBUILD GRAPH
     # turn projected node/edge gdfs into a graph and update its CRS attribute
-    G_proj = convert.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj, G.graph)
+    G_proj = convert.graph_from_gdfs(gdf_nodes_proj, gdf_edges_proj, graph_attrs=G.graph)
     G_proj.graph["crs"] = to_crs
 
-    utils.log(f"Projected graph with {len(G)} nodes and {len(G.edges)} edges")
+    msg = f"Projected graph with {len(G)} nodes and {len(G.edges)} edges"
+    utils.log(msg, level=lg.INFO)
     return G_proj

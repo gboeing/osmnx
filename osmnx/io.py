@@ -1,37 +1,50 @@
-"""Serialize graphs to/from files on disk."""
+"""File I/O functions to save/load graphs to/from files on disk."""
+
+from __future__ import annotations
 
 import ast
 import contextlib
+import logging as lg
 from pathlib import Path
-from warnings import warn
+from typing import TYPE_CHECKING
+from typing import Any
 
 import networkx as nx
 import pandas as pd
 from shapely import wkt
 
+from . import _osm_xml
 from . import convert
-from . import osm_xml
 from . import settings
 from . import utils
 
+if TYPE_CHECKING:
+    import geopandas as gpd
 
-def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
+
+def save_graph_geopackage(
+    G: nx.MultiDiGraph,
+    filepath: str | Path | None = None,
+    *,
+    directed: bool = False,
+    encoding: str = "utf-8",
+) -> None:
     """
     Save graph nodes and edges to disk as layers in a GeoPackage file.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    filepath : string or pathlib.Path
-        path to the GeoPackage file including extension. if None, use default
-        data folder + graph.gpkg
-    encoding : string
-        the character encoding for the saved file
-    directed : bool
-        if False, save one edge for each undirected edge in the graph but
-        retain original oneway and to/from information as edge attributes; if
-        True, save one edge for each directed edge in the graph
+    G
+        The graph to save.
+    filepath
+        Path to the GeoPackage file including extension. If None, use default
+        `settings.data_folder/graph.gpkg`.
+    directed
+        If False, save one edge for each undirected edge in the graph but
+        retain original oneway and to/from information as edge attributes. If
+        True, save one edge for each directed edge in the graph.
+    encoding
+        The character encoding of the saved GeoPackage file.
 
     Returns
     -------
@@ -54,85 +67,33 @@ def save_graph_geopackage(G, filepath=None, encoding="utf-8", directed=False):
     # save the nodes and edges as GeoPackage layers
     gdf_nodes.to_file(filepath, layer="nodes", driver="GPKG", index=True, encoding=encoding)
     gdf_edges.to_file(filepath, layer="edges", driver="GPKG", index=True, encoding=encoding)
-    utils.log(f"Saved graph as GeoPackage at {filepath!r}")
+
+    msg = f"Saved graph as GeoPackage at {filepath!r}"
+    utils.log(msg, level=lg.INFO)
 
 
-def save_graph_shapefile(G, filepath=None, encoding="utf-8", directed=False):
-    """
-    Do not use: deprecated. Use the save_graph_geopackage function instead.
-
-    The Shapefile format is proprietary and outdated. Instead, use the
-    superior GeoPackage file format via the save_graph_geopackage function.
-    See http://switchfromshapefile.org/ for more information.
-
-    Parameters
-    ----------
-    G : networkx.MultiDiGraph
-        input graph
-    filepath : string or pathlib.Path
-        path to the shapefiles folder (no file extension). if None, use
-        default data folder + graph_shapefile
-    encoding : string
-        the character encoding for the saved files
-    directed : bool
-        if False, save one edge for each undirected edge in the graph but
-        retain original oneway and to/from information as edge attributes; if
-        True, save one edge for each directed edge in the graph
-
-    Returns
-    -------
-    None
-    """
-    warn(
-        "The `save_graph_shapefile` function is deprecated and will be removed "
-        "in the v2.0.0 release. Instead, use the `save_graph_geopackage` function "
-        "to save graphs as GeoPackage files for subsequent GIS analysis. "
-        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
-        FutureWarning,
-        stacklevel=2,
-    )
-
-    # default filepath if none was provided
-    filepath = (
-        Path(settings.data_folder) / "graph_shapefile" if filepath is None else Path(filepath)
-    )
-
-    # if save folder does not already exist, create it (shapefiles
-    # get saved as set of files)
-    filepath.mkdir(parents=True, exist_ok=True)
-    filepath_nodes = filepath / "nodes.shp"
-    filepath_edges = filepath / "edges.shp"
-
-    # convert graph to gdfs and stringify non-numeric columns
-    if directed:
-        gdf_nodes, gdf_edges = convert.graph_to_gdfs(G)
-    else:
-        gdf_nodes, gdf_edges = convert.graph_to_gdfs(convert.to_undirected(G))
-    gdf_nodes = _stringify_nonnumeric_cols(gdf_nodes)
-    gdf_edges = _stringify_nonnumeric_cols(gdf_edges)
-
-    # save the nodes and edges as separate ESRI shapefiles
-    gdf_nodes.to_file(filepath_nodes, driver="ESRI Shapefile", index=True, encoding=encoding)
-    gdf_edges.to_file(filepath_edges, driver="ESRI Shapefile", index=True, encoding=encoding)
-    utils.log(f"Saved graph as shapefiles at {filepath!r}")
-
-
-def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
+def save_graphml(
+    G: nx.MultiDiGraph,
+    filepath: str | Path | None = None,
+    *,
+    gephi: bool = False,
+    encoding: str = "utf-8",
+) -> None:
     """
     Save graph to disk as GraphML file.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    filepath : string or pathlib.Path
-        path to the GraphML file including extension. if None, use default
-        data folder + graph.graphml
-    gephi : bool
-        if True, give each edge a unique key/id to work around Gephi's
-        interpretation of the GraphML specification
-    encoding : string
-        the character encoding for the saved file
+    G
+        The graph to save as.
+    filepath
+        Path to the GraphML file including extension. If None, use default
+        `settings.data_folder/graph.graphml`.
+    gephi
+        If True, give each edge a unique key/id for compatibility with Gephi's
+        interpretation of the GraphML specification.
+    encoding
+        The character encoding of the saved GraphML file.
 
     Returns
     -------
@@ -168,12 +129,18 @@ def save_graphml(G, filepath=None, gephi=False, encoding="utf-8"):
             data[attr] = str(value)
 
     nx.write_graphml(G, path=filepath, encoding=encoding)
-    utils.log(f"Saved graph as GraphML file at {filepath!r}")
+    msg = f"Saved graph as GraphML file at {filepath!r}"
+    utils.log(msg, level=lg.INFO)
 
 
 def load_graphml(
-    filepath=None, graphml_str=None, node_dtypes=None, edge_dtypes=None, graph_dtypes=None
-):
+    filepath: str | Path | None = None,
+    *,
+    graphml_str: str | None = None,
+    node_dtypes: dict[str, Any] | None = None,
+    edge_dtypes: dict[str, Any] | None = None,
+    graph_dtypes: dict[str, Any] | None = None,
+) -> nx.MultiDiGraph:
     """
     Load an OSMnx-saved GraphML file from disk or GraphML string.
 
@@ -194,24 +161,23 @@ def load_graphml(
 
     Parameters
     ----------
-    filepath : string or pathlib.Path
-        path to the GraphML file
-    graphml_str : string
-        a valid and decoded string representation of a GraphML file's contents
-    node_dtypes : dict
-        dict of node attribute names:types to convert values' data types. the
-        type can be a python type or a custom string converter function.
-    edge_dtypes : dict
-        dict of edge attribute names:types to convert values' data types. the
-        type can be a python type or a custom string converter function.
-    graph_dtypes : dict
-        dict of graph-level attribute names:types to convert values' data
-        types. the type can be a python type or a custom string converter
-        function.
+    filepath
+        Path to the GraphML file.
+    graphml_str
+        Valid and decoded string representation of a GraphML file's contents.
+    node_dtypes
+        Dict of node attribute names:types to convert values' data types. The
+        type can be a type or a custom string converter function.
+    edge_dtypes
+        Dict of edge attribute names:types to convert values' data types. The
+        type can be a type or a custom string converter function.
+    graph_dtypes
+        Dict of graph-level attribute names:types to convert values' data
+        types. The type can be a type or a custom string converter function.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
     if (filepath is None and graphml_str is None) or (
         filepath is not None and graphml_str is not None
@@ -224,8 +190,6 @@ def load_graphml(
     default_node_dtypes = {
         "elevation": float,
         "elevation_res": float,
-        "lat": float,
-        "lon": float,
         "osmid": int,
         "street_count": int,
         "x": float,
@@ -255,116 +219,96 @@ def load_graphml(
         # read the graphml file from disk
         source = filepath
         G = nx.read_graphml(
-            Path(filepath), node_type=default_node_dtypes["osmid"], force_multigraph=True
+            Path(filepath),
+            node_type=default_node_dtypes["osmid"],
+            force_multigraph=True,
         )
     else:
         # parse the graphml string
         source = "string"
         G = nx.parse_graphml(
-            graphml_str, node_type=default_node_dtypes["osmid"], force_multigraph=True
+            graphml_str,
+            node_type=default_node_dtypes["osmid"],
+            force_multigraph=True,
         )
 
     # convert graph/node/edge attribute data types
-    utils.log("Converting node, edge, and graph-level attribute data types")
+    msg = "Converting node, edge, and graph-level attribute data types"
+    utils.log(msg, level=lg.INFO)
     G = _convert_graph_attr_types(G, default_graph_dtypes)
     G = _convert_node_attr_types(G, default_node_dtypes)
     G = _convert_edge_attr_types(G, default_edge_dtypes)
 
-    utils.log(f"Loaded graph with {len(G)} nodes and {len(G.edges)} edges from {source!r}")
+    msg = f"Loaded graph with {len(G)} nodes and {len(G.edges)} edges from {source!r}"
+    utils.log(msg, level=lg.INFO)
     return G
 
 
 def save_graph_xml(
-    data,
-    filepath=None,
-    node_tags=None,
-    node_attrs=None,
-    edge_tags=None,
-    edge_attrs=None,
-    oneway=None,
-    merge_edges=None,
-    edge_tag_aggs=None,
-    api_version=None,
-    precision=None,
-    way_tag_aggs=None,
-):
+    G: nx.MultiDiGraph,
+    filepath: str | Path | None = None,
+    *,
+    way_tag_aggs: dict[str, Any] | None = None,
+    encoding: str = "utf-8",
+) -> None:
     """
-    Save graph to disk as an OSM-formatted XML .osm file.
+    Save graph to disk as an OSM XML file.
 
-    This function exists only to allow serialization to the .osm file format
+    This function exists only to allow serialization to the OSM XML format
     for applications that require it, and has constraints to conform to that.
-    As such, this function has a limited use case which does not include
-    saving/loading graphs for subsequent OSMnx analysis. To save/load graphs
-    to/from disk for later use in OSMnx, use the `io.save_graphml` and
-    `io.load_graphml` functions instead. To load a graph from a .osm file that
-    you have downloaded or generated elsewhere, use the `graph.graph_from_xml`
+    As such, it has a limited use case which does not include saving/loading
+    graphs for subsequent OSMnx analysis. To save/load graphs to/from disk for
+    later use in OSMnx, use the `io.save_graphml` and `io.load_graphml`
+    functions instead. To load a graph from an OSM XML file that you have
+    downloaded or generated elsewhere, use the `graph.graph_from_xml`
     function.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which tags your graph is created and saved with.
+    This function merges graph edges such that each OSM way has one entry in
+    the XML output, with the way's nodes topologically sorted. `G` must be
+    unsimplified to save as OSM XML: otherwise, one edge could comprise
+    multiple OSM ways, making it impossible to group and sort edges in way.
+    `G` should also have been created with `ox.settings.all_oneway=True` for
+    this function to behave properly.
 
     Parameters
     ----------
-    data : networkx.MultiDiGraph
-        the input graph
-    filepath : string or pathlib.Path
-        do not use, deprecated
-    node_tags : list
-        do not use, deprecated
-    node_attrs: list
-        do not use, deprecated
-    edge_tags : list
-        do not use, deprecated
-    edge_attrs : list
-        do not use, deprecated
-    oneway : bool
-        do not use, deprecated
-    merge_edges : bool
-        do not use, deprecated
-    edge_tag_aggs : tuple
-        do not use, deprecated
-    api_version : float
-        do not use, deprecated
-    precision : int
-        do not use, deprecated
-    way_tag_aggs : dict
+    G
+        Unsimplified, unprojected graph to save as an OSM XML file.
+    filepath
+        Path to the saved file including extension. If None, use default
+        `settings.data_folder/graph.osm`.
+    way_tag_aggs
         Keys are OSM way tag keys and values are aggregation functions
         (anything accepted as an argument by pandas.agg). Allows user to
         aggregate graph edge attribute values into single OSM way values. If
         None, or if some tag's key does not exist in the dict, the way
         attribute will be assigned the value of the first edge of the way.
+    encoding
+        The character encoding of the saved OSM XML file.
 
     Returns
     -------
     None
     """
-    osm_xml._save_graph_xml(
-        data,
-        filepath,
-        node_tags,
-        node_attrs,
-        edge_tags,
-        edge_attrs,
-        oneway,
-        merge_edges,
-        edge_tag_aggs,
-        api_version,
-        precision,
-        way_tag_aggs,
-    )
+    _osm_xml._save_graph_xml(G, filepath, way_tag_aggs, encoding)
 
 
-def _convert_graph_attr_types(G, dtypes=None):
+def _convert_graph_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.MultiDiGraph:
     """
     Convert graph-level attributes using a dict of data types.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    dtypes : dict
-        dict of graph-level attribute names:types
+    G
+        Graph to convert the graph-level attributes of.
+    dtypes
+        Dict of graph-level attribute names:types.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
     # remove node_default and edge_default metadata keys if they exist
     G.graph.pop("node_default", None)
@@ -376,20 +320,20 @@ def _convert_graph_attr_types(G, dtypes=None):
     return G
 
 
-def _convert_node_attr_types(G, dtypes=None):
+def _convert_node_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.MultiDiGraph:
     """
     Convert graph nodes' attributes using a dict of data types.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    dtypes : dict
-        dict of node attribute names:types
+    G
+        Graph to convert the node attributes of.
+    dtypes
+        Dict of node attribute names:types.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
     for _, data in G.nodes(data=True):
         # first, eval stringified lists, dicts, or sets to convert them to objects
@@ -406,20 +350,20 @@ def _convert_node_attr_types(G, dtypes=None):
     return G
 
 
-def _convert_edge_attr_types(G, dtypes=None):
+def _convert_edge_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.MultiDiGraph:
     """
     Convert graph edges' attributes using a dict of data types.
 
     Parameters
     ----------
-    G : networkx.MultiDiGraph
-        input graph
-    dtypes : dict
-        dict of edge attribute names:types
+    G
+        Graph to convert the edge attributes of.
+    dtypes
+        Dict of edge attribute names:types.
 
     Returns
     -------
-    G : networkx.MultiDiGraph
+    G
     """
     # for each edge in the graph, eval attribute value lists and convert types
     for _, _, data in G.edges(data=True, keys=False):
@@ -452,7 +396,7 @@ def _convert_edge_attr_types(G, dtypes=None):
     return G
 
 
-def _convert_bool_string(value):
+def _convert_bool_string(value: bool | str) -> bool:
     """
     Convert a "True" or "False" string literal to corresponding boolean type.
 
@@ -465,25 +409,25 @@ def _convert_bool_string(value):
 
     Parameters
     ----------
-    value : string {"True", "False"}
-        the value to convert
+    value
+        The string value to convert to bool.
 
     Returns
     -------
-    bool
+    bool_value
     """
-    if value in {"True", "False"}:
-        return value == "True"
-
     if isinstance(value, bool):
         return value
 
+    if value in {"True", "False"}:
+        return value == "True"
+
     # otherwise the value is not a valid boolean
-    msg = f"invalid literal for boolean: {value!r}"
+    msg = f"Invalid literal for boolean: {value!r}."
     raise ValueError(msg)
 
 
-def _stringify_nonnumeric_cols(gdf):
+def _stringify_nonnumeric_cols(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     """
     Make every non-numeric GeoDataFrame column (besides geometry) a string.
 
@@ -492,13 +436,13 @@ def _stringify_nonnumeric_cols(gdf):
 
     Parameters
     ----------
-    gdf : geopandas.GeoDataFrame
-        gdf to stringify non-numeric columns of
+    gdf
+        GeoDataFrame to stringify non-numeric columns of.
 
     Returns
     -------
-    gdf : geopandas.GeoDataFrame
-        gdf with non-numeric columns stringified
+    gdf
+        GeoDataFrame with non-numeric columns stringified.
     """
     # stringify every non-numeric column other than geometry column
     for col in (c for c in gdf.columns if c != "geometry"):

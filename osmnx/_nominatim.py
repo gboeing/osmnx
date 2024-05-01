@@ -1,44 +1,55 @@
 """Tools to work with the Nominatim API."""
 
+from __future__ import annotations
+
 import logging as lg
 import time
 from collections import OrderedDict
-from warnings import warn
+from typing import Any
 
 import requests
 
-from . import _downloader
+from . import _http
 from . import settings
 from . import utils
+from ._errors import InsufficientResponseError
 
 
-def _download_nominatim_element(query, by_osmid=False, limit=1, polygon_geojson=1):
+def _download_nominatim_element(
+    query: str | dict[str, str],
+    *,
+    by_osmid: bool = False,
+    limit: int = 1,
+    polygon_geojson: bool = True,
+) -> list[dict[str, Any]]:
     """
     Retrieve an OSM element from the Nominatim API.
 
     Parameters
     ----------
-    query : string or dict
-        query string or structured query dict
-    by_osmid : bool
-        if True, treat query as an OSM ID lookup rather than text search
-    limit : int
-        max number of results to return
-    polygon_geojson : int
-        retrieve the place's geometry from the API, 0=no, 1=yes
+    query
+        Query string or structured query dict.
+    by_osmid
+        If True, treat `query` as an OSM ID lookup rather than text search.
+    limit
+        Max number of results to return.
+    polygon_geojson
+        Whether to retrieve the place's geometry from the API.
 
     Returns
     -------
-    response_json : dict
-        JSON response from the Nominatim server
+    response_json
     """
     # define the parameters
-    params = OrderedDict()
+    params: OrderedDict[str, int | str] = OrderedDict()
     params["format"] = "json"
-    params["polygon_geojson"] = polygon_geojson
+    params["polygon_geojson"] = int(polygon_geojson)  # bool -> int
 
     if by_osmid:
         # if querying by OSM ID, use the lookup endpoint
+        if not isinstance(query, str):
+            msg = "`query` must be a string if `by_osmid` is True."
+            raise TypeError(msg)
         request_type = "lookup"
         params["osm_ids"] = query
 
@@ -58,79 +69,69 @@ def _download_nominatim_element(query, by_osmid=False, limit=1, polygon_geojson=
             for key in sorted(query):
                 params[key] = query[key]
         else:  # pragma: no cover
-            msg = "query must be a dict or a string"
+            msg = "Each query must be a dict or a string."  # type: ignore[unreachable]
             raise TypeError(msg)
 
     # request the URL, return the JSON
     return _nominatim_request(params=params, request_type=request_type)
 
 
-def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
+def _nominatim_request(
+    params: OrderedDict[str, int | str],
+    *,
+    request_type: str = "search",
+    pause: float = 1,
+    error_pause: float = 60,
+) -> list[dict[str, Any]]:
     """
     Send a HTTP GET request to the Nominatim API and return response.
 
     Parameters
     ----------
-    params : OrderedDict
-        key-value pairs of parameters
-    request_type : string {"search", "reverse", "lookup"}
-        which Nominatim API endpoint to query
-    pause : float
-        how long to pause before request, in seconds. per the nominatim usage
-        policy: "an absolute maximum of 1 request per second" is allowed
-    error_pause : float
-        how long to pause in seconds before re-trying request if error
+    params
+        Key-value pairs of parameters.
+    request_type
+        {"search", "reverse", "lookup"}
+        Which Nominatim API endpoint to query.
+    pause
+        How long to pause before request, in seconds. Per the Nominatim usage
+        policy: "an absolute maximum of 1 request per second" is allowed.
+    error_pause
+        How long to pause in seconds before re-trying request if error.
 
     Returns
     -------
-    response_json : dict
+    response_json
     """
-    if settings.timeout is None:
-        timeout = settings.requests_timeout
-    else:
-        timeout = settings.timeout
-        msg = (
-            "`settings.timeout` is deprecated and will be removed in the v2.0.0 "
-            "release: use `settings.requests_timeout` instead. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
-        )
-        warn(msg, FutureWarning, stacklevel=2)
-
-    if settings.nominatim_endpoint is None:
-        nominatim_endpoint = settings.nominatim_url
-    else:
-        nominatim_endpoint = settings.nominatim_endpoint
-        msg = (
-            "`settings.nominatim_endpoint` is deprecated and will be removed in the "
-            "v2.0.0 release: use `settings.nominatim_url` instead. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
-        )
-        warn(msg, FutureWarning, stacklevel=2)
-
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
-        msg = 'Nominatim request_type must be "search", "reverse", or "lookup"'
+        msg = "Nominatim `request_type` must be 'search', 'reverse', or 'lookup'."
         raise ValueError(msg)
 
+    # add nominatim API key to params if one has been provided in settings
+    if settings.nominatim_key is not None:
+        params["key"] = settings.nominatim_key
+
     # prepare Nominatim API URL and see if request already exists in cache
-    url = nominatim_endpoint.rstrip("/") + "/" + request_type
-    params["key"] = settings.nominatim_key
-    prepared_url = requests.Request("GET", url, params=params).prepare().url
-    cached_response_json = _downloader._retrieve_from_cache(prepared_url)
-    if cached_response_json is not None:
+    url = settings.nominatim_url.rstrip("/") + "/" + request_type
+    prepared_url = str(requests.Request("GET", url, params=params).prepare().url)
+    cached_response_json = _http._retrieve_from_cache(prepared_url)
+    if isinstance(cached_response_json, list):
         return cached_response_json
 
     # pause then request this URL
-    domain = _downloader._hostname_from_url(url)
-    utils.log(f"Pausing {pause} second(s) before making HTTP GET request to {domain!r}")
+    domain = _http._hostname_from_url(url)
+    msg = f"Pausing {pause} second(s) before making HTTP GET request to {domain!r}"
+    utils.log(msg, level=lg.INFO)
     time.sleep(pause)
 
     # transmit the HTTP GET request
-    utils.log(f"Get {prepared_url} with timeout={timeout}")
+    msg = f"Get {prepared_url} with timeout={settings.requests_timeout}"
+    utils.log(msg, level=lg.INFO)
     response = requests.get(
         url,
         params=params,
-        timeout=timeout,
-        headers=_downloader._get_http_headers(),
+        timeout=settings.requests_timeout,
+        headers=_http._get_http_headers(),
         **settings.requests_kwargs,
     )
 
@@ -142,8 +143,16 @@ def _nominatim_request(params, request_type="search", pause=1, error_pause=60):
         )
         utils.log(msg, level=lg.WARNING)
         time.sleep(error_pause)
-        return _nominatim_request(params, request_type, pause, error_pause)
+        return _nominatim_request(
+            params,
+            request_type=request_type,
+            pause=pause,
+            error_pause=error_pause,
+        )
 
-    response_json = _downloader._parse_response(response)
-    _downloader._save_to_cache(prepared_url, response_json, response.status_code)
+    response_json = _http._parse_response(response)
+    if not isinstance(response_json, list):
+        msg = "Nominatim API did not return a list of results."
+        raise InsufficientResponseError(msg)
+    _http._save_to_cache(prepared_url, response_json, response.ok)
     return response_json

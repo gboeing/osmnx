@@ -1,20 +1,19 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v4.5.0"
+    rev: "v4.6.0"
     hooks:
       - id: check-added-large-files
         args: [--maxkb=50]
       - id: check-ast
-      - id: check-builtin-literals
       - id: check-case-conflict
-      - id: check-docstring-first
+      - id: check-executables-have-shebangs
       - id: check-json
       - id: check-merge-conflict
         args: [--assume-in-merge]
+      - id: check-shebang-scripts-are-executable
       - id: check-toml
       - id: check-xml
       - id: check-yaml
-      - id: debug-statements
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: fix-byte-order-marker
@@ -29,15 +28,27 @@ repos:
       - id: prettier
         types_or: [markdown, yaml]
 
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: "v0.39.0"
+    hooks:
+      - id: markdownlint
+        args: [--disable=MD013]
+
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: "v0.16"
+    hooks:
+      - id: validate-pyproject
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.1.15"
+    rev: "v0.4.1"
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.8.0"
+    rev: "v1.9.0"
     hooks:
       - id: mypy
-        additional_dependencies: [types-requests]
+        additional_dependencies:
+          [matplotlib, pandas-stubs, pytest, types-requests]

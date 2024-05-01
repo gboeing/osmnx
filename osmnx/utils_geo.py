@@ -1,15 +1,19 @@
 """Geospatial utility functions."""
 
+from __future__ import annotations
+
+import logging as lg
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import Literal
+from typing import overload
 from warnings import warn
 
 import networkx as nx
 import numpy as np
-from shapely.geometry import LineString
-from shapely.geometry import MultiLineString
-from shapely.geometry import MultiPoint
-from shapely.geometry import MultiPolygon
-from shapely.geometry import Point
-from shapely.geometry import Polygon
+from shapely import LineString
+from shapely import MultiPolygon
+from shapely import Polygon
 from shapely.ops import split
 
 from . import convert
@@ -17,8 +21,13 @@ from . import projection
 from . import settings
 from . import utils
 
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
-def sample_points(G, n):
+    import geopandas as gpd
+
+
+def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
     """
     Randomly sample points constrained to a spatial graph.
 
@@ -29,21 +38,22 @@ def sample_points(G, n):
 
     Parameters
     ----------
-    G : networkx.MultiGraph
-        graph from which to sample points. should be undirected (to avoid
+    G
+        Graph from which to sample points. Should be undirected (to avoid
         oversampling bidirectional edges) and projected (for accurate point
-        interpolation)
-    n : int
-        how many points to sample
+        interpolation).
+    n
+        How many points to sample.
 
     Returns
     -------
-    points : geopandas.GeoSeries
-        the sampled points, multi-indexed by (u, v, key) of the edge from
-        which each point was drawn
+    point
+        The sampled points, multi-indexed by `(u, v, key)` of the edge from
+        which each point was sampled.
     """
     if nx.is_directed(G):  # pragma: no cover
-        warn("graph should be undirected to avoid oversampling bidirectional edges", stacklevel=2)
+        msg = "`G` should be undirected to avoid oversampling bidirectional edges."
+        warn(msg, category=UserWarning, stacklevel=2)
     gdf_edges = convert.graph_to_gdfs(G, nodes=False)[["geometry", "length"]]
     weights = gdf_edges["length"] / gdf_edges["length"].sum()
     idx = np.random.default_rng().choice(gdf_edges.index, size=n, p=weights)
@@ -51,7 +61,7 @@ def sample_points(G, n):
     return lines.interpolate(np.random.default_rng().random(n), normalized=True)
 
 
-def interpolate_points(geom, dist):
+def interpolate_points(geom: LineString, dist: float) -> Iterator[tuple[float, float]]:
     """
     Interpolate evenly spaced points along a LineString.
 
@@ -60,16 +70,16 @@ def interpolate_points(geom, dist):
 
     Parameters
     ----------
-    geom : shapely.geometry.LineString
-        a LineString geometry
-    dist : float
-        spacing distance between interpolated points, in same units as `geom`.
-        smaller values accordingly generate more points.
+    geom
+        A LineString geometry.
+    dist
+        Spacing distance between interpolated points, in same units as `geom`.
+        Smaller values accordingly generate more points.
 
     Yields
     ------
-    points : generator
-        tuples of (x, y) floats of the interpolated points' coordinates
+    point
+        Interpolated point's `(x, y)` coordinates.
     """
     if isinstance(geom, LineString):
         num_vert = max(round(geom.length / dist), 1)
@@ -77,196 +87,37 @@ def interpolate_points(geom, dist):
             point = geom.interpolate(n / num_vert, normalized=True)
             yield point.x, point.y
     else:  # pragma: no cover
-        msg = f"unhandled geometry type {geom.geom_type}"
+        msg = "`geom` must be a LineString."
         raise TypeError(msg)
 
 
-def _round_polygon_coords(p, precision):
+def _consolidate_subdivide_geometry(geometry: Polygon | MultiPolygon) -> MultiPolygon:
     """
-    Round the coordinates of a shapely Polygon to some decimal precision.
-
-    Parameters
-    ----------
-    p : shapely.geometry.Polygon
-        the polygon to round the coordinates of
-    precision : int
-        decimal precision to round coordinates to
-
-    Returns
-    -------
-    shapely.geometry.Polygon
-    """
-    # round coords of Polygon exterior
-    shell = [[round(x, precision) for x in c] for c in p.exterior.coords]
-
-    # round coords of (possibly multiple, possibly none) Polygon interior(s)
-    holes = [[[round(x, precision) for x in c] for c in i.coords] for i in p.interiors]
-
-    # construct new Polygon with rounded coordinates and buffer by zero to
-    # clean self-touching or self-crossing polygons
-    return Polygon(shell=shell, holes=holes).buffer(0)
-
-
-def _round_multipolygon_coords(mp, precision):
-    """
-    Round the coordinates of a shapely MultiPolygon to some decimal precision.
-
-    Parameters
-    ----------
-    mp : shapely.geometry.MultiPolygon
-        the MultiPolygon to round the coordinates of
-    precision : int
-        decimal precision to round coordinates to
-
-    Returns
-    -------
-    shapely.geometry.MultiPolygon
-    """
-    return MultiPolygon([_round_polygon_coords(p, precision) for p in mp.geoms])
-
-
-def _round_point_coords(pt, precision):
-    """
-    Round the coordinates of a shapely Point to some decimal precision.
-
-    Parameters
-    ----------
-    pt : shapely.geometry.Point
-        the Point to round the coordinates of
-    precision : int
-        decimal precision to round coordinates to
-
-    Returns
-    -------
-    shapely.geometry.Point
-    """
-    return Point([round(x, precision) for x in pt.coords[0]])
-
-
-def _round_multipoint_coords(mpt, precision):
-    """
-    Round the coordinates of a shapely MultiPoint to some decimal precision.
-
-    Parameters
-    ----------
-    mpt : shapely.geometry.MultiPoint
-        the MultiPoint to round the coordinates of
-    precision : int
-        decimal precision to round coordinates to
-
-    Returns
-    -------
-    shapely.geometry.MultiPoint
-    """
-    return MultiPoint([_round_point_coords(pt, precision) for pt in mpt.geoms])
-
-
-def _round_linestring_coords(ls, precision):
-    """
-    Round the coordinates of a shapely LineString to some decimal precision.
-
-    Parameters
-    ----------
-    ls : shapely.geometry.LineString
-        the LineString to round the coordinates of
-    precision : int
-        decimal precision to round coordinates to
-
-    Returns
-    -------
-    shapely.geometry.LineString
-    """
-    return LineString([[round(x, precision) for x in c] for c in ls.coords])
-
-
-def _round_multilinestring_coords(mls, precision):
-    """
-    Round the coordinates of a shapely MultiLineString to some decimal precision.
-
-    Parameters
-    ----------
-    mls : shapely.geometry.MultiLineString
-        the MultiLineString to round the coordinates of
-    precision : int
-        decimal precision to round coordinates to
-
-    Returns
-    -------
-    shapely.geometry.MultiLineString
-    """
-    return MultiLineString([_round_linestring_coords(ls, precision) for ls in mls.geoms])
-
-
-def round_geometry_coords(geom, precision):
-    """
-    Do not use: deprecated.
-
-    Parameters
-    ----------
-    geom : shapely.geometry.geometry {Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon}
-        deprecated, do not use
-    precision : int
-        deprecated, do not use
-
-    Returns
-    -------
-    shapely.geometry.geometry
-    """
-    warn(
-        "The `round_geometry_coords` function is deprecated and will be "
-        "removed in the v2.0.0 release. "
-        "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123",
-        FutureWarning,
-        stacklevel=2,
-    )
-
-    if isinstance(geom, Point):
-        return _round_point_coords(geom, precision)
-
-    if isinstance(geom, MultiPoint):
-        return _round_multipoint_coords(geom, precision)
-
-    if isinstance(geom, LineString):
-        return _round_linestring_coords(geom, precision)
-
-    if isinstance(geom, MultiLineString):
-        return _round_multilinestring_coords(geom, precision)
-
-    if isinstance(geom, Polygon):
-        return _round_polygon_coords(geom, precision)
-
-    if isinstance(geom, MultiPolygon):
-        return _round_multipolygon_coords(geom, precision)
-
-    # otherwise
-    msg = f"cannot round coordinates of unhandled geometry type: {type(geom)}"
-    raise TypeError(msg)
-
-
-def _consolidate_subdivide_geometry(geometry):
-    """
-    Consolidate and subdivide some geometry.
+    Consolidate and subdivide some (projected) geometry.
 
     Consolidate a geometry into a convex hull, then subdivide it into smaller
     sub-polygons if its area exceeds max size (in geometry's units). Configure
-    the max size via max_query_area_size in the settings module.
+    the max size via the `settings` module's `max_query_area_size`. Geometries
+    with areas much larger than `max_query_area_size` may take a long time to
+    process.
 
     When the geometry has a very large area relative to its vertex count,
     the resulting MultiPolygon's boundary may differ somewhat from the input,
     due to the way long straight lines are projected. You can interpolate
-    additional vertices along your input geometry's exterior to mitigate this.
+    additional vertices along your input geometry's exterior to mitigate this
+    if necessary.
 
     Parameters
     ----------
-    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the projected (in meter units) geometry to consolidate and subdivide
+    geometry
+        The projected (in meter units) geometry to consolidate and subdivide.
 
     Returns
     -------
-    geometry : shapely.geometry.MultiPolygon
+    geometry
     """
     if not isinstance(geometry, (Polygon, MultiPolygon)):  # pragma: no cover
-        msg = "Geometry must be a shapely Polygon or MultiPolygon"
+        msg = "Geometry must be a shapely Polygon or MultiPolygon."
         raise TypeError(msg)
 
     # if geometry is either 1) a Polygon whose area exceeds the max size, or
@@ -286,7 +137,7 @@ def _consolidate_subdivide_geometry(geometry):
             "area size. It will automatically be divided up into multiple "
             "sub-queries accordingly. This may take a long time."
         )
-        warn(msg, stacklevel=2)
+        warn(msg, category=UserWarning, stacklevel=2)
 
     # if geometry area exceeds max size, subdivide it into smaller subpolygons
     # that are no greater than settings.max_query_area_size in size
@@ -299,21 +150,21 @@ def _consolidate_subdivide_geometry(geometry):
     return geometry
 
 
-def _quadrat_cut_geometry(geometry, quadrat_width):
+def _quadrat_cut_geometry(geometry: Polygon | MultiPolygon, quadrat_width: float) -> MultiPolygon:
     """
     Split a Polygon or MultiPolygon up into sub-polygons of a specified size.
 
     Parameters
     ----------
-    geometry : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the geometry to split up into smaller sub-polygons
-    quadrat_width : float
-        width (in geometry's units) of quadrat squares with which to split up
-        the geometry
+    geometry
+        The geometry to split up into smaller sub-polygons.
+    quadrat_width
+        Width (in geometry's units) of quadrat squares with which to split up
+        the geometry.
 
     Returns
     -------
-    geometry : shapely.geometry.MultiPolygon
+    geometry
     """
     # min number of dividing lines (3 produces a grid of 4 quadrat squares)
     min_num = 3
@@ -341,7 +192,10 @@ def _quadrat_cut_geometry(geometry, quadrat_width):
     return MultiPolygon(geometries)
 
 
-def _intersect_index_quadrats(geometries, polygon):
+def _intersect_index_quadrats(
+    geometries: gpd.GeoSeries,
+    polygon: Polygon | MultiPolygon,
+) -> set[Any]:
     """
     Identify geometries that intersect a (Multi)Polygon.
 
@@ -351,26 +205,28 @@ def _intersect_index_quadrats(geometries, polygon):
 
     Parameters
     ----------
-    geometries : geopandas.GeoSeries
-        the geometries to intersect with the polygon
-    polygon : shapely.geometry.Polygon or shapely.geometry.MultiPolygon
-        the polygon to intersect with the geometries
+    geometries
+        The geometries to intersect with the polygon.
+    polygon
+        The polygon to intersect with the geometries.
 
     Returns
     -------
-    geoms_in_poly : set
-        set of the index labels of the geometries that intersected the polygon
+    geoms_in_poly
+        The index labels of the geometries that intersected the polygon.
     """
     # create an r-tree spatial index for the geometries
     rtree = geometries.sindex
-    utils.log(f"Built r-tree spatial index for {len(geometries):,} geometries")
+    msg = f"Built r-tree spatial index for {len(geometries):,} geometries"
+    utils.log(msg, level=lg.INFO)
 
     # cut polygon into chunks for faster spatial index intersecting. specify a
     # sensible quadrat_width to balance performance (eg, 0.1 degrees is approx
     # 8 km at NYC's latitude) with either projected or unprojected coordinates
     quadrat_width = max(0.1, np.sqrt(polygon.area) / 10)
     multipoly = _quadrat_cut_geometry(polygon, quadrat_width)
-    utils.log(f"Accelerating r-tree with {len(multipoly.geoms)} quadrats")
+    msg = f"Accelerating r-tree with {len(multipoly.geoms)} quadrats"
+    utils.log(msg, level=lg.INFO)
 
     # loop through each chunk of the polygon to find intersecting geometries
     # first find approximate matches with spatial index, then precise matches
@@ -384,11 +240,110 @@ def _intersect_index_quadrats(geometries, polygon):
             precise_matches = possible_matches[possible_matches.intersects(poly_buff)]
             geoms_in_poly.update(precise_matches.index)
 
-    utils.log(f"Identified {len(geoms_in_poly):,} geometries inside polygon")
+    msg = f"Identified {len(geoms_in_poly):,} geometries inside polygon"
+    utils.log(msg, level=lg.INFO)
     return geoms_in_poly
 
 
-def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
+# dist present, project_utm missing/False, return_crs missing/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float],
+    dist: float,
+) -> tuple[float, float, float, float]: ...
+
+
+# dist present, project_utm missing/False, return_crs present/True
+@overload
+def bbox_from_point(
+    point: tuple[float, float],
+    dist: float,
+    *,
+    return_crs: Literal[True],
+) -> tuple[float, float, float, float]: ...
+
+
+# dist present, project_utm missing/False, return_crs present/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float],
+    dist: float,
+    *,
+    return_crs: Literal[False],
+) -> tuple[float, float, float, float]: ...
+
+
+# dist present, project_utm present/True, return_crs missing/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float],
+    dist: float,
+    *,
+    project_utm: Literal[True],
+) -> tuple[float, float, float, float]: ...
+
+
+# dist present, project_utm present/True, return_crs present/True
+@overload
+def bbox_from_point(
+    point: tuple[float, float],
+    dist: float,
+    *,
+    project_utm: Literal[True],
+    return_crs: Literal[True],
+) -> tuple[tuple[float, float, float, float], Any]: ...
+
+
+# dist present, project_utm present/True, return_crs present/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float],
+    dist: float,
+    *,
+    project_utm: Literal[True],
+    return_crs: Literal[False],
+) -> tuple[float, float, float, float]: ...
+
+
+# dist present, project_utm present/False, return_crs missing/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float],
+    dist: float,
+    *,
+    project_utm: Literal[False],
+) -> tuple[float, float, float, float]: ...
+
+
+# dist present, project_utm present/False, return_crs present/True
+@overload
+def bbox_from_point(
+    point: tuple[float, float],
+    dist: float,
+    *,
+    project_utm: Literal[False],
+    return_crs: Literal[True],
+) -> tuple[float, float, float, float]: ...
+
+
+# dist present, project_utm present/False, return_crs present/False
+@overload
+def bbox_from_point(
+    point: tuple[float, float],
+    dist: float,
+    *,
+    project_utm: Literal[False],
+    return_crs: Literal[False],
+) -> tuple[float, float, float, float]: ...
+
+
+def bbox_from_point(
+    point: tuple[float, float],
+    dist: float,
+    *,
+    project_utm: bool = False,
+    return_crs: bool = False,
+) -> tuple[float, float, float, float] | tuple[tuple[float, float, float, float], Any]:
     """
     Create a bounding box around a (lat, lon) point.
 
@@ -397,19 +352,19 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
 
     Parameters
     ----------
-    point : tuple
-        the (lat, lon) center point to create the bounding box around
-    dist : int
-        bounding box distance in meters from the center point
-    project_utm : bool
-        if True, return bounding box as UTM-projected coordinates
-    return_crs : bool
-        if True, and project_utm=True, return the projected CRS too
+    point
+        The `(lat, lon)` center point to create the bounding box around.
+    dist
+        Bounding box distance in meters from the center point.
+    project_utm
+        If True, return bounding box as UTM-projected coordinates.
+    return_crs
+        If True, and `project_utm` is True, then return the projected CRS too.
 
     Returns
     -------
-    bbox or bbox, crs: tuple or tuple, crs
-        (north, south, east, west) or ((north, south, east, west), crs)
+    bbox or bbox, crs
+        `(north, south, east, west)` or `((north, south, east, west), crs)`.
     """
     EARTH_RADIUS_M = 6_371_009  # meters
     lat, lon = point
@@ -426,7 +381,8 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
         bbox_proj, crs_proj = projection.project_geometry(bbox_poly)
         west, south, east, north = bbox_proj.bounds
 
-    utils.log(f"Created bbox {dist} m from {point}: {north},{south},{east},{west}")
+    msg = f"Created bbox {dist} m from {point}: {north},{south},{east},{west}"
+    utils.log(msg, level=lg.INFO)
 
     if project_utm and return_crs:
         return (north, south, east, west), crs_proj
@@ -435,34 +391,18 @@ def bbox_from_point(point, dist=1000, project_utm=False, return_crs=False):
     return north, south, east, west
 
 
-def bbox_to_poly(north=None, south=None, east=None, west=None, bbox=None):
+def bbox_to_poly(bbox: tuple[float, float, float, float]) -> Polygon:
     """
-    Convert bounding box coordinates to shapely Polygon.
+    Convert bounding box coordinates to Shapely Polygon.
 
     Parameters
     ----------
-    north : float
-        deprecated, do not use
-    south : float
-        deprecated, do not use
-    east : float
-        deprecated, do not use
-    west : float
-        deprecated, do not use
-    bbox : tuple of floats
-        bounding box as (north, south, east, west)
+    bbox
+        Bounding box as `(north, south, east, west)`.
 
     Returns
     -------
-    shapely.geometry.Polygon
+    polygon
     """
-    if not (north is None and south is None and east is None and west is None):
-        msg = (
-            "The `north`, `south`, `east`, and `west` parameters are deprecated and "
-            "will be removed in the v2.0.0 release. Use the `bbox` parameter instead. "
-            "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
-        )
-        warn(msg, FutureWarning, stacklevel=2)
-    else:
-        north, south, east, west = bbox
+    north, south, east, west = bbox
     return Polygon([(west, south), (east, south), (east, north), (west, north)])
