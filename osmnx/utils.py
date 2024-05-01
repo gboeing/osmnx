@@ -16,10 +16,8 @@ def citation(style="bibtex"):
     """
     Print the OSMnx package's citation information.
 
-    Boeing, G. (2017). OSMnx: New Methods for Acquiring, Constructing,
-    Analyzing, and Visualizing Complex Street Networks. Computers, Environment
-    and Urban Systems, 65, 126-139.
-    https://doi.org/10.1016/j.compenvurbsys.2017.05.004
+    Boeing, G. (2024). Modeling and Analyzing Urban Networks and Amenities with
+    OSMnx. Working paper. https://geoffboeing.com/publications/osmnx-paper/
 
     Parameters
     ----------
@@ -32,32 +30,23 @@ def citation(style="bibtex"):
     """
     if style == "apa":
         msg = (
-            "Boeing, G. (2017). OSMnx: New Methods for Acquiring, Constructing, "
-            "Analyzing, and Visualizing Complex Street Networks. Computers, "
-            "Environment and Urban Systems, 65, 126-139. "
-            "https://doi.org/10.1016/j.compenvurbsys.2017.05.004"
+            "Boeing, G. (2024). Modeling and Analyzing Urban Networks and Amenities "
+            "with OSMnx. Working paper. https://geoffboeing.com/publications/osmnx-paper/"
         )
     elif style == "bibtex":
         msg = (
-            "@article{boeing_osmnx_2017,\n"
-            "    title = {{OSMnx}: {New} {Methods} for {Acquiring}, "
-            "{Constructing}, {Analyzing}, and {Visualizing} {Complex} "
-            "{Street} {Networks}},\n"
-            "    volume = {65},\n"
-            "    doi = {10.1016/j.compenvurbsys.2017.05.004},\n"
-            "    number = {126-139},\n"
-            "    journal = {Computers, Environment and Urban Systems},\n"
+            "@techreport{boeing_osmnx_2024,\n"
             "    author = {Boeing, Geoff},\n"
-            "    year = {2017},\n"
-            "    pages = {126--139}\n"
+            "    title = {{Modeling and Analyzing Urban Networks and Amenities with OSMnx}},\n"
+            "    type = {Working paper},\n"
+            "    url = {https://geoffboeing.com/publications/osmnx-paper/},\n"
+            "    year = {2024}\n"
             "}"
         )
     elif style == "ieee":
         msg = (
-            'G. Boeing, "OSMnx: New Methods for Acquiring, Constructing, '
-            'Analyzing, and Visualizing Complex Street Networks," Computers, '
-            "Environment and Urban Systems, vol. 65, pp. 126-139, 2017, "
-            "doi: 10.1016/j.compenvurbsys.2017.05.004."
+            'G. Boeing, "Modeling and Analyzing Urban Networks and Amenities with OSMnx," '
+            "Working paper, https://geoffboeing.com/publications/osmnx-paper/"
         )
     else:  # pragma: no cover
         err_msg = f"unrecognized citation style {style!r}"
