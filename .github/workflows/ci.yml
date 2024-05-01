@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, v2]
+    branches: [main]
   schedule:
     - cron: "0 5 * * 1" # every monday at 05:00 UTC
   workflow_dispatch:
