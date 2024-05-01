@@ -2,6 +2,7 @@
 
 ## 1.9.3 (TBD)
 
+- update the official package reference paper (#1169)
 - deprecate the "all_private" network_type in favor of its new name "all" (#1164)
 
 ## 1.9.2 (2024-04-02)

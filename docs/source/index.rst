@@ -10,11 +10,11 @@ OSMnx 2.0 is coming soon: read the `migration guide`_.
 Citation
 --------
 
-If you use OSMnx in your work, please cite the journal article:
+If you use OSMnx in your work, please cite the paper:
 
-Boeing, G. 2017. `OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks`_. *Computers, Environment and Urban Systems* 65, 126-139.
+Boeing, G. (2024). `Modeling and Analyzing Urban Networks and Amenities with OSMnx`_. Working paper. https://geoffboeing.com/publications/osmnx-paper/
 
-.. _OSMnx\: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks: https://geoffboeing.com/publications/osmnx-complex-street-networks/
+.. _Modeling and Analyzing Urban Networks and Amenities with OSMnx: https://geoffboeing.com/publications/osmnx-paper/
 
 
 Getting Started
@@ -22,9 +22,9 @@ Getting Started
 
 First read the :doc:`getting-started` guide for an introduction to the package and FAQ.
 
-Then work through the `OSMnx Examples`_ gallery for step-by-step tutorials and sample code.
+Then work through the OSMnx `Examples Gallery`_ for step-by-step tutorials and sample code.
 
-.. _OSMnx Examples: https://github.com/gboeing/osmnx-examples
+.. _Examples Gallery: https://github.com/gboeing/osmnx-examples
 
 
 Installation
