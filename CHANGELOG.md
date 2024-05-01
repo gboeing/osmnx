@@ -3,8 +3,8 @@
 ## 1.9.3 (2024-05-01)
 
 - update the official package reference paper (#1169)
-- rename "all" network_type to "all_public" (#1164)
-- rename "all_private" network_type to "all" and deprecate "all_private" name (#1164)
+- rename network_types "all" -> "all_public" and "all_private" -> "all" for clarity (#1164)
+- deprecate the obsolete "all_private" network_type name (#1164)
 
 ## 1.9.2 (2024-04-02)
 
