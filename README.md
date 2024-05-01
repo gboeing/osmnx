@@ -15,7 +15,7 @@ OSMnx 2.0 is coming soon: read the [migration guide](https://github.com/gboeing/
 
 If you use OSMnx in your work, please cite the journal article:
 
-Boeing, G. 2017. "[OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks](https://geoffboeing.com/publications/osmnx-complex-street-networks/)." _Computers, Environment and Urban Systems_ 65, 126-139.
+Boeing, G. (2024). Modeling and Analyzing Urban Networks and Amenities with OSMnx. Working paper. <https://geoffboeing.com/publications/osmnx-paper/>
 
 ## Getting Started
 
