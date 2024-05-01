@@ -29,7 +29,7 @@ jobs:
         with:
           cache-downloads: true
           cache-environment: true
-          environment-file: tests/environments/env-test-build.yml
+          environment-file: environments/tests/env-test-build.yml
           post-cleanup: none
 
       - name: Build package and twine check
