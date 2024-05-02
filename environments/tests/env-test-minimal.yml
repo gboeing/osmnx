@@ -29,6 +29,7 @@ dependencies:
   - pytest
   - pytest-cov
   - typeguard
+  - uv
 
   # docs (sphinx pinned to version from /docs/requirements.txt)
   - furo
