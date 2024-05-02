@@ -36,7 +36,7 @@ jobs:
         run: |
           uv pip install -e .
           micromamba list
-          micromamba info --all
+          micromamba info
 
       - name: Run pre-commit checks
         run: SKIP=no-commit-to-branch pre-commit run --all-files
