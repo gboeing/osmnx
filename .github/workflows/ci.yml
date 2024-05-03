@@ -41,8 +41,8 @@ jobs:
       - name: Install OSMnx
         run: |
           uv pip install -e .
-          micromamba list
-          micromamba info
+          conda list
+          conda info --all
 
       - name: Run pre-commit checks
         run: SKIP=no-commit-to-branch pre-commit run --all-files
