@@ -1,6 +1,6 @@
 # basics
 osmnx
-python == 3.11.*
+python == 3.12.*
 
 # helpful extras
 bottleneck
@@ -22,8 +22,8 @@ sphinx-autodoc-typehints
 # packaging
 conda-smithy
 hatch
-pip
 twine
+uv
 
 # typing
 mypy

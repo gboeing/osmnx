@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, v1]
   pull_request:
-    branches: [main]
+    branches: [main, v1]
   schedule:
     - cron: "0 5 * * 1" # every monday at 05:00 UTC
   workflow_dispatch:
@@ -40,7 +40,7 @@ jobs:
 
       - name: Install OSMnx
         run: |
-          pip install -e .
+          uv pip install -e .
           conda list
           conda info --all
 

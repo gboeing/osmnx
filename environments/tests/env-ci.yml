@@ -26,6 +26,7 @@ dependencies:
   - pytest
   - pytest-cov
   - typeguard
+  - uv
 
   # docs
   - furo

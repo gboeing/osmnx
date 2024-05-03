@@ -110,9 +110,9 @@ def features_from_bbox(
     tags
         Tags for finding elements in the selected area. Results are the union,
         not intersection of the tags and each result matches at least one tag.
-        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
-        and the values can be either `True` to retrieve all elements matching
-        the tag, or a string to retrieve a single tag:value combination, or a
+        The keys are OSM tags (e.g. `building`, `landuse`, `highway`, etc) and
+        the values can be either `True` to retrieve all elements matching the
+        tag, or a string to retrieve a single `tag:value` combination, or a
         list of strings to retrieve multiple values for the tag. For example,
         `tags = {'building': True}` would return all buildings in the area.
         Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
@@ -151,9 +151,9 @@ def features_from_point(
     tags
         Tags for finding elements in the selected area. Results are the union,
         not intersection of the tags and each result matches at least one tag.
-        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
-        and the values can be either `True` to retrieve all elements matching
-        the tag, or a string to retrieve a single tag:value combination, or a
+        The keys are OSM tags (e.g. `building`, `landuse`, `highway`, etc) and
+        the values can be either `True` to retrieve all elements matching the
+        tag, or a string to retrieve a single `tag:value` combination, or a
         list of strings to retrieve multiple values for the tag. For example,
         `tags = {'building': True}` would return all buildings in the area.
         Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
@@ -194,9 +194,9 @@ def features_from_address(
     tags
         Tags for finding elements in the selected area. Results are the union,
         not intersection of the tags and each result matches at least one tag.
-        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
-        and the values can be either `True` to retrieve all elements matching
-        the tag, or a string to retrieve a single tag:value combination, or a
+        The keys are OSM tags (e.g. `building`, `landuse`, `highway`, etc) and
+        the values can be either `True` to retrieve all elements matching the
+        tag, or a string to retrieve a single `tag:value` combination, or a
         list of strings to retrieve multiple values for the tag. For example,
         `tags = {'building': True}` would return all buildings in the area.
         Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
@@ -249,9 +249,9 @@ def features_from_place(
     tags
         Tags for finding elements in the selected area. Results are the union,
         not intersection of the tags and each result matches at least one tag.
-        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
-        and the values can be either `True` to retrieve all elements matching
-        the tag, or a string to retrieve a single tag:value combination, or a
+        The keys are OSM tags (e.g. `building`, `landuse`, `highway`, etc) and
+        the values can be either `True` to retrieve all elements matching the
+        tag, or a string to retrieve a single `tag:value` combination, or a
         list of strings to retrieve multiple values for the tag. For example,
         `tags = {'building': True}` would return all buildings in the area.
         Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
@@ -296,9 +296,9 @@ def features_from_polygon(
     tags
         Tags for finding elements in the selected area. Results are the union,
         not intersection of the tags and each result matches at least one tag.
-        The keys are OSM tags (e.g., `building`, `landuse`, `highway`, etc)
-        and the values can be either `True` to retrieve all elements matching
-        the tag, or a string to retrieve a single tag:value combination, or a
+        The keys are OSM tags (e.g. `building`, `landuse`, `highway`, etc) and
+        the values can be either `True` to retrieve all elements matching the
+        tag, or a string to retrieve a single `tag:value` combination, or a
         list of strings to retrieve multiple values for the tag. For example,
         `tags = {'building': True}` would return all buildings in the area.
         Or, `tags = {'amenity':True, 'landuse':['retail','commercial'],
