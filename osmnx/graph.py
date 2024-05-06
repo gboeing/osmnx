@@ -102,6 +102,7 @@ def graph_from_bbox(
         retain_all=retain_all,
         truncate_by_edge=truncate_by_edge,
         custom_filter=custom_filter,
+        buffer_dist=None,
     )
 
     msg = f"graph_from_bbox returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
@@ -163,6 +164,8 @@ def graph_from_point(
         e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
         in a `network_type` that is in `settings.bidirectional_network_types`
         if you want the graph to be fully bidirectional.
+    buffer_dist : float
+        distance to buffer around the place geometry, in meters
 
     Returns
     -------
@@ -370,6 +373,7 @@ def graph_from_place(
         retain_all=retain_all,
         truncate_by_edge=truncate_by_edge,
         custom_filter=custom_filter,
+        buffer_dist=None,
     )
 
     msg = f"graph_from_place returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
@@ -385,6 +389,7 @@ def graph_from_polygon(
     retain_all: bool = False,
     truncate_by_edge: bool = False,
     custom_filter: str | None = None,
+    buffer_dist=None,
 ) -> nx.MultiDiGraph:
     """
     Download and create a graph within the boundaries of a (Multi)Polygon.
@@ -420,6 +425,8 @@ def graph_from_polygon(
         e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
         in a `network_type` that is in `settings.bidirectional_network_types`
         if you want the graph to be fully bidirectional.
+     buffer_dist : float
+        distance to buffer around the place geometry, in meters
 
     Returns
     -------
