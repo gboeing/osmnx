@@ -21,16 +21,13 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
 
-      - name: Create environment with Micromamba
-        uses: mamba-org/setup-micromamba@v1
+      - name: Pip install requirements
+        uses: actions/setup-python@v5
         with:
-          cache-downloads: true
-          cache-environment: true
-          environment-file: environments/tests/env-test-build.yml
-          post-cleanup: none
+          python-version: "3.12"
+          cache: "pip"
+      - run: pip install -r requirements-test-build.txt
 
       - name: Build package and twine check
         run: |
