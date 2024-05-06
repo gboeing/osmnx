@@ -11,7 +11,7 @@ fi
 
 # update necessary python packaging packages
 eval "$(conda shell.bash hook)"
-conda deactivate
+conda activate base
 conda activate ox
 mamba update conda-smithy --yes --no-banner
 
@@ -21,13 +21,14 @@ make -C ./docs html SPHINXOPTS="-E -W --keep-going"
 python -m sphinx -E -W --keep-going -b linkcheck ./docs/source ./docs/build/linkcheck
 rm -rf ./docs/build
 
-# get the current package version number
-VERSION=$(hatch version)
-
-# build and validate the distribution then get its SHA256
+# build and validate the distribution
 rm -rf ./dist
+validate-pyproject ./pyproject.toml
 hatch build --clean
 twine check --strict ./dist/*
+
+# get the current package version number and its SHA256
+VERSION=$(hatch version)
 SHA=$(openssl dgst -sha256 -r "./dist/$PACKAGE-$VERSION.tar.gz" | awk '{print $1}')
 
 # rerender the conda-forge feedstock
