@@ -22,15 +22,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Pip install requirements
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: "pip"
-      - run: pip install -r environments/tests/requirements-test-build.txt
 
-      - name: Build package and twine check
+      - name: Install requirements
+        run: python -m pip install -r ./environments/tests/requirements-test-build.txt
+
+      - name: Build and validate package
         run: |
+          validate-pyproject ./pyproject.toml
           hatch build --clean
           twine check --strict ./dist/*
 

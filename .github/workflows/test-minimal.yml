@@ -21,28 +21,19 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
 
       - name: Create environment with Micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
-          cache-downloads: true
           cache-environment: true
-          environment-file: environments/tests/env-test-minimal.yml
+          environment-file: ./environments/tests/env-test-minimal.yml
           post-cleanup: none
 
       - name: Install OSMnx
         run: |
           uv pip install -e .
           micromamba list
-          micromamba info
-
-      - name: Run pre-commit checks
-        run: SKIP=no-commit-to-branch pre-commit run --all-files
-
-      - name: Test docs
-        run: make -C ./docs html SPHINXOPTS="-E -W --keep-going"
+          uv pip show --verbose osmnx
 
       - name: Test code
-        run: pytest --verbose --maxfail=1 --typeguard-packages=osmnx
+        run: pytest --verbose --maxfail=1

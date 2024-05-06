@@ -34,11 +34,6 @@ repos:
       - id: markdownlint
         args: [--disable=MD013]
 
-  - repo: https://github.com/abravalheri/validate-pyproject
-    rev: "v0.16"
-    hooks:
-      - id: validate-pyproject
-
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: "v0.4.2"
     hooks:

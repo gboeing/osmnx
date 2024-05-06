@@ -7,7 +7,9 @@ channels:
   - conda-forge
 
 dependencies:
-  # required (pinned to min versions from /pyproject.toml)
+  - uv
+
+  # requirements (pinned to min versions from /pyproject.toml)
   - geopandas=0.12
   - networkx=2.5
   - numpy=1.21
@@ -25,13 +27,4 @@ dependencies:
 
   # testing
   - lxml
-  - pre-commit
   - pytest
-  - pytest-cov
-  - typeguard
-  - uv
-
-  # docs (sphinx pinned to version from /docs/requirements.txt)
-  - furo
-  - sphinx=7
-  - sphinx-autodoc-typehints

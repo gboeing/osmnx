@@ -26,28 +26,32 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
 
       - name: Create environment with Micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
-          cache-downloads: true
           cache-environment: true
           create-args: python=${{ matrix.python-version }}
-          environment-file: environments/tests/env-ci.yml
+          environment-file: ./environments/tests/env-ci.yml
           post-cleanup: none
 
       - name: Install OSMnx
         run: |
           uv pip install -e .
           conda list
-          conda info --all
+
+      - name: Cache pre-commit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit/
+          key: pre-commit-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles(".pre-commit-config.yaml") }}
 
       - name: Run pre-commit checks
-        run: SKIP=no-commit-to-branch pre-commit run --all-files
+        run: pre-commit run --all-files
+        env:
+          SKIP: no-commit-to-branch
 
-      - name: Test docs
+      - name: Test docs build
         run: make -C ./docs html SPHINXOPTS="-E -W --keep-going"
 
       - name: Test code and coverage

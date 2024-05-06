@@ -24,6 +24,7 @@ conda-smithy
 hatch
 twine
 uv
+validate-pyproject
 
 # typing
 mypy
