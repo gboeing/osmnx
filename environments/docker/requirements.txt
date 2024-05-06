@@ -22,8 +22,8 @@ sphinx-autodoc-typehints
 # packaging
 conda-smithy
 hatch
+pip
 twine
-uv
 validate-pyproject
 
 # typing

@@ -31,9 +31,9 @@ jobs:
 
       - name: Install OSMnx
         run: |
-          uv pip install -e .
+          python -m pip install -e .
           micromamba list
-          uv pip show --verbose osmnx
+          python -m pip show osmnx
 
       - name: Test code
         run: pytest --verbose --maxfail=1

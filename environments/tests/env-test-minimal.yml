@@ -7,8 +7,6 @@ channels:
   - conda-forge
 
 dependencies:
-  - uv
-
   # requirements (pinned to min versions from /pyproject.toml)
   - geopandas=0.12
   - networkx=2.5

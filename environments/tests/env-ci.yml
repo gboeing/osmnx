@@ -4,8 +4,6 @@ channels:
   - conda-forge
 
 dependencies:
-  - uv
-
   # requirements
   - geopandas
   - networkx

@@ -57,9 +57,6 @@ exclude_also = ["@overload", "if TYPE_CHECKING:"]
 [tool.hatch.build]
 packages = ["osmnx"]
 
-[tool.hatch.envs.default]
-installer = "uv"
-
 [tool.hatch.version]
 path = "osmnx/_version.py"
 
