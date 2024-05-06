@@ -27,7 +27,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: "pip"
-      - run: pip install -r requirements-test-build.txt
+      - run: pip install -r environments/tests/requirements-test-build.txt
 
       - name: Build package and twine check
         run: |
