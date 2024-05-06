@@ -37,8 +37,9 @@ jobs:
 
       - name: Install OSMnx
         run: |
-          uv pip install -e .
-          conda list
+          python -m pip install -e .
+          micromamba list
+          python -m pip show osmnx
 
       - name: Cache pre-commit
         uses: actions/cache@v4
