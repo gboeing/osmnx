@@ -1,9 +1,9 @@
 Further Reading
 ===============
 
-Boeing, G. (2024). `Modeling and Analyzing Urban Networks and Amenities with OSMnx`_. Working paper. https://geoffboeing.com/publications/osmnx-paper/
+Boeing, G. (2024). `Modeling and Analyzing Urban Networks and Amenities with OSMnx`_. Working paper.
 
-This is the official citation for the project.
+This is the official reference paper and citation for the project.
 
 .. _Modeling and Analyzing Urban Networks and Amenities with OSMnx: https://geoffboeing.com/publications/osmnx-paper/
 
