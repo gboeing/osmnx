@@ -553,7 +553,7 @@ def plot_figure_ground(
     node_sizes: list[float] | float = [node_widths[node] for node in Gu.nodes]
 
     # define the view extents of the plotting figure
-    node_geoms = convert.graph_to_gdfs(Gu, edges=False, node_geometry=True).unary_union
+    node_geoms = convert.graph_to_gdfs(Gu, edges=False, node_geometry=True).union_all()
     lonlat_point = node_geoms.centroid.coords[0]
     latlon_point = tuple(reversed(lonlat_point))
     bbox = utils_geo.bbox_from_point(latlon_point, dist=dist, project_utm=False)
