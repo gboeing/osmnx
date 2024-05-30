@@ -580,10 +580,10 @@ def _merge_nodes_geometric(
         # fill nulls (resulting from missing tolerances) with original points,
         # then merge overlapping geometries
         tols = pd.Series(tolerance).reindex(gdf_nodes.index)
-        merged = gdf_nodes.buffer(tols).fillna(gdf_nodes["geometry"]).unary_union
+        merged = gdf_nodes.buffer(tols).fillna(gdf_nodes["geometry"]).union_all()
     else:
         # buffer nodes then merge overlapping geometries
-        merged = gdf_nodes.buffer(tolerance).unary_union
+        merged = gdf_nodes.buffer(tolerance).union_all()
 
     # extract the member geometries if it's a multi-geometry
     merged = merged.geoms if hasattr(merged, "geoms") else merged
@@ -665,7 +665,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
                 for suffix, wcc in enumerate(wccs):
                     # set subcluster xy to the centroid of just these nodes
                     idx = list(wcc)
-                    subcluster_centroid = node_points.loc[idx].unary_union.centroid
+                    subcluster_centroid = node_points.loc[idx].union_all().centroid
                     gdf.loc[idx, "x"] = subcluster_centroid.x
                     gdf.loc[idx, "y"] = subcluster_centroid.y
                     # move to subcluster by appending suffix to cluster label
