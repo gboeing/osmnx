@@ -168,27 +168,34 @@ def _get_overpass_pause(
         # if overpass rate limiting is False, then there is zero pause
         return 0
 
+    url = base_endpoint.rstrip("/") + "/status"
+
+    # try to retrieve the URL
     try:
-        url = base_endpoint.rstrip("/") + "/status"
         response = requests.get(
             url,
             headers=_http._get_http_headers(),
             timeout=settings.requests_timeout,
             **settings.requests_kwargs,
         )
-        status = response.text.split("\n")[4]
-        status_first_part = status.split(" ")[0]
+        response_text = response.text
     except ConnectionError as e:  # pragma: no cover
-        # cannot reach status endpoint, log error and return default duration
+        # cannot reach status endpoint: log error and return default duration
         msg = f"Unable to query {url}, {e}"
         utils.log(msg, level=lg.ERROR)
         return default_duration
+
+    # try to parse the output
+    try:
+        status = response_text.split("\n")[4]
+        status_first_part = status.split(" ")[0]
     except (AttributeError, IndexError, ValueError):  # pragma: no cover
-        # cannot parse output, log error and return default duration
-        msg = f"Unable to parse {url} response: {response.text}"
+        # cannot parse output: log error and return default duration
+        msg = f"Unable to parse {url} response: {response_text}"
         utils.log(msg, level=lg.ERROR)
         return default_duration
 
+    # determine the current status of the server
     try:
         # if first token is numeric, it's how many slots you have available,
         # no wait required
