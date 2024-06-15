@@ -59,16 +59,25 @@ Using the :code:`features` and :code:`graph` modules, as described below, you ca
 Urban Amenities
 ^^^^^^^^^^^^^^^
 
-Using OSMnx's :code:`features` module, you can search for and download geospatial `features`_ (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap `Overpass`_ API as a GeoPandas GeoDataFrame. This uses OpenStreetMap `tags`_ to search for matching `elements`_.
+Using OSMnx's :code:`features` module, you can search for and download any geospatial `features`_ (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap `Overpass`_ API as a GeoPandas GeoDataFrame. This uses OpenStreetMap `tags`_ to search for matching `elements`_.
 
 Modeling a Network
 ^^^^^^^^^^^^^^^^^^
 
-Using OSMnx's :code:`graph` module, you can retrieve any spatial network data (such as streets, paths, rail, canals, etc) from the Overpass API and model them as NetworkX `MultiDiGraphs`_.
+Using OSMnx's :code:`graph` module, you can retrieve any spatial network data (such as streets, paths, rail, canals, etc) from the Overpass API and model them as NetworkX `MultiDiGraphs`_. See the official reference paper at the :doc:`further-reading` page for complete modeling details.
 
-MultiDiGraphs are nonplanar directed graphs with possible self-loops and parallel edges. Thus, a one-way street will be represented with a single directed edge from node *u* to node *v*, but a bidirectional street will be represented with two reciprocal directed edges (with identical geometries): one from node *u* to node *v* and another from *v* to *u*, to represent both possible directions of flow. Because these graphs are nonplanar, they correctly model the topology of interchanges, bridges, and tunnels. That is, edge crossings in a two-dimensional plane are not intersections in an OSMnx model unless they represent true junctions in the three-dimensional real world.
+In short, MultiDiGraphs are nonplanar directed graphs with possible self-loops and parallel edges. Thus, a one-way street will be represented with a single directed edge from node *u* to node *v*, but a bidirectional street will be represented with two reciprocal directed edges (with identical geometries): one from node *u* to node *v* and another from *v* to *u*, to represent both possible directions of flow. Because these graphs are nonplanar, they correctly model the topology of interchanges, bridges, and tunnels. That is, edge crossings in a two-dimensional plane are not intersections in an OSMnx model unless they represent true junctions in the three-dimensional real world.
 
 The :code:`graph` module uses filters to query the Overpass API: you can either specify a built-in network type or provide your own custom filter with `Overpass QL`_. Refer to the :code:`graph` module's documentation for more details. Under the hood, OSMnx does several things to generate the best possible model. It initially creates a 500m-buffered graph before truncating it to your desired query area, to ensure accurate streets-per-node stats and to attenuate graph perimeter effects. It also simplifies the graph topology as discussed below.
+
+Model Attributes
+^^^^^^^^^^^^^^^^
+
+An OSMnx model has some standard required attributes, plus some optional attributes. The latter are sometimes present based on the source OSM data's tagging, the :code:`settings` module configuration, and any processing you may have done to add additional attributes (as noted in various functions' documentation).
+
+As a NetworkX MultiDiGraph object, it has top-level :code:`graph`, :code:`nodes`, and :code:`edges` attributes. The :code:`graph` attribute dictionary must contain a "crs" key defining its coordinate reference system. The :code:`nodes` are identified by OSM ID and each must contain a :code:`data` attribute dictionary that must have "x" and "y" keys defining its coordinates and a "street_count" key defining how many physical streets are incident to it. The :code:`edges` are identified by a 3-tuple of "u" (source node ID), "v" (target node ID), and "key" (to differentiate parallel edges), and each must contain a :code:`data` attribute dictionary that must have an "osmid" key defining its OSM ID and a "length" key defining its length in meters.
+
+The OSMnx :code:`graph` module automatically creates MultiDiGraphs with these required attributes, plus additional optional attributes based on the :code:`settings` module configuration. If you instead manually create your own graph model, make sure it has these required attributes at a minimum.
 
 Topology Clean-Up
 ^^^^^^^^^^^^^^^^^
@@ -114,7 +123,7 @@ You can plot graphs, routes, network figure-ground diagrams, building footprints
 Usage Limits
 ^^^^^^^^^^^^
 
-Refer to the `Nominatim Usage Policy`_ and `Overpass Commons`_ documentation for usage limitations and restrictions to which you must adhere. If you use an alternative Nominatim/Overpass instance, ensure you understand and follow their usage policies. If you need to exceed these limitations, consider installing your own hosted instance and setting OSMnx to use it.
+Refer to the `Nominatim Usage Policy`_ and `Overpass Commons`_ documentation for API usage limits and restrictions to which you must adhere. If you configure OSMnx to use an alternative API instance, ensure you understand and follow their policies. If you feel you need to exceed these limits, consider installing your own hosted instance and setting OSMnx to use it.
 
 More Info
 ---------
