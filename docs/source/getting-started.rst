@@ -87,6 +87,11 @@ Visualization
 
 You can plot graphs, routes, network figure-ground diagrams, building footprints, and street network orientation rose diagrams (aka, polar histograms) with the :code:`plot` module. You can also explore street networks, routes, or geospatial features as interactive `Folium`_ web maps.
 
+Usage Limits
+^^^^^^^^^^^^
+
+Refer to the `Nominatim Usage Policy`_ and `Overpass Commons`_ documentation for API usage limits and restrictions to which you must adhere. If you configure OSMnx to use an alternative API instance, ensure you understand and follow their policies. If you feel you need to exceed these limits, consider installing your own hosted instance and setting OSMnx to use it.
+
 More Info
 ---------
 
@@ -121,3 +126,5 @@ Frequently Asked Questions
 .. _Changelog: https://github.com/gboeing/osmnx/blob/main/CHANGELOG.md
 .. _projects: https://geoffboeing.com/2018/03/osmnx-features-roundup
 .. _StackOverflow: https://stackoverflow.com/search?q=osmnx
+.. _Nominatim Usage Policy: https://operations.osmfoundation.org/policies/nominatim/
+.. _Overpass Commons: https://dev.overpass-api.de/overpass-doc/en/preface/commons.html

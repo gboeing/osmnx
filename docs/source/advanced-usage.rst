@@ -35,12 +35,6 @@ Working with Elevation
 
 The :code:`elevation` module lets you automatically attach elevations to the graph's nodes from a local raster file or a web service like the Google Maps `Elevation API`_. You can also calculate edge grades (i.e., rise-over-run) and analyze the steepness of certain streets or routes.
 
-
-Usage Limits
-------------
-
-Refer to the `Nominatim Usage Policy`_ and `Overpass Commons`_ documentation for API usage limits and restrictions to which you must adhere. If you configure OSMnx to use an alternative API instance, ensure you understand and follow their policies. If you feel you need to exceed these limits, consider installing your own hosted instance and setting OSMnx to use it.
-
 More Info
 ---------
 
@@ -55,5 +49,3 @@ All of this functionality is demonstrated step-by-step in the OSMnx `Examples Ga
 .. _GeoDataFrames: https://geopandas.org/en/stable/docs/reference/geodataframe.html
 .. _CRS: https://en.wikipedia.org/wiki/Coordinate_reference_system
 .. _Elevation API: https://developers.google.com/maps/documentation/elevation
-.. _Nominatim Usage Policy: https://operations.osmfoundation.org/policies/nominatim/
-.. _Overpass Commons: https://dev.overpass-api.de/overpass-doc/en/preface/commons.html
