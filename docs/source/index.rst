@@ -44,7 +44,7 @@ If you have any trouble, consult the :doc:`user-reference`. The OSMnx repository
 License
 -------
 
-OSMnx is open source and licensed under the MIT license. OpenStreetMap's open data `license`_ requires that derivative works provide proper attribution. Refer to the :doc:`getting-started` guide for usage limitations.
+OSMnx is open source and licensed under the MIT license. OpenStreetMap's open data `license`_ requires that derivative works provide proper attribution. Refer to the :doc:`advanced-usage` guide for usage limitations.
 
 .. _license: https://www.openstreetmap.org/copyright
 
@@ -55,12 +55,17 @@ Documentation
 .. toctree::
    :maxdepth: 1
 
+   installation
+
+.. toctree::
+   :maxdepth: 1
+
    getting-started
 
 .. toctree::
    :maxdepth: 1
 
-   installation
+   advanced-usage
 
 .. toctree::
    :maxdepth: 1
