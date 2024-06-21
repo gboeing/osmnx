@@ -55,12 +55,12 @@ Documentation
 .. toctree::
    :maxdepth: 1
 
-   getting-started
+   installation
 
 .. toctree::
    :maxdepth: 1
 
-   installation
+   getting-started
 
 .. toctree::
    :maxdepth: 1
