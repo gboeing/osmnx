@@ -22,7 +22,7 @@ You can run OSMnx + JupyterLab directly from the official OSMnx `Docker`_ image.
 Pip
 ---
 
-You may be able to install OSMnx with `pip`_ (in a virtual environment) but this is not officially supported. OSMnx is written in pure Python and its installation alone is thus trivially simple if you already have its dependencies installed and tested on your system. OSMnx depends on packages that in turn depend on C/C++ libraries, and installing those dependencies with pip is sometimes challenging depending on your specific system's configuration. If you're not sure what you're doing, just follow the conda instructions above to avoid installation problems.
+You may be able to install OSMnx with `pip`_ (into a virtual environment) but this is not officially supported. OSMnx is written in pure Python and its installation alone is thus trivially simple if you already have its dependencies installed and tested on your system. OSMnx depends on packages that in turn depend on C/C++ libraries, and installing those dependencies with pip is sometimes challenging depending on your specific system's configuration. If you're not sure what you're doing, just follow the conda instructions above to avoid installation problems.
 
 .. _conda: https://conda.io/
 .. _conda-forge: https://conda-forge.org/

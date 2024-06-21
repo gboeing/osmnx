@@ -65,11 +65,6 @@ Documentation
 .. toctree::
    :maxdepth: 1
 
-   advanced-usage
-
-.. toctree::
-   :maxdepth: 1
-
    user-reference
 
 .. toctree::
