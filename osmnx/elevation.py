@@ -215,7 +215,7 @@ def add_node_elevations_google(
     # round coordinates to 6 decimal places (approx 5 to 10 cm resolution)
     node_points = pd.Series({n: f"{d['y']:.6f},{d['x']:.6f}" for n, d in G.nodes(data=True)})
     n_calls = int(np.ceil(len(node_points) / batch_size))
-    domain = _http._hostname_from_url(settings.elevation_url_template)
+    domain = _http._hostname_from_url(settings.elevation_url_template_google)
 
     msg = f"Requesting node elevations from {domain!r} in {n_calls} request(s)"
     utils.log(msg, level=lg.INFO)
@@ -226,7 +226,80 @@ def add_node_elevations_google(
     for i in range(0, len(node_points), batch_size):
         chunk = node_points.iloc[i : i + batch_size]
         locations = "|".join(chunk)
-        url = settings.elevation_url_template.format(locations=locations, key=api_key)
+        url = settings.elevation_url_template_google.format(locations=locations, key=api_key)
+
+        # download and append these elevation results to list of all results
+        response_json = _elevation_request(url, pause)
+        if "results" in response_json and len(response_json["results"]) > 0:
+            results.extend(response_json["results"])
+        else:
+            raise InsufficientResponseError(str(response_json))
+
+    # sanity check that all our vectors have the same number of elements
+    msg = f"Graph has {len(G):,} nodes and we received {len(results):,} results from {domain!r}"
+    utils.log(msg, level=lg.INFO)
+    if not (len(results) == len(G) == len(node_points)):  # pragma: no cover
+        err_msg = f"{msg}\n{response_json}"
+        raise InsufficientResponseError(err_msg)
+
+    # add elevation as an attribute to the nodes
+    df_elev = pd.DataFrame(node_points, columns=["node_points"])
+    df_elev["elevation"] = [result["elevation"] for result in results]
+    nx.set_node_attributes(G, name="elevation", values=df_elev["elevation"].to_dict())
+    msg = f"Added elevation data from {domain!r} to all nodes."
+    utils.log(msg, level=lg.INFO)
+
+    return G
+
+
+def add_node_elevations_open(
+    G: nx.MultiDiGraph,
+    *,
+    batch_size: int = 128,
+    pause: float = 0.5,
+) -> nx.MultiDiGraph:
+    """
+    Add `elevation` (meters) attributes to all nodes using a web service.
+
+    By default, this uses the Open Elevation API. The Open Elevation API does not
+    require an API key. You can find more information about the Open Elevation API at:
+    https://open-elevation.com/
+
+    For a free local alternative see the `add_node_elevations_raster`
+    function. See also the `add_edge_grades` function.
+
+    Parameters
+    ----------
+    G
+        Graph to add elevation data to.
+    batch_size
+        Max number of coordinate pairs to submit in each request (depends on
+        provider's limits). Default limit is 128.
+    pause
+        How long to pause in seconds between API calls, which can be increased
+        if you get rate limited. Default is 0.5 seconds.
+
+    Returns
+    -------
+    G
+        Graph with `elevation` attributes on the nodes.
+    """
+    # make a pandas series of all the nodes' coordinates as "lat,lon" and
+    # round coordinates to 6 decimal places (approx 5 to 10 cm resolution)
+    node_points = pd.Series({n: f"{d['y']:.6f},{d['x']:.6f}" for n, d in G.nodes(data=True)})
+    n_calls = int(np.ceil(len(node_points) / batch_size))
+    domain = _http._hostname_from_url(settings.elevation_url_template_open)
+
+    msg = f"Requesting node elevations from {domain!r} in {n_calls} request(s)"
+    utils.log(msg, level=lg.INFO)
+
+    # break the series of coordinates into chunks of batch_size
+    # API format is locations=lat,lon|lat,lon|lat,lon|lat,lon...
+    results = []
+    for i in range(0, len(node_points), batch_size):
+        chunk = node_points.iloc[i : i + batch_size]
+        locations = "|".join(chunk)
+        url = settings.elevation_url_template_open.format(locations=locations)
 
         # download and append these elevation results to list of all results
         response_json = _elevation_request(url, pause)

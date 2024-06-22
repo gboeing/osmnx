@@ -40,12 +40,16 @@ doh_url_template : str | None
     Endpoint to resolve DNS-over-HTTPS if local DNS resolution fails. Set to
     None to disable DoH, but see `downloader._config_dns` documentation for
     caveats. Default is: `"https://8.8.8.8/resolve?name={hostname}"`
-elevation_url_template : str
+elevation_url_template_google : str
     Endpoint of the Google Maps Elevation API (or equivalent), containing
     exactly two parameters: `locations` and `key`. Default is:
     `"https://maps.googleapis.com/maps/api/elevation/json?locations={locations}&key={key}"`
     One example of an alternative equivalent would be Open Topo Data:
     `"https://api.opentopodata.org/v1/aster30m?locations={locations}&key={key}"`
+elevation_url_template_open : str
+    Endpoint of the Open Elevation API (or equivalent), containing
+    exactly one parameter: `locations`. Default is:
+    `"https://api.open-elevation.com/api/v1/lookup?locations={locations}"`
 http_accept_language : str
     HTTP header accept-language. Default is `"en"`. Note that Nominatim's
     default language is "en" and it may sort its results' importance scores
@@ -139,8 +143,11 @@ data_folder: str | Path = "./data"
 default_access: str = '["access"!~"private"]'
 default_crs: str = "epsg:4326"
 doh_url_template: str | None = "https://8.8.8.8/resolve?name={hostname}"
-elevation_url_template: str = (
+elevation_url_template_google: str = (
     "https://maps.googleapis.com/maps/api/elevation/json?locations={locations}&key={key}"
+)
+elevation_url_template_open: str = (
+    "https://api.open-elevation.com/api/v1/lookup?locations={locations}"
 )
 http_accept_language: str = "en"
 http_referer: str = "OSMnx Python package (https://github.com/gboeing/osmnx)"
