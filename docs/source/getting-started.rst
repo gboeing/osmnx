@@ -107,7 +107,7 @@ You can also use NetworkX directly to calculate additional topological network m
 Working with Elevation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The :code:`elevation` module lets you automatically attach elevations to the graph's nodes from a local raster file or the Google Maps `Elevation API`_ (or any other web API with a compatible interface). You can also calculate edge grades (i.e., rise-over-run) and analyze the steepness of certain streets or routes.
+The :code:`elevation` module lets you automatically attach elevations to the graph's nodes from a local raster file or the Google Maps `Elevation API`_ (or equivalent web API with a compatible interface). You can also calculate edge grades (i.e., rise-over-run) and analyze the steepness of certain streets or routes.
 
 Routing
 ^^^^^^^
