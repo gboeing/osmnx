@@ -181,13 +181,15 @@ def add_node_elevations_google(
     pause: float = 0,
 ) -> nx.MultiDiGraph:
     """
-    Add `elevation` (meters) attributes to all nodes using a web service.
+    Add `elevation` (meters) attributes to all nodes using a web API.
 
-    By default, this uses the Google Maps Elevation API but you can optionally
-    use an equivalent API with the same interface and response format, such as
-    Open Topo Data, via the `settings` module's `elevation_url_template`. The
-    Google Maps Elevation API requires an API key but other providers may not.
-    You can find more information about the Google Maps Elevation API at:
+    By default this uses the Google Maps Elevation API, but you could instead
+    use any equivalent API with the same interface and response format (such
+    as the Open Topo Data API or the Open-Elevation API) via the `settings`
+    module's `elevation_url_template`. Adjust the `batch_size` and `pause`
+    arguments as needed for the provider. The Google Maps Elevation API
+    requires an API key but other providers may not. You can find more
+    information about the Google Maps Elevation API interface and format at:
     https://developers.google.com/maps/documentation/elevation
 
     For a free local alternative see the `add_node_elevations_raster`

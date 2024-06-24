@@ -42,10 +42,12 @@ doh_url_template : str | None
     caveats. Default is: `"https://8.8.8.8/resolve?name={hostname}"`
 elevation_url_template : str
     Endpoint of the Google Maps Elevation API (or equivalent), containing
-    exactly two parameters: `locations` and `key`. Default is:
-    `"https://maps.googleapis.com/maps/api/elevation/json?locations={locations}&key={key}"`
-    One example of an alternative equivalent would be Open Topo Data:
-    `"https://api.opentopodata.org/v1/aster30m?locations={locations}&key={key}"`
+    up to two parameters, in order: `locations` and `key`. Default is:
+    `"https://maps.googleapis.com/maps/api/elevation/json?locations={locations}&key={key}"`.
+    As alternative free examples, the Open Topo Data API would be:
+    `"https://api.opentopodata.org/v1/aster30m?locations={locations}"`
+    and the Open-Elevation API would be:
+    `"https://api.open-elevation.com/api/v1/lookup?locations={locations}"`.
 http_accept_language : str
     HTTP header accept-language. Default is `"en"`. Note that Nominatim's
     default language is "en" and it may sort its results' importance scores
