@@ -68,11 +68,11 @@ class _OSMContentHandler(ContentHandler):
     https://overpass-api.de
     """
 
-    def __init__(self) -> None:  # noqa: ANN101
+    def __init__(self) -> None:
         self._element: dict[str, Any] | None = None
         self.object: dict[str, Any] = {"elements": []}
 
-    def startElement(self, name: str, attrs: AttributesImpl) -> None:  # noqa: ANN101,N802
+    def startElement(self, name: str, attrs: AttributesImpl) -> None:  # noqa: N802
         # identify node/way/relation attrs to convert from string to numeric
         float_attrs = {"lat", "lon"}
         int_attrs = {"changeset", "id", "uid", "version"}
@@ -102,7 +102,7 @@ class _OSMContentHandler(ContentHandler):
                 {k: (int(v) if k == "ref" else v) for k, v in attrs.items()},
             )
 
-    def endElement(self, name: str) -> None:  # noqa: ANN101,N802
+    def endElement(self, name: str) -> None:  # noqa: N802
         if name in {"node", "way", "relation"}:
             self.object["elements"].append(self._element)
 
