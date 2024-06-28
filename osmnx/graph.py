@@ -743,7 +743,7 @@ def _is_path_one_way(attrs: dict[str, Any], bidirectional: bool, oneway_values: 
         return True
 
     # rule 4
-    if "junction" in attrs and attrs["junction"] == "roundabout":
+    if "junction" in attrs and attrs["junction"] == "roundabout":  # noqa: SIM103
         # roundabouts are also one-way but are not explicitly tagged as such
         return True
 
