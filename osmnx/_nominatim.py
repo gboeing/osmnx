@@ -152,7 +152,7 @@ def _nominatim_request(
 
     response_json = _http._parse_response(response)
     if not isinstance(response_json, list):
-        msg = "Nominatim API did not return a list of results."
+        msg = f"Nominatim API did not return a list of results. Reponse Json is of type {type(response_json)}"
         raise InsufficientResponseError(msg)
     _http._save_to_cache(prepared_url, response_json, response.ok)
     return response_json

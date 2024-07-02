@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging as lg
 import socket
+import xml.etree.ElementTree as ET
 from hashlib import sha1
 from pathlib import Path
 from typing import Any
@@ -21,6 +22,31 @@ from ._errors import ResponseStatusCodeError
 # capture getaddrinfo function to use original later after mutating it
 _original_getaddrinfo = socket.getaddrinfo
 
+def xml_to_dict(element):
+    # If the element has no children, return its text content
+    if not list(element):
+        return element.text
+    
+    # Create a dictionary to hold the element's data
+    result = {}
+    
+    for child in element:
+        child_result = xml_to_dict(child)
+        
+        # Handle multiple children with the same tag
+        if child.tag in result:
+            if isinstance(result[child.tag], list):
+                result[child.tag].append(child_result)
+            else:
+                result[child.tag] = [result[child.tag], child_result]
+        else:
+            result[child.tag] = child_result
+            
+    return result
+
+def parse_xml_string(xml_string):
+    root = ET.fromstring(xml_string)
+    return {root.tag: xml_to_dict(root)}
 
 def _save_to_cache(
     url: str,
@@ -318,12 +344,20 @@ def _parse_response(response: requests.Response) -> dict[str, Any] | list[dict[s
     # parse the response to JSON and log/raise exceptions
     try:
         response_json: dict[str, Any] | list[dict[str, Any]] = response.json()
-    except JSONDecodeError as e:  # pragma: no cover
+    except JSONDecodeError as e:  # pragma: no cover 
+        # gets flagged during reverse geocode process, where it returns a string of an xml
         msg = f"{domain!r} responded: {response.status_code} {response.reason} {response.text}"
         utils.log(msg, level=lg.ERROR)
         if response.ok:
-            raise InsufficientResponseError(msg) from e
-        raise ResponseStatusCodeError(msg) from e
+            # try to parse the response as an xml since it was successful
+            try:
+                response_string=f'''{response.text}
+                '''
+                response_json = [parse_xml_string(response_string)]           
+            except:
+                raise InsufficientResponseError(msg) from e
+        else:
+            raise ResponseStatusCodeError(msg) from e
 
     # log any remarks if they exist
     if isinstance(response_json, dict) and "remark" in response_json:  # pragma: no cover
