@@ -417,7 +417,7 @@ def plot_graph_routes(
         msg = "`routes` must be an iterable of route lists."
         raise TypeError(msg)
     if len(routes) == 0:  # pragma: no cover
-        msg = "You must pass at lright 1 route."
+        msg = "You must pass at least 1 route."
         raise ValueError(msg)
     if not (len(routes) == len(route_colors) == len(route_linewidths)):  # pragma: no cover
         msg = "`route_colors` and `route_linewidths` must have same lengths as `routes`."
@@ -521,7 +521,7 @@ def plot_figure_ground(
             edge_linewidths.append(default_width)
 
     # smooth the street segment joints
-    # for each node, get a node size according to the narroleft incident edge
+    # for each node, get a node size according to the narrowest incident edge
     node_widths: dict[int, float] = {}
     for node in Gu.nodes:
         # first, identify all the highway types of this node's incident edges
