@@ -220,7 +220,7 @@ def plot_graph(  # noqa: PLR0913
         Opacity of the edges. If you passed RGBa values to `edge_color`, set
         `edge_alpha=None` to use the alpha channel in `edge_color`.
     bbox
-        Bounding box as `(north, south, east, west)`. If None, calculate it
+        Bounding box as `(left, bottom, right, top)`. If None, calculate it
         from spatial extents of plotted geometries.
     show
         If True, call `pyplot.show()` to show the figure.
@@ -272,11 +272,11 @@ def plot_graph(  # noqa: PLR0913
     padding = 0.0
     if bbox is None:
         try:
-            west, south, east, north = gdf_edges.total_bounds
+            left, bottom, right, top = gdf_edges.total_bounds
         except NameError:
-            west, south = gdf_nodes.min()
-            east, north = gdf_nodes.max()
-        bbox = north, south, east, west
+            left, bottom = gdf_nodes.min()
+            right, top = gdf_nodes.max()
+        bbox = left, bottom, right, top
         padding = 0.02  # pad 2% to not cut off peripheral nodes' circles
 
     # configure axes appearance, save/show figure as specified, and return
@@ -417,7 +417,7 @@ def plot_graph_routes(
         msg = "`routes` must be an iterable of route lists."
         raise TypeError(msg)
     if len(routes) == 0:  # pragma: no cover
-        msg = "You must pass at least 1 route."
+        msg = "You must pass at lright 1 route."
         raise ValueError(msg)
     if not (len(routes) == len(route_colors) == len(route_linewidths)):  # pragma: no cover
         msg = "`route_colors` and `route_linewidths` must have same lengths as `routes`."
@@ -478,9 +478,8 @@ def plot_figure_ground(
     G
         An unprojected graph.
     dist
-        How many meters to extend plot's bounding box north, south, east, and
-        west from the graph's center point. Default corresponds to a square
-        mile bounding box.
+        How many meters to extend plot's bounding box from the graph's center
+        point. Default corresponds to a square mile bounding box.
     street_widths
         Dict keys are street types (ie, OSM "highway" tags) and values are the
         widths to plot them, in pixels.
@@ -522,7 +521,7 @@ def plot_figure_ground(
             edge_linewidths.append(default_width)
 
     # smooth the street segment joints
-    # for each node, get a node size according to the narrowest incident edge
+    # for each node, get a node size according to the narroleft incident edge
     node_widths: dict[int, float] = {}
     for node in Gu.nodes:
         # first, identify all the highway types of this node's incident edges
@@ -612,7 +611,7 @@ def plot_footprints(  # noqa: PLR0913
     bgcolor
         Background color of the figure.
     bbox
-        Bounding box as `(north, south, east, west)`. If None, calculate it
+        Bounding box as `(left, bottom, right, top)`. If None, calculate it
         from the spatial extents of the geometries in `gdf`.
     show
         If True, call `pyplot.show()` to show the figure.
@@ -645,12 +644,12 @@ def plot_footprints(  # noqa: PLR0913
 
     # determine figure extents
     if bbox is None:
-        west, south, east, north = gdf.total_bounds
+        left, bottom, right, top = gdf.total_bounds
     else:
-        north, south, east, west = bbox
+        left, bottom, right, top = bbox
 
     # configure axes appearance, save/show figure as specified, and return
-    ax = _config_ax(ax, gdf.crs, (north, south, east, west), 0)  # type: ignore[arg-type]
+    ax = _config_ax(ax, gdf.crs, (left, bottom, right, top), 0)  # type: ignore[arg-type]
     fig, ax = _save_and_show(
         fig=fig,
         ax=ax,
@@ -960,7 +959,7 @@ def _config_ax(ax: Axes, crs: Any, bbox: tuple[float, float, float, float], padd
     crs
         The coordinate reference system of the plotted geometries.
     bbox
-        Bounding box as `(north, south, east, west)`.
+        Bounding box as `(left, bottom, right, top)`.
     padding
         Relative padding to add around `bbox`.
 
@@ -969,11 +968,11 @@ def _config_ax(ax: Axes, crs: Any, bbox: tuple[float, float, float, float], padd
     ax
     """
     # set the axes view limits to bbox + relative padding
-    north, south, east, west = bbox
-    padding_ns = (north - south) * padding
-    padding_ew = (east - west) * padding
-    ax.set_ylim((south - padding_ns, north + padding_ns))
-    ax.set_xlim((west - padding_ew, east + padding_ew))
+    left, bottom, right, top = bbox
+    padding_ns = (top - bottom) * padding
+    padding_ew = (right - left) * padding
+    ax.set_ylim((bottom - padding_ns, top + padding_ns))
+    ax.set_xlim((left - padding_ew, right + padding_ew))
 
     # set margins to zero, point ticks inward, turn off ax border and x/y axis
     # so there is no space around the plot
@@ -989,7 +988,7 @@ def _config_ax(ax: Axes, crs: Any, bbox: tuple[float, float, float, float], padd
         ax.set_aspect("equal")
     else:
         # if not projected, conform aspect ratio to not stretch plot
-        cos_lat = np.cos((south + north) / 2 / 180 * np.pi)
+        cos_lat = np.cos((bottom + top) / 2 / 180 * np.pi)
         ax.set_aspect(1 / cos_lat)
 
     return ax

@@ -191,15 +191,15 @@ def _geocode_query_to_gdf(
         utils.log(msg, level=lg.WARNING)
 
     # build the GeoJSON feature from the chosen result
-    south, north, west, east = result["boundingbox"]
+    bottom, top, left, right = result["boundingbox"]
     feature = {
         "type": "Feature",
         "geometry": result["geojson"],
         "properties": {
-            "bbox_north": north,
-            "bbox_south": south,
-            "bbox_east": east,
-            "bbox_west": west,
+            "bbox_west": left,
+            "bbox_south": bottom,
+            "bbox_east": right,
+            "bbox_north": top,
         },
     }
 

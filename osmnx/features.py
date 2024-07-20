@@ -105,7 +105,7 @@ def features_from_bbox(
     Parameters
     ----------
     bbox
-        Bounding box as `(north, south, east, west)`. Coordinates should be in
+        Bounding box as `(left, bottom, right, top)`. Coordinates should be in
         unprojected latitude-longitude degrees (EPSG:4326).
     tags
         Tags for finding elements in the selected area. Results are the union,
