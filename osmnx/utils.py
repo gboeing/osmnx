@@ -151,8 +151,8 @@ def log(
             # print explicitly to terminal in case Jupyter has captured stdout
             if getattr(sys.stdout, "_original_stdstream_copy", None) is not None:
                 # redirect the Jupyter-captured pipe back to original
-                os.dup2(sys.stdout._original_stdstream_copy, sys.__stdout__.fileno())  # type: ignore[attr-defined]
-                sys.stdout._original_stdstream_copy = None  # type: ignore[attr-defined]
+                os.dup2(sys.stdout._original_stdstream_copy, sys.__stdout__.fileno())  # type: ignore[union-attr]
+                sys.stdout._original_stdstream_copy = None  # type: ignore[union-attr]
             with redirect_stdout(sys.__stdout__):
                 print(message, file=sys.__stdout__, flush=True)
         except OSError:
