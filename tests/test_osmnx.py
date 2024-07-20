@@ -664,12 +664,12 @@ def test_features() -> None:
 
     # features_from_bbox - bounding box query to return no data
     with pytest.raises(ox._errors.InsufficientResponseError):
-        gdf = ox.features_from_bbox(bbox=(-2.000, -2.001, -2.000, -2.001), tags={"building": True})
+        gdf = ox.features_from_bbox(bbox=(-2.001, -2.001, -2.000, -2.000), tags={"building": True})
 
     # features_from_bbox - successful
     gdf = ox.features_from_bbox(bbox, tags=tags1)
     fig, ax = ox.plot_footprints(gdf)
-    fig, ax = ox.plot_footprints(gdf, ax=ax, bbox=(10, 0, 10, 0))
+    fig, ax = ox.plot_footprints(gdf, ax=ax, bbox=(0, 0, 10, 10))
 
     # features_from_point - tests multipolygon creation
     gdf = ox.utils_geo.bbox_from_point(location_point, dist=500)
