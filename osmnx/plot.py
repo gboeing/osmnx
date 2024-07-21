@@ -222,6 +222,13 @@ def plot_graph(
     fig, ax : tuple
         matplotlib figure, axis
     """
+    if bbox is not None:
+        msg = (
+            "The expected order of coordinates in `bbox` will change in the "
+            "v2.0.0 release to `(left, bottom, right, top)`."
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     _verify_mpl()
     max_node_size = max(node_size) if hasattr(node_size, "__iter__") else node_size
     max_edge_lw = max(edge_linewidth) if hasattr(edge_linewidth, "__iter__") else edge_linewidth
@@ -675,6 +682,13 @@ def plot_footprints(
     fig, ax : tuple
         matplotlib figure, axis
     """
+    if bbox is not None:
+        msg = (
+            "The expected order of coordinates in `bbox` will change in the "
+            "v2.0.0 release to `(left, bottom, right, top)`."
+        )
+        warn(msg, FutureWarning, stacklevel=2)
+
     _verify_mpl()
 
     if ax is None:

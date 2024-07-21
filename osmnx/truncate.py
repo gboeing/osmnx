@@ -107,6 +107,8 @@ def truncate_graph_bbox(
         msg = (
             "The `north`, `south`, `east`, and `west` parameters are deprecated and "
             "will be removed in the v2.0.0 release. Use the `bbox` parameter instead. "
+            "Note that the expected order of coordinates in `bbox` will change in the "
+            "v2.0.0 release to `(left, bottom, right, top)`. "
             "See the OSMnx v2 migration guide: https://github.com/gboeing/osmnx/issues/1123"
         )
         warn(msg, FutureWarning, stacklevel=2)

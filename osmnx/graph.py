@@ -99,6 +99,12 @@ def graph_from_bbox(
         warn(msg, FutureWarning, stacklevel=2)
         bbox = (north, south, east, west)
 
+    msg = (
+        "The expected order of coordinates in `bbox` will change in the "
+        "v2.0.0 release to `(left, bottom, right, top)`."
+    )
+    warn(msg, FutureWarning, stacklevel=2)
+
     # convert bounding box to a polygon
     polygon = utils_geo.bbox_to_poly(bbox=bbox)
 
