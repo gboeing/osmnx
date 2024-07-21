@@ -644,12 +644,10 @@ def plot_footprints(  # noqa: PLR0913
 
     # determine figure extents
     if bbox is None:
-        left, bottom, right, top = gdf.total_bounds
-    else:
-        left, bottom, right, top = bbox
+        bbox = gdf.total_bounds
 
     # configure axes appearance, save/show figure as specified, and return
-    ax = _config_ax(ax, gdf.crs, (left, bottom, right, top), 0)  # type: ignore[arg-type]
+    ax = _config_ax(ax, gdf.crs, bbox, 0)  # type: ignore[arg-type]
     fig, ax = _save_and_show(
         fig=fig,
         ax=ax,

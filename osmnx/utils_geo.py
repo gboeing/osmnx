@@ -375,20 +375,21 @@ def bbox_from_point(
     bottom = lat - delta_lat
     right = lon + delta_lon
     left = lon - delta_lon
+    bbox = left, bottom, right, top
 
     if project_utm:
-        bbox_poly = bbox_to_poly(bbox=(left, bottom, right, top))
+        bbox_poly = bbox_to_poly(bbox=bbox)
         bbox_proj, crs_proj = projection.project_geometry(bbox_poly)
-        left, bottom, right, top = bbox_proj.bounds
+        bbox = bbox_proj.bounds
 
-    msg = f"Created bbox {dist} m from {point}: {top},{bottom},{right},{left}"
+    msg = f"Created bbox {dist} meters from {point}: {bbox}"
     utils.log(msg, level=lg.INFO)
 
     if project_utm and return_crs:
-        return (left, bottom, right, top), crs_proj
+        return bbox, crs_proj
 
     # otherwise
-    return left, bottom, right, top
+    return bbox
 
 
 def bbox_to_poly(bbox: tuple[float, float, float, float]) -> Polygon:
