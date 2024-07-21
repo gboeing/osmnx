@@ -266,8 +266,7 @@ def features_from_place(
     gdf
     """
     # extract the geometry from the GeoDataFrame to use in query
-    gdf_place = geocoder.geocode_to_gdf(query, which_result=which_result)
-    polygon = gdf_place["geometry"].union_all()
+    polygon = geocoder.geocode_to_gdf(query, which_result=which_result).union_all()
     msg = "Constructed place geometry polygon(s) to query Overpass"
     utils.log(msg, level=lg.INFO)
 
