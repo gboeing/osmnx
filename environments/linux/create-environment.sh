@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-ENV=ox
+ENV=ox_v1
 PACKAGE=osmnx
 eval "$(conda shell.bash hook)"
 conda deactivate

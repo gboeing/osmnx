@@ -2,6 +2,19 @@
 osmnx
 python == 3.11.*
 
+# dependencies
+gdal == 3.9.*
+geopandas == 0.14.*
+matplotlib == 3.8.*
+networkx == 3.3.*
+numpy == 1.26.*
+pandas == 2.2.*
+rasterio == 1.3.*
+requests == 2.32.*
+scikit-learn == 1.5.*
+scipy == 1.13.*
+shapely == 2.0.*
+
 # helpful
 beautifulsoup4
 bokeh
