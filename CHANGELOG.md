@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.4 (TBD)
+
+- pin maximum dependency versions for remaining v1 releases
+- add warning to note that the order of bounding box coordinates will change in v2
+
 ## 1.9.3 (2024-05-01)
 
 - update the official package reference paper (#1169)
