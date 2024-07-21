@@ -77,7 +77,7 @@ def truncate_graph_bbox(
     G
         Input graph.
     bbox
-        Bounding box as `(north, south, east, west)`.
+        Bounding box as `(left, bottom, right, top)`.
     truncate_by_edge
         If True, retain nodes outside bounding box if at least one of node's
         neighbors is within the bounding box.

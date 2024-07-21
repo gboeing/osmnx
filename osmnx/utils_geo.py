@@ -170,11 +170,11 @@ def _quadrat_cut_geometry(geometry: Polygon | MultiPolygon, quadrat_width: float
     min_num = 3
 
     # create n evenly spaced points between the min and max x and y bounds
-    west, south, east, north = geometry.bounds
-    x_num = int(np.ceil((east - west) / quadrat_width) + 1)
-    y_num = int(np.ceil((north - south) / quadrat_width) + 1)
-    x_points = np.linspace(west, east, num=max(x_num, min_num))
-    y_points = np.linspace(south, north, num=max(y_num, min_num))
+    left, bottom, right, top = geometry.bounds
+    x_num = int(np.ceil((right - left) / quadrat_width) + 1)
+    y_num = int(np.ceil((top - bottom) / quadrat_width) + 1)
+    x_points = np.linspace(left, right, num=max(x_num, min_num))
+    y_points = np.linspace(bottom, top, num=max(y_num, min_num))
 
     # create a quadrat grid of lines at each of the evenly spaced points
     vertical_lines = [LineString([(x, y_points[0]), (x, y_points[-1])]) for x in x_points]
@@ -347,8 +347,8 @@ def bbox_from_point(
     """
     Create a bounding box around a (lat, lon) point.
 
-    Create a bounding box some distance (in meters) in each direction (north,
-    south, east, and west) from the center point and optionally project it.
+    Create a bounding box some distance (in meters) in each direction (top,
+    bottom, right, and left) from the center point and optionally project it.
 
     Parameters
     ----------
@@ -364,31 +364,32 @@ def bbox_from_point(
     Returns
     -------
     bbox or bbox, crs
-        `(north, south, east, west)` or `((north, south, east, west), crs)`.
+        `(left, bottom, right, top)` or `((left, bottom, right, top), crs)`.
     """
     EARTH_RADIUS_M = 6_371_009  # meters
     lat, lon = point
 
     delta_lat = (dist / EARTH_RADIUS_M) * (180 / np.pi)
     delta_lon = (dist / EARTH_RADIUS_M) * (180 / np.pi) / np.cos(lat * np.pi / 180)
-    north = lat + delta_lat
-    south = lat - delta_lat
-    east = lon + delta_lon
-    west = lon - delta_lon
+    top = lat + delta_lat
+    bottom = lat - delta_lat
+    right = lon + delta_lon
+    left = lon - delta_lon
+    bbox = left, bottom, right, top
 
     if project_utm:
-        bbox_poly = bbox_to_poly(bbox=(north, south, east, west))
+        bbox_poly = bbox_to_poly(bbox=bbox)
         bbox_proj, crs_proj = projection.project_geometry(bbox_poly)
-        west, south, east, north = bbox_proj.bounds
+        bbox = bbox_proj.bounds
 
-    msg = f"Created bbox {dist} m from {point}: {north},{south},{east},{west}"
+    msg = f"Created bbox {dist} meters from {point}: {bbox}"
     utils.log(msg, level=lg.INFO)
 
     if project_utm and return_crs:
-        return (north, south, east, west), crs_proj
+        return bbox, crs_proj
 
     # otherwise
-    return north, south, east, west
+    return bbox
 
 
 def bbox_to_poly(bbox: tuple[float, float, float, float]) -> Polygon:
@@ -398,11 +399,11 @@ def bbox_to_poly(bbox: tuple[float, float, float, float]) -> Polygon:
     Parameters
     ----------
     bbox
-        Bounding box as `(north, south, east, west)`.
+        Bounding box as `(left, bottom, right, top)`.
 
     Returns
     -------
     polygon
     """
-    north, south, east, west = bbox
-    return Polygon([(west, south), (east, south), (east, north), (west, north)])
+    left, bottom, right, top = bbox
+    return Polygon([(left, bottom), (right, bottom), (right, top), (left, top)])

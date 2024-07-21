@@ -535,17 +535,17 @@ def test_save_load() -> None:  # noqa: PLR0915
     # create list, set, and dict attributes for nodes and edges
     rand_ints_nodes = np.random.default_rng().integers(low=0, high=10, size=len(G.nodes))
     rand_ints_edges = np.random.default_rng().integers(low=0, high=10, size=len(G.edges))
-    list_node_attrs = {n: [n, r] for n, r in zip(G.nodes, rand_ints_nodes)}
+    list_node_attrs = {n: [n, int(r)] for n, r in zip(G.nodes, rand_ints_nodes)}
     nx.set_node_attributes(G, list_node_attrs, "test_list")
-    list_edge_attrs = {e: [e, r] for e, r in zip(G.edges, rand_ints_edges)}
+    list_edge_attrs = {e: [e, int(r)] for e, r in zip(G.edges, rand_ints_edges)}
     nx.set_edge_attributes(G, list_edge_attrs, "test_list")
-    set_node_attrs = {n: {n, r} for n, r in zip(G.nodes, rand_ints_nodes)}
+    set_node_attrs = {n: {n, int(r)} for n, r in zip(G.nodes, rand_ints_nodes)}
     nx.set_node_attributes(G, set_node_attrs, "test_set")
-    set_edge_attrs = {e: {e, r} for e, r in zip(G.edges, rand_ints_edges)}
+    set_edge_attrs = {e: {e, int(r)} for e, r in zip(G.edges, rand_ints_edges)}
     nx.set_edge_attributes(G, set_edge_attrs, "test_set")
-    dict_node_attrs = {n: {n: r} for n, r in zip(G.nodes, rand_ints_nodes)}
+    dict_node_attrs = {n: {n: int(r)} for n, r in zip(G.nodes, rand_ints_nodes)}
     nx.set_node_attributes(G, dict_node_attrs, "test_dict")
-    dict_edge_attrs = {e: {e: r} for e, r in zip(G.edges, rand_ints_edges)}
+    dict_edge_attrs = {e: {e: int(r)} for e, r in zip(G.edges, rand_ints_edges)}
     nx.set_edge_attributes(G, dict_edge_attrs, "test_dict")
 
     # save/load graph as graphml file
@@ -664,12 +664,12 @@ def test_features() -> None:
 
     # features_from_bbox - bounding box query to return no data
     with pytest.raises(ox._errors.InsufficientResponseError):
-        gdf = ox.features_from_bbox(bbox=(-2.000, -2.001, -2.000, -2.001), tags={"building": True})
+        gdf = ox.features_from_bbox(bbox=(-2.001, -2.001, -2.000, -2.000), tags={"building": True})
 
     # features_from_bbox - successful
     gdf = ox.features_from_bbox(bbox, tags=tags1)
     fig, ax = ox.plot_footprints(gdf)
-    fig, ax = ox.plot_footprints(gdf, ax=ax, bbox=(10, 0, 10, 0))
+    fig, ax = ox.plot_footprints(gdf, ax=ax, bbox=(0, 0, 10, 10))
 
     # features_from_point - tests multipolygon creation
     gdf = ox.utils_geo.bbox_from_point(location_point, dist=500)

@@ -8,7 +8,6 @@ from typing import Any
 
 import geopandas as gpd
 import networkx as nx
-import numpy as np
 import pandas as pd
 from shapely import LineString
 from shapely import Point
@@ -622,7 +621,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         Keys are node attribute names and values are aggregation functions
         (anything accepted as an argument by `pandas.agg`). Node attributes
         not in `node_attr_aggs` will contain the unique values across the
-        merged nodes. If None, defaults to `{"elevation": numpy.mean}`.
+        merged nodes. If None, defaults to `{"elevation": "mean"}`.
 
     Returns
     -------
@@ -632,7 +631,7 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     """
     # default node attributes to aggregate upon consolidation
     if node_attr_aggs is None:
-        node_attr_aggs = {"elevation": np.mean}
+        node_attr_aggs = {"elevation": "mean"}
 
     # STEP 1
     # buffer nodes to passed-in distance and merge overlaps. turn merged nodes

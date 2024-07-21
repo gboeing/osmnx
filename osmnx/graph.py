@@ -62,7 +62,7 @@ def graph_from_bbox(
     Parameters
     ----------
     bbox
-        Bounding box as `(north, south, east, west)`. Coordinates should be in
+        Bounding box as `(left, bottom, right, top)`. Coordinates should be in
         unprojected latitude-longitude degrees (EPSG:4326).
     network_type
         {"all", "all_public", "bike", "drive", "drive_service", "walk"}
