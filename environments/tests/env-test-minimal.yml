@@ -10,8 +10,8 @@ dependencies:
   # requirements (pinned to min versions from /pyproject.toml)
   - geopandas=1.0
   - networkx=2.5
-  - numpy=1.21
-  - pandas=1.1
+  - numpy=1.22
+  - pandas=1.4
   - python=3.9
   - requests=2.27
   - shapely=2.0
