@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.9.4 (TBD)
+## 1.9.4 (2024-07-24)
 
 - pin maximum dependency versions for remaining v1 releases
 - add warning to note that the order of bounding box coordinates will change in v2
