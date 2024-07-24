@@ -41,6 +41,11 @@ Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123)
 - rename private \_downloader module to \_http (#1114)
 - remove unnecessary private \_api module (#1114)
 
+## 1.9.4 (2024-07-24)
+
+- pin maximum dependency versions for remaining v1 releases
+- add warning to note that the order of bounding box coordinates will change in v2
+
 ## 1.9.3 (2024-05-01)
 
 - update the official package reference paper (#1169)
