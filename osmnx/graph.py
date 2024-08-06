@@ -44,7 +44,7 @@ def graph_from_bbox(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    custom_filter: str | None = None,
+    custom_filter: str | list[str] | None = None,
 ) -> nx.MultiDiGraph:
     """
     Download and create a graph within a lat-lon bounding box.
@@ -118,7 +118,7 @@ def graph_from_point(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    custom_filter: str | None = None,
+    custom_filter: str | list[str] | None = None,
 ) -> nx.MultiDiGraph:
     """
     Download and create a graph within some distance of a lat-lon point.
@@ -210,7 +210,7 @@ def graph_from_address(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    custom_filter: str | None = None,
+    custom_filter: str | list[str] | None = None,
 ) -> nx.MultiDiGraph | tuple[nx.MultiDiGraph, tuple[float, float]]:
     """
     Download and create a graph within some distance of an address.
@@ -293,7 +293,7 @@ def graph_from_place(
     retain_all: bool = False,
     truncate_by_edge: bool = False,
     which_result: int | None | list[int | None] = None,
-    custom_filter: str | None = None,
+    custom_filter: str | list[str] | None = None,
 ) -> nx.MultiDiGraph:
     """
     Download and create a graph within the boundaries of some place(s).
@@ -382,7 +382,7 @@ def graph_from_polygon(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    custom_filter: str | None = None,
+    custom_filter: str | list[str] | None = None,
 ) -> nx.MultiDiGraph:
     """
     Download and create a graph within the boundaries of a (Multi)Polygon.
