@@ -13,9 +13,9 @@ dependencies:
   - shapely
 
   # extras
-  - gdal
   - matplotlib
   - rasterio
+  - rio-vrt
   - scikit-learn
   - scipy
 

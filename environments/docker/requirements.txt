@@ -1,5 +1,6 @@
 # basics
 osmnx
+rio-vrt
 python == 3.12.*
 
 # helpful extras
