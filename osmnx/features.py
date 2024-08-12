@@ -505,7 +505,7 @@ def _build_way_geometry(
 
     A way can be a LineString (open or closed way) or a Polygon (closed way)
     but multi-geometries and polygons with holes are represented as relations.
-    See documentation: https://wiki.openstreetmap.org/wiki/Way#Types_of_way
+    See documentation: https://wiki.openstreetmap.org/wiki/Way#Types_of_ways
 
     Parameters
     ----------
