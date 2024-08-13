@@ -77,9 +77,14 @@ def graph_from_bbox(
         neighbors is within the bounding box.
     custom_filter
         A custom ways filter to be used instead of the `network_type` presets,
-        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
-        in a `network_type` that is in `settings.bidirectional_network_types`
-        if you want the graph to be fully bidirectional.
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. 
+        If single `str` is provded, intersection will be used to combine results, 
+        e.g `'[maxspeed=50][lanes=2]'` will query all ways with maximum speed
+        of 50 and having two lanes.
+        If `list[str]`, union will be used, e.g. `['[maxspeed=50]', '[lanes=2]']`
+        will query all ways with maximum speed of 50 or having two lanes.
+        Also pass in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional. 
 
     Returns
     -------
@@ -160,9 +165,14 @@ def graph_from_point(
         neighbors is within the bounding box.
     custom_filter
         A custom ways filter to be used instead of the `network_type` presets,
-        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
-        in a `network_type` that is in `settings.bidirectional_network_types`
-        if you want the graph to be fully bidirectional.
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. 
+        If single `str` is provded, intersection will be used to combine results, 
+        e.g `'[maxspeed=50][lanes=2]'` will query all ways with maximum speed
+        of 50 and having two lanes.
+        If `list[str]`, union will be used, e.g. `['[maxspeed=50]', '[lanes=2]']`
+        will query all ways with maximum speed of 50 or having two lanes.
+        Also pass in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional. 
 
     Returns
     -------
@@ -251,9 +261,14 @@ def graph_from_address(
         neighbors is within the bounding box.
     custom_filter
         A custom ways filter to be used instead of the `network_type` presets,
-        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
-        in a `network_type` that is in `settings.bidirectional_network_types`
-        if you want the graph to be fully bidirectional.
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. 
+        If single `str` is provded, intersection will be used to combine results, 
+        e.g `'[maxspeed=50][lanes=2]'` will query all ways with maximum speed
+        of 50 and having two lanes.
+        If `list[str]`, union will be used, e.g. `['[maxspeed=50]', '[lanes=2]']`
+        will query all ways with maximum speed of 50 or having two lanes.
+        Also pass in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional. 
 
     Returns
     -------
@@ -341,9 +356,14 @@ def graph_from_place(
         (Multi)Polygon or raise an error if OSM doesn't return one.
     custom_filter
         A custom ways filter to be used instead of the `network_type` presets,
-        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
-        in a `network_type` that is in `settings.bidirectional_network_types`
-        if you want the graph to be fully bidirectional.
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. 
+        If single `str` is provded, intersection will be used to combine results, 
+        e.g `'[maxspeed=50][lanes=2]'` will query all ways with maximum speed
+        of 50 and having two lanes.
+        If `list[str]`, union will be used, e.g. `['[maxspeed=50]', '[lanes=2]']`
+        will query all ways with maximum speed of 50 or having two lanes.
+        Also pass in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional. 
 
     Returns
     -------
@@ -415,9 +435,14 @@ def graph_from_polygon(
         neighbors is within the bounding box.
     custom_filter
         A custom ways filter to be used instead of the `network_type` presets,
-        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. Also pass
-        in a `network_type` that is in `settings.bidirectional_network_types`
-        if you want the graph to be fully bidirectional.
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. 
+        If single `str` is provded, intersection will be used to combine results, 
+        e.g `'[maxspeed=50][lanes=2]'` will query all ways with maximum speed
+        of 50 and having two lanes.
+        If `list[str]`, union will be used, e.g. `['[maxspeed=50]', '[lanes=2]']`
+        will query all ways with maximum speed of 50 or having two lanes.
+        Also pass in a `network_type` that is in `settings.bidirectional_network_types`
+        if you want the graph to be fully bidirectional. 
 
     Returns
     -------
