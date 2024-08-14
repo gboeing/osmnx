@@ -40,6 +40,8 @@ Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123)
 - rename osm_xml module to \_osm_xml to make it private, as all its functions are private (#1113)
 - rename private \_downloader module to \_http (#1114)
 - remove unnecessary private \_api module (#1114)
+- optimize \_remove_polygon_holes function for improved performance with complex geometries (#1200)
+- enhance efficiency of \_create_gdf function in feature processing (#1200)
 
 ## 1.9.4 (2024-07-24)
 
