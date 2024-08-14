@@ -409,14 +409,13 @@ def _create_gdf(
         raise CacheOnlyInterruptError(msg)
 
     # convert the elements into a GeoDataFrame of features
-    idx = ["element", "id"]
     gdf = (
         gpd.GeoDataFrame(
             data=_process_features(elements, set(tags.keys())),
             geometry="geometry",
             crs=settings.default_crs,
         )
-        .set_index(idx)
+        .set_index(["element", "id"])
         .sort_index()
     )
     return _filter_features(gdf, polygon, tags)
@@ -641,7 +640,7 @@ def _remove_polygon_holes(
         # if there are no holes to remove, geom is the union of outer polygons
         geometry = unary_union(outer_polygons)
     else:
-        # otherwise, remove from each outer poly each inner poly it contains
+        # otherwise, remove from each outer poly all inner polys it contains
         polygons_with_holes = []
         for outer in outer_polygons:
             prepare(outer)

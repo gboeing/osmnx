@@ -369,15 +369,15 @@ def _download_overpass_network(
     response_json
         JSON response from the Overpass server.
     """
-    # create a filter to exclude certain kinds of ways based on the requested
+    # create filter(s) to exclude certain kinds of ways based on the requested
     # network_type, if provided, otherwise use custom_filter
-    way_filter = []
+    way_filters = []
     if isinstance(custom_filter, list):
-        way_filter = custom_filter
+        way_filters = custom_filter
     elif isinstance(custom_filter, str):
-        way_filter = [custom_filter]
+        way_filters = [custom_filter]
     else:
-        way_filter = [_get_network_filter(network_type)]
+        way_filters = [_get_network_filter(network_type)]
 
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
@@ -390,10 +390,8 @@ def _download_overpass_network(
     # pass exterior coordinates of each polygon in list to API, one at a time
     # the '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
-        for way_filter_str in way_filter:
-            query_str = (
-                f"{overpass_settings};(way{way_filter_str}(poly:{polygon_coord_str!r});>;);out;"
-            )
+        for way_filter in way_filters:
+            query_str = f"{overpass_settings};(way{way_filter}(poly:{polygon_coord_str!r});>;);out;"
             yield _overpass_request(OrderedDict(data=query_str))
 
 
