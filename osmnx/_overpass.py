@@ -350,7 +350,7 @@ def _create_overpass_features_query(  # noqa: PLR0912
 def _download_overpass_network(
     polygon: Polygon | MultiPolygon,
     network_type: str,
-    custom_filter: str | None,
+    custom_filter: str | list[str] | None,
 ) -> Iterator[dict[str, Any]]:
     """
     Retrieve networked ways and nodes within boundary from the Overpass API.
@@ -371,7 +371,13 @@ def _download_overpass_network(
     """
     # create a filter to exclude certain kinds of ways based on the requested
     # network_type, if provided, otherwise use custom_filter
-    way_filter = custom_filter if custom_filter is not None else _get_network_filter(network_type)
+    way_filter = []
+    if isinstance(custom_filter, list):
+        way_filter = custom_filter
+    elif isinstance(custom_filter, str):
+        way_filter = [custom_filter]
+    else:
+        way_filter = [_get_network_filter(network_type)]
 
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
@@ -384,8 +390,11 @@ def _download_overpass_network(
     # pass exterior coordinates of each polygon in list to API, one at a time
     # the '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
-        query_str = f"{overpass_settings};(way{way_filter}(poly:{polygon_coord_str!r});>;);out;"
-        yield _overpass_request(OrderedDict(data=query_str))
+        for way_filter_str in way_filter:
+            query_str = (
+                f"{overpass_settings};(way{way_filter_str}(poly:{polygon_coord_str!r});>;);out;"
+            )
+            yield _overpass_request(OrderedDict(data=query_str))
 
 
 def _download_overpass_features(
