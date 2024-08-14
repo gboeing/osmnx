@@ -26,6 +26,7 @@ from shapely import MultiLineString
 from shapely import MultiPolygon
 from shapely import Point
 from shapely import Polygon
+from shapely import prepare
 from shapely.errors import GEOSException
 from shapely.ops import linemerge
 from shapely.ops import polygonize
@@ -408,9 +409,15 @@ def _create_gdf(
         raise CacheOnlyInterruptError(msg)
 
     # convert the elements into a GeoDataFrame of features
-    idx = ["element", "id"]
-    features = _process_features(elements, set(tags.keys()))
-    gdf = gpd.GeoDataFrame(features, geometry="geometry", crs=settings.default_crs).set_index(idx)
+    gdf = (
+        gpd.GeoDataFrame(
+            data=_process_features(elements, set(tags.keys())),
+            geometry="geometry",
+            crs=settings.default_crs,
+        )
+        .set_index(["element", "id"])
+        .sort_index()
+    )
     return _filter_features(gdf, polygon, tags)
 
 
@@ -633,13 +640,12 @@ def _remove_polygon_holes(
         # if there are no holes to remove, geom is the union of outer polygons
         geometry = unary_union(outer_polygons)
     else:
-        # otherwise, remove from each outer poly each inner poly it contains
+        # otherwise, remove from each outer poly all inner polys it contains
         polygons_with_holes = []
         for outer in outer_polygons:
-            for inner in inner_polygons:
-                if outer.contains(inner):
-                    outer = outer.difference(inner)  # noqa: PLW2901
-            polygons_with_holes.append(outer)
+            prepare(outer)
+            holes = [inner for inner in inner_polygons if outer.contains(inner)]
+            polygons_with_holes.append(outer.difference(unary_union(holes)))
         geometry = unary_union(polygons_with_holes)
 
     # ensure returned geometry is a Polygon or MultiPolygon
