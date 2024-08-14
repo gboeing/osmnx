@@ -637,6 +637,10 @@ def test_graph_from() -> None:
         network_type="all_public",
     )
 
+    # test union of multiple custom filters
+    cf_union = ['["highway"~"tertiary"]', '["railway"~"tram"]']
+    G = ox.graph_from_point(location_point, dist=500, custom_filter=cf_union, retain_all=True)
+
     ox.settings.overpass_memory = 1073741824
     G = ox.graph_from_point(
         location_point,
@@ -703,3 +707,20 @@ def test_features() -> None:
         gdf = ox.features_from_xml(filename)
         assert "Willow Street" in gdf["name"].to_numpy()
     Path.unlink(Path(temp_filename))
+
+    # test the "island within a hole" and "touching inner rings" use cases
+    # https://wiki.openstreetmap.org/wiki/Relation:multipolygon#Island_within_a_hole
+    # https://wiki.openstreetmap.org/wiki/Relation:multipolygon#Touching_inner_rings
+    outer1 = Polygon(((0, 0), (4, 0), (4, 4), (0, 4)))
+    inner1 = Polygon(((1, 1), (2, 1), (2, 3), (1, 3)))
+    inner2 = Polygon(((2, 1), (3, 1), (3, 3), (2, 3)))
+    outer2 = Polygon(((1.5, 1.5), (2.5, 1.5), (2.5, 2.5), (1.5, 2.5)))
+    outer_polygons = [outer1, outer2]
+    inner_polygons = [inner1, inner2]
+    result = ox.features._remove_polygon_holes(outer_polygons, inner_polygons)
+    geom_wkt = (
+        "MULTIPOLYGON (((4 4, 4 0, 0 0, 0 4, 4 4), "
+        "(3 1, 3 3, 2 3, 1 3, 1 1, 2 1, 3 1)), "
+        "((2.5 2.5, 2.5 1.5, 1.5 1.5, 1.5 2.5, 2.5 2.5)))"
+    )
+    assert result == wkt.loads(geom_wkt)
