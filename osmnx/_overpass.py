@@ -391,7 +391,9 @@ def _download_overpass_network(
     # the '>' makes it recurse so we get ways and the ways' nodes.
     for polygon_coord_str in polygon_coord_strs:
         for way_filter_str in way_filter:
-            query_str = f"{overpass_settings};(way{way_filter_str}(poly:{polygon_coord_str!r});>;);out;"
+            query_str = (
+                f"{overpass_settings};(way{way_filter_str}(poly:{polygon_coord_str!r});>;);out;"
+            )
             yield _overpass_request(OrderedDict(data=query_str))
 
 
