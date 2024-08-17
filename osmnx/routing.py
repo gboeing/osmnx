@@ -470,7 +470,8 @@ def _verify_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
     None
     """
     try:
-        values_float = (np.array(tuple(G.edges(data=attr)))[:, 2]).astype(float)
+        edges_data = np.array(tuple(G.edges(data=attr)), dtype=object)[:, 2]
+        values_float = edges_data.astype(float)
         if np.isnan(values_float).any():
             msg = f"The attribute {attr!r} is missing or null on some edges."
             warn(msg, category=UserWarning, stacklevel=2)
