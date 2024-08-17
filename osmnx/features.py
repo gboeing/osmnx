@@ -680,7 +680,7 @@ def _filter_features(
         Filtered GeoDataFrame of features.
     """
     # remove any null or empty geometries then fix any invalid geometries
-    gdf = gdf[~(gdf["geometry"].isna() | gdf["geometry"].is_empty)]
+    gdf = gdf[~(gdf["geometry"].isna() | gdf["geometry"].is_empty)].copy()
     gdf.loc[:, "geometry"] = gdf["geometry"].make_valid()
 
     # retain rows with geometries that intersect the polygon
