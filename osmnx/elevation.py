@@ -24,13 +24,13 @@ from ._errors import InsufficientResponseError
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-# rasterio and gdal are optional dependencies for raster querying
+# rasterio and rio-vrt are optional dependencies for raster querying
 try:
     import rasterio
-    from osgeo import gdal
+    from rio_vrt import build_vrt
 except ImportError:  # pragma: no cover
     rasterio = None
-    gdal = None
+    build_vrt = None
 
 
 def add_edge_grades(G: nx.MultiDiGraph, *, add_absolute: bool = True) -> nx.MultiDiGraph:
@@ -137,8 +137,8 @@ def add_node_elevations_raster(
     G
         Graph with `elevation` attributes on the nodes.
     """
-    if rasterio is None or gdal is None:  # pragma: no cover
-        msg = "gdal and rasterio must be installed as optional dependencies to query raster files."
+    if rasterio is None or build_vrt is None:  # pragma: no cover
+        msg = "rasterio and rio-vrt must be installed as optional dependencies to query rasters."
         raise ImportError(msg)
 
     if cpus is None:
@@ -153,8 +153,7 @@ def add_node_elevations_raster(
         filepaths = [str(p) for p in filepath]
         checksum = sha1(str(filepaths).encode("utf-8")).hexdigest()  # noqa: S324
         filepath = f"./.osmnx_{checksum}.vrt"
-        gdal.UseExceptions()
-        gdal.BuildVRT(filepath, filepaths).FlushCache()
+        build_vrt(filepath, filepaths)
 
     nodes = convert.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
     if cpus == 1:
