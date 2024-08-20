@@ -26,6 +26,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           cache: "pip"
+          python-version: "3.12"
 
       - name: Install OSMnx with dependency pre-releases
         run: |
