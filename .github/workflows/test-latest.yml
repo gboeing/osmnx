@@ -1,4 +1,4 @@
-name: Test latest versions
+name: Test latest/pre-release dependency versions
 
 on:
   schedule:
