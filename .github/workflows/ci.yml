@@ -39,6 +39,7 @@ jobs:
           python -m pip install -e .
           python -m pip list -v
           python -m pip show osmnx
+          python --version
 
       - name: Cache pre-commit
         uses: actions/cache@v4
