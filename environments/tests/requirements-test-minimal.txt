@@ -2,8 +2,8 @@
 # environment to run the test suite against the oldest supported versions of
 # Python and the required/optional dependencies.
 
-# python (pinned to min version from /pyproject.toml)
-python == 3.9
+# pin python-version in ./github/workflows/test-minimal.yml to min version
+# from /pyproject.toml
 
 # requirements (pinned to min versions from /pyproject.toml)
 geopandas == 1.0
