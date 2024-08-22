@@ -17,9 +17,9 @@ dependencies:
   - shapely=2.0
 
   # extras (pinned to min versions from /pyproject.toml)
-  - gdal
   - matplotlib=3.5
   - rasterio=1.3
+  - rio-vrt=0.3
   - scikit-learn=1.0
   - scipy=1.5
 

@@ -723,4 +723,4 @@ def test_features() -> None:
         "(3 1, 3 3, 2 3, 1 3, 1 1, 2 1, 3 1)), "
         "((2.5 2.5, 2.5 1.5, 1.5 1.5, 1.5 2.5, 2.5 2.5)))"
     )
-    assert result == wkt.loads(geom_wkt)
+    assert result.equals(wkt.loads(geom_wkt))
