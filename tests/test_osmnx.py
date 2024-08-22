@@ -43,11 +43,11 @@ location_point = (37.791427, -122.410018)
 address = "600 Montgomery St, San Francisco, California, USA"
 place1 = {"city": "Piedmont", "state": "California", "country": "USA"}
 place2 = "SoHo, New York, NY"
-p = (
+polygon_wkt = (
     "POLYGON ((-122.262 37.869, -122.255 37.869, -122.255 37.874,"
     "-122.262 37.874, -122.262 37.869))"
 )
-polygon = wkt.loads(p)
+polygon = ox.utils_geo.buffer_geometry(geometry=wkt.loads(polygon_wkt), dist=1)
 
 
 def test_logging() -> None:
