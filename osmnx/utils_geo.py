@@ -11,6 +11,7 @@ from warnings import warn
 
 import networkx as nx
 import numpy as np
+from shapely import Geometry
 from shapely import LineString
 from shapely import MultiPolygon
 from shapely import Polygon
@@ -25,6 +26,32 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
     import geopandas as gpd
+
+
+def buffer_geometry(geometry: Geometry, dist: float) -> Geometry:
+    """
+    Buffer an unprojected Shapely geometry by some distance in meters.
+
+    Parameters
+    ----------
+    geometry
+        The geometry to be buffered. Coordinates should be in unprojected
+        latitude-longitude degrees (EPSG:4326).
+    dist
+        The buffer distance in meters.
+
+    Returns
+    -------
+    geometry_buff
+        The (also unprojected) buffered geometry.
+    """
+    geometry_proj, crs_proj = projection.project_geometry(geometry)
+    geometry_buff, _ = projection.project_geometry(
+        geometry=geometry_proj.buffer(dist),
+        crs=crs_proj,
+        to_latlong=True,
+    )
+    return geometry_buff
 
 
 def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
