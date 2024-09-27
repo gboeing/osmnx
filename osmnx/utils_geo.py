@@ -28,13 +28,13 @@ if TYPE_CHECKING:
     import geopandas as gpd
 
 
-def buffer_geometry(geometry: Geometry, dist: float) -> Geometry:
+def buffer_geometry(geom: Geometry, dist: float) -> Geometry:
     """
     Buffer an unprojected Shapely geometry by some distance in meters.
 
     Parameters
     ----------
-    geometry
+    geom
         The geometry to be buffered. Coordinates should be in unprojected
         latitude-longitude degrees (EPSG:4326).
     dist
@@ -45,13 +45,13 @@ def buffer_geometry(geometry: Geometry, dist: float) -> Geometry:
     geometry_buff
         The (also unprojected) buffered geometry.
     """
-    geometry_proj, crs_proj = projection.project_geometry(geometry)
-    geometry_buff, _ = projection.project_geometry(
-        geometry=geometry_proj.buffer(dist),
+    geom_proj, crs_proj = projection.project_geometry(geom)
+    geom_buff, _ = projection.project_geometry(
+        geometry=geom_proj.buffer(dist),
         crs=crs_proj,
         to_latlong=True,
     )
-    return geometry_buff
+    return geom_buff
 
 
 def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
@@ -74,7 +74,7 @@ def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
 
     Returns
     -------
-    point
+    points
         The sampled points, multi-indexed by `(u, v, key)` of the edge from
         which each point was sampled.
     """
@@ -118,7 +118,7 @@ def interpolate_points(geom: LineString, dist: float) -> Iterator[tuple[float, f
         raise TypeError(msg)
 
 
-def _consolidate_subdivide_geometry(geometry: Polygon | MultiPolygon) -> MultiPolygon:
+def _consolidate_subdivide_geometry(geom: Polygon | MultiPolygon) -> MultiPolygon:
     """
     Consolidate and subdivide some (projected) geometry.
 
@@ -136,27 +136,25 @@ def _consolidate_subdivide_geometry(geometry: Polygon | MultiPolygon) -> MultiPo
 
     Parameters
     ----------
-    geometry
+    geom
         The projected (in meter units) geometry to consolidate and subdivide.
 
     Returns
     -------
-    geometry
+    geom
     """
-    if not isinstance(geometry, (Polygon, MultiPolygon)):  # pragma: no cover
+    if not isinstance(geom, (Polygon, MultiPolygon)):  # pragma: no cover
         msg = "Geometry must be a shapely Polygon or MultiPolygon."
         raise TypeError(msg)
 
     # if geometry is either 1) a Polygon whose area exceeds the max size, or
     # 2) a MultiPolygon, then get the convex hull around the geometry
     mqas = settings.max_query_area_size
-    if isinstance(geometry, MultiPolygon) or (
-        isinstance(geometry, Polygon) and geometry.area > mqas
-    ):
-        geometry = geometry.convex_hull
+    if isinstance(geom, MultiPolygon) or (isinstance(geom, Polygon) and geom.area > mqas):
+        geom = geom.convex_hull
 
     # warn user if they passed a geometry with area much larger than max size
-    ratio = int(geometry.area / mqas)
+    ratio = int(geom.area / mqas)
     warning_threshold = 10
     if ratio > warning_threshold:
         msg = (
@@ -168,22 +166,22 @@ def _consolidate_subdivide_geometry(geometry: Polygon | MultiPolygon) -> MultiPo
 
     # if geometry area exceeds max size, subdivide it into smaller subpolygons
     # that are no greater than settings.max_query_area_size in size
-    if geometry.area > mqas:
-        geometry = _quadrat_cut_geometry(geometry, quadrat_width=np.sqrt(mqas))
+    if geom.area > mqas:
+        geom = _quadrat_cut_geometry(geom, quadrat_width=np.sqrt(mqas))
 
-    if isinstance(geometry, Polygon):
-        geometry = MultiPolygon([geometry])
+    if isinstance(geom, Polygon):
+        geom = MultiPolygon([geom])
 
-    return geometry
+    return geom
 
 
-def _quadrat_cut_geometry(geometry: Polygon | MultiPolygon, quadrat_width: float) -> MultiPolygon:
+def _quadrat_cut_geometry(geom: Polygon | MultiPolygon, quadrat_width: float) -> MultiPolygon:
     """
     Split a Polygon or MultiPolygon up into sub-polygons of a specified size.
 
     Parameters
     ----------
-    geometry
+    geom
         The geometry to split up into smaller sub-polygons.
     quadrat_width
         Width (in geometry's units) of quadrat squares with which to split up
@@ -191,13 +189,13 @@ def _quadrat_cut_geometry(geometry: Polygon | MultiPolygon, quadrat_width: float
 
     Returns
     -------
-    geometry
+    geom
     """
     # min number of dividing lines (3 produces a grid of 4 quadrat squares)
     min_num = 3
 
     # create n evenly spaced points between the min and max x and y bounds
-    left, bottom, right, top = geometry.bounds
+    left, bottom, right, top = geom.bounds
     x_num = int(np.ceil((right - left) / quadrat_width) + 1)
     y_num = int(np.ceil((top - bottom) / quadrat_width) + 1)
     x_points = np.linspace(left, right, num=max(x_num, min_num))
@@ -209,18 +207,18 @@ def _quadrat_cut_geometry(geometry: Polygon | MultiPolygon, quadrat_width: float
     lines = vertical_lines + horizont_lines
 
     # recursively split the geometry by each quadrat line
-    geometries = [geometry]
+    geoms = [geom]
     for line in lines:
         # split polygon by line if they intersect, otherwise just keep it
-        split_geoms = [split(g, line).geoms if g.intersects(line) else [g] for g in geometries]
+        split_geoms = [split(g, line).geoms if g.intersects(line) else [g] for g in geoms]
         # now flatten the list and process these split geoms on the next line in the list of lines
-        geometries = [g for g_list in split_geoms for g in g_list]
+        geoms = [g for g_list in split_geoms for g in g_list]
 
-    return MultiPolygon(geometries)
+    return MultiPolygon(geoms)
 
 
 def _intersect_index_quadrats(
-    geometries: gpd.GeoSeries,
+    geoms: gpd.GeoSeries,
     polygon: Polygon | MultiPolygon,
 ) -> set[Any]:
     """
@@ -232,7 +230,7 @@ def _intersect_index_quadrats(
 
     Parameters
     ----------
-    geometries
+    geoms
         The geometries to intersect with the polygon.
     polygon
         The polygon to intersect with the geometries.
@@ -243,8 +241,8 @@ def _intersect_index_quadrats(
         The index labels of the geometries that intersected the polygon.
     """
     # create an r-tree spatial index for the geometries
-    rtree = geometries.sindex
-    msg = f"Built r-tree spatial index for {len(geometries):,} geometries"
+    rtree = geoms.sindex
+    msg = f"Built r-tree spatial index for {len(geoms):,} geometries"
     utils.log(msg, level=lg.INFO)
 
     # cut polygon into chunks for faster spatial index intersecting. specify a
@@ -263,7 +261,7 @@ def _intersect_index_quadrats(
         poly_buff = poly.buffer(0)
         if poly_buff.is_valid and poly_buff.area > 0:
             possible_matches_iloc = rtree.intersection(poly_buff.bounds)
-            possible_matches = geometries.iloc[list(possible_matches_iloc)]
+            possible_matches = geoms.iloc[list(possible_matches_iloc)]
             precise_matches = possible_matches[possible_matches.intersects(poly_buff)]
             geoms_in_poly.update(precise_matches.index)
 
