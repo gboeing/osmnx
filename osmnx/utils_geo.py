@@ -74,7 +74,7 @@ def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
 
     Returns
     -------
-    point
+    points
         The sampled points, multi-indexed by `(u, v, key)` of the edge from
         which each point was sampled.
     """
