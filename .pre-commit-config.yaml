@@ -29,20 +29,20 @@ repos:
         types_or: [markdown, yaml]
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: "v0.41.0"
+    rev: "v0.42.0"
     hooks:
       - id: markdownlint
         args: [--disable=MD013]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.5.4"
+    rev: "v0.6.8"
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.11.0"
+    rev: "v1.11.2"
     hooks:
       - id: mypy
         additional_dependencies:
