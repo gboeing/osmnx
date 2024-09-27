@@ -28,13 +28,13 @@ if TYPE_CHECKING:
     import geopandas as gpd
 
 
-def buffer_geometry(geometry: Geometry, dist: float) -> Geometry:
+def buffer_geometry(geom: Geometry, dist: float) -> Geometry:
     """
     Buffer an unprojected Shapely geometry by some distance in meters.
 
     Parameters
     ----------
-    geometry
+    geom
         The geometry to be buffered. Coordinates should be in unprojected
         latitude-longitude degrees (EPSG:4326).
     dist
@@ -45,13 +45,13 @@ def buffer_geometry(geometry: Geometry, dist: float) -> Geometry:
     geometry_buff
         The (also unprojected) buffered geometry.
     """
-    geometry_proj, crs_proj = projection.project_geometry(geometry)
-    geometry_buff, _ = projection.project_geometry(
-        geometry=geometry_proj.buffer(dist),
+    geom_proj, crs_proj = projection.project_geometry(geom)
+    geom_buff, _ = projection.project_geometry(
+        geometry=geom_proj.buffer(dist),
         crs=crs_proj,
         to_latlong=True,
     )
-    return geometry_buff
+    return geom_buff
 
 
 def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:

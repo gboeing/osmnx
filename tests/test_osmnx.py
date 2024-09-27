@@ -47,7 +47,7 @@ polygon_wkt = (
     "POLYGON ((-122.262 37.869, -122.255 37.869, -122.255 37.874,"
     "-122.262 37.874, -122.262 37.869))"
 )
-polygon = ox.utils_geo.buffer_geometry(geometry=wkt.loads(polygon_wkt), dist=1)
+polygon = ox.utils_geo.buffer_geometry(geom=wkt.loads(polygon_wkt), dist=1)
 
 
 def test_logging() -> None:
