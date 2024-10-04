@@ -37,7 +37,7 @@ def is_projected(crs: Any) -> bool:  # noqa: ANN401
 
 
 def project_geometry(
-    geometry: Geometry,
+    geom: Geometry,
     *,
     crs: Any | None = None,  # noqa: ANN401
     to_crs: Any | None = None,  # noqa: ANN401
@@ -53,7 +53,7 @@ def project_geometry(
 
     Parameters
     ----------
-    geometry
+    geom
         The geometry to be projected.
     crs
         The initial CRS of `geometry`. If None, it will be set to
@@ -66,16 +66,16 @@ def project_geometry(
 
     Returns
     -------
-    geometry_proj, crs
+    geom_proj, crs
         The projected geometry and its new CRS.
     """
     if crs is None:
         crs = settings.default_crs
 
-    gdf = gpd.GeoDataFrame(geometry=[geometry], crs=crs)
+    gdf = gpd.GeoDataFrame(geometry=[geom], crs=crs)
     gdf_proj = project_gdf(gdf, to_crs=to_crs, to_latlong=to_latlong)
-    geometry_proj = gdf_proj["geometry"].iloc[0]
-    return geometry_proj, gdf_proj.crs
+    geom_proj = gdf_proj["geometry"].iloc[0]
+    return geom_proj, gdf_proj.crs
 
 
 def project_gdf(
@@ -90,7 +90,7 @@ def project_gdf(
     If `to_latlong` is True, this projects the GeoDataFrame to the coordinate
     reference system defined by `settings.default_crs`. Otherwise it projects
     it to the CRS defined by `to_crs`. If `to_crs` is `None`, it projects it
-    to the CRS of an appropriate UTM zone given `geometry`'s bounds.
+    to the CRS of an appropriate UTM zone given `gdf`'s bounds.
 
     Parameters
     ----------

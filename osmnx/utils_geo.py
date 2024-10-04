@@ -47,7 +47,7 @@ def buffer_geometry(geom: Geometry, dist: float) -> Geometry:
     """
     geom_proj, crs_proj = projection.project_geometry(geom)
     geom_buff, _ = projection.project_geometry(
-        geometry=geom_proj.buffer(dist),
+        geom=geom_proj.buffer(dist),
         crs=crs_proj,
         to_latlong=True,
     )
