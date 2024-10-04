@@ -306,13 +306,15 @@ def nearest_nodes(
     """
     Find the nearest node to a point or to each of several points.
 
-    If `X` and `Y` are single coordinate values, this will return the nearest
-    node to that point. If `X` and `Y` are iterables of coordinate values,
-    this will return the nearest node to each point.
+    If `X` and `Y` are single coordinate values, this function will return the
+    nearest node to that point. If `X` and `Y` are iterables of coordinate
+    values, it will return the nearest node to each point.
 
-    If the graph is projected, this uses a k-d tree for Euclidean nearest
+    This function is vectorized: if you have many points to search for, pass
+    them in one call as numpy arrays (avoid using loops) to maximize runtime
+    speed. If the graph is projected, it uses a k-d tree for Euclidean nearest
     neighbor search, which requires that scipy is installed as an optional
-    dependency. If it is unprojected, this uses a ball tree for haversine
+    dependency. If the graph is unprojected, it uses a ball tree for haversine
     nearest neighbor search, which requires that scikit-learn is installed as
     an optional dependency.
 
@@ -463,11 +465,15 @@ def nearest_edges(
     """
     Find the nearest edge to a point or to each of several points.
 
-    If `X` and `Y` are single coordinate values, this will return the nearest
-    edge to that point. If `X` and `Y` are iterables of coordinate values,
-    this will return the nearest edge to each point. This uses an R-tree
-    spatial index and minimizes the Euclidean distance from each point to the
-    possible matches. For accurate results, use a projected graph and points.
+    If `X` and `Y` are single coordinate values, this function will return the
+    nearest edge to that point. If `X` and `Y` are iterables of coordinate
+    values, it will return the nearest edge to each point.
+
+    This function is vectorized: if you have many points to search for, pass
+    them in one call as numpy arrays (avoid using loops) to maximize runtime
+    speed. It uses an R-tree spatial index and minimizes the Euclidean
+    distance from each point to the possible matches. For accurate results,
+    use a projected graph and projected points.
 
     Parameters
     ----------
@@ -481,7 +487,7 @@ def nearest_edges(
         containing no nulls.
     return_dist
         If True, optionally also return the distance(s) between point(s) and
-        nearest edge(s).
+        nearest edge(s), in same units as graph and points.
 
     Returns
     -------

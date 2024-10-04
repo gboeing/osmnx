@@ -123,6 +123,7 @@ def features_from_bbox(
     Returns
     -------
     gdf
+        The features, multi-indexed by element type and OSM ID.
     """
     # convert bbox to polygon then create GeoDataFrame of features within it
     polygon = utils_geo.bbox_to_poly(bbox)
@@ -167,6 +168,7 @@ def features_from_point(
     Returns
     -------
     gdf
+        The features, multi-indexed by element type and OSM ID.
     """
     # create bbox from point and dist, then create gdf of features within it
     bbox = utils_geo.bbox_from_point(center_point, dist)
@@ -209,6 +211,7 @@ def features_from_address(
     Returns
     -------
     gdf
+        The features, multi-indexed by element type and OSM ID.
     """
     # geocode the address to a point, then create gdf of features around it
     center_point = geocoder.geocode(address)
@@ -265,6 +268,7 @@ def features_from_place(
     Returns
     -------
     gdf
+        The features, multi-indexed by element type and OSM ID.
     """
     # extract the geometry from the GeoDataFrame to use in query
     polygon = geocoder.geocode_to_gdf(query, which_result=which_result).union_all()
@@ -308,6 +312,7 @@ def features_from_polygon(
     Returns
     -------
     gdf
+        The features, multi-indexed by element type and OSM ID.
     """
     # verify that the geometry is valid and is a Polygon/MultiPolygon
     if not polygon.is_valid:
@@ -356,6 +361,7 @@ def features_from_xml(
     Returns
     -------
     gdf
+        The features, multi-indexed by element type and OSM ID.
     """
     # if tags or polygon is None, create an empty object to skip filtering
     if tags is None:
