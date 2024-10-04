@@ -507,6 +507,10 @@ def add_edge_speeds(
     the edge's maxspeed attribute string, then function assumes kph, per OSM
     guidelines: https://wiki.openstreetmap.org/wiki/Map_Features/Units
 
+    If you wish to set all edge speeds to a single constant value (such as for
+    a walking network), use `nx.set_edge_attributes` to set the `speed_kph`
+    attribute value directly, rather than using this function.
+
     Parameters
     ----------
     G
