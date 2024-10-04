@@ -28,5 +28,5 @@ dependencies:
 
   # docs
   - furo
-  - sphinx=7
+  - sphinx=8
   - sphinx-autodoc-typehints
