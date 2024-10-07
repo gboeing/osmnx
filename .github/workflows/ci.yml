@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Create environment with Micromamba
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           cache-environment: true
           create-args: python=${{ matrix.python-version }}
