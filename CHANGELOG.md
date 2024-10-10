@@ -6,6 +6,7 @@ Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123)
 
 - add type annotations to all public and private functions throughout package (#1107)
 - remove all functionality previously deprecated in v1 (#1113 #1122 #1135 #1148)
+- add Python 3.13 support
 - drop Python 3.8 support (#1106)
 - bump minimum required numpy version to 1.22 for typing support (#1133 #1198)
 - bump minimum required versions of geopandas to 1.0 and pandas to 1.4 for union_all support (#1179 #1198)
