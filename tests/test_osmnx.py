@@ -581,9 +581,8 @@ def test_save_load() -> None:  # noqa: PLR0915
     G2 = ox.load_graphml(fp, node_dtypes=nd, edge_dtypes=ed)
 
     # test loading graphml from a file stream
-    file_bytes = Path.open(Path("tests/input_data/short.graphml"), "rb").read()
-    data = str(file_bytes.decode())
-    G = ox.load_graphml(graphml_str=data, node_dtypes=nd, edge_dtypes=ed)
+    graphml = Path("tests/input_data/short.graphml").read_text(encoding="utf-8")
+    G = ox.load_graphml(graphml_str=graphml, node_dtypes=nd, edge_dtypes=ed)
 
 
 def test_graph_from() -> None:
