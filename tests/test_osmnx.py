@@ -10,6 +10,7 @@ import matplotlib as mpl
 mpl.use("Agg")
 
 import bz2
+import gzip
 import logging as lg
 import os
 import tempfile
@@ -203,12 +204,23 @@ def test_osm_xml() -> None:
     node_id = 53098262
     neighbor_ids = 53092170, 53060438, 53027353, 667744075
 
-    with bz2.BZ2File("tests/input_data/West-Oakland.osm.bz2") as f:
-        handle, temp_filename = tempfile.mkstemp(suffix=".osm")
-        os.write(handle, f.read())
-        os.close(handle)
+    # read the contents of the bzip2 file
+    path_bz2 = "tests/input_data/West-Oakland.osm.bz2"
+    with bz2.open(path_bz2, mode="rb") as f:
+        file_contents = f.read()
 
-    for filename in ("tests/input_data/West-Oakland.osm.bz2", temp_filename):
+    # write the contents to a .osm file
+    _, path_osm = tempfile.mkstemp(suffix=".osm")
+    with Path(path_osm).open("wb") as f:
+        f.write(file_contents)
+
+    # write the contents to a gzip file
+    path_gz = path_osm + ".gz"
+    with gzip.open(path_gz, mode="wb") as f:
+        f.write(file_contents)
+
+    # load and test graph_from_xml across the .osm, bzip2, and gzip files
+    for filename in (path_bz2, path_gz, path_osm):
         G = ox.graph_from_xml(filename)
         assert node_id in G.nodes
 
@@ -218,7 +230,9 @@ def test_osm_xml() -> None:
             assert edge_key in G.edges
             assert G.edges[edge_key]["name"] in {"8th Street", "Willow Street"}
 
-    Path.unlink(Path(temp_filename))
+        # delete temporary files
+        if Path(filename).suffix != ".bz2":
+            Path.unlink(Path(filename))
 
     # test OSM xml saving
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
