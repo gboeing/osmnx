@@ -603,19 +603,16 @@ def _create_graph(
     nodes: dict[int, dict[str, Any]] = {}
     paths: dict[int, dict[str, Any]] = {}
 
-    # consume response_jsons generator to download data from server
+    # consume response_jsons generator to download data from server. if
+    # cache_only_mode, just consume response_jsons then continue next loop.
+    # otherwise, extract nodes and paths from the downloaded OSM data.
     response_count = 0
     for response_json in response_jsons:
         response_count += 1
-
-        # if cache_only_mode, consume response_jsons then continue next loop
-        if settings.cache_only_mode:  # pragma: no cover
-            continue
-
-        # otherwise, extract nodes and paths from the downloaded OSM data
-        nodes_temp, paths_temp = _parse_nodes_paths(response_json)
-        nodes.update(nodes_temp)
-        paths.update(paths_temp)
+        if not settings.cache_only_mode:
+            nodes_temp, paths_temp = _parse_nodes_paths(response_json)
+            nodes.update(nodes_temp)
+            paths.update(paths_temp)
 
     msg = f"Retrieved all data from API in {response_count} request(s)"
     utils.log(msg, level=lg.INFO)
