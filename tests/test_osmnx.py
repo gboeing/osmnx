@@ -220,8 +220,7 @@ def test_osm_xml() -> None:
         f.write(file_contents)
 
     # load and test graph_from_xml across the .osm, bzip2, and gzip files
-    for filepath_str in (path_bz2, path_gz, path_osm):
-        filepath = Path(filepath_str)
+    for filepath in (path_bz2, path_gz, path_osm):
         G = ox.graph_from_xml(filepath)
         assert node_id in G.nodes
 
@@ -231,9 +230,9 @@ def test_osm_xml() -> None:
             assert edge_key in G.edges
             assert G.edges[edge_key]["name"] in {"8th Street", "Willow Street"}
 
-        # delete temporary files
-        if filepath.suffix != ".bz2":
-            Path.unlink(filepath)
+    # delete temporary files
+    Path.unlink(Path(path_osm))
+    Path.unlink(Path(path_gz))
 
     # test OSM xml saving
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
