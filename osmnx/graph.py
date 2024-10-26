@@ -34,7 +34,6 @@ from ._version import __version__
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from pathlib import Path
 
 
 def graph_from_bbox(
@@ -557,7 +556,7 @@ def graph_from_xml(
     G
     """
     # transmogrify file of OSM XML data into JSON
-    response_jsons = [_osm_xml._overpass_json_from_xml(filepath, encoding)]
+    response_jsons = [_osm_xml._overpass_json_from_xml(Path(filepath), encoding)]
 
     # create graph using this response JSON
     G = _create_graph(response_jsons, bidirectional)

@@ -200,7 +200,7 @@ def test_bearings() -> None:
 
 def test_osm_xml() -> None:
     """Test working with .osm XML data."""
-    # test loading a graph from a local .osm xml file
+    # test loading a graph from a local .osm xml (and bz2 and gzip) file
     node_id = 53098262
     neighbor_ids = 53092170, 53060438, 53027353, 667744075
 
@@ -220,8 +220,9 @@ def test_osm_xml() -> None:
         f.write(file_contents)
 
     # load and test graph_from_xml across the .osm, bzip2, and gzip files
-    for filename in (path_bz2, path_gz, path_osm):
-        G = ox.graph_from_xml(filename)
+    for filepath_str in (path_bz2, path_gz, path_osm):
+        filepath = Path(filepath_str)
+        G = ox.graph_from_xml(filepath)
         assert node_id in G.nodes
 
         for neighbor_id in neighbor_ids:
@@ -231,8 +232,8 @@ def test_osm_xml() -> None:
             assert G.edges[edge_key]["name"] in {"8th Street", "Willow Street"}
 
         # delete temporary files
-        if Path(filename).suffix != ".bz2":
-            Path.unlink(Path(filename))
+        if filepath.suffix != ".bz2":
+            Path.unlink(filepath)
 
     # test OSM xml saving
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
