@@ -16,6 +16,7 @@ Refer to the Getting Started guide for usage limitations.
 from __future__ import annotations
 
 import logging as lg
+from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -43,7 +44,6 @@ from ._errors import InsufficientResponseError
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
-    from pathlib import Path
 
 # define what types of OSM relations we currently handle
 _RELATION_TYPES = {"boundary", "multipolygon"}
@@ -370,7 +370,7 @@ def features_from_xml(
         polygon = Polygon()
 
     # transmogrify OSM XML file to JSON then create GeoDataFrame from it
-    response_jsons = [_osm_xml._overpass_json_from_xml(filepath, encoding)]
+    response_jsons = [_osm_xml._overpass_json_from_xml(Path(filepath), encoding)]
     gdf = _create_gdf(response_jsons, polygon, tags)
 
     # drop misc element attrs that might have been added from OSM XML file
