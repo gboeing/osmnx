@@ -230,10 +230,6 @@ def test_osm_xml() -> None:
             assert edge_key in G.edges
             assert G.edges[edge_key]["name"] in {"8th Street", "Willow Street"}
 
-    # delete temporary files
-    Path.unlink(Path(path_osm))
-    Path.unlink(Path(path_gz))
-
     # test OSM xml saving
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
     fp = Path(ox.settings.data_folder) / "graph.osm"
@@ -268,6 +264,10 @@ def test_osm_xml() -> None:
     # restore settings
     ox.settings.overpass_settings = default_overpass_settings
     ox.settings.all_oneway = default_all_oneway
+
+    # delete temporary files
+    Path.unlink(Path(path_osm))
+    Path.unlink(Path(path_gz))
 
 
 def test_elevation() -> None:
