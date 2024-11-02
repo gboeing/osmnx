@@ -174,7 +174,8 @@ def _overpass_json_from_xml(filepath: Path, encoding: str) -> dict[str, Any]:
         file.seek(0)
         handler = _OSMContentHandler()
         sax_parse(file, handler)  # noqa: S317
-        return handler.object
+
+    return handler.object
 
 
 def _save_graph_xml(
