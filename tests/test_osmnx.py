@@ -210,17 +210,17 @@ def test_osm_xml() -> None:
         file_contents = f.read()
 
     # write the contents to a .osm file
-    _, path_osm = tempfile.mkstemp(suffix=".osm")
-    with Path(path_osm).open("wb") as f:
+    path_osm_temp = path_bz2.strip(".bz2")
+    with Path(path_osm_temp).open("wb") as f:
         f.write(file_contents)
 
     # write the contents to a gzip file
-    path_gz = path_osm + ".gz"
-    with gzip.open(path_gz, mode="wb") as f:
+    path_gz_temp = path_osm_temp + ".gz"
+    with gzip.open(path_gz_temp, mode="wb") as f:
         f.write(file_contents)
 
-    # load and test graph_from_xml across the .osm, bzip2, and gzip files
-    for filepath in (path_bz2, path_gz, path_osm):
+    # load and test graph_from_xml across the .osm, .bz2, and .gz files
+    for filepath in (path_bz2, path_gz_temp, path_osm_temp):
         G = ox.graph_from_xml(filepath)
         assert node_id in G.nodes
 
@@ -229,6 +229,10 @@ def test_osm_xml() -> None:
             assert neighbor_id in G.nodes
             assert edge_key in G.edges
             assert G.edges[edge_key]["name"] in {"8th Street", "Willow Street"}
+
+    # delete the temporary .osm and .gz files
+    Path.unlink(Path(path_osm_temp))
+    Path.unlink(Path(path_gz_temp))
 
     # test OSM xml saving
     G = ox.graph_from_point(location_point, dist=500, network_type="drive", simplify=False)
@@ -264,10 +268,6 @@ def test_osm_xml() -> None:
     # restore settings
     ox.settings.overpass_settings = default_overpass_settings
     ox.settings.all_oneway = default_all_oneway
-
-    # delete temporary files
-    Path.unlink(Path(path_osm))
-    Path.unlink(Path(path_gz))
 
 
 def test_elevation() -> None:
