@@ -59,6 +59,6 @@ jobs:
         run: pytest --verbose --maxfail=1 --typeguard-packages=osmnx --cov=osmnx --cov-report=xml
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
