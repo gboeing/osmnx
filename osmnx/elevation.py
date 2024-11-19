@@ -133,7 +133,8 @@ def add_node_elevations_raster(
     cpus
         How many CPU cores to use. If None, use all available.
     vrt_path
-        Path to VRT file.
+        Path to virtual raster file to create, if passing multiple raster
+        filepaths. If None, automatically creates a VRT file.
 
     Returns
     -------
