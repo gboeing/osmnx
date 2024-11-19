@@ -112,6 +112,7 @@ def add_node_elevations_raster(
     *,
     band: int = 1,
     cpus: int | None = None,
+    vrt_path: str | Path | None = None,
 ) -> nx.MultiDiGraph:
     """
     Add `elevation` attributes to all nodes from local raster file(s).
@@ -131,6 +132,8 @@ def add_node_elevations_raster(
         Which raster band to query.
     cpus
         How many CPU cores to use. If None, use all available.
+    vrt_path
+        Path to VRT file.
 
     Returns
     -------
@@ -148,12 +151,15 @@ def add_node_elevations_raster(
     utils.log(msg, level=lg.INFO)
 
     # if multiple filepaths are passed in, compose them as a virtual raster
-    # use the sha1 hash of the filepaths object as the vrt filename
     if not isinstance(filepath, (str, Path)):
         filepaths = [str(p) for p in filepath]
-        checksum = sha1(str(filepaths).encode("utf-8")).hexdigest()  # noqa: S324
-        filepath = f"./.osmnx_{checksum}.vrt"
-        build_vrt(filepath, filepaths)
+        if vrt_path is None:
+            # use the sha1 hash of the filepaths object as the vrt filename
+            checksum = sha1(str(filepaths).encode("utf-8")).hexdigest()  # noqa: S324
+            vrt_path = f"./.osmnx_{checksum}.vrt"
+        if not Path(vrt_path).is_file():
+            build_vrt(vrt_path, filepaths)
+        filepath = vrt_path
 
     nodes = convert.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
     if cpus == 1:
