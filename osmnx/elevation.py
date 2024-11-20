@@ -148,10 +148,14 @@ def add_node_elevations_raster(
     utils.log(msg, level=lg.INFO)
 
     # if multiple filepaths are passed in, compose them as a virtual raster
-    # use the unique sha1 hash of the filepaths object in the vrt filename
     if not isinstance(filepath, (str, Path)):
+        # create the folder on the disk if it doesn't already exist
+        cache_folder = Path(settings.cache_folder)
+        cache_folder.mkdir(parents=True, exist_ok=True)
+
+        # use the sha1 hash of the sorted filepaths as the vrt filename
         checksum = sha1(str(sorted(filepath)).encode("utf-8")).hexdigest()  # noqa: S324
-        vrt_filepath = Path(settings.cache_folder) / Path(f"osmnx-{checksum}.vrt")
+        vrt_filepath = cache_folder / f"{checksum}.vrt"
         if not vrt_filepath.is_file():
             build_vrt(vrt_filepath, filepath)
         filepath = vrt_filepath
