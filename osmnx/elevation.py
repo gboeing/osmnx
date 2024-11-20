@@ -150,7 +150,7 @@ def add_node_elevations_raster(
     # if multiple filepaths are passed in, compose them as a virtual raster
     # use the unique sha1 hash of the filepaths object in the vrt filename
     if not isinstance(filepath, (str, Path)):
-        checksum = sha1(str(filepath).encode("utf-8")).hexdigest()  # noqa: S324
+        checksum = sha1(str(sorted(filepath)).encode("utf-8")).hexdigest()  # noqa: S324
         vrt_filepath = Path(settings.cache_folder) / Path(f"osmnx-{checksum}.vrt")
         if not vrt_filepath.is_file():
             build_vrt(vrt_filepath, filepath)
