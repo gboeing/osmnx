@@ -106,6 +106,41 @@ def _query_raster(
         return zip(nodes.index, values)
 
 
+def _build_vrt_file(raster_paths: Iterable[str | Path]) -> Path:
+    """
+    Build a virtual raster file compositing multiple individual raster files.
+
+    See also https://gdal.org/en/stable/drivers/raster/vrt.html
+
+    Parameters
+    ----------
+    raster_paths
+        The paths to the raster files.
+
+    Returns
+    -------
+    vrt_path
+        The path to the VRT file.
+    """
+    if build_vrt is None:  # pragma: no cover
+        msg = "rio-vrt must be installed as an optional dependency to build VRTs."
+        raise ImportError(msg)
+
+    # use the sha1 hash of the sorted filepaths as the VRT filename
+    raster_paths = sorted(raster_paths)
+    checksum = sha1(str(raster_paths).encode("utf-8")).hexdigest()  # noqa: S324
+    vrt_path = Path(settings.cache_folder) / f"{checksum}.vrt"
+
+    # build the VRT file if it doesn't already exist in the cache
+    if not vrt_path.is_file():
+        msg = f"Building VRT for {len(raster_paths):,} rasters at {vrt_path!r}..."
+        utils.log(msg, level=lg.INFO)
+        vrt_path.parent.mkdir(parents=True, exist_ok=True)
+        build_vrt(vrt_path, raster_paths)
+
+    return vrt_path
+
+
 def add_node_elevations_raster(
     G: nx.MultiDiGraph,
     filepath: str | Path | Iterable[str | Path],
@@ -137,28 +172,19 @@ def add_node_elevations_raster(
     G
         Graph with `elevation` attributes on the nodes.
     """
-    if rasterio is None or build_vrt is None:  # pragma: no cover
-        msg = "rasterio and rio-vrt must be installed as optional dependencies to query rasters."
+    if rasterio is None:  # pragma: no cover
+        msg = "rasterio must be installed as an optional dependency to query rasters."
         raise ImportError(msg)
+
+    # if multiple filepaths are passed in, compose them as a virtual raster
+    if not isinstance(filepath, (str, Path)):
+        filepath = _build_vrt_file(filepath)
 
     if cpus is None:
         cpus = mp.cpu_count()
     cpus = min(cpus, mp.cpu_count())
     msg = f"Attaching elevations with {cpus} CPUs..."
     utils.log(msg, level=lg.INFO)
-
-    # if multiple filepaths are passed in, compose them as a virtual raster
-    if not isinstance(filepath, (str, Path)):
-        # create the folder on the disk if it doesn't already exist
-        cache_folder = Path(settings.cache_folder)
-        cache_folder.mkdir(parents=True, exist_ok=True)
-
-        # use the sha1 hash of the sorted filepaths as the vrt filename
-        checksum = sha1(str(sorted(filepath)).encode("utf-8")).hexdigest()  # noqa: S324
-        vrt_filepath = cache_folder / f"{checksum}.vrt"
-        if not vrt_filepath.is_file():
-            build_vrt(vrt_filepath, filepath)
-        filepath = vrt_filepath
 
     nodes = convert.graph_to_gdfs(G, edges=False, node_geometry=False)[["x", "y"]]
     if cpus == 1:
