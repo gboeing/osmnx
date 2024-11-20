@@ -366,7 +366,7 @@ def shortest_path(
     # if multi-threading, calculate shortest paths in parallel
     else:
         args = ((G, o, d, weight) for o, d in zip(orig, dest))
-        with mp.get_context("spawn").Pool(cpus) as pool:
+        with mp.get_context(mp.get_start_method()).Pool(cpus) as pool:
             paths = pool.starmap_async(_single_shortest_path, args).get()
 
     return paths
