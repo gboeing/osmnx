@@ -68,7 +68,7 @@ def save_graph_geopackage(
     gdf_nodes.to_file(filepath, layer="nodes", driver="GPKG", index=True, encoding=encoding)
     gdf_edges.to_file(filepath, layer="edges", driver="GPKG", index=True, encoding=encoding)
 
-    msg = f"Saved graph as GeoPackage at {filepath!r}"
+    msg = f"Saved graph as GeoPackage at {str(filepath)!r}"
     utils.log(msg, level=lg.INFO)
 
 
@@ -129,7 +129,7 @@ def save_graphml(
             data[attr] = str(value)
 
     nx.write_graphml(G, path=filepath, encoding=encoding)
-    msg = f"Saved graph as GraphML file at {filepath!r}"
+    msg = f"Saved graph as GraphML file at {str(filepath)!r}"
     utils.log(msg, level=lg.INFO)
 
 
@@ -239,7 +239,7 @@ def load_graphml(
     G = _convert_node_attr_types(G, default_node_dtypes)
     G = _convert_edge_attr_types(G, default_edge_dtypes)
 
-    msg = f"Loaded graph with {len(G)} nodes and {len(G.edges)} edges from {source!r}"
+    msg = f"Loaded graph with {len(G)} nodes and {len(G.edges)} edges from {str(source)!r}"
     utils.log(msg, level=lg.INFO)
     return G
 

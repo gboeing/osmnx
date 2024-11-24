@@ -233,7 +233,7 @@ def _config_dns(url: str) -> None:
     """
     Force socket.getaddrinfo to use IP address instead of hostname.
 
-    Resolves the URL's domain to an IP address so that we use the same server
+    Resolves URL's hostname to an IP address so that we use the same server
     for both 1) checking the necessary pause duration and 2) sending the query
     itself even if there is round-robin redirecting among multiple server
     machines on the server-side. Mutates the getaddrinfo function so it uses
@@ -309,17 +309,17 @@ def _parse_response(response: requests.Response) -> dict[str, Any] | list[dict[s
         Value will be a dict if the response is from the Google or Overpass
         APIs, and a list if the response is from the Nominatim API.
     """
-    # log the response size and domain
-    domain = _hostname_from_url(response.url)
+    # log the response size and hostname
+    hostname = _hostname_from_url(response.url)
     size_kb = len(response.content) / 1000
-    msg = f"Downloaded {size_kb:,.1f}kB from {domain!r} with status {response.status_code}"
+    msg = f"Downloaded {size_kb:,.1f}kB from {hostname!r} with status {response.status_code}"
     utils.log(msg, level=lg.INFO)
 
     # parse the response to JSON and log/raise exceptions
     try:
         response_json: dict[str, Any] | list[dict[str, Any]] = response.json()
     except JSONDecodeError as e:  # pragma: no cover
-        msg = f"{domain!r} responded: {response.status_code} {response.reason} {response.text}"
+        msg = f"{hostname!r} responded: {response.status_code} {response.reason} {response.text}"
         utils.log(msg, level=lg.ERROR)
         if response.ok:
             raise InsufficientResponseError(msg) from e
@@ -327,12 +327,12 @@ def _parse_response(response: requests.Response) -> dict[str, Any] | list[dict[s
 
     # log any remarks if they exist
     if isinstance(response_json, dict) and "remark" in response_json:  # pragma: no cover
-        msg = f"{domain!r} remarked: {response_json['remark']!r}"
+        msg = f"{hostname!r} remarked: {response_json['remark']!r}"
         utils.log(msg, level=lg.WARNING)
 
     # log if the response status_code is not OK
     if not response.ok:
-        msg = f"{domain!r} returned HTTP status code {response.status_code}"
+        msg = f"{hostname!r} returned HTTP status code {response.status_code}"
         utils.log(msg, level=lg.WARNING)
 
     return response_json

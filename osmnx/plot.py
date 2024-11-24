@@ -934,7 +934,7 @@ def _save_and_show(
             fig.savefig(fp, dpi=dpi, bbox_inches=extent, format=ext, facecolor=fc, transparent=True)
             fig.set_frameon(False)  # and turn it back off again
 
-        msg = f"Saved figure to disk at {fp!r}"
+        msg = f"Saved figure to disk at {str(fp)!r}"
         utils.log(msg, level=lg.INFO)
 
     if show:

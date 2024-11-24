@@ -119,8 +119,8 @@ def _nominatim_request(
         return cached_response_json
 
     # pause then request this URL
-    domain = _http._hostname_from_url(url)
-    msg = f"Pausing {pause} second(s) before making HTTP GET request to {domain!r}"
+    hostname = _http._hostname_from_url(url)
+    msg = f"Pausing {pause} second(s) before making HTTP GET request to {hostname!r}"
     utils.log(msg, level=lg.INFO)
     time.sleep(pause)
 
@@ -138,7 +138,7 @@ def _nominatim_request(
     # handle 429 and 504 errors by pausing then recursively re-trying request
     if response.status_code in {429, 504}:  # pragma: no cover
         msg = (
-            f"{domain!r} responded {response.status_code} {response.reason}: "
+            f"{hostname!r} responded {response.status_code} {response.reason}: "
             f"we'll retry in {error_pause} secs"
         )
         utils.log(msg, level=lg.WARNING)

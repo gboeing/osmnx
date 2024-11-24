@@ -462,8 +462,8 @@ def _overpass_request(
     # pause then request this URL
     if pause is None:
         this_pause = _get_overpass_pause(settings.overpass_url)
-    domain = _http._hostname_from_url(url)
-    msg = f"Pausing {this_pause} second(s) before making HTTP POST request to {domain!r}"
+    hostname = _http._hostname_from_url(url)
+    msg = f"Pausing {this_pause} second(s) before making HTTP POST request to {hostname!r}"
     utils.log(msg, level=lg.INFO)
     time.sleep(this_pause)
 
@@ -482,7 +482,7 @@ def _overpass_request(
     if response.status_code in {429, 504}:  # pragma: no cover
         this_pause = error_pause + _get_overpass_pause(settings.overpass_url)
         msg = (
-            f"{domain!r} responded {response.status_code} {response.reason}: "
+            f"{hostname!r} responded {response.status_code} {response.reason}: "
             f"we'll retry in {this_pause} secs"
         )
         utils.log(msg, level=lg.WARNING)
