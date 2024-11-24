@@ -392,17 +392,17 @@ def simplify_graph(  # noqa: C901, PLR0912
                     path_attributes[attr] = [edge_data[attr]]
 
         # consolidate the path's edge segments' attribute values
-        for attr in path_attributes:
-            if attr in edge_attr_aggs:
+        for attr_name, attr_values in path_attributes.items():
+            if attr_name in edge_attr_aggs:
                 # if this attribute's values must be aggregated, do so now
-                agg_func = edge_attr_aggs[attr]
-                path_attributes[attr] = agg_func(path_attributes[attr])
-            elif len(set(path_attributes[attr])) == 1:
+                agg_func = edge_attr_aggs[attr_name]
+                path_attributes[attr_name] = agg_func(attr_values)
+            elif len(set(attr_values)) == 1:
                 # if there's only 1 unique value, keep that single value
-                path_attributes[attr] = path_attributes[attr][0]
+                path_attributes[attr_name] = attr_values[0]
             else:
                 # otherwise, if there are multiple uniques, keep one of each
-                path_attributes[attr] = list(set(path_attributes[attr]))
+                path_attributes[attr_name] = list(set(attr_values))
 
         # construct the new consolidated edge's geometry for this path
         path_attributes["geometry"] = LineString(

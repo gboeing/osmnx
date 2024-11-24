@@ -31,9 +31,9 @@ try:
     from matplotlib import cm
     from matplotlib import colormaps
     from matplotlib import colors
-    from matplotlib.axes._axes import Axes  # noqa: TCH002
-    from matplotlib.figure import Figure  # noqa: TCH002
-    from matplotlib.projections.polar import PolarAxes  # noqa: TCH002
+    from matplotlib.axes._axes import Axes  # noqa: TC002
+    from matplotlib.figure import Figure  # noqa: TC002
+    from matplotlib.projections.polar import PolarAxes  # noqa: TC002
 
     mpl_available = True
 

@@ -11,7 +11,7 @@ from typing import Any
 
 import numpy as np
 import requests
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from . import _http
 from . import projection
@@ -179,7 +179,7 @@ def _get_overpass_pause(
             **settings.requests_kwargs,
         )
         response_text = response.text
-    except ConnectionError as e:  # pragma: no cover
+    except RequestsConnectionError as e:  # pragma: no cover
         # cannot reach status endpoint: log error and return default duration
         msg = f"Unable to query {url}, {e}"
         utils.log(msg, level=lg.ERROR)

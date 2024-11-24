@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from lxml import etree
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError as RequestsConnectionError
 from shapely import Point
 from shapely import Polygon
 from shapely import wkt
@@ -462,7 +462,7 @@ def test_endpoints() -> None:
     # This should fail because we didn't provide a valid endpoint
     ox.settings.overpass_rate_limit = False
     ox.settings.overpass_url = "http://NOT_A_VALID_ENDPOINT/api/"
-    with pytest.raises(ConnectionError, match="Max retries exceeded with url"):
+    with pytest.raises(RequestsConnectionError, match="Max retries exceeded with url"):
         G = ox.graph_from_place(place1, network_type="all")
 
     ox.settings.overpass_rate_limit = default_overpass_rate_limit
