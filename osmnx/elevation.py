@@ -133,7 +133,7 @@ def _build_vrt_file(raster_paths: Iterable[str | Path]) -> Path:
 
     # build the VRT file if it doesn't already exist in the cache
     if not vrt_path.is_file():
-        msg = f"Building VRT for {len(raster_paths):,} rasters at {vrt_path!r}..."
+        msg = f"Building VRT for {len(raster_paths):,} rasters at {str(vrt_path)!r}..."
         utils.log(msg, level=lg.INFO)
         vrt_path.parent.mkdir(parents=True, exist_ok=True)
         build_vrt(vrt_path, raster_paths)
@@ -193,7 +193,7 @@ def add_node_elevations_raster(
         # divide nodes into equal-sized chunks for multiprocessing
         size = int(np.ceil(len(nodes) / cpus))
         args = ((nodes.iloc[i : i + size], filepath, band) for i in range(0, len(nodes), size))
-        with mp.get_context(mp.get_start_method()).Pool(cpus) as pool:
+        with mp.get_context().Pool(cpus) as pool:
             results = pool.starmap_async(_query_raster, args).get()
         elevs = {k: v for kv in results for k, v in kv}
 
@@ -247,9 +247,9 @@ def add_node_elevations_google(
     # round coordinates to 6 decimal places (approx 5 to 10 cm resolution)
     node_points = pd.Series({n: f"{d['y']:.6f},{d['x']:.6f}" for n, d in G.nodes(data=True)})
     n_calls = int(np.ceil(len(node_points) / batch_size))
-    domain = _http._hostname_from_url(settings.elevation_url_template)
+    hostname = _http._hostname_from_url(settings.elevation_url_template)
 
-    msg = f"Requesting node elevations from {domain!r} in {n_calls} request(s)"
+    msg = f"Requesting node elevations from {hostname!r} in {n_calls} request(s)"
     utils.log(msg, level=lg.INFO)
 
     # break the series of coordinates into chunks of batch_size
@@ -268,7 +268,7 @@ def add_node_elevations_google(
             raise InsufficientResponseError(str(response_json))
 
     # sanity check that all our vectors have the same number of elements
-    msg = f"Graph has {len(G):,} nodes and we received {len(results):,} results from {domain!r}"
+    msg = f"Graph has {len(G):,} nodes and we received {len(results):,} results from {hostname!r}"
     utils.log(msg, level=lg.INFO)
     if not (len(results) == len(G) == len(node_points)):  # pragma: no cover
         err_msg = f"{msg}\n{response_json}"
@@ -278,7 +278,7 @@ def add_node_elevations_google(
     df_elev = pd.DataFrame(node_points, columns=["node_points"])
     df_elev["elevation"] = [result["elevation"] for result in results]
     nx.set_node_attributes(G, name="elevation", values=df_elev["elevation"].to_dict())
-    msg = f"Added elevation data from {domain!r} to all nodes."
+    msg = f"Added elevation data from {hostname!r} to all nodes."
     utils.log(msg, level=lg.INFO)
 
     return G
@@ -305,8 +305,8 @@ def _elevation_request(url: str, pause: float) -> dict[str, Any]:
         return cached_response_json
 
     # pause then request this URL
-    domain = _http._hostname_from_url(url)
-    msg = f"Pausing {pause} second(s) before making HTTP GET request to {domain!r}"
+    hostname = _http._hostname_from_url(url)
+    msg = f"Pausing {pause} second(s) before making HTTP GET request to {hostname!r}"
     utils.log(msg, level=lg.INFO)
     time.sleep(pause)
 

@@ -31,9 +31,9 @@ try:
     from matplotlib import cm
     from matplotlib import colormaps
     from matplotlib import colors
-    from matplotlib.axes._axes import Axes  # noqa: TCH002
-    from matplotlib.figure import Figure  # noqa: TCH002
-    from matplotlib.projections.polar import PolarAxes  # noqa: TCH002
+    from matplotlib.axes._axes import Axes  # noqa: TC002
+    from matplotlib.figure import Figure  # noqa: TC002
+    from matplotlib.projections.polar import PolarAxes  # noqa: TC002
 
     mpl_available = True
 
@@ -934,7 +934,7 @@ def _save_and_show(
             fig.savefig(fp, dpi=dpi, bbox_inches=extent, format=ext, facecolor=fc, transparent=True)
             fig.set_frameon(False)  # and turn it back off again
 
-        msg = f"Saved figure to disk at {fp!r}"
+        msg = f"Saved figure to disk at {str(fp)!r}"
         utils.log(msg, level=lg.INFO)
 
     if show:

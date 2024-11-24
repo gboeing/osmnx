@@ -171,10 +171,10 @@ def graph_to_gdfs(
         u, v, k, data = zip(*G.edges(keys=True, data=True))
 
         if fill_edge_geometry:
-            coords = {n: (G.nodes[n]["x"], G.nodes[n]["y"]) for n in G}
+            node_coords = {n: (G.nodes[n]["x"], G.nodes[n]["y"]) for n in G}
             edge_geoms = (
-                edata.get("geometry", LineString((coords[u], coords[v])))
-                for u, v, _, edata in G.edges(keys=True, data=True)
+                d.get("geometry", LineString((node_coords[u], node_coords[v])))
+                for u, v, _, d in G.edges(keys=True, data=True)
             )
             gdf_edges = gpd.GeoDataFrame(data, crs=crs, geometry=list(edge_geoms))
 

@@ -12,7 +12,7 @@ from pathlib import Path
 
 # project info
 author = "Geoff Boeing"
-copyright = "2016-2024, Geoff Boeing"  # noqa: A001
+copyright = "2016-2025, Geoff Boeing"  # noqa: A001
 project = "OSMnx"
 
 # go up two levels from current working dir (/docs/source) to package root
@@ -36,10 +36,10 @@ autodoc_mock_imports = [
     "matplotlib",
     "networkx",
     "numpy",
-    "osgeo",
     "pandas",
     "rasterio",
     "requests",
+    "rio-vrt",
     "scipy",
     "shapely",
     "sklearn",

@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0 (in development)
+## 2.0.0 (2024-11-24)
 
 Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123)
 
