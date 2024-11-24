@@ -282,10 +282,10 @@ def test_elevation() -> None:
     ox.settings.elevation_url_template = (
         "https://api.opentopodata.org/v1/aster30m?locations={locations}&key={key}"
     )
-    _ = ox.elevation.add_node_elevations_google(G, batch_size=100, pause=0.01)
+    _ = ox.elevation.add_node_elevations_google(G, batch_size=100, pause=0.5)
 
     # same thing again, to hit the cache
-    _ = ox.elevation.add_node_elevations_google(G, batch_size=100, pause=0.01)
+    _ = ox.elevation.add_node_elevations_google(G, batch_size=100, pause=0)
 
     # add node elevations from a single raster file (some nodes will be null)
     rasters = list(Path("tests/input_data").glob("elevation*.tif"))
