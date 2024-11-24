@@ -171,25 +171,11 @@ def graph_to_gdfs(
         u, v, k, data = zip(*G.edges(keys=True, data=True))
 
         if fill_edge_geometry:
-            # subroutine to get geometry for every edge: if edge already has
-            # geometry return it, otherwise create it using the incident nodes
-            x_lookup = nx.get_node_attributes(G, "x")
-            y_lookup = nx.get_node_attributes(G, "y")
-
-            def _make_edge_geometry(
-                u: int,
-                v: int,
-                data: dict[str, Any],
-                x: dict[int, float] = x_lookup,
-                y: dict[int, float] = y_lookup,
-            ) -> LineString:
-                if "geometry" in data:
-                    return data["geometry"]
-
-                # otherwise
-                return LineString((Point((x[u], y[u])), Point((x[v], y[v]))))
-
-            edge_geoms = map(_make_edge_geometry, u, v, data)
+            coords = {n: (G.nodes[n]["x"], G.nodes[n]["y"]) for n in G}
+            edge_geoms = (
+                edata.get("geometry", LineString((coords[u], coords[v])))
+                for u, v, _, edata in G.edges(keys=True, data=True)
+            )
             gdf_edges = gpd.GeoDataFrame(data, crs=crs, geometry=list(edge_geoms))
 
         else:
