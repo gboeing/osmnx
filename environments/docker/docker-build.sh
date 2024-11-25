@@ -32,12 +32,12 @@ docker rmi $(docker images -q) --force
 # login then multi-platform buildx the image and push it to the hub
 set -e
 docker login
-docker buildx build --push --platform=linux/amd64,linux/arm64 $TAGARGS .
+docker buildx build --no-cache --push --platform=linux/amd64,linux/arm64 $TAGARGS .
 
 # import package and print its version as a test, then export conda env to yml
 echo "Pushed $ALLTAGS to Docker Hub"
 echo "Testing image..."
-IMPORTED_VERSION=$(docker run --rm $TAG /bin/bash -c "python -c \"import $PACKAGE; print($PACKAGE.__version__)\"")
+IMPORTED_VERSION=$(docker run --rm $TAG /bin/bash -c "ipython -c \"import $PACKAGE; print($PACKAGE.__version__)\"")
 echo "Imported $PACKAGE version $IMPORTED_VERSION, expected $VERSION"
 docker run --rm -v "$PWD":/home/jovyan/work $TAG /bin/bash -c "conda env export -n base > /home/jovyan/work/environment.yml"
 echo "Exported conda env to environment.yml"
