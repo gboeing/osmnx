@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  test_latest:
+    if: ${{ github.repository == 'gboeing/osmnx' }}
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
