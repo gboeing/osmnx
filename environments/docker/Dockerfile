@@ -4,7 +4,7 @@ LABEL url="https://osmnx.readthedocs.io"
 LABEL description="OSMnx is a Python package to easily download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap."
 
 # copy the package files needed for installation
-COPY --chmod=0755 ./environments/docker-test/requirements.txt ./osmnx/
+COPY --chmod=0755 ./environments/docker/requirements.txt ./osmnx/
 COPY --chmod=0755 ./osmnx/ ./osmnx/osmnx/
 COPY --chmod=0755 ./pyproject.toml ./osmnx/
 COPY --chmod=0755 ./README.md ./osmnx/
@@ -23,7 +23,7 @@ RUN conda update --yes -c conda-forge --strict-channel-priority -n base mamba &&
     ipython -c "import osmnx; print('OSMnx version', osmnx.__version__)"
 
 # copy default jupyterlab settings, then set jupyter working directory to map to mounted volume
-COPY --chmod=0755 ./environments/docker-test/overrides.json /opt/conda/share/jupyter/lab/settings/
+COPY --chmod=0755 ./environments/docker/overrides.json /opt/conda/share/jupyter/lab/settings/
 WORKDIR /home/jovyan/work
 
 # set default command to launch when container is run
