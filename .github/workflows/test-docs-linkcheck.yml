@@ -1,19 +1,15 @@
-name: Build and check package/docs
+name: Build docs and check links
 
 on:
   schedule:
-    - cron: "0 6 * * 1" # every monday at 06:00 UTC
+    - cron: "30 4 * * 1" # every monday at 04:30 UTC
   workflow_dispatch:
 
 jobs:
-  test_build:
+  test_docs_linkcheck:
     if: ${{ github.repository == 'gboeing/osmnx' }}
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest]
+    name: Build docs and check links
+    runs-on: ubuntu-latest
 
     defaults:
       run:
@@ -27,16 +23,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-          cache: "pip"
 
       - name: Install requirements
-        run: python -m pip install -r ./environments/tests/requirements-test-build.txt
-
-      - name: Build and validate package
         run: |
-          validate-pyproject ./pyproject.toml
-          hatch build --clean
-          twine check --strict ./dist/*
+          python -m pip install --user furo "sphinx==7.*" sphinx-autodoc-typehints
+          python -m pip check
 
       - name: Build docs and check links
         run: python -m sphinx -E -W --keep-going -b linkcheck ./docs/source ./docs/build/linkcheck

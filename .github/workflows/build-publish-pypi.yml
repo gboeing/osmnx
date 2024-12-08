@@ -1,0 +1,46 @@
+name: Build and publish to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*'
+  schedule:
+    - cron: "0 6 * * 1" # every monday at 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  build_publish_pypi:
+    if: ${{ github.repository == 'gboeing/osmnx' }}
+    name: Build/publish package to PyPI
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash -elo pipefail {0}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Build and check package
+        run: |
+          python -m pip install --user hatch twine validate-pyproject[all]
+          python -m validate_pyproject ./pyproject.toml
+          python -m hatch build --clean
+          python -m twine check --strict ./dist/*
+
+      - name: Publish package to PyPI
+        if: ${{ github.event_name != 'schedule' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.TEST_PYPI_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+          print-hash: true
+          verbose: true
+          verify-metadata: true
