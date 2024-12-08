@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_push_docker_image:
+  build_publish_docker:
     if: ${{ github.repository == 'gboeing/osmnx' }}
     name: Build/push image to Docker Hub
     runs-on: ubuntu-latest
