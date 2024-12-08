@@ -1,6 +1,0 @@
-furo
-hatch
-sphinx == 7.*
-sphinx-autodoc-typehints
-twine
-validate-pyproject[all]
