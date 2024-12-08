@@ -1,4 +1,4 @@
-name: Publish Python distribution to PyPI
+name: Publish package to PyPI
 
 on:
   push:
@@ -9,11 +9,9 @@ on:
 jobs:
   build:
     name: Build and publish on PyPI
-    environment:
-      name: testpypi
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
-    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repo
@@ -26,11 +24,12 @@ jobs:
 
     - name: Build and check package
       run: |
-        python -m pip install hatch twine --user
+        python -m pip install --user hatch twine
         python -m hatch build --clean
         python -m twine check --strict ./dist/*
 
-    - name: Publish distribution
+    - name: Publish package to PyPI
+      if: github.repository == 'gboeing/osmnx' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
