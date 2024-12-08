@@ -1,5 +1,17 @@
-# basics
-osmnx
+# required dependencies
+geopandas
+networkx
+numpy
+pandas
+requests
+shapely
+
+# optional dependencies
+matplotlib
+rasterio
+rio-vrt
+scipy
+scikit-learn
 
 # helpful extras
 bottleneck
