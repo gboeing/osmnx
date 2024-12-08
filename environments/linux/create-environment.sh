@@ -11,6 +11,7 @@ eval "$(conda shell.bash hook)"
 conda activate $ENV
 python -m pip --python $ENV_PATH uninstall $PACKAGE --yes
 python -m pip --python $ENV_PATH install -e ../../.
+python -m pip --python $ENV_PATH check
 python -m ipykernel install --prefix $ENV_PATH --name $ENV --display-name "Python ($ENV)"
 conda env export -n $ENV > environment.yml
 conda list -n $ENV

@@ -9,6 +9,7 @@ mamba create -n %ENV% --yes -c conda-forge --strict-channel-priority --file "../
 conda activate %ENV% && ^
 python -m pip --python %ENV_PATH%\python.exe uninstall %PACKAGE% --yes && ^
 python -m pip --python %ENV_PATH%\python.exe install -e ../../. && ^
+python -m pip --python %ENV_PATH%\python.exe check && ^
 python -m ipykernel install --prefix %ENV_PATH% --name %ENV% --display-name "Python (%ENV%)" && ^
 conda env export -n %ENV% > environment.yml && ^
 conda list && ^
