@@ -7,7 +7,7 @@ on:
 
 jobs:
   test_build:
-    if: github.repository == 'gboeing/osmnx'
+    if: ${{ github.repository == 'gboeing/osmnx' }}
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
