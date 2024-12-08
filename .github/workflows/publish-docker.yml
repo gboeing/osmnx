@@ -8,12 +8,9 @@ on:
 
 jobs:
   build_push_docker_image:
+    if: github.repository == 'gboeing/osmnx'
     name: Build/push image to Docker Hub
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-      packages: write
 
     steps:
       - name: Checkout repo
@@ -33,12 +30,11 @@ jobs:
 
       - name: Set up Docker buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          platforms: linux/amd64,linux/arm64
 
       - name: Build and push Docker image
-        if: github.repository == 'gboeing/osmnx'
         uses: docker/build-push-action@v6
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
         with:
           context: .
           file: ./environments/docker/Dockerfile
