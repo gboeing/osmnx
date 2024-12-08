@@ -7,15 +7,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  push_to_registry:
+  build_push_docker_image:
     name: Build/push image to Docker Hub
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
       packages: write
-    steps:
 
+    steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
@@ -32,6 +32,7 @@ jobs:
           images: ${{ github.repository }}
 
       - name: Build and push Docker image
+        if: github.repository == 'gboeing/osmnx'
         uses: docker/build-push-action@v6
         with:
           context: .
