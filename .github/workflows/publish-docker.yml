@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*'
+  schedule:
+    - cron: "0 8 * * 1" # every monday at 08:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -39,5 +41,5 @@ jobs:
           context: .
           file: ./environments/docker/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: false
+          push: ${{ github.event_name != 'schedule' }}
           tags: ${{ steps.meta.outputs.tags }}
