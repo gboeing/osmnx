@@ -4,14 +4,15 @@ on:
   push:
     tags:
       - 'v*'
+  schedule:
+    - cron: "0 6 * * 1" # every monday at 06:00 UTC
   workflow_dispatch:
 
 jobs:
   build_publish_pypi:
+    if: ${{ github.repository == 'gboeing/osmnx' }}
     name: Build and publish on PyPI
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
 
     defaults:
       run:
@@ -34,11 +35,11 @@ jobs:
         python -m twine check --strict ./dist/*
 
     - name: Publish package to PyPI
-      if: github.repository == 'gboeing/osmnx' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      if: ${{ github.event_name != 'schedule' }}
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        password: ${{ secrets.TEST_PYPI_TOKEN }}
         repository-url: https://test.pypi.org/legacy/
         print-hash: true
         verbose: true
