@@ -1,4 +1,4 @@
-name: Build/Publish Docker Hub Image
+name: Build and publish Docker image
 
 on:
   push:
@@ -30,6 +30,11 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ github.repository }}
+
+      - name: Set up Docker buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
 
       - name: Build and push Docker image
         if: github.repository == 'gboeing/osmnx'
