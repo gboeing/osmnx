@@ -5,7 +5,7 @@ SET PACKAGE=osmnx
 CALL %CONDA_ROOT%\Scripts\activate.bat && ^
 conda activate base && ^
 conda env remove -n %ENV% --yes && ^
-mamba create -n %ENV% --yes -c conda-forge --strict-channel-priority --file "../docker/requirements.txt" && ^
+mamba create -n %ENV% --yes -c conda-forge --strict-channel-priority --file requirements.txt && ^
 conda activate %ENV% && ^
 python -m pip --python %ENV_PATH%\python.exe uninstall %PACKAGE% --yes && ^
 python -m pip --python %ENV_PATH%\python.exe install -e ../../. && ^

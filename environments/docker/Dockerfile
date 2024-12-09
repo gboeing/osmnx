@@ -4,7 +4,7 @@ LABEL url="https://osmnx.readthedocs.io"
 LABEL description="OSMnx is a Python package to easily download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap."
 
 # copy the package files needed for installation
-COPY --chmod=0755 ./environments/docker/requirements.txt ./osmnx/
+COPY --chmod=0755 ./environments/requirements.txt ./osmnx/
 COPY --chmod=0755 ./osmnx/ ./osmnx/osmnx/
 COPY --chmod=0755 ./pyproject.toml ./osmnx/
 COPY --chmod=0755 ./README.md ./osmnx/
