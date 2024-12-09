@@ -2,7 +2,7 @@ name: Test minimum dependencies
 
 on:
   schedule:
-    - cron: "0 5 * * 1" # every monday at 05:00 UTC
+    - cron: "20 4 * * 1" # every monday at 04:20 UTC
   workflow_dispatch:
 
 jobs:

@@ -5,7 +5,7 @@ on:
     tags:
       - 'v*'
   schedule:
-    - cron: "0 6 * * 1" # every monday at 06:00 UTC
+    - cron: "40 4 * * 1" # every monday at 04:40 UTC
   workflow_dispatch:
 
 jobs:
