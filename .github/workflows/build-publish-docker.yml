@@ -6,7 +6,6 @@ on:
       - '*'
   schedule:
     - cron: "50 4 * * 1" # every monday at 04:50 UTC
-  workflow_dispatch:
 
 jobs:
   build_publish_docker:
@@ -40,5 +39,5 @@ jobs:
           context: .
           file: ./environments/docker/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'schedule' }}
+          push: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags') }}
           tags: ${{ steps.meta.outputs.tags }}
