@@ -13,6 +13,7 @@ jobs:
     if: ${{ github.repository == 'gboeing/osmnx' }}
     name: Build/publish package to PyPI
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       id-token: write
 

@@ -12,6 +12,7 @@ jobs:
     if: ${{ github.repository == 'gboeing/osmnx' }}
     name: Build/publish image to Docker Hub
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repo
