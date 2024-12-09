@@ -1,3 +1,8 @@
+# This workflow builds and validates the Python package distribution and
+# uploads it to PyPI if the triggering event was a tag push. When it's a
+# scheduled run, it just builds and validates the distribution as a test, but
+# does not upload it. The upload uses PyPI trusted publishing, so don't change
+# this workflow file's name.
 name: Build and publish to PyPI
 
 on:

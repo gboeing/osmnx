@@ -1,3 +1,4 @@
+# This workflow tests building the package docs and verifying links are live.
 name: Build docs and check links
 
 on:

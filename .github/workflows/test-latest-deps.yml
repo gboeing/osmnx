@@ -1,3 +1,5 @@
+# This workflow runs the test suite using the latest/pre-release dependency
+# versions.
 name: Test latest/pre-release dependencies
 
 on:

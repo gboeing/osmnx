@@ -1,3 +1,5 @@
+# This workflow runs the test suite using the minimum supported dependency
+# versions.
 name: Test minimum dependencies
 
 on:

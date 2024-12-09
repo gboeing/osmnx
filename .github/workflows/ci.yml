@@ -1,3 +1,4 @@
+# This workflow runs the repo's CI tests.
 name: CI
 
 on:
