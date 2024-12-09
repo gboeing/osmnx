@@ -38,9 +38,4 @@ jobs:
         if: ${{ github.event_name != 'schedule' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
-          print-hash: true
-          verbose: true
-          verify-metadata: true
