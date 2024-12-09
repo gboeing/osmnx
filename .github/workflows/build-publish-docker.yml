@@ -24,7 +24,7 @@ jobs:
           username: gboeing
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata for Docker
+      - name: Extract tags for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
