@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1 (TBD)
+
+- fix message when missing optional dependencies in elevation module (#1250)
+
 ## 2.0.0 (2024-11-24)
 
 Read the v2 [migration guide](https://github.com/gboeing/osmnx/issues/1123)

@@ -27,9 +27,11 @@ if TYPE_CHECKING:
 # rasterio and rio-vrt are optional dependencies for raster querying
 try:
     import rasterio
-    from rio_vrt import build_vrt
 except ImportError:  # pragma: no cover
     rasterio = None
+try:
+    from rio_vrt import build_vrt
+except ImportError:  # pragma: no cover
     build_vrt = None
 
 
