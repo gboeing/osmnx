@@ -2,7 +2,7 @@
 set -e
 
 # delete temp files and folders
-rm -r -f .pytest_cache .temp ./dist ./docs/build ".coverage*" "./*/__pycache__"
+rm -r -f ./.coverage* ./.pytest_cache ./.temp ./dist ./docs/build ./*/__pycache__
 
 # run the pre-commit hooks for linting/formatting
 pre-commit run --all-files
@@ -20,4 +20,5 @@ python -m sphinx -E -W --keep-going -b linkcheck ./docs/source ./docs/build/link
 python -m pytest --verbose --maxfail=1 --typeguard-packages=osmnx --cov=osmnx --cov-report=term-missing:skip-covered
 
 # delete temp files and folders
-rm -r -f .pytest_cache .temp ./dist ./docs/build ".coverage*" "./*/__pycache__"
+sleep 1
+rm -r -f ./.coverage* ./.pytest_cache ./.temp ./dist ./docs/build ./*/__pycache__
