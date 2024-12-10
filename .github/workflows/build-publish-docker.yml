@@ -1,18 +1,21 @@
+# This workflow builds a Docker image from the repo's Dockerfile and pushes it
+# to Docker Hub if the triggering event was a tag push. When it's a scheduled
+# run, it just builds the image as a test, but does not push it.
 name: Build and publish Docker image
 
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
   schedule:
     - cron: "50 4 * * 1" # every monday at 04:50 UTC
-  workflow_dispatch:
 
 jobs:
   build_publish_docker:
     if: ${{ github.repository == 'gboeing/osmnx' }}
     name: Build/publish image to Docker Hub
     runs-on: ubuntu-latest
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repo
@@ -24,7 +27,7 @@ jobs:
           username: gboeing
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata for Docker
+      - name: Extract tags for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -40,5 +43,5 @@ jobs:
           context: .
           file: ./environments/docker/Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name != 'schedule' }}
+          push: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags') }}
           tags: ${{ steps.meta.outputs.tags }}

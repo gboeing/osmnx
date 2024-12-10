@@ -1,3 +1,4 @@
+# This workflow runs the repo's CI tests.
 name: CI
 
 on:
@@ -13,6 +14,7 @@ jobs:
   ci:
     name: Python ${{ matrix.python-version }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:

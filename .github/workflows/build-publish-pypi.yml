@@ -1,3 +1,8 @@
+# This workflow builds and validates the Python package distribution and
+# uploads it to PyPI if the triggering event was a tag push. When it's a
+# scheduled run, it just builds and validates the distribution as a test, but
+# does not upload it. The upload uses PyPI trusted publishing, so don't change
+# this workflow file's name.
 name: Build and publish to PyPI
 
 on:
@@ -6,13 +11,15 @@ on:
       - 'v*'
   schedule:
     - cron: "40 4 * * 1" # every monday at 04:40 UTC
-  workflow_dispatch:
 
 jobs:
   build_publish_pypi:
     if: ${{ github.repository == 'gboeing/osmnx' }}
     name: Build/publish package to PyPI
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      id-token: write
 
     defaults:
       run:
@@ -35,12 +42,5 @@ jobs:
           python -m twine check --strict ./dist/*
 
       - name: Publish package to PyPI
-        if: ${{ github.event_name != 'schedule' }}
+        if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags') }}
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_TOKEN }}
-          repository-url: https://test.pypi.org/legacy/
-          print-hash: true
-          verbose: true
-          verify-metadata: true

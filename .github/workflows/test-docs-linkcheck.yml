@@ -1,3 +1,4 @@
+# This workflow tests building the package docs and verifying links are live.
 name: Build docs and check links
 
 on:
@@ -10,6 +11,7 @@ jobs:
     if: ${{ github.repository == 'gboeing/osmnx' }}
     name: Build docs and check links
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     defaults:
       run:
