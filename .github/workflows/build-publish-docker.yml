@@ -6,7 +6,7 @@ name: Build and publish Docker image
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
   schedule:
     - cron: "50 4 * * 1" # every monday at 04:50 UTC
 
