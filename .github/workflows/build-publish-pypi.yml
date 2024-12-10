@@ -45,5 +45,3 @@ jobs:
       - name: Publish package to PyPI
         if: ${{ github.event_name != 'schedule' }}
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
