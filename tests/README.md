@@ -1,34 +1,27 @@
 # OSMnx tests
 
-First, ensure that you have installed the necessary [dependencies](../environments/tests/env-ci.yml) for the test suite. Then use the repository's [pre-commit hooks](../.pre-commit-config.yaml) and the scripts in this folder to:
-
-- format the code and docstrings per the project's style
-- lint the code and docstrings
-- type check the code
-- run tests and coverage
-
-Read more about the project's standards in the [contributing guidelines](../CONTRIBUTING.md).
+Read more about the project's standards in the [contributing guidelines](../CONTRIBUTING.md) and ensure that you have installed the necessary [dependencies](../environments/tests/env-ci.yml) for the test suite.
 
 ## Code format
 
-Format the code and sort imports per the project's style by running (from the repository root):
+Format the code per the project's style by running the pre-commit hooks:
 
 ```shell
-bash ./tests/format.sh
+pre-commit install
+pre-commit run -a
 ```
 
 ## Run tests
 
-Lint, type check, and test the code/docstrings by running (from the repository root):
+Run the test suite locally by running (from the repository root):
 
 ```shell
-pre-commit install
 bash ./tests/lint_test.sh
 ```
 
 ## Continuous integration
 
-Pull requests trigger continuous integration tests via GitHub Actions. See the [configuration](../.github/workflows/ci.yml). This includes the following steps:
+Pull requests trigger continuous integration tests via GitHub Actions (see [workflow](../.github/workflows/ci.yml)), including the following steps:
 
 - build the docs
 - check code formatting
@@ -38,10 +31,6 @@ Pull requests trigger continuous integration tests via GitHub Actions. See the [
 
 ## Releases
 
-To package and release a new version, update `CHANGELOG.md` and edit the version number in `osmnx/_version.py`. If necessary, update the dates in `LICENSE.txt` and `docs/source/conf.py` and the dependency versions in `pyproject.toml`. Then change directories to the repository's root and run:
+To publish a new version, update `CHANGELOG.md` and edit the version number in `osmnx/_version.py`. If necessary, update the dates in `LICENSE.txt` and `docs/source/conf.py` and the dependency versions in `pyproject.toml`. Then tag the repository with its new semantic version, like `v1.2.3`.
 
-```shell
-bash -i ./tests/release.sh
-```
-
-This will tag the repository with the new version number, upload the PyPI distribution, and update the conda-forge feedstock. Then, open a pull request at the [feedstock](https://github.com/conda-forge/osmnx-feedstock) to release on conda-forge. Finally, when the new version is available on conda-forge, update the [Docker image](../environments/docker) and the OSMnx [Examples Gallery](https://github.com/gboeing/osmnx-examples) to use the new version.
+Pushing the tags will trigger Github Actions to publish the distribution to PyPI (see [workflow](../.github/workflows/build-publish-pypi.yml)) and publish a new image to Docker Hub (see [workflow](../.github/workflows/build-publish-docker.yml)). The `regro-cf-autotick-bot` will open a pull request to update the conda-forge [feedstock](https://github.com/conda-forge/osmnx-feedstock): merge this PR to publish the distribution on conda-forge. Finally, update the [Examples Gallery](https://github.com/gboeing/osmnx-examples) to use the new version.
