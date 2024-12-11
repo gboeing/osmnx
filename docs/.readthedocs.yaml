@@ -9,7 +9,7 @@ formats: all
 
 python:
   install:
-    - requirements: docs/requirements.txt
+    - requirements: docs/requirements-rtd.txt
 
 sphinx:
   configuration: docs/source/conf.py

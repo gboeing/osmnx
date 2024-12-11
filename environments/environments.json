@@ -1,0 +1,51 @@
+{
+ "env-test-minimum-deps": {
+  "filepath": "./environments/tests/env-test-minimum-deps.yml",
+  "force_pin": true,
+  "which_optionals": [
+   "entropy",
+   "neighbors",
+   "raster",
+   "visualization",
+   "tests"
+  ]
+ },
+ "env-ci": {
+  "filepath": "./environments/tests/env-ci.yml"
+ },
+ "requirements-test-latest-deps": {
+  "filepath": "./environments/tests/requirements-test-latest-deps.txt",
+  "needs_python": false
+ },
+ "requirements-rtd": {
+  "filepath": "./docs/requirements-rtd.txt",
+  "needs_python": false,
+  "needs_dependencies": false,
+  "which_optionals": [
+   "docs"
+  ]
+ },
+ "requirements-env": {
+  "filepath": "./environments/requirements.txt",
+  "needs_python": false,
+  "extras": [
+   "bottleneck",
+   "cartopy",
+   "conda-smithy",
+   "folium",
+   "hatch",
+   "jupyterlab",
+   "nbdime",
+   "nbqa",
+   "numexpr",
+   "pillow",
+   "pip",
+   "pysal>24",
+   "python-igraph",
+   "seaborn",
+   "statsmodels",
+   "twine",
+   "validate-pyproject"
+  ]
+ }
+}
