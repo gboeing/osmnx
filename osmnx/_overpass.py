@@ -101,6 +101,8 @@ def _get_network_filter(network_type: str) -> str:
         f'["highway"!~"abandoned|bus_guideway|construction|cycleway|motor|no|planned|platform|'
         f'proposed|raceway|razed"]'
         f'["foot"!~"no"]["service"!~"private"]'
+        f'["sidewalk"!~"separate"]["sidewalk:both"!~"separate"]'
+        f'["sidewalk:left"!~"separate"]["sidewalk:right"!~"separate"]'
     )
 
     # biking: filter out foot ways, motor ways, private ways, and anything
