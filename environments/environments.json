@@ -1,33 +1,47 @@
 {
  "env-test-minimum-deps": {
   "filepath": "./environments/tests/env-test-minimum-deps.yml",
+  "needs_python": true,
+  "needs_dependencies": true,
+  "needs_optionals": true,
+  "which_optionals": ["entropy", "neighbors", "raster", "visualization", "tests"],
   "force_pin": true,
-  "which_optionals": [
-   "entropy",
-   "neighbors",
-   "raster",
-   "visualization",
-   "tests"
-  ]
+  "extras": null
  },
  "env-ci": {
-  "filepath": "./environments/tests/env-ci.yml"
+  "filepath": "./environments/tests/env-ci.yml",
+  "needs_python": true,
+  "needs_dependencies": true,
+  "needs_optionals": true,
+  "which_optionals": null,
+  "force_pin": false,
+  "extras": null
  },
  "requirements-test-latest-deps": {
   "filepath": "./environments/tests/requirements-test-latest-deps.txt",
-  "needs_python": false
+  "needs_python": false,
+  "needs_dependencies": true,
+  "needs_optionals": true,
+  "which_optionals": null,
+  "force_pin": false,
+  "extras": null
  },
  "requirements-rtd": {
   "filepath": "./docs/requirements-rtd.txt",
   "needs_python": false,
   "needs_dependencies": false,
-  "which_optionals": [
-   "docs"
-  ]
+  "needs_optionals": true,
+  "which_optionals": ["docs"],
+  "force_pin": false,
+  "extras": null
  },
  "requirements-env": {
   "filepath": "./environments/requirements.txt",
   "needs_python": false,
+  "needs_dependencies": true,
+  "needs_optionals": true,
+  "which_optionals": null,
+  "force_pin": false,
   "extras": [
    "bottleneck",
    "cartopy",
