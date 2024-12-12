@@ -1,6 +1,6 @@
 #!/bin/bash
 # prune conda, docker, and git
-set -e
+set -euo pipefail
 eval "$(conda shell.bash hook)"
 conda activate base
 conda clean --all --yes

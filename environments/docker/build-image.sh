@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 echo "Run this script from the repository root."
 docker login
 docker buildx build --no-cache --pull --push --platform=linux/amd64,linux/arm64 -f ./environments/docker/Dockerfile -t gboeing/osmnx:test .
