@@ -47,7 +47,9 @@ The OSMnx `Examples Gallery`_ contains tutorials and demonstrations of all these
 Configuration
 ^^^^^^^^^^^^^
 
-You can configure OSMnx using the :code:`settings` module. Here you can adjust logging behavior, caching, server endpoints, and more. You can also configure OSMnx to retrieve historical snapshots of OpenStreetMap data as of a certain date. Read more about the :ref:`settings <osmnx-settings-module>` module.
+You can configure OSMnx using the :code:`settings` module. Here you can adjust logging behavior, caching, server endpoints, and more. You can also configure OSMnx to retrieve historical snapshots of OpenStreetMap data as of a certain date.
+
+Read more about the :ref:`settings <osmnx-settings-module>` module in the User Reference.
 
 Geocoding and Querying
 ^^^^^^^^^^^^^^^^^^^^^^
