@@ -381,7 +381,7 @@ def to_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
     Convert MultiDiGraph to undirected MultiGraph.
 
     This function has a limited use case: it allows you to create a MultiGraph
-    for use with functions/algorithms which only accept a MultiGraph object.
+    for use with functions/algorithms that only accept a MultiGraph object.
     Rather, if you want a fully bidirectional graph (such as for a walking
     network), configure the `settings` module's `bidirectional_network_types`
     before creating your graph to generate a fully bidirectional MultiDiGraph.
