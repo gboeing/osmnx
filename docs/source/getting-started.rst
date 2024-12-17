@@ -6,7 +6,7 @@ Get Started in 4 Steps
 
 1. Install OSMnx by following the :doc:`installation` guide.
 
-2. Read ":ref:`Introducing OSMnx`" below on this page.
+2. Read ":ref:`introducing-osmnx`" below on this page.
 
 3. Work through the OSMnx `Examples Gallery`_ for step-by-step tutorials and sample code.
 
@@ -14,7 +14,7 @@ Get Started in 4 Steps
 
 Finally, if you're not already familiar with `NetworkX`_ and `GeoPandas`_, make sure you read their user guides as OSMnx uses their data structures and functionality.
 
-.. _Introducing OSMnx:
+.. _introducing-osmnx:
 
 Introducing OSMnx
 -----------------
@@ -47,7 +47,9 @@ The OSMnx `Examples Gallery`_ contains tutorials and demonstrations of all these
 Configuration
 ^^^^^^^^^^^^^
 
-You can configure OSMnx using the :code:`settings` module. Here you can adjust logging behavior, caching, server endpoints, and more. You can also configure OSMnx to retrieve historical snapshots of OpenStreetMap data as of a certain date. Refer to the FAQ below for server usage limitations.
+You can configure OSMnx using the :code:`settings` module. Here you can adjust logging behavior, caching, server endpoints, and more. You can also configure OSMnx to retrieve historical snapshots of OpenStreetMap data as of a certain date.
+
+Read more about the :ref:`settings <osmnx-settings-module>` module in the User Reference.
 
 Geocoding and Querying
 ^^^^^^^^^^^^^^^^^^^^^^

@@ -54,9 +54,11 @@ def graph_from_bbox(
 
     Use the `settings` module's `useful_tags_node` and `useful_tags_way`
     settings to configure which OSM node/way tags are added as graph node/edge
-    attributes. You can also use the `settings` module to retrieve a snapshot
-    of historical OSM data as of a certain date, or to configure the Overpass
-    server timeout, memory allocation, and other custom settings.
+    attributes. If you want a fully bidirectional network, ensure your
+    `network_type` is in `settings.bidirectional_network_types` before
+    creating your graph. You can also use the `settings` module to retrieve a
+    snapshot of historical OSM data as of a certain date, or to configure the
+    Overpass server timeout, memory allocation, and other customizations.
 
     Parameters
     ----------
@@ -72,8 +74,8 @@ def graph_from_bbox(
         If True, return the entire graph even if it is not connected. If
         False, retain only the largest weakly connected component.
     truncate_by_edge
-        If True, retain nodes outside bounding box if at least one of node's
-        neighbors is within the bounding box.
+        If True, retain nodes the outside bounding box if at least one of
+        the node's neighbors lies within the bounding box.
     custom_filter
         A custom ways filter to be used instead of the `network_type` presets,
         e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. If `str`,
@@ -133,9 +135,11 @@ def graph_from_point(
 
     Use the `settings` module's `useful_tags_node` and `useful_tags_way`
     settings to configure which OSM node/way tags are added as graph node/edge
-    attributes. You can also use the `settings` module to retrieve a snapshot
-    of historical OSM data as of a certain date, or to configure the Overpass
-    server timeout, memory allocation, and other custom settings.
+    attributes. If you want a fully bidirectional network, ensure your
+    `network_type` is in `settings.bidirectional_network_types` before
+    creating your graph. You can also use the `settings` module to retrieve a
+    snapshot of historical OSM data as of a certain date, or to configure the
+    Overpass server timeout, memory allocation, and other customizations.
 
     Parameters
     ----------
@@ -160,8 +164,8 @@ def graph_from_point(
         If True, return the entire graph even if it is not connected. If
         False, retain only the largest weakly connected component.
     truncate_by_edge
-        If True, retain nodes outside bounding box if at least one of node's
-        neighbors is within the bounding box.
+        If True, retain nodes the outside bounding box if at least one of
+        the node's neighbors lies within the bounding box.
     custom_filter
         A custom ways filter to be used instead of the `network_type` presets,
         e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. If `str`,
@@ -230,9 +234,11 @@ def graph_from_address(
 
     Use the `settings` module's `useful_tags_node` and `useful_tags_way`
     settings to configure which OSM node/way tags are added as graph node/edge
-    attributes. You can also use the `settings` module to retrieve a snapshot
-    of historical OSM data as of a certain date, or to configure the Overpass
-    server timeout, memory allocation, and other custom settings.
+    attributes. If you want a fully bidirectional network, ensure your
+    `network_type` is in `settings.bidirectional_network_types` before
+    creating your graph. You can also use the `settings` module to retrieve a
+    snapshot of historical OSM data as of a certain date, or to configure the
+    Overpass server timeout, memory allocation, and other customizations.
 
     Parameters
     ----------
@@ -256,8 +262,8 @@ def graph_from_address(
         If True, return the entire graph even if it is not connected. If
         False, retain only the largest weakly connected component.
     truncate_by_edge
-        If True, retain nodes outside bounding box if at least one of node's
-        neighbors is within the bounding box.
+        If True, retain nodes the outside bounding box if at least one of
+        the node's neighbors lies within the bounding box.
     custom_filter
         A custom ways filter to be used instead of the `network_type` presets,
         e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. If `str`,
@@ -331,9 +337,11 @@ def graph_from_place(
 
     Use the `settings` module's `useful_tags_node` and `useful_tags_way`
     settings to configure which OSM node/way tags are added as graph node/edge
-    attributes. You can also use the `settings` module to retrieve a snapshot
-    of historical OSM data as of a certain date, or to configure the Overpass
-    server timeout, memory allocation, and other custom settings.
+    attributes. If you want a fully bidirectional network, ensure your
+    `network_type` is in `settings.bidirectional_network_types` before
+    creating your graph. You can also use the `settings` module to retrieve a
+    snapshot of historical OSM data as of a certain date, or to configure the
+    Overpass server timeout, memory allocation, and other customizations.
 
     Parameters
     ----------
@@ -348,10 +356,10 @@ def graph_from_place(
         If True, return the entire graph even if it is not connected. If
         False, retain only the largest weakly connected component.
     truncate_by_edge
-        If True, retain nodes outside bounding box if at least one of node's
-        neighbors is within the bounding box.
+        If True, retain nodes outside the place boundary polygon(s) if at
+        least one of the node's neighbors lies within the polygon(s).
     which_result
-        which geocoding result to use. if None, auto-select the first
+        Which geocoding result to use. if None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one.
     custom_filter
         A custom ways filter to be used instead of the `network_type` presets,
@@ -412,9 +420,11 @@ def graph_from_polygon(
 
     Use the `settings` module's `useful_tags_node` and `useful_tags_way`
     settings to configure which OSM node/way tags are added as graph node/edge
-    attributes. You can also use the `settings` module to retrieve a snapshot
-    of historical OSM data as of a certain date, or to configure the Overpass
-    server timeout, memory allocation, and other custom settings.
+    attributes. If you want a fully bidirectional network, ensure your
+    `network_type` is in `settings.bidirectional_network_types` before
+    creating your graph. You can also use the `settings` module to retrieve a
+    snapshot of historical OSM data as of a certain date, or to configure the
+    Overpass server timeout, memory allocation, and other customizations.
 
     Parameters
     ----------
@@ -430,8 +440,8 @@ def graph_from_polygon(
         If True, return the entire graph even if it is not connected. If
         False, retain only the largest weakly connected component.
     truncate_by_edge
-        If True, retain nodes outside bounding box if at least one of node's
-        neighbors is within the bounding box.
+        If True, retain nodes outside `polygon` if at least one of the node's
+        neighbors lies within `polygon`.
     custom_filter
         A custom ways filter to be used instead of the `network_type` presets,
         e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. If `str`,
