@@ -73,6 +73,8 @@ osmnx.routing module
 .. automodule:: osmnx.routing
     :members:
 
+.. _osmnx-settings-module:
+
 osmnx.settings module
 ---------------------
 
