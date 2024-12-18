@@ -2,7 +2,7 @@
 
 ## 2.0.1 (TBD)
 
-- fix message when missing optional dependencies in elevation module (#1250)
+- fix error message when elevation module's optional dependencies are missing (#1250)
 - update "walk" network_type to filter out ways whose sidewalks are mapped separately (#1254)
 
 ## 2.0.0 (2024-11-24)
