@@ -124,7 +124,7 @@ def make_file(env_name: str) -> None:
             text = ""
             for k, v in data.items():
                 if isinstance(v, list):
-                    text += k + ":\n- " + "\n- ".join(v) + "\n"
+                    text += k + ":\n  - " + "\n  - ".join(v) + "\n"
                 elif isinstance(v, str):
                     text += k + ": " + v + "\n"
             f.writelines(HEADER + text)

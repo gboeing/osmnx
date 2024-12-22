@@ -29,6 +29,15 @@ repos:
         args: [--fix]
       - id: ruff-format
 
+  - repo: local
+    hooks:
+      - id: yamllint
+        name: yamllint
+        entry: yamllint
+        args: [--strict, -d, "{extends: relaxed, rules: {line-length: {max: 120}}}"]
+        language: python
+        types: [file, yaml]
+
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: "v1.13.0"
     hooks:

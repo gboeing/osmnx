@@ -10,7 +10,9 @@ body:
     id: contributing
     attributes:
       label: Contributing guidelines
-      description: Before you proceed, read the [contributing guidelines](../blob/main/CONTRIBUTING.md) regarding where to ask usage questions and how to propose a feature.
+      description: |
+        Before you proceed, read the [contributing guidelines](../blob/main/CONTRIBUTING.md)
+        regarding where to ask usage questions and how to propose a feature.
       options:
         - label: I understand the contributing guidelines
           required: true
@@ -19,7 +21,10 @@ body:
     id: documentation_examples
     attributes:
       label: Documentation
-      description: Before you proceed, review the [documentation](https://osmnx.readthedocs.io/) and [examples gallery](https://github.com/gboeing/osmnx-examples), which cover key concepts, installation, and package usage.
+      description: |
+        Before you proceed, review the [documentation](https://osmnx.readthedocs.io/)
+        and [examples gallery](https://github.com/gboeing/osmnx-examples), which cover
+        key concepts, installation, and package usage.
       options:
         - label: My proposal is not addressed by the documentation or examples
           required: true
@@ -28,7 +33,9 @@ body:
     id: existing_issue
     attributes:
       label: Existing issues
-      description: Before you proceed, search the open/closed issues and pull requests to see if anything similar has been proposed.
+      description: |
+        Before you proceed, search the open/closed issues and pull requests to see if
+        anything similar has been proposed.
       options:
         - label: Nothing similar appears in an existing issue
           required: true
@@ -37,7 +44,9 @@ body:
     id: problem
     attributes:
       label: What problem does your feature proposal solve?
-      description: Provide a clear and concise description of your use case and the current problem, challenge, or limitation.
+      description: |
+        Provide a clear and concise description of your use case and the current problem,
+        challenge, or limitation.
     validations:
       required: true
 
@@ -45,7 +54,9 @@ body:
     id: solution
     attributes:
       label: What is your proposed solution?
-      description: Provide a clear and concise description of what you want to change in OSMnx and how you plan to implement it.
+      description: |
+        Provide a clear and concise description of what you want to change in OSMnx and
+        how you plan to implement it.
     validations:
       required: true
 
@@ -53,7 +64,9 @@ body:
     id: alternatives
     attributes:
       label: What alternatives have you considered?
-      description: Provide a clear and concise description of any alternative solutions, features, or workarounds you have considered.
+      description: |
+        Provide a clear and concise description of any alternative solutions, features,
+        or workarounds you have considered.
     validations:
       required: true
 
@@ -61,6 +74,9 @@ body:
     id: mwe
     attributes:
       label: Additional context
-      description: Provide a complete minimal working example of code to demonstrate your use case. Add any additional code snippets, context, or screenshots about the feature proposal to demonstrate its importance and feasibility.
+      description: |
+        Provide a complete minimal working example of code to demonstrate your use case.
+        Add any additional code snippets, context, or screenshots about the feature
+        proposal to demonstrate its importance and feasibility.
     validations:
       required: true

@@ -3,25 +3,25 @@
 # environments/environments.json and the requirements in pyproject.toml.
 name: env-ci
 channels:
-- conda-forge
+  - conda-forge
 dependencies:
-- furo
-- geopandas>=1.0
-- lxml
-- matplotlib>=3.5
-- networkx>=2.5
-- numpy>=1.22
-- pandas>=1.4
-- pre-commit
-- pytest
-- pytest-cov
-- python>=3.9
-- rasterio>=1.3
-- requests>=2.27
-- rio-vrt>=0.3
-- scikit-learn>=0.23
-- scipy>=1.5
-- shapely>=2.0
-- sphinx-autodoc-typehints
-- sphinx>=7
-- typeguard
+  - furo
+  - geopandas>=1.0
+  - lxml
+  - matplotlib>=3.5
+  - networkx>=2.5
+  - numpy>=1.22
+  - pandas>=1.4
+  - pre-commit
+  - pytest
+  - pytest-cov
+  - python>=3.9
+  - rasterio>=1.3
+  - requests>=2.27
+  - rio-vrt>=0.3
+  - scikit-learn>=0.23
+  - scipy>=1.5
+  - shapely>=2.0
+  - sphinx-autodoc-typehints
+  - sphinx>=7
+  - typeguard
