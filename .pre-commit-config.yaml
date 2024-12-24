@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: "v5.0.0"
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
         args: [--maxkb=50]
@@ -23,20 +23,20 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/adrienverge/yamllint
-    rev: "v1.35.1"
+    rev: v1.35.1
     hooks:
       - id: yamllint
-        args: [--strict, -d, "{extends: relaxed, rules: {line-length: {max: 120}}}"]
+        args: [--strict, -d, "{extends: relaxed, rules: {line-length: {max: 110}}}"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.8.2"
+    rev: v0.8.4
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.13.0"
+    rev: v1.14.0
     hooks:
       - id: mypy
         additional_dependencies:
