@@ -22,21 +22,18 @@ repos:
         args: [--branch, main]
       - id: trailing-whitespace
 
+  - repo: https://github.com/adrienverge/yamllint
+    rev: "v1.35.1"
+    hooks:
+      - id: yamllint
+        args: [--strict, -d, "{extends: relaxed, rules: {line-length: {max: 120}}}"]
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: "v0.8.2"
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
-
-  - repo: local
-    hooks:
-      - id: yamllint
-        name: yamllint
-        entry: yamllint
-        args: [--strict, -d, "{extends: relaxed, rules: {line-length: {max: 120}}}"]
-        language: python
-        types: [file, yaml]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: "v1.13.0"
