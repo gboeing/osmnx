@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: [main, v1]
   schedule:
-    - cron: "0 4 * * 1" # every monday at 04:00 UTC
+    - cron: "0 4 * * 1"  # every monday at 04:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -48,7 +48,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pre-commit/
-          key: pre-commit-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: pre-commit-${{ matrix.python-version }}-${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run pre-commit checks
         run: pre-commit run --all-files
