@@ -6,11 +6,13 @@ channels:
   - conda-forge
 dependencies:
   - geopandas==1.0.*
+  - hatch
   - lxml
   - matplotlib==3.5.*
   - networkx==2.5.*
   - numpy==1.22.*
   - pandas==1.4.*
+  - pip
   - pre-commit
   - pytest
   - pytest-cov
@@ -21,4 +23,6 @@ dependencies:
   - scikit-learn==0.23.*
   - scipy==1.5.*
   - shapely==2.0.*
+  - twine
   - typeguard
+  - validate-pyproject

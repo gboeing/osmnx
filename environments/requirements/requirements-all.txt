@@ -12,7 +12,6 @@ jupyterlab
 lxml
 matplotlib>=3.5
 nbdime
-nbqa
 networkx>=2.5
 numexpr
 numpy>=1.22

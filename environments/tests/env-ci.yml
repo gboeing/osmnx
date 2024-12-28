@@ -7,11 +7,13 @@ channels:
 dependencies:
   - furo
   - geopandas>=1.0
+  - hatch
   - lxml
   - matplotlib>=3.5
   - networkx>=2.5
   - numpy>=1.22
   - pandas>=1.4
+  - pip
   - pre-commit
   - pytest
   - pytest-cov
@@ -24,4 +26,6 @@ dependencies:
   - shapely>=2.0
   - sphinx-autodoc-typehints
   - sphinx>=7
+  - twine
   - typeguard
+  - validate-pyproject

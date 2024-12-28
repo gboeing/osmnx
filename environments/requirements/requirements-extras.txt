@@ -1,0 +1,12 @@
+bottleneck
+cartopy
+conda-smithy
+folium
+jupyterlab
+nbdime
+numexpr
+pillow
+pysal>24
+python-igraph
+seaborn
+statsmodels

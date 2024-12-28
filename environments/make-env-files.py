@@ -13,7 +13,7 @@ from packaging.requirements import Requirement
 
 # path to package's pyproject and the config json file
 pyproject_path = "./pyproject.toml"
-environments_config_path = "./environments/environments.json"
+environments_config_path = "./environments/requirements/environments.json"
 
 # what channels to specify in conda env yml files
 CHANNELS = ["conda-forge"]
@@ -25,22 +25,16 @@ HEADER = (
 )
 
 
-def extract_optional_deps(which: list[str] | None = None) -> list[Requirement]:
+def extract_optional_deps() -> list[Requirement]:
     """
     Extract a list of the optional dependencies/versions from pyproject.toml.
-
-    Parameters
-    ----------
-    which
-        Which optional dependencies to extract. If None, extract them all.
 
     Returns
     -------
     optional_deps
     """
     opts = pyproject["project"]["optional-dependencies"]
-    opts = [v for k, v in opts.items() if k in which] if which is not None else opts.values()
-    return list({Requirement(o) for o in itertools.chain.from_iterable(opts)})
+    return list({Requirement(o) for o in itertools.chain.from_iterable(opts.values())})
 
 
 def make_requirement(
@@ -94,7 +88,7 @@ def make_file(env_name: str) -> None:
 
     # it's a conda env file if it ends with ".yml", otherwise it's a pip
     # requirements.txt file
-    is_conda = env["filepath"].endswith(".yml")
+    is_conda = env["output_path"].endswith(".yml")
 
     # determine which dependencies to add based on the configuration
     depends_on = []
@@ -105,33 +99,39 @@ def make_file(env_name: str) -> None:
         dependencies = [Requirement(d) for d in pyproject["project"]["dependencies"]]
         depends_on.extend(dependencies)
     if env["needs_optionals"]:
-        optionals = extract_optional_deps(which=env["which_optionals"])
+        optionals = extract_optional_deps()
         depends_on.extend(optionals)
 
     # make the list of requirements
-    requirements = sorted(
+    requirements = [
         make_requirement(dep, force_pin=env["force_pin"], is_conda=is_conda) for dep in depends_on
-    )
+    ]
 
     # add any extra requirements if provided in the configuration
     if env["extras"] is not None:
-        requirements = sorted(requirements + env["extras"])
+        for extras_filepath in env["extras"]:
+            with Path(extras_filepath).open() as f:
+                requirements += f.read().splitlines()
 
-    # write the conda env yml or pip requirements.txt file to disk
-    with Path(env["filepath"]).open("w") as f:
-        if is_conda:
-            data = {"name": env_name, "channels": CHANNELS, "dependencies": requirements}
-            text = ""
-            for k, v in data.items():
-                if isinstance(v, list):
-                    text += k + ":\n  - " + "\n  - ".join(v) + "\n"
-                elif isinstance(v, str):
-                    text += k + ": " + v + "\n"
-            f.writelines(HEADER + text)
-        else:
-            f.writelines(HEADER + "\n".join(requirements) + "\n")
+    # convert the requirements to conda env yml or pip requirements.txt
+    requirements = sorted(requirements)
+    if not is_conda:
+        text = HEADER + "\n".join(requirements) + "\n"
+    else:
+        data = {"name": env_name, "channels": CHANNELS, "dependencies": requirements}
+        text = ""
+        for k, v in data.items():
+            if isinstance(v, list):
+                text += k + ":\n  - " + "\n  - ".join(v) + "\n"
+            elif isinstance(v, str):
+                text += k + ": " + v + "\n"
+        text = HEADER + text
 
-    print(f"Wrote {len(requirements)} requirements to {env['filepath']!r}")  # noqa: T201
+    # write the file to disk
+    with Path(env["output_path"]).open("w") as f:
+        f.writelines(text)
+
+    print(f"Wrote {len(requirements)} requirements to {env['output_path']!r}")  # noqa: T201
 
 
 if __name__ == "__main__":
