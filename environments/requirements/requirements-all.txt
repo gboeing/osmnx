@@ -3,7 +3,6 @@
 # /environments/requirements/ and the requirements in pyproject.toml.
 bottleneck
 cartopy
-conda-smithy
 folium
 furo
 geopandas>=1.0
