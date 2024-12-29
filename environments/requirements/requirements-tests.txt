@@ -1,0 +1,9 @@
+hatch
+lxml
+pip
+pre-commit
+pytest
+pytest-cov
+twine
+typeguard
+validate-pyproject

@@ -55,6 +55,12 @@ jobs:
         env:
           SKIP: no-commit-to-branch
 
+      - name: Build and check package
+        run: |
+          python -m validate_pyproject ./pyproject.toml
+          python -m hatch build --clean
+          python -m twine check --strict ./dist/*
+
       - name: Test docs build
         run: python -m sphinx -E -W --keep-going -b html ./docs/source ./docs/build/html
 

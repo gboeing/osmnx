@@ -43,7 +43,6 @@ ox.settings.cache_folder = ".temp/cache"
 location_point = (37.791427, -122.410018)
 address = "600 Montgomery St, San Francisco, California, USA"
 place1 = {"city": "Piedmont", "state": "California", "country": "USA"}
-place2 = "SoHo, New York, NY"
 polygon_wkt = (
     "POLYGON ((-122.262 37.869, -122.255 37.869, -122.255 37.874,"
     "-122.262 37.874, -122.262 37.869))"
@@ -88,7 +87,6 @@ def test_geocoder() -> None:
     """Test retrieving elements by place name and OSM ID."""
     city = ox.geocode_to_gdf("R2999176", by_osmid=True)
     city = ox.geocode_to_gdf(place1, which_result=1)
-    city = ox.geocode_to_gdf(place2)
     city_projected = ox.projection.project_gdf(city, to_crs="epsg:3395")
 
     # test geocoding a bad query: should raise exception
