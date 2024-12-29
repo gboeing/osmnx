@@ -1,6 +1,5 @@
 bottleneck
 cartopy
-conda-smithy
 folium
 jupyterlab
 nbdime

@@ -11,7 +11,7 @@ COPY --chmod=0755 ./README.md ./osmnx/
 
 # install and configuration everything in one RUN to keep image tidy
 RUN conda update --yes -c conda-forge --strict-channel-priority -n base conda mamba && \
-    mamba install --update-all --force-reinstall --yes -c conda-forge --strict-channel-priority --file ./osmnx/requirements.txt && \
+    mamba install --update-all --force-reinstall --yes -c conda-forge --strict-channel-priority --file ./osmnx/requirements-all.txt && \
     python -m pip install --no-cache-dir -e ./osmnx/ && \
     python -m ipykernel install --sys-prefix --name ox --display-name "Python (ox)" && \
     rm -f -r -v /opt/conda/share/jupyter/kernels/python3 && \
