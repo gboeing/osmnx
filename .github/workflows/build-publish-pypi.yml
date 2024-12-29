@@ -8,9 +8,9 @@ name: Build and publish to PyPI
 on:
   push:
     tags:
-      - 'v*'
+      - v*
   schedule:
-    - cron: "40 4 * * 1"  # every monday at 04:40 UTC
+    - cron: 40 4 * * 1  # every monday at 04:40 UTC
 
 jobs:
   build_publish_pypi:
@@ -32,11 +32,13 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: 3.*
+          cache: pip
+          cache-dependency-path: ./environments/requirements/requirements-packaging.txt
 
       - name: Build and check package
         run: |
-          python -m pip install --user -r ./environments/requirements/requirements-packaging.txt
+          python -m pip install -r ./environments/requirements/requirements-packaging.txt
           python -m validate_pyproject ./pyproject.toml
           python -m hatch build --clean
           python -m twine check --strict ./dist/*

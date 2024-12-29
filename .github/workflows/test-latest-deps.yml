@@ -4,7 +4,7 @@ name: Test latest/pre-release dependencies
 
 on:
   schedule:
-    - cron: "30 4 * * 1"  # every monday at 04:30 UTC
+    - cron: 30 4 * * 1  # every monday at 04:30 UTC
   workflow_dispatch:
 
 jobs:
@@ -29,12 +29,12 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: 3.*
 
       - name: Install OSMnx with latest/pre-release dependencies
         run: |
           python -m pip install --pre -r ./environments/tests/requirements-test-latest-deps.txt
-          python -m pip install -e .
+          python -m pip install .
           python -m pip check
           python -m pip list -v
           python -m pip show osmnx
