@@ -3,7 +3,7 @@ name: Build docs and check links
 
 on:
   schedule:
-    - cron: "10 4 * * 1"  # every monday at 04:10 UTC
+    - cron: 10 4 * * 1  # every monday at 04:10 UTC
   workflow_dispatch:
 
 jobs:
@@ -24,7 +24,9 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: 3.*
+          cache: pip
+          cache-dependency-path: ./environments/requirements/requirements-docs.txt
 
       - name: Install requirements
         run: |
