@@ -1,45 +1,47 @@
-{
- "env-ci": {
-  "output_path": "./environments/tests/env-ci.yml",
-  "needs_python": true,
-  "needs_dependencies": true,
-  "needs_optionals": true,
-  "force_pin": false,
-  "extras": ["./environments/requirements/requirements-docs.txt",
-    "./environments/requirements/requirements-tests.txt"]
- },
- "env-test-minimum-deps": {
-  "output_path": "./environments/tests/env-test-minimum-deps.yml",
-  "needs_python": true,
-  "needs_dependencies": true,
-  "needs_optionals": true,
-  "force_pin": true,
-  "extras": ["./environments/requirements/requirements-tests.txt"]
- },
- "requirements-test-latest-deps": {
-  "output_path": "./environments/tests/requirements-test-latest-deps.txt",
-  "needs_python": false,
-  "needs_dependencies": true,
-  "needs_optionals": true,
-  "force_pin": false,
-  "extras": ["./environments/requirements/requirements-tests.txt"]
- },
- "requirements-rtd": {
-  "output_path": "./docs/requirements-rtd.txt",
-  "needs_python": false,
-  "needs_dependencies": false,
-  "needs_optionals": false,
-  "force_pin": false,
-  "extras": ["./environments/requirements/requirements-docs.txt"]
- },
- "requirements-all": {
-  "output_path": "./environments/requirements/requirements-all.txt",
-  "needs_python": false,
-  "needs_dependencies": true,
-  "needs_optionals": true,
-  "force_pin": false,
-  "extras": ["./environments/requirements/requirements-docs.txt",
-    "./environments/requirements/requirements-extras.txt",
-    "./environments/requirements/requirements-tests.txt"]
- }
-}
+[
+  {
+    "output_path": "./environments/tests/env-ci.yml",
+    "needs_dependencies": true,
+    "pin_exact": false,
+    "extras": [
+      "./environments/requirements/requirements-docs.txt",
+      "./environments/requirements/requirements-packaging.txt",
+      "./environments/requirements/requirements-tests.txt"
+    ]
+  },
+  {
+    "output_path": "./environments/tests/env-test-minimum-deps.yml",
+    "needs_dependencies": true,
+    "pin_exact": true,
+    "extras": [
+      "./environments/requirements/requirements-tests.txt"
+    ]
+  },
+  {
+    "output_path": "./environments/tests/requirements-test-latest-deps.txt",
+    "needs_dependencies": true,
+    "pin_exact": false,
+    "extras": [
+      "./environments/requirements/requirements-tests.txt"
+    ]
+  },
+  {
+    "output_path": "./docs/requirements-rtd.txt",
+    "needs_dependencies": false,
+    "pin_exact": false,
+    "extras": [
+      "./environments/requirements/requirements-docs.txt"
+    ]
+  },
+  {
+    "output_path": "./environments/requirements/requirements-all.txt",
+    "needs_dependencies": true,
+    "pin_exact": false,
+    "extras": [
+      "./environments/requirements/requirements-docs.txt",
+      "./environments/requirements/requirements-extras.txt",
+      "./environments/requirements/requirements-packaging.txt",
+      "./environments/requirements/requirements-tests.txt"
+    ]
+  }
+]

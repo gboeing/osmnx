@@ -1,21 +1,21 @@
 # noqa: INP001
-"""Make conda env.yml and pip requirements.txt files from environments.json data."""
+"""Make conda env.yaml and pip requirements.txt files from environments.json data."""
 
 from __future__ import annotations
 
-import argparse
-import itertools
-import json
+from itertools import chain
+from json import load as json_load
 from pathlib import Path
+from typing import Any
 
-import tomllib
 from packaging.requirements import Requirement
+from tomllib import load as tomllib_load
 
 # path to package's pyproject and the config json file
-pyproject_path = "./pyproject.toml"
-environments_config_path = "./environments/requirements/environments.json"
+PYPROJECT_PATH = "./pyproject.toml"
+ENVS_CONFIG_PATH = "./environments/requirements/environments.json"
 
-# what channels to specify in conda env yml files
+# what channels to specify in conda env yaml files
 CHANNELS = ["conda-forge"]
 
 HEADER = (
@@ -25,21 +25,9 @@ HEADER = (
 )
 
 
-def extract_optional_deps() -> list[Requirement]:
-    """
-    Extract a list of the optional dependencies/versions from pyproject.toml.
-
-    Returns
-    -------
-    optional_deps
-    """
-    opts = pyproject["project"]["optional-dependencies"]
-    return list({Requirement(o) for o in itertools.chain.from_iterable(opts.values())})
-
-
 def make_requirement(
     requirement: Requirement,
-    force_pin: bool = False,  # noqa: FBT001,FBT002
+    pin_exact: bool = False,  # noqa: FBT001,FBT002
     is_conda: bool = True,  # noqa: FBT001,FBT002
 ) -> str:
     """
@@ -51,11 +39,11 @@ def make_requirement(
     ----------
     requirement
         A requirement object
-    force_pin
+    pin_exact
         If True, pin requirement to version rather than using existing
         specifier. Allows you to convert minimum versions to pinned versions.
     is_conda
-        If True and if `force_pin` is True, format the requirement string to
+        If True and if `pin_exact` is True, format the requirement string to
         end with ".*" for conda environment file pinning format compatibility.
 
     Returns
@@ -63,7 +51,7 @@ def make_requirement(
     requirement_str
     """
     specifiers = list(requirement.specifier)
-    if force_pin and len(specifiers) == 1:
+    if pin_exact and len(specifiers) == 1:
         spec = f"{requirement.name}=={specifiers[0].version}"
         if is_conda and not spec.endswith(".*"):
             spec += ".*"
@@ -71,53 +59,48 @@ def make_requirement(
     return str(requirement)
 
 
-def make_file(env_name: str) -> None:
+def make_file(env: dict[str, Any]) -> None:
     """
     Write a conda environment yaml file or pip requirements.txt file.
 
     Parameters
     ----------
-    env_name
-        An enviroment name among the keys of environments.json.
+    env
+        An environment configuration dictionary.
 
     Returns
     -------
     None
     """
-    env = envs[env_name]
+    depends_on = []
+    output_path = Path(env["output_path"])
 
-    # it's a conda env file if it ends with ".yml", otherwise it's a pip
-    # requirements.txt file
-    is_conda = env["output_path"].endswith(".yml")
+    # it's conda env if it's a yaml file, otherwise it's pip requirements.txt
+    is_conda = output_path.suffix in {".yaml", ".yml"}
 
     # determine which dependencies to add based on the configuration
-    depends_on = []
-    if env["needs_python"]:
-        python_dep = Requirement(f"python{pyproject['project']['requires-python']}")
-        depends_on.append(python_dep)
+    if is_conda:
+        depends_on.append(Requirement(f"python{pyproject['project']['requires-python']}"))
     if env["needs_dependencies"]:
-        dependencies = [Requirement(d) for d in pyproject["project"]["dependencies"]]
-        depends_on.extend(dependencies)
-    if env["needs_optionals"]:
-        optionals = extract_optional_deps()
-        depends_on.extend(optionals)
+        depends_on.extend(Requirement(d) for d in pyproject["project"]["dependencies"])
+        optionals = pyproject["project"]["optional-dependencies"].values()
+        depends_on.extend({Requirement(o) for o in chain.from_iterable(optionals)})
 
     # make the list of requirements
-    requirements = [
-        make_requirement(dep, force_pin=env["force_pin"], is_conda=is_conda) for dep in depends_on
-    ]
+    requirements = [make_requirement(dep, env["pin_exact"], is_conda) for dep in depends_on]
 
-    # add any extra requirements if provided in the configuration
+    # inject any additional requirement files if specified by the config
     if env["extras"] is not None:
         for extras_filepath in env["extras"]:
             with Path(extras_filepath).open() as f:
                 requirements += f.read().splitlines()
 
-    # convert the requirements to conda env yml or pip requirements.txt
+    # convert the requirements to conda env yaml or pip requirements text
     requirements = sorted(requirements)
     if not is_conda:
         text = HEADER + "\n".join(requirements) + "\n"
     else:
+        env_name = Path(output_path).stem
         data = {"name": env_name, "channels": CHANNELS, "dependencies": requirements}
         text = ""
         for k, v in data.items():
@@ -127,29 +110,20 @@ def make_file(env_name: str) -> None:
                 text += k + ": " + v + "\n"
         text = HEADER + text
 
-    # write the file to disk
-    with Path(env["output_path"]).open("w") as f:
+    # write the text to file on disk
+    with Path(output_path).open("w") as f:
         f.writelines(text)
 
-    print(f"Wrote {len(requirements)} requirements to {env['output_path']!r}")  # noqa: T201
+    print(f"Wrote {len(requirements)} requirements to {str(output_path)!r}")  # noqa: T201
 
 
 if __name__ == "__main__":
     # load the pyproject.toml and the environments.json config files
-    with Path(pyproject_path).open("rb") as f:
-        pyproject = tomllib.load(f)
-    with Path(environments_config_path).open("rb") as f:
-        envs = json.load(f)
+    with Path(PYPROJECT_PATH).open("rb") as f:
+        pyproject = tomllib_load(f)
+    with Path(ENVS_CONFIG_PATH).open("rb") as f:
+        envs = json_load(f)
 
-    # parse any command-line arguments passed by the user
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("-n", dest="env_name", type=str)
-    args = arg_parser.parse_args()
-
-    if args.env_name is not None:
-        # if user passed -n command line argument, generate only that file
-        make_file(args.env_name)
-    else:
-        # otherwise, make all environment files
-        for env_name in envs:
-            make_file(env_name)
+    # make each environment/requirements file as configured
+    for env in envs:
+        make_file(env)
