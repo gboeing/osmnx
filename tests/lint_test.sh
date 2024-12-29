@@ -4,6 +4,9 @@ set -euo pipefail
 # delete temp files and folders
 rm -r -f ./.coverage* ./.pytest_cache ./.temp ./dist ./docs/build ./*/__pycache__
 
+# create all the configured environment/requirements files
+python ./environments/make-env-files.py
+
 # run the pre-commit hooks for linting/formatting
 pre-commit run --all-files
 
@@ -12,13 +15,12 @@ python -m validate_pyproject ./pyproject.toml
 python -m hatch build --clean
 python -m twine check --strict ./dist/*
 
-# build the docs and test that links are alive
-python -m sphinx -E -W --keep-going -b html ./docs/source ./docs/build/html
-python -m sphinx -E -W --keep-going -b linkcheck ./docs/source ./docs/build/linkcheck
-
 # run the tests and report the test coverage
 python -m pytest --verbose --maxfail=1 --typeguard-packages=osmnx --cov=osmnx --cov-report=term-missing:skip-covered
 
+# build the docs and test that links are alive
+python -m sphinx -q -a -E -W --keep-going -b html ./docs/source ./docs/build/html
+python -m sphinx -q -a -E -W --keep-going -b linkcheck ./docs/source ./docs/build/linkcheck
+
 # delete temp files and folders
-sleep 1
 rm -r -f ./.coverage* ./.pytest_cache ./.temp ./dist ./docs/build ./*/__pycache__
