@@ -36,7 +36,7 @@ jobs:
 
       - name: Build and check package
         run: |
-          python -m pip install --user -r ./environments/requirements/requirements-packaging.txt
+          python -m pip install -r ./environments/requirements/requirements-packaging.txt
           python -m validate_pyproject ./pyproject.toml
           python -m hatch build --clean
           python -m twine check --strict ./dist/*

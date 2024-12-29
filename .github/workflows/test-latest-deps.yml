@@ -34,7 +34,7 @@ jobs:
       - name: Install OSMnx with latest/pre-release dependencies
         run: |
           python -m pip install --pre -r ./environments/tests/requirements-test-latest-deps.txt
-          python -m pip install -e .
+          python -m pip install .
           python -m pip check
           python -m pip list -v
           python -m pip show osmnx
