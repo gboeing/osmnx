@@ -1,9 +1,9 @@
 version: 2
 
 build:
-  os: "ubuntu-lts-latest"
+  os: ubuntu-lts-latest
   tools:
-    python: "3"
+    python: 3
 
 formats: all
 
