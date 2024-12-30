@@ -26,14 +26,6 @@
     ]
   },
   {
-    "output_path": "./docs/requirements-rtd.txt",
-    "needs_dependencies": false,
-    "pin_exact": false,
-    "extras": [
-      "./environments/requirements/requirements-docs.txt"
-    ]
-  },
-  {
     "output_path": "./environments/requirements/requirements-all.txt",
     "needs_dependencies": true,
     "pin_exact": false,

@@ -9,8 +9,8 @@ formats: all
 
 python:
   install:
-    - requirements: docs/requirements-rtd.txt
+    - requirements: ./environments/requirements/requirements-docs.txt
 
 sphinx:
-  configuration: docs/source/conf.py
+  configuration: ./docs/source/conf.py
   fail_on_warning: true
