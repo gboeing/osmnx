@@ -8,7 +8,7 @@ rm -r -f ./.coverage* ./.pytest_cache ./.temp ./dist ./docs/build ./*/__pycache_
 python ./environments/make-env-files.py
 
 # run the pre-commit hooks for linting/formatting
-pre-commit run --all-files
+SKIP=no-commit-to-branch pre-commit run --all-files
 
 # build and validate the package
 python -m validate_pyproject ./pyproject.toml
