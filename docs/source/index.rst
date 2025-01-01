@@ -22,7 +22,7 @@ Getting Started
 
 First read the :doc:`getting-started` guide for an introduction to the package and FAQ.
 
-Then work through the OSMnx `Examples Gallery`_ for step-by-step tutorials and sample code.
+Then work through the `Examples Gallery`_ for step-by-step tutorials and sample code.
 
 .. _Examples Gallery: https://github.com/gboeing/osmnx-examples
 

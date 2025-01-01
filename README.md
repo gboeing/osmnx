@@ -21,7 +21,7 @@ Boeing, G. (2024). Modeling and Analyzing Urban Networks and Amenities with OSMn
 
 First read the [Getting Started](https://osmnx.readthedocs.io/en/stable/getting-started.html) guide for an introduction to the package and FAQ.
 
-Then work through the OSMnx [Examples Gallery](https://github.com/gboeing/osmnx-examples) for step-by-step tutorials and sample code.
+Then work through the [Examples Gallery](https://github.com/gboeing/osmnx-examples) for step-by-step tutorials and sample code.
 
 ## Installation
 

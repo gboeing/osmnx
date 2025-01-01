@@ -26,7 +26,14 @@ repos:
     rev: v1.35.1
     hooks:
       - id: yamllint
-        args: [--strict, -d, "{extends: relaxed, rules: {line-length: {max: 110}}}"]
+        args:
+          - --strict
+          - >
+            -d={extends: default, rules: {
+            document-start: disable,
+            line-length: {max: 110},
+            quoted-strings: {quote-type: single, required: only-when-needed},
+            truthy: {check-keys: false}}}
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.4
@@ -40,4 +47,7 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies:
-          [matplotlib, pandas-stubs, pytest, types-requests]
+          - matplotlib
+          - pandas-stubs
+          - pytest
+          - types-requests
