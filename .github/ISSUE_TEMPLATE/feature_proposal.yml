@@ -4,14 +4,15 @@ labels: enh
 body:
   - type: markdown
     attributes:
-      value: "Thanks for using OSMnx!"
+      value: Thanks for using OSMnx!
 
   - type: checkboxes
     id: contributing
     attributes:
       label: Contributing guidelines
       description: |
-        Before you proceed, read the [contributing guidelines](../blob/main/CONTRIBUTING.md)
+        Before you proceed, read the
+        [contributing guidelines](../blob/main/CONTRIBUTING.md)
         regarding where to ask usage questions and how to propose a feature.
       options:
         - label: I understand the contributing guidelines
