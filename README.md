@@ -4,7 +4,7 @@
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/osmnx?period=total&units=international_system&left_color=grey&right_color=brightgreen&left_text=downloads)](https://pepy.tech/project/osmnx)
 [![Anaconda Downloads](https://anaconda.org/conda-forge/osmnx/badges/downloads.svg)](https://anaconda.org/conda-forge/osmnx)
 [![Documentation Status](https://readthedocs.org/projects/osmnx/badge/?version=latest)](https://osmnx.readthedocs.io/)
-[![Build Status](https://github.com/gboeing/osmnx/workflows/CI/badge.svg?branch=main)](https://github.com/gboeing/osmnx/actions/workflows/ci.yml)
+[![Build Status](https://github.com/gboeing/osmnx/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/gboeing/osmnx/actions/workflows/ci.yml)
 [![Coverage Status](https://codecov.io/gh/gboeing/osmnx/branch/main/graph/badge.svg)](https://codecov.io/gh/gboeing/osmnx)
 
 **OSMnx** is a Python package to easily download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap. You can download and model walking, driving, or biking networks with a single line of code then analyze and visualize them. You can just as easily work with urban amenities/points of interest, building footprints, transit stops, elevation data, street orientations, speed/travel time, and routing.
