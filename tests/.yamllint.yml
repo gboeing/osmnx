@@ -1,0 +1,10 @@
+extends: default
+rules:
+  document-start: disable
+  line-length:
+    max: 100
+  quoted-strings:
+    quote-type: single
+    required: only-when-needed
+  truthy:
+    check-keys: false
