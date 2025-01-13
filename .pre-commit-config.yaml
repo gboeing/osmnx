@@ -19,7 +19,6 @@ repos:
       - id: fix-byte-order-marker
       - id: mixed-line-ending
       - id: no-commit-to-branch
-        args: [--branch=main]
       - id: pretty-format-json
         args: [--autofix]
       - id: trailing-whitespace
@@ -28,7 +27,7 @@ repos:
     rev: v1.35.1
     hooks:
       - id: yamllint
-        args: [--strict, --config-file, ./tests/.yamllint.yml]
+        args: [--strict, --config-file=./tests/.yamllint.yml]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.1

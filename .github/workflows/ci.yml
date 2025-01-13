@@ -65,7 +65,13 @@ jobs:
         run: python -m sphinx -E -W --keep-going -b html ./docs/source ./docs/build/html
 
       - name: Test code and coverage
-        run: python -m pytest --verbose --maxfail=1 --typeguard-packages=osmnx --cov=osmnx --cov-report=xml
+        run: >
+             python -m pytest
+             --verbose
+             --maxfail=1
+             --typeguard-packages=osmnx
+             --cov=osmnx
+             --cov-report=xml
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v5
