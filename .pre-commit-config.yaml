@@ -19,21 +19,16 @@ repos:
       - id: fix-byte-order-marker
       - id: mixed-line-ending
       - id: no-commit-to-branch
-        args: [--branch, main]
+        args: [--branch=main]
+      - id: pretty-format-json
+        args: [--autofix]
       - id: trailing-whitespace
 
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.35.1
     hooks:
       - id: yamllint
-        args:
-          - --strict
-          - >
-            -d={extends: default, rules: {
-            document-start: disable,
-            line-length: {max: 110},
-            quoted-strings: {quote-type: single, required: only-when-needed},
-            truthy: {check-keys: false}}}
+        args: [--strict, --config-file, ./tests/.yamllint.yml]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.6

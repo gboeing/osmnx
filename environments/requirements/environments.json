@@ -1,39 +1,39 @@
 [
   {
-    "output_path": "./environments/tests/env-ci.yml",
-    "needs_dependencies": true,
-    "pin_exact": false,
     "extras": [
       "./environments/requirements/requirements-docs.txt",
       "./environments/requirements/requirements-packaging.txt",
       "./environments/requirements/requirements-tests.txt"
-    ]
+    ],
+    "needs_dependencies": true,
+    "output_path": "./environments/tests/env-ci.yml",
+    "pin_exact": false
   },
   {
+    "extras": [
+      "./environments/requirements/requirements-tests.txt"
+    ],
+    "needs_dependencies": true,
     "output_path": "./environments/tests/env-test-minimum-deps.yml",
-    "needs_dependencies": true,
-    "pin_exact": true,
-    "extras": [
-      "./environments/requirements/requirements-tests.txt"
-    ]
+    "pin_exact": true
   },
   {
+    "extras": [
+      "./environments/requirements/requirements-tests.txt"
+    ],
+    "needs_dependencies": true,
     "output_path": "./environments/tests/requirements-test-latest-deps.txt",
-    "needs_dependencies": true,
-    "pin_exact": false,
-    "extras": [
-      "./environments/requirements/requirements-tests.txt"
-    ]
+    "pin_exact": false
   },
   {
-    "output_path": "./environments/requirements/requirements-all.txt",
-    "needs_dependencies": true,
-    "pin_exact": false,
     "extras": [
       "./environments/requirements/requirements-docs.txt",
       "./environments/requirements/requirements-extras.txt",
       "./environments/requirements/requirements-packaging.txt",
       "./environments/requirements/requirements-tests.txt"
-    ]
+    ],
+    "needs_dependencies": true,
+    "output_path": "./environments/requirements/requirements-all.txt",
+    "pin_exact": false
   }
 ]
