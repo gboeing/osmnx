@@ -325,7 +325,7 @@ def plot_graph_route(
         Size of the origin and destination nodes.
     ax
         If not None, plot on this pre-existing axes instance.
-    pg_kwargs
+    **pg_kwargs
         Keyword arguments to pass to `plot_graph`.
 
     Returns
@@ -394,7 +394,7 @@ def plot_graph_routes(
     route_linewidths
         If float, the one linewidth for all routes. Otherwise, the linewidth
         for each route.
-    pgr_kwargs
+    **pgr_kwargs
         Keyword arguments to pass to `plot_graph_route`.
 
     Returns
@@ -487,7 +487,7 @@ def plot_figure_ground(
         Fallback width, in pixels, for any street type not in `street_widths`.
     color
         The color of the streets.
-    pg_kwargs
+    **pg_kwargs
         Keyword arguments to pass to `plot_graph`.
 
     Returns

@@ -223,7 +223,6 @@ def _validate_node_edge_gdfs(
         GeoDataFrame of graph nodes uniquely indexed by `osmid`.
     gdf_edges
         GeoDataFrame of graph edges uniquely multi-indexed by `(u, v, key)`.
-    graph_attrs
 
     Returns
     -------

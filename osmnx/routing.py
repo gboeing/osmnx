@@ -316,7 +316,7 @@ def shortest_path(
     Parameters
     ----------
     G
-        Input graph,
+        Input graph.
     orig
         Origin node ID(s).
     dest

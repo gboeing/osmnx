@@ -38,7 +38,7 @@ def make_requirement(
     Parameters
     ----------
     requirement
-        A requirement object
+        A requirement object.
     pin_exact
         If True, pin requirement to version rather than using existing
         specifier. Allows you to convert minimum versions to pinned versions.
@@ -49,6 +49,7 @@ def make_requirement(
     Returns
     -------
     requirement_str
+        The requirement's name and its specifier(s).
     """
     specifiers = list(requirement.specifier)
     if pin_exact and len(specifiers) == 1:

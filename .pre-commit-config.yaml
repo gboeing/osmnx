@@ -29,6 +29,11 @@ repos:
       - id: yamllint
         args: [--strict, --config-file=./tests/.yamllint.yml]
 
+  - repo: https://github.com/numpy/numpydoc
+    rev: v1.8.0
+    hooks:
+      - id: numpydoc-validation
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.1
     hooks:

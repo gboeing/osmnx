@@ -599,9 +599,6 @@ def _create_graph(
     ----------
     response_jsons
         Iterable of JSON responses from the Overpass API.
-    retain_all
-        If True, return the entire graph even if it is not connected.
-        Otherwise, retain only the largest weakly connected component.
     bidirectional
         If True, create bidirectional edges for one-way streets.
 

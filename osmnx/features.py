@@ -351,10 +351,10 @@ def features_from_xml(
     ----------
     filepath
         Path to file containing OSM XML data.
-    tags
-        Query tags to optionally filter the final GeoDataFrame.
     polygon
         Spatial boundaries to optionally filter the final GeoDataFrame.
+    tags
+        Query tags to optionally filter the final GeoDataFrame.
     encoding
         The OSM XML file's character encoding.
 
