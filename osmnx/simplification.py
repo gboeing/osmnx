@@ -129,7 +129,7 @@ def _build_path(
     G
         Input graph.
     endpoint
-        Ehe endpoint node from which to start the path.
+        The endpoint node from which to start the path.
     endpoint_successor
         The successor of endpoint through which the path to the next endpoint
         will be built.
