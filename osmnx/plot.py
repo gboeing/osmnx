@@ -55,13 +55,13 @@ def get_colors(
     Parameters
     ----------
     n
-        How many colors to generate.
+        How many colors to sample.
     cmap
-        Name of the matplotlib colormap from which to choose the colors.
+        Name of the matplotlib colormap from which to sample the colors.
     start
-        Where to start in the colorspace (from 0 to 1).
+        Where to start sampling from the colorspace (from 0 to 1).
     stop
-        Where to end in the colorspace (from 0 to 1).
+        Where to end sampling from the colorspace (from 0 to 1).
     alpha
         If `None`, return colors as HTML-like hex triplet "#rrggbb" RGB
         strings. If `float`, return as "#rrggbbaa" RGBa strings.
@@ -69,6 +69,7 @@ def get_colors(
     Returns
     -------
     color_list
+        The sampled colors.
     """
     _verify_mpl()
     color_gen = (colormaps[cmap](x) for x in np.linspace(start, stop, n))
@@ -237,6 +238,7 @@ def plot_graph(  # noqa: PLR0913
     Returns
     -------
     fig, ax
+        The resulting matplotlib figure and axes objects.
     """
     _verify_mpl()
     max_node_size = max(node_size) if isinstance(node_size, Sequence) else node_size
@@ -331,6 +333,7 @@ def plot_graph_route(
     Returns
     -------
     fig, ax
+        The resulting matplotlib figure and axes objects.
     """
     _verify_mpl()
     if ax is None:
@@ -400,6 +403,7 @@ def plot_graph_routes(
     Returns
     -------
     fig, ax
+        The resulting matplotlib figure and axes objects.
     """
     # make iterables lists (so we're guaranteed to be able to get their sizes)
     routes = list(routes)
@@ -493,6 +497,7 @@ def plot_figure_ground(
     Returns
     -------
     fig, ax
+        The resulting matplotlib figure and axes objects.
     """
     _verify_mpl()
 
@@ -628,6 +633,7 @@ def plot_footprints(  # noqa: PLR0913
     Returns
     -------
     fig, ax
+        The resulting matplotlib figure and axes objects.
     """
     _verify_mpl()
     fig, ax = _get_fig_ax(ax=ax, figsize=figsize, bgcolor=bgcolor, polar=False)
@@ -731,6 +737,7 @@ def plot_orientation(  # noqa: PLR0913
     Returns
     -------
     fig, ax
+        The resulting matplotlib figure and polar axes objects.
     """
     _verify_mpl()
 
@@ -903,6 +910,7 @@ def _save_and_show(
     Returns
     -------
     fig, ax
+        The matplotlib figure and axes objects.
     """
     fig.canvas.draw()
     fig.canvas.flush_events()
@@ -964,6 +972,7 @@ def _config_ax(ax: Axes, crs: Any, bbox: tuple[float, float, float, float], padd
     Returns
     -------
     ax
+        The configured matplotlib axes object.
     """
     # set the axes view limits to bbox + relative padding
     left, bottom, right, top = bbox
@@ -1035,6 +1044,7 @@ def _get_fig_ax(
     Returns
     -------
     fig, ax
+        The resulting matplotlib figure and axes objects.
     """
     if ax is None:
         if polar:

@@ -90,6 +90,7 @@ def graph_from_bbox(
     Returns
     -------
     G
+        The resulting MultiDiGraph.
 
     Notes
     -----
@@ -180,6 +181,7 @@ def graph_from_point(
     Returns
     -------
     G
+        The resulting MultiDiGraph.
 
     Notes
     -----
@@ -224,7 +226,7 @@ def graph_from_address(
     retain_all: bool = False,
     truncate_by_edge: bool = False,
     custom_filter: str | list[str] | None = None,
-) -> nx.MultiDiGraph | tuple[nx.MultiDiGraph, tuple[float, float]]:
+) -> nx.MultiDiGraph:
     """
     Download and create a graph within some distance of an address.
 
@@ -277,7 +279,8 @@ def graph_from_address(
 
     Returns
     -------
-    G or (G, (lat, lon))
+    G
+        The resulting MultiDiGraph.
 
     Notes
     -----
@@ -375,6 +378,7 @@ def graph_from_place(
     Returns
     -------
     G
+        The resulting MultiDiGraph.
 
     Notes
     -----
@@ -456,6 +460,7 @@ def graph_from_polygon(
     Returns
     -------
     G
+        The resulting MultiDiGraph.
 
     Notes
     -----
@@ -564,6 +569,7 @@ def graph_from_xml(
     Returns
     -------
     G
+        The resulting MultiDiGraph.
     """
     # transmogrify file of OSM XML data into JSON
     response_jsons = [_osm_xml._overpass_json_from_xml(Path(filepath), encoding)]
@@ -605,6 +611,7 @@ def _create_graph(
     Returns
     -------
     G
+        The resulting MultiDiGraph.
     """
     # each dict's keys are OSM IDs and values are dicts of attributes
     nodes: dict[int, dict[str, Any]] = {}
@@ -669,6 +676,7 @@ def _convert_node(element: dict[str, Any]) -> dict[str, Any]:
     Returns
     -------
     node
+        The converted node.
     """
     node = {"y": element["lat"], "x": element["lon"]}
     if "tags" in element:
@@ -690,6 +698,7 @@ def _convert_path(element: dict[str, Any]) -> dict[str, Any]:
     Returns
     -------
     path
+        The converted path.
     """
     path = {"osmid": element["id"]}
 
@@ -746,6 +755,7 @@ def _is_path_one_way(attrs: dict[str, Any], bidirectional: bool, oneway_values: 
     Returns
     -------
     is_one_way
+        True if path allows travel in only one direction, otherwise False.
     """
     # rule 1
     if settings.all_oneway:
@@ -792,6 +802,7 @@ def _is_path_reversed(attrs: dict[str, Any], reversed_values: set[str]) -> bool:
     Returns
     -------
     is_reversed
+        True if nodes' order should be reversed, otherwise False.
     """
     return "oneway" in attrs and attrs["oneway"] in reversed_values
 

@@ -288,7 +288,7 @@ def add_node_elevations_google(
 
 def _elevation_request(url: str, pause: float) -> dict[str, Any]:
     """
-    Send a HTTP GET request to a Google Maps-style Elevation API.
+    Send a HTTP GET request to a Google Maps-style elevation API.
 
     Parameters
     ----------
@@ -300,6 +300,7 @@ def _elevation_request(url: str, pause: float) -> dict[str, Any]:
     Returns
     -------
     response_json
+        The elevation API's response.
     """
     # check if request already exists in cache
     cached_response_json = _http._retrieve_from_cache(url)

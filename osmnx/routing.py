@@ -198,6 +198,7 @@ def route_to_gdf(
     Returns
     -------
     gdf_edges
+        The ordered edges in the path.
     """
     pairs = zip(route[:-1], route[1:])
     uvk = ((u, v, min(G[u][v].items(), key=lambda i: i[1][weight])[0]) for u, v in pairs)

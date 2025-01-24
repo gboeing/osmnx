@@ -164,6 +164,7 @@ def _get_http_headers(
     Returns
     -------
     headers
+        The updated HTTP headers.
     """
     if user_agent is None:
         user_agent = settings.http_user_agent

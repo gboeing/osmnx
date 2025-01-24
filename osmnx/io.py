@@ -179,6 +179,7 @@ def load_graphml(
     Returns
     -------
     G
+        The loaded MultiDiGraph.
     """
     if (filepath is None and graphml_str is None) or (
         filepath is not None and graphml_str is not None
@@ -310,6 +311,7 @@ def _convert_graph_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.
     Returns
     -------
     G
+        The graph with its graph-level attributes' types converted.
     """
     # remove node_default and edge_default metadata keys if they exist
     G.graph.pop("node_default", None)
@@ -335,6 +337,7 @@ def _convert_node_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.M
     Returns
     -------
     G
+        The graph with its nodes' attributes' types converted.
     """
     for _, data in G.nodes(data=True):
         # first, eval stringified lists, dicts, or sets to convert them to objects
@@ -365,6 +368,7 @@ def _convert_edge_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.M
     Returns
     -------
     G
+        The graph with its edges' attributes' types converted.
     """
     # for each edge in the graph, eval attribute value lists and convert types
     for _, _, data in G.edges(data=True, keys=False):
@@ -411,11 +415,12 @@ def _convert_bool_string(value: bool | str) -> bool:
     Parameters
     ----------
     value
-        The string value to convert to bool.
+        The string to convert to bool.
 
     Returns
     -------
     bool_value
+        The boolean equivalent of the string literal.
     """
     if isinstance(value, bool):
         return value
