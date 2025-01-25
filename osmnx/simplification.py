@@ -335,7 +335,7 @@ def simplify_graph(  # noqa: C901, PLR0912
 
     Returns
     -------
-    G
+    Gs
         Topologically simplified graph, with a new `geometry` attribute on
         each simplified edge.
     """
@@ -513,19 +513,19 @@ def consolidate_intersections(
 
     Returns
     -------
-    G or gs
+    Gc or gs
         If `rebuild_graph=True`, returns MultiDiGraph with consolidated
         intersections and (optionally) reconnected edge geometries. If
         `rebuild_graph=False`, returns GeoSeries of Points representing the
         centroids of street intersections.
     """
+    # make a copy to not mutate original graph object caller passed in
+    G = G.copy()
+
     # if dead_ends is False, discard dead-ends to retain only intersections
     if not dead_ends:
         spn = stats.streets_per_node(G)
         dead_end_nodes = [node for node, count in spn.items() if count <= 1]
-
-        # make a copy to not mutate original graph object caller passed in
-        G = G.copy()
         G.remove_nodes_from(dead_end_nodes)
 
     if rebuild_graph:
@@ -630,6 +630,10 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         A rebuilt graph with consolidated intersections and (optionally)
         reconnected edge geometries.
     """
+    if G.graph.get("consolidated"):  # pragma: no cover
+        msg = "This graph has already been consolidated, cannot consolidate it again."
+        raise GraphSimplificationError(msg)
+
     # default node attributes to aggregate upon consolidation
     if node_attr_aggs is None:
         node_attr_aggs = {"elevation": "mean"}
@@ -714,6 +718,9 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
                     # if there are multiple unique values, keep one of each
                     node_attrs[col] = unique_vals
             Gc.add_node(cluster_label, **node_attrs)
+
+    # mark the graph as having been consolidated
+    G.graph["consolidated"] = True
 
     if len(G.edges) == 0 or not reconnect_edges:
         # if reconnect_edges is False or there are no edges in original graph

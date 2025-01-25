@@ -3,6 +3,8 @@
 ## 2.0.2 (TBD)
 
 - improve docstrings (#1272)
+- fix bug where consolidate_intersections function would mutate the passed-in graph (#1273)
+- provide user-friendly error message if consolidate_intersections is run more than once (#1273)
 
 ## 2.0.1 (2025-01-01)
 
