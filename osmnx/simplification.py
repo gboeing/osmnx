@@ -335,7 +335,7 @@ def simplify_graph(  # noqa: C901, PLR0912
 
     Returns
     -------
-    G
+    Gs
         Topologically simplified graph, with a new `geometry` attribute on
         each simplified edge.
     """
@@ -513,19 +513,19 @@ def consolidate_intersections(
 
     Returns
     -------
-    G or gs
+    Gc or gs
         If `rebuild_graph=True`, returns MultiDiGraph with consolidated
         intersections and (optionally) reconnected edge geometries. If
         `rebuild_graph=False`, returns GeoSeries of Points representing the
         centroids of street intersections.
     """
+    # make a copy to not mutate original graph object caller passed in
+    G = G.copy()
+
     # if dead_ends is False, discard dead-ends to retain only intersections
     if not dead_ends:
         spn = stats.streets_per_node(G)
         dead_end_nodes = [node for node, count in spn.items() if count <= 1]
-
-        # make a copy to not mutate original graph object caller passed in
-        G = G.copy()
         G.remove_nodes_from(dead_end_nodes)
 
     if rebuild_graph:
