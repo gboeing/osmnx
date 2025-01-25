@@ -73,6 +73,7 @@ def ts(style: str = "datetime", template: str | None = None) -> str:
     Returns
     -------
     timestamp
+        The current timestamp.
     """
     if template is None:
         if style == "datetime":
@@ -174,6 +175,7 @@ def _get_logger(name: str, filename: str) -> lg.Logger:
     Returns
     -------
     logger
+        The logger.
     """
     logger = lg.getLogger(name)
 

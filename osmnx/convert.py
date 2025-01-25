@@ -223,7 +223,6 @@ def _validate_node_edge_gdfs(
         GeoDataFrame of graph nodes uniquely indexed by `osmid`.
     gdf_edges
         GeoDataFrame of graph edges uniquely multi-indexed by `(u, v, key)`.
-    graph_attrs
 
     Returns
     -------
@@ -302,6 +301,7 @@ def graph_from_gdfs(
     Returns
     -------
     G
+        The converted MultiDiGraph.
     """
     _validate_node_edge_gdfs(gdf_nodes, gdf_edges)
 
@@ -354,7 +354,8 @@ def to_digraph(G: nx.MultiDiGraph, *, weight: str = "length") -> nx.DiGraph:
 
     Returns
     -------
-    G
+    D
+        The converted DiGraph.
     """
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
@@ -397,6 +398,7 @@ def to_undirected(G: nx.MultiDiGraph) -> nx.MultiGraph:
     Returns
     -------
     Gu
+        The converted MultiGraph.
     """
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
@@ -460,6 +462,7 @@ def _is_duplicate_edge(data1: dict[str, Any], data2: dict[str, Any]) -> bool:
     Returns
     -------
     is_dupe
+        True if `osmid` and `geometry` are the same, otherwise False.
     """
     is_dupe = False
 
@@ -531,6 +534,7 @@ def _update_edge_keys(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
     Returns
     -------
     G
+        Graph with incremented keys where needed.
     """
     # identify all the edges that are duplicates based on a sorted combination
     # of their origin, destination, and key. that is, edge uv will match edge vu

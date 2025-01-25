@@ -31,7 +31,7 @@ def is_projected(crs: Any) -> bool:  # noqa: ANN401
     Returns
     -------
     projected
-        True if `crs` is projected, otherwise False
+        True if `crs` is projected, otherwise False.
     """
     return bool(gpd.GeoSeries(crs=crs).crs.is_projected)
 

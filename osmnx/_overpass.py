@@ -296,6 +296,7 @@ def _create_overpass_features_query(  # noqa: PLR0912
     Returns
     -------
     query
+        The Overpass features query.
     """
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
@@ -450,6 +451,7 @@ def _overpass_request(
     Returns
     -------
     response_json
+        The Overpass API's response.
     """
     # resolve url to same IP even if there is server round-robin redirecting
     _http._config_dns(settings.overpass_url)

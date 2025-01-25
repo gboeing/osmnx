@@ -351,10 +351,10 @@ def features_from_xml(
     ----------
     filepath
         Path to file containing OSM XML data.
-    tags
-        Query tags to optionally filter the final GeoDataFrame.
     polygon
         Spatial boundaries to optionally filter the final GeoDataFrame.
+    tags
+        Query tags to optionally filter the final GeoDataFrame.
     encoding
         The OSM XML file's character encoding.
 
@@ -444,6 +444,7 @@ def _process_features(
     Returns
     -------
     features
+        The features with geometries.
     """
     nodes = []  # all nodes, including ones that just compose ways
     feature_nodes = []  # nodes that possibly match our query tags
@@ -534,6 +535,7 @@ def _build_way_geometry(
     Returns
     -------
     geometry
+        The way's geometry.
     """
     # a way is a LineString by default, but if it's a closed way and it's not
     # tagged area=no, check if any of its tags denote it as a polygon instead
@@ -584,6 +586,7 @@ def _build_relation_geometry(
     Returns
     -------
     geometry
+        The relation's geometry.
     """
     inner_linestrings = []
     outer_linestrings = []
@@ -641,6 +644,7 @@ def _remove_polygon_holes(
     Returns
     -------
     geometry
+        The geometry minus inner holes.
     """
     if len(inner_polygons) == 0:
         # if there are no holes to remove, geom is the union of outer polygons

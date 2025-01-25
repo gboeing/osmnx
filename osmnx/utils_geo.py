@@ -142,6 +142,7 @@ def _consolidate_subdivide_geometry(geom: Polygon | MultiPolygon) -> MultiPolygo
     Returns
     -------
     geom
+        The resulting consolidated and subdivided geometry.
     """
     if not isinstance(geom, (Polygon, MultiPolygon)):  # pragma: no cover
         msg = "Geometry must be a shapely Polygon or MultiPolygon."
@@ -190,6 +191,7 @@ def _quadrat_cut_geometry(geom: Polygon | MultiPolygon, quadrat_width: float) ->
     Returns
     -------
     geom
+        The resulting split-up geometry.
     """
     # min number of dividing lines (3 produces a grid of 4 quadrat squares)
     min_num = 3
@@ -429,6 +431,7 @@ def bbox_to_poly(bbox: tuple[float, float, float, float]) -> Polygon:
     Returns
     -------
     polygon
+        The resulting bounding box polygon.
     """
     left, bottom, right, top = bbox
     return Polygon([(left, bottom), (right, bottom), (right, top), (left, top)])

@@ -69,6 +69,9 @@ strict = true
 warn_no_return = true
 warn_unreachable = true
 
+[tool.numpydoc_validation]
+checks = ["all", "ES01", "EX01", "GL08", "PR04", "RT03", "SA01"]
+
 [tool.ruff]
 cache-dir = "~/.cache/pre-commit/ruff"
 exclude = ["build/*"]

@@ -39,6 +39,7 @@ def _download_nominatim_element(
     Returns
     -------
     response_json
+        The Nominatim API's response.
     """
     # define the parameters
     params: OrderedDict[str, int | str] = OrderedDict()
@@ -102,6 +103,7 @@ def _nominatim_request(
     Returns
     -------
     response_json
+        The Nominatim API's response.
     """
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
         msg = "Nominatim `request_type` must be 'search', 'reverse', or 'lookup'."

@@ -55,7 +55,7 @@ def _is_endpoint(
     G
         Input graph.
     node
-        The ID of the node.
+        The ID of the node to check.
     node_attrs_include
         Node attribute names for relaxing the strictness of endpoint
         determination. A node is always an endpoint if it possesses one or
@@ -69,6 +69,7 @@ def _is_endpoint(
     Returns
     -------
     endpoint
+        True if node is an endpoint, otherwise False.
     """
     neighbors = set(list(G.predecessors(node)) + list(G.successors(node)))
     n = len(neighbors)
