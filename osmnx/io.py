@@ -188,7 +188,10 @@ def load_graphml(
         raise ValueError(msg)
 
     # specify default graph/node/edge attribute values' data types
-    default_graph_dtypes = {"simplified": _convert_bool_string}
+    default_graph_dtypes = {
+        "consolidated": _convert_bool_string,
+        "simplified": _convert_bool_string,
+    }
     default_node_dtypes = {
         "elevation": float,
         "elevation_res": float,

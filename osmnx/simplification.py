@@ -630,6 +630,10 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         A rebuilt graph with consolidated intersections and (optionally)
         reconnected edge geometries.
     """
+    if G.graph.get("consolidated"):  # pragma: no cover
+        msg = "This graph has already been consolidated, cannot consolidate it again."
+        raise GraphSimplificationError(msg)
+
     # default node attributes to aggregate upon consolidation
     if node_attr_aggs is None:
         node_attr_aggs = {"elevation": "mean"}
@@ -714,6 +718,9 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
                     # if there are multiple unique values, keep one of each
                     node_attrs[col] = unique_vals
             Gc.add_node(cluster_label, **node_attrs)
+
+    # mark the graph as having been consolidated
+    G.graph["consolidated"] = True
 
     if len(G.edges) == 0 or not reconnect_edges:
         # if reconnect_edges is False or there are no edges in original graph

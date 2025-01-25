@@ -228,9 +228,9 @@ def _save_graph_xml(
         )
         warn(msg, category=UserWarning, stacklevel=2)
 
-    # raise error if graph has been simplified
-    if G.graph.get("simplified", False):
-        msg = "Graph must be unsimplified to save as OSM XML."
+    # raise error if graph has been simplified or nodes consolidated
+    if G.graph.get("simplified", False) or G.graph.get("consolidated", False):
+        msg = "Graph must be unsimplified and unconsolidated to save as OSM XML."
         raise GraphSimplificationError(msg)
 
     # set default filepath if None was provided
