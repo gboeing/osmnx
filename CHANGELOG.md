@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.2 (TBD)
+
+- improve docstrings (#1272)
+
 ## 2.0.1 (2025-01-01)
 
 - fix error message when elevation module's optional dependencies are missing (#1250)
