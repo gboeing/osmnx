@@ -46,10 +46,6 @@ def save_graph_geopackage(
         True, save one edge for each directed edge in the graph.
     encoding
         The character encoding of the saved GeoPackage file.
-
-    Returns
-    -------
-    None
     """
     # default filepath if none was provided
     filepath = Path(settings.data_folder) / "graph.gpkg" if filepath is None else Path(filepath)
@@ -95,10 +91,6 @@ def save_graphml(
         interpretation of the GraphML specification.
     encoding
         The character encoding of the saved GraphML file.
-
-    Returns
-    -------
-    None
     """
     # default filepath if none was provided
     filepath = Path(settings.data_folder) / "graph.graphml" if filepath is None else Path(filepath)
@@ -292,10 +284,6 @@ def save_graph_xml(
         attribute will be assigned the value of the first edge of the way.
     encoding
         The character encoding of the saved OSM XML file.
-
-    Returns
-    -------
-    None
     """
     _osm_xml._save_graph_xml(G, filepath, way_tag_aggs, encoding)
 

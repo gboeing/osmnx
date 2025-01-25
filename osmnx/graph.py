@@ -823,10 +823,6 @@ def _add_paths(
         Iterable of paths' `tag:value` attribute data dicts.
     bidirectional
         If True, create bidirectional edges for one-way streets.
-
-    Returns
-    -------
-    None
     """
     # the values OSM uses in its 'oneway' tag to denote True, and to denote
     # travel can only occur in the opposite direction of the node order. see:

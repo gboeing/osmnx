@@ -1061,13 +1061,7 @@ def _get_fig_ax(
 
 
 def _verify_mpl() -> None:
-    """
-    Verify that matplotlib is installed and imported.
-
-    Returns
-    -------
-    None
-    """
+    """Verify that matplotlib is installed and imported."""
     if not mpl_available:  # pragma: no cover
         msg = "matplotlib must be installed as an optional dependency for visualization."
         raise ImportError(msg)

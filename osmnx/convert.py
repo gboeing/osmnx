@@ -223,10 +223,6 @@ def _validate_node_edge_gdfs(
         GeoDataFrame of graph nodes uniquely indexed by `osmid`.
     gdf_edges
         GeoDataFrame of graph edges uniquely multi-indexed by `(u, v, key)`.
-
-    Returns
-    -------
-    None
     """
     # ensure gdf_nodes contains x and y columns representing node geometries
     if not ("x" in gdf_nodes.columns and "y" in gdf_nodes.columns):  # pragma: no cover
@@ -505,6 +501,7 @@ def _is_same_geometry(ls1: LineString, ls2: LineString) -> bool:
     Returns
     -------
     is_same
+        True if geometries are the same in either direction, otherwise False.
     """
     # extract coordinates from each LineString geometry
     geom1 = [tuple(coords) for coords in ls1.xy]
