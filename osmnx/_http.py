@@ -50,10 +50,6 @@ def _save_to_cache(
         The JSON response from the server.
     ok
         A `requests.response.ok` value.
-
-    Returns
-    -------
-    None
     """
     if settings.use_cache:
         if not ok:  # pragma: no cover
@@ -251,10 +247,6 @@ def _config_dns(url: str) -> None:
     ----------
     url
         The URL to consistently resolve the IP address of.
-
-    Returns
-    -------
-    None
     """
     hostname = _hostname_from_url(url)
     try:

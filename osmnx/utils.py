@@ -25,10 +25,6 @@ def citation(style: str = "bibtex") -> None:
     style
         {"apa", "bibtex", "ieee"}
         The citation format, either APA or BibTeX or IEEE.
-
-    Returns
-    -------
-    None
     """
     if style == "apa":
         msg = (
@@ -116,10 +112,6 @@ def log(
     filename
         The name of the log file, without file extension. If None, set to
         `settings.log_filename` value.
-
-    Returns
-    -------
-    None
     """
     if level is None:
         level = settings.log_level

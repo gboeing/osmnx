@@ -202,10 +202,6 @@ def _save_graph_xml(
         attribute will be assigned the value of the first edge of the way.
     encoding
         The character encoding of the saved OSM XML file.
-
-    Returns
-    -------
-    None
     """
     # default "oneway" value used to fill this tag where missing
     ONEWAY = False
@@ -291,10 +287,6 @@ def _add_nodes_xml(
         The XML parent element.
     gdf_nodes
         A GeoDataFrame of graph nodes.
-
-    Returns
-    -------
-    None
     """
     node_tags = set(settings.useful_tags_node)
     node_attrs = {"id", "lat", "lon"}.union(ATTR_DEFAULTS)
@@ -336,10 +328,6 @@ def _add_ways_xml(
         aggregate graph edge attribute values into single OSM way values. If
         None, or if some tag's key does not exist in the dict, the way
         attribute will be assigned the value of the first edge of the way.
-
-    Returns
-    -------
-    None
     """
     way_tags = set(settings.useful_tags_way)
     way_attrs = list({"id"}.union(ATTR_DEFAULTS))

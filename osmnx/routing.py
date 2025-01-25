@@ -465,10 +465,6 @@ def _verify_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
         Input graph.
     attr
         Name of the edge attribute to verify.
-
-    Returns
-    -------
-    None
     """
     try:
         values_float = (np.array(tuple(G.edges(data=attr)))[:, 2]).astype(float)

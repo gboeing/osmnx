@@ -68,10 +68,6 @@ def make_file(env: dict[str, Any]) -> None:
     ----------
     env
         An environment configuration dictionary.
-
-    Returns
-    -------
-    None
     """
     depends_on = []
     output_path = Path(env["output_path"])
