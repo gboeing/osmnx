@@ -12,7 +12,7 @@ Get Started in 4 Steps
 
 4. Consult the :doc:`user-reference` for complete details on using the package.
 
-Finally, if you're not already familiar with `NetworkX`_ and `GeoPandas`_, make sure you read their user guides as OSMnx uses their data structures and functionality.
+Finally, if you're not already familiar with `NetworkX`_ and `GeoPandas`_, make sure you read their user guides as OSMnx uses their data structures.
 
 .. _introducing-osmnx:
 

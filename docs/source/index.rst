@@ -49,8 +49,8 @@ OSMnx is open source and licensed under the MIT license. OpenStreetMap's open da
 .. _license: https://www.openstreetmap.org/copyright
 
 
-Documentation
--------------
+User Guides
+-----------
 
 .. toctree::
    :maxdepth: 1
