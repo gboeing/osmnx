@@ -55,6 +55,9 @@ def _save_to_cache(
         if not ok:  # pragma: no cover
             msg = "Did not save to cache because HTTP status code is not OK"
             utils.log(msg, level=lg.WARNING)
+        elif isinstance(response_json, dict) and ("remark" in response_json):  # pragma: no cover
+            msg = f"Did not save to cache because response contains remark: {response_json['remark']!r}"
+            utils.log(msg, lg.WARNING)
         else:
             # create the folder on the disk if it doesn't already exist
             cache_folder = Path(settings.cache_folder)
@@ -118,19 +121,8 @@ def _retrieve_from_cache(url: str) -> dict[str, Any] | list[dict[str, Any]] | No
         # return cached response for this url if exists, otherwise return None
         cache_filepath = _url_in_cache(url)
         if cache_filepath is not None:
-            response_json: dict[str, Any] | list[dict[str, Any]] = json.loads(
-                cache_filepath.read_text(encoding="utf-8"),
-            )
-
-            # return None if there is a server remark in the cached response
-            if isinstance(response_json, dict) and ("remark" in response_json):  # pragma: no cover
-                msg = (
-                    f"Ignoring cache file {str(cache_filepath)!r} because "
-                    f"it contains a remark: {response_json['remark']!r}"
-                )
-                utils.log(msg, lg.WARNING)
-                return None
-
+            response_json: dict[str, Any] | list[dict[str, Any]]
+            response_json = json.loads(cache_filepath.read_text(encoding="utf-8"))
             msg = f"Retrieved response from cache file {str(cache_filepath)!r}"
             utils.log(msg, lg.INFO)
             return response_json
