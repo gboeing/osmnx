@@ -141,8 +141,8 @@ def _get_network_filter(network_type: str) -> str:
 def _get_overpass_pause(
     base_endpoint: str,
     *,
-    recursive_delay: float = 5,
-    default_duration: float = 60,
+    recursive_delay: float = 4,
+    default_duration: float = 50,
 ) -> float:
     """
     Retrieve a pause duration from the Overpass API status endpoint.
@@ -432,7 +432,7 @@ def _overpass_request(
     data: OrderedDict[str, Any],
     *,
     pause: float | None = None,
-    error_pause: float = 60,
+    error_pause: float = 55,
 ) -> dict[str, Any]:
     """
     Send a HTTP POST request to the Overpass API and return response.
