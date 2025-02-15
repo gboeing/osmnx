@@ -4,9 +4,6 @@ set -euo pipefail
 # delete temp files and folders
 rm -r -f ./.coverage* ./.pytest_cache ./.temp ./dist ./docs/build ./*/__pycache__
 
-# create all the configured environment/requirements files
-python ./environments/make-env-files.py
-
 # run the pre-commit hooks for linting/formatting
 SKIP=no-commit-to-branch pre-commit run --all-files
 

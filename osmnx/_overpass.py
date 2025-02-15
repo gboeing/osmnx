@@ -141,8 +141,8 @@ def _get_network_filter(network_type: str) -> str:
 def _get_overpass_pause(
     base_endpoint: str,
     *,
-    recursive_delay: float = 4,
-    default_duration: float = 50,
+    recursion_pause: float = 5,
+    default_pause: float = 60,
 ) -> float:
     """
     Retrieve a pause duration from the Overpass API status endpoint.
@@ -155,19 +155,19 @@ def _get_overpass_pause(
     ----------
     base_endpoint
         Base Overpass API URL (without "/status" at the end).
-    recursive_delay
+    recursion_pause
         How long to wait between recursive calls if the server is currently
         running a query.
-    default_duration
-        If a fatal error occurs, fall back on returning this value.
+    default_pause
+        If a fatal error occurs, fall back on this liberal pause duration.
 
     Returns
     -------
     pause
         The current pause duration specified by the Overpass status endpoint.
     """
+    # if overpass rate limiting is False, then there is zero pause
     if not settings.overpass_rate_limit:
-        # if overpass rate limiting is False, then there is zero pause
         return 0
 
     url = base_endpoint.rstrip("/") + "/status"
@@ -185,7 +185,7 @@ def _get_overpass_pause(
         # cannot reach status endpoint: log error and return default duration
         msg = f"Unable to reach {url}, {e}"
         utils.log(msg, level=lg.ERROR)
-        return default_duration
+        return default_pause
 
     # try to parse the output
     try:
@@ -195,7 +195,7 @@ def _get_overpass_pause(
         # cannot parse output: log error and return default duration
         msg = f"Unable to parse {url} response: {response_text}"
         utils.log(msg, level=lg.ERROR)
-        return default_duration
+        return default_pause
 
     # determine the current status of the server
     try:
@@ -215,16 +215,16 @@ def _get_overpass_pause(
             pause = max(seconds, 1)
 
         # if first token is 'Currently', it is currently running a query so
-        # check back in recursive_delay seconds
+        # check back in recursion_pause seconds
         elif status_first_part == "Currently":
-            time.sleep(recursive_delay)
+            time.sleep(recursion_pause)
             pause = _get_overpass_pause(base_endpoint)
 
         # any other status is unrecognized: log error, return default duration
         else:
             msg = f"Unrecognized server status: {status!r}"
             utils.log(msg, level=lg.ERROR)
-            return default_duration
+            return default_pause
 
     return pause
 
@@ -428,12 +428,7 @@ def _download_overpass_features(
         yield _overpass_request(OrderedDict(data=query_str))
 
 
-def _overpass_request(
-    data: OrderedDict[str, Any],
-    *,
-    pause: float | None = None,
-    error_pause: float = 55,
-) -> dict[str, Any]:
+def _overpass_request(data: OrderedDict[str, Any]) -> dict[str, Any]:
     """
     Send a HTTP POST request to the Overpass API and return response.
 
@@ -441,12 +436,6 @@ def _overpass_request(
     ----------
     data
         Key-value pairs of parameters.
-    pause
-        How long to pause in seconds before request. If None, will query API
-        status endpoint to find when next slot is available.
-    error_pause
-        How long to pause in seconds (in addition to `pause`) before re-trying
-        request if error.
 
     Returns
     -------
@@ -464,8 +453,7 @@ def _overpass_request(
         return cached_response_json
 
     # pause then request this URL
-    if pause is None:
-        pause = _get_overpass_pause(settings.overpass_url)
+    pause = _get_overpass_pause(settings.overpass_url)
     hostname = _http._hostname_from_url(url)
     msg = f"Pausing {pause} second(s) before making HTTP POST request to {hostname!r}"
     utils.log(msg, level=lg.INFO)
@@ -484,6 +472,7 @@ def _overpass_request(
 
     # handle 429 and 504 errors by pausing then recursively re-trying request
     if response.status_code in {429, 504}:  # pragma: no cover
+        error_pause = 55
         msg = (
             f"{hostname!r} responded {response.status_code} {response.reason}: "
             f"we'll retry in {error_pause} secs"

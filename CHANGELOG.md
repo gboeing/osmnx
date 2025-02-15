@@ -2,8 +2,9 @@
 
 ## 2.0.2 (TBD)
 
-- fix bug in parsing time when calculating pause duration between requests (#1277)
 - fix bug where consolidate_intersections function would mutate the passed-in graph (#1273)
+- fix bug in parsing time when calculating pause duration between requests (#1277)
+- refactor interals of caching and pausing between requests (#1279)
 - provide user-friendly error message if consolidate_intersections is run more than once (#1273)
 - improve docstrings (#1272 #1274)
 
