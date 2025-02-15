@@ -81,8 +81,6 @@ def _nominatim_request(
     params: OrderedDict[str, int | str],
     *,
     request_type: str = "search",
-    pause: float = 1,
-    error_pause: float = 60,
 ) -> list[dict[str, Any]]:
     """
     Send a HTTP GET request to the Nominatim API and return response.
@@ -92,19 +90,18 @@ def _nominatim_request(
     params
         Key-value pairs of parameters.
     request_type
-        {"search", "reverse", "lookup"}
-        Which Nominatim API endpoint to query.
-    pause
-        How long to pause before request, in seconds. Per the Nominatim usage
-        policy: "an absolute maximum of 1 request per second" is allowed.
-    error_pause
-        How long to pause in seconds before re-trying request if error.
+        Which Nominatim API endpoint to query, one of {"search", "reverse",
+        "lookup"}.
 
     Returns
     -------
     response_json
         The Nominatim API's response.
     """
+    # how long to pause before request, in seconds. Per the Nominatim usage
+    # policy: "an absolute maximum of 1 request per second" is allowed.
+    pause = 1
+
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
         msg = "Nominatim `request_type` must be 'search', 'reverse', or 'lookup'."
         raise ValueError(msg)
@@ -139,6 +136,7 @@ def _nominatim_request(
 
     # handle 429 and 504 errors by pausing then recursively re-trying request
     if response.status_code in {429, 504}:  # pragma: no cover
+        error_pause = 55
         msg = (
             f"{hostname!r} responded {response.status_code} {response.reason}: "
             f"we'll retry in {error_pause} secs"
