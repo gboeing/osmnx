@@ -32,6 +32,7 @@ shapely>=2.0
 sphinx-autodoc-typehints
 sphinx>=7
 statsmodels
+tomli
 twine
 typeguard
 validate-pyproject

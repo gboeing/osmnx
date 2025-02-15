@@ -2,9 +2,10 @@
 
 ## 2.0.2 (TBD)
 
-- improve docstrings (#1272 #1274)
+- fix bug in parsing time when calculating pause duration between requests (#1277)
 - fix bug where consolidate_intersections function would mutate the passed-in graph (#1273)
 - provide user-friendly error message if consolidate_intersections is run more than once (#1273)
+- improve docstrings (#1272 #1274)
 
 ## 2.0.1 (2025-01-01)
 

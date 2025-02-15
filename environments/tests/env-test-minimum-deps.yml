@@ -22,4 +22,5 @@ dependencies:
   - scikit-learn==0.23.*
   - scipy==1.5.*
   - shapely==2.0.*
+  - tomli
   - typeguard

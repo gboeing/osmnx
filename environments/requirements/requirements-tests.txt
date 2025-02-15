@@ -4,3 +4,4 @@ pre-commit
 pytest
 pytest-cov
 typeguard
+tomli

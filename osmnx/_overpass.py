@@ -141,8 +141,8 @@ def _get_network_filter(network_type: str) -> str:
 def _get_overpass_pause(
     base_endpoint: str,
     *,
-    recursive_delay: float = 5,
-    default_duration: float = 60,
+    recursive_delay: float = 4,
+    default_duration: float = 50,
 ) -> float:
     """
     Retrieve a pause duration from the Overpass API status endpoint.
@@ -183,7 +183,7 @@ def _get_overpass_pause(
         response_text = response.text
     except RequestsConnectionError as e:  # pragma: no cover
         # cannot reach status endpoint: log error and return default duration
-        msg = f"Unable to query {url}, {e}"
+        msg = f"Unable to reach {url}, {e}"
         utils.log(msg, level=lg.ERROR)
         return default_duration
 
@@ -209,7 +209,7 @@ def _get_overpass_pause(
         if status_first_part == "Slot":
             utc_time_str = status.split(" ")[3]
             pattern = "%Y-%m-%dT%H:%M:%SZ,"
-            utc_time = dt.datetime.strptime(utc_time_str, pattern).astimezone(dt.timezone.utc)
+            utc_time = dt.datetime.strptime(utc_time_str, pattern).replace(tzinfo=dt.timezone.utc)
             utc_now = dt.datetime.now(tz=dt.timezone.utc)
             seconds = int(np.ceil((utc_time - utc_now).total_seconds()))
             pause = max(seconds, 1)
@@ -432,7 +432,7 @@ def _overpass_request(
     data: OrderedDict[str, Any],
     *,
     pause: float | None = None,
-    error_pause: float = 60,
+    error_pause: float = 55,
 ) -> dict[str, Any]:
     """
     Send a HTTP POST request to the Overpass API and return response.
@@ -465,11 +465,11 @@ def _overpass_request(
 
     # pause then request this URL
     if pause is None:
-        this_pause = _get_overpass_pause(settings.overpass_url)
+        pause = _get_overpass_pause(settings.overpass_url)
     hostname = _http._hostname_from_url(url)
-    msg = f"Pausing {this_pause} second(s) before making HTTP POST request to {hostname!r}"
+    msg = f"Pausing {pause} second(s) before making HTTP POST request to {hostname!r}"
     utils.log(msg, level=lg.INFO)
-    time.sleep(this_pause)
+    time.sleep(pause)
 
     # transmit the HTTP POST request
     msg = f"Post {prepared_url} with timeout={settings.requests_timeout}"
@@ -484,14 +484,13 @@ def _overpass_request(
 
     # handle 429 and 504 errors by pausing then recursively re-trying request
     if response.status_code in {429, 504}:  # pragma: no cover
-        this_pause = error_pause + _get_overpass_pause(settings.overpass_url)
         msg = (
             f"{hostname!r} responded {response.status_code} {response.reason}: "
-            f"we'll retry in {this_pause} secs"
+            f"we'll retry in {error_pause} secs"
         )
         utils.log(msg, level=lg.WARNING)
-        time.sleep(this_pause)
-        return _overpass_request(data, pause=pause, error_pause=error_pause)
+        time.sleep(error_pause)
+        return _overpass_request(data)
 
     response_json = _http._parse_response(response)
     if not isinstance(response_json, dict):  # pragma: no cover

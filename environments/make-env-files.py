@@ -9,7 +9,13 @@ from pathlib import Path
 from typing import Any
 
 from packaging.requirements import Requirement
-from tomllib import load as tomllib_load
+
+try:
+    # for python >=3.11
+    from tomllib import load as toml_load
+except ImportError:
+    # for python <3.11
+    from tomli import load as toml_load
 
 # path to package's pyproject and the config json file
 PYPROJECT_PATH = "./pyproject.toml"
@@ -60,7 +66,7 @@ def make_requirement(
     return str(requirement)
 
 
-def make_file(env: dict[str, Any]) -> None:
+def make_file(env: dict[str, Any], pyproject: dict[str, Any]) -> None:
     """
     Write a conda environment yaml file or pip requirements.txt file.
 
@@ -68,6 +74,8 @@ def make_file(env: dict[str, Any]) -> None:
     ----------
     env
         An environment configuration dictionary.
+    pyproject
+        A parsed pyproject.toml file's contents.
     """
     depends_on = []
     output_path = Path(env["output_path"])
@@ -117,10 +125,10 @@ def make_file(env: dict[str, Any]) -> None:
 if __name__ == "__main__":
     # load the pyproject.toml and the environments.json config files
     with Path(PYPROJECT_PATH).open("rb") as f:
-        pyproject = tomllib_load(f)
+        pyproject = toml_load(f)
     with Path(ENVS_CONFIG_PATH).open("rb") as f:
         envs = json_load(f)
 
     # make each environment/requirements file as configured
     for env in envs:
-        make_file(env)
+        make_file(env, pyproject)
