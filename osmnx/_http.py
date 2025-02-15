@@ -69,8 +69,9 @@ def _get_cache_filepath(key: str, extension: str = "json") -> Path:
     """
     Determine a cache filepath for a key.
 
-    This calculates the SHA-1 hash digest (40 hexadecimal characters) of `key`
-    to generate a succinct but unique cache filename.
+    This uses the configured `settings.cache_folder` and calculates the 160
+    bit SHA-1 hash digest (40 hexadecimal characters) of `key` to generate a
+    succinct but unique cache filename.
 
     Parameters
     ----------
