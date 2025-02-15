@@ -145,12 +145,7 @@ def _nominatim_request(
         )
         utils.log(msg, level=lg.WARNING)
         time.sleep(error_pause)
-        return _nominatim_request(
-            params,
-            request_type=request_type,
-            pause=pause,
-            error_pause=error_pause,
-        )
+        return _nominatim_request(params, request_type=request_type)
 
     response_json = _http._parse_response(response)
     if not isinstance(response_json, list):
