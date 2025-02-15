@@ -26,6 +26,7 @@ dependencies:
   - shapely>=2.0
   - sphinx-autodoc-typehints
   - sphinx>=7
+  - tomli
   - twine
   - typeguard
   - validate-pyproject
