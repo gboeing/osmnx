@@ -98,10 +98,6 @@ def _nominatim_request(
     response_json
         The Nominatim API's response.
     """
-    # how long to pause before request, in seconds. Per the Nominatim usage
-    # policy: "an absolute maximum of 1 request per second" is allowed.
-    pause = 1
-
     if request_type not in {"search", "reverse", "lookup"}:  # pragma: no cover
         msg = "Nominatim `request_type` must be 'search', 'reverse', or 'lookup'."
         raise ValueError(msg)
@@ -117,7 +113,9 @@ def _nominatim_request(
     if isinstance(cached_response_json, list):
         return cached_response_json
 
-    # pause then request this URL
+    # how long to pause before request, in seconds. Per the Nominatim usage
+    # policy: "an absolute maximum of 1 request per second" is allowed.
+    pause = 1
     hostname = _http._hostname_from_url(url)
     msg = f"Pausing {pause} second(s) before making HTTP GET request to {hostname!r}"
     utils.log(msg, level=lg.INFO)
