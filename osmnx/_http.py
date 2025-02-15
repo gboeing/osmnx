@@ -89,7 +89,7 @@ def _get_cache_filepath(key: str, extension: str = "json") -> Path:
     return Path(settings.cache_folder) / f"{digest}.{extension}"
 
 
-def _in_cache(key: str) -> Path | None:
+def _check_cache(key: str) -> Path | None:
     """
     Check if a key exists in the cache, and return its cache filepath if so.
 
@@ -126,7 +126,7 @@ def _retrieve_from_cache(url: str) -> dict[str, Any] | list[dict[str, Any]] | No
     # if the tool is configured to use the cache
     if settings.use_cache:
         # return cached response for this url if exists, otherwise return None
-        cache_filepath = _in_cache(url)
+        cache_filepath = _check_cache(url)
         if cache_filepath is not None:
             response_json: dict[str, Any] | list[dict[str, Any]]
             response_json = json.loads(cache_filepath.read_text(encoding="utf-8"))
