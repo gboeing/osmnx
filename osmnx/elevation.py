@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging as lg
 import multiprocessing as mp
 import time
-from hashlib import sha1
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
@@ -128,10 +127,9 @@ def _build_vrt_file(raster_paths: Iterable[str | Path]) -> Path:
         msg = "rio-vrt must be installed as an optional dependency to build VRTs."
         raise ImportError(msg)
 
-    # use the sha1 hash of the sorted filepaths as the VRT filename
+    # determine VRT cache filepath, from stringified sorted raster filepaths
     raster_paths = sorted(raster_paths)
-    checksum = sha1(str(raster_paths).encode("utf-8")).hexdigest()  # noqa: S324
-    vrt_path = Path(settings.cache_folder) / f"{checksum}.vrt"
+    vrt_path = _http._get_cache_filepath(str(raster_paths), "vrt")
 
     # build the VRT file if it doesn't already exist in the cache
     if not vrt_path.is_file():
