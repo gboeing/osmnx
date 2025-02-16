@@ -1,3 +1,3 @@
 """OSMnx package version information."""
 
-__version__ = "2.0.2dev"
+__version__ = "2.0.2"
