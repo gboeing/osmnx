@@ -58,32 +58,32 @@ def _save_to_cache(
             utils.log(msg, lg.WARNING)
         else:
             # create cache folder on disk if it doesn't already exist
-            cache_filepath = _get_cache_filepath(url)
+            cache_filepath = _resolve_cache_filepath(url)
             cache_filepath.parent.mkdir(parents=True, exist_ok=True)
             cache_filepath.write_text(json.dumps(response_json), encoding="utf-8")
             msg = f"Saved response to cache file {str(cache_filepath)!r}"
             utils.log(msg, level=lg.INFO)
 
 
-def _get_cache_filepath(key: str, extension: str = "json") -> Path:
+def _resolve_cache_filepath(key: str, extension: str = "json") -> Path:
     """
-    Determine a cache filepath for a key.
+    Determine a cache key's corresponding cache file path.
 
     This uses the configured `settings.cache_folder` and calculates the 160
-    bit SHA-1 hash digest (40 hexadecimal characters) of `key` to generate a
+    bit SHA-1 hash digest (40 hexadecimal characters) of `key` to determine a
     succinct but unique cache filename.
 
     Parameters
     ----------
     key
-        The key for which to generate a cache filepath, for example, a URL.
+        The key for which to generate a cache file path, for example, a URL.
     extension
-        The desired cache file extension.
+        The desired cache file's extension.
 
     Returns
     -------
     cache_filepath
-        Cache filepath corresponding to `key`.
+        Cache file path corresponding to `key`.
     """
     digest = sha1(key.encode("utf-8")).hexdigest()  # noqa: S324
     return Path(settings.cache_folder) / f"{digest}.{extension}"
@@ -91,7 +91,7 @@ def _get_cache_filepath(key: str, extension: str = "json") -> Path:
 
 def _check_cache(key: str) -> Path | None:
     """
-    Check if a key exists in the cache, and return its cache filepath if so.
+    Check if a key exists in the cache, and return its cache file path if so.
 
     Parameters
     ----------
@@ -103,7 +103,7 @@ def _check_cache(key: str) -> Path | None:
     cache_filepath
         Filepath to cached data for `key` if it exists, otherwise None.
     """
-    cache_filepath = _get_cache_filepath(key)
+    cache_filepath = _resolve_cache_filepath(key)
     return cache_filepath if cache_filepath.is_file() else None
 
 
