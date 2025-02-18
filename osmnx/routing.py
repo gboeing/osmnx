@@ -325,7 +325,9 @@ def shortest_path(
     weight
         Edge attribute to minimize when solving shortest path.
     cpus
-        How many CPU cores to use. If None, use all available.
+        How many CPU cores to use if multiprocessing. If None, use all
+        available. If you are multiprocessing, make sure you protect your
+        entry point: see the Python docs for details.
 
     Returns
     -------
