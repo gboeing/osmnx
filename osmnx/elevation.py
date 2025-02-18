@@ -165,7 +165,9 @@ def add_node_elevations_raster(
     band
         Which raster band to query.
     cpus
-        How many CPU cores to use. If None, use all available.
+        How many CPU cores to use if multiprocessing. If None, use all
+        available. If you are multiprocessing, make sure you protect your
+        entry point: see the Python docs for details.
 
     Returns
     -------
