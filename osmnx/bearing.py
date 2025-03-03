@@ -277,7 +277,7 @@ def _bearings_distribution(
     # Bins will be merged in pairs after the histogram is computed. The last
     # bin edge is the same as the first (i.e., 0 degrees = 360 degrees).
     num_split_bins = num_bins * 2
-    split_bin_edges = np.arange(num_split_bins + 1) * 360 / num_split_bins
+    split_bin_edges = np.linspace(0, 360, num_split_bins + 1)
 
     bearings, weights = _extract_edge_bearings(G, min_length, weight)
     split_bin_counts, split_bin_edges = np.histogram(
