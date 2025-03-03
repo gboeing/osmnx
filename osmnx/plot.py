@@ -761,7 +761,7 @@ def plot_orientation(  # noqa: PLR0913
     )
 
     # positions: where to center each bar
-    positions = np.radians(bin_centers)
+    positions = np.deg2rad(bin_centers)
 
     # width: make bars fill the circumference without gaps or overlaps
     width = 2 * np.pi / num_bins
@@ -995,7 +995,7 @@ def _config_ax(ax: Axes, crs: Any, bbox: tuple[float, float, float, float], padd
         ax.set_aspect("equal")
     else:
         # if not projected, conform aspect ratio to not stretch plot
-        cos_lat = np.cos((bottom + top) / 2 / 180 * np.pi)
+        cos_lat = np.cos(np.deg2rad((bottom + top) / 2))
         ax.set_aspect(1 / cos_lat)
 
     return ax

@@ -69,14 +69,14 @@ def calculate_bearing(
         The bearing(s) in decimal degrees.
     """
     # get the latitudes and the difference in longitudes, all in radians
-    lat1 = np.radians(lat1)
-    lat2 = np.radians(lat2)
-    delta_lon = np.radians(lon2 - lon1)
+    lat1 = np.deg2rad(lat1)
+    lat2 = np.deg2rad(lat2)
+    delta_lon = np.deg2rad(lon2 - lon1)
 
     # calculate initial bearing from -180 degrees to +180 degrees
     y = np.sin(delta_lon) * np.cos(lat2)
     x = np.cos(lat1) * np.sin(lat2) - np.sin(lat1) * np.cos(lat2) * np.cos(delta_lon)
-    initial_bearing = np.degrees(np.arctan2(y, x))
+    initial_bearing = np.rad2deg(np.arctan2(y, x))
 
     # normalize to 0-360 degrees to get compass bearing
     bearing: float | npt.NDArray[np.float64] = initial_bearing % 360
