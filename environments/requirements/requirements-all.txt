@@ -21,6 +21,7 @@ pre-commit
 pysal>24
 pytest
 pytest-cov
+pytest-xdist
 python-igraph
 rasterio>=1.3
 requests>=2.27
