@@ -13,7 +13,7 @@ python -m hatch build --clean
 python -m twine check --strict ./dist/*
 
 # run the tests and report the test coverage
-python -m pytest --verbose --maxfail=1 --typeguard-packages=osmnx --cov=osmnx --cov-report=term-missing:skip-covered --numprocesses 3 --dist loadgroup
+python -m pytest --verbose --maxfail=1 --typeguard-packages=osmnx --cov=osmnx --cov-report=term-missing:skip-covered --numprocesses=3 --dist=loadgroup
 
 # build the docs and test that links are alive
 python -m sphinx -q -a -E -W --keep-going -b html ./docs/source ./docs/build/html
