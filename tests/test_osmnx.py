@@ -50,6 +50,7 @@ polygon_wkt = (
 polygon = ox.utils_geo.buffer_geometry(geom=wkt.loads(polygon_wkt), dist=1)
 
 
+@pytest.mark.xdist_group(name="group1")
 def test_logging() -> None:
     """Test the logger."""
     ox.utils.log("test a fake default message")
@@ -66,6 +67,7 @@ def test_logging() -> None:
     ox.utils.ts(style="time")
 
 
+@pytest.mark.xdist_group(name="group1")
 def test_exceptions() -> None:
     """Test the custom errors."""
     message = "testing exception"
@@ -83,6 +85,7 @@ def test_exceptions() -> None:
         raise ox._errors.GraphSimplificationError(message)
 
 
+@pytest.mark.xdist_group(name="group1")
 def test_geocoder() -> None:
     """Test retrieving elements by place name and OSM ID."""
     city = ox.geocode_to_gdf("R2999176", by_osmid=True)
@@ -101,6 +104,7 @@ def test_geocoder() -> None:
         _ = ox.geocode_to_gdf("Bunker Hill, Los Angeles, CA, USA")
 
 
+@pytest.mark.xdist_group(name="group1")
 def test_stats() -> None:
     """Test generating graph stats."""
     # create graph, add a new node, add bearings, project it
@@ -144,6 +148,7 @@ def test_stats() -> None:
     G_clean = ox.consolidate_intersections(G_proj, tolerance=tols, rebuild_graph=True)
 
 
+@pytest.mark.xdist_group(name="group1")
 def test_bearings() -> None:
     """Test bearings and orientation entropy."""
     G = ox.graph_from_place(place1, network_type="all")
@@ -196,6 +201,7 @@ def test_bearings() -> None:
     assert list(bin_centers) == [0.0, 180.0]
 
 
+@pytest.mark.xdist_group(name="group1")
 def test_osm_xml() -> None:
     """Test working with .osm XML data."""
     # test loading a graph from a local .osm xml (and bz2 and gzip) file
@@ -268,6 +274,7 @@ def test_osm_xml() -> None:
     ox.settings.all_oneway = default_all_oneway
 
 
+@pytest.mark.xdist_group(name="group1")
 def test_elevation() -> None:
     """Test working with elevation data."""
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
@@ -301,6 +308,7 @@ def test_elevation() -> None:
     G = ox.add_edge_grades(G, add_absolute=True)
 
 
+@pytest.mark.xdist_group(name="group1")
 def test_routing() -> None:
     """Test working with speed, travel time, and routing."""
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
@@ -378,6 +386,7 @@ def test_routing() -> None:
     assert ox.distance.euclidean(0, 0, 1, 1) == pytest.approx(1.4142135)
 
 
+@pytest.mark.xdist_group(name="group1")
 def test_plots() -> None:
     """Test visualization methods."""
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
@@ -415,6 +424,7 @@ def test_plots() -> None:
     fig, ax = ox.plot_figure_ground(G=G)
 
 
+@pytest.mark.xdist_group(name="group1")
 def test_nearest() -> None:
     """Test nearest node/edge searching."""
     # get graph and x/y coords to search
@@ -437,6 +447,7 @@ def test_nearest() -> None:
     _ = ox.distance.nearest_edges(Gp, X[0], Y[0], return_dist=True)
 
 
+@pytest.mark.xdist_group(name="group1")
 def test_endpoints() -> None:
     """Test different API endpoints."""
     default_requests_timeout = ox.settings.requests_timeout
@@ -511,6 +522,7 @@ def test_endpoints() -> None:
     ox.settings.overpass_url = default_overpass_url
 
 
+@pytest.mark.xdist_group(name="group1")
 def test_save_load() -> None:  # noqa: PLR0915
     """Test saving/loading graphs to/from disk."""
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
@@ -597,6 +609,7 @@ def test_save_load() -> None:  # noqa: PLR0915
     G = ox.load_graphml(graphml_str=graphml, node_dtypes=nd, edge_dtypes=ed)
 
 
+@pytest.mark.xdist_group(name="group2")
 def test_graph_from() -> None:
     """Test downloading graphs from Overpass."""
     # test subdividing a large geometry (raises a UserWarning)
@@ -661,6 +674,7 @@ def test_graph_from() -> None:
     )
 
 
+@pytest.mark.xdist_group(name="group3")
 def test_features() -> None:
     """Test downloading features from Overpass."""
     bbox = ox.utils_geo.bbox_from_point(location_point, dist=500)

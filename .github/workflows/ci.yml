@@ -72,6 +72,8 @@ jobs:
              --typeguard-packages=osmnx
              --cov=osmnx
              --cov-report=xml
+             --numprocesses=3
+             --dist=loadgroup
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v5
