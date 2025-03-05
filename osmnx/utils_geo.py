@@ -396,8 +396,8 @@ def bbox_from_point(
     EARTH_RADIUS_M = 6_371_009  # meters
     lat, lon = point
 
-    delta_lat = (dist / EARTH_RADIUS_M) * (180 / np.pi)
-    delta_lon = (dist / EARTH_RADIUS_M) * (180 / np.pi) / np.cos(lat * np.pi / 180)
+    delta_lat = np.rad2deg(dist / EARTH_RADIUS_M)
+    delta_lon = np.rad2deg(dist / EARTH_RADIUS_M) / np.cos(np.deg2rad(lat))
     top = lat + delta_lat
     bottom = lat - delta_lat
     right = lon + delta_lon
