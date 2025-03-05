@@ -129,7 +129,7 @@ def _build_vrt_file(raster_paths: Iterable[str | Path]) -> Path:
 
     # determine VRT cache filepath, from stringified sorted raster filepaths
     raster_paths = sorted(raster_paths)
-    vrt_path = _http._get_cache_filepath(str(raster_paths), "vrt")
+    vrt_path = _http._resolve_cache_filepath(str(raster_paths), "vrt")
 
     # build the VRT file if it doesn't already exist in the cache
     if not vrt_path.is_file():
@@ -165,7 +165,9 @@ def add_node_elevations_raster(
     band
         Which raster band to query.
     cpus
-        How many CPU cores to use. If None, use all available.
+        How many CPU cores to use if multiprocessing. If None, use all
+        available. If you are multiprocessing, make sure you protect your
+        entry point: see the Python docs for details.
 
     Returns
     -------
