@@ -337,15 +337,15 @@ def plot_graph_route(
     fig, ax
         The resulting matplotlib figure and axes objects.
     """
-    _verify_mpl()
-    if ax is None:
-        # plot the graph but not the route, and override any user show/close
-        # args for now: we'll do that later
-        overrides = {"show", "save", "close"}
-        kwargs = {k: v for k, v in pg_kwargs.items() if k not in overrides}
-        fig, ax = plot_graph(G, show=False, save=False, close=False, **kwargs)
-    else:
-        fig = ax.figure  # type: ignore[assignment]
+    fig, ax = _prepare_graph_route_plot(
+        G,
+        route,
+        orig_dest_color=route_color,
+        orig_dest_alpha=route_alpha,
+        orig_dest_size=orig_dest_size,
+        ax=ax,
+        **pg_kwargs,
+    )
 
     # scatterplot origin and destination points (first/last nodes in route)
     od_x = (G.nodes[route[0]]["x"], G.nodes[route[-1]]["x"])
@@ -414,20 +414,15 @@ def animate_graph_route(
     fig, ax
         The resulting matplotlib figure and axes objects.
     """
-    _verify_mpl()
-    if ax is None:
-        # plot the graph but not the route, and override any user show/close
-        # args for now: we'll do that later
-        overrides = {"show", "save", "close"}
-        kwargs = {k: v for k, v in pg_kwargs.items() if k not in overrides}
-        fig, ax = plot_graph(G, show=False, save=False, close=False, **kwargs)
-    else:
-        fig = ax.figure  # type: ignore[assignment]
-
-    # scatterplot origin and destination points (first/last nodes in route)
-    od_x = (G.nodes[route[0]]["x"], G.nodes[route[-1]]["x"])
-    od_y = (G.nodes[route[0]]["y"], G.nodes[route[-1]]["y"])
-    ax.scatter(od_x, od_y, s=orig_dest_size, c=route_color, alpha=route_alpha, edgecolor="none")
+    fig, ax = _prepare_graph_route_plot(
+        G,
+        route,
+        orig_dest_color=route_color,
+        orig_dest_alpha=route_alpha,
+        orig_dest_size=orig_dest_size,
+        ax=ax,
+        **pg_kwargs,
+    )
 
     # assemble list of lists of x and y coords for each edge
     x = []
@@ -1119,6 +1114,66 @@ def _config_ax(ax: Axes, crs: Any, bbox: tuple[float, float, float, float], padd
         ax.set_aspect(1 / cos_lat)
 
     return ax
+
+
+def _prepare_graph_route_plot(
+    G: nx.MultiDiGraph,
+    route: list[int],
+    *,
+    orig_dest_color: str = "r",
+    orig_dest_alpha: float = 0.5,
+    orig_dest_size: float = 100,
+    ax: Axes | None = None,
+    **pg_kwargs: Any,  # noqa: ANN401
+) -> tuple[Figure, Axes]:
+    """
+    Plot graph and origin/destination nodes of a route, helper for plot_graph_route and animate_graph_route.
+
+    Parameters
+    ----------
+    G
+        Input graph.
+    route
+        A path of node IDs.
+    orig_dest_color
+        The color of the origin and destination nodes.
+    orig_dest_alpha
+        Opacity of the origin and destination nodes.
+    orig_dest_size
+        Size of the origin and destination nodes.
+    ax
+        If not None, plot on this pre-existing axes instance.
+    **pg_kwargs
+        Keyword arguments to pass to `plot_graph`.
+
+    Returns
+    -------
+    fig, ax
+        The resulting matplotlib figure and axes objects.
+    """
+    _verify_mpl()
+    if ax is None:
+        # plot the graph but not the route, and override any user show/close
+        # args for now: we'll do that later
+        overrides = {"show", "save", "close"}
+        kwargs = {k: v for k, v in pg_kwargs.items() if k not in overrides}
+        fig, ax = plot_graph(G, show=False, save=False, close=False, **kwargs)
+    else:
+        fig = ax.figure  # type: ignore[assignment]
+
+    # scatterplot origin and destination points (first/last nodes in route)
+    od_x = (G.nodes[route[0]]["x"], G.nodes[route[-1]]["x"])
+    od_y = (G.nodes[route[0]]["y"], G.nodes[route[-1]]["y"])
+    ax.scatter(
+        od_x,
+        od_y,
+        s=orig_dest_size,
+        c=orig_dest_color,
+        alpha=orig_dest_alpha,
+        edgecolor="none",
+    )
+
+    return fig, ax
 
 
 # if polar = False, return Axes
