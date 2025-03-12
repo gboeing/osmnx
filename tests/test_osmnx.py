@@ -366,6 +366,7 @@ def test_routing() -> None:
     route_edges = ox.routing.route_to_gdf(G, route5, weight="travel_time")
 
     fig, ax = ox.plot_graph_route(G, route5, save=True)
+    fig, ax = ox.animate_graph_route(G, route5, save=True)
 
     # test multiple origins-destinations
     n = 5

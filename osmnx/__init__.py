@@ -34,6 +34,7 @@ from .io import load_graphml as load_graphml
 from .io import save_graph_geopackage as save_graph_geopackage
 from .io import save_graph_xml as save_graph_xml
 from .io import save_graphml as save_graphml
+from .plot import animate_graph_route as animate_graph_route
 from .plot import plot_figure_ground as plot_figure_ground
 from .plot import plot_footprints as plot_footprints
 from .plot import plot_graph as plot_graph

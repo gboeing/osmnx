@@ -31,8 +31,10 @@ try:
     from matplotlib import cm
     from matplotlib import colormaps
     from matplotlib import colors
+    from matplotlib.animation import FuncAnimation
     from matplotlib.axes._axes import Axes  # noqa: TC002
     from matplotlib.figure import Figure  # noqa: TC002
+    from matplotlib.lines import Line2D  # noqa: TC002
     from matplotlib.projections.polar import PolarAxes  # noqa: TC002
 
     mpl_available = True
@@ -371,6 +373,124 @@ def plot_graph_route(
     sas_kwargs = {"show", "close", "save", "filepath", "dpi"}
     kwargs = {k: v for k, v in pg_kwargs.items() if k in sas_kwargs}
     fig, ax = _save_and_show(fig=fig, ax=ax, **kwargs)
+    return fig, ax
+
+
+def animate_graph_route(
+    G: nx.MultiDiGraph,
+    route: list[int],
+    *,
+    route_color: str = "r",
+    route_linewidth: float = 4,
+    route_alpha: float = 0.5,
+    orig_dest_size: float = 100,
+    ax: Axes | None = None,
+    **pg_kwargs: Any,  # noqa: ANN401
+) -> tuple[Figure, Axes]:
+    """
+    Visualize a path along a graph.
+
+    Parameters
+    ----------
+    G
+        Input graph.
+    route
+        A path of node IDs.
+    route_color
+        The color of the route.
+    route_linewidth
+        Width of the route's line.
+    route_alpha
+        Opacity of the route's line.
+    orig_dest_size
+        Size of the origin and destination nodes.
+    ax
+        If not None, plot on this pre-existing axes instance.
+    **pg_kwargs
+        Keyword arguments to pass to `plot_graph`.
+
+    Returns
+    -------
+    fig, ax
+        The resulting matplotlib figure and axes objects.
+    """
+    _verify_mpl()
+    if ax is None:
+        # plot the graph but not the route, and override any user show/close
+        # args for now: we'll do that later
+        overrides = {"show", "save", "close"}
+        kwargs = {k: v for k, v in pg_kwargs.items() if k not in overrides}
+        fig, ax = plot_graph(G, show=False, save=False, close=False, **kwargs)
+    else:
+        fig = ax.figure  # type: ignore[assignment]
+
+    # scatterplot origin and destination points (first/last nodes in route)
+    od_x = (G.nodes[route[0]]["x"], G.nodes[route[-1]]["x"])
+    od_y = (G.nodes[route[0]]["y"], G.nodes[route[-1]]["y"])
+    ax.scatter(od_x, od_y, s=orig_dest_size, c=route_color, alpha=route_alpha, edgecolor="none")
+
+    # assemble list of lists of x and y coords for each edge
+    x = []
+    y = []
+    for u, v in zip(route[:-1], route[1:]):
+        # if there are parallel edges, select the shortest in length
+        data = min(G.get_edge_data(u, v).values(), key=lambda d: d["length"])
+        if "geometry" in data:
+            # if geometry attribute exists, append a new sublist with all its coords
+            xs, ys = data["geometry"].xy
+            x.append(list(xs))
+            y.append(list(ys))
+        else:
+            # otherwise, the edge is a straight line from node to node
+            x.append([G.nodes[u]["x"], G.nodes[v]["x"]])
+            y.append([G.nodes[u]["y"], G.nodes[v]["y"]])
+
+    # The zip into list of tuples of lists, where each tuple ris an edge w/ lists for x/y coords
+    edge_coords = list(zip(x, y))
+
+    # Create line object for main route with user-defined alpha
+    route_line = ax.plot([], [], c=route_color, lw=route_linewidth, alpha=route_alpha)
+    # Create second line object for "leader" edge w/ alpha hardcorded to 1
+    leader_line = ax.plot([], [], c=route_color, lw=route_linewidth, alpha=1)
+
+    # Function to pass to FuncAnimation for updating each frame
+    def update_route_lines(edge_coords: tuple[list[float], list[float]]) -> list[Line2D]:
+        # Get lists of x and y coords for new edge to be added
+        new_xs, new_ys = edge_coords
+        # Get x and y coords of current "leader" edge
+        xdata_leader, ydata_leader = leader_line[0].get_data()
+        # Replace leader edge with new edge
+        leader_line[0].set_data(new_xs, new_ys)
+        # Get existing x and y coords for main route
+        xdata_route, ydata_route = route_line[0].get_data()
+        # Append previous leader edge coords to the main route
+        xdata_route = np.append(xdata_route, xdata_leader)
+        ydata_route = np.append(ydata_route, ydata_leader)
+        route_line[0].set_data(xdata_route, ydata_route)
+
+        return route_line + leader_line
+
+    # Ensures that animation is reset after saving so that it can be shown "fresh"
+    def init_func() -> list[Line2D]:
+        route_line[0].set_data([], [])
+        leader_line[0].set_data([], [])
+        return route_line + leader_line
+
+    ani = FuncAnimation(fig, update_route_lines, edge_coords, repeat=False, init_func=init_func)
+
+    # save/show/close as specified
+    if pg_kwargs.get("save", False):
+        # Get user-provided filepath or use default
+        filepath = pg_kwargs.get("filepath")
+        fp = Path(settings.imgs_folder) / "animation.gif" if filepath is None else Path(filepath)
+        # if save folder does not already exist, create it
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        ani.save(fp, dpi=pg_kwargs.get("dpi", 300))
+    if pg_kwargs.get("show", True):
+        plt.show()
+    if pg_kwargs.get("close", True):
+        plt.close()
+
     return fig, ax
 
 
