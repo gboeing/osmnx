@@ -337,7 +337,7 @@ def plot_graph_route(
     fig, ax
         The resulting matplotlib figure and axes objects.
     """
-    fig, ax = _prepare_graph_route_plot(
+    fig, ax, x, y = _prepare_graph_route_plot(
         G,
         route,
         orig_dest_color=route_color,
@@ -347,22 +347,14 @@ def plot_graph_route(
         **pg_kwargs,
     )
 
-    # assemble the route edge geometries' x and y coords then plot the line
-    x = []
-    y = []
-    for u, v in zip(route[:-1], route[1:]):
-        # if there are parallel edges, select the shortest in length
-        data = min(G.get_edge_data(u, v).values(), key=lambda d: d["length"])
-        if "geometry" in data:
-            # if geometry attribute exists, add all its coords to list
-            xs, ys = data["geometry"].xy
-            x.extend(xs)
-            y.extend(ys)
-        else:
-            # otherwise, the edge is a straight line from node to node
-            x.extend((G.nodes[u]["x"], G.nodes[v]["x"]))
-            y.extend((G.nodes[u]["y"], G.nodes[v]["y"]))
-    ax.plot(x, y, c=route_color, lw=route_linewidth, alpha=route_alpha)
+    # Flatten lists of coords and plot
+    ax.plot(
+        [coord for edge in x for coord in edge],
+        [coord for edge in y for coord in edge],
+        c=route_color,
+        lw=route_linewidth,
+        alpha=route_alpha,
+    )
 
     # save and show the figure as specified, passing relevant kwargs
     sas_kwargs = {"show", "close", "save", "filepath", "dpi"}
@@ -409,7 +401,7 @@ def animate_graph_route(
     fig, ax
         The resulting matplotlib figure and axes objects.
     """
-    fig, ax = _prepare_graph_route_plot(
+    fig, ax, x, y = _prepare_graph_route_plot(
         G,
         route,
         orig_dest_color=route_color,
@@ -418,22 +410,6 @@ def animate_graph_route(
         ax=ax,
         **pg_kwargs,
     )
-
-    # assemble list of lists of x and y coords for each edge
-    x = []
-    y = []
-    for u, v in zip(route[:-1], route[1:]):
-        # if there are parallel edges, select the shortest in length
-        data = min(G.get_edge_data(u, v).values(), key=lambda d: d["length"])
-        if "geometry" in data:
-            # if geometry attribute exists, append a new sublist with all its coords
-            xs, ys = data["geometry"].xy
-            x.append(list(xs))
-            y.append(list(ys))
-        else:
-            # otherwise, the edge is a straight line from node to node
-            x.append([G.nodes[u]["x"], G.nodes[v]["x"]])
-            y.append([G.nodes[u]["y"], G.nodes[v]["y"]])
 
     # The zip into list of tuples of lists, where each tuple ris an edge w/ lists for x/y coords
     edge_coords = list(zip(x, y))
@@ -1120,7 +1096,7 @@ def _prepare_graph_route_plot(
     orig_dest_size: float = 100,
     ax: Axes | None = None,
     **pg_kwargs: Any,  # noqa: ANN401
-) -> tuple[Figure, Axes]:
+) -> tuple[Figure, Axes, list[list[float]], list[list[float]]]:
     """
     Plot graph and origin/destination nodes of a route, helper for plot_graph_route and animate_graph_route.
 
@@ -1143,8 +1119,9 @@ def _prepare_graph_route_plot(
 
     Returns
     -------
-    fig, ax
-        The resulting matplotlib figure and axes objects.
+    fig, ax, x, y
+        The resulting matplotlib figure and axes objects, and lists of x and y coordinates
+        with sublists for each edge.
     """
     _verify_mpl()
     if ax is None:
@@ -1168,7 +1145,23 @@ def _prepare_graph_route_plot(
         edgecolor="none",
     )
 
-    return fig, ax
+    # assemble list of lists of x and y coords for each edge
+    x = []
+    y = []
+    for u, v in zip(route[:-1], route[1:]):
+        # if there are parallel edges, select the shortest in length
+        data = min(G.get_edge_data(u, v).values(), key=lambda d: d["length"])
+        if "geometry" in data:
+            # if geometry attribute exists, append a new sublist with all its coords
+            xs, ys = data["geometry"].xy
+            x.append(list(xs))
+            y.append(list(ys))
+        else:
+            # otherwise, the edge is a straight line from node to node
+            x.append([G.nodes[u]["x"], G.nodes[v]["x"]])
+            y.append([G.nodes[u]["y"], G.nodes[v]["y"]])
+
+    return fig, ax, x, y
 
 
 # if polar = False, return Axes
