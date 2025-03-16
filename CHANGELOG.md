@@ -8,6 +8,7 @@
 - streamline internal handling of radians throughout package (#1281)
 - provide user-friendly error message if consolidate_intersections is run more than once (#1273)
 - improve docstrings (#1272 #1274)
+- Fix IndexError in _getaddrinfo by Safely Handling Missing Host Argument (#1282)
 
 ## 2.0.1 (2025-01-01)
 
