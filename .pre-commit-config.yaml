@@ -32,7 +32,7 @@ repos:
         require_serial: true
 
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.35.1
+    rev: v1.37.0
     hooks:
       - id: yamllint
         args: [--strict, --config-file=./tests/.yamllint.yml]
@@ -43,7 +43,7 @@ repos:
       - id: numpydoc-validation
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.6
+    rev: v0.11.2
     hooks:
       - id: ruff
         args: [--fix]
