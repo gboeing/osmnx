@@ -2,13 +2,14 @@
 
 ## 2.0.2 (TBD)
 
-- fix bug where consolidate_intersections function would mutate the passed-in graph (#1273)
 - fix bug in parsing time when calculating pause duration between requests (#1277)
+- fix bug in round-robin DNS resolution by safely handling missing host argument (#1282)
+- fix bug where consolidate_intersections function would mutate the passed-in graph (#1273)
+- add graph-level "consolidated" attribute if consolidate_intersections has been run (#1273)
+- provide user-friendly error message if consolidate_intersections is run more than once (#1273)
 - refactor internals of caching and pausing between requests (#1279)
 - streamline internal handling of radians throughout package (#1281)
-- provide user-friendly error message if consolidate_intersections is run more than once (#1273)
 - improve docstrings (#1272 #1274)
-- Fix IndexError in _getaddrinfo by Safely Handling Missing Host Argument (#1282)
 
 ## 2.0.1 (2025-01-01)
 
