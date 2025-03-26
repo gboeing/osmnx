@@ -138,7 +138,7 @@ def test_stats() -> None:
     # test passing dict of tolerances to consolidate_intersections
     tols: dict[int, float]
     # every node present
-    tols = {node: 5 for node in G_proj.nodes}
+    tols = dict.fromkeys(G_proj.nodes, 5)
     G_clean = ox.consolidate_intersections(G_proj, tolerance=tols, rebuild_graph=True)
     # one node missing
     tols.popitem()
@@ -246,7 +246,7 @@ def test_osm_xml() -> None:
     # validate saved XML against XSD schema
     xsd_filepath = "./tests/input_data/osm_schema.xsd"
     parser = etree.XMLParser(schema=etree.XMLSchema(file=xsd_filepath))
-    _ = etree.parse(fp, parser=parser)  # noqa: S320
+    _ = etree.parse(fp, parser=parser)
 
     # test roundabout handling
     default_all_oneway = ox.settings.all_oneway
@@ -256,7 +256,7 @@ def test_osm_xml() -> None:
     point = (39.0290346, -84.4696884)
     G = ox.graph_from_point(point, dist=500, dist_type="bbox", network_type="drive", simplify=False)
     ox.io.save_graph_xml(G)
-    _ = etree.parse(fp, parser=parser)  # noqa: S320
+    _ = etree.parse(fp, parser=parser)
 
     # raise error if trying to save a simplified graph
     with pytest.raises(ox._errors.GraphSimplificationError):
@@ -267,7 +267,7 @@ def test_osm_xml() -> None:
     nx.set_node_attributes(Gc, 0, name="uid")
     ox.io.save_graph_xml(Gc, fp)  # issues UserWarning
     Gc = ox.graph.graph_from_xml(fp)  # issues UserWarning
-    _ = etree.parse(fp, parser=parser)  # noqa: S320
+    _ = etree.parse(fp, parser=parser)
 
     # restore settings
     ox.settings.overpass_settings = default_overpass_settings

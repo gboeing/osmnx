@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.2 (TBD)
+## 2.0.2 (2025-03-25)
 
 - fix bug in parsing time when calculating pause duration between requests (#1277)
 - fix bug in round-robin DNS resolution by safely handling missing host argument (#1282)
