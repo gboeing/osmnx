@@ -157,6 +157,9 @@ def _geocode_query_to_gdf(
     limit = 50 if which_result is None else which_result
     results = _nominatim._download_nominatim_element(query, by_osmid=by_osmid, limit=limit)
 
+    # ensure geocoder results are sorted from most to least important
+    results = sorted(results, key=lambda x: x["importance"], reverse=True)
+
     # choose the right result from the JSON response
     if len(results) == 0:
         # if no results were returned, raise error
