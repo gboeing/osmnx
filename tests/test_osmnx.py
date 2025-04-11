@@ -41,7 +41,7 @@ ox.settings.cache_folder = ".temp/cache"
 
 # define queries to use throughout tests
 location_point = (37.791427, -122.410018)
-address = "600 Montgomery St, San Francisco, California, USA"
+address = "Transamerica Pyramid, 600 Montgomery Street, San Francisco, California, USA"
 place1 = {"city": "Piedmont", "state": "California", "country": "USA"}
 polygon_wkt = (
     "POLYGON ((-122.262 37.869, -122.255 37.869, -122.255 37.874, "
