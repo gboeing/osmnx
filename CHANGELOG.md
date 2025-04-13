@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.3 (TBD)
+
+- ensure geocoder results are sorted by importance (#1290)
+
 ## 2.0.2 (2025-03-25)
 
 - fix bug in parsing time when calculating pause duration between requests (#1277)
