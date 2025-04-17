@@ -10,12 +10,14 @@ authors:
 url: "https://osmnx.readthedocs.org"
 repository-code: "https://github.com/gboeing/osmnx"
 preferred-citation:
-  type: report
+  type: article
+  doi: "10.1111/gean.70009"
+  journal: "Geographical Analysis"
   title: "Modeling and Analyzing Urban Networks and Amenities with OSMnx"
+  volume: published online ahead of print
+  year: 2025
   authors:
   - family-names: "Boeing"
     given-names: "Geoff"
     orcid: "https://orcid.org/0000-0003-1851-6411"
     website: "https://geoffboeing.com"
-  year: 2024
-  url: "https://geoffboeing.com/publications/osmnx-paper/"
