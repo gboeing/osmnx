@@ -35,7 +35,7 @@ def citation(style: str = "bibtex") -> None:
         )
     elif style == "bibtex":
         msg = (
-            "@article{boeing_osmnx_2024,\n"
+            "@article{boeing_osmnx_2025,\n"
             "    author = {Boeing, Geoff},\n"
             "    title = {{Modeling and Analyzing Urban Networks and Amenities with OSMnx}},\n"
             "    volume = {published online ahead of print},\n"
