@@ -1,23 +1,32 @@
 cff-version: 1.2.0
-message: "If you use OSMnx, please cite the preferred-citation below."
-title: "OSMnx"
-abstract: "OSMnx is a Python package to easily download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap."
+title: OSMnx
+message: If you use OSMnx, please cite the preferred-citation below.
+type: software
 authors:
-- family-names: "Boeing"
-  given-names: "Geoff"
-  orcid: "https://orcid.org/0000-0003-1851-6411"
-  website: "https://geoffboeing.com"
-url: "https://osmnx.readthedocs.org"
-repository-code: "https://github.com/gboeing/osmnx"
+  - family-names: Boeing
+    given-names: Geoff
+    orcid: https://orcid.org/0000-0003-1851-6411
+identifiers:
+  - type: doi
+    value: 10.1111/gean.70009
+    description: Official reference paper
+repository-code: https://github.com/gboeing/osmnx
+url: https://osmnx.readthedocs.org
+abstract: >-
+  OSMnx is a Python package to easily download, model, analyze, and visualize
+  street networks and other geospatial features from OpenStreetMap.
+license: MIT
 preferred-citation:
   type: article
-  doi: "10.1111/gean.70009"
-  journal: "Geographical Analysis"
-  title: "Modeling and Analyzing Urban Networks and Amenities with OSMnx"
-  volume: published online ahead of print
-  year: 2025
   authors:
-  - family-names: "Boeing"
-    given-names: "Geoff"
-    orcid: "https://orcid.org/0000-0003-1851-6411"
-    website: "https://geoffboeing.com"
+    - family-names: Boeing
+      given-names: Geoff
+      orcid: https://orcid.org/0000-0003-1851-6411
+  year: 2025
+  title: Modeling and Analyzing Urban Networks and Amenities with OSMnx
+  journal: Geographical Analysis
+  volume: published online ahead of print
+  issue: published online ahead of print
+  start: 1
+  end: 23
+  doi: 10.1111/gean.70009
