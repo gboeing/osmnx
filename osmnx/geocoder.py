@@ -94,8 +94,8 @@ def geocode_to_gdf(
     which_result
         Which search result to return. If None, auto-select the first
         (Multi)Polygon or raise an error if OSM doesn't return one. To get
-        the top match regardless of geometry type, set `which_result=1`.
-        Ignored if `by_osmid=True`.
+        the top match (sorted by importance) regardless of geometry type, set
+        `which_result=1`. Ignored if `by_osmid=True`.
     by_osmid
         If True, treat query as an OSM ID lookup rather than text search.
 
@@ -156,6 +156,9 @@ def _geocode_query_to_gdf(
     """
     limit = 50 if which_result is None else which_result
     results = _nominatim._download_nominatim_element(query, by_osmid=by_osmid, limit=limit)
+
+    # ensure geocoder results are sorted from most to least important
+    results = sorted(results, key=lambda x: x["importance"], reverse=True)
 
     # choose the right result from the JSON response
     if len(results) == 0:
