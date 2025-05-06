@@ -5,15 +5,15 @@ Boeing, G. (2025). `Modeling and Analyzing Urban Networks and Amenities with OSM
 
 This is the official reference paper and citation for the OSMnx package.
 
-.. _Modeling and Analyzing Urban Networks and Amenities with OSMnx: https://geoffboeing.com/publications/osmnx-paper/
+.. _Modeling and Analyzing Urban Networks and Amenities with OSMnx: https://doi.org/10.1111/gean.70009
 
 ----
 
-Boeing, G. (2025). `Topological Graph Simplification Solutions to the Street Intersection Miscount Problem`_. *Transactions in GIS*, published online ahead of print. doi:10.1111/tgis.70037
+Boeing, G. (2025). `Topological Graph Simplification Solutions to the Street Intersection Miscount Problem`_. *Transactions in GIS* 29 (3), e70037. doi:10.1111/tgis.70037
 
 This paper describes and validates the algorithms implemented in OSMnx's :code:`simplification` module and explains why graph simplification is necessary to accurately measure intersection density, street segment length, node degree, etc.
 
-.. _Topological Graph Simplification Solutions to the Street Intersection Miscount Problem: https://arxiv.org/abs/2407.00258
+.. _Topological Graph Simplification Solutions to the Street Intersection Miscount Problem: https://doi.org/10.1111/tgis.70037
 
 ----
 

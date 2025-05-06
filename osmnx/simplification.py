@@ -287,8 +287,8 @@ def simplify_graph(  # noqa: C901, PLR0912
 
     This algorithm is described in the journal article: Boeing, G. 2025.
     "Topological Graph Simplification Solutions to the Street Intersection
-    Miscount Problem." Transactions in GIS, published online ahead of print.
-    https://arxiv.org/abs/2407.00258
+    Miscount Problem." Transactions in GIS, 29 (3), e70037.
+    https://doi.org/10.1111/tgis.70037
 
     This simplifies the graph's topology by removing all nodes that are not
     intersections or dead-ends, by creating an edge directly between the end
@@ -461,8 +461,8 @@ def consolidate_intersections(
 
     This algorithm is described in the journal article: Boeing, G. 2025.
     "Topological Graph Simplification Solutions to the Street Intersection
-    Miscount Problem." Transactions in GIS, published online ahead of print.
-    https://arxiv.org/abs/2407.00258
+    Miscount Problem." Transactions in GIS, 29 (3), e70037.
+    https://doi.org/10.1111/tgis.70037
 
     Merges nearby nodes and returns either their centroids or a rebuilt graph
     with consolidated intersections and reconnected edge geometries. The
