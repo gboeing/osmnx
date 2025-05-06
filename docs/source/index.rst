@@ -12,7 +12,7 @@ Citation
 
 If you use OSMnx in your work, please cite the paper:
 
-Boeing, G. (2024). `Modeling and Analyzing Urban Networks and Amenities with OSMnx`_. Working paper. https://geoffboeing.com/publications/osmnx-paper/
+Boeing, G. (2025). `Modeling and Analyzing Urban Networks and Amenities with OSMnx`_. *Geographical Analysis*, published online ahead of print. doi:10.1111/gean.70009
 
 .. _Modeling and Analyzing Urban Networks and Amenities with OSMnx: https://geoffboeing.com/publications/osmnx-paper/
 

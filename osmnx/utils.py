@@ -17,8 +17,9 @@ def citation(style: str = "bibtex") -> None:
     """
     Print the OSMnx package's citation information.
 
-    Boeing, G. (2024). Modeling and Analyzing Urban Networks and Amenities with
-    OSMnx. Working paper. https://geoffboeing.com/publications/osmnx-paper/
+    Boeing, G. (2025). Modeling and Analyzing Urban Networks and Amenities with
+    OSMnx. Geographical Analysis, published online ahead of print.
+    doi:10.1111/gean.70009
 
     Parameters
     ----------
@@ -28,23 +29,25 @@ def citation(style: str = "bibtex") -> None:
     """
     if style == "apa":
         msg = (
-            "Boeing, G. (2024). Modeling and Analyzing Urban Networks and Amenities "
-            "with OSMnx. Working paper. https://geoffboeing.com/publications/osmnx-paper/"
+            "Boeing, G. (2025). Modeling and Analyzing Urban Networks and Amenities "
+            "with OSMnx. Geographical Analysis, published online ahead of print. "
+            "doi:10.1111/gean.70009"
         )
     elif style == "bibtex":
         msg = (
-            "@techreport{boeing_osmnx_2024,\n"
+            "@article{boeing_osmnx_2025,\n"
             "    author = {Boeing, Geoff},\n"
             "    title = {{Modeling and Analyzing Urban Networks and Amenities with OSMnx}},\n"
-            "    type = {Working paper},\n"
-            "    url = {https://geoffboeing.com/publications/osmnx-paper/},\n"
-            "    year = {2024}\n"
+            "    volume = {published online ahead of print},\n"
+            "    doi = {10.1111/gean.70009},\n"
+            "    journal = {Geographical Analysis},\n"
+            "    year = {2025}\n"
             "}"
         )
     elif style == "ieee":
         msg = (
             'G. Boeing, "Modeling and Analyzing Urban Networks and Amenities with OSMnx," '
-            "Working paper, https://geoffboeing.com/publications/osmnx-paper/"
+            "Geographical Analysis, published online ahead of print, 2025, doi: 10.1111/gean.70009."
         )
     else:  # pragma: no cover
         err_msg = f"Invalid citation style {style!r}."

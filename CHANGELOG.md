@@ -3,6 +3,7 @@
 ## 2.0.3 (TBD)
 
 - ensure geocoder results are sorted by importance (#1290)
+- update official reference paper and citations (#1293)
 
 ## 2.0.2 (2025-03-25)
 
