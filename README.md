@@ -15,7 +15,7 @@ OSMnx 2.0 is released: read the [migration guide](https://github.com/gboeing/osm
 
 If you use OSMnx in your work, please cite the paper:
 
-Boeing, G. (2025). Modeling and Analyzing Urban Networks and Amenities with OSMnx. *Geographical Analysis*, published online ahead of print. doi:10.1111/gean.70009 <https://geoffboeing.com/publications/osmnx-paper/>
+Boeing, G. (2025). [Modeling and Analyzing Urban Networks and Amenities with OSMnx](https://doi.org/10.1111/gean.70009). *Geographical Analysis*, published online ahead of print. doi:10.1111/gean.70009
 
 ## Getting Started
 
