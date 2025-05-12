@@ -1,4 +1,4 @@
-# ruff: noqa: INP001
+#!/usr/bin/env python
 """
 Configuration file for the Sphinx documentation builder.
 

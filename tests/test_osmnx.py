@@ -1,4 +1,5 @@
-# ruff: noqa: E402,F841,INP001,PLR2004,S101
+#!/usr/bin/env python
+# ruff: noqa: E402,F841,PLR2004,S101
 """Test suite for the package."""
 
 from __future__ import annotations
