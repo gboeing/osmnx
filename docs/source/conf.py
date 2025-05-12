@@ -45,10 +45,11 @@ autodoc_mock_imports = [
     "sklearn",
 ]
 
-# linkcheck for stackoverflow gets HTTP 403 in CI environment
-# set necessary linkcheck headers to avoid 403s from doi.org
-linkcheck_request_headers = {"*": {"Sec-Fetch-Site": "cross-site"}}
-linkcheck_ignore = [r"https://doi\.org/.*"]
+# set necessary linkcheck headers to avoid 403 from DOI redirect
+h = {}
+h["Sec-Fetch-Site"] = "cross-site"
+h["User-Agent"] = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:138.0) Gecko/20100101 Firefox/138.0"
+linkcheck_request_headers = {"https://doi.org/": h}
 
 # type annotations configuration
 autodoc_typehints = "description"
