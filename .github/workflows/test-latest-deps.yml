@@ -33,12 +33,11 @@ jobs:
 
       - name: Install OSMnx with latest/pre-release dependencies
         run: |
-          python -m pip install --pre -r ./environments/tests/requirements-test-latest-deps.txt
-          python -m pip install .
-          python -m pip check
-          python -m pip list -v
-          python -m pip show osmnx
-          python --version
+          uv sync --all-extras --group=tests --prerelease=allow
+          uv pip check
+          uv pip list
+          uv pip show osmnx
+          uv run python --version
 
       - name: Test code
-        run: pytest --verbose --maxfail=1
+        run: uv run pytest --verbose --maxfail=1
