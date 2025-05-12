@@ -46,10 +46,21 @@ autodoc_mock_imports = [
 ]
 
 # set necessary linkcheck headers to avoid 403 from DOI redirect
-h = {}
-h["Sec-Fetch-Site"] = "cross-site"
-h["User-Agent"] = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:138.0) Gecko/20100101 Firefox/138.0"
-linkcheck_request_headers = {"https://doi.org/": h}
+headers = {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br, zstd",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Priority": "u=0, i",
+    "Referer": "https://duckduckgo.com/",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "cross-site",
+    "Sec-Fetch-User": "?1",
+    "TE": "trailers",
+    "Upgrade-Insecure-Requests": "1",
+    "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:138.0) Gecko/20100101 Firefox/138.0",
+}
+linkcheck_request_headers = {"*": headers}
 
 # type annotations configuration
 autodoc_typehints = "description"
