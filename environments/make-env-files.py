@@ -1,4 +1,4 @@
-# noqa: INP001
+#!/usr/bin/env python
 """Make conda env.yaml and pip requirements.txt files from environments.json data."""
 
 from __future__ import annotations

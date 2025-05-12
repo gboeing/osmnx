@@ -1,4 +1,4 @@
-# ruff: noqa: INP001
+#!/usr/bin/env python
 """
 Configuration file for the Sphinx documentation builder.
 
@@ -45,8 +45,8 @@ autodoc_mock_imports = [
     "sklearn",
 ]
 
-# linkcheck for stackoverflow gets HTTP 403 in CI environment
-linkcheck_ignore = [r"https://stackoverflow\.com/.*"]
+# linkcheck for some DOI redirects gets HTTP 403 in CI environment
+linkcheck_ignore = [r"https://doi\.org/.*"]
 
 # type annotations configuration
 autodoc_typehints = "description"
