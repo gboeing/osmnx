@@ -1,11 +1,6 @@
-bottleneck
-cartopy
 folium
 jupyterlab
 nbdime
-numexpr
 pillow
-pysal>24
 python-igraph
 seaborn
-statsmodels
