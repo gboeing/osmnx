@@ -17,6 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
+        python-version: ['3.9']
 
     defaults:
       run:
@@ -27,19 +28,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v6
         with:
-          enable-cache: true
+          activate-environment: true
           cache-dependency-glob: pyproject.toml
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
 
       - name: Install OSMnx with minimum dependency versions
         run: |
-          uv export --all-extras --no-group=dev --resolution=lowest-direct --no-hashes --no-header --no-annotate --no-build --python=3.9 > requirements.txt
-          uv export --only-dev --resolution=highest --no-hashes --no-header --no-annotate --no-build --python=3.9 > requirements-dev.txt
-          uv venv --python=3.9
-          source .venv/bin/activate
-          uv pip install --requirements requirements.txt --python=3.9
-          uv pip install --requirements requirements-dev.txt --python=3.9
+          uv export --no-build --all-extras --no-group=dev --resolution=lowest-direct > reqs.txt
+          uv export --no-build --only-dev --resolution=highest > reqs-dev.txt
+          uv pip install --requirements reqs.txt
+          uv pip install --requirements reqs-dev.txt
           uv run python --version
           uv pip show osmnx
           uv pip list
