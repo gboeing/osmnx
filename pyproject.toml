@@ -48,33 +48,19 @@ raster = ["rasterio>=1.3", "rio-vrt>=0.3"]
 visualization = ["matplotlib>=3.5"]
 
 [dependency-groups]
-docs = [
+dev = [
   "furo",
-  "sphinx-autodoc-typehints",
-  "sphinx>=7",
-]
-examples = [
-  "folium",
-  "jupyterlab",
-  "nbdime",
-  "pandas[excel,performance]",
-  "pillow",
-  "python-igraph",
-]
-packaging = [
   "hatch",
-  "twine",
-  "validate-pyproject",
-]
-tests = [
   "lxml",
-  "pip",
   "pre-commit",
   "pytest",
   "pytest-cov",
   "pytest-xdist",
+  "sphinx-autodoc-typehints",
+  "sphinx>=7",
+  "twine",
   "typeguard",
-  "tomli",
+  "validate-pyproject",
 ]
 
 [project.urls]
