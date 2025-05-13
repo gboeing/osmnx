@@ -11,6 +11,7 @@ on:
       - v*
   schedule:
     - cron: 40 4 * * 1  # every monday at 04:40 UTC
+  workflow_dispatch:
 
 jobs:
   build_publish_pypi:
