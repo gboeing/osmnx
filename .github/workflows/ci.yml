@@ -56,7 +56,7 @@ jobs:
 
       - name: Build and check package
         run: |
-          uv run validate_pyproject ./pyproject.toml
+          uv run validate-pyproject pyproject.toml
           uv run hatch build --clean
           uv run twine check --strict ./dist/*
 
