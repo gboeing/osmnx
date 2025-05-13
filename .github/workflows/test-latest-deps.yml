@@ -23,6 +23,9 @@ jobs:
       run:
         shell: bash -elo pipefail {0}
 
+    env:
+      UV_PRERELEASE: allow
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -36,7 +39,7 @@ jobs:
 
       - name: Install OSMnx with latest/pre-release dependencies
         run: |
-          uv sync --all-extras --dev --prerelease=allow --no-cache
+          uv sync --all-extras --dev --no-cache
           uv run python --version
           uv pip show osmnx
           uv pip list
