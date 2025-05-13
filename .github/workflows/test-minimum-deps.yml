@@ -37,7 +37,7 @@ jobs:
 
       - name: Install OSMnx with minimum dependency versions
         run: |
-          uv export --no-build --all-extras --no-group=dev --resolution=lowest-direct > reqs.txt
+          uv export --no-build --all-extras --no-dev --resolution=lowest-direct > reqs.txt
           uv export --no-build --only-dev --resolution=highest > reqs-dev.txt
           uv pip install --requirements reqs.txt
           uv pip install --requirements reqs-dev.txt
