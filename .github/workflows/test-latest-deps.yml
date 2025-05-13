@@ -28,19 +28,15 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
         with:
-          python-version: 3.*
+          enable-cache: false
 
       - name: Install OSMnx with latest/pre-release dependencies
         run: |
-          uv sync --all-extras --group=tests --prerelease=allow
-          uv pip check
-          uv pip list
-          uv pip show osmnx
+          uv sync --all-extras --dev --prerelease=allow --no-cache
           uv run python --version
+          uv pip show osmnx
+          uv pip list
 
       - name: Test code
-        run: uv run pytest --verbose --maxfail=1
+        run: uv run pytest --verbose --maxfail=1 --numprocesses=3 --dist=loadgroup
