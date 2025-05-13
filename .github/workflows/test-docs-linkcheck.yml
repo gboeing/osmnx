@@ -31,4 +31,5 @@ jobs:
         run: uv sync --only-dev
 
       - name: Build docs and check links
-        run: uv run sphinx -E -W --keep-going -b linkcheck ./docs/source ./docs/build/linkcheck
+        run: |
+          uv run sphinx-build --keep-going -E -W -b linkcheck ./docs/source ./docs/build/linkcheck

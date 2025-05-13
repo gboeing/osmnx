@@ -38,9 +38,9 @@ jobs:
       - name: Build and check package
         run: |
           uv sync --only-dev
-          uv run validate_pyproject ./pyproject.toml
+          uv run validate-pyproject pyproject.toml
           uv run hatch build --clean
-          uv run twine check --strict ./dist/*
+          uv run twine check --strict dist/*
 
       - name: Publish package to PyPI
         if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags') }}

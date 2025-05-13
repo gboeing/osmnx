@@ -60,7 +60,7 @@ dev = [
   "sphinx>=7",
   "twine",
   "typeguard",
-  "validate-pyproject",
+  "validate-pyproject[all]",
 ]
 
 [project.urls]
