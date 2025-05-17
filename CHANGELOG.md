@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.4 (TBD)
+
+- fix bug in features module when elements have pre-existing geometry tags (#1298)
+
 ## 2.0.3 (2025-05-06)
 
 - ensure geocoder results are sorted by importance (#1290)
