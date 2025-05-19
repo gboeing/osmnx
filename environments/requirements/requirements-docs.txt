@@ -1,3 +1,0 @@
-furo
-sphinx-autodoc-typehints
-sphinx>=7
