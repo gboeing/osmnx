@@ -3,6 +3,7 @@
 ## 2.0.4 (TBD)
 
 - fix bug in features module when elements have pre-existing geometry tags (#1298)
+- fix bug in save_graphml function where gephi compatibility mode erases node attributes (#1300)
 
 ## 2.0.3 (2025-05-06)
 
