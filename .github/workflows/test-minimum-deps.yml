@@ -40,6 +40,7 @@ jobs:
           uv run ./environments/make-min-deps.py
           uv pip install --no-build --strict --requirements ./requirements-min.txt
           uv pip install -e .
+          uv pip check
           uv pip list
           uv pip show osmnx
           uv run --no-sync python --version
