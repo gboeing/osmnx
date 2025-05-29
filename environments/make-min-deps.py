@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # /// script
 # dependencies = [
 #     "packaging",
