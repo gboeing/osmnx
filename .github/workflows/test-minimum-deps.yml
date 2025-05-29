@@ -37,9 +37,6 @@ jobs:
 
       - name: Install OSMnx with minimum dependency versions
         run: |
-          uv python pin ${{ matrix.python-version }}
-          uv venv
-          source .venv/bin/activate
           uv run ./environments/make-min-deps.py
           uv pip install --no-build --strict --requirements ./requirements-min.txt
           uv pip install -e .
