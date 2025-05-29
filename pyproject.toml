@@ -60,7 +60,7 @@ dev = [
   "sphinx>=7",
   "twine",
   "typeguard",
-  "validate-pyproject[all]",
+  "validate-pyproject",
 ]
 
 [project.urls]
@@ -111,3 +111,6 @@ convention = "numpy"
 
 [tool.ruff.lint.pylint]
 max-args = 8
+
+[tool.uv]
+version = "0.7.8"
