@@ -860,7 +860,7 @@ def _get_colors_by_value(
         # linearly map a color to each attribute value
         normalizer = colors.Normalize(full_min, full_max)
         scalar_mapper = cm.ScalarMappable(normalizer, colormaps[cmap])
-        color_series = vals.map(scalar_mapper.to_rgba).map(colors.to_hex)  # type: ignore[arg-type,unused-ignore]
+        color_series = vals.map(scalar_mapper.to_rgba).map(colors.to_hex)  # type: ignore[arg-type,unused-ignore]  # needed for python<3.10
         color_series.loc[pd.isna(vals)] = na_color
 
     else:
