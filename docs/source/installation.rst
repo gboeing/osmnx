@@ -4,7 +4,7 @@ Installation
 Conda
 -----
 
-The official supported way to install OSMnx is with conda:
+The official supported way to install OSMnx is with `conda`_ or `mamba`_:
 
 .. code-block:: shell
 
@@ -22,7 +22,7 @@ You can run OSMnx + JupyterLab directly from the official OSMnx `Docker`_ image.
 Pip
 ---
 
-You can usually install OSMnx with `pip`_ (into a virtual environment) but this is not officially supported.
+You should be able to install OSMnx with `uv`_ or `pip`_ (into a virtual environment) but this is not officially supported.
 
 OSMnx is written in pure Python and its installation alone is thus trivially simple if you already have its dependencies installed and tested on your system. However, OSMnx depends on other packages that in turn depend on compiled C/C++ libraries, and installing those dependencies with pip is sometimes challenging depending on your specific system's configuration. If precompiled binaries are not available for your system, you may need to compile and configure those dependencies manually by following their installation instructions.
 
@@ -31,4 +31,6 @@ So, if you're not sure what you're doing, just follow the conda instructions abo
 .. _conda: https://conda.io/
 .. _conda-forge: https://conda-forge.org/
 .. _Docker: https://hub.docker.com/r/gboeing/osmnx
+.. _mamba: https://mamba.readthedocs.io/
 .. _pip: https://pip.pypa.io/
+.. _uv: https://docs.astral.sh/uv/
