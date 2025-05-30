@@ -7,7 +7,9 @@ PACKAGE=osmnx
 eval "$(conda shell.bash hook)"
 conda activate base
 conda env remove --yes -n $ENV || true
-mamba create --yes -c conda-forge --strict-channel-priority -n $ENV --file ./requirements/requirements-all.txt
+python make-all-reqs.py
+mamba create --yes -c conda-forge --strict-channel-priority -n $ENV --file ./requirements-all.txt
+rm -f ./requirements-all.txt
 conda activate $ENV
 python -m pip --python "$ENV_PATH" uninstall $PACKAGE --yes
 python -m pip --python "$ENV_PATH" install -e ../.
