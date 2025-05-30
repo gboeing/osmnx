@@ -98,14 +98,14 @@ def save_graphml(
     # if save folder does not already exist, create it
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
+    # make a copy to not mutate original graph object caller passed in
+    G = G.copy()
+
     if gephi:
         # for gephi compatibility, each edge's key must be unique as an id
-        uvkd = ((u, v, k, d) for k, (u, v, d) in enumerate(G.edges(keys=False, data=True)))
-        G = nx.MultiDiGraph(uvkd)
-
-    else:
-        # make a copy to not mutate original graph object caller passed in
-        G = G.copy()
+        uvkd = [(u, v, k, d) for k, (u, v, d) in enumerate(G.edges(keys=False, data=True))]
+        G.clear_edges()
+        G.add_edges_from(uvkd)
 
     # stringify all the graph attribute values
     for attr, value in G.graph.items():

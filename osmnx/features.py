@@ -455,8 +455,10 @@ def _process_features(
     relations = []  # all relations
 
     # sort elements by node, way, and relation. only retain relations that
-    # match the relation types we currently handle
+    # match the relation types we currently handle. remove any geometry tags
+    # (they shouldn't exist) or they'll overwrite our geom attributes later
     for element in elements:
+        element.get("tags", {}).pop("geometry", None)
         et = element["type"]
         if et == "node":
             nodes.append(element)
