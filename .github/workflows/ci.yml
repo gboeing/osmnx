@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: [main, v1]
   schedule:
-    - cron: 0 4 * * 1  # every monday at 04:00 UTC
+    - cron: 5 4 * * 1  # every monday at 04:05 UTC
   workflow_dispatch:
 
 jobs:
@@ -40,9 +40,10 @@ jobs:
       - name: Install OSMnx
         run: |
           uv sync --all-extras --dev
-          uv run python --version
-          uv pip show osmnx
+          uv pip check
           uv pip list
+          uv pip show osmnx
+          uv run python --version
 
       - name: Cache pre-commit
         uses: actions/cache@v4

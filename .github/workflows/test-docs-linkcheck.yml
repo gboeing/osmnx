@@ -3,7 +3,7 @@ name: Build docs and check links
 
 on:
   schedule:
-    - cron: 10 4 * * 1  # every monday at 04:10 UTC
+    - cron: 20 4 * * 1  # every monday at 04:20 UTC
   workflow_dispatch:
 
 jobs:

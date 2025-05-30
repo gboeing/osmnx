@@ -10,7 +10,7 @@ on:
     tags:
       - v*
   schedule:
-    - cron: 40 4 * * 1  # every monday at 04:40 UTC
+    - cron: 10 4 * * 1  # every monday at 04:10 UTC
 
 jobs:
   build_publish_pypi:

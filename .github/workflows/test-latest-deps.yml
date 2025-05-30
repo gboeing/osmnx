@@ -4,7 +4,7 @@ name: Test latest/pre-release dependencies
 
 on:
   schedule:
-    - cron: 30 4 * * 1  # every monday at 04:30 UTC
+    - cron: 15 4 * * 1  # every monday at 04:15 UTC
   workflow_dispatch:
 
 jobs:
@@ -40,9 +40,10 @@ jobs:
       - name: Install OSMnx with latest/pre-release dependencies
         run: |
           uv sync --all-extras --dev --no-cache
-          uv run python --version
-          uv pip show osmnx
+          uv pip check
           uv pip list
+          uv pip show osmnx
+          uv run python --version
 
       - name: Test code
         run: uv run pytest --verbose --maxfail=1 --numprocesses=3 --dist=loadgroup
