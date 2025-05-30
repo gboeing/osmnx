@@ -113,4 +113,4 @@ convention = "numpy"
 max-args = 8
 
 [tool.uv]
-version = "0.7.8"
+required-version = "==0.7.8"
