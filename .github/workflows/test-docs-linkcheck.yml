@@ -3,7 +3,7 @@ name: Build docs and check links
 
 on:
   schedule:
-    - cron: 10 4 * * 1  # every monday at 04:10 UTC
+    - cron: 20 4 * * 1  # every monday at 04:20 UTC
   workflow_dispatch:
 
 jobs:
@@ -21,17 +21,16 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: 3.*
-          cache: pip
-          cache-dependency-path: ./environments/requirements/requirements-docs.txt
+          activate-environment: true
+          cache-dependency-glob: pyproject.toml
+          enable-cache: true
 
       - name: Install requirements
-        run: |
-          python -m pip install -r ./environments/requirements/requirements-docs.txt
-          python -m pip check
+        run: uv sync --only-dev
 
       - name: Build docs and check links
-        run: python -m sphinx -E -W --keep-going -b linkcheck ./docs/source ./docs/build/linkcheck
+        run: |
+          uv run sphinx-build --keep-going -E -W -b linkcheck ./docs/source ./docs/build/linkcheck

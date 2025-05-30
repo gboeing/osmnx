@@ -4,7 +4,7 @@ name: Test minimum dependencies
 
 on:
   schedule:
-    - cron: 20 4 * * 1  # every monday at 04:20 UTC
+    - cron: 25 4 * * 1  # every monday at 04:25 UTC
   workflow_dispatch:
 
 jobs:
@@ -17,6 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
+        python-version: ['3.9']
 
     defaults:
       run:
@@ -26,19 +27,23 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Create environment with minimum dependency versions
-        uses: mamba-org/setup-micromamba@v2
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          cache-environment: true
-          environment-file: ./environments/tests/env-test-minimum-deps.yml
-          post-cleanup: none
+          activate-environment: true
+          cache-dependency-glob: pyproject.toml
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install OSMnx
+      - name: Install OSMnx with minimum dependency versions
         run: |
-          python -m pip install .
-          python -m pip check
-          micromamba list
-          python -m pip show osmnx
+          uv run ./environments/make-min-deps.py
+          uv pip install --no-build --strict --requirements ./requirements-min.txt
+          uv pip install -e .
+          uv pip check
+          uv pip list
+          uv pip show osmnx
+          uv run --no-sync python --version
 
       - name: Test code
-        run: pytest --verbose --maxfail=1
+        run: uv run --no-sync pytest --verbose --maxfail=1 --numprocesses=3 --dist=loadgroup

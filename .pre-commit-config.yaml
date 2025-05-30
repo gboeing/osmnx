@@ -23,14 +23,6 @@ repos:
         args: [--autofix]
       - id: trailing-whitespace
 
-  - repo: local
-    hooks:
-      - id: make-env-files
-        name: Make env files
-        entry: python environments/make-env-files.py
-        language: system
-        require_serial: true
-
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.37.1
     hooks:
@@ -43,9 +35,9 @@ repos:
       - id: numpydoc-validation
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.9
+    rev: v0.11.12
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: [--fix]
       - id: ruff-format
 

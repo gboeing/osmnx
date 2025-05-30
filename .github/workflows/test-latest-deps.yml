@@ -4,7 +4,7 @@ name: Test latest/pre-release dependencies
 
 on:
   schedule:
-    - cron: 30 4 * * 1  # every monday at 04:30 UTC
+    - cron: 15 4 * * 1  # every monday at 04:15 UTC
   workflow_dispatch:
 
 jobs:
@@ -17,28 +17,33 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
+        python-version: ['3.13']
 
     defaults:
       run:
         shell: bash -elo pipefail {0}
 
+    env:
+      UV_PRERELEASE: allow
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: 3.*
+          activate-environment: true
+          enable-cache: false
+          python-version: ${{ matrix.python-version }}
 
       - name: Install OSMnx with latest/pre-release dependencies
         run: |
-          python -m pip install --pre -r ./environments/tests/requirements-test-latest-deps.txt
-          python -m pip install .
-          python -m pip check
-          python -m pip list -v
-          python -m pip show osmnx
-          python --version
+          uv sync --all-extras --dev --no-cache
+          uv pip check
+          uv pip list
+          uv pip show osmnx
+          uv run python --version
 
       - name: Test code
-        run: pytest --verbose --maxfail=1
+        run: uv run pytest --verbose --maxfail=1 --numprocesses=3 --dist=loadgroup

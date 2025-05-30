@@ -8,15 +8,14 @@ on:
     tags:
       - v*
   schedule:
-    - cron: 50 4 * * 1  # every monday at 04:50 UTC
-  workflow_dispatch:
+    - cron: 0 4 * * 1  # every monday at 04:00 UTC
 
 jobs:
   build_publish_docker:
     if: ${{ github.repository == 'gboeing/osmnx' }}
     name: Build/publish image to Docker Hub
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repo
