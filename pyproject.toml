@@ -113,4 +113,4 @@ convention = "numpy"
 max-args = 8
 
 [tool.uv]
-required-version = "==0.7.8"
+required-version = "==0.7.8" # match version in environments/docker/install.sh

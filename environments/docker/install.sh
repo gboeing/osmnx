@@ -11,17 +11,16 @@ else
   NOEXTRA=""
 fi
 
-wget -qO- https://astral.sh/uv/install.sh | sh
+wget -qO- https://astral.sh/uv/0.7.8/install.sh | sh
 source $HOME/.local/bin/env
 uv export --no-cache --no-build --no-dev --all-extras $NOEXTRA > reqs.txt
 uv pip install --no-cache --no-build --system --strict -r reqs.txt -r requirements-extras.txt
+uv cache clean
+uv pip check
+uv pip list
+uv pip show osmnx
+python --version
 python -m ipykernel install --sys-prefix --name ox --display-name "Python (ox)"
 rm -f -r -v /opt/conda/share/jupyter/kernels/python3
-uv cache clean
-pip cache purge
-pip list
-pip check
-python --version
-pip show osmnx
 jupyter kernelspec list
 ipython -c "import osmnx; print('OSMnx version', osmnx.__version__)"
