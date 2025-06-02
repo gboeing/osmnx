@@ -39,11 +39,14 @@ jobs:
 
       - name: Install OSMnx
         run: |
+          uv tree
           uv sync --all-extras --dev
           uv pip check
           uv pip list
           uv pip show osmnx
+          uv tree
           uv run python --version
+          uv tree
 
       - name: Cache pre-commit
         uses: actions/cache@v4
