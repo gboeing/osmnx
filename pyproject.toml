@@ -33,13 +33,13 @@ dependencies = [
   "shapely>=2.0",
 ]
 description = "Download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap"
-dynamic = ["version"]
 keywords = ["GIS", "Networks", "OpenStreetMap", "Routing"]
 license = { text = "MIT License" }
 maintainers = [{ name = "OSMnx contributors" }]
 name = "osmnx"
 readme = "README.md"
 requires-python = ">=3.9" # match classifiers above and mypy version below
+version = "2.0.4dev"
 
 [project.optional-dependencies]
 entropy = ["scipy>=1.8"]
@@ -69,9 +69,6 @@ Documentation = "https://osmnx.readthedocs.io"
 
 [tool.coverage.report]
 exclude_also = ["@overload", "if TYPE_CHECKING:"]
-
-[tool.hatch.version]
-path = "osmnx/_version.py"
 
 [tool.mypy]
 cache_dir = "~/.cache/pre-commit/mypy"

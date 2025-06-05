@@ -1,8 +1,10 @@
 # ruff: noqa: F401,PLC0414
 """Define the OSMnx package's namespace."""
 
+from importlib.metadata import version as metadata_version
+
 # expose the package version
-from ._version import __version__ as __version__
+__version__ = metadata_version(__name__)
 
 # expose the old pre-v2 API for backwards compatibility. this allows common
 # functionality to be accessed directly via the ox.function_name() shortcut
