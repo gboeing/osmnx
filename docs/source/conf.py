@@ -7,8 +7,9 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
 import sys
-from importlib.metadata import version as metadata_version
 from pathlib import Path
+
+from tomllib import load
 
 # project info
 author = "Geoff Boeing"
@@ -20,7 +21,9 @@ pkg_root_path = str(Path.cwd().parent.parent)
 sys.path.insert(0, pkg_root_path)
 
 # dynamically load version
-version = release = metadata_version("osmnx")
+with Path("../../pyproject.toml").open("rb") as f:
+    pyproject = load(f)
+version = release = pyproject["project"]["version"]
 
 # mock import all required + optional dependency packages because readthedocs
 # does not have them installed
