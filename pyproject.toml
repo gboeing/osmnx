@@ -50,7 +50,6 @@ visualization = ["matplotlib>=3.5"]
 [dependency-groups]
 dev = [
   "furo",
-  "hatch",
   "lxml",
   "pre-commit",
   "pytest",
@@ -70,9 +69,6 @@ Documentation = "https://osmnx.readthedocs.io"
 
 [tool.coverage.report]
 exclude_also = ["@overload", "if TYPE_CHECKING:"]
-
-[tool.hatch.build]
-packages = ["osmnx"]
 
 [tool.hatch.version]
 path = "osmnx/_version.py"
