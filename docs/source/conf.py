@@ -9,7 +9,10 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 import sys
 from pathlib import Path
 
-from tomllib import load
+try:
+    from tomllib import load as toml_load
+except ImportError:
+    from tomli import load as toml_load
 
 # project info
 author = "Geoff Boeing"
@@ -22,7 +25,7 @@ sys.path.insert(0, pkg_root_path)
 
 # dynamically load version
 with Path("../../pyproject.toml").open("rb") as f:
-    pyproject = load(f)
+    pyproject = toml_load(f)
 version = release = pyproject["project"]["version"]
 
 # mock import all required + optional dependency packages because readthedocs
