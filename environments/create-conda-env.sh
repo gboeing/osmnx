@@ -7,12 +7,14 @@ PACKAGE=osmnx
 eval "$(conda shell.bash hook)"
 conda activate base
 conda env remove --yes -n $ENV || true
-python make-all-reqs.py
-mamba create --yes -c conda-forge --strict-channel-priority -n $ENV --file ./requirements-all.txt
-rm -f ./requirements-all.txt
+conda create --yes -c conda-forge --strict-channel-priority -n $ENV python
+eval "$(conda shell.bash hook)"
 conda activate $ENV
+uv export --no-cache --no-build --dev --all-extras > ./environments/reqs.txt
+uv pip install --no-cache --no-build --strict -r ./environments/reqs.txt -r ./environments/requirements-extras.txt
+rm -f ./environments/reqs.txt
 python -m pip --python "$ENV_PATH" uninstall $PACKAGE --yes
-python -m pip --python "$ENV_PATH" install -e ../.
+python -m pip --python "$ENV_PATH" install -e .
 python -m ipykernel install --prefix "$ENV_PATH" --name $ENV --display-name "Python ($ENV)"
 conda list -n $ENV
 python -m pip --python "$ENV_PATH" check
