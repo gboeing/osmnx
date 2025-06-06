@@ -178,11 +178,3 @@ osmnx.utils_geo module
     :members:
     :private-members:
     :noindex:
-
-osmnx._version module
----------------------
-
-.. automodule:: osmnx._version
-    :members:
-    :private-members:
-    :noindex:

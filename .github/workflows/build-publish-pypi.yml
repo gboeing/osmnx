@@ -40,7 +40,7 @@ jobs:
         run: |
           uv sync --only-dev
           uv run validate-pyproject pyproject.toml
-          uv run hatch build --clean
+          uv build
           uv run twine check --strict dist/*
 
       - name: Publish package to PyPI

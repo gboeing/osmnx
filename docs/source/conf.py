@@ -6,9 +6,13 @@ For the full list of built-in configuration values, see the documentation:
 https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
-import re
 import sys
 from pathlib import Path
+
+try:
+    from tomllib import load as toml_load
+except ImportError:
+    from tomli import load as toml_load
 
 # project info
 author = "Geoff Boeing"
@@ -19,15 +23,10 @@ project = "OSMnx"
 pkg_root_path = str(Path.cwd().parent.parent)
 sys.path.insert(0, pkg_root_path)
 
-# dynamically load version from __version__ variable in /osmnx/_version.py
-file_text = Path("../../osmnx/_version.py").read_text(encoding="utf-8")
-regex = re.compile("^__version__ = ['\"]([^'\"]*)['\"]", re.MULTILINE)
-match = re.search(regex, file_text)
-if match:
-    version = release = match.group(1)
-else:
-    msg = "Unable to find version string in file."
-    raise ValueError(msg)
+# dynamically load version
+with Path("../../pyproject.toml").open("rb") as f:
+    pyproject = toml_load(f)
+version = release = pyproject["project"]["version"]
 
 # mock import all required + optional dependency packages because readthedocs
 # does not have them installed

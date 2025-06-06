@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging as lg
 from collections.abc import Iterable
+from importlib.metadata import version as metadata_version
 from itertools import groupby
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -30,7 +31,6 @@ from . import utils
 from . import utils_geo
 from ._errors import CacheOnlyInterruptError
 from ._errors import InsufficientResponseError
-from ._version import __version__
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -643,7 +643,7 @@ def _create_graph(
     # create the MultiDiGraph and set its graph-level attributes
     metadata = {
         "created_date": utils.ts(),
-        "created_with": f"OSMnx {__version__}",
+        "created_with": f"OSMnx {metadata_version('osmnx')}",
         "crs": settings.default_crs,
     }
     G = nx.MultiDiGraph(**metadata)

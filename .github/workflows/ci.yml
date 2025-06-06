@@ -58,7 +58,7 @@ jobs:
       - name: Build and check package
         run: |
           uv run validate-pyproject pyproject.toml
-          uv run hatch build --clean
+          uv build
           uv run twine check --strict dist/*
 
       - name: Test docs build

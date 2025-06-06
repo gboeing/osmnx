@@ -10,6 +10,7 @@ import bz2
 import gzip
 import logging as lg
 from contextlib import contextmanager
+from importlib.metadata import version as metadata_version
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
@@ -31,7 +32,6 @@ from . import settings
 from . import truncate
 from . import utils
 from ._errors import GraphSimplificationError
-from ._version import __version__ as osmnx_version
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -56,7 +56,7 @@ ATTR_DEFAULTS = {
 ROOT_ATTR_DEFAULTS = {
     "attribution": "https://www.openstreetmap.org/copyright",
     "copyright": "OpenStreetMap and contributors",
-    "generator": f"OSMnx {osmnx_version}",
+    "generator": f"OSMnx {metadata_version('osmnx')}",
     "license": "https://opendatacommons.org/licenses/odbl/1-0/",
     "version": "0.6",
 }
