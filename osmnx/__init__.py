@@ -4,7 +4,7 @@
 from importlib.metadata import version as metadata_version
 
 # expose the package version
-__version__ = metadata_version(__name__)
+__version__ = metadata_version("osmnx")
 
 # expose the old pre-v2 API for backwards compatibility. this allows common
 # functionality to be accessed directly via the ox.function_name() shortcut
