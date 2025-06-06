@@ -1,6 +1,6 @@
 [build-system]
-build-backend = "hatchling.build"
-requires = ["hatchling"]
+build-backend = "uv_build"
+requires = ["uv_build"]
 
 [project]
 authors = [{ name = "Geoff Boeing", email = "boeing@usc.edu" }]
@@ -34,7 +34,8 @@ dependencies = [
 ]
 description = "Download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap"
 keywords = ["GIS", "Networks", "OpenStreetMap", "Routing"]
-license = { text = "MIT License" }
+license = "MIT"
+license-files = ["LICENSE.txt"]
 maintainers = [{ name = "OSMnx contributors" }]
 name = "osmnx"
 readme = "README.md"
@@ -106,4 +107,7 @@ convention = "numpy"
 max-args = 8
 
 [tool.uv]
-required-version = "==0.7.8" # match version in environments/docker/install.sh
+required-version = "==0.7.12" # match version in environments/docker/install.sh
+
+[tool.uv.build-backend]
+module-root = ""
