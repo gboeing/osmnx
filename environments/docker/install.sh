@@ -11,7 +11,7 @@ else
   NOEXTRA=""
 fi
 
-wget -qO- https://astral.sh/uv/0.7.8/install.sh | sh
+wget -qO- https://astral.sh/uv/0.7.12/install.sh | sh
 source $HOME/.local/bin/env
 uv export --no-cache --no-build --no-dev --all-extras $NOEXTRA > reqs.txt
 uv pip install --no-cache --no-build --system --strict -r reqs.txt -r requirements-extras.txt
