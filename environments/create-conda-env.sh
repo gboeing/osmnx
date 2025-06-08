@@ -4,14 +4,15 @@ echo "Run conda deactivate before running this script."
 ENV=ox
 ENV_PATH=$(conda info --base)/envs/$ENV
 PACKAGE=osmnx
+uv --version
 eval "$(conda shell.bash hook)"
 conda activate base
 conda env remove --yes -n $ENV || true
 conda create --yes -c conda-forge --strict-channel-priority -n $ENV python
 eval "$(conda shell.bash hook)"
 conda activate $ENV
-uv export --no-cache --no-build --dev --all-extras > ./environments/reqs.txt
-uv pip install --no-cache --no-build --strict -r ./environments/reqs.txt -r ./environments/requirements-extras.txt
+uv export --no-build --dev --all-extras > ./environments/reqs.txt
+uv pip install --no-build --strict -r ./environments/reqs.txt -r ./environments/requirements-extras.txt
 rm -f ./environments/reqs.txt
 python -m pip --python "$ENV_PATH" uninstall $PACKAGE --yes
 python -m pip --python "$ENV_PATH" install -e .
