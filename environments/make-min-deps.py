@@ -24,6 +24,6 @@ deps.extend({Requirement(o) for o in chain.from_iterable(optionals)})
 reqs = [f"{dep.name}=={next(iter(dep.specifier)).version}.*" for dep in deps]
 reqs.extend(pyproject["dependency-groups"]["dev"])
 
-# write the requirements as to file on disk
+# write the requirements to file on disk
 with Path("./requirements-min.txt").open("w") as f:
     f.writelines("\n".join(sorted(reqs)))
