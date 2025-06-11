@@ -1,5 +1,6 @@
 folium
 jupyterlab
+mapclassify
 nbdime
 pillow
 python-igraph
