@@ -2,6 +2,9 @@
 # versions.
 name: Test minimum dependencies
 
+permissions:
+  contents: read
+
 on:
   schedule:
     - cron: 25 4 * * 1  # every monday at 04:25 UTC

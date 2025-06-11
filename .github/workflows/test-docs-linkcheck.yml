@@ -1,6 +1,9 @@
 # This workflow tests building the package docs and verifying links are live.
 name: Build docs and check links
 
+permissions:
+  contents: read
+
 on:
   schedule:
     - cron: 20 4 * * 1  # every monday at 04:20 UTC
