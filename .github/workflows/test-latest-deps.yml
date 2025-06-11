@@ -2,6 +2,9 @@
 # versions.
 name: Test latest/pre-release dependencies
 
+permissions:
+  contents: read
+
 on:
   schedule:
     - cron: 15 4 * * 1  # every monday at 04:15 UTC

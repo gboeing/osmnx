@@ -5,6 +5,9 @@
 # this workflow file's name.
 name: Build and publish to PyPI
 
+permissions:
+  contents: read
+
 on:
   push:
     tags:

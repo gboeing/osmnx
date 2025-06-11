@@ -3,6 +3,9 @@
 # run, it just builds the image as a test, but does not push it.
 name: Build and publish Docker image
 
+permissions:
+  contents: read
+
 on:
   push:
     tags:

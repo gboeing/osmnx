@@ -1,6 +1,9 @@
 # This workflow runs the repo's CI tests.
 name: CI
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main, v1]
