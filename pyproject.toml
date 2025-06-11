@@ -40,7 +40,7 @@ maintainers = [{ name = "OSMnx contributors" }]
 name = "osmnx"
 readme = "README.md"
 requires-python = ">=3.9" # match classifiers above and mypy version below
-version = "2.0.4dev"
+version = "2.0.4"
 
 [project.optional-dependencies]
 entropy = ["scipy>=1.8"]

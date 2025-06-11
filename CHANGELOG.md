@@ -1,10 +1,10 @@
 # Changelog
 
-## 2.0.4 (TBD)
+## 2.0.4 (2025-06-11)
 
 - fix bug in features module when elements have pre-existing geometry tags (#1298)
 - fix bug in save_graphml function where gephi compatibility mode erases node attributes (#1300)
-- bump minimum required version of optional extras scipy to 1.8 and scikit-learn to 1.0 (#1296)
+- bump minimum required version of optional extras to earliest version with wheels (#1296)
 
 ## 2.0.3 (2025-05-06)
 
