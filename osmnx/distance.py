@@ -538,3 +538,77 @@ def nearest_edges(
         return ne_array, dist_array
     # otherwise
     return ne_array
+
+def get_nearest_connected_nodes(
+    G: nx.MultiDiGraph,
+    source_node: int,
+    target_node: int,
+) -> list[int]:
+    """
+    Map source and target nodes to the main strongly connected component of the graph.
+
+    If either the source or target node lies in an island component (i.e., not connected
+    to the main road network), this function finds and returns the geographically nearest
+    node from the largest strongly connected component ("mainland") as a substitute.
+
+    This ensures that any subsequent routing or network analysis is performed only on
+    the connected portion of the graph.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        A directed multigraph representing the road or path network.
+    source_node : int
+        Node ID of the source node (may be in an island).
+    target_node : int
+        Node ID of the target node (may be in an island).
+
+    Returns
+    -------
+    new_nodes : list of int
+        A list containing two node IDs:
+        - A connected substitute for the source node (or the source itself if already connected)
+        - A connected substitute for the target node (or the target itself if already connected)
+
+    Notes
+    -----
+    - Uses Euclidean distance (in degree coordinates) to find the closest connected node.
+    - Assumes nodes have 'x' and 'y' attributes (longitude and latitude).
+    - Exits with error if no strongly connected components are found.
+    """
+    strongly_ccs = list(nx.strongly_connected_components(G))
+    nodes = [source_node, target_node]
+
+    if not strongly_ccs:
+        print("Error: No weakly connected components found.")
+        exit()
+
+    main_strong_cc_nodes = max(strongly_ccs, key=len)
+    G_main_strong = G.subgraph(main_strong_cc_nodes).copy()
+
+    all_nodes_original = set(G.nodes())
+    island_nodes = all_nodes_original - main_strong_cc_nodes
+    main_node_ids = list(G_main_strong.nodes())
+
+    if not main_node_ids:
+        print("Error: The largest weakly connected component has no nodes.")
+        exit()
+
+    new_nodes = []
+    for node in nodes:
+        if node in island_nodes:
+            island_point_y = G.nodes[node]['y']
+            island_point_x = G.nodes[node]['x']
+
+            main_y = np.array([G_main_strong.nodes[n]['y'] for n in main_node_ids])
+            main_x = np.array([G_main_strong.nodes[n]['x'] for n in main_node_ids])
+
+            distances_deg = np.sqrt((main_x - island_point_x)**2 + (main_y - island_point_y)**2)
+            nearest_index = distances_deg.argmin()
+            nearest_main_node_candidate = main_node_ids[nearest_index]
+
+            new_nodes.append(nearest_main_node_candidate)
+        else:
+            new_nodes.append(node)
+
+    return new_nodes
