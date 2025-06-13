@@ -597,8 +597,8 @@ def nearest_connected_nodes(
             island_x = G.nodes[node]["x"]
             island_y = G.nodes[node]["y"]
 
-            main_x: NDArray[np.float64] = np.array([G_main_strong.nodes[n]["x"] for n in main_node_ids])
-            main_y: NDArray[np.float64] = np.array([G_main_strong.nodes[n]["y"] for n in main_node_ids])
+            main_x = np.array([G_main_strong.nodes[n]["x"] for n in main_node_ids])
+            main_y = np.array([G_main_strong.nodes[n]["y"] for n in main_node_ids])
 
             distances = np.sqrt((main_x - island_x) ** 2 + (main_y - island_y) ** 2)
             nearest_index = int(distances.argmin())
