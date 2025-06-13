@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging as lg
 from collections.abc import Iterable
+import sys
 from typing import Literal
 from typing import overload
 
@@ -580,8 +581,7 @@ def get_nearest_connected_nodes(
     nodes = [source_node, target_node]
 
     if not strongly_ccs:
-        print("Error: No weakly connected components found.")
-        exit()
+        sys.exit()
 
     main_strong_cc_nodes = max(strongly_ccs, key=len)
     G_main_strong = G.subgraph(main_strong_cc_nodes).copy()
@@ -591,8 +591,7 @@ def get_nearest_connected_nodes(
     main_node_ids = list(G_main_strong.nodes())
 
     if not main_node_ids:
-        print("Error: The largest weakly connected component has no nodes.")
-        exit()
+        sys.exit()
 
     new_nodes = []
     for node in nodes:
