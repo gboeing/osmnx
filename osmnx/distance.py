@@ -538,3 +538,78 @@ def nearest_edges(
         return ne_array, dist_array
     # otherwise
     return ne_array
+
+
+def map_nodes_to_main_component(
+    G: nx.MultiDiGraph,
+    source_node: int,
+    target_node: int,
+) -> list[int]:
+    """
+    Map nodes to the largest strongly connected component in the graph.
+
+    If either the source or target node lies in an isolated subgraph
+    (i.e., outside the largest strongly connected component), this function
+    finds and returns the nearest node within the main component.
+
+    Parameters
+    ----------
+    G : networkx.MultiDiGraph
+        Directed graph from which to identify the largest strongly connected component.
+    source_node : int
+        The node ID for the source.
+    target_node : int
+        The node ID for the target.
+
+    Returns
+    -------
+    list[int]
+        A list containing two node IDs:
+        - A valid substitute for the source node (if needed).
+        - A valid substitute for the target node (if needed).
+
+    Raises
+    ------
+    ValueError
+        If no strongly connected components exist, or the main component is empty.
+
+    Notes
+    -----
+    - Assumes each node has 'x' (longitude) and 'y' (latitude) attributes.
+    - Uses Euclidean distance in degrees to find the closest connected substitute.
+    """
+    strongly_ccs = list(nx.strongly_connected_components(G))
+    if not strongly_ccs:
+        msg = "No strongly connected components found."
+        raise ValueError(msg)
+
+    main_strong_cc_nodes = max(strongly_ccs, key=len)
+    G_main_strong = G.subgraph(main_strong_cc_nodes).copy()
+
+    main_node_ids = list(G_main_strong.nodes)
+    if not main_node_ids:
+        msg = "The largest strongly connected component has no nodes."
+        raise ValueError(msg)
+
+    island_nodes = set(G.nodes) - main_strong_cc_nodes
+    new_nodes: list[int] = []
+
+    for node in [source_node, target_node]:
+        if node in island_nodes:
+            island_x = G.nodes[node]["x"]
+            island_y = G.nodes[node]["y"]
+
+            main_x = [G_main_strong.nodes[n]["x"] for n in main_node_ids]
+            main_y = [G_main_strong.nodes[n]["y"] for n in main_node_ids]
+
+            distances = [
+                ((x - island_x) ** 2 + (y - island_y) ** 2) ** 0.5 for x, y in zip(main_x, main_y)
+            ]
+            nearest_index = distances.index(min(distances))
+            nearest_node = main_node_ids[nearest_index]
+
+            new_nodes.append(nearest_node)
+        else:
+            new_nodes.append(node)
+
+    return new_nodes
