@@ -447,6 +447,46 @@ def test_nearest() -> None:
     _ = ox.distance.nearest_edges(Gp, X[0], Y[0], return_dist=False)
     _ = ox.distance.nearest_edges(Gp, X[0], Y[0], return_dist=True)
 
+@pytest.mark.xdist_group(name="group1")
+def test_map_nodes_to_main_component() -> None:
+    """Test mapping nodes to main strongly connected component."""
+
+    # Create a directed graph with a main component and isolated nodes
+    G = nx.MultiDiGraph()
+
+    # Main strongly connected component (nodes 1-4)
+    G.add_edges_from([(1, 2), (2, 3), (3, 4), (4, 1)])
+
+    # Isolated component (nodes 5-6)
+    G.add_edge(5, 6)
+
+    # Add coordinates to all nodes
+    coords = {
+        1: (0, 0), 2: (1, 0), 3: (1, 1), 4: (0, 1),
+        5: (10, 10), 6: (11, 10)
+    }
+    for node, (x, y) in coords.items():
+        G.nodes[node]["x"] = x
+        G.nodes[node]["y"] = y
+
+    # Case 1: Both nodes in main component
+    mapped = ox.distance.map_nodes_to_main_component(G, 1, 2)
+    assert mapped == [1, 2]
+
+    # Case 2: Source outside, target inside
+    mapped = ox.distance.map_nodes_to_main_component(G, 5, 2)
+    assert mapped[0] in {1, 2, 3, 4}
+    assert mapped[1] == 2
+
+    # Case 3: Both nodes outside main component
+    mapped = ox.distance.map_nodes_to_main_component(G, 5, 6)
+    assert mapped[0] in {1, 2, 3, 4}
+    assert mapped[1] in {1, 2, 3, 4}
+
+    # Case 4: Source inside, target outside
+    mapped = ox.distance.map_nodes_to_main_component(G, 2, 6)
+    assert mapped[0] == 2
+    assert mapped[1] in {1, 2, 3, 4}
 
 @pytest.mark.xdist_group(name="group1")
 def test_endpoints() -> None:
