@@ -2,7 +2,7 @@
 
 ## 2.0.5 (TBD)
 
-- improve module exposure for better introspection (#1308)
+- improve module exposure for better code introspection (#1308)
 
 ## 2.0.4 (2025-06-11)
 
