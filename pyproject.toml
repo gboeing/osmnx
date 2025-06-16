@@ -52,6 +52,7 @@ visualization = ["matplotlib>=3.5"]
 dev = [
   "furo",
   "lxml",
+  "pip",
   "pre-commit",
   "pytest",
   "pytest-cov",
