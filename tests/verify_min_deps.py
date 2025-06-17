@@ -1,10 +1,4 @@
 #!/usr/bin/env python
-# /// script
-# dependencies = [
-#     "packaging",
-#     "tomli",
-# ]
-# ///
 """Verify installed dependencies match minimum dependency versions."""
 
 from importlib.metadata import version as metadata_version
