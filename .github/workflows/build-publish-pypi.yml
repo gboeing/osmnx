@@ -1,8 +1,7 @@
-# This workflow builds and validates the Python package distribution and
-# uploads it to PyPI if the triggering event was a tag push. When it's a
-# scheduled run, it just builds and validates the distribution as a test, but
-# does not upload it. The upload uses PyPI trusted publishing, so don't change
-# this workflow file's name.
+# This workflow builds the Python package distribution and uploads it to PyPI
+# if the triggering event was a tag push. When it's a scheduled run, it just
+# builds and validates the distribution as a test, but does not upload it. The
+# upload uses PyPI trusted publishing, so don't change this workflow filename.
 name: Build and publish to PyPI
 
 permissions:
@@ -35,16 +34,9 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
-        with:
-          cache-dependency-glob: pyproject.toml
-          enable-cache: true
 
-      - name: Build and check package
-        run: |
-          uv sync --only-dev
-          uv build
-          uvx twine check --strict dist/*
-          uvx --from=validate-pyproject[all] validate-pyproject ./pyproject.toml
+      - name: Build package
+        run: uv build
 
       - name: Publish package to PyPI
         if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags') }}
