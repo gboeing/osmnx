@@ -12,7 +12,7 @@ conda create --yes -c conda-forge --strict-channel-priority -n $ENV python
 eval "$(conda shell.bash hook)"
 conda activate $ENV
 uv export --no-build --dev --all-extras > ./environments/reqs.txt
-uv pip install --no-build --strict -r ./environments/reqs.txt folium jupyterlab mapclassify nbdime python-igraph
+uv pip install --no-build --strict -r ./environments/reqs.txt folium igraph jupyterlab mapclassify nbdime
 rm -f ./environments/reqs.txt
 python -m pip --python "$ENV_PATH" uninstall $PACKAGE --yes
 python -m pip --python "$ENV_PATH" install -e .

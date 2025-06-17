@@ -17,7 +17,7 @@ source $HOME/.local/bin/env
 
 # add extra packages necessary for running examples' notebooks
 # then install everything into the existing system environment
-uv add --no-sync --optional=examples folium jupyterlab mapclassify python-igraph
+uv add --no-sync --optional=examples folium igraph jupyterlab mapclassify
 uv export --no-cache --no-build --no-dev --all-extras $NOEXTRA > requirements.txt
 uv pip install --no-cache --no-build --system --strict -r requirements.txt
 uv cache clean
