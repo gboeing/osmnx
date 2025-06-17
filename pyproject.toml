@@ -58,9 +58,7 @@ dev = [
   "pytest-xdist>=3",
   "sphinx>=7",
   "sphinx-autodoc-typehints>=2",
-  "twine>=6",
   "typeguard>=4",
-  "validate-pyproject>=0.24",
 ]
 
 [project.urls]
