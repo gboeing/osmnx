@@ -41,6 +41,7 @@ jobs:
 
       - name: Install OSMnx with latest/pre-release dependencies
         run: |
+          uv python pin ${{ matrix.python-version }}
           uv sync --all-extras --dev --no-cache
           uv pip check
           uv pip list
