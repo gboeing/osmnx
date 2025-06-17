@@ -39,14 +39,14 @@ jobs:
 
       - name: Install OSMnx with minimum dependency versions
         run: |
-          uv venv
-          uv run ./environments/make-min-deps.py
-          uv pip install --no-build --strict --requirements ./requirements-min.txt
-          uv pip install -e .
+          uv python pin ${{ matrix.python-version }}
+          uv sync --dev --all-extras --resolution=lowest-direct
           uv pip check
           uv pip list
           uv pip show osmnx
           uv run --no-sync python --version
 
       - name: Test code
-        run: uv run --no-sync pytest --verbose --maxfail=1 --numprocesses=3 --dist=loadgroup
+        run: |
+          uv run --no-sync tests/verify_min_deps.py
+          uv run --no-sync pytest --verbose --maxfail=1 --numprocesses=3 --dist=loadgroup
