@@ -44,7 +44,6 @@ version = "2.0.4"
 
 [project.optional-dependencies]
 entropy = ["scipy>=1.8"]
-examples = ["folium>=0.20", "mapclassify>=2.5", "python-igraph>=0.10",]
 neighbors = ["scikit-learn>=1.0", "scipy>=1.8"]
 raster = ["rasterio>=1.3.1", "rio-vrt>=0.3"]
 visualization = ["matplotlib>=3.5"]
