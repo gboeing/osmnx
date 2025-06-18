@@ -41,6 +41,7 @@ jobs:
 
       - name: Install OSMnx
         run: |
+          uv python pin ${{ matrix.python-version }}
           uv sync --all-extras --dev
           uv pip check
           uv pip list
@@ -60,9 +61,9 @@ jobs:
 
       - name: Build and check package
         run: |
-          uv run validate-pyproject pyproject.toml
           uv build
-          uv run twine check --strict dist/*
+          uvx twine check --strict dist/*
+          uvx --from=validate-pyproject[all] validate-pyproject ./pyproject.toml
 
       - name: Test docs build
         run: uv run sphinx-build -E -W --keep-going -b html ./docs/source ./docs/build/html

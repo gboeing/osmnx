@@ -11,9 +11,9 @@ rm -r -f ./.coverage* ./.pytest_cache ./.temp ./dist ./docs/build ./*/__pycache_
 SKIP=no-commit-to-branch uv run pre-commit run --all-files
 
 # build and validate the package
-uv run validate-pyproject ./pyproject.toml
 uv build
-uv run twine check --strict ./dist/*
+uvx twine check --strict ./dist/*
+uvx --from=validate-pyproject[all] validate-pyproject ./pyproject.toml
 
 # run the tests and report the test coverage
 uv run pytest --verbose --maxfail=1 --typeguard-packages=osmnx --cov=osmnx --cov-report=term-missing:skip-covered --numprocesses=3 --dist=loadgroup

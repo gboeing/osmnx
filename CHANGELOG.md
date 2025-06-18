@@ -3,12 +3,14 @@
 ## 2.0.5 (TBD)
 
 - improve module exposure for better code introspection (#1308)
+- add "examples" and "all" optional dependency extras (#1313)
+- bump minimum required patch versions of optional extras to earliest versions with macosx/arm64 wheels (#1313)
 
 ## 2.0.4 (2025-06-11)
 
 - fix bug in features module when elements have pre-existing geometry tags (#1298)
 - fix bug in save_graphml function where gephi compatibility mode erases node attributes (#1300)
-- bump minimum required versions of optional extras to earliest versions with wheels (#1296)
+- bump minimum required minor versions of optional extras to earliest versions with linux/amd64 wheels (#1296)
 
 ## 2.0.3 (2025-05-06)
 

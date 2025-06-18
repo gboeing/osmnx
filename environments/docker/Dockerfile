@@ -8,7 +8,6 @@ ARG TARGETPLATFORM
 
 # copy the package files needed for installation
 COPY --chown=jovyan --chmod=0755 ./environments/docker/install.sh ./osmnx/
-COPY --chown=jovyan --chmod=0755 ./environments/requirements-extras.txt ./osmnx/
 COPY --chown=jovyan --chmod=0755 ./osmnx/ ./osmnx/osmnx/
 COPY --chown=jovyan --chmod=0755 ./pyproject.toml ./osmnx/
 COPY --chown=jovyan --chmod=0755 ./README.md ./osmnx/
