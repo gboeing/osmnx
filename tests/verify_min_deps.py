@@ -14,9 +14,10 @@ with Path("./pyproject.toml").open("rb") as f:
 
 # extract/pin dependencies + optionals + dev group from pyproject
 deps = [Requirement(d) for d in pyproject["project"]["dependencies"]]
-optionals = pyproject["project"]["optional-dependencies"].values()
-deps.extend({Requirement(o) for o in chain.from_iterable(optionals)})
+opts = pyproject["project"]["optional-dependencies"].values()
+deps.extend({Requirement(o) for o in chain.from_iterable(opts) if not o.startswith("osmnx")})
 deps.extend(Requirement(d) for d in pyproject["dependency-groups"]["dev"])
+
 requirements = {dep.name: next(iter(dep.specifier)).version for dep in deps}
 requirements = dict(sorted(requirements.items()))
 
