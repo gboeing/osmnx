@@ -7,7 +7,7 @@ set -euo pipefail
 # see https://github.com/rasterio/rasterio-wheels/issues/69
 if [[ "$TARGETPLATFORM" == "linux/arm64" ]]
 then
-  NOEXTRA="--no-extra=raster"
+  NOEXTRA="--no-extra=raster --no-extra=all"
 else
   NOEXTRA=""
 fi
