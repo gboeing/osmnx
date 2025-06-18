@@ -16,8 +16,7 @@ fi
 wget -qO- https://astral.sh/uv/0.7.12/install.sh | sh
 source $HOME/.local/bin/env
 
-# add extra packages necessary for running examples' notebooks
-# then install everything into the existing system environment
+# install all requirements into the existing system environment
 uv export --no-cache --no-build --no-dev --all-extras $NOEXTRA > requirements.txt
 uv pip install --no-cache --no-build --system --strict -r requirements.txt
 uv cache clean

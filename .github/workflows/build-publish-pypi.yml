@@ -1,7 +1,7 @@
 # This workflow builds the Python package distribution and uploads it to PyPI
 # if the triggering event was a tag push. When it's a scheduled run, it just
-# builds and validates the distribution as a test, but does not upload it. The
-# upload uses PyPI trusted publishing, so don't change this workflow filename.
+# builds the distribution as a test, but does not upload it. The upload uses
+# PyPI trusted publishing, so don't change this workflow's filename.
 name: Build and publish to PyPI
 
 permissions:
