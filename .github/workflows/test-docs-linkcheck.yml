@@ -26,13 +26,8 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
-        with:
-          cache-dependency-glob: pyproject.toml
-          enable-cache: true
-
-      - name: Install requirements
-        run: uv sync --only-dev
 
       - name: Build docs and check links
-        run: |
-          uv run sphinx-build --keep-going -E -W -b linkcheck ./docs/source ./docs/build/linkcheck
+        run: >
+          uvx --from=sphinx sphinx-build --keep-going -E -W
+          -b linkcheck ./docs/source ./docs/build/linkcheck
