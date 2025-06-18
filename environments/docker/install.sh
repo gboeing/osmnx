@@ -4,6 +4,7 @@ set -euo pipefail
 # rasterio doesn't provide linux/arm64 wheels, so if the target platform is
 # linux/arm64, don't install this optional dependency (attempting to build
 # it rather than install the wheel will also fail).
+# see https://github.com/rasterio/rasterio-wheels/issues/69
 if [[ "$TARGETPLATFORM" == "linux/arm64" ]]
 then
   NOEXTRA="--no-extra=raster"
@@ -17,7 +18,6 @@ source $HOME/.local/bin/env
 
 # add extra packages necessary for running examples' notebooks
 # then install everything into the existing system environment
-uv add --no-sync --optional=examples folium igraph jupyterlab mapclassify
 uv export --no-cache --no-build --no-dev --all-extras $NOEXTRA > requirements.txt
 uv pip install --no-cache --no-build --system --strict -r requirements.txt
 uv cache clean
