@@ -21,7 +21,8 @@ def _validate_nodes(G: nx.MultiDiGraph, strict: bool) -> tuple[bool, str, str]: 
     G
         The input graph.
     strict
-        If `True`, enforce "should" rules in addition to "must" rules.
+        If `True`, enforce optional rules in addition to required rules. These
+        optional rules primarily enforce expected attribute data types.
 
     Returns
     -------
@@ -189,7 +190,8 @@ def _validate_graph(G: nx.MultiDiGraph, strict: bool) -> None:  # noqa: FBT001
     G
         The input graph.
     strict
-        If `True`, enforce "should" rules in addition to "must" rules.
+        If `True`, enforce optional rules in addition to required rules. These
+        optional rules primarily enforce expected attribute data types.
     """
     # validate graph, nodes, and edges
     is_valid_graph, err_msg_graph, warn_msg_graph = _validate_graph_attrs(G)
