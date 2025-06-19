@@ -10,7 +10,7 @@ class GraphSimplificationError(ValueError):
 
 
 class GraphValidationError(ValueError):
-    """Exception for a problem with graph validation."""
+    """Exception for failed graph validation."""
 
 
 class InsufficientResponseError(ValueError):
