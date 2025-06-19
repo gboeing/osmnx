@@ -12,7 +12,7 @@ Ensure you have followed the installation instructions in the [documentation](ht
 
 ## If you have a feature proposal
 
-The OSMnx project follows three principles when adding new functionality: 1) it is useful for a broad set of users, 2) it generalizes well, and 3) it is not trivially easy for users to implement themselves.
+The OSMnx project follows three principles when considering new functionality: 1) it is useful for a broad set of users, 2) it generalizes well, and 3) it is not trivially easy for users to implement themselves.
 
 - Post your proposal on the [issue tracker](https://github.com/gboeing/osmnx/issues), and _provide all the information requested in the template_, so we can review it together (some proposals may not be a good fit for the project).
 - Fork the repo, make your change, update the [changelog](./CHANGELOG.md), run the [tests](./tests), and submit a pull request.
