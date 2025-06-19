@@ -31,9 +31,9 @@ The OSMnx project follows three principles when considering new functionality: 1
 
 We need a minimal standalone example code snippet to be able to reproduce and in turn troubleshoot your problem (also provide the resulting complete error traceback if your code generates an error). This code snippet must be:
 
-*Minimal*: the absolute fewest lines of code necessary to reproduce your problem without any extraneous code or data unrelated to your specific problem. This usually requires reworking your code and data down to just a few lines necessary to generate the error.
+_Minimal_: the absolute fewest lines of code necessary to reproduce your problem without any extraneous code or data unrelated to your specific problem. This usually requires reworking your code and data down to just a few lines necessary to generate the error.
 
-*Standalone*: all imports, data, and variables must be completely defined within the snippet itself so others can independently run it from top to bottom by copying/pasting it into a Python interpreter. Do not link to or load external files and do not provide screenshots of code or error messages: provide all code, data, and tracebacks inline as text.
+_Standalone_: all imports, data, and variables must be completely defined within the snippet itself so others can independently run it from top to bottom by copying/pasting it into a Python interpreter. Do not link to or load external files and do not provide screenshots of code or error messages: provide all code, data, and tracebacks inline as text.
 
 If you're unsure how to create a good reproducible example, read
         [this guide](https://matthewrocklin.com/blog/work/2018/02/28/minimal-bug-reports).
