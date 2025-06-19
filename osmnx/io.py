@@ -391,7 +391,7 @@ def _convert_edge_attr_types(G: nx.MultiDiGraph, dtypes: dict[str, Any]) -> nx.M
     return G
 
 
-def _convert_bool_string(value: bool | str) -> bool:
+def _convert_bool_string(value: bool | str) -> bool:  # noqa: FBT001
     """
     Convert a "True" or "False" string literal to corresponding boolean type.
 
