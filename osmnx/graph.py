@@ -20,6 +20,7 @@ from shapely import Polygon
 
 from . import _osm_xml
 from . import _overpass
+from . import _validate
 from . import distance
 from . import geocoder
 from . import projection
@@ -31,7 +32,6 @@ from . import utils
 from . import utils_geo
 from ._errors import CacheOnlyInterruptError
 from ._errors import InsufficientResponseError
-from ._validate import _validate_graph
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -51,7 +51,7 @@ def validate_graph(G: nx.MultiDiGraph, *, strict: bool = True) -> None:
         If `True`, enforce optional rules in addition to required rules. These
         optional rules primarily enforce expected attribute data types.
     """
-    _validate_graph(G, strict)
+    _validate._validate_graph(G, strict)
 
 
 def graph_from_bbox(
