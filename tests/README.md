@@ -1,13 +1,12 @@
 # OSMnx tests
 
-Read more about the project's standards in the [contributing guidelines](../CONTRIBUTING.md) and ensure that you have installed the necessary dependencies (defined in [pyproject.toml](../pyproject.toml)) for the test suite.
+Read more about the project's standards in the [contributing guidelines](../CONTRIBUTING.md) and ensure that you have installed the necessary dev [dependencies](../pyproject.toml) for the test suite.
 
 ## Code format
 
 Format the code per the project's style by running the pre-commit hooks:
 
 ```shell
-uv sync --all-extras --dev
 pre-commit install
 pre-commit run -a
 ```
@@ -17,6 +16,7 @@ pre-commit run -a
 Run the test suite locally by running (from the repository root):
 
 ```shell
+uv sync --all-extras --dev
 bash ./tests/lint_test.sh
 ```
 
