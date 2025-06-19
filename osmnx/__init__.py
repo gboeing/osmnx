@@ -14,6 +14,7 @@ from importlib.metadata import version as metadata_version
 __version__ = metadata_version("osmnx")
 
 # expose the package's public modules
+from . import _errors as _errors
 from . import bearing as bearing
 from . import convert as convert
 from . import distance as distance
