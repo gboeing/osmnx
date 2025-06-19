@@ -9,6 +9,10 @@ class GraphSimplificationError(ValueError):
     """Exception for a problem with graph simplification."""
 
 
+class GraphValidationError(ValueError):
+    """Exception for a problem with graph validation."""
+
+
 class InsufficientResponseError(ValueError):
     """Exception for empty or too few results in server response."""
 

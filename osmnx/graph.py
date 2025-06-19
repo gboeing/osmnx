@@ -31,9 +31,27 @@ from . import utils
 from . import utils_geo
 from ._errors import CacheOnlyInterruptError
 from ._errors import InsufficientResponseError
+from ._validate import _validate_graph
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
+
+def validate_graph(G: nx.MultiDiGraph, *, strict: bool = True) -> None:
+    """
+    Validate that a graph object satisfies OSMnx expectations.
+
+    Raises `ox._errors.GraphValidationError` if validation fails.
+
+    Parameters
+    ----------
+    G
+        The input graph.
+    strict
+        If `True`, enforce optional rules in addition to required rules. These
+        optional rules primarily enforce expected attribute data types.
+    """
+    _validate_graph(G, strict)
 
 
 def graph_from_bbox(

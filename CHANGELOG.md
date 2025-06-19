@@ -3,6 +3,7 @@
 ## 2.0.5 (TBD)
 
 - improve module exposure for better code introspection (#1308)
+- add validate_graph function to graph module to validate that a graph object satisfies OSMnx expectations
 - add "examples" and "all" optional dependency extras (#1313)
 - bump minimum required patch versions of optional extras to earliest versions with macosx/arm64 wheels (#1313)
 
