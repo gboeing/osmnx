@@ -4,12 +4,38 @@ from __future__ import annotations
 
 import logging as lg
 from numbers import Real
+from warnings import warn
 
 import geopandas as gpd
 import networkx as nx
+import numpy as np
 
 from ._errors import GraphValidationError
 from .utils import log
+
+
+def _verify_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
+    """
+    Verify attribute values are numeric and non-null across graph edges.
+
+    Raises a ValueError if this attribute contains non-numeric values, and
+    issues a UserWarning if this attribute is missing or null on any edges.
+
+    Parameters
+    ----------
+    G
+        Input graph.
+    attr
+        Name of the edge attribute to verify.
+    """
+    try:
+        values_float = (np.array(tuple(G.edges(data=attr)))[:, 2]).astype(float)
+        if np.isnan(values_float).any():
+            msg = f"The attribute {attr!r} is missing or null on some edges."
+            warn(msg, category=UserWarning, stacklevel=2)
+    except ValueError as e:
+        msg = f"The edge attribute {attr!r} contains non-numeric values."
+        raise ValueError(msg) from e
 
 
 def _validate_nodes(G: nx.MultiDiGraph, strict: bool) -> tuple[bool, str, str]:  # noqa: FBT001
