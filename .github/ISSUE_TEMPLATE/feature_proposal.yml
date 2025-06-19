@@ -46,8 +46,7 @@ body:
     attributes:
       label: What problem does your feature proposal solve?
       description: |
-        Provide a clear and concise description of your use case and the current problem,
-        challenge, or limitation.
+        Describe your use case and the current problem, challenge, or limitation.
     validations:
       required: true
 
@@ -56,8 +55,7 @@ body:
     attributes:
       label: What is your proposed solution?
       description: |
-        Provide a clear and concise description of what you want to change in OSMnx and
-        how you plan to implement it.
+        Describe what you want to change in OSMnx and how you plan to implement it.
     validations:
       required: true
 
@@ -66,8 +64,7 @@ body:
     attributes:
       label: What alternatives have you considered?
       description: |
-        Provide a clear and concise description of any alternative solutions, features,
-        or workarounds you have considered.
+        Describe any alternative solutions, features, or workarounds you have considered.
     validations:
       required: true
 
