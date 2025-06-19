@@ -105,13 +105,6 @@ def _validate_edges(G: nx.MultiDiGraph, strict: bool) -> tuple[bool, str, str]: 
 
     # otherwise, it has at least 1 edge, so validate the edge attributes
     else:
-        # WARN: edge IDs should be (source, target, key) 3-tuples
-        N = set(G.nodes)
-        if not all(u in N and v in N and isinstance(k, int) for u, v, k in G.edges):
-            warn_msg += "Edge IDs should be (source, target, key) 3-tuples. "
-            if strict:
-                is_valid = False
-
         # ERR: edges must have "osmid" data attributes
         edge_osmids = nx.get_edge_attributes(G, name="osmid")
         if set(edge_osmids) != set(G.edges):
