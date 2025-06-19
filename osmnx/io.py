@@ -1,4 +1,3 @@
-# ruff: noqa: A005
 """File I/O functions to save/load graphs to/from files on disk."""
 
 from __future__ import annotations
