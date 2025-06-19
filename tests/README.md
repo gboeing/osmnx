@@ -1,12 +1,13 @@
 # OSMnx tests
 
-Read more about the project's standards in the [contributing guidelines](../CONTRIBUTING.md) and ensure that you have installed the necessary [dependencies](../environments/tests/env-ci.yml) for the test suite.
+Read more about the project's standards in the [contributing guidelines](../CONTRIBUTING.md) and ensure that you have installed the necessary dependencies (defined in [pyproject.toml](../pyproject.toml)) for the test suite.
 
 ## Code format
 
 Format the code per the project's style by running the pre-commit hooks:
 
 ```shell
+uv sync --all-extras --dev
 pre-commit install
 pre-commit run -a
 ```
@@ -23,7 +24,7 @@ bash ./tests/lint_test.sh
 
 Pull requests trigger continuous integration tests via GitHub Actions (see [workflow](../.github/workflows/ci.yml)), including the following steps:
 
-- build the docs
+- build the docs and the package
 - check code formatting
 - lint the code and docstrings
 - type check the code
