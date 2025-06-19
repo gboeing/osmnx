@@ -1,5 +1,9 @@
 # Changelog
 
+## TBD
+
+- add validate_graph function to graph module to validate that a graph object satisfies OSMnx expectations (#1317)
+
 ## 2.0.5 (TBD)
 
 - improve module exposure for better code introspection (#1308)
