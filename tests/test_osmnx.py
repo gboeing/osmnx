@@ -93,7 +93,7 @@ def test_exceptions() -> None:
 def test_validate_graph() -> None:
     """Test validating graph objects."""
     # pass an empty non-MultiDiGraph
-    G = nx.MultiGraph()
+    G = nx.Graph()
     with suppress_type_checks(), pytest.raises(ox._errors.GraphValidationError):
         ox.graph.validate_graph(G)
 
