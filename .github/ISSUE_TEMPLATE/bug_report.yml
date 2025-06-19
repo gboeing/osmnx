@@ -63,8 +63,8 @@ body:
     attributes:
       label: Environment packages and versions
       description: |
-        Paste the complete output of `conda list` here. Auto-rendered as code,
-        no need for backticks.
+        Paste the complete output of `conda list` or `pip list` here.
+        Auto-rendered as code, no need for backticks.
       render: shell
     validations:
       required: true
@@ -79,10 +79,10 @@ body:
         instructions.
       multiple: false
       options:
-        - Other (describe below)
-        - Conda and conda-forge
+        - conda or mamba (via conda-forge)
+        - pip or uv (via PyPI)
         - OSMnx Docker image
-        - Pip
+        - Other (describe below)
     validations:
       required: true
 
@@ -99,15 +99,21 @@ body:
   - type: textarea
     id: mwe
     attributes:
-      label: Complete minimal reproducible example
+      label: Minimal standalone reproducible example
       description: |
-        This example code snippet must be *minimal* so it doesn't contain extraneous
-        code or data unrelated to your specific problem and it must be *complete*
-        so we can independently run it from top to bottom by copying/pasting it
-        into a Python interpreter. That means all imports and all variables must
-        be defined. If you're unsure how to create a good reproducible example, read
+        We need a minimal standalone example code snippet to be able to reproduce
+        and in turn troubleshoot your problem (also provide the resulting complete
+        error traceback if your code generates an error). This code snippet must be
+        *minimal*: the absolute fewest lines of code necessary to reproduce your
+        problem without any extraneous code or data unrelated to your specific problem.
+        This usually requires reworking your code and data down to just a few lines
+        necessary to generate the error. And it must be *standalone*: all imports, data,
+        and variables must be completely defined within the snippet itself so others can
+        independently run it from top to bottom by copying/pasting it into a Python
+        interpreter. Do not link to or load external files and do not provide screenshots
+        of code or error messages: provide all code, data, and tracebacks inline as text.
+        If you're unsure how to create a good reproducible example, read
         [this guide](https://matthewrocklin.com/blog/work/2018/02/28/minimal-bug-reports).
-        Do not post a screenshot of your code or error message: provide it as text.
         Auto-rendered as code, no need for backticks.
       render: python
     validations:
