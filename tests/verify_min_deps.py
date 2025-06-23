@@ -12,11 +12,11 @@ from tomli import load as toml_load
 with Path("./pyproject.toml").open("rb") as f:
     pyproject = toml_load(f)
 
-# extract/pin dependencies + optionals + dev group from pyproject
+# extract/pin dependencies + all extras + all group from pyproject
 deps = [Requirement(d) for d in pyproject["project"]["dependencies"]]
 opts = pyproject["project"]["optional-dependencies"].values()
 deps.extend({Requirement(o) for o in chain.from_iterable(opts) if not o.startswith("osmnx")})
-deps.extend(Requirement(d) for d in pyproject["dependency-groups"]["dev"])
+deps.extend(Requirement(d) for g in pyproject["dependency-groups"].values() for d in g)
 
 requirements = {dep.name: next(iter(dep.specifier)).version for dep in deps}
 requirements = dict(sorted(requirements.items()))
