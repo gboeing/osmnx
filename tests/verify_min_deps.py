@@ -19,7 +19,8 @@ deps.extend({Requirement(o) for o in chain.from_iterable(opts)})
 requirements = {dep.name: next(iter(dep.specifier)).version for dep in deps}
 requirements = dict(sorted(requirements.items()))
 
-ok_msg = "Installed dependencies match minimum dependency versions."
+# check that installed versions match minimum versions
+ok_msg = ""
 err_msg = ""
 for package, required_version in requirements.items():
     installed_version = metadata_version(package)
@@ -28,8 +29,10 @@ for package, required_version in requirements.items():
     else:
         err_msg += f"\nExpected {package} {required_version}, found {installed_version}."
 
-if err_msg != "":
+# print ok message or raise error with error message
+if err_msg == "":
+    ok_msg = "Installed dependencies match minimum dependency versions." + ok_msg
+    print(ok_msg)  # noqa: T201
+else:
     err_msg = "Installed dependencies do not match minimum dependency versions." + err_msg
     raise ImportError(err_msg)
-
-print(ok_msg)  # noqa: T201
