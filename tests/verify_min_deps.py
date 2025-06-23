@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Verify installed dependencies match minimum dependency versions."""
+"""Verify that installed dependencies match minimum dependency versions."""
 
 from importlib.metadata import version as metadata_version
 from itertools import chain
@@ -21,11 +21,17 @@ deps.extend(Requirement(d) for d in pyproject["dependency-groups"]["dev"])
 requirements = {dep.name: next(iter(dep.specifier)).version for dep in deps}
 requirements = dict(sorted(requirements.items()))
 
-message = ""
+ok_msg = "Installed dependencies match minimum dependency versions."
+err_msg = ""
 for package, required_version in requirements.items():
     installed_version = metadata_version(package)
-    if not installed_version.startswith(required_version):
-        message += f"Expected {package} {required_version}, found {installed_version}. "
+    if installed_version.startswith(required_version):
+        ok_msg += f"\nExpected {package} {required_version}, matches {installed_version}."
+    else:
+        err_msg += f"\nExpected {package} {required_version}, found {installed_version}."
 
-if message != "":
-    raise ImportError(message)
+if err_msg != "":
+    err_msg = "Installed dependencies do not match minimum dependency versions." + err_msg
+    raise ImportError(err_msg)
+
+print(ok_msg)  # noqa: T201
