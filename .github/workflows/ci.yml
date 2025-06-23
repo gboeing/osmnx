@@ -62,8 +62,8 @@ jobs:
       - name: Build and check package
         run: |
           uv build
-          uvx twine check --strict dist/*
-          uvx --from=validate-pyproject[all] validate-pyproject ./pyproject.toml
+          uv run twine check --strict dist/*
+          uv run validate-pyproject ./pyproject.toml
 
       - name: Test docs build
         run: uv run sphinx-build -E -W --keep-going -b html ./docs/source ./docs/build/html

@@ -12,8 +12,8 @@ SKIP=no-commit-to-branch pre-commit run --all-files
 
 # build and validate the package
 uv build
-uvx twine check --strict ./dist/*
-uvx --from=validate-pyproject[all] validate-pyproject ./pyproject.toml
+twine check --strict ./dist/*
+validate-pyproject ./pyproject.toml
 
 # run the tests and report the test coverage
 pytest --verbose --maxfail=1 --typeguard-packages=osmnx --cov=osmnx --cov-report=term-missing:skip-covered --numprocesses=3 --dist=loadgroup
