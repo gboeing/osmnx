@@ -31,7 +31,7 @@ jobs:
           enable-cache: true
 
       - name: Install requirements
-        run: uv sync --only-dev
+        run: uv sync --only-group docs
 
       - name: Build docs and check links
         run: |
