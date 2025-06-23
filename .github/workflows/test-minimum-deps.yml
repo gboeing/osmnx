@@ -40,11 +40,7 @@ jobs:
       - name: Install OSMnx with minimum dependency versions
         run: |
           uv python pin ${{ matrix.python-version }}
-          uv sync --all-extras --group test --resolution=lowest-direct
-          uv pip check
-          uv pip list
-          uv pip show osmnx
-          uv run --no-sync python --version
+          uv sync --all-extras --group test --resolution=lowest-direct --verbose
 
       - name: Test code
         run: |

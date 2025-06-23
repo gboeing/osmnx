@@ -39,11 +39,7 @@ jobs:
       - name: Install OSMnx with latest/pre-release dependencies
         run: |
           uv python pin ${{ matrix.python-version }}
-          uv sync --no-cache --all-extras --group test --prerelease=allow
-          uv pip check
-          uv pip list
-          uv pip show osmnx
-          uv run python --version
+          uv sync --no-cache --all-extras --group test --prerelease=allow --verbose
 
       - name: Test code
         run: uv run pytest --verbose --maxfail=1 --numprocesses=3 --dist=loadgroup

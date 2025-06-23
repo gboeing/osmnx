@@ -21,8 +21,5 @@ uv export --no-cache --no-build --all-extras $NOEXTRA --group examples > require
 uv pip install --no-cache --no-build --system --strict -r requirements-temp.txt
 rm -f requirements-temp.txt
 uv cache clean
-uv pip check
-uv pip list
-uv pip show osmnx
 python --version
 ipython -c "import osmnx; print('OSMnx version', osmnx.__version__)"
