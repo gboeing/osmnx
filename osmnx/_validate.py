@@ -18,8 +18,9 @@ def _verify_numeric_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
     """
     Verify attribute values are numeric and non-null across graph edges.
 
-    Raises a ValueError if this attribute contains non-numeric values, and
-    issues a UserWarning if this attribute is missing or null on any edges.
+    Raises a GraphValidationError if this attribute contains non-numeric
+    values, and issues a UserWarning if this attribute is missing or null on
+    any edges.
 
     Parameters
     ----------
@@ -35,7 +36,7 @@ def _verify_numeric_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
             warn(msg, category=UserWarning, stacklevel=2)
     except ValueError as e:
         msg = f"The edge attribute {attr!r} contains non-numeric values."
-        raise ValueError(msg) from e
+        raise GraphValidationError(msg) from e
 
 
 def _validate_node_edge_gdfs(
@@ -57,12 +58,12 @@ def _validate_node_edge_gdfs(
     # ensure gdf_nodes contains x and y columns representing node geometries
     if not ("x" in gdf_nodes.columns and "y" in gdf_nodes.columns):  # pragma: no cover
         msg = "`gdf_nodes` must contain 'x' and 'y' columns."
-        raise ValueError(msg)
+        raise GraphValidationError(msg)
 
     # ensure gdf_nodes and gdf_edges are uniquely indexed
     if not (gdf_nodes.index.is_unique and gdf_edges.index.is_unique):  # pragma: no cover
         msg = "`gdf_nodes` and `gdf_edges` must each be uniquely indexed."
-        raise ValueError(msg)
+        raise GraphValidationError(msg)
 
     # ensure 1) gdf_edges are multi-indexed with 3 levels and 2) that its u
     # and v values (first two index levels) all appear among gdf_nodes index
@@ -72,7 +73,7 @@ def _validate_node_edge_gdfs(
     check2 = uv.issubset(set(gdf_nodes.index))
     if not (check1 and check2):  # pragma: no cover
         msg = "`gdf_edges` must be multi-indexed by `(u, v, key)`."
-        raise ValueError(msg)
+        raise GraphValidationError(msg)
 
     # warn user if geometry values differ from coordinates in x/y columns,
     # because we discard the geometry column
