@@ -38,6 +38,60 @@ def _verify_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
         raise ValueError(msg) from e
 
 
+def _validate_node_edge_gdfs(
+    gdf_nodes: gpd.GeoDataFrame,
+    gdf_edges: gpd.GeoDataFrame,
+) -> None:
+    """
+    Validate that node/edge GeoDataFrames can be converted to a MultiDiGraph.
+
+    Raises a `ValueError` if validation fails.
+
+    Parameters
+    ----------
+    gdf_nodes
+        GeoDataFrame of graph nodes uniquely indexed by `osmid`.
+    gdf_edges
+        GeoDataFrame of graph edges uniquely multi-indexed by `(u, v, key)`.
+    """
+    # ensure gdf_nodes contains x and y columns representing node geometries
+    if not ("x" in gdf_nodes.columns and "y" in gdf_nodes.columns):  # pragma: no cover
+        msg = "`gdf_nodes` must contain 'x' and 'y' columns."
+        raise ValueError(msg)
+
+    # ensure gdf_nodes and gdf_edges are uniquely indexed
+    if not (gdf_nodes.index.is_unique and gdf_edges.index.is_unique):  # pragma: no cover
+        msg = "`gdf_nodes` and `gdf_edges` must each be uniquely indexed."
+        raise ValueError(msg)
+
+    # ensure 1) gdf_edges are multi-indexed with 3 levels and 2) that its u
+    # and v values (first two index levels) all appear among gdf_nodes index
+    edges_index_levels = 3
+    check1 = gdf_edges.index.nlevels == edges_index_levels
+    uv = set(gdf_edges.index.get_level_values(0)) | set(gdf_edges.index.get_level_values(1))
+    check2 = uv.issubset(set(gdf_nodes.index))
+    if not (check1 and check2):  # pragma: no cover
+        msg = "`gdf_edges` must be multi-indexed by `(u, v, key)`."
+        raise ValueError(msg)
+
+    # warn user if geometry values differ from coordinates in x/y columns,
+    # because we discard the geometry column
+    if gdf_nodes.active_geometry_name is not None:  # pragma: no cover
+        msg = (
+            "Discarding the `gdf_nodes` 'geometry' column, though its values "
+            "differ from the coordinates in the 'x' and 'y' columns."
+        )
+        try:
+            all_x_match = (gdf_nodes.geometry.x == gdf_nodes["x"]).all()
+            all_y_match = (gdf_nodes.geometry.y == gdf_nodes["y"]).all()
+            if not (all_x_match and all_y_match):
+                # warn if x/y coords don't match geometry column
+                warn(msg, category=UserWarning, stacklevel=2)
+        except ValueError:  # pragma: no cover
+            # warn if geometry column contains non-point geometry types
+            warn(msg, category=UserWarning, stacklevel=2)
+
+
 def _validate_nodes(G: nx.MultiDiGraph, strict: bool) -> tuple[bool, str, str]:  # noqa: FBT001
     """
     Validate that a graph's nodes satisfy OSMnx expectations.
