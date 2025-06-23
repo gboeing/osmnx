@@ -13,7 +13,7 @@ else
 fi
 
 # install uv and add the executable to the PATH
-wget -qO- https://astral.sh/uv/0.7.12/install.sh | sh
+wget -qO- https://astral.sh/uv/0.7.14/install.sh | sh
 source $HOME/.local/bin/env
 
 # install all requirements into the existing system environment
