@@ -25,7 +25,4 @@ uv pip check
 uv pip list
 uv pip show osmnx
 python --version
-python -m ipykernel install --sys-prefix --name ox --display-name "Python (ox)"
-rm -f -r -v /opt/conda/share/jupyter/kernels/python3
-jupyter kernelspec list
 ipython -c "import osmnx; print('OSMnx version', osmnx.__version__)"
