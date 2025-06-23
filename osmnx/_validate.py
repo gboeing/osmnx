@@ -14,7 +14,7 @@ from ._errors import GraphValidationError
 from .utils import log
 
 
-def _verify_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
+def _verify_numeric_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
     """
     Verify attribute values are numeric and non-null across graph edges.
 
