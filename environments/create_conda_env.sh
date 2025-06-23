@@ -6,14 +6,14 @@ ENV_PATH=$(conda info --base)/envs/$ENV
 PACKAGE=osmnx
 uv --version
 eval "$(conda shell.bash hook)"
-conda activate base
+conda deactivate
 conda env remove --yes -n $ENV || true
 conda create --yes -c conda-forge --strict-channel-priority -n $ENV python
 eval "$(conda shell.bash hook)"
 conda activate $ENV
-uv export --no-build --all-extras --all-groups > ./environments/reqs.txt
-uv pip install --no-build --strict -r ./environments/reqs.txt
-rm -f ./environments/reqs.txt
+uv export --no-build --all-extras --all-groups > ./environments/requirements-temp.txt
+uv pip install --no-build --strict -r ./environments/requirements-temp.txt
+rm -f ./environments/requirements-temp.txt
 python -m pip --python "$ENV_PATH" uninstall $PACKAGE --yes
 python -m pip --python "$ENV_PATH" install -e .
 python -m ipykernel install --prefix "$ENV_PATH" --name $ENV --display-name "Python ($ENV)"

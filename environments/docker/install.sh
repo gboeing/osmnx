@@ -17,8 +17,9 @@ wget -qO- https://astral.sh/uv/0.7.14/install.sh | sh
 source $HOME/.local/bin/env
 
 # install all requirements into the existing system environment
-uv export --no-cache --no-build --no-dev --all-extras $NOEXTRA > requirements.txt
-uv pip install --no-cache --no-build --system --strict -r requirements.txt
+uv export --no-cache --no-build --all-extras $NOEXTRA --group examples > requirements-temp.txt
+uv pip install --no-cache --no-build --system --strict -r requirements-temp.txt
+rm -f requirements-temp.txt
 uv cache clean
 uv pip check
 uv pip list
