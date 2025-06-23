@@ -40,13 +40,9 @@ jobs:
       - name: Install OSMnx with minimum dependency versions
         run: |
           uv python pin ${{ matrix.python-version }}
-          uv sync --all-extras --dev --resolution=lowest-direct
-          uv pip check
-          uv pip list
-          uv pip show osmnx
-          uv run --no-sync python --version
+          uv sync --all-extras --group test --resolution=lowest-direct
 
       - name: Test code
         run: |
-          uv run --no-sync --with packaging --with tomli ./tests/verify_min_deps.py
+          uv run --no-sync --with tomli ./tests/verify_min_deps.py  # need tomli for python<=3.10
           uv run --no-sync pytest --verbose --maxfail=1 --numprocesses=3 --dist=loadgroup

@@ -13,18 +13,13 @@ else
 fi
 
 # install uv and add the executable to the PATH
-wget -qO- https://astral.sh/uv/0.7.12/install.sh | sh
+wget -qO- https://astral.sh/uv/0.7.14/install.sh | sh
 source $HOME/.local/bin/env
 
 # install all requirements into the existing system environment
-uv export --no-cache --no-build --no-dev --all-extras $NOEXTRA > requirements.txt
-uv pip install --no-cache --no-build --system --strict -r requirements.txt
+uv export --no-cache --no-build --all-extras $NOEXTRA --group examples > requirements-temp.txt
+uv pip install --no-cache --no-build --system --strict -r requirements-temp.txt
+rm -f requirements-temp.txt
 uv cache clean
-uv pip check
-uv pip list
-uv pip show osmnx
 python --version
-python -m ipykernel install --sys-prefix --name ox --display-name "Python (ox)"
-rm -f -r -v /opt/conda/share/jupyter/kernels/python3
-jupyter kernelspec list
 ipython -c "import osmnx; print('OSMnx version', osmnx.__version__)"
