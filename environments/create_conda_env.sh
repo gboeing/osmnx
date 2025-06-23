@@ -11,7 +11,7 @@ conda env remove --yes -n $ENV || true
 conda create --yes -c conda-forge --strict-channel-priority -n $ENV python
 eval "$(conda shell.bash hook)"
 conda activate $ENV
-uv export --no-build --dev --all-extras > ./environments/reqs.txt
+uv export --no-build --all-groups --all-extras > ./environments/reqs.txt
 uv pip install --no-build --strict -r ./environments/reqs.txt
 rm -f ./environments/reqs.txt
 python -m pip --python "$ENV_PATH" uninstall $PACKAGE --yes

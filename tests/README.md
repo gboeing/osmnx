@@ -16,7 +16,7 @@ pre-commit run -a
 Run the test suite locally by running (from the repository root):
 
 ```shell
-uv sync --all-extras --dev
+uv sync --all-extras --all-groups
 bash ./tests/lint_test.sh
 ```
 
