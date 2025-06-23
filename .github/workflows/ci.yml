@@ -42,7 +42,7 @@ jobs:
       - name: Install OSMnx
         run: |
           uv python pin ${{ matrix.python-version }}
-          uv sync --all-extras --group docs --group lint --group test --verbose
+          uv sync --all-extras --group docs --group lint --group test
 
       - name: Cache pre-commit
         uses: actions/cache@v4
