@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Verify installed dependencies match minimum dependency versions."""
+"""Verify that installed dependencies match minimum dependency versions."""
 
 from importlib.metadata import version as metadata_version
 from itertools import chain
@@ -12,20 +12,27 @@ from tomli import load as toml_load
 with Path("./pyproject.toml").open("rb") as f:
     pyproject = toml_load(f)
 
-# extract/pin dependencies + optionals + dev group from pyproject
+# extract and pin all required + optional dependencies from pyproject
 deps = [Requirement(d) for d in pyproject["project"]["dependencies"]]
-opts = pyproject["project"]["optional-dependencies"].values()
-deps.extend({Requirement(o) for o in chain.from_iterable(opts) if not o.startswith("osmnx")})
-deps.extend(Requirement(d) for d in pyproject["dependency-groups"]["dev"])
-
+opts = [v for k, v in pyproject["project"]["optional-dependencies"].items() if k != "all"]
+deps.extend({Requirement(o) for o in chain.from_iterable(opts)})
 requirements = {dep.name: next(iter(dep.specifier)).version for dep in deps}
 requirements = dict(sorted(requirements.items()))
 
-message = ""
+# check that installed versions match minimum versions
+ok_msg = ""
+err_msg = ""
 for package, required_version in requirements.items():
     installed_version = metadata_version(package)
-    if not installed_version.startswith(required_version):
-        message += f"Expected {package} {required_version}, found {installed_version}. "
+    if installed_version.startswith(required_version):
+        ok_msg += f"\nExpected {package} {required_version}, matches {installed_version}."
+    else:
+        err_msg += f"\nExpected {package} {required_version}, found {installed_version}."
 
-if message != "":
-    raise ImportError(message)
+# print ok message or raise error with error message
+if err_msg == "":
+    ok_msg = "Installed dependencies match minimum dependency versions." + ok_msg
+    print(ok_msg)  # noqa: T201
+else:
+    err_msg = "Installed dependencies do not match minimum dependency versions." + err_msg
+    raise ImportError(err_msg)

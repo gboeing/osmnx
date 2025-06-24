@@ -7,7 +7,7 @@
 ## 2.0.5 (TBD)
 
 - improve module exposure for better code introspection (#1308)
-- add "examples" and "all" optional dependency extras (#1313)
+- add "all" optional dependency extra (#1313)
 - bump minimum required patch versions of optional extras to earliest versions with macosx/arm64 wheels (#1313)
 
 ## 2.0.4 (2025-06-11)
