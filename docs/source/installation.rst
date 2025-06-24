@@ -22,13 +22,18 @@ You can run OSMnx + JupyterLab directly from the official OSMnx `Docker`_ image.
 Pip
 ---
 
-You can also install OSMnx with `uv`_ or `pip`_ (into a virtual environment).
+You can also install OSMnx with `uv`_ or `pip`_ (into a virtual environment):
 
-OSMnx is written in pure Python. Its installation alone is thus trivially simple if you have its dependencies installed and tested on your system. However, OSMnx depends on other packages that in turn depend on compiled C/C++ libraries, which may present some challenges depending on your specific system's configuration. If precompiled binaries are not available for your system, you may need to compile and configure those dependencies by following their installation instructions. So, if you're not sure what you're doing, just follow the conda instructions above to avoid installation problems.
+.. code-block:: shell
+
+    pip install osmnx
+
+OSMnx is written in pure Python and distributed on `PyPI`_. Its installation alone is thus trivially simple if you have its dependencies installed and tested on your system. However, OSMnx depends on other packages that in turn depend on compiled C/C++ libraries, which may present some challenges depending on your specific system's configuration. If precompiled binaries are not available for your system, you may need to compile and configure those dependencies by following their installation instructions. So, if you're not sure what you're doing, just follow the conda instructions above to avoid installation problems.
 
 .. _conda: https://conda.io/
 .. _conda-forge: https://conda-forge.org/
 .. _Docker: https://hub.docker.com/r/gboeing/osmnx
 .. _mamba: https://mamba.readthedocs.io/
 .. _pip: https://pip.pypa.io/
+.. _PyPI: https://pypi.org/project/osmnx/
 .. _uv: https://docs.astral.sh/uv/
