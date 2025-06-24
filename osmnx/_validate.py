@@ -74,6 +74,11 @@ def _validate_node_edge_gdfs(
     warn_msg = ""
     err_msg = ""
 
+    # ensure type is GeoDataFrame
+    if not (isinstance(gdf_nodes, gpd.GeoDataFrame) and isinstance(gdf_edges, gpd.GeoDataFrame)):
+        err_msg += "`gdf_nodes` and `gdf_edges` must be GeoDataFrames."
+        is_valid = False
+
     # ensure gdf_nodes has x and y columns representing node geometries
     if not ("x" in gdf_nodes.columns and "y" in gdf_nodes.columns):
         err_msg += "`gdf_nodes` must have 'x' and 'y' columns."
