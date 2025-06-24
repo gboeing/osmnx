@@ -76,35 +76,16 @@ def _validate_node_edge_gdfs(
 
     # ensure type is GeoDataFrame
     if not (isinstance(gdf_nodes, gpd.GeoDataFrame) and isinstance(gdf_edges, gpd.GeoDataFrame)):
-        err_msg += "`gdf_nodes` and `gdf_edges` must be GeoDataFrames."
+        # if they are not both GeoDataFrames
+        err_msg += "`gdf_nodes` and `gdf_edges` must be GeoDataFrames. "
         is_valid = False
-
-    # ensure gdf_nodes has x and y columns representing node geometries
-    if not ("x" in gdf_nodes.columns and "y" in gdf_nodes.columns):
-        err_msg += "`gdf_nodes` must have 'x' and 'y' columns."
-        is_valid = False
-
-    # ensure gdf_nodes and gdf_edges are uniquely indexed
-    if not (gdf_nodes.index.is_unique and gdf_edges.index.is_unique):
-        err_msg += "`gdf_nodes` and `gdf_edges` must each be uniquely indexed."
-        is_valid = False
-
-    # ensure 1) gdf_edges are multi-indexed with 3 levels and 2) that its u
-    # and v values (first two index levels) all appear among gdf_nodes index
-    edges_index_levels = 3
-    check1 = gdf_edges.index.nlevels == edges_index_levels
-    uv = set(gdf_edges.index.get_level_values(0)) | set(gdf_edges.index.get_level_values(1))
-    check2 = uv.issubset(set(gdf_nodes.index))
-    if not (check1 and check2):
-        err_msg = "`gdf_edges` must be multi-indexed by `(u, v, key)`."
-        is_valid = False
-
+    # if they are both GeoDataFrames...
     # warn user if geometry values differ from coordinates in x/y columns,
-    # because we discard the geometry column
-    if gdf_nodes.active_geometry_name is not None:
+    # because we ignore the geometry column
+    elif gdf_nodes.active_geometry_name is not None:
         msg = (
-            "Will discard the `gdf_nodes` 'geometry' column, though its values "
-            "differ from the coordinates in the 'x' and 'y' columns."
+            "Will ignore the `gdf_nodes` 'geometry' column, though its values "
+            "differ from the coordinates in the 'x' and 'y' columns. "
         )
         try:
             all_x_match = (gdf_nodes.geometry.x == gdf_nodes["x"]).all()
@@ -119,6 +100,29 @@ def _validate_node_edge_gdfs(
             warn_msg += msg
             if strict:
                 is_valid = False
+
+    # ensure gdf_nodes has x and y columns representing node geometries
+    if not ("x" in gdf_nodes.columns and "y" in gdf_nodes.columns):
+        err_msg += "`gdf_nodes` must have 'x' and 'y' columns. "
+        is_valid = False
+
+    # ensure gdf_nodes and gdf_edges are uniquely indexed
+    if not (gdf_nodes.index.is_unique and gdf_edges.index.is_unique):
+        err_msg += "`gdf_nodes` and `gdf_edges` must each be uniquely indexed. "
+        is_valid = False
+
+    # ensure 1) gdf_edges are multi-indexed with 3 levels and 2) that its u
+    # and v values (first two index levels) all appear among gdf_nodes index
+    edges_index_levels = 3
+    check1 = gdf_edges.index.nlevels == edges_index_levels
+    try:
+        uv = set(gdf_edges.index.get_level_values(0)) | set(gdf_edges.index.get_level_values(1))
+        check2 = uv.issubset(set(gdf_nodes.index))
+    except IndexError:
+        check2 = False
+    if not (check1 and check2):
+        err_msg += "`gdf_edges` must be multi-indexed by `(u, v, key)`. "
+        is_valid = False
 
     _report_validation(is_valid, valid_msg, warn_msg, err_msg)
 

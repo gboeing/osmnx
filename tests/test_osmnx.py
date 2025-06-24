@@ -90,8 +90,29 @@ def test_exceptions() -> None:
 
 
 @pytest.mark.xdist_group(name="group1")
-def test_validate_graph() -> None:
-    """Test validating graph objects."""
+def test_validating() -> None:
+    """Test validating graph inputs and objects."""
+    # node/edge GeoDataFrame validation
+    # pass in wrong types, bad indexes, and missing x/y columns
+    gdf_nodes = pd.DataFrame(index=[0, 0])
+    gdf_edges = pd.DataFrame()
+    with suppress_type_checks(), pytest.raises(ox._errors.GraphValidationError):
+        ox._validate._validate_node_edge_gdfs(gdf_nodes, gdf_edges)
+
+    # pass in non-Point node geometries
+    gdf_nodes = gpd.GeoDataFrame(geometry=[Polygon(), Polygon()])
+    gdf_edges = gpd.GeoDataFrame()
+    with pytest.raises(ox._errors.GraphValidationError):
+        ox._validate._validate_node_edge_gdfs(gdf_nodes, gdf_edges)
+
+    # pass in x/y not matching geometries
+    data = {"x": [0, 1], "y": [2, 3]}
+    gdf_nodes = gpd.GeoDataFrame(data=data, geometry=[Point((6, 7)), Point((8, 9))])
+    gdf_edges = gpd.GeoDataFrame()
+    with pytest.raises(ox._errors.GraphValidationError):
+        ox._validate._validate_node_edge_gdfs(gdf_nodes, gdf_edges)
+
+    # graph validation
     # pass an empty non-MultiDiGraph
     G = nx.Graph()
     with suppress_type_checks(), pytest.raises(ox._errors.GraphValidationError):
