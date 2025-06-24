@@ -90,8 +90,14 @@ def test_exceptions() -> None:
 
 
 @pytest.mark.xdist_group(name="group1")
-def test_validating() -> None:
+def test_validating() -> None:  # noqa: PLR0915
     """Test validating graph inputs and objects."""
+    # validate graph edge attribute is numeric and non-null
+    G = nx.MultiDiGraph()
+    G.add_edge(0, 1)
+    with pytest.raises(ox._errors.GraphValidationError):
+        ox._validate._verify_numeric_edge_attribute(G, "length", strict=True)
+
     # node/edge GeoDataFrame validation
     # pass in wrong types, bad indexes, and missing x/y columns
     gdf_nodes = pd.DataFrame(index=[0, 0])
