@@ -98,6 +98,11 @@ def test_validating() -> None:  # noqa: PLR0915
     with pytest.raises(ox._errors.GraphValidationError):
         ox._validate._verify_numeric_edge_attribute(G, "length", strict=True)
 
+    # features GeoDataFrame validation
+    # pass in gdf with missing geometries and non-unique, non-multi index
+    with pytest.raises(ox._errors.GraphValidationError):
+        ox._validate._validate_features_gdf(gpd.GeoDataFrame(index=[0, 0]))
+
     # node/edge GeoDataFrame validation
     # pass in wrong types, bad indexes, and missing x/y columns
     gdf_nodes = pd.DataFrame(index=[0, 0])

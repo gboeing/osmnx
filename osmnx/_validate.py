@@ -1,4 +1,4 @@
-"""Validate that graph objects satisfy OSMnx expectations."""
+"""Validate that graphs and GeoDataFrames satisfy OSMnx expectations."""
 
 from __future__ import annotations
 
@@ -49,6 +49,48 @@ def _verify_numeric_edge_attribute(G: nx.MultiDiGraph, attr: str, *, strict: boo
     _report_validation(is_valid, valid_msg, warn_msg, err_msg)
 
 
+def _validate_features_gdf(gdf: gpd.GeoDataFrame) -> None:
+    """
+    Validate that features GeoDataFrame satisfies OSMnx expectations.
+
+    Raises a `GraphValidationError` if validation fails.
+
+    Parameters
+    ----------
+    gdf
+        GeoDataFrame of features uniquely multi-indexed by
+        `(element_type, osmid)`.
+    """
+    is_valid = True
+    valid_msg = "Validated features GeoDataFrame."
+    warn_msg = ""
+    err_msg = ""
+
+    # ensure gdf is uniquely indexed
+    if not gdf.index.is_unique:
+        err_msg += "`gdf` must be uniquely indexed. "
+        is_valid = False
+
+    # ensure gdf is multi-indexed with 2 levels (element_type and osmid) and
+    # that the element types are all either node, way, or relation
+    features_index_levels = 2
+    check1 = gdf.index.nlevels == features_index_levels
+    element_types = set(gdf.index.get_level_values(0))
+    check2 = element_types.issubset({"node", "way", "relation"})
+    if not (check1 and check2):
+        err_msg += "`gdf` must be multi-indexed by `(element_type, osmid)`. "
+        is_valid = False
+
+    # ensure gdf has an active geometry column with all valid non-null geoms
+    if (gdf.active_geometry_name is None) or (
+        gdf.geometry.isna() | gdf.geometry.is_empty | ~gdf.geometry.is_valid
+    ).any():
+        err_msg += "`gdf` must contain valid, non-null geometries`. "
+        is_valid = False
+
+    _report_validation(is_valid, valid_msg, warn_msg, err_msg)
+
+
 def _validate_node_edge_gdfs(
     gdf_nodes: gpd.GeoDataFrame,
     gdf_edges: gpd.GeoDataFrame,
@@ -58,7 +100,7 @@ def _validate_node_edge_gdfs(
     """
     Validate that node/edge GeoDataFrames can be converted to a MultiDiGraph.
 
-    Raises a `ValueError` if validation fails.
+    Raises a `GraphValidationError` if validation fails.
 
     Parameters
     ----------
