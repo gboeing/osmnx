@@ -335,7 +335,7 @@ def shortest_path(
         The node IDs constituting the shortest path, or, if `orig` and `dest`
         are both iterable, then a list of such paths.
     """
-    _validate._verify_numeric_edge_attribute(G, weight)
+    _validate._verify_numeric_edge_attribute(G, weight, strict=False)
 
     # if neither orig nor dest is iterable, just return the shortest path
     if not (isinstance(orig, Iterable) or isinstance(dest, Iterable)):
@@ -407,7 +407,7 @@ def k_shortest_paths(
     path
         The node IDs constituting the next-shortest path.
     """
-    _validate._verify_numeric_edge_attribute(G, weight)
+    _validate._verify_numeric_edge_attribute(G, weight, strict=False)
     paths_gen = nx.shortest_simple_paths(
         G=convert.to_digraph(G, weight=weight),
         source=orig,

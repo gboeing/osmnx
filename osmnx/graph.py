@@ -51,7 +51,7 @@ def validate_graph(G: nx.MultiDiGraph, *, strict: bool = True) -> None:
         If `True`, enforce optional rules in addition to required rules. These
         optional rules primarily enforce expected attribute data types.
     """
-    _validate._validate_graph(G, strict)
+    _validate._validate_graph(G, strict=strict)
 
 
 def graph_from_bbox(

@@ -14,7 +14,7 @@ from ._errors import GraphValidationError
 from .utils import log
 
 
-def _verify_numeric_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
+def _verify_numeric_edge_attribute(G: nx.MultiDiGraph, attr: str, *, strict: bool = True) -> None:
     """
     Verify attribute values are numeric and non-null across graph edges.
 
@@ -28,20 +28,32 @@ def _verify_numeric_edge_attribute(G: nx.MultiDiGraph, attr: str) -> None:
         Input graph.
     attr
         Name of the edge attribute to verify.
+    strict
+        If `True`, elevate warnings to errors.
     """
+    is_valid = True
+    valid_msg = "Verified {attr!r} values are numeric and non-null across graph edges."
+    warn_msg = ""
+    err_msg = ""
+
     try:
         values_float = (np.array(tuple(G.edges(data=attr)))[:, 2]).astype(float)
         if np.isnan(values_float).any():
-            msg = f"The attribute {attr!r} is missing or null on some edges."
-            warn(msg, category=UserWarning, stacklevel=2)
-    except ValueError as e:
-        msg = f"The edge attribute {attr!r} contains non-numeric values."
-        raise GraphValidationError(msg) from e
+            warn_msg += f"The attribute {attr!r} is missing or null on some edges."
+            if strict:
+                is_valid = False
+    except ValueError:
+        err_msg += f"The edge attribute {attr!r} contains non-numeric values."
+        is_valid = False
+
+    _report_validation(is_valid, valid_msg, warn_msg, err_msg)
 
 
 def _validate_node_edge_gdfs(
     gdf_nodes: gpd.GeoDataFrame,
     gdf_edges: gpd.GeoDataFrame,
+    *,
+    strict: bool = True,
 ) -> None:
     """
     Validate that node/edge GeoDataFrames can be converted to a MultiDiGraph.
@@ -54,16 +66,23 @@ def _validate_node_edge_gdfs(
         GeoDataFrame of graph nodes uniquely indexed by `osmid`.
     gdf_edges
         GeoDataFrame of graph edges uniquely multi-indexed by `(u, v, key)`.
+    strict
+        If `True`, elevate warnings to errors.
     """
-    # ensure gdf_nodes contains x and y columns representing node geometries
+    is_valid = True
+    valid_msg = "Validated that node/edge GeoDataFrames can be converted to a MultiDiGraph."
+    warn_msg = ""
+    err_msg = ""
+
+    # ensure gdf_nodes has x and y columns representing node geometries
     if not ("x" in gdf_nodes.columns and "y" in gdf_nodes.columns):  # pragma: no cover
-        msg = "`gdf_nodes` must contain 'x' and 'y' columns."
-        raise GraphValidationError(msg)
+        err_msg += "`gdf_nodes` must have 'x' and 'y' columns."
+        is_valid = False
 
     # ensure gdf_nodes and gdf_edges are uniquely indexed
     if not (gdf_nodes.index.is_unique and gdf_edges.index.is_unique):  # pragma: no cover
-        msg = "`gdf_nodes` and `gdf_edges` must each be uniquely indexed."
-        raise GraphValidationError(msg)
+        err_msg += "`gdf_nodes` and `gdf_edges` must each be uniquely indexed."
+        is_valid = False
 
     # ensure 1) gdf_edges are multi-indexed with 3 levels and 2) that its u
     # and v values (first two index levels) all appear among gdf_nodes index
@@ -72,14 +91,14 @@ def _validate_node_edge_gdfs(
     uv = set(gdf_edges.index.get_level_values(0)) | set(gdf_edges.index.get_level_values(1))
     check2 = uv.issubset(set(gdf_nodes.index))
     if not (check1 and check2):  # pragma: no cover
-        msg = "`gdf_edges` must be multi-indexed by `(u, v, key)`."
-        raise GraphValidationError(msg)
+        err_msg = "`gdf_edges` must be multi-indexed by `(u, v, key)`."
+        is_valid = False
 
     # warn user if geometry values differ from coordinates in x/y columns,
     # because we discard the geometry column
     if gdf_nodes.active_geometry_name is not None:  # pragma: no cover
         msg = (
-            "Discarding the `gdf_nodes` 'geometry' column, though its values "
+            "Will discard the `gdf_nodes` 'geometry' column, though its values "
             "differ from the coordinates in the 'x' and 'y' columns."
         )
         try:
@@ -87,10 +106,16 @@ def _validate_node_edge_gdfs(
             all_y_match = (gdf_nodes.geometry.y == gdf_nodes["y"]).all()
             if not (all_x_match and all_y_match):
                 # warn if x/y coords don't match geometry column
-                warn(msg, category=UserWarning, stacklevel=2)
+                warn_msg += msg
+                if strict:
+                    is_valid = False
         except ValueError:  # pragma: no cover
             # warn if geometry column contains non-point geometry types
-            warn(msg, category=UserWarning, stacklevel=2)
+            warn_msg += msg
+            if strict:
+                is_valid = False
+
+    _report_validation(is_valid, valid_msg, warn_msg, err_msg)
 
 
 def _validate_nodes(G: nx.MultiDiGraph, strict: bool) -> tuple[bool, str, str]:  # noqa: FBT001
@@ -102,8 +127,7 @@ def _validate_nodes(G: nx.MultiDiGraph, strict: bool) -> tuple[bool, str, str]: 
     G
         The input graph.
     strict
-        If `True`, enforce optional rules in addition to required rules. These
-        optional rules primarily enforce expected attribute data types.
+        If `True`, elevate warnings to errors.
 
     Returns
     -------
@@ -167,8 +191,7 @@ def _validate_edges(G: nx.MultiDiGraph, strict: bool) -> tuple[bool, str, str]: 
     G
         The input graph.
     strict
-        If `True`, enforce optional rules in addition to required rules. These
-        optional rules primarily enforce expected attribute data types.
+        If `True`, elevate warnings to errors.
 
     Returns
     -------
@@ -260,7 +283,7 @@ def _validate_graph_attrs(G: nx.MultiDiGraph) -> tuple[bool, str, str]:
     return is_valid, err_msg, warn_msg
 
 
-def _validate_graph(G: nx.MultiDiGraph, strict: bool) -> None:  # noqa: FBT001
+def _validate_graph(G: nx.MultiDiGraph, *, strict: bool = True) -> None:
     """
     Validate that a graph object satisfies OSMnx expectations.
 
@@ -271,24 +294,43 @@ def _validate_graph(G: nx.MultiDiGraph, strict: bool) -> None:  # noqa: FBT001
     G
         The input graph.
     strict
-        If `True`, enforce optional rules in addition to required rules. These
-        optional rules primarily enforce expected attribute data types.
+        If `True`, elevate warnings to errors.
     """
     # validate graph, nodes, and edges
     is_valid_graph, err_msg_graph, warn_msg_graph = _validate_graph_attrs(G)
     is_valid_nodes, err_msg_nodes, warn_msg_nodes = _validate_nodes(G, strict)
     is_valid_edges, err_msg_edges, warn_msg_edges = _validate_edges(G, strict)
 
-    # assemble results
+    # report results
     is_valid = is_valid_graph and is_valid_nodes and is_valid_edges
     err_msg = err_msg_graph + err_msg_nodes + err_msg_edges
     warn_msg = warn_msg_graph + warn_msg_nodes + warn_msg_edges
+    valid_msg = "Successfully validated graph."
+    _report_validation(is_valid, valid_msg, warn_msg, err_msg)
 
-    # all done, report any errors/warnings
+
+def _report_validation(is_valid: bool, valid_msg: str, warn_msg: str, err_msg: str) -> None:  # noqa: FBT001
+    """
+    Report validation results by logging, warning, or raising an exception.
+
+    Parameters
+    ----------
+    is_valid
+        Whether or not the validation succeeded.
+    valid_msg
+        The message to log if validation succeeded.
+    warn_msg
+        Any warning messages to log and either issue a warning or include in
+        error message.
+    err_msg
+        Any error messages to include when raising exception if validation
+        failed.
+    """
     if is_valid:
-        msg = "Successfully validated graph."
-        log(msg, level=lg.INFO)
+        log(valid_msg, level=lg.INFO)
+        if warn_msg != "":
+            log(warn_msg, level=lg.WARNING)
+            warn(warn_msg, category=UserWarning, stacklevel=2)
     else:
-        log_level = lg.ERROR if len(err_msg) > 0 else lg.WARNING
-        log(err_msg + warn_msg, level=log_level)
+        log(err_msg + warn_msg, level=lg.ERROR)
         raise GraphValidationError(err_msg + warn_msg)
