@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging as lg
 from collections.abc import Iterable
+from typing import TYPE_CHECKING
 from typing import Literal
 from typing import overload
 
@@ -17,11 +18,15 @@ from . import convert
 from . import projection
 from . import utils
 
+if TYPE_CHECKING:
+    from types import ModuleType
+
 # scipy is optional dependency for projected nearest-neighbor search
+scipy: ModuleType | None
 try:
-    from scipy.spatial import cKDTree
+    import scipy
 except ImportError:  # pragma: no cover
-    cKDTree = None  # noqa: N816
+    scipy = None
 
 # scikit-learn is optional dependency for unprojected nearest-neighbor search
 try:
@@ -358,10 +363,10 @@ def nearest_nodes(
 
     if projection.is_projected(G.graph["crs"]):
         # if projected, use k-d tree for euclidean nearest-neighbor search
-        if cKDTree is None:  # pragma: no cover
+        if scipy is None:  # pragma: no cover
             msg = "scipy must be installed as an optional dependency to search a projected graph."
             raise ImportError(msg)
-        dist_array, pos = cKDTree(nodes).query(np.array([X_arr, Y_arr]).T, k=1)
+        dist_array, pos = scipy.spatial.cKDTree(nodes).query(np.array([X_arr, Y_arr]).T, k=1)
         nn_array = nodes.index[pos].to_numpy()
 
     else:
