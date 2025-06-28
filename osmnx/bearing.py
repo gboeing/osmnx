@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from types import ModuleType
+from typing import TYPE_CHECKING
 from typing import overload
 from warnings import warn
 
@@ -11,7 +13,11 @@ import numpy.typing as npt
 
 from . import projection
 
+if TYPE_CHECKING:
+    from types import ModuleType
+
 # scipy is an optional dependency for entropy calculation
+scipy: ModuleType | None
 try:
     import scipy
 except ImportError:  # pragma: no cover
