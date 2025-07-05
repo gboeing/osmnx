@@ -2,10 +2,10 @@
 
 ## 2.0.5 (TBD)
 
+- fix bug when projecting geometries in polar regions (#1323)
 - improve module exposure for better code introspection (#1308)
 - add "all" optional dependency extra (#1313)
 - bump minimum required patch versions of optional extras to earliest versions with macosx/arm64 wheels (#1313)
-- fix bug when computing area using UTM for polar regions (#1323)
 
 ## 2.0.4 (2025-06-11)
 
