@@ -1,4 +1,4 @@
-# ruff: noqa: D205,PLC0414  # numpydoc ignore=SS06
+# ruff: noqa: D205  # numpydoc ignore=SS06
 """
 OSMnx is a Python package to easily download, model, analyze, and visualize
 street networks and other geospatial features from OpenStreetMap.
