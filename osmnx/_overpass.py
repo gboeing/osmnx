@@ -261,19 +261,9 @@ def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list[s
     coord_strs
         Exterior coordinates of polygon(s).
     """
-    # if polygon is outside UTM limits (80 deg south, 84 deg north), then we
-    # must use universal polar stereographic coordinate system instead
-    UTM_SOUTH_LIMIT = -80
-    UTM_NORTH_LIMIT = 84
-    to_crs = None
-    if polygon.bounds[1] < UTM_SOUTH_LIMIT:
-        to_crs = "epsg:32761"
-    elif polygon.bounds[3] > UTM_NORTH_LIMIT:
-        to_crs = "epsg:32661"
-
     # subdivide the polygon if its area exceeds max size
     # this results in a multipolygon of 1+ constituent polygons
-    poly_proj, crs_proj = projection.project_geometry(polygon, to_crs=to_crs)
+    poly_proj, crs_proj = projection.project_geometry(polygon)
     multi_poly_proj = utils_geo._consolidate_subdivide_geometry(poly_proj)
     multi_poly, _ = projection.project_geometry(multi_poly_proj, crs=crs_proj, to_latlong=True)
 
