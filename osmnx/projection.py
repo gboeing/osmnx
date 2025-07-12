@@ -49,7 +49,7 @@ def project_geometry(
     If `to_latlong` is True, this projects the geometry to the coordinate
     reference system defined by `settings.default_crs`. Otherwise it projects
     it to the CRS defined by `to_crs`. If `to_crs` is `None`, it projects it
-    to the CRS of an appropriate UTM zone given `geometry`'s bounds.
+    to the CRS of an appropriate UTM (or UPS) zone given `geometry`'s bounds.
 
     Parameters
     ----------
@@ -90,7 +90,7 @@ def project_gdf(
     If `to_latlong` is True, this projects the GeoDataFrame to the coordinate
     reference system defined by `settings.default_crs`. Otherwise it projects
     it to the CRS defined by `to_crs`. If `to_crs` is `None`, it projects it
-    to the CRS of an appropriate UTM zone given `gdf`'s bounds.
+    to the CRS of an appropriate UTM (or UPS) zone given `gdf`'s bounds.
 
     Parameters
     ----------
@@ -117,7 +117,17 @@ def project_gdf(
 
     # else if to_crs is None, project gdf to an appropriate UTM zone
     elif to_crs is None:
-        to_crs = gdf.estimate_utm_crs()
+        # if polygon is outside UTM limits (80 deg south, 84 deg north), then
+        # we must use universal polar stereographic coordinate system instead
+        UTM_SOUTH_LIMIT = -80
+        UTM_NORTH_LIMIT = 84
+        if gdf.total_bounds[1] < UTM_SOUTH_LIMIT:
+            to_crs = "epsg:32761"
+        elif gdf.total_bounds[3] > UTM_NORTH_LIMIT:
+            to_crs = "epsg:32661"
+        else:
+            # otherwise, we're within UTM limits, so determine UTM zone
+            to_crs = gdf.estimate_utm_crs()
 
     # project the gdf
     gdf_proj = gdf.to_crs(to_crs)
@@ -140,7 +150,7 @@ def project_graph(
     If `to_latlong` is True, this projects the graph to the coordinate
     reference system defined by `settings.default_crs`. Otherwise it projects
     it to the CRS defined by `to_crs`. If `to_crs` is `None`, it projects it
-    to the CRS of an appropriate UTM zone given `geometry`'s bounds.
+    to the CRS of an appropriate UTM (or UPS) zone given `geometry`'s bounds.
 
     Parameters
     ----------

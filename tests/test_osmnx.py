@@ -42,6 +42,9 @@ ox.settings.cache_folder = ".temp/cache"
 
 # define queries to use throughout tests
 location_point = (37.791427, -122.410018)
+polar_point_south = (-84.5501149, -64.1500283)
+polar_point_north = (85.0511092, -30.4142117)
+
 address = "Transamerica Pyramid, 600 Montgomery Street, San Francisco, California, USA"
 place1 = {"city": "Piedmont", "state": "California", "country": "USA"}
 polygon_wkt = (
@@ -808,25 +811,34 @@ def test_features() -> None:
     fig, ax = ox.plot_footprints(gdf)
     fig, ax = ox.plot_footprints(gdf, ax=ax, bbox=(0, 0, 10, 10))
 
+    # features_from_bbox - test < -80 deg latitude
+    tags2: dict[str, bool | str | list[str]] = {"natural": True, "amenity": True}
+    bbox = ox.utils_geo.bbox_from_point(polar_point_south, dist=500)
+    gdf = ox.features_from_bbox(bbox, tags=tags2)
+
+    # features_from_bbox - test > 84 deg latitude
+    bbox = ox.utils_geo.bbox_from_point(polar_point_north, dist=500)
+    gdf = ox.features_from_bbox(bbox, tags=tags2)
+
     # features_from_point - tests multipolygon creation
     gdf = ox.utils_geo.bbox_from_point(location_point, dist=500)
 
     # features_from_place - includes test of list of places
-    tags2: dict[str, bool | str | list[str]] = {
+    tags3: dict[str, bool | str | list[str]] = {
         "amenity": True,
         "landuse": ["retail", "commercial"],
         "highway": "bus_stop",
     }
-    gdf = ox.features_from_place(place1, tags=tags2)
-    gdf = ox.features_from_place([place1], which_result=[None], tags=tags2)
+    gdf = ox.features_from_place(place1, tags=tags3)
+    gdf = ox.features_from_place([place1], which_result=[None], tags=tags3)
 
     # features_from_polygon
     polygon = ox.geocode_to_gdf(place1).geometry.iloc[0]
-    ox.features_from_polygon(polygon, tags2)
+    ox.features_from_polygon(polygon, tags3)
 
     # features_from_address - includes testing overpass settings and snapshot from 2019
     ox.settings.overpass_settings = '[out:json][timeout:200][date:"2019-10-28T19:20:00Z"]'
-    gdf = ox.features_from_address(address, tags=tags2, dist=1000)
+    gdf = ox.features_from_address(address, tags=tags3, dist=1000)
 
     # features_from_xml - tests error handling of clipped XMLs with incomplete geometry
     gdf = ox.features_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")
