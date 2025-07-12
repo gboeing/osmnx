@@ -1,5 +1,9 @@
 # Changelog
 
+## TBD
+
+- add validate_graph function to graph module to validate that a graph object satisfies OSMnx expectations (#1317)
+
 ## 2.0.5 (2025-07-05)
 
 - fix bug that prevents querying or projecting in polar regions (#1324 #1326)
