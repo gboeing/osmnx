@@ -99,7 +99,7 @@ convention = "numpy"
 max-args = 8
 
 [tool.uv]
-required-version = "==0.7.*" # match version in environments/docker/install.sh
+required-version = "==0.8.*" # match version in environments/docker/install.sh
 
 [tool.uv.build-backend]
 module-root = ""
