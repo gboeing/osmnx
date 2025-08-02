@@ -13,7 +13,6 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -39,7 +38,7 @@ license-files = ["LICENSE.txt"]
 maintainers = [{ name = "OSMnx contributors" }]
 name = "osmnx"
 readme = "README.md"
-requires-python = ">=3.9" # match classifiers above and mypy version below
+requires-python = ">=3.10" # match classifiers above and mypy version below
 version = "2.0.6dev"
 
 [project.optional-dependencies]
@@ -66,7 +65,7 @@ exclude_also = ["@overload", "if TYPE_CHECKING:"]
 [tool.mypy]
 cache_dir = "~/.cache/pre-commit/mypy"
 ignore_missing_imports = true
-python_version = "3.9"
+python_version = "3.10"
 strict = true
 warn_no_return = true
 warn_unreachable = true
