@@ -12,10 +12,6 @@ else
   NOEXTRA=""
 fi
 
-# install uv and add the executable to the PATH
-wget -qO- https://astral.sh/uv/0.8.4/install.sh | sh
-source $HOME/.local/bin/env
-
 # install all requirements into the existing system environment
 uv export --no-cache --no-build --all-extras $NOEXTRA --group examples > requirements-temp.txt
 uv pip install --no-cache --no-build --system --compile-bytecode --strict -r requirements-temp.txt
