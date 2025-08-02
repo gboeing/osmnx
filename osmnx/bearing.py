@@ -122,7 +122,7 @@ def add_edge_bearings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
     # calculate bearings then set as edge attributes
     bearings = calculate_bearing(coords[:, 0], coords[:, 1], coords[:, 2], coords[:, 3])
-    values = zip(uvk, bearings)
+    values = zip(uvk, bearings, strict=True)
     nx.set_edge_attributes(G, dict(values), name="bearing")
 
     return G

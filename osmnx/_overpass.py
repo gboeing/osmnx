@@ -273,7 +273,7 @@ def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list[s
     coord_strs = []
     for geom in multi_poly.geoms:
         x, y = geom.exterior.xy
-        coord_list = [f"{xy[1]:.6f}{' '}{xy[0]:.6f}" for xy in zip(x, y)]
+        coord_list = [f"{xy[1]:.6f}{' '}{xy[0]:.6f}" for xy in zip(x, y, strict=True)]
         coord_strs.append(" ".join(coord_list))
 
     return coord_strs
