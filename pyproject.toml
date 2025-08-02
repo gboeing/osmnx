@@ -40,7 +40,7 @@ maintainers = [{ name = "OSMnx contributors" }]
 name = "osmnx"
 readme = "README.md"
 requires-python = ">=3.9" # match classifiers above and mypy version below
-version = "2.0.5dev"
+version = "2.0.6dev"
 
 [project.optional-dependencies]
 all = ["osmnx[entropy,neighbors,raster,visualization]"]
@@ -99,7 +99,7 @@ convention = "numpy"
 max-args = 8
 
 [tool.uv]
-required-version = "==0.7.*" # match version in environments/docker/install.sh
+required-version = "==0.8.*" # match version in environments/docker/Dockerfile
 
 [tool.uv.build-backend]
 module-root = ""

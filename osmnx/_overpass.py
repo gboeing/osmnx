@@ -261,7 +261,7 @@ def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list[s
     coord_strs
         Exterior coordinates of polygon(s).
     """
-    # first subdivide the polygon if its area exceeds max size
+    # subdivide the polygon if its area exceeds max size
     # this results in a multipolygon of 1+ constituent polygons
     poly_proj, crs_proj = projection.project_geometry(polygon)
     multi_poly_proj = utils_geo._consolidate_subdivide_geometry(poly_proj)

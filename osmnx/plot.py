@@ -89,7 +89,7 @@ def get_node_colors_by_attr(
     stop: float = 1,
     na_color: str = "none",
     equal_size: bool = False,
-) -> pd.Series:  # type: ignore[type-arg]
+) -> pd.Series:  # type: ignore[type-arg,unused-ignore]  # needed for python<=3.9
     """
     Return colors based on nodes' numerical attribute values.
 
@@ -133,7 +133,7 @@ def get_edge_colors_by_attr(
     stop: float = 1,
     na_color: str = "none",
     equal_size: bool = False,
-) -> pd.Series:  # type: ignore[type-arg]
+) -> pd.Series:  # type: ignore[type-arg,unused-ignore]  # needed for python<=3.9
     """
     Return colors based on edges' numerical attribute values.
 
@@ -808,14 +808,14 @@ def plot_orientation(  # noqa: PLR0913
 
 
 def _get_colors_by_value(
-    vals: pd.Series,  # type: ignore[type-arg]
+    vals: pd.Series,  # type: ignore[type-arg,unused-ignore]  # needed for python<=3.9
     num_bins: int | None,
     cmap: str,
     start: float,
     stop: float,
     na_color: str,
     equal_size: bool,  # noqa: FBT001
-) -> pd.Series:  # type: ignore[type-arg]
+) -> pd.Series:  # type: ignore[type-arg,unused-ignore]  # needed for python<=3.9
     """
     Map colors to the values in a Series of node/edge attribute values.
 

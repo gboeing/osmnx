@@ -1,7 +1,8 @@
 # Changelog
 
-## 2.0.5 (TBD)
+## 2.0.5 (2025-07-05)
 
+- fix bug that prevents querying or projecting in polar regions (#1324 #1326)
 - improve module exposure for better code introspection (#1308)
 - add "all" optional dependency extra (#1313)
 - bump minimum required patch versions of optional extras to earliest versions with macosx/arm64 wheels (#1313)
