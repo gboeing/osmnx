@@ -248,7 +248,7 @@ def _bearings_distribution(
     num_bins: int,
     min_length: float,
     weight: str | None,
-) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """
     Compute distribution of bearings across evenly spaced bins.
 
