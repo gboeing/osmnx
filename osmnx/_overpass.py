@@ -35,7 +35,9 @@ def _get_network_filter(network_type: str) -> str:
     excludes ways that are incompatible with the requested network type. You
     can choose from the following types:
 
-    "all" retrieves all public and private-access ways currently in use.
+    "all" retrieves all public and private-access ways currently in use,
+    (defined to exclude ways that represent areas either explicitly (area=yes)
+    or by OSM tagging convention (rest_area, services))
 
     "all_public" retrieves all public ways currently in use.
 
@@ -75,8 +77,8 @@ def _get_network_filter(network_type: str) -> str:
     filters["drive"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
-        f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|service|"
-        f'steps|track"]'
+        f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|"
+        f'rest_area|service|services|steps|track"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
         f'["service"!~"alley|driveway|emergency_access|parking|parking_aisle|private"]'
     )
@@ -85,8 +87,8 @@ def _get_network_filter(network_type: str) -> str:
     filters["drive_service"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
-        f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|steps|"
-        f'track"]'
+        f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|"
+        f'rest_area|services|steps|track"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
         f'["service"!~"emergency_access|parking|parking_aisle|private"]'
     )
@@ -99,7 +101,7 @@ def _get_network_filter(network_type: str) -> str:
     filters["walk"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|bus_guideway|construction|cycleway|motor|no|planned|platform|'
-        f'proposed|raceway|razed"]'
+        f'proposed|raceway|razed|rest_area|services"]'
         f'["foot"!~"no"]["service"!~"private"]'
         f'["sidewalk"!~"separate"]["sidewalk:both"!~"separate"]'
         f'["sidewalk:left"!~"separate"]["sidewalk:right"!~"separate"]'
@@ -110,7 +112,7 @@ def _get_network_filter(network_type: str) -> str:
     filters["bike"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
         f'["highway"!~"abandoned|bus_guideway|construction|corridor|elevator|escalator|footway|'
-        f'motor|no|planned|platform|proposed|raceway|razed|steps"]'
+        f'motor|no|planned|platform|proposed|raceway|razed|rest_area|services|steps"]'
         f'["bicycle"!~"no"]["service"!~"private"]'
     )
 
@@ -118,7 +120,8 @@ def _get_network_filter(network_type: str) -> str:
     # use or that is private-access only
     filters["all_public"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|construction|no|planned|platform|proposed|raceway|razed"]'
+        f'["highway"!~"abandoned|construction|no|planned|platform|proposed|raceway|razed|'
+        f'rest_area|services"]'
         f'["service"!~"private"]'
     )
 
@@ -126,7 +129,7 @@ def _get_network_filter(network_type: str) -> str:
     # everything not currently in use
     filters["all"] = (
         '["highway"]["area"!~"yes"]["highway"!~"abandoned|construction|no|planned|platform|'
-        'proposed|raceway|razed"]'
+        'proposed|raceway|razed|rest_area|services"]'
     )
 
     if network_type in filters:
