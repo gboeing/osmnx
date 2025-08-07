@@ -36,8 +36,8 @@ def _get_network_filter(network_type: str) -> str:
     can choose from the following types:
 
     "all" retrieves all public and private-access ways currently in use,
-    (defined to exclude ways that represent areas either explicitly (area=yes)
-    or by OSM tagging convention (rest_area, services))
+    excluding those that represent areas either explicitly (area=yes) or by
+    convention (rest_area, services).
 
     "all_public" retrieves all public ways currently in use.
 
@@ -76,9 +76,9 @@ def _get_network_filter(network_type: str) -> str:
     # tagged as providing certain services
     filters["drive"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
-        f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|"
-        f'rest_area|service|services|steps|track"]'
+        f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|'
+        f"cycleway|elevator|escalator|footway|no|path|pedestrian|planned|platform|"
+        f'proposed|raceway|razed|rest_area|service|services|steps|track"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
         f'["service"!~"alley|driveway|emergency_access|parking|parking_aisle|private"]'
     )
@@ -86,9 +86,9 @@ def _get_network_filter(network_type: str) -> str:
     # drive+service: allow ways tagged 'service' but filter out certain types
     filters["drive_service"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|'
-        f"escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|razed|"
-        f'rest_area|services|steps|track"]'
+        f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|'
+        f"cycleway|elevator|escalator|footway|no|path|pedestrian|planned|platform|"
+        f'proposed|raceway|razed|rest_area|services|steps|track"]'
         f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
         f'["service"!~"emergency_access|parking|parking_aisle|private"]'
     )
@@ -100,8 +100,8 @@ def _get_network_filter(network_type: str) -> str:
     # ignores such cycleways.
     filters["walk"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bus_guideway|construction|cycleway|motor|no|planned|platform|'
-        f'proposed|raceway|razed|rest_area|services"]'
+        f'["highway"!~"abandoned|bus_guideway|construction|cycleway|motor|no|planned|'
+        f'platform|proposed|raceway|razed|rest_area|services"]'
         f'["foot"!~"no"]["service"!~"private"]'
         f'["sidewalk"!~"separate"]["sidewalk:both"!~"separate"]'
         f'["sidewalk:left"!~"separate"]["sidewalk:right"!~"separate"]'
@@ -111,8 +111,9 @@ def _get_network_filter(network_type: str) -> str:
     # tagged biking=no
     filters["bike"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bus_guideway|construction|corridor|elevator|escalator|footway|'
-        f'motor|no|planned|platform|proposed|raceway|razed|rest_area|services|steps"]'
+        f'["highway"!~"abandoned|bus_guideway|construction|corridor|elevator|'
+        f"escalator|footway|motor|no|planned|platform|proposed|raceway|razed|"
+        f'rest_area|services|steps"]'
         f'["bicycle"!~"no"]["service"!~"private"]'
     )
 
@@ -120,16 +121,16 @@ def _get_network_filter(network_type: str) -> str:
     # use or that is private-access only
     filters["all_public"] = (
         f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|construction|no|planned|platform|proposed|raceway|razed|'
-        f'rest_area|services"]'
+        f'["highway"!~"abandoned|construction|no|planned|platform|proposed|raceway|'
+        f'razed|rest_area|services"]'
         f'["service"!~"private"]'
     )
 
     # to download all ways, including private-access ones, just filter out
     # everything not currently in use
     filters["all"] = (
-        '["highway"]["area"!~"yes"]["highway"!~"abandoned|construction|no|planned|platform|'
-        'proposed|raceway|razed|rest_area|services"]'
+        '["highway"]["area"!~"yes"]["highway"!~"abandoned|construction|no|planned|'
+        'platform|proposed|raceway|razed|rest_area|services"]'
     )
 
     if network_type in filters:

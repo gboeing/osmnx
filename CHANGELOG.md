@@ -1,6 +1,8 @@
 # Changelog
 
-- exclude highways tagged as "rest_area" or "services" (which differs from "service") for all network types, these are amenity areas rather than routable ways (#1328)
+## TBD
+
+- exclude ways tagged "rest_area" or "services" when downloading network data (#1328)
 
 ## 2.0.5 (2025-07-05)
 
