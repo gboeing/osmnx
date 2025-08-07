@@ -49,4 +49,5 @@ repos:
           - matplotlib
           - pandas-stubs
           - pytest
+          - scipy-stubs
           - types-requests
