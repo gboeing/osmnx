@@ -6,7 +6,8 @@ LABEL description="OSMnx is a Python package to easily download, model, analyze,
 # expose $TARGETPLATFORM to the install.sh script
 ARG TARGETPLATFORM
 
-# copy the package files needed for installation
+# copy uv binaries and package files needed for installation
+COPY --from=ghcr.io/astral-sh/uv:0.8 /uv /uvx /bin/
 COPY --chown=jovyan --chmod=0755 ./environments/docker/install.sh ./osmnx/
 COPY --chown=jovyan --chmod=0755 ./osmnx/ ./osmnx/osmnx/
 COPY --chown=jovyan --chmod=0755 ./pyproject.toml ./osmnx/

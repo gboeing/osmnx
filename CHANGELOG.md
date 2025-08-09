@@ -3,6 +3,7 @@
 ## TBD
 
 - add validate_graph function to graph module to validate that a graph object satisfies OSMnx expectations (#1317)
+- exclude ways tagged "rest_area" or "services" when downloading network data (#1328)
 
 ## 2.0.5 (2025-07-05)
 
