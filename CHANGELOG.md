@@ -2,6 +2,7 @@
 
 ## TBD
 
+- handle relations with missing member geometries when loading features from XML (#1334)
 - exclude ways tagged "rest_area" or "services" when downloading network data (#1328)
 
 ## 2.0.5 (2025-07-05)
