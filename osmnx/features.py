@@ -598,7 +598,14 @@ def _build_relation_geometry(
     # sort member geometries by member role and geometry type
     for member in members:
         if member["type"] == "way":
-            geom = way_geoms[member["ref"]]
+            geom = way_geoms.get(member["ref"])
+            if geom is None:
+                # a member's geometry may be missing when loaded from XML, if
+                # so, we cannot build this relation's complete geometry, so
+                # just return a null geometry to be removed at final filtering
+                msg = f"Cannot build relation geometry, missing member way {member['ref']}"
+                utils.log(msg, level=lg.WARNING)
+                return Polygon()
             role = member["role"]
             if role == "outer" and geom.geom_type == "LineString":
                 outer_linestrings.append(geom)

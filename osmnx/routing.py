@@ -6,11 +6,11 @@ import itertools
 import logging as lg
 import multiprocessing as mp
 import re
+from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
 from typing import Any
-from typing import Callable
 from typing import overload
 
 import networkx as nx
@@ -200,7 +200,7 @@ def route_to_gdf(
     gdf_edges
         The ordered edges in the path.
     """
-    pairs = zip(route[:-1], route[1:])
+    pairs = itertools.pairwise(route)
     uvk = ((u, v, min(G[u][v].items(), key=lambda i: i[1][weight])[0]) for u, v in pairs)
     return convert.graph_to_gdfs(G.subgraph(route), nodes=False).loc[uvk]
 
@@ -364,11 +364,11 @@ def shortest_path(
 
     # if single-threading, calculate each shortest path one at a time
     if cpus == 1:
-        paths = [_single_shortest_path(G, o, d, weight) for o, d in zip(orig, dest)]
+        paths = [_single_shortest_path(G, o, d, weight) for o, d in zip(orig, dest, strict=True)]
 
     # if multi-threading, calculate shortest paths in parallel
     else:
-        args = ((G, o, d, weight) for o, d in zip(orig, dest))
+        args = ((G, o, d, weight) for o, d in zip(orig, dest, strict=True))
         with mp.get_context().Pool(cpus) as pool:
             paths = pool.starmap_async(_single_shortest_path, args).get()
 

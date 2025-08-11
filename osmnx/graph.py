@@ -10,6 +10,7 @@ import logging as lg
 from collections.abc import Iterable
 from importlib.metadata import version as metadata_version
 from itertools import groupby
+from itertools import pairwise
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
@@ -867,7 +868,7 @@ def _add_paths(
             path["oneway"] = is_one_way
 
         # zip path nodes to get (u, v) tuples like [(0,1), (1,2), (2,3)].
-        edges = list(zip(nodes[:-1], nodes[1:]))
+        edges = list(pairwise(nodes))
 
         # add all the edge tuples and give them the path's tag:value attrs
         path["reversed"] = False

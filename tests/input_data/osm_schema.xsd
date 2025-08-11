@@ -87,6 +87,7 @@
       <xs:attribute name="copyright" type="xs:string" use="optional" />
       <xs:attribute name="generator" type="xs:string" use="required" />
       <xs:attribute name="license" type="xs:string" use="optional" />
+      <xs:attribute name="timestamp" type="xs:dateTime" use="optional" />
       <xs:attribute name="version" type="xs:float" use="required" fixed="0.6" />
     </xs:complexType>
   </xs:element>

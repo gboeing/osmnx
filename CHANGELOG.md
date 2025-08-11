@@ -1,8 +1,12 @@
 # Changelog
 
-## TBD
+## 2.1.0 (TBD)
 
 - add validate_graph function to graph module to validate that a graph object satisfies OSMnx expectations (#1317)
+
+## 2.0.6 (2025-08-11)
+
+- handle relations with missing member geometries when loading features from XML (#1334)
 - exclude ways tagged "rest_area" or "services" when downloading network data (#1328)
 
 ## 2.0.5 (2025-07-05)

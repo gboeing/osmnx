@@ -967,4 +967,26 @@
 		<tag k="type" v="multipolygon"/>
 		<tag k="landuse" v="residential"/>
 	</relation>
+	<relation id="318560" visible="true" version="8" changeset="136724339" timestamp="2023-05-30T04:42:59Z" user="Aleks-Berlin" uid="85218">
+		<member type="way" ref="43326015" role="outer"/>
+		<member type="way" ref="44098878" role="inner"/>
+		<member type="way" ref="44098877" role="inner"/>
+		<member type="way" ref="44098876" role="inner"/>
+		<tag k="addr:housenumber" v="75"/>
+		<tag k="addr:postcode" v="10117"/>
+		<tag k="addr:street" v="Mauerstraße"/>
+		<tag k="architect" v="Ernst Hake;Heinrich Techo;Franz Ahrens"/>
+		<tag k="building" v="government"/>
+		<tag k="building:architecture" v="neo-baroque"/>
+		<tag k="building:levels" v="4"/>
+		<tag k="fixme" v="Gebäude baulich richtig aufteilen und dann building=office für das Ministerium und building=civic für das Museum verwendet werden."/>
+		<tag k="heritage" v="4"/>
+		<tag k="loc_name" v="Post-Kolosseum"/>
+		<tag k="museum" v="technology"/>
+		<tag k="old_name" v="Reichspostministerium"/>
+		<tag k="start_date" v="1872"/>
+		<tag k="tourism" v="museum"/>
+		<tag k="type" v="multipolygon"/>
+		<tag k="wikipedia" v="de:Museum für Kommunikation Berlin"/>
+	</relation>
 </osm>
