@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.0 (TBD)
+
+- add validate_graph function to graph module to validate that a graph object satisfies OSMnx expectations (#1317)
+
 ## 2.0.6 (2025-08-11)
 
 - handle relations with missing member geometries when loading features from XML (#1334)
