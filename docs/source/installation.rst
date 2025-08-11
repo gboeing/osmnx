@@ -8,9 +8,9 @@ The foolproof way to install OSMnx is with `conda`_ or `mamba`_:
 
 .. code-block:: shell
 
-    conda create -n ox conda-forge::osmnx
+    conda create --strict-channel-priority -c conda-forge -n ox osmnx
 
-This creates a new conda environment and installs OSMnx into it, via the conda-forge channel. If you want other packages, such as :code:`jupyterlab`, installed in this environment as well, just add their names after :code:`osmnx` above. To upgrade OSMnx to a newer release, remove the conda environment you created and then create a new one again, as above. See the `conda`_ and `conda-forge`_ documentation for more details.
+This creates a new conda environment and installs OSMnx into it, via the conda-forge channel. If you want other packages, such as :code:`jupyterlab`, installed in this environment as well, just add their names after :code:`osmnx` above. To upgrade OSMnx to a newer release, remove the conda environment you created and then create a new one again, as above. See the `conda-forge`_ documentation for details.
 
 Docker
 ------
