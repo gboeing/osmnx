@@ -23,6 +23,7 @@ from . import features as features
 from . import geocoder as geocoder
 from . import graph as graph
 from . import io as io
+from . import pbf as pbf
 from . import plot as plot
 from . import projection as projection
 from . import routing as routing
