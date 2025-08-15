@@ -6,9 +6,9 @@ permissions:
 
 on:
   push:
-    branches: [main, v1]
+    branches: [main, v2.1]
   pull_request:
-    branches: [main, v1]
+    branches: [main, v2.1]
   schedule:
     - cron: 5 4 * * 1  # every monday at 04:05 UTC
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
