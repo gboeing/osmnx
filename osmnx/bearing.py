@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from types import ModuleType
+from typing import TYPE_CHECKING
 from typing import overload
 from warnings import warn
 
@@ -11,7 +13,11 @@ import numpy.typing as npt
 
 from . import projection
 
+if TYPE_CHECKING:
+    from types import ModuleType
+
 # scipy is an optional dependency for entropy calculation
+scipy: ModuleType | None
 try:
     import scipy
 except ImportError:  # pragma: no cover
@@ -116,7 +122,7 @@ def add_edge_bearings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
     # calculate bearings then set as edge attributes
     bearings = calculate_bearing(coords[:, 0], coords[:, 1], coords[:, 2], coords[:, 3])
-    values = zip(uvk, bearings)
+    values = zip(uvk, bearings, strict=True)
     nx.set_edge_attributes(G, dict(values), name="bearing")
 
     return G
@@ -242,7 +248,7 @@ def _bearings_distribution(
     num_bins: int,
     min_length: float,
     weight: str | None,
-) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+) -> tuple[npt.NDArray[np.floating], npt.NDArray[np.floating]]:
     """
     Compute distribution of bearings across evenly spaced bins.
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 import logging as lg
 from collections.abc import Iterable
 from collections.abc import Sequence
@@ -89,7 +90,7 @@ def get_node_colors_by_attr(
     stop: float = 1,
     na_color: str = "none",
     equal_size: bool = False,
-) -> pd.Series:  # type: ignore[type-arg,unused-ignore]  # needed for python<=3.9
+) -> pd.Series:
     """
     Return colors based on nodes' numerical attribute values.
 
@@ -133,7 +134,7 @@ def get_edge_colors_by_attr(
     stop: float = 1,
     na_color: str = "none",
     equal_size: bool = False,
-) -> pd.Series:  # type: ignore[type-arg,unused-ignore]  # needed for python<=3.9
+) -> pd.Series:
     """
     Return colors based on edges' numerical attribute values.
 
@@ -353,7 +354,7 @@ def plot_graph_route(
     # assemble the route edge geometries' x and y coords then plot the line
     x = []
     y = []
-    for u, v in zip(route[:-1], route[1:]):
+    for u, v in itertools.pairwise(route):
         # if there are parallel edges, select the shortest in length
         data = min(G.get_edge_data(u, v).values(), key=lambda d: d["length"])
         if "geometry" in data:
@@ -444,7 +445,7 @@ def plot_graph_routes(
     # plot the subsequent routes on top of existing ax
     overrides.update({"ax"})
     kwargs = {k: v for k, v in pgr_kwargs.items() if k not in overrides}
-    r_rc_rlw = zip(routes[1:], route_colors[1:], route_linewidths[1:])
+    r_rc_rlw = zip(routes[1:], route_colors[1:], route_linewidths[1:], strict=True)
     for route, route_color, route_linewidth in r_rc_rlw:
         fig, ax = plot_graph_route(
             G,
@@ -808,14 +809,14 @@ def plot_orientation(  # noqa: PLR0913
 
 
 def _get_colors_by_value(
-    vals: pd.Series,  # type: ignore[type-arg,unused-ignore]  # needed for python<=3.9
+    vals: pd.Series,
     num_bins: int | None,
     cmap: str,
     start: float,
     stop: float,
     na_color: str,
     equal_size: bool,  # noqa: FBT001
-) -> pd.Series:  # type: ignore[type-arg,unused-ignore]  # needed for python<=3.9
+) -> pd.Series:
     """
     Map colors to the values in a Series of node/edge attribute values.
 
@@ -860,7 +861,7 @@ def _get_colors_by_value(
         # linearly map a color to each attribute value
         normalizer = colors.Normalize(full_min, full_max)
         scalar_mapper = cm.ScalarMappable(normalizer, colormaps[cmap])
-        color_series = vals.map(scalar_mapper.to_rgba).map(colors.to_hex)  # type: ignore[arg-type,unused-ignore]  # needed for python<=3.9
+        color_series = vals.map(scalar_mapper.to_rgba).map(colors.to_hex)
         color_series.loc[pd.isna(vals)] = na_color
 
     else:

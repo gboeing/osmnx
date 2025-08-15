@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 import logging as lg
 from typing import TYPE_CHECKING
 from typing import Any
@@ -368,7 +369,7 @@ def simplify_graph(  # noqa: C901, PLR0912
         # their spatial geometry
         merged_edges = []
         path_attributes: dict[str, Any] = {}
-        for u, v in zip(path[:-1], path[1:]):
+        for u, v in itertools.pairwise(path):
             if track_merged:
                 # keep track of the edges that were merged
                 merged_edges.append((u, v))
