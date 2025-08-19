@@ -261,7 +261,7 @@ def _config_dns(url: str) -> None:
         if hostname == next(iter(args), kwargs.get("host")):
             msg = f"Resolved {hostname!r} to {ip!r}"
             utils.log(msg, level=lg.INFO)
-            # Remove 'host' from kwargs to avoid TypeError when 'host' is passed both positionally and as a keyword.
+            # Remove 'host' from kwargs to avoid TypeError with duplicate arguments.
             kwargs.pop("host", None)
             return _original_getaddrinfo(ip, *args[1:], **kwargs)
 
