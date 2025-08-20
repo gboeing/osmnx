@@ -1,5 +1,9 @@
 # Changelog
 
+## TBD
+
+- fix TypeError in `_getaddrinfo` wrapper when host passed both positionally and as keyword (#1340)
+
 ## 2.0.6 (2025-08-11)
 
 - handle relations with missing member geometries when loading features from XML (#1334)
