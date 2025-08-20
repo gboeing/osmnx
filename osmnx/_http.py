@@ -259,10 +259,10 @@ def _config_dns(url: str) -> None:
     # mutate socket.getaddrinfo to map hostname -> IP address
     def _getaddrinfo(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
         if hostname == next(iter(args), kwargs.get("host")):
+            # remove "host" from kwargs to avoid TypeError with positional argument
+            kwargs.pop("host", None)
             msg = f"Resolved {hostname!r} to {ip!r}"
             utils.log(msg, level=lg.INFO)
-            # Remove 'host' from kwargs to avoid TypeError with duplicate arguments.
-            kwargs.pop("host", None)
             return _original_getaddrinfo(ip, *args[1:], **kwargs)
 
         # otherwise
