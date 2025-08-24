@@ -60,17 +60,17 @@ def add_edge_grades(G: nx.MultiDiGraph, *, add_absolute: bool = True) -> nx.Mult
         edges.
     """
     elev_lookup = G.nodes(data="elevation")
-    u, v, k, lengths = zip(*G.edges(keys=True, data="length"))
-    uvk = tuple(zip(u, v, k))
+    u, v, k, lengths = zip(*G.edges(keys=True, data="length"), strict=True)
+    uvk = tuple(zip(u, v, k, strict=True))
 
     # calculate edges' elevation changes from u to v then divide by lengths
     elevs = np.array([(elev_lookup[u], elev_lookup[v]) for u, v, k in uvk])
     grades = (elevs[:, 1] - elevs[:, 0]) / np.array(lengths)
-    nx.set_edge_attributes(G, dict(zip(uvk, grades)), name="grade")
+    nx.set_edge_attributes(G, dict(zip(uvk, grades, strict=True)), name="grade")
 
     # optionally add grade absolute value to the edge attributes
     if add_absolute:
-        nx.set_edge_attributes(G, dict(zip(uvk, np.abs(grades))), name="grade_abs")
+        nx.set_edge_attributes(G, dict(zip(uvk, np.abs(grades), strict=True)), name="grade_abs")
 
     msg = "Added grade attributes to all edges"
     utils.log(msg, level=lg.INFO)
@@ -104,7 +104,7 @@ def _query_raster(
     with rasterio.open(filepath) as raster:
         values = np.array(tuple(raster.sample(nodes.to_numpy(), band)), dtype=float).squeeze()
         values[values == raster.nodata] = np.nan
-        return zip(nodes.index, values)
+        return zip(nodes.index, values, strict=True)
 
 
 def _build_vrt_file(raster_paths: Iterable[str | Path]) -> Path:
