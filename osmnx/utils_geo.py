@@ -13,6 +13,7 @@ import networkx as nx
 import numpy as np
 from shapely import Geometry
 from shapely import LineString
+from shapely import MultiLineString
 from shapely import MultiPolygon
 from shapely import Polygon
 from shapely.ops import split
@@ -88,7 +89,7 @@ def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
     return lines.interpolate(np.random.default_rng().random(n), normalized=True)
 
 
-def interpolate_points(geom: LineString, dist: float) -> Iterator[tuple[float, float]]:
+def interpolate_points(geom: LineString | MultiLineString, dist: float) -> Iterator[tuple[float, float]]:
     """
     Interpolate evenly spaced points along a LineString.
 
@@ -108,7 +109,7 @@ def interpolate_points(geom: LineString, dist: float) -> Iterator[tuple[float, f
     point
         Interpolated point's `(x, y)` coordinates.
     """
-    if isinstance(geom, LineString):
+    if isinstance(geom, (LineString, MultiLineString)):
         num_vert = max(round(geom.length / dist), 1)
         for n in range(num_vert + 1):
             point = geom.interpolate(n / num_vert, normalized=True)
