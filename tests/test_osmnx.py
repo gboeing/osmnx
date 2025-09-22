@@ -105,7 +105,7 @@ def test_geocoder() -> None:
 
     # fails to geocode to a (Multi)Polygon
     with pytest.raises(TypeError):
-        _ = ox.geocode_to_gdf("Civic Center, San Francisco, California, USA")
+        _ = ox.geocode_to_gdf("Bunker Hill, Los Angeles, California, USA")
 
 
 @pytest.mark.xdist_group(name="group1")
@@ -164,8 +164,8 @@ def test_bearings() -> None:
     # calculate entropy
     Gu = ox.convert.to_undirected(G)
     entropy = ox.bearing.orientation_entropy(Gu, weight="length")
-    fig, ax = ox.plot.plot_orientation(Gu, area=True, title="Title")
-    fig, ax = ox.plot.plot_orientation(Gu, ax=ax, area=False, title="Title")
+    _, ax = ox.plot.plot_orientation(Gu, area=True, title="Title")
+    _, _ = ox.plot.plot_orientation(Gu, ax=ax, area=False, title="Title")
 
     # test support of edge bearings for directed and undirected graphs
     G = nx.MultiDiGraph(crs="epsg:4326")
@@ -369,7 +369,7 @@ def test_routing() -> None:
 
     route_edges = ox.routing.route_to_gdf(G, route5, weight="travel_time")
 
-    fig, ax = ox.plot_graph_route(G, route5, save=True)
+    _, _ = ox.plot_graph_route(G, route5, save=True)
 
     # test multiple origins-destinations
     n = 5
@@ -383,7 +383,7 @@ def test_routing() -> None:
 
     # test k shortest paths
     routes = ox.routing.k_shortest_paths(G, orig_node, dest_node, k=2, weight="travel_time")
-    fig, ax = ox.plot_graph_routes(G, list(routes))
+    _, _ = ox.plot_graph_routes(G, list(routes))
 
     # test great circle and euclidean distance calculators
     assert ox.distance.great_circle(0, 0, 1, 1) == pytest.approx(157249.6034105)
@@ -405,9 +405,9 @@ def test_plots() -> None:
 
     # plot and save to disk
     filepath = Path(ox.settings.data_folder) / "test.svg"
-    fig, ax = ox.plot_graph(G, show=False, save=True, close=True, filepath=filepath)
-    fig, ax = ox.plot_graph(Gp, edge_linewidth=0, figsize=(5, 5), bgcolor="y")
-    fig, ax = ox.plot_graph(
+    _, ax = ox.plot_graph(G, show=False, save=True, close=True, filepath=filepath)
+    _, ax = ox.plot_graph(Gp, edge_linewidth=0, figsize=(5, 5), bgcolor="y")
+    _, ax = ox.plot_graph(
         Gp,
         ax=ax,
         dpi=180,
@@ -425,7 +425,7 @@ def test_plots() -> None:
     )
 
     # figure-ground plots
-    fig, ax = ox.plot_figure_ground(G=G)
+    _, _ = ox.plot_figure_ground(G=G)
 
 
 @pytest.mark.xdist_group(name="group1")
@@ -441,7 +441,7 @@ def test_nearest() -> None:
     # get nearest nodes
     _ = ox.distance.nearest_nodes(G, X, Y, return_dist=True)
     _ = ox.distance.nearest_nodes(G, X, Y, return_dist=False)
-    nn0, dist0 = ox.distance.nearest_nodes(G, X[0], Y[0], return_dist=True)
+    _, _ = ox.distance.nearest_nodes(G, X[0], Y[0], return_dist=True)
     nn1 = ox.distance.nearest_nodes(Gp, X[0], Y[0], return_dist=False)
 
     # get nearest edge
@@ -684,7 +684,7 @@ def test_features() -> None:
     bbox = ox.utils_geo.bbox_from_point(location_point, dist=500)
     tags1: dict[str, bool | str | list[str]] = {"landuse": True, "building": True, "highway": True}
 
-    with pytest.raises(ValueError, match="The geometry of `polygon` is invalid."):
+    with pytest.raises(ValueError, match="The geometry of `polygon` is invalid"):
         ox.features.features_from_polygon(Polygon(((0, 0), (0, 0), (0, 0), (0, 0))), tags={})
     with suppress_type_checks(), pytest.raises(TypeError):
         ox.features.features_from_polygon(Point(0, 0), tags={})
@@ -701,8 +701,8 @@ def test_features() -> None:
 
     # features_from_bbox - successful
     gdf = ox.features_from_bbox(bbox, tags=tags1)
-    fig, ax = ox.plot_footprints(gdf)
-    fig, ax = ox.plot_footprints(gdf, ax=ax, bbox=(0, 0, 10, 10))
+    _, ax = ox.plot_footprints(gdf)
+    _, ax = ox.plot_footprints(gdf, ax=ax, bbox=(0, 0, 10, 10))
 
     # features_from_bbox - test < -80 deg latitude
     tags2: dict[str, bool | str | list[str]] = {"natural": True, "amenity": True}
