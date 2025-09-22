@@ -89,7 +89,10 @@ def sample_points(G: nx.MultiGraph, n: int) -> gpd.GeoSeries:
     return lines.interpolate(np.random.default_rng().random(n), normalized=True)
 
 
-def interpolate_points(geom: LineString | MultiLineString, dist: float) -> Iterator[tuple[float, float]]:
+def interpolate_points(
+    geom: LineString | MultiLineString,
+    dist: float,
+) -> Iterator[tuple[float, float]]:
     """
     Interpolate evenly spaced points along a LineString.
 
