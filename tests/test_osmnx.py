@@ -105,7 +105,7 @@ def test_geocoder() -> None:
 
     # fails to geocode to a (Multi)Polygon
     with pytest.raises(TypeError):
-        _ = ox.geocode_to_gdf("Civic Center, San Francisco, California, USA")
+        _ = ox.geocode_to_gdf("Bunker Hill, Los Angeles, California, USA")
 
 
 @pytest.mark.xdist_group(name="group1")
