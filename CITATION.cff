@@ -25,8 +25,8 @@ preferred-citation:
   year: 2025
   title: Modeling and Analyzing Urban Networks and Amenities with OSMnx
   journal: Geographical Analysis
-  volume: published online ahead of print
-  issue: published online ahead of print
-  start: 1
-  end: 23
+  volume: 57
+  issue: 4
+  start: 567
+  end: 577
   doi: 10.1111/gean.70009

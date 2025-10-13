@@ -18,8 +18,7 @@ def citation(style: str = "bibtex") -> None:
     Print the OSMnx package's citation information.
 
     Boeing, G. (2025). Modeling and Analyzing Urban Networks and Amenities with
-    OSMnx. Geographical Analysis, published online ahead of print.
-    doi:10.1111/gean.70009
+    OSMnx. Geographical Analysis, 57(4), 567-577. doi:10.1111/gean.70009
 
     Parameters
     ----------
@@ -30,25 +29,27 @@ def citation(style: str = "bibtex") -> None:
     if style == "apa":
         msg = (
             "Boeing, G. (2025). Modeling and Analyzing Urban Networks and Amenities "
-            "with OSMnx. Geographical Analysis, published online ahead of print. "
-            "doi:10.1111/gean.70009"
+            "with OSMnx. Geographical Analysis, 57(4), 567-577. doi:10.1111/gean.70009"
         )
     elif style == "bibtex":
         msg = (
             "@article{boeing_osmnx_2025,\n"
             "    author = {Boeing, Geoff},\n"
             "    title = {{Modeling and Analyzing Urban Networks and Amenities with OSMnx}},\n"
-            "    volume = {published online ahead of print},\n"
-            "    doi = {10.1111/gean.70009},\n"
             "    journal = {Geographical Analysis},\n"
             "    year = {2025}\n"
+            "    volume = {57},\n"
+            "    number = {4},\n"
+            "    pages = {567--577},\n"
+            "    doi = {10.1111/gean.70009},\n"
             "}"
         )
     elif style == "ieee":
         msg = (
             'G. Boeing, "Modeling and Analyzing Urban Networks and Amenities with OSMnx," '
-            "Geographical Analysis, published online ahead of print, 2025, doi: 10.1111/gean.70009."
+            "Geographical Analysis, vol. 57, no. 4, pp. 567-577, 2025, doi: 10.1111/gean.70009."
         )
+
     else:  # pragma: no cover
         err_msg = f"Invalid citation style {style!r}."
         raise ValueError(err_msg)
