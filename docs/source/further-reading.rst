@@ -1,7 +1,7 @@
 Further Reading
 ===============
 
-Boeing, G. (2025). `Modeling and Analyzing Urban Networks and Amenities with OSMnx`_. *Geographical Analysis*, published online ahead of print. doi:10.1111/gean.70009
+Boeing, G. (2025). `Modeling and Analyzing Urban Networks and Amenities with OSMnx`_. *Geographical Analysis* 57 (4), 567-577. doi:10.1111/gean.70009
 
 This is the official reference paper and citation for the OSMnx package.
 
