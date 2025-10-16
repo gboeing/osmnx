@@ -52,7 +52,7 @@ visualization = ["matplotlib>=3.5"]
 [dependency-groups]
 docs = ["furo>=2023", "sphinx>=7", "sphinx-autodoc-typehints>=2"]
 examples = ["folium>=0.12", "jupyterlab>=3.0", "mapclassify>=2.5", "igraph>=0.9"]
-lint = ["pip>=25", "pre-commit>=4", "twine>=6", "validate-pyproject[all]>=0.24"]
+lint = ["pip>=25", "prek>=0", "twine>=6", "validate-pyproject[all]>=0.24"]
 test = ["lxml>=5.1", "pytest>=8", "pytest-cov>=6", "pytest-xdist>=3", "typeguard>=4"]
 
 [project.urls]
@@ -64,7 +64,7 @@ Documentation = "https://osmnx.readthedocs.io"
 exclude_also = ["@overload", "if TYPE_CHECKING:"]
 
 [tool.mypy]
-cache_dir = "~/.cache/pre-commit/mypy"
+cache_dir = "~/.cache/prek/cache/mypy"
 ignore_missing_imports = true
 python_version = "3.10"
 strict = true
@@ -75,7 +75,7 @@ warn_unreachable = true
 checks = ["all", "ES01", "EX01", "GL08", "PR04", "SA01"]
 
 [tool.ruff]
-cache-dir = "~/.cache/pre-commit/ruff"
+cache-dir = "~/.cache/prek/cache/ruff"
 exclude = ["build/*"]
 line-length = 100
 

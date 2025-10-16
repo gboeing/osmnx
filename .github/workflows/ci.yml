@@ -47,11 +47,11 @@ jobs:
       - name: Cache pre-commit
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pre-commit/
+          path: ~/.cache/prek/
           key: pre-commit-${{ matrix.python-version }}-${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run pre-commit checks
-        run: uv run pre-commit run --all-files
+        run: uv run prek run --all-files
         env:
           SKIP: no-commit-to-branch
 

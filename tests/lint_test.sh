@@ -8,7 +8,7 @@ source .venv/bin/activate
 rm -r -f ./.coverage* ./.pytest_cache ./.temp ./dist ./docs/build ./*/__pycache__
 
 # run the pre-commit hooks for linting/formatting
-SKIP=no-commit-to-branch pre-commit run --all-files
+SKIP=no-commit-to-branch prek run --all-files
 
 # build and validate the package
 uv build
