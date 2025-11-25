@@ -1,6 +1,6 @@
 # Changelog
 
-## TBD
+## 2.0.7 (2025-11-25)
 
 - fix TypeError in _getaddrinfo wrapper when host passed both positionally and as keyword (#1340)
 - allow interpolate_points function to run on MultiLineString input (#1341)
