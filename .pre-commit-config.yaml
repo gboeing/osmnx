@@ -45,7 +45,6 @@ repos:
     rev: v1.18.2
     hooks:
       - id: mypy
-        files: ^(osmnx/|docs/)  # needed to support python 3.9
         additional_dependencies:
           - matplotlib
           - pandas-stubs
