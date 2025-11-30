@@ -554,26 +554,26 @@ def test_save_load() -> None:  # noqa: PLR0915
     attr_name = "test_bool"
     G.graph[attr_name] = False
     bools = np.random.default_rng().integers(low=0, high=2, size=len(G.nodes))
-    node_attrs = {n: bool(b) for n, b in zip(G.nodes, bools)}
+    node_attrs = {n: bool(b) for n, b in zip(G.nodes, bools, strict=True)}
     nx.set_node_attributes(G, node_attrs, attr_name)
     bools = np.random.default_rng().integers(low=0, high=2, size=len(G.edges))
-    edge_attrs = {n: bool(b) for n, b in zip(G.edges, bools)}
+    edge_attrs = {n: bool(b) for n, b in zip(G.edges, bools, strict=True)}
     nx.set_edge_attributes(G, edge_attrs, attr_name)
 
     # create list, set, and dict attributes for nodes and edges
     rand_ints_nodes = np.random.default_rng().integers(low=0, high=10, size=len(G.nodes))
     rand_ints_edges = np.random.default_rng().integers(low=0, high=10, size=len(G.edges))
-    list_node_attrs = {n: [n, int(r)] for n, r in zip(G.nodes, rand_ints_nodes)}
+    list_node_attrs = {n: [n, int(r)] for n, r in zip(G.nodes, rand_ints_nodes, strict=True)}
     nx.set_node_attributes(G, list_node_attrs, "test_list")
-    list_edge_attrs = {e: [e, int(r)] for e, r in zip(G.edges, rand_ints_edges)}
+    list_edge_attrs = {e: [e, int(r)] for e, r in zip(G.edges, rand_ints_edges, strict=True)}
     nx.set_edge_attributes(G, list_edge_attrs, "test_list")
-    set_node_attrs = {n: {n, int(r)} for n, r in zip(G.nodes, rand_ints_nodes)}
+    set_node_attrs = {n: {n, int(r)} for n, r in zip(G.nodes, rand_ints_nodes, strict=True)}
     nx.set_node_attributes(G, set_node_attrs, "test_set")
-    set_edge_attrs = {e: {e, int(r)} for e, r in zip(G.edges, rand_ints_edges)}
+    set_edge_attrs = {e: {e, int(r)} for e, r in zip(G.edges, rand_ints_edges, strict=True)}
     nx.set_edge_attributes(G, set_edge_attrs, "test_set")
-    dict_node_attrs = {n: {n: int(r)} for n, r in zip(G.nodes, rand_ints_nodes)}
+    dict_node_attrs = {n: {n: int(r)} for n, r in zip(G.nodes, rand_ints_nodes, strict=True)}
     nx.set_node_attributes(G, dict_node_attrs, "test_dict")
-    dict_edge_attrs = {e: {e: int(r)} for e, r in zip(G.edges, rand_ints_edges)}
+    dict_edge_attrs = {e: {e: int(r)} for e, r in zip(G.edges, rand_ints_edges, strict=True)}
     nx.set_edge_attributes(G, dict_edge_attrs, "test_dict")
 
     # save/load graph as graphml file
@@ -590,12 +590,12 @@ def test_save_load() -> None:  # noqa: PLR0915
     # verify everything in G is equivalent in G2
     assert tuple(G.graph.keys()) == tuple(G2.graph.keys())
     assert tuple(G.graph.values()) == tuple(G2.graph.values())
-    z = zip(G.nodes(data=True), G2.nodes(data=True))
+    z = zip(G.nodes(data=True), G2.nodes(data=True), strict=True)
     for (n1, d1), (n2, d2) in z:
         assert n1 == n2
         assert tuple(d1.keys()) == tuple(d2.keys())
         assert tuple(d1.values()) == tuple(d2.values())
-    z = zip(G.edges(keys=True, data=True), G2.edges(keys=True, data=True))
+    z = zip(G.edges(keys=True, data=True), G2.edges(keys=True, data=True), strict=True)
     for (u1, v1, k1, d1), (u2, v2, k2, d2) in z:
         assert u1 == u2
         assert v1 == v2

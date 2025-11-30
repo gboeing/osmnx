@@ -150,7 +150,7 @@ def graph_to_gdfs(
             msg = "Graph contains no nodes."
             raise ValueError(msg)
 
-        uvk, data = zip(*G.nodes(data=True))
+        uvk, data = zip(*G.nodes(data=True), strict=True)
 
         if node_geometry:
             # convert node x/y attributes to Points for geometry column
@@ -168,7 +168,7 @@ def graph_to_gdfs(
             msg = "Graph contains no edges."
             raise ValueError(msg)
 
-        u, v, k, data = zip(*G.edges(keys=True, data=True))
+        u, v, k, data = zip(*G.edges(keys=True, data=True), strict=True)
 
         if fill_edge_geometry:
             node_coords = {n: (G.nodes[n]["x"], G.nodes[n]["y"]) for n in G}
@@ -317,8 +317,8 @@ def graph_from_gdfs(
     # add edges and their attributes to graph, but filter out null attribute
     # values so that edges only get attributes with non-null values
     attr_names = gdf_edges.columns.to_list()
-    for (u, v, k), attr_vals in zip(gdf_edges.index, gdf_edges.to_numpy()):
-        data_all = zip(attr_names, attr_vals)
+    for (u, v, k), attr_vals in zip(gdf_edges.index, gdf_edges.to_numpy(), strict=True):
+        data_all = zip(attr_names, attr_vals, strict=True)
         data = {name: val for name, val in data_all if isinstance(val, list) or pd.notna(val)}
         G.add_edge(u, v, key=k, **data)
 

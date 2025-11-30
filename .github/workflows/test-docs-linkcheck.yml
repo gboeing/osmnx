@@ -1,13 +1,17 @@
 # This workflow tests building the package docs and verifying links are live.
 name: Build docs and check links
 
-permissions:
-  contents: read
-
 on:
   schedule:
     - cron: 20 4 * * 1  # every monday at 04:20 UTC
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   test_docs_linkcheck:
@@ -22,7 +26,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
