@@ -4,9 +4,6 @@
 # PyPI trusted publishing, so don't change this workflow's filename.
 name: Build and publish to PyPI
 
-permissions:
-  contents: read
-
 on:
   push:
     tags:
@@ -14,6 +11,13 @@ on:
   schedule:
     - cron: 10 4 * * 1  # every monday at 04:10 UTC
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build_publish_pypi:

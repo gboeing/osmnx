@@ -2,13 +2,17 @@
 # versions.
 name: Test latest/pre-release dependencies
 
-permissions:
-  contents: read
-
 on:
   schedule:
     - cron: 15 4 * * 1  # every monday at 04:15 UTC
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   test_latest_deps:
@@ -20,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-        python-version: ['3.14']
+        python-version: ['3.13']
 
     defaults:
       run:
@@ -42,4 +46,4 @@ jobs:
           uv sync --no-cache --all-extras --group test --prerelease=allow
 
       - name: Test code
-        run: uv run pytest --verbose --maxfail=1 --numprocesses=3 --dist=loadgroup
+        run: uv run --no-sync pytest

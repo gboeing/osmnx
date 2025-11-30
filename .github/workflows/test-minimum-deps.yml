@@ -2,13 +2,17 @@
 # versions.
 name: Test minimum dependencies
 
-permissions:
-  contents: read
-
 on:
   schedule:
     - cron: 25 4 * * 1  # every monday at 04:25 UTC
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   test_minimum_deps:
@@ -45,4 +49,4 @@ jobs:
       - name: Test code
         run: |
           uv run --no-sync --with tomli ./tests/verify_min_deps.py  # need tomli for python<=3.10
-          uv run --no-sync pytest --verbose --maxfail=1 --numprocesses=3 --dist=loadgroup
+          uv run --no-sync pytest
