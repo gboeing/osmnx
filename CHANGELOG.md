@@ -4,6 +4,11 @@
 
 - add validate_graph function to graph module to validate that a graph object satisfies OSMnx expectations (#1317)
 
+## 2.0.7 (2025-11-25)
+
+- fix TypeError in _getaddrinfo wrapper when host passed both positionally and as keyword (#1340)
+- allow interpolate_points function to run on MultiLineString input (#1341)
+
 ## 2.0.6 (2025-08-11)
 
 - handle relations with missing member geometries when loading features from XML (#1334)
