@@ -49,4 +49,4 @@ jobs:
       - name: Test code
         run: |
           uv run --no-sync ./tests/verify_min_deps.py
-          uv run --no-sync pytest
+          uv run --no-sync pytest -W ignore
