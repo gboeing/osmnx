@@ -49,7 +49,7 @@ jobs:
           uv sync --all-extras --group docs --group lint --group test
 
       - name: Cache pre-commit
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/prek/
           key: pre-commit-${{ matrix.python-version }}-${{ hashFiles('.pre-commit-config.yaml') }}
