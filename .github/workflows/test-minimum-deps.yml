@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-        python-version: ['3.10']
+        python-version: ['3.11']
 
     defaults:
       run:
@@ -48,5 +48,5 @@ jobs:
 
       - name: Test code
         run: |
-          uv run --no-sync --with tomli ./tests/verify_min_deps.py  # need tomli for python<=3.10
+          uv run --no-sync ./tests/verify_min_deps.py
           uv run --no-sync pytest

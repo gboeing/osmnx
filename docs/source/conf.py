@@ -8,11 +8,7 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import sys
 from pathlib import Path
-
-try:
-    from tomllib import load as toml_load
-except ImportError:
-    from tomli import load as toml_load
+from tomllib import load as toml_load
 
 # project info
 author = "Geoff Boeing"
