@@ -3,9 +3,9 @@ name: CI
 
 on:
   push:
-    branches: [main, v2.1]
+    branches: [main]
   pull_request:
-    branches: [main, v2.1]
+    branches: [main]
   schedule:
     - cron: 5 4 * * 1  # every monday at 04:05 UTC
   workflow_dispatch:
@@ -26,7 +26,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.11', '3.12', '3.13', '3.14']
 
     defaults:
       run:

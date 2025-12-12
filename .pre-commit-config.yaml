@@ -30,12 +30,12 @@ repos:
         args: [--strict, --config-file=./tests/.yamllint.yml]
 
   - repo: https://github.com/numpy/numpydoc
-    rev: v1.9.0
+    rev: v1.10.0
     hooks:
       - id: numpydoc-validation
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.7
+    rev: v0.14.9
     hooks:
       - id: ruff-check
         args: [--fix, --show-fixes]

@@ -2,6 +2,8 @@
 
 ## 2.1.0 (TBD)
 
+- add Python 3.14 support (#1336)
+- drop Python 3.9 and 3.10 support (#1322 #1336)
 - add validate_graph function to graph module to validate that a graph object satisfies OSMnx expectations (#1317)
 
 ## 2.0.7 (2025-11-25)

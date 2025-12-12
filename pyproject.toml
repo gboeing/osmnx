@@ -12,7 +12,6 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -28,7 +27,7 @@ dependencies = [
   "geopandas>=1.0.1",
   "networkx>=2.5",
   "numpy>=1.24",
-  "pandas>=1.4",
+  "pandas>=1.5",
   "requests>=2.27",
   "shapely>=2.0",
 ]
@@ -39,19 +38,19 @@ license-files = ["LICENSE.txt"]
 maintainers = [{ name = "OSMnx contributors" }]
 name = "osmnx"
 readme = "README.md"
-requires-python = ">=3.10" # match classifiers above and mypy version below
+requires-python = ">=3.11" # match classifiers above and mypy version below
 version = "2.1.0dev"
 
 [project.optional-dependencies]
 all = ["osmnx[entropy,neighbors,raster,visualization]"]
-entropy = ["scipy>=1.8"]
-neighbors = ["scikit-learn>=1.1", "scipy>=1.8"]
+entropy = ["scipy>=1.10"]
+neighbors = ["scikit-learn>=1.2", "scipy>=1.10"]
 raster = ["rasterio>=1.4", "rio-vrt>=0.3"]
-visualization = ["matplotlib>=3.5"]
+visualization = ["matplotlib>=3.6"]
 
 [dependency-groups]
 docs = ["furo>=2023", "sphinx>=7", "sphinx-autodoc-typehints>=2"]
-examples = ["folium>=0.12", "jupyterlab>=3.0", "mapclassify>=2.5", "igraph>=0.9"]
+examples = ["folium>=0.12", "jupyterlab>=3.0", "mapclassify>=2.5", "igraph>=0.11"]
 lint = ["pip>=25", "prek>=0.2", "twine>=6", "validate-pyproject[all]>=0.24"]
 test = ["lxml>=6", "pytest>=9", "pytest-cov>=6", "pytest-xdist>=3", "typeguard>=4"]
 
@@ -67,7 +66,7 @@ exclude_also = ["@overload", "if TYPE_CHECKING:"]
 cache_dir = "~/.cache/prek/cache/mypy"
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 ignore_missing_imports = true
-python_version = "3.10"
+python_version = "3.11"
 strict = true
 warn_no_return = true
 warn_unreachable = true

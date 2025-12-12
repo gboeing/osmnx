@@ -4,9 +4,9 @@
 from importlib.metadata import version as metadata_version
 from itertools import chain
 from pathlib import Path
+from tomllib import load as toml_load
 
 from packaging.requirements import Requirement
-from tomli import load as toml_load
 
 # load the pyproject.toml file
 with Path("./pyproject.toml").open("rb") as f:
