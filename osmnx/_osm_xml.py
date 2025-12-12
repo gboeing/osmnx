@@ -236,7 +236,7 @@ def _save_graph_xml(
     # convert graph to node/edge gdfs and create dict of spatial bounds
     gdf_nodes, gdf_edges = convert.graph_to_gdfs(G, fill_edge_geometry=False)
     coords = [str(round(c, PRECISION)) for c in gdf_nodes.union_all().bounds]
-    bounds = dict(zip(["minlon", "minlat", "maxlon", "maxlat"], coords))
+    bounds = dict(zip(["minlon", "minlat", "maxlon", "maxlat"], coords, strict=True))
 
     # add default values (if missing) for standard attrs
     for gdf in (gdf_nodes, gdf_edges):

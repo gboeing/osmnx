@@ -213,8 +213,8 @@ def _get_overpass_pause(
         if status_first_part == "Slot":
             utc_time_str = status.split(" ")[3]
             pattern = "%Y-%m-%dT%H:%M:%SZ,"
-            utc_time = dt.datetime.strptime(utc_time_str, pattern).replace(tzinfo=dt.timezone.utc)
-            utc_now = dt.datetime.now(tz=dt.timezone.utc)
+            utc_time = dt.datetime.strptime(utc_time_str, pattern).replace(tzinfo=dt.UTC)
+            utc_now = dt.datetime.now(tz=dt.UTC)
             seconds = int(np.ceil((utc_time - utc_now).total_seconds()))
             pause = max(seconds, 1)
 
@@ -277,7 +277,7 @@ def _make_overpass_polygon_coord_strs(polygon: Polygon | MultiPolygon) -> list[s
     coord_strs = []
     for geom in multi_poly.geoms:
         x, y = geom.exterior.xy
-        coord_list = [f"{xy[1]:.6f}{' '}{xy[0]:.6f}" for xy in zip(x, y)]
+        coord_list = [f"{xy[1]:.6f}{' '}{xy[0]:.6f}" for xy in zip(x, y, strict=True)]
         coord_strs.append(" ".join(coord_list))
 
     return coord_strs

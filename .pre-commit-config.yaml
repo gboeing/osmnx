@@ -30,24 +30,24 @@ repos:
         args: [--strict, --config-file=./tests/.yamllint.yml]
 
   - repo: https://github.com/numpy/numpydoc
-    rev: v1.9.0
+    rev: v1.10.0
     hooks:
       - id: numpydoc-validation
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.0
+    rev: v0.14.9
     hooks:
       - id: ruff-check
-        args: [--fix]
+        args: [--fix, --show-fixes]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.18.2
+    rev: v1.19.0
     hooks:
       - id: mypy
-        files: ^(osmnx/|docs/)  # needed to support python 3.9
         additional_dependencies:
           - matplotlib
           - pandas-stubs
           - pytest
+          - scipy-stubs
           - types-requests

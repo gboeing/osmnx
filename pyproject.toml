@@ -8,27 +8,26 @@ classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Scientific/Engineering :: GIS",
   "Topic :: Scientific/Engineering :: Information Analysis",
   "Topic :: Scientific/Engineering :: Mathematics",
   "Topic :: Scientific/Engineering :: Physics",
   "Topic :: Scientific/Engineering :: Visualization",
+  "Typing :: Typed",
 ]
 dependencies = [
   "geopandas>=1.0.1",
   "networkx>=2.5",
-  "numpy>=1.22",
-  "pandas>=1.4",
+  "numpy>=1.24",
+  "pandas>=1.5",
   "requests>=2.27",
   "shapely>=2.0",
 ]
@@ -39,21 +38,21 @@ license-files = ["LICENSE.txt"]
 maintainers = [{ name = "OSMnx contributors" }]
 name = "osmnx"
 readme = "README.md"
-requires-python = ">=3.9" # match classifiers above and mypy version below
-version = "2.0.7"
+requires-python = ">=3.11" # match classifiers above and mypy version below
+version = "2.1.0dev"
 
 [project.optional-dependencies]
 all = ["osmnx[entropy,neighbors,raster,visualization]"]
-entropy = ["scipy>=1.8"]
-neighbors = ["scikit-learn>=1.1", "scipy>=1.8"]
-raster = ["rasterio>=1.3.5", "rio-vrt>=0.3"]
-visualization = ["matplotlib>=3.5"]
+entropy = ["scipy>=1.10"]
+neighbors = ["scikit-learn>=1.2", "scipy>=1.10"]
+raster = ["rasterio>=1.4", "rio-vrt>=0.3"]
+visualization = ["matplotlib>=3.6"]
 
 [dependency-groups]
 docs = ["furo>=2023", "sphinx>=7", "sphinx-autodoc-typehints>=2"]
-examples = ["folium>=0.12", "jupyterlab>=3.0", "mapclassify>=2.5", "igraph>=0.9"]
-lint = ["pip>=25", "pre-commit>=4", "twine>=6", "validate-pyproject[all]>=0.24"]
-test = ["lxml>=5.1", "pytest>=8", "pytest-cov>=6", "pytest-xdist>=3", "typeguard>=4"]
+examples = ["folium>=0.12", "jupyterlab>=3.0", "mapclassify>=2.5", "igraph>=0.11"]
+lint = ["pip>=25", "prek>=0.2", "twine>=6", "validate-pyproject[all]>=0.24"]
+test = ["lxml>=6", "pytest>=9", "pytest-cov>=6", "pytest-xdist>=3", "typeguard>=4"]
 
 [project.urls]
 Documentation = "https://osmnx.readthedocs.io"
@@ -64,9 +63,10 @@ Documentation = "https://osmnx.readthedocs.io"
 exclude_also = ["@overload", "if TYPE_CHECKING:"]
 
 [tool.mypy]
-cache_dir = "~/.cache/pre-commit/mypy"
+cache_dir = "~/.cache/prek/cache/mypy"
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 ignore_missing_imports = true
-python_version = "3.9"
+python_version = "3.11"
 strict = true
 warn_no_return = true
 warn_unreachable = true
@@ -74,14 +74,23 @@ warn_unreachable = true
 [tool.numpydoc_validation]
 checks = ["all", "ES01", "EX01", "GL08", "PR04", "SA01"]
 
+[tool.pytest.ini_options]
+addopts = ["-ra", "--verbose", "--maxfail=1", "--numprocesses=3", "--dist=loadgroup"]
+cache_dir = "~/.cache/pytest"
+filterwarnings = ["error", "ignore::UserWarning"]
+log_level = "INFO"
+minversion = 9
+strict = true
+testpaths = ["tests"]
+
 [tool.ruff]
-cache-dir = "~/.cache/pre-commit/ruff"
+cache-dir = "~/.cache/prek/cache/ruff"
 exclude = ["build/*"]
 line-length = 100
 
 [tool.ruff.lint]
-extend-ignore = ["N803", "N806", "SLF001"]
 extend-select = ["ALL"]
+ignore = ["N803", "N806", "SLF001"]
 
 [tool.ruff.lint.isort]
 force-single-line = true
@@ -99,7 +108,7 @@ convention = "numpy"
 max-args = 8
 
 [tool.uv]
-required-version = "==0.8.*" # match version in environments/docker/Dockerfile
+required-version = "==0.9.*" # match version in environments/docker/Dockerfile
 
 [tool.uv.build-backend]
 module-root = ""

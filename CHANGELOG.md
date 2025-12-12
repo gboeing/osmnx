@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0 (TBD)
+
+- add Python 3.14 support
+- drop Python 3.9 and 3.10 support
+
 ## 2.0.7 (2025-11-25)
 
 - fix TypeError in _getaddrinfo wrapper when host passed both positionally and as keyword (#1340)
