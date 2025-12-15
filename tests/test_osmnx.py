@@ -82,8 +82,8 @@ def test_exceptions() -> None:
     with pytest.raises(ox._errors.GraphSimplificationError):
         raise ox._errors.GraphSimplificationError(message)
 
-    with pytest.raises(ox._errors.GraphValidationError):
-        raise ox._errors.GraphValidationError(message)
+    with pytest.raises(ox._errors.ValidationError):
+        raise ox._errors.ValidationError(message)
 
     with pytest.raises(ox._errors.InsufficientResponseError):
         raise ox._errors.InsufficientResponseError(message)
@@ -98,77 +98,77 @@ def test_validating() -> None:  # noqa: PLR0915
     # validate graph edge attribute is numeric and non-null
     G = nx.MultiDiGraph()
     G.add_edge(0, 1)
-    with pytest.raises(ox._errors.GraphValidationError):
+    with pytest.raises(ox._errors.ValidationError):
         ox._validate._verify_numeric_edge_attribute(G, "length", strict=True)
 
     # features GeoDataFrame validation
     # pass in gdf with missing geometries and non-unique, non-multi index
-    with pytest.raises(ox._errors.GraphValidationError):
+    with pytest.raises(ox._errors.ValidationError):
         ox._validate._validate_features_gdf(gpd.GeoDataFrame(index=[0, 0]))
 
     # node/edge GeoDataFrame validation
     # pass in wrong types, bad indexes, and missing x/y columns
     gdf_nodes = pd.DataFrame(index=[0, 0])
     gdf_edges = pd.DataFrame()
-    with suppress_type_checks(), pytest.raises(ox._errors.GraphValidationError):
+    with suppress_type_checks(), pytest.raises(ox._errors.ValidationError):
         ox._validate._validate_node_edge_gdfs(gdf_nodes, gdf_edges)
 
     # pass in non-Point node geometries
     gdf_nodes = gpd.GeoDataFrame(geometry=[Polygon(), Polygon()])
     gdf_edges = gpd.GeoDataFrame()
-    with pytest.raises(ox._errors.GraphValidationError):
+    with pytest.raises(ox._errors.ValidationError):
         ox._validate._validate_node_edge_gdfs(gdf_nodes, gdf_edges)
 
     # pass in x/y not matching geometries
     data = {"x": [0, 1], "y": [2, 3]}
     gdf_nodes = gpd.GeoDataFrame(data=data, geometry=[Point((6, 7)), Point((8, 9))])
     gdf_edges = gpd.GeoDataFrame()
-    with pytest.raises(ox._errors.GraphValidationError):
+    with pytest.raises(ox._errors.ValidationError):
         ox._validate._validate_node_edge_gdfs(gdf_nodes, gdf_edges)
 
     # graph validation
     # pass an empty non-MultiDiGraph
     G = nx.Graph()
-    with suppress_type_checks(), pytest.raises(ox._errors.GraphValidationError):
+    with suppress_type_checks(), pytest.raises(ox._errors.ValidationError):
         ox.graph.validate_graph(G)
 
     # test missing top-level graph attribute and non-int node IDs
     G = nx.MultiDiGraph()
     del G.graph
     G.add_edge("0", "1")
-    with pytest.raises(ox._errors.GraphValidationError):
+    with pytest.raises(ox._errors.ValidationError):
         ox.graph.validate_graph(G)
 
     # pass an empty MultiDiGraph with an invalid CRS
     G = nx.MultiDiGraph()
     G.graph["crs"] = "epsg:999999"
-    with pytest.raises(ox._errors.GraphValidationError):
+    with pytest.raises(ox._errors.ValidationError):
         ox.graph.validate_graph(G)
 
     # fix the CRS and add an edge
     G.graph["crs"] = "epsg:4326"
     G.add_edge(0, 1)
-    with pytest.raises(ox._errors.GraphValidationError):
+    with pytest.raises(ox._errors.ValidationError):
         ox.graph.validate_graph(G)
 
     # add required node attributes, but with invalid types
     nx.set_node_attributes(G, values=None, name="x")
     nx.set_node_attributes(G, values=None, name="y")
     nx.set_node_attributes(G, values=None, name="street_count")
-    with pytest.raises(ox._errors.GraphValidationError):
+    with pytest.raises(ox._errors.ValidationError):
         ox.graph.validate_graph(G)
 
     # fix the invalid node attribute types
     nx.set_node_attributes(G, values=0, name="x")
     nx.set_node_attributes(G, values=0, name="y")
     nx.set_node_attributes(G, values=None, name="street_count")
-    with pytest.raises(ox._errors.GraphValidationError):
+    with pytest.raises(ox._errors.ValidationError):
         ox.graph.validate_graph(G)
 
     # add required edge attributes, but with invalid types
     nx.set_edge_attributes(G, values=None, name="osmid")
     nx.set_edge_attributes(G, values=None, name="length")
-    with pytest.raises(ox._errors.GraphValidationError):
+    with pytest.raises(ox._errors.ValidationError):
         ox.graph.validate_graph(G)
 
     # fix the invalid node attribute types: should finally pass validation

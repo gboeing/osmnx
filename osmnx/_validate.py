@@ -10,7 +10,7 @@ import geopandas as gpd
 import networkx as nx
 import numpy as np
 
-from ._errors import GraphValidationError
+from ._errors import ValidationError
 from .utils import log
 
 
@@ -18,7 +18,7 @@ def _verify_numeric_edge_attribute(G: nx.MultiDiGraph, attr: str, *, strict: boo
     """
     Verify attribute values are numeric and non-null across graph edges.
 
-    Raises a GraphValidationError if this attribute contains non-numeric
+    Raises a ValidationError if this attribute contains non-numeric
     values, and issues a UserWarning if this attribute is missing or null on
     any edges.
 
@@ -53,7 +53,7 @@ def _validate_features_gdf(gdf: gpd.GeoDataFrame) -> None:
     """
     Validate that features GeoDataFrame satisfies OSMnx expectations.
 
-    Raises a `GraphValidationError` if validation fails.
+    Raises a `ValidationError` if validation fails.
 
     Parameters
     ----------
@@ -100,7 +100,7 @@ def _validate_node_edge_gdfs(
     """
     Validate that node/edge GeoDataFrames can be converted to a MultiDiGraph.
 
-    Raises a `GraphValidationError` if validation fails.
+    Raises a `ValidationError` if validation fails.
 
     Parameters
     ----------
@@ -338,7 +338,7 @@ def _validate_graph(G: nx.MultiDiGraph, *, strict: bool = True) -> None:
     """
     Validate that a graph object satisfies OSMnx expectations.
 
-    Raises `ox._errors.GraphValidationError` if validation fails.
+    Raises `ox._errors.ValidationError` if validation fails.
 
     Parameters
     ----------
@@ -384,4 +384,4 @@ def _report_validation(is_valid: bool, valid_msg: str, warn_msg: str, err_msg: s
             warn(warn_msg, category=UserWarning, stacklevel=2)
     else:
         log(err_msg + warn_msg, level=lg.ERROR)
-        raise GraphValidationError(err_msg + warn_msg)
+        raise ValidationError(err_msg + warn_msg)
