@@ -18,6 +18,61 @@ from . import _validate
 from . import utils
 
 
+def validate_graph(G: nx.MultiDiGraph, *, strict: bool = True) -> None:
+    """
+    Validate that a graph object satisfies OSMnx expectations.
+
+    Raises `ox._errors.GraphValidationError` if validation fails.
+
+    Parameters
+    ----------
+    G
+        The input graph.
+    strict
+        If `True`, enforce optional rules in addition to required rules. These
+        optional rules primarily enforce expected attribute data types.
+    """
+    _validate._validate_graph(G, strict=strict)
+
+
+def validate_node_edge_gdfs(
+    gdf_nodes: gpd.GeoDataFrame,
+    gdf_edges: gpd.GeoDataFrame,
+    *,
+    strict: bool = True,
+) -> None:
+    """
+    Validate that node/edge GeoDataFrames can be converted to a MultiDiGraph.
+
+    Raises a `ValidationError` if validation fails.
+
+    Parameters
+    ----------
+    gdf_nodes
+        GeoDataFrame of graph nodes uniquely indexed by `osmid`.
+    gdf_edges
+        GeoDataFrame of graph edges uniquely multi-indexed by `(u, v, key)`.
+    strict
+        If `True`, elevate warnings to errors.
+    """
+    _validate._validate_node_edge_gdfs(gdf_nodes, gdf_edges, strict=strict)
+
+
+def validate_features_gdf(gdf: gpd.GeoDataFrame) -> None:
+    """
+    Validate that features GeoDataFrame satisfies OSMnx expectations.
+
+    Raises a `ValidationError` if validation fails.
+
+    Parameters
+    ----------
+    gdf
+        GeoDataFrame of features uniquely multi-indexed by
+        `(element_type, osmid)`.
+    """
+    _validate._validate_features_gdf(gdf)
+
+
 # nodes and edges are both missing (therefore both default true)
 @overload
 def graph_to_gdfs(
@@ -245,7 +300,7 @@ def graph_from_gdfs(
     G
         The converted MultiDiGraph.
     """
-    _validate._validate_node_edge_gdfs(gdf_nodes, gdf_edges)
+    validate_node_edge_gdfs(gdf_nodes, gdf_edges)
 
     # drop geometry column from gdf_nodes (since we use x and y for geometry
     # information), but warn the user if the geometry values differ from the
