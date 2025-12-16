@@ -2,8 +2,9 @@
 
 ## 2.1.0 (TBD)
 
-- add Python 3.14 support
-- drop Python 3.9 and 3.10 support
+- add Python 3.14 support (#1336)
+- drop Python 3.9 and 3.10 support (#1322 #1336)
+- add validation functions to verify that a graph or GeoDataFrame satisfies OSMnx expectations (#1317)
 
 ## 2.0.7 (2025-11-25)
 
@@ -25,7 +26,7 @@
 ## 2.0.4 (2025-06-11)
 
 - fix bug in features module when elements have pre-existing geometry tags (#1298)
-- fix bug in save_graphml function where gephi compatibility mode erases node attributes (#1300)
+- fix bug in save_graphml function where Gephi compatibility mode erases node attributes (#1300)
 - bump minimum required minor versions of optional extras to earliest versions with linux/amd64 wheels (#1296)
 
 ## 2.0.3 (2025-05-06)

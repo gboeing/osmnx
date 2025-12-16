@@ -76,17 +76,105 @@ def test_exceptions() -> None:
     """Test the custom errors."""
     message = "testing exception"
 
-    with pytest.raises(ox._errors.ResponseStatusCodeError):
-        raise ox._errors.ResponseStatusCodeError(message)
-
     with pytest.raises(ox._errors.CacheOnlyInterruptError):
         raise ox._errors.CacheOnlyInterruptError(message)
+
+    with pytest.raises(ox._errors.GraphSimplificationError):
+        raise ox._errors.GraphSimplificationError(message)
+
+    with pytest.raises(ox._errors.ValidationError):
+        raise ox._errors.ValidationError(message)
 
     with pytest.raises(ox._errors.InsufficientResponseError):
         raise ox._errors.InsufficientResponseError(message)
 
-    with pytest.raises(ox._errors.GraphSimplificationError):
-        raise ox._errors.GraphSimplificationError(message)
+    with pytest.raises(ox._errors.ResponseStatusCodeError):
+        raise ox._errors.ResponseStatusCodeError(message)
+
+
+@pytest.mark.xdist_group(name="group1")
+def test_validating() -> None:  # noqa: PLR0915
+    """Test validating graph inputs and objects."""
+    # validate graph edge attribute is numeric and non-null
+    G = nx.MultiDiGraph()
+    G.add_edge(0, 1)
+    with pytest.raises(ox._errors.ValidationError):
+        ox._validate._verify_numeric_edge_attribute(G, "length", strict=True)
+
+    # features GeoDataFrame validation
+    # pass in gdf with missing geometries and non-unique, non-multi index
+    with pytest.raises(ox._errors.ValidationError):
+        ox.convert.validate_features_gdf(gpd.GeoDataFrame(index=[0, 0]))
+
+    # node/edge GeoDataFrame validation
+    # pass in wrong types, bad indexes, and missing x/y columns
+    gdf_nodes = pd.DataFrame(index=[0, 0])
+    gdf_edges = pd.DataFrame()
+    with suppress_type_checks(), pytest.raises(ox._errors.ValidationError):
+        ox.convert.validate_node_edge_gdfs(gdf_nodes, gdf_edges)
+
+    # pass in non-Point node geometries
+    gdf_nodes = gpd.GeoDataFrame(geometry=[Polygon(), Polygon()])
+    gdf_edges = gpd.GeoDataFrame()
+    with pytest.raises(ox._errors.ValidationError):
+        ox.convert.validate_node_edge_gdfs(gdf_nodes, gdf_edges)
+
+    # pass in x/y not matching geometries
+    data = {"x": [0, 1], "y": [2, 3]}
+    gdf_nodes = gpd.GeoDataFrame(data=data, geometry=[Point((6, 7)), Point((8, 9))])
+    gdf_edges = gpd.GeoDataFrame()
+    with pytest.raises(ox._errors.ValidationError):
+        ox.convert.validate_node_edge_gdfs(gdf_nodes, gdf_edges)
+
+    # graph validation
+    # pass an empty non-MultiDiGraph
+    G = nx.Graph()
+    with suppress_type_checks(), pytest.raises(ox._errors.ValidationError):
+        ox.convert.validate_graph(G)
+
+    # test missing top-level graph attribute and non-int node IDs
+    G = nx.MultiDiGraph()
+    del G.graph
+    G.add_edge("0", "1")
+    with pytest.raises(ox._errors.ValidationError):
+        ox.convert.validate_graph(G)
+
+    # pass an empty MultiDiGraph with an invalid CRS
+    G = nx.MultiDiGraph()
+    G.graph["crs"] = "epsg:999999"
+    with pytest.raises(ox._errors.ValidationError):
+        ox.convert.validate_graph(G)
+
+    # fix the CRS and add an edge
+    G.graph["crs"] = "epsg:4326"
+    G.add_edge(0, 1)
+    with pytest.raises(ox._errors.ValidationError):
+        ox.convert.validate_graph(G)
+
+    # add required node attributes, but with invalid types
+    nx.set_node_attributes(G, values=None, name="x")
+    nx.set_node_attributes(G, values=None, name="y")
+    nx.set_node_attributes(G, values=None, name="street_count")
+    with pytest.raises(ox._errors.ValidationError):
+        ox.convert.validate_graph(G)
+
+    # fix the invalid node attribute types
+    nx.set_node_attributes(G, values=0, name="x")
+    nx.set_node_attributes(G, values=0, name="y")
+    nx.set_node_attributes(G, values=None, name="street_count")
+    with pytest.raises(ox._errors.ValidationError):
+        ox.convert.validate_graph(G)
+
+    # add required edge attributes, but with invalid types
+    nx.set_edge_attributes(G, values=None, name="osmid")
+    nx.set_edge_attributes(G, values=None, name="length")
+    with pytest.raises(ox._errors.ValidationError):
+        ox.convert.validate_graph(G)
+
+    # fix the invalid node attribute types: should finally pass validation
+    nx.set_edge_attributes(G, values=[0], name="osmid")
+    nx.set_edge_attributes(G, values=1.5, name="length")
+    ox.convert.validate_graph(G)
 
 
 @pytest.mark.xdist_group(name="group1")
@@ -230,6 +318,7 @@ def test_osm_xml() -> None:
     # load and test graph_from_xml across the .osm, .bz2, and .gz files
     for filepath in (path_bz2, path_gz_temp, path_osm_temp):
         G = ox.graph_from_xml(filepath)
+        ox.convert.validate_graph(G, strict=False)  # non-strict because nodes lack street_count
         assert node_id in G.nodes
 
         for neighbor_id in neighbor_ids:
@@ -268,9 +357,11 @@ def test_osm_xml() -> None:
 
     # save a projected/consolidated graph as OSM XML
     Gc = ox.simplification.consolidate_intersections(ox.projection.project_graph(G))
+    ox.convert.validate_graph(Gc)
     nx.set_node_attributes(Gc, 0, name="uid")
     ox.io.save_graph_xml(Gc, fp)  # issues UserWarning
     Gc = ox.graph.graph_from_xml(fp)  # issues UserWarning
+    ox.convert.validate_graph(Gc, strict=False)  # non-strict because nodes lack street_count
     _ = etree.parse(fp, parser=parser)
 
     # restore settings
@@ -530,6 +621,7 @@ def test_endpoints() -> None:
 def test_save_load() -> None:  # noqa: PLR0915
     """Test saving/loading graphs to/from disk."""
     G = ox.graph_from_point(location_point, dist=500, network_type="drive")
+    ox.convert.validate_graph(G)
 
     # save/load geopackage and convert graph to/from node/edge GeoDataFrames
     ox.save_graph_geopackage(G, directed=False)
@@ -537,9 +629,11 @@ def test_save_load() -> None:  # noqa: PLR0915
     ox.save_graph_geopackage(G, filepath=fp, directed=True)
     gdf_nodes1 = gpd.read_file(fp, layer="nodes").set_index("osmid")
     gdf_edges1 = gpd.read_file(fp, layer="edges").set_index(["u", "v", "key"])
-    G2 = ox.graph_from_gdfs(gdf_nodes1, gdf_edges1)
+    G2 = ox.convert.graph_from_gdfs(gdf_nodes1, gdf_edges1)
+    ox.convert.validate_graph(G2, strict=False)  # non-strict because osmid wasn't loaded as int
     G2 = ox.graph_from_gdfs(gdf_nodes1, gdf_edges1, graph_attrs=G.graph)
-    gdf_nodes2, gdf_edges2 = ox.graph_to_gdfs(G2)
+    ox.convert.validate_graph(G2, strict=False)  # non-strict because osmid wasn't loaded as int
+    gdf_nodes2, gdf_edges2 = ox.convert.graph_to_gdfs(G2)
     _ = list(ox.utils_geo.interpolate_points(gdf_edges2["geometry"].iloc[0], 0.001))
     assert set(gdf_nodes1.index) == set(gdf_nodes2.index) == set(G.nodes) == set(G2.nodes)
     assert set(gdf_edges1.index) == set(gdf_edges2.index) == set(G.edges) == set(G2.edges)
@@ -586,6 +680,7 @@ def test_save_load() -> None:  # noqa: PLR0915
         node_dtypes={attr_name: ox.io._convert_bool_string},
         edge_dtypes={attr_name: ox.io._convert_bool_string},
     )
+    ox.convert.validate_graph(G2)
 
     # verify everything in G is equivalent in G2
     assert tuple(G.graph.keys()) == tuple(G2.graph.keys())
@@ -607,6 +702,7 @@ def test_save_load() -> None:  # noqa: PLR0915
     nd = {"osmid": str}
     ed = {"length": str, "osmid": float}
     G2 = ox.load_graphml(fp, node_dtypes=nd, edge_dtypes=ed)
+    ox.convert.validate_graph(G2, strict=False)  # non-strict because of non-standard types
 
     # test loading graphml from a file stream
     graphml = Path("tests/input_data/short.graphml").read_text(encoding="utf-8")
@@ -625,21 +721,28 @@ def test_graph_from() -> None:
     _ = ox.utils_geo.bbox_from_point(location_point, dist=1000, project_utm=True, return_crs=True)
     bbox = ox.utils_geo.bbox_from_point(location_point, dist=500)
     G = ox.graph_from_bbox(bbox, network_type="drive")
+    ox.convert.validate_graph(G)
     G = ox.graph_from_bbox(bbox, network_type="drive_service", truncate_by_edge=True)
+    ox.convert.validate_graph(G)
 
     # truncate graph by bounding box
     bbox = ox.utils_geo.bbox_from_point(location_point, dist=400)
     G = ox.truncate.truncate_graph_bbox(G, bbox)
+    ox.convert.validate_graph(G)
     G = ox.truncate.largest_component(G, strongly=True)
+    ox.convert.validate_graph(G)
 
     # graph from address
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
+    ox.convert.validate_graph(G)
 
     # graph from list of places
     G = ox.graph_from_place([place1], which_result=[None], network_type="all")
+    ox.convert.validate_graph(G)
 
     # graph from polygon
     G = ox.graph_from_polygon(polygon, network_type="walk", truncate_by_edge=True, simplify=False)
+    ox.convert.validate_graph(G)
     G = ox.simplify_graph(
         G,
         node_attrs_include=["junction", "ref"],
@@ -647,6 +750,7 @@ def test_graph_from() -> None:
         remove_rings=False,
         track_merged=True,
     )
+    ox.convert.validate_graph(G)
 
     # test custom query filter
     cf = (
@@ -664,10 +768,12 @@ def test_graph_from() -> None:
         dist_type="bbox",
         network_type="all_public",
     )
+    ox.convert.validate_graph(G)
 
     # test union of multiple custom filters
     cf_union = ['["highway"~"tertiary"]', '["railway"~"tram"]']
     G = ox.graph_from_point(location_point, dist=500, custom_filter=cf_union, retain_all=True)
+    ox.convert.validate_graph(G)
 
     ox.settings.overpass_memory = 1073741824
     G = ox.graph_from_point(
@@ -676,6 +782,7 @@ def test_graph_from() -> None:
         dist_type="network",
         network_type="all",
     )
+    ox.convert.validate_graph(G)
 
 
 @pytest.mark.xdist_group(name="group3")
