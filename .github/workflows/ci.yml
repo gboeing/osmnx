@@ -1,17 +1,21 @@
 # This workflow runs the repo's CI tests.
 name: CI
 
-permissions:
-  contents: read
-
 on:
   push:
-    branches: [main, v2.1]
+    branches: [main]
   pull_request:
-    branches: [main, v2.1]
+    branches: [main]
   schedule:
     - cron: 5 4 * * 1  # every monday at 04:05 UTC
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   ci:
@@ -22,7 +26,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.11', '3.12', '3.13', '3.14']
 
     defaults:
       run:
@@ -30,10 +34,10 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           cache-dependency-glob: pyproject.toml
           enable-cache: true
@@ -45,13 +49,13 @@ jobs:
           uv sync --all-extras --group docs --group lint --group test
 
       - name: Cache pre-commit
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
-          path: ~/.cache/pre-commit/
+          path: ~/.cache/prek/
           key: pre-commit-${{ matrix.python-version }}-${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run pre-commit checks
-        run: uv run pre-commit run --all-files
+        run: uv run prek run --all-files
         env:
           SKIP: no-commit-to-branch
 
@@ -65,15 +69,7 @@ jobs:
         run: uv run sphinx-build -E -W --keep-going -b html ./docs/source ./docs/build/html
 
       - name: Test code and coverage
-        run: >
-             uv run pytest
-             --verbose
-             --maxfail=1
-             --typeguard-packages=osmnx
-             --cov=osmnx
-             --cov-report=xml
-             --numprocesses=3
-             --dist=loadgroup
+        run: uv run pytest --typeguard-packages=osmnx --cov=osmnx --cov-report=xml
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v5

@@ -186,3 +186,11 @@ osmnx.utils_geo module
     :members:
     :private-members:
     :noindex:
+
+osmnx._validate module
+----------------------
+
+.. automodule:: osmnx._validate
+    :members:
+    :private-members:
+    :noindex:

@@ -47,39 +47,39 @@ The OSMnx `Examples Gallery`_ contains tutorials and demonstrations of all these
 Configuration
 ^^^^^^^^^^^^^
 
-You can configure OSMnx using the :code:`settings` module. Here you can adjust logging behavior, caching, server endpoints, and more. You can also configure OSMnx to retrieve historical snapshots of OpenStreetMap data as of a certain date.
+You can configure OSMnx using the ``settings`` module. Here you can adjust logging behavior, caching, server endpoints, and more. You can also configure OSMnx to retrieve historical snapshots of OpenStreetMap data as of a certain date.
 
 Read more about the :ref:`settings <osmnx-settings-module>` module in the User Reference.
 
 Geocoding and Querying
 ^^^^^^^^^^^^^^^^^^^^^^
 
-OSMnx geocodes place names and addresses with the OpenStreetMap `Nominatim`_ API. You can use the :code:`geocoder` module to geocode place names or addresses to lat-lon coordinates. Or, you can retrieve place boundaries or any other OpenStreetMap elements by name or ID. Read more about the :ref:`geocoder <osmnx-geocoder-module>` module in the User Reference.
+OSMnx geocodes place names and addresses with the OpenStreetMap `Nominatim`_ API. You can use the ``geocoder`` module to geocode place names or addresses to lat-lon coordinates. Or, you can retrieve place boundaries or any other OpenStreetMap elements by name or ID. Read more about the :ref:`geocoder <osmnx-geocoder-module>` module in the User Reference.
 
-Using the :code:`features` and :code:`graph` modules, as described below, you can download data by lat-lon point, address, bounding box, bounding polygon, or place name (e.g., neighborhood, city, county, etc).
+Using the ``features`` and ``graph`` modules, as described below, you can download data by lat-lon point, address, bounding box, bounding polygon, or place name (e.g., neighborhood, city, county, etc).
 
 Urban Amenities
 ^^^^^^^^^^^^^^^
 
-Using OSMnx's :code:`features` module, you can search for and download any geospatial `features`_ (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap `Overpass`_ API as a GeoPandas GeoDataFrame. This uses OpenStreetMap `tags`_ to search for matching `elements`_.
+Using OSMnx's ``features`` module, you can search for and download any geospatial `features`_ (such as building footprints, grocery stores, schools, public parks, transit stops, etc) from the OpenStreetMap `Overpass`_ API as a GeoPandas GeoDataFrame. This uses OpenStreetMap `tags`_ to search for matching `elements`_.
 
 Read more about the :ref:`features <osmnx-features-module>` module in the User Reference.
 
 Modeling a Network
 ^^^^^^^^^^^^^^^^^^
 
-Using OSMnx's :code:`graph` module, you can retrieve any spatial network data (such as streets, paths, rail, canals, etc) from the Overpass API and model them as NetworkX `MultiDiGraphs`_.
+Using OSMnx's ``graph`` module, you can retrieve any spatial network data (such as streets, paths, rail, canals, etc) from the Overpass API and model them as NetworkX `MultiDiGraphs`_.
 
 In short, MultiDiGraphs are nonplanar directed graphs with possible self-loops and parallel edges. Thus, a one-way street will be represented with a single directed edge from node *u* to node *v*, but a bidirectional street will be represented with two reciprocal directed edges (with identical geometries): one from node *u* to node *v* and another from *v* to *u*, to represent both possible directions of flow. Because these graphs are nonplanar, they correctly model the topology of interchanges, bridges, and tunnels. That is, edge crossings in a two-dimensional plane are not intersections in an OSMnx model unless they represent true junctions in the three-dimensional real world.
 
-The :code:`graph` module uses filters to query the Overpass API: you can either specify a built-in network type or provide your own custom filter with `Overpass QL`_. Under the hood, OSMnx does several things to generate the best possible model. It initially creates a 500m-buffered graph before truncating it to your desired query area, to ensure accurate streets-per-node stats and to attenuate graph perimeter effects. By default, it returns the largest weakly connected component. It also simplifies the graph topology as discussed below.
+The ``graph`` module uses filters to query the Overpass API: you can either specify a built-in network type or provide your own custom filter with `Overpass QL`_. Under the hood, OSMnx does several things to generate the best possible model. It initially creates a 500m-buffered graph before truncating it to your desired query area, to ensure accurate streets-per-node stats and to attenuate graph perimeter effects. By default, it returns the largest weakly connected component. It also simplifies the graph topology as discussed below.
 
 Read more about the :ref:`graph <osmnx-graph-module>` module in the User Reference and refer to the official reference paper at the :doc:`further-reading` page for complete modeling details.
 
 Topology Clean-Up
 ^^^^^^^^^^^^^^^^^
 
-The :code:`simplification` module automatically processes the network's topology from the original raw OpenStreetMap data, such that nodes represent intersections/dead-ends and edges represent the street segments that link them. This takes two primary forms: graph simplification and intersection consolidation.
+The ``simplification`` module automatically processes the network's topology from the original raw OpenStreetMap data, such that nodes represent intersections/dead-ends and edges represent the street segments that link them. This takes two primary forms: graph simplification and intersection consolidation.
 
 **Graph simplification** cleans up the graph's topology so that nodes represent intersections or dead-ends and edges represent street segments. This is important because in OpenStreetMap raw data, ways comprise sets of straight-line segments between nodes: that is, nodes are vertices for streets' curving line geometries, not just intersections and dead-ends. By default, OSMnx simplifies this topology by discarding non-intersection/dead-end nodes while retaining the complete true edge geometry as an edge attribute. When multiple OpenStreetMap ways are merged into a single graph edge, the ways' attribute values can be aggregated into a single value.
 
@@ -90,48 +90,48 @@ Read more about the :ref:`simplification <osmnx-simplification-module>` module i
 Model Attributes
 ^^^^^^^^^^^^^^^^
 
-An OSMnx model has some standard required attributes, plus some optional attributes. The latter are sometimes present based on the source OSM data's tagging, the :code:`settings` module configuration, and any processing you may have done to add additional attributes (as noted in various functions' documentation).
+An OSMnx model has some standard required attributes, plus some optional attributes. The latter are sometimes present based on the source OSM data's tagging, the ``settings`` module configuration, and any processing you may have done to add additional attributes (as noted in various functions' documentation).
 
-As a NetworkX `MultiDiGraph`_ object, it has top-level :code:`graph`, :code:`nodes`, and :code:`edges` attributes. The :code:`graph` attribute dictionary must contain a "crs" key defining its coordinate reference system. The :code:`nodes` are identified by OSM ID and each must contain a :code:`data` attribute dictionary that must have "x" and "y" keys defining its coordinates and a "street_count" key defining how many physical streets are incident to it. The :code:`edges` are identified by a 3-tuple of "u" (source node ID), "v" (target node ID), and "key" (to differentiate parallel edges), and each must contain a :code:`data` attribute dictionary that must have an "osmid" key defining its OSM ID and a "length" key defining its length in meters.
+As a NetworkX `MultiDiGraph`_ object, it has top-level ``graph``, ``nodes``, and ``edges`` attributes. The ``graph`` attribute dictionary must contain a "crs" key defining its coordinate reference system. The ``nodes`` are identified by OSM ID and each must contain a ``data`` attribute dictionary that must have "x" and "y" keys defining its coordinates and a "street_count" key defining how many physical streets are incident to it. The ``edges`` are identified by a 3-tuple of "u" (source node ID), "v" (target node ID), and "key" (to differentiate parallel edges), and each must contain a ``data`` attribute dictionary that must have an "osmid" key defining its OSM ID and a "length" key defining its length in meters.
 
-The OSMnx :code:`graph` module automatically creates MultiDiGraphs with these required attributes, plus additional optional attributes based on the :code:`settings` module configuration. If you instead manually create your own graph model, make sure it has these required attributes at a minimum.
+The OSMnx ``graph`` module automatically creates MultiDiGraphs with these required attributes, plus additional optional attributes based on the ``settings`` module configuration. If you instead manually create your own graph model, make sure it has these required attributes at a minimum.
 
 Convert, Project, Save
 ^^^^^^^^^^^^^^^^^^^^^^
 
-OSMnx's :code:`convert` module can convert a MultiDiGraph to a `DiGraph`_ if you prefer a directed representation of the network without any parallel edges, or to a `MultiGraph`_ if you need an undirected representation for use with functions or algorithms that only accept a MultiGraph object. If you just want a fully bidirectional graph (such as for a walking network), just configure the `settings` module's `bidirectional_network_types` before creating your graph.
+OSMnx's ``convert`` module can convert a MultiDiGraph to a `DiGraph`_ if you prefer a directed representation of the network without any parallel edges, or to a `MultiGraph`_ if you need an undirected representation for use with functions or algorithms that only accept a MultiGraph object. If you just want a fully bidirectional graph (such as for a walking network), just configure the ``settings`` module's ``bidirectional_network_types`` before creating your graph.
 
-The :code:`convert` module can also convert a MultiDiGraph to/from GeoPandas node and edge `GeoDataFrames`_. The nodes GeoDataFrame is indexed by OSM ID and the edges GeoDataFrame is multi-indexed by :code:`u, v, key` just like a NetworkX edge. This allows you to load arbitrary node/edge ShapeFiles or GeoPackage layers as GeoDataFrames then model them as a MultiDiGraph for graph analysis. Read more about the :ref:`convert <osmnx-convert-module>` module in the User Reference.
+The ``convert`` module can also convert a MultiDiGraph to/from GeoPandas node and edge `GeoDataFrames`_. The nodes GeoDataFrame is indexed by OSM ID and the edges GeoDataFrame is multi-indexed by ``u, v, key`` just like a NetworkX edge. This allows you to load arbitrary node/edge ShapeFiles or GeoPackage layers as GeoDataFrames then model them as a MultiDiGraph for graph analysis. The ``convert`` module exposes validation functions to verify that your MultiDiGraph or GeoDataFrames satisfy OSMnx requirements. Read more about the :ref:`convert <osmnx-convert-module>` module in the User Reference.
 
-You can easily project your graph to different coordinate reference systems using the :code:`projection` module. If you're unsure which `CRS`_ you want to project to, OSMnx can automatically determine an appropriate UTM CRS for you. Read more about the :ref:`projection <osmnx-projection-module>` module in the User Reference.
+You can easily project your graph to different coordinate reference systems using the ``projection`` module. If you're unsure which `CRS`_ you want to project to, OSMnx can automatically determine an appropriate UTM CRS for you. Read more about the :ref:`projection <osmnx-projection-module>` module in the User Reference.
 
-Using the :code:`io` module, you can save your graph to disk as a GraphML file (to load into other network analysis software), a GeoPackage (to load into other GIS software), or an OSM XML file. Use the GraphML format whenever saving a graph for later work with OSMnx. Read more about the :ref:`io <osmnx-io-module>` module in the User Reference.
+Using the ``io`` module, you can save your graph to disk as a GraphML file (to load into other network analysis software), a GeoPackage (to load into other GIS software), or an OSM XML file. Use the GraphML format whenever saving a graph for later work with OSMnx. Read more about the :ref:`io <osmnx-io-module>` module in the User Reference.
 
 Network Measures
 ^^^^^^^^^^^^^^^^
 
-You can use the :code:`stats` module to calculate a variety of geometric and topological measures as well as street network bearing and orientation statistics. These measures define streets as the edges in an undirected representation of the graph to prevent double-counting bidirectional edges of a two-way street. You can easily generate common stats in transportation studies, urban design, and network science, including intersection density, circuity, average node degree (connectedness), betweenness centrality, and much more. Read more about the :ref:`stats <osmnx-stats-module>` module in the User Reference.
+You can use the ``stats`` module to calculate a variety of geometric and topological measures as well as street network bearing and orientation statistics. These measures define streets as the edges in an undirected representation of the graph to prevent double-counting bidirectional edges of a two-way street. You can easily generate common stats in transportation studies, urban design, and network science, including intersection density, circuity, average node degree (connectedness), betweenness centrality, and much more. Read more about the :ref:`stats <osmnx-stats-module>` module in the User Reference.
 
 You can also use NetworkX directly to calculate additional topological network measures.
 
 Working with Elevation
 ^^^^^^^^^^^^^^^^^^^^^^
 
-The :code:`elevation` module lets you automatically attach elevations to the graph's nodes from a local raster file or the Google Maps `Elevation API`_ (or equivalent web API with a compatible interface). You can also calculate edge grades (i.e., rise-over-run) and analyze the steepness of certain streets or routes.
+The ``elevation`` module lets you automatically attach elevations to the graph's nodes from a local raster file or the Google Maps `Elevation API`_ (or equivalent web API with a compatible interface). You can also calculate edge grades (i.e., rise-over-run) and analyze the steepness of certain streets or routes.
 
 Read more about the :ref:`elevation <osmnx-elevation-module>` module in the User Reference.
 
 Routing
 ^^^^^^^
 
-The :code:`distance` module can find the nearest node(s) or edge(s) to coordinates using a fast spatial index. The :code:`routing` module can solve shortest paths for network routing, parallelized with multiprocessing, using different weights (e.g., distance, travel time, elevation change, etc). It can also impute missing speeds to the graph edges. This imputation can obviously be imprecise, so the user can override it by passing in arguments that define local speed limits. It can also calculate free-flow travel times for each edge.
+The ``distance`` module can find the nearest node(s) or edge(s) to coordinates using a fast spatial index. The ``routing`` module can solve shortest paths for network routing, parallelized with multiprocessing, using different weights (e.g., distance, travel time, elevation change, etc). It can also impute missing speeds to the graph edges. This imputation can obviously be imprecise, so the user can override it by passing in arguments that define local speed limits. It can also calculate free-flow travel times for each edge.
 
 Read more about the :ref:`distance <osmnx-distance-module>` and :ref:`routing <osmnx-routing-module>` modules in the User Reference.
 
 Visualization
 ^^^^^^^^^^^^^
 
-You can plot graphs, routes, network figure-ground diagrams, building footprints, and street network orientation rose diagrams (aka, polar histograms) with the :code:`plot` module. You can also explore street networks, routes, or geospatial features as interactive `Folium`_ web maps.
+You can plot graphs, routes, network figure-ground diagrams, building footprints, and street network orientation rose diagrams (aka, polar histograms) with the ``plot`` module. You can also explore street networks, routes, or geospatial features as interactive `Folium`_ web maps.
 
 Read more about the :ref:`plot <osmnx-plot-module>` module in the User Reference.
 
