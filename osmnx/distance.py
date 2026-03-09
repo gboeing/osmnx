@@ -430,7 +430,7 @@ def nearest_edges(
     G: nx.MultiDiGraph,
     X: Iterable[float],
     Y: Iterable[float],
-) -> npt.NDArray[np.object_]: ...
+) -> npt.NDArray[np.int_]: ...
 
 
 # if X and Y are iterable and return_dist is provided/False
@@ -441,7 +441,7 @@ def nearest_edges(
     Y: Iterable[float],
     *,
     return_dist: Literal[False],
-) -> npt.NDArray[np.object_]: ...
+) -> npt.NDArray[np.int_]: ...
 
 
 # if X and Y are iterable and return_dist is provided/True
@@ -452,7 +452,7 @@ def nearest_edges(
     Y: Iterable[float],
     *,
     return_dist: Literal[True],
-) -> tuple[npt.NDArray[np.object_], npt.NDArray[np.float64]]: ...
+) -> tuple[npt.NDArray[np.int_], npt.NDArray[np.float64]]: ...
 
 
 def nearest_edges(
@@ -463,9 +463,9 @@ def nearest_edges(
     return_dist: bool = False,
 ) -> (
     tuple[int, int, int]
-    | npt.NDArray[np.object_]
+    | npt.NDArray[np.int_]
     | tuple[tuple[int, int, int], float]
-    | tuple[npt.NDArray[np.object_], npt.NDArray[np.float64]]
+    | tuple[npt.NDArray[np.int_], npt.NDArray[np.float64]]
 ):
     """
     Find the nearest edge to a point or to each of several points.
@@ -514,7 +514,7 @@ def nearest_edges(
         msg = "`X` and `Y` cannot contain nulls."
         raise ValueError(msg)
     geoms = convert.graph_to_gdfs(G, nodes=False)["geometry"]
-    ne_array: npt.NDArray[np.object_]  # array of tuple[int, int, int]
+    ne_array: npt.NDArray[np.int_]  # array of tuple[int, int, int]
     dist_array: npt.NDArray[np.float64]
 
     # build an r-tree spatial index by position for subsequent iloc
