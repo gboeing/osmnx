@@ -45,8 +45,10 @@ linkcheck_ignore = [r"https://doi\.org/.*"]
 
 # type annotations configuration
 autodoc_typehints = "description"
+autodoc_typehints_format = "short"
 napoleon_use_param = True
 napoleon_use_rtype = False
+python_use_unqualified_type_names = True
 typehints_document_rtype = True
 typehints_use_rtype = False
 typehints_fully_qualified = False
