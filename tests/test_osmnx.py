@@ -785,6 +785,20 @@ def test_graph_from() -> None:
     ox.convert.validate_graph(G)
 
 
+@pytest.mark.xdist_group(name="group2")
+def test_double_projection() -> None:
+    """Test that projecting a graph twice doesn't break it."""
+    G = ox.graph_from_point(location_point, dist=500, network_type="drive")
+    G_proj = ox.project_graph(G)
+    keys = list(G_proj.nodes().keys())
+    G_proj2 = ox.project_graph(G_proj)
+    data_1 = G_proj.nodes(data=True)
+    data_2 = G_proj2.nodes(data=True)
+    for key in keys:
+        assert key in data_2
+        assert data_1[key]['x'] == data_2[key]['x']
+        assert data_1[key]['y'] == data_2[key]['y']
+
 @pytest.mark.xdist_group(name="group3")
 def test_features() -> None:
     """Test downloading features from Overpass."""

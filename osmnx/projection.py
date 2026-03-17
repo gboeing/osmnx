@@ -117,17 +117,7 @@ def project_gdf(
 
     # else if to_crs is None, project gdf to an appropriate UTM zone
     elif to_crs is None:
-        # if polygon is outside UTM limits (80 deg south, 84 deg north), then
-        # we must use universal polar stereographic coordinate system instead
-        UTM_SOUTH_LIMIT = -80
-        UTM_NORTH_LIMIT = 84
-        if gdf.total_bounds[1] < UTM_SOUTH_LIMIT:
-            to_crs = "epsg:32761"
-        elif gdf.total_bounds[3] > UTM_NORTH_LIMIT:
-            to_crs = "epsg:32661"
-        else:
-            # otherwise, we're within UTM limits, so determine UTM zone
-            to_crs = gdf.estimate_utm_crs()
+        to_crs = gdf.estimate_utm_crs()
 
     # project the gdf
     gdf_proj = gdf.to_crs(to_crs)
