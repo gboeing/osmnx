@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "uv_build"
-requires = ["uv_build"]
+requires = ["uv_build==0.10.*"]
 
 [project]
 authors = [{ name = "Geoff Boeing", email = "boeing@usc.edu" }]
@@ -108,7 +108,7 @@ convention = "numpy"
 max-args = 8
 
 [tool.uv]
-required-version = "==0.10.*" # match version in environments/docker/Dockerfile
+required-version = "==0.10.*" # match version above and in Dockerfile
 
 [tool.uv.build-backend]
 module-root = ""
