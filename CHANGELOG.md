@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.1 (TBD)
+
+- fix re-projection bug (#1373 #1374)
+
 ## 2.1.0 (2026-02-16)
 
 - add Python 3.14 support (#1336)

@@ -203,6 +203,7 @@ def test_stats() -> None:
     G = ox.graph_from_place(place1, network_type="all")
     G.add_node(0, x=location_point[1], y=location_point[0], street_count=0)
     G_proj = ox.project_graph(G)
+    G_proj = ox.project_graph(G_proj)  # test double-projection
     G_proj = ox.distance.add_edge_lengths(G_proj, edges=tuple(G_proj.edges)[0:3])
 
     # calculate stats
