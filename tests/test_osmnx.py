@@ -796,8 +796,9 @@ def test_double_projection() -> None:
     data_2 = G_proj2.nodes(data=True)
     for key in keys:
         assert key in data_2
-        assert data_1[key]['x'] == data_2[key]['x']
-        assert data_1[key]['y'] == data_2[key]['y']
+        assert data_1[key]["x"] == data_2[key]["x"]
+        assert data_1[key]["y"] == data_2[key]["y"]
+
 
 @pytest.mark.xdist_group(name="group3")
 def test_features() -> None:
