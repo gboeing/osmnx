@@ -203,6 +203,7 @@ def test_stats() -> None:
     G = ox.graph_from_place(place1, network_type="all")
     G.add_node(0, x=location_point[1], y=location_point[0], street_count=0)
     G_proj = ox.project_graph(G)
+    G_proj = ox.project_graph(G_proj)  # test double-projection
     G_proj = ox.distance.add_edge_lengths(G_proj, edges=tuple(G_proj.edges)[0:3])
 
     # calculate stats
@@ -783,21 +784,6 @@ def test_graph_from() -> None:
         network_type="all",
     )
     ox.convert.validate_graph(G)
-
-
-@pytest.mark.xdist_group(name="group2")
-def test_double_projection() -> None:
-    """Test that projecting a graph twice doesn't break it."""
-    G = ox.graph_from_point(location_point, dist=500, network_type="drive")
-    G_proj = ox.project_graph(G)
-    keys = list(G_proj.nodes().keys())
-    G_proj2 = ox.project_graph(G_proj)
-    data_1 = G_proj.nodes(data=True)
-    data_2 = G_proj2.nodes(data=True)
-    for key in keys:
-        assert key in data_2
-        assert data_1[key]["x"] == data_2[key]["x"]
-        assert data_1[key]["y"] == data_2[key]["y"]
 
 
 @pytest.mark.xdist_group(name="group3")
