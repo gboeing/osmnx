@@ -35,3 +35,7 @@ from . import utils_geo as utils_geo
 
 # expose the old v1 API for backwards compatibility
 from ._api_v1 import *  # noqa: F403
+
+# backward compatibility alias for removed v1 function
+from .features import features_from_place as geometries_from_place
+
