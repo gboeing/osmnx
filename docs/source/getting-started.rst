@@ -138,7 +138,7 @@ Read more about the :ref:`plot <osmnx-plot-module>` module in the User Reference
 Usage Limits
 ^^^^^^^^^^^^
 
-Refer to the `Nominatim Usage Policy`_ and `Overpass Commons`_ documentation for API usage limits and restrictions to which you must adhere. If you configure OSMnx to use an alternative API instance, ensure you understand and follow their policies. If you feel you need to exceed these limits, consider installing your own hosted instance and setting OSMnx to use it.
+Be a good neighbor! OSMnx works with Overpass's rate limiting to avoid overwhelming their resources. Don't run multiple/parallel OSMnx instances simultaneously to circumvent their limits. These APIs are free to use, but they're not free to operate. If you will make many queries (e.g., more than 1k/day), you need to host your own local Overpass instance. Refer to the `Nominatim Usage Policy`_ and `Overpass Commons`_ documentation for API usage limits and restrictions to which you must adhere. If you configure OSMnx to use an alternative API instance, ensure you understand and follow their policies. If you feel you need to exceed these limits, just install your own hosted instance and set OSMnx to use it.
 
 More Info
 ---------
