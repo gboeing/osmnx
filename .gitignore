@@ -1,6 +1,7 @@
 .temp
 .pytest_cache
 *.vrt
+*.code-workspace
 .DS_Store
 .python-version
 
