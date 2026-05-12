@@ -1,6 +1,6 @@
-# ruff: noqa: D103, PLR2004, S101
-# numpydoc ignore=GL08,PR01,RT01
 """Offline tests for analysis, routing, distance, and plotting helpers."""
+
+# ruff: noqa: D103, PLR2004, S101
 
 from __future__ import annotations
 
@@ -19,13 +19,13 @@ from shapely import Polygon
 from typeguard import suppress_type_checks
 
 import osmnx as ox
-from tests.helpers import LOCATION_POINT
-from tests.helpers import Response
-from tests.helpers import drive_graph
-from tests.helpers import toy_graph
+from tests.conftest import LOCATION_POINT
+from tests.conftest import _drive_graph
+from tests.conftest import _Response
+from tests.conftest import _toy_graph
 
 
-@pytest.mark.unit
+@pytest.mark.offline
 def test_logging_and_utils(tmp_path: Path) -> None:
     ox.settings.log_console = True
     ox.settings.log_file = True
@@ -47,10 +47,10 @@ def test_logging_and_utils(tmp_path: Path) -> None:
     assert ox.settings.logs_folder == tmp_path
 
 
-@pytest.mark.integration
+@pytest.mark.offline
 def test_bearings_routing_and_nearest(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
-    G = drive_graph()
+    G = _drive_graph()
 
     assert ox.bearing.calculate_bearing(0, 0, 1, 1) == pytest.approx(44.99563646)
 
@@ -101,10 +101,10 @@ def test_bearings_routing_and_nearest(http_cache: Path) -> None:
     assert len(nearest_edges[0]) == 3
 
 
-@pytest.mark.integration
+@pytest.mark.offline
 def test_plots_and_colors(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
-    G = drive_graph()
+    G = _drive_graph()
     Gp = ox.project_graph(G)
 
     colors = ox.plot.get_colors(n=5, cmap="plasma", start=0.1, stop=0.9, alpha=0.5)
@@ -141,7 +141,7 @@ def test_plots_and_colors(http_cache: Path) -> None:
     assert filepath.is_file()
 
 
-@pytest.mark.unit
+@pytest.mark.offline
 def test_utils_geo_projection_and_http_helpers(tmp_path: Path) -> None:
     geom = ox.utils_geo.buffer_geometry(Point(-122.41, 37.79), dist=100)
     bbox = ox.utils_geo.bbox_from_point(LOCATION_POINT, dist=500, project_utm=True)
@@ -185,13 +185,13 @@ def test_utils_geo_projection_and_http_helpers(tmp_path: Path) -> None:
     assert "User-Agent" in ox._http._get_http_headers(user_agent="test-agent")
 
 
-@pytest.mark.unit
-def test_targeted_error_and_helper_branches(
+@pytest.mark.offline
+def test_routing_and_http_helpers_validate_inputs_and_statuses(
     http_cache: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     ox.settings.cache_folder = http_cache
-    G = drive_graph()
+    G = _drive_graph()
 
     G_dist = ox.truncate.truncate_graph_dist(G, 101, 150)
     assert set(G_dist.nodes).issubset(G.nodes)
@@ -223,15 +223,15 @@ def test_targeted_error_and_helper_branches(
     assert ox._http._resolve_host_via_doh("example.com") == "example.com"
     ox.settings.doh_url_template = "https://dns.example.test/{hostname}"
 
-    doh_response = Response({"Status": 0, "Answer": [{"data": "192.0.2.1"}]})
+    doh_response = _Response({"Status": 0, "Answer": [{"data": "192.0.2.1"}]})
 
-    def _fake_doh_get(*_args: object, **_kwargs: object) -> Response:
+    def _fake_doh_get(*_args: object, **_kwargs: object) -> _Response:
         return doh_response
 
     monkeypatch.setattr(requests, "get", _fake_doh_get)
     assert ox._http._resolve_host_via_doh("example.com") == "192.0.2.1"
 
-    doh_response = Response({"Status": 1})
+    doh_response = _Response({"Status": 1})
     assert ox._http._resolve_host_via_doh("example.com") == "example.com"
 
     class _StatusResponse:
@@ -245,8 +245,8 @@ def test_targeted_error_and_helper_branches(
     assert ox._overpass._get_overpass_pause("https://overpass.example.test/api") == 0
 
 
-@pytest.mark.unit
-def test_projection_stats_distance_and_geometry_branches() -> None:
+@pytest.mark.offline
+def test_projection_stats_distance_and_geometry_behaviors() -> None:
     gdf_north = gpd.GeoDataFrame(geometry=[Point(0, 85.1)], crs="epsg:4326")
     gdf_south = gpd.GeoDataFrame(geometry=[Point(0, -84.1)], crs="epsg:4326")
     assert ox.projection.project_gdf(gdf_north).crs == "epsg:32661"
@@ -264,7 +264,7 @@ def test_projection_stats_distance_and_geometry_branches() -> None:
     G_projected = ox.project_graph(G_simple)
     assert ox.project_graph(G_projected, to_latlong=True).graph["crs"] == ox.settings.default_crs
 
-    G_stats = toy_graph(crs="epsg:3857")
+    G_stats = _toy_graph(crs="epsg:3857")
     G_missing_count = G_stats.copy()
     del G_missing_count.nodes[1]["street_count"]
     assert set(ox.stats.streets_per_node(G_missing_count)) != set(G_missing_count.nodes)
@@ -316,8 +316,8 @@ def test_projection_stats_distance_and_geometry_branches() -> None:
     )
 
 
-@pytest.mark.unit
-def test_truncate_plot_and_routing_branches(tmp_path: Path) -> None:
+@pytest.mark.offline
+def test_truncation_plotting_and_routing_errors(tmp_path: Path) -> None:
     G_trunc = nx.MultiDiGraph(crs="epsg:4326")
     G_trunc.add_node(1, x=0.0, y=0.0)
     G_trunc.add_node(2, x=2.0, y=0.0)
@@ -331,7 +331,7 @@ def test_truncate_plot_and_routing_branches(tmp_path: Path) -> None:
     G_strong.add_edges_from([(1, 2), (2, 1), (3, 4)])
     assert set(ox.truncate.largest_component(G_strong, strongly=True).nodes) == {1, 2}
 
-    G_plot = toy_graph()
+    G_plot = _toy_graph()
     G_plot.add_node(99, x=0.0, y=1.0, street_count=0)
     _, _ = ox.plot_graph_route(G_plot, [1, 2, 3], show=False, close=True)
     _, _ = ox.plot_figure_ground(G_plot, show=False, close=True)
@@ -372,7 +372,7 @@ def test_truncate_plot_and_routing_branches(tmp_path: Path) -> None:
             equal_size=False,
         )
 
-    G_route = toy_graph()
+    G_route = _toy_graph()
     G_route.add_node(4, x=10.0, y=10.0, street_count=0)
     assert ox.shortest_path(G_route, 1, 4) is None
     assert ox.shortest_path(G_route, [1], [3], cpus=None) == [[1, 2, 3]]

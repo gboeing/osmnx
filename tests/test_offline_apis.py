@@ -1,6 +1,6 @@
-# ruff: noqa: D103, PLR2004, S101
-# numpydoc ignore=GL08,PR01,RT01
 """Offline tests for cached and mocked API workflows."""
+
+# ruff: noqa: D103, PLR2004, S101
 
 from __future__ import annotations
 
@@ -20,15 +20,15 @@ from typeguard import suppress_type_checks
 
 import osmnx as ox
 from osmnx import _nominatim
-from tests.helpers import ADDRESS
-from tests.helpers import LOCATION_POINT
-from tests.helpers import PLACE
-from tests.helpers import TAGS
-from tests.helpers import Response
-from tests.helpers import drive_graph
+from tests.conftest import ADDRESS
+from tests.conftest import LOCATION_POINT
+from tests.conftest import PLACE
+from tests.conftest import TAGS
+from tests.conftest import _drive_graph
+from tests.conftest import _Response
 
 
-@pytest.mark.unit
+@pytest.mark.offline
 def test_cache_fixture_manifest(http_cache: Path) -> None:
     manifest = json.loads((http_cache / "manifest.json").read_text(encoding="utf-8"))
 
@@ -41,7 +41,7 @@ def test_cache_fixture_manifest(http_cache: Path) -> None:
     assert all(record["query"] for record in manifest["records"])
 
 
-@pytest.mark.integration
+@pytest.mark.offline
 def test_geocoder_uses_committed_cache(
     http_cache: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -100,7 +100,7 @@ def test_geocoder_uses_committed_cache(
         ox.geocode_to_gdf("Bunker Hill, Los Angeles, California, USA")
 
 
-@pytest.mark.integration
+@pytest.mark.offline
 def test_graph_downloaders_use_committed_cache(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
 
@@ -134,7 +134,7 @@ def test_graph_downloaders_use_committed_cache(http_cache: Path) -> None:
     assert dict(G_drive.nodes(data="street_count")) == {101: 2, 102: 4, 103: 2, 104: 4, 105: 4}
 
 
-@pytest.mark.integration
+@pytest.mark.offline
 def test_features_downloaders_use_committed_cache(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
 
@@ -167,14 +167,14 @@ def test_features_downloaders_use_committed_cache(http_cache: Path) -> None:
         ox.features.features_from_polygon(Point(0, 0), tags={})
 
 
-@pytest.mark.integration
+@pytest.mark.offline
 def test_elevation_from_cache_and_raster(
     http_cache: Path,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     ox.settings.cache_folder = http_cache
-    G = drive_graph()
+    G = _drive_graph()
 
     with monkeypatch.context() as m:
 
@@ -209,11 +209,11 @@ def test_elevation_from_cache_and_raster(
     assert pd.notna(pd.Series(dict(G.nodes(data="elevation")))).sum() >= 2
 
 
-@pytest.mark.unit
+@pytest.mark.offline
 def test_http_parse_and_request_validation() -> None:
-    response = cast("requests.Response", Response({"status": "ok"}))
+    response = cast("requests.Response", _Response({"status": "ok"}))
     assert ox._http._parse_response(response) == {"status": "ok"}
-    response = cast("requests.Response", Response([{"status": "ok"}]))
+    response = cast("requests.Response", _Response([{"status": "ok"}]))
     assert ox._http._parse_response(response) == [{"status": "ok"}]
 
     params: OrderedDict[str, int | str] = OrderedDict()
@@ -231,7 +231,7 @@ def test_http_parse_and_request_validation() -> None:
     assert "[maxsize:123]" in ox._overpass._make_overpass_settings()
 
 
-@pytest.mark.unit
+@pytest.mark.offline
 def test_uncached_nominatim_request_paths(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -246,12 +246,12 @@ def test_uncached_nominatim_request_paths(
 
     nominatim_responses = iter(
         [
-            Response([], ok=False, status_code=429),
-            Response([{"place_id": 1}]),
+            _Response([], ok=False, status_code=429),
+            _Response([{"place_id": 1}]),
         ],
     )
 
-    def _fake_nominatim_get(*_args: object, **_kwargs: object) -> Response:
+    def _fake_nominatim_get(*_args: object, **_kwargs: object) -> _Response:
         return next(nominatim_responses)
 
     ox.settings.nominatim_key = "fixture-key"
@@ -262,15 +262,15 @@ def test_uncached_nominatim_request_paths(
     assert ox._nominatim._nominatim_request(params=params) == [{"place_id": 1}]
     assert params["key"] == "fixture-key"
 
-    def _fake_nominatim_dict(*_args: object, **_kwargs: object) -> Response:
-        return Response({"not": "a-list"})
+    def _fake_nominatim_dict(*_args: object, **_kwargs: object) -> _Response:
+        return _Response({"not": "a-list"})
 
     monkeypatch.setattr(requests, "get", _fake_nominatim_dict)
     with pytest.raises(ox._errors.InsufficientResponseError, match="did not return a list"):
         ox._nominatim._nominatim_request(params=OrderedDict(format="json", q="fixture"))
 
 
-@pytest.mark.unit
+@pytest.mark.offline
 def test_uncached_overpass_and_elevation_request_paths(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -290,12 +290,12 @@ def test_uncached_overpass_and_elevation_request_paths(
 
     overpass_responses = iter(
         [
-            Response({"remark": "retry"}, ok=False, status_code=429),
-            Response({"elements": []}),
+            _Response({"remark": "retry"}, ok=False, status_code=429),
+            _Response({"elements": []}),
         ],
     )
 
-    def _fake_overpass_post(*_args: object, **_kwargs: object) -> Response:
+    def _fake_overpass_post(*_args: object, **_kwargs: object) -> _Response:
         return next(overpass_responses)
 
     ox.settings.overpass_rate_limit = False
@@ -304,8 +304,8 @@ def test_uncached_overpass_and_elevation_request_paths(
     assert ox._overpass._overpass_request(OrderedDict(data="node(1);out;")) == {"elements": []}
     assert config_dns_calls == [ox.settings.overpass_url, ox.settings.overpass_url]
 
-    def _fake_overpass_list(*_args: object, **_kwargs: object) -> Response:
-        return Response([{"not": "a-dict"}])
+    def _fake_overpass_list(*_args: object, **_kwargs: object) -> _Response:
+        return _Response([{"not": "a-dict"}])
 
     monkeypatch.setattr(requests, "post", _fake_overpass_list)
     with pytest.raises(ox._errors.InsufficientResponseError, match="did not return a dict"):
@@ -313,12 +313,12 @@ def test_uncached_overpass_and_elevation_request_paths(
 
     elevation_responses = iter(
         [
-            Response({"results": [{"elevation": 10.0}]}),
-            Response([{"not": "a-dict"}]),
+            _Response({"results": [{"elevation": 10.0}]}),
+            _Response([{"not": "a-dict"}]),
         ],
     )
 
-    def _fake_elevation_get(*_args: object, **_kwargs: object) -> Response:
+    def _fake_elevation_get(*_args: object, **_kwargs: object) -> _Response:
         return next(elevation_responses)
 
     monkeypatch.setattr(requests, "get", _fake_elevation_get)
@@ -329,15 +329,15 @@ def test_uncached_overpass_and_elevation_request_paths(
         ox.elevation._elevation_request("https://example.com/elevation?second", pause=0)
 
 
-@pytest.mark.unit
-def test_http_cache_and_dns_helper_branches(
+@pytest.mark.offline
+def test_http_cache_and_dns_helpers_are_deterministic(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     ox.settings.cache_folder = tmp_path
 
     assert ox._http._retrieve_from_cache("https://not-in-cache.example") is None
-    assert ox._http._parse_response(Response({"status": "error"}, ok=False, status_code=500)) == {
+    assert ox._http._parse_response(_Response({"status": "error"}, ok=False, status_code=500)) == {
         "status": "error",
     }
 
@@ -360,8 +360,8 @@ def test_http_cache_and_dns_helper_branches(
         monkeypatch.setattr(socket, "getaddrinfo", original_getaddrinfo)
 
 
-@pytest.mark.unit
-def test_overpass_query_and_pause_branches(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.offline
+def test_overpass_status_and_query_helpers_parse_responses(monkeypatch: pytest.MonkeyPatch) -> None:
 
     def _sleep(_seconds: float) -> None:
         return None

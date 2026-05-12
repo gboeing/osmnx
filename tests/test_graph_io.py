@@ -1,6 +1,6 @@
-# ruff: noqa: D103, PLR2004, S101
-# numpydoc ignore=GL08,PR01,RT01
 """Offline tests for graph creation, conversion, and file IO."""
+
+# ruff: noqa: D103, PLR2004, S101
 
 from __future__ import annotations
 
@@ -19,15 +19,15 @@ from shapely import Polygon
 from typeguard import suppress_type_checks
 
 import osmnx as ox
-from tests.helpers import LOCATION_POINT
-from tests.helpers import drive_graph
-from tests.helpers import toy_graph
+from tests.conftest import LOCATION_POINT
+from tests.conftest import _drive_graph
+from tests.conftest import _toy_graph
 
 
-@pytest.mark.integration
+@pytest.mark.offline
 def test_stats_simplification_and_conversion(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
-    G = drive_graph()
+    G = _drive_graph()
     G_proj = ox.project_graph(G)
     G_proj = ox.project_graph(G_proj)
 
@@ -62,10 +62,10 @@ def test_stats_simplification_and_conversion(http_cache: Path) -> None:
     assert isinstance(Gu, nx.MultiGraph)
 
 
-@pytest.mark.integration
+@pytest.mark.offline
 def test_save_load_graph_files(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
-    G = drive_graph()
+    G = _drive_graph()
     ox.convert.validate_graph(G)
 
     ox.save_graph_geopackage(G, directed=False)
@@ -107,7 +107,7 @@ def test_save_load_graph_files(http_cache: Path) -> None:
     assert len(G3) > 0
 
 
-@pytest.mark.integration
+@pytest.mark.offline
 def test_osm_xml_read_write(http_cache: Path, tmp_path: Path) -> None:
     ox.settings.cache_folder = http_cache
     node_id = 53098262
@@ -132,7 +132,7 @@ def test_osm_xml_read_write(http_cache: Path, tmp_path: Path) -> None:
 
     default_all_oneway = ox.settings.all_oneway
     ox.settings.all_oneway = True
-    G = drive_graph()
+    G = _drive_graph()
     fp = Path(ox.settings.data_folder) / "graph.osm"
     ox.io.save_graph_xml(G, filepath=fp, way_tag_aggs={"lanes": "sum"})
 
@@ -144,8 +144,8 @@ def test_osm_xml_read_write(http_cache: Path, tmp_path: Path) -> None:
     ox.settings.all_oneway = default_all_oneway
 
 
-@pytest.mark.integration
-def test_graph_creation_edge_cases(http_cache: Path) -> None:
+@pytest.mark.offline
+def test_graph_creation_validates_inputs(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
     G_network = ox.graph_from_point(
         LOCATION_POINT,
@@ -187,8 +187,8 @@ def test_graph_creation_edge_cases(http_cache: Path) -> None:
     assert (2, 1, 0) in G.edges
 
 
-@pytest.mark.unit
-def test_convert_and_io_edge_cases(tmp_path: Path) -> None:
+@pytest.mark.offline
+def test_conversion_and_graphml_validate_inputs(tmp_path: Path) -> None:
     empty = nx.MultiDiGraph(crs="epsg:4326")
     with pytest.raises(ValueError, match="contains no nodes"):
         ox.graph_to_gdfs(empty, nodes=True, edges=False)
@@ -230,7 +230,7 @@ def test_convert_and_io_edge_cases(tmp_path: Path) -> None:
     )
     assert G_types.edges[1, 2, 0]["osmid"] == [10, 11]
 
-    G_parallel = toy_graph()
+    G_parallel = _toy_graph()
     G_parallel.add_edge(
         2,
         1,
@@ -280,8 +280,8 @@ def test_convert_and_io_edge_cases(tmp_path: Path) -> None:
     )
 
 
-@pytest.mark.unit
-def test_osm_xml_warning_and_sort_branches(tmp_path: Path) -> None:
+@pytest.mark.offline
+def test_osm_xml_roundtrip_warns_for_projected_graphs(tmp_path: Path) -> None:
     G = nx.MultiDiGraph(crs="epsg:3857")
     G.add_node(1, x=0.0, y=0.0, street_count=1)
     G.add_node(2, x=1.0, y=0.0, street_count=2)

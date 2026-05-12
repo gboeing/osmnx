@@ -81,10 +81,8 @@ cache_dir = "~/.cache/pytest"
 filterwarnings = ["error", "ignore::UserWarning"]
 log_level = "INFO"
 markers = [
-  "integration: multi-step local workflow tests",
-  "network: tests that make live public web API calls",
-  "slow: local tests that are relatively expensive",
-  "unit: deterministic offline unit tests",
+  "offline: deterministic tests that do not make live public web API calls",
+  "online: tests that make live public web API calls",
 ]
 minversion = 9
 strict = true

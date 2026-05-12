@@ -41,6 +41,6 @@ jobs:
           uv sync --all-extras --group test
 
       - name: Test public web APIs
-        run: uv run pytest -m network --numprocesses=3
+        run: uv run pytest -m online --numprocesses=3
         env:
           OSMNX_RUN_NETWORK_TESTS: '1'

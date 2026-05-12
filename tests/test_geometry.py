@@ -1,6 +1,6 @@
-# ruff: noqa: D103, PLR2004, S101
-# numpydoc ignore=GL08,PR01,RT01
 """Offline tests for validation, features, simplification, and geometry workflows."""
+
+# ruff: noqa: D103, PLR2004, S101
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from typeguard import suppress_type_checks
 import osmnx as ox
 
 
-@pytest.mark.unit
+@pytest.mark.offline
 def test_validation_errors() -> None:
     G = nx.MultiDiGraph()
     G.add_edge(0, 1)
@@ -67,8 +67,8 @@ def test_validation_errors() -> None:
     ox.convert.validate_graph(G)
 
 
-@pytest.mark.unit
-def test_validation_warning_and_error_branches() -> None:
+@pytest.mark.offline
+def test_validation_reports_bad_graph_attributes() -> None:
     G = nx.MultiDiGraph(crs="epsg:4326")
     G.add_node("a", x="bad", y=0)
     G.add_node("b", x=1, y="bad")
@@ -113,7 +113,7 @@ def test_validation_warning_and_error_branches() -> None:
     ox.convert.validate_node_edge_gdfs(gdf_nodes, gdf_edges)
 
 
-@pytest.mark.integration
+@pytest.mark.offline
 def test_features_from_xml_and_polygon_holes() -> None:
     gdf = ox.features_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")
     assert len(gdf) > 0
@@ -134,8 +134,8 @@ def test_features_from_xml_and_polygon_holes() -> None:
     assert result.equals(wkt.loads(geom_wkt))
 
 
-@pytest.mark.unit
-def test_simplification_branches(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.offline
+def test_simplification_preserves_merged_edge_attrs(monkeypatch: pytest.MonkeyPatch) -> None:
     G = nx.MultiDiGraph(crs="epsg:4326")
     G.add_node(1, x=0.0, y=0.0, street_count=1)
     G.add_node(2, x=1.0, y=0.0, street_count=2)
@@ -184,8 +184,8 @@ def test_simplification_branches(monkeypatch: pytest.MonkeyPatch) -> None:
     assert len(ox.simplification._remove_rings(R, None, None)) == 0
 
 
-@pytest.mark.unit
-def test_consolidation_edge_branches() -> None:
+@pytest.mark.offline
+def test_consolidation_merges_nearby_intersections() -> None:
     Gm = nx.MultiDiGraph(crs="epsg:3857")
     Gm.add_node(1, x=0.0, y=0.0, street_count=2, elevation=1.0, color="red")
     Gm.add_node(2, x=1.0, y=0.0, street_count=2, elevation=3.0, color="blue")
@@ -220,8 +220,8 @@ def test_consolidation_edge_branches() -> None:
     assert len(Gc_split) == 4
 
 
-@pytest.mark.unit
-def test_feature_processing_filter_branches() -> None:
+@pytest.mark.offline
+def test_feature_processing_filters_tags_and_geometry() -> None:
     outer_line = LineString([(0, 0), (4, 0), (4, 4), (0, 4), (0, 0)])
     inner_line = LineString([(1, 1), (2, 1), (2, 2), (1, 2), (1, 1)])
     inner_poly = Polygon([(2.5, 2.5), (3, 2.5), (3, 3), (2.5, 3)])

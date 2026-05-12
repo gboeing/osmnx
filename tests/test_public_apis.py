@@ -1,6 +1,6 @@
-# ruff: noqa: PLR2004, S101
-# numpydoc ignore=PR01,RT01
 """Live public web API compatibility tests."""
+
+# ruff: noqa: PLR2004, S101
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import pytest
 
 import osmnx as ox
 
-pytestmark = pytest.mark.network
+pytestmark = pytest.mark.online
 
 LOCATION_POINT = (37.791427, -122.410018)
 ADDRESS = "Transamerica Pyramid, 600 Montgomery Street, San Francisco, California, USA"
