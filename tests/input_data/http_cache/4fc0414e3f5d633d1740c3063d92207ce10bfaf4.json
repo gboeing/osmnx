@@ -1,0 +1,25 @@
+{
+  "results": [
+    {
+      "elevation": 10.0,
+      "location": {}
+    },
+    {
+      "elevation": 11.0,
+      "location": {}
+    },
+    {
+      "elevation": 12.0,
+      "location": {}
+    },
+    {
+      "elevation": 13.0,
+      "location": {}
+    },
+    {
+      "elevation": 14.0,
+      "location": {}
+    }
+  ],
+  "status": "OK"
+}

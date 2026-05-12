@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "uv_build"
-requires = ["uv_build==0.10.*"]
+requires = ["uv_build==0.11.*"]
 
 [project]
 authors = [{ name = "Geoff Boeing", email = "boeing@usc.edu" }]
@@ -79,6 +79,12 @@ addopts = ["-ra", "--verbose", "--maxfail=1", "--numprocesses=3", "--dist=loadgr
 cache_dir = "~/.cache/pytest"
 filterwarnings = ["error", "ignore::UserWarning"]
 log_level = "INFO"
+markers = [
+  "integration: multi-step local workflow tests",
+  "network: tests that make live public web API calls",
+  "slow: local tests that are relatively expensive",
+  "unit: deterministic offline unit tests",
+]
 minversion = 9
 strict = true
 testpaths = ["tests"]
@@ -108,7 +114,7 @@ convention = "numpy"
 max-args = 8
 
 [tool.uv]
-required-version = "==0.10.*" # match version above and in Dockerfile
+required-version = "==0.11.*" # match version above and in Dockerfile
 
 [tool.uv.build-backend]
 module-root = ""

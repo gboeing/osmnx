@@ -1,0 +1,49 @@
+[
+  {
+    "addresstype": "city",
+    "boundingbox": [
+      "37.7860",
+      "37.7970",
+      "-122.4160",
+      "-122.4040"
+    ],
+    "class": "boundary",
+    "display_name": "Piedmont Fixture, California, USA",
+    "geojson": {
+      "coordinates": [
+        [
+          [
+            -122.416,
+            37.786
+          ],
+          [
+            -122.404,
+            37.786
+          ],
+          [
+            -122.404,
+            37.797
+          ],
+          [
+            -122.416,
+            37.797
+          ],
+          [
+            -122.416,
+            37.786
+          ]
+        ]
+      ],
+      "type": "Polygon"
+    },
+    "importance": 0.8,
+    "lat": "37.791427",
+    "lon": "-122.410018",
+    "name": "Piedmont Fixture",
+    "osm_id": 2999176,
+    "osm_type": "relation",
+    "place_id": 9002,
+    "place_rank": 16,
+    "type": "administrative"
+  }
+]

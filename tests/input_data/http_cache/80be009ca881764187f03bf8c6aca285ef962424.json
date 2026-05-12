@@ -1,0 +1,29 @@
+[
+  {
+    "addresstype": "neighbourhood",
+    "boundingbox": [
+      "37.7900",
+      "37.7920",
+      "-122.4110",
+      "-122.4090"
+    ],
+    "class": "place",
+    "display_name": "Bunker Hill Fixture",
+    "geojson": {
+      "coordinates": [
+        -122.410018,
+        37.791427
+      ],
+      "type": "Point"
+    },
+    "importance": 0.1,
+    "lat": "37.791427",
+    "lon": "-122.410018",
+    "name": "Bunker Hill Fixture",
+    "osm_id": 9003,
+    "osm_type": "node",
+    "place_id": 9003,
+    "place_rank": 20,
+    "type": "neighbourhood"
+  }
+]

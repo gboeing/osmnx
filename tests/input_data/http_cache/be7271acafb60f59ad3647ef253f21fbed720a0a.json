@@ -1,0 +1,29 @@
+[
+  {
+    "addresstype": "office",
+    "boundingbox": [
+      "37.7909",
+      "37.7920",
+      "-122.4107",
+      "-122.4094"
+    ],
+    "class": "office",
+    "display_name": "Transamerica Pyramid, 600 Montgomery Street, San Francisco, California, USA",
+    "geojson": {
+      "coordinates": [
+        -122.410018,
+        37.791427
+      ],
+      "type": "Point"
+    },
+    "importance": 0.9,
+    "lat": "37.791427",
+    "lon": "-122.410018",
+    "name": "Transamerica Pyramid Fixture",
+    "osm_id": 9001,
+    "osm_type": "node",
+    "place_id": 9001,
+    "place_rank": 30,
+    "type": "yes"
+  }
+]

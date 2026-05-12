@@ -1,0 +1,146 @@
+{
+  "description": "Raw OSMnx HTTP cache fixtures for deterministic offline tests.",
+  "expected": {
+    "elevation_results": 5,
+    "feature_elements": 8,
+    "network_nodes": 5,
+    "network_ways": 4
+  },
+  "generated_by": "synthetic fixture generator; no public API calls",
+  "generated_on": "2026-05-09",
+  "records": [
+    {
+      "cache_file": "be7271acafb60f59ad3647ef253f21fbed720a0a.json",
+      "endpoint": "https://nominatim.openstreetmap.org/search",
+      "label": "nominatim_geocode_address",
+      "query": "q=Transamerica Pyramid, 600 Montgomery Street, San Francisco, California, USA&format=json&limit=1",
+      "url_host": "nominatim.openstreetmap.org"
+    },
+    {
+      "cache_file": "f1f8610e6bb112def0a968fc6625bc5c51ca795b.json",
+      "endpoint": "https://nominatim.openstreetmap.org/search",
+      "label": "nominatim_place_polygon",
+      "query": "city=Piedmont&state=California&country=USA&format=json&polygon_geojson=1&dedupe=0&limit=50",
+      "url_host": "nominatim.openstreetmap.org"
+    },
+    {
+      "cache_file": "51a8a60e27ec040a17a10a2659d7946d80607df7.json",
+      "endpoint": "https://nominatim.openstreetmap.org/lookup",
+      "label": "nominatim_lookup_relation",
+      "query": "osm_ids=R2999176&format=json&polygon_geojson=1",
+      "url_host": "nominatim.openstreetmap.org"
+    },
+    {
+      "cache_file": "ce6b1b54fd55e2c991a46e037d9038e4bc4fd308.json",
+      "endpoint": "https://nominatim.openstreetmap.org/search",
+      "label": "nominatim_geocode_empty",
+      "query": "q=!@#$%^&*&format=json&limit=1",
+      "url_host": "nominatim.openstreetmap.org"
+    },
+    {
+      "cache_file": "0be0d6b34a9700ade60bc9f39b36639c0c37ca41.json",
+      "endpoint": "https://nominatim.openstreetmap.org/search",
+      "label": "nominatim_place_empty",
+      "query": "q=AAAZZZ&format=json&polygon_geojson=1&dedupe=0&limit=50",
+      "url_host": "nominatim.openstreetmap.org"
+    },
+    {
+      "cache_file": "80be009ca881764187f03bf8c6aca285ef962424.json",
+      "endpoint": "https://nominatim.openstreetmap.org/search",
+      "label": "nominatim_nonpolygon_result",
+      "query": "q=Bunker Hill, Los Angeles, California, USA&format=json&polygon_geojson=1&dedupe=0&limit=50",
+      "url_host": "nominatim.openstreetmap.org"
+    },
+    {
+      "cache_file": "d206c7ec7b8dd802e70c1fabbce4cc8dd5a23054.json",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "label": "overpass_network_1",
+      "query": "data=<drive network Overpass QL for the committed point/bbox polygon fixture>",
+      "url_host": "overpass-api.de"
+    },
+    {
+      "cache_file": "d206c7ec7b8dd802e70c1fabbce4cc8dd5a23054.json",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "label": "overpass_network_2",
+      "query": "data=<drive network Overpass QL for the committed point/bbox polygon fixture>",
+      "url_host": "overpass-api.de"
+    },
+    {
+      "cache_file": "8c3de719319e9140fcd798508e71abc3d0387c71.json",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "label": "overpass_network_3",
+      "query": "data=<drive network Overpass QL for the committed address polygon fixture>",
+      "url_host": "overpass-api.de"
+    },
+    {
+      "cache_file": "d206c7ec7b8dd802e70c1fabbce4cc8dd5a23054.json",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "label": "overpass_network_4",
+      "query": "data=<all network Overpass QL for the committed place polygon fixture>",
+      "url_host": "overpass-api.de"
+    },
+    {
+      "cache_file": "c41588e004167fdff982a269a2fcc476a61076de.json",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "label": "overpass_network_5",
+      "query": "data=<walk network Overpass QL for the committed place polygon fixture>",
+      "url_host": "overpass-api.de"
+    },
+    {
+      "cache_file": "4a3d397fee15cdcdce1e0ff643bb15cdd1dff87b.json",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "label": "overpass_network_6",
+      "query": "data=<all network Overpass QL for the polygon with interior holes fixture>",
+      "url_host": "overpass-api.de"
+    },
+    {
+      "cache_file": "8882c7a2619f4a40f1bc962a03d395703a4113d1.json",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "label": "overpass_network_7",
+      "query": "data=<all_private network Overpass QL for the committed point polygon fixture>",
+      "url_host": "overpass-api.de"
+    },
+    {
+      "cache_file": "deb786fd5711db743020090a375ad75807dede6c.json",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "label": "overpass_features_1",
+      "query": "data=<feature Overpass QL for amenity/building/highway/landuse tags within point/bbox polygon>",
+      "url_host": "overpass-api.de"
+    },
+    {
+      "cache_file": "deb786fd5711db743020090a375ad75807dede6c.json",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "label": "overpass_features_2",
+      "query": "data=<feature Overpass QL for amenity/building/highway/landuse tags within point/bbox polygon>",
+      "url_host": "overpass-api.de"
+    },
+    {
+      "cache_file": "deb786fd5711db743020090a375ad75807dede6c.json",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "label": "overpass_features_3",
+      "query": "data=<feature Overpass QL for amenity/building/highway/landuse tags within address polygon>",
+      "url_host": "overpass-api.de"
+    },
+    {
+      "cache_file": "d37e6539fd80563459bfecfa63e7a4654eb9aa3a.json",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "label": "overpass_features_4",
+      "query": "data=<feature Overpass QL for amenity/building/highway/landuse tags within place polygon>",
+      "url_host": "overpass-api.de"
+    },
+    {
+      "cache_file": "d37e6539fd80563459bfecfa63e7a4654eb9aa3a.json",
+      "endpoint": "https://overpass-api.de/api/interpreter",
+      "label": "overpass_features_5",
+      "query": "data=<feature Overpass QL for amenity/building/highway/landuse tags within polygon>",
+      "url_host": "overpass-api.de"
+    },
+    {
+      "cache_file": "4fc0414e3f5d633d1740c3063d92207ce10bfaf4.json",
+      "endpoint": "https://api.opentopodata.org/v1/aster30m",
+      "label": "elevation_nodes",
+      "query": "locations=<5 committed graph fixture node coordinates>&key=None",
+      "url_host": "api.opentopodata.org"
+    }
+  ]
+}

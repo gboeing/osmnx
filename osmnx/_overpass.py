@@ -446,15 +446,15 @@ def _overpass_request(data: OrderedDict[str, Any]) -> dict[str, Any]:
     response_json
         The Overpass API's response.
     """
-    # resolve url to same IP even if there is server round-robin redirecting
-    _http._config_dns(settings.overpass_url)
-
     # prepare the Overpass API URL and see if request already exists in cache
     url = settings.overpass_url.rstrip("/") + "/interpreter"
     prepared_url = str(requests.Request("GET", url, params=data).prepare().url)
     cached_response_json = _http._retrieve_from_cache(prepared_url)
     if isinstance(cached_response_json, dict):
         return cached_response_json
+
+    # resolve url to same IP even if there is server round-robin redirecting
+    _http._config_dns(settings.overpass_url)
 
     # pause then request this URL
     pause = _get_overpass_pause(settings.overpass_url)

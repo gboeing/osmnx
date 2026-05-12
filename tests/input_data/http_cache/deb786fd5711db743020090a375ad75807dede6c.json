@@ -1,0 +1,87 @@
+{
+  "elements": [
+    {
+      "id": 301,
+      "lat": 37.791,
+      "lon": -122.41,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Fixture Cafe"
+      },
+      "type": "node"
+    },
+    {
+      "id": 401,
+      "lat": 37.791,
+      "lon": -122.4108,
+      "type": "node"
+    },
+    {
+      "id": 402,
+      "lat": 37.791,
+      "lon": -122.4098,
+      "type": "node"
+    },
+    {
+      "id": 403,
+      "lat": 37.7918,
+      "lon": -122.4098,
+      "type": "node"
+    },
+    {
+      "id": 404,
+      "lat": 37.7918,
+      "lon": -122.4108,
+      "type": "node"
+    },
+    {
+      "id": 302,
+      "nodes": [
+        401,
+        402,
+        403,
+        404,
+        401
+      ],
+      "tags": {
+        "building": "yes",
+        "name": "Fixture Building"
+      },
+      "type": "way"
+    },
+    {
+      "id": 303,
+      "nodes": [
+        401,
+        402
+      ],
+      "tags": {
+        "highway": "bus_stop",
+        "name": "Fixture Stop"
+      },
+      "type": "way"
+    },
+    {
+      "id": 304,
+      "members": [
+        {
+          "ref": 302,
+          "role": "outer",
+          "type": "way"
+        }
+      ],
+      "tags": {
+        "landuse": "retail",
+        "name": "Fixture Retail",
+        "type": "multipolygon"
+      },
+      "type": "relation"
+    }
+  ],
+  "generator": "OSMnx offline feature fixture",
+  "osm3s": {
+    "copyright": "fixture",
+    "timestamp_osm_base": "2026-01-01T00:00:00Z"
+  },
+  "version": 0.6
+}

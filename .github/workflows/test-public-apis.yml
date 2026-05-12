@@ -1,0 +1,46 @@
+# This workflow runs live public web API compatibility tests.
+name: Test public web APIs
+
+on:
+  schedule:
+    - cron: 35 4 * * 1  # every monday at 04:35 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test_public_apis:
+    if: ${{ github.repository == 'gboeing/osmnx' }}
+    name: Public web APIs
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    defaults:
+      run:
+        shell: bash -elo pipefail {0}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          cache-dependency-glob: pyproject.toml
+          enable-cache: true
+          python-version: '3.14'
+
+      - name: Install OSMnx
+        run: |
+          uv python pin 3.14
+          uv sync --all-extras --group test
+
+      - name: Test public web APIs
+        run: uv run pytest -m network --numprocesses=0
+        env:
+          OSMNX_RUN_NETWORK_TESTS: '1'
