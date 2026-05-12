@@ -13,10 +13,13 @@ import bz2
 import gzip
 import json
 import logging as lg
+import os as stdlib_os
 import socket
+import sys as stdlib_sys
 import time as stdlib_time
 from collections import OrderedDict
 from pathlib import Path
+from typing import Any
 from typing import cast
 
 import geopandas as gpd
@@ -131,6 +134,46 @@ def test_logging_and_utils(tmp_path: Path) -> None:
     assert len(ox.utils.ts(style="date")) == 10
     assert len(ox.utils.ts(style="time")) == 8
     assert ox.settings.logs_folder == tmp_path
+
+
+@pytest.mark.unit
+def test_console_logging_fallback_branches(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    Test console logging paths for captured stdout and OSError fallback.
+
+    Parameters
+    ----------
+    monkeypatch
+        Pytest monkeypatch fixture.
+    """
+    ox.settings.log_console = True
+    ox.settings.log_file = False
+
+    dup2_calls: list[tuple[int, int]] = []
+
+    def _fake_dup2(fd: int, fd2: int) -> None:
+        dup2_calls.append((fd, fd2))
+
+    monkeypatch.setattr(stdlib_os, "dup2", _fake_dup2)
+    monkeypatch.setattr(stdlib_sys.stdout, "_original_stdstream_copy", 999, raising=False)
+    ox.utils.log("captured stdout path")
+    original_stdout = cast("Any", stdlib_sys.__stdout__)
+    captured_stdout = cast("Any", stdlib_sys.stdout)
+    assert dup2_calls == [(999, original_stdout.fileno())]
+    assert captured_stdout._original_stdstream_copy is None
+
+    class _RaisesOSError:
+        def __init__(self, *_args: object, **_kwargs: object) -> None:
+            pass
+
+        def __enter__(self) -> None:
+            raise OSError
+
+        def __exit__(self, *_args: object) -> None:
+            pass
+
+    monkeypatch.setattr(ox.utils, "redirect_stdout", _RaisesOSError)
+    ox.utils.log("fallback stdout path")
 
 
 @pytest.mark.unit
@@ -1275,6 +1318,15 @@ def test_convert_and_io_edge_cases(tmp_path: Path) -> None:
     )
     Gu = ox.convert.to_undirected(G_parallel)
     assert isinstance(Gu, nx.MultiGraph)
+
+    G_duplicate = nx.MultiDiGraph(crs="epsg:4326")
+    G_duplicate.add_node(1, x=0, y=0)
+    G_duplicate.add_node(2, x=1, y=1)
+    G_duplicate.add_edge(1, 2, key=0, osmid=1)
+    G_duplicate.add_edge(2, 1, key=1, osmid=1)
+    Gu_duplicate = ox.convert.to_undirected(G_duplicate)
+    assert len(Gu_duplicate.edges) == 1
+
     same_geom = LineString([(0, 0), (1, 1)])
     assert ox.convert._is_duplicate_edge(
         {"osmid": [1, 2], "geometry": same_geom},
@@ -1553,6 +1605,28 @@ def test_projection_stats_distance_and_geometry_branches() -> None:
         )
         > 0
     )
+
+
+@pytest.mark.unit
+def test_circuity_avg_zero_division_branch(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    Test circuity fallback when total straight-line distance is zero.
+
+    Parameters
+    ----------
+    monkeypatch
+        Pytest monkeypatch fixture.
+    """
+    G = nx.MultiGraph(crs="epsg:4326")
+    G.add_node(1, x=0.0, y=0.0)
+    G.add_node(2, x=0.0, y=0.0)
+    G.add_edge(1, 2, length=1.0)
+
+    def _raise_zero_division(_Gu: nx.MultiGraph) -> float:
+        raise ZeroDivisionError
+
+    monkeypatch.setattr(ox.stats, "edge_length_total", _raise_zero_division)
+    assert ox.stats.circuity_avg(G) is None
 
 
 @pytest.mark.unit
