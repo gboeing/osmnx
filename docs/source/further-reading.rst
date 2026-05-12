@@ -9,19 +9,19 @@ This is the official reference paper and citation for the OSMnx package.
 
 ----
 
+Boeing, G. (2026). `Urban Science Beyond Samples: Up-to-Date Street Network Models and Indicators for Every Urban Area in the World`_. *Environment and Planning B: Urban Analytics and City Science*, published online ahead of print. doi:10.1177/23998083261446991
+
+This study uses OSMnx to model and analyze the street networks of every urban area in the world: over 180 million OpenStreetMap street network nodes and over 360 million edges across 10,351 urban areas in 189 countries.
+
+.. _Urban Science Beyond Samples\: Up-to-Date Street Network Models and Indicators for Every Urban Area in the World: https://geoffboeing.com/publications/street-network-models-indicators-world/
+
+----
+
 Boeing, G. (2025). `Topological Graph Simplification Solutions to the Street Intersection Miscount Problem`_. *Transactions in GIS* 29 (3), e70037. doi:10.1111/tgis.70037
 
 This paper describes and validates the algorithms implemented in OSMnx's :code:`simplification` module and explains why graph simplification is necessary to accurately measure intersection density, street segment length, node degree, etc.
 
 .. _Topological Graph Simplification Solutions to the Street Intersection Miscount Problem: https://doi.org/10.1111/tgis.70037
-
-----
-
-Boeing, G. (2021). `Street Network Models and Indicators for Every Urban Area in the World`_. *Geographical Analysis* 54 (3), 519-535. doi:10.1111/gean.12281
-
-This study uses OSMnx to model and analyze the street networks of every urban area in the world: over 160 million OpenStreetMap street network nodes and over 320 million edges across 8,914 urban areas in 178 countries.
-
-.. _Street Network Models and Indicators for Every Urban Area in the World: https://geoffboeing.com/publications/street-network-models-indicators-world/
 
 ----
 
