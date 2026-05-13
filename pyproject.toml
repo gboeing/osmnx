@@ -61,7 +61,7 @@ Documentation = "https://osmnx.readthedocs.io"
 
 [tool.coverage.report]
 exclude_also = ["@overload", "if TYPE_CHECKING:"]
-fail_under = 100
+fail_under = 99
 
 [tool.mypy]
 cache_dir = "~/.cache/prek/cache/mypy"

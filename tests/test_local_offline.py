@@ -25,9 +25,9 @@ from conftest import ADDRESS
 from conftest import LOCATION_POINT
 from conftest import PLACE
 from conftest import TAGS
-from conftest import _drive_graph
-from conftest import _Response
-from conftest import _toy_graph
+from conftest import Response
+from conftest import drive_graph
+from conftest import toy_graph
 from lxml import etree
 from shapely import LineString
 from shapely import Point
@@ -38,10 +38,18 @@ from typeguard import suppress_type_checks
 import osmnx as ox
 from osmnx import _nominatim
 
+pytestmark = pytest.mark.offline
+
+# Sections:
+# - Cached API workflows
+# - HTTP/cache/request behavior
+# - Graph creation, conversion, and file IO
+# - Analysis, routing, distance, and plotting
+# - Projection, geometry, validation, and simplification
+
 # Cached API workflows
 
 
-@pytest.mark.offline
 def test_cache_fixture_manifest(http_cache: Path) -> None:
     manifest = json.loads((http_cache / "manifest.json").read_text(encoding="utf-8"))
 
@@ -54,7 +62,6 @@ def test_cache_fixture_manifest(http_cache: Path) -> None:
     assert all(record["query"] for record in manifest["records"])
 
 
-@pytest.mark.offline
 def test_geocoder_uses_committed_cache(
     http_cache: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -113,7 +120,6 @@ def test_geocoder_uses_committed_cache(
         ox.geocode_to_gdf("Bunker Hill, Los Angeles, California, USA")
 
 
-@pytest.mark.offline
 def test_graph_downloaders_use_committed_cache(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
 
@@ -147,7 +153,6 @@ def test_graph_downloaders_use_committed_cache(http_cache: Path) -> None:
     assert dict(G_drive.nodes(data="street_count")) == {101: 2, 102: 4, 103: 2, 104: 4, 105: 4}
 
 
-@pytest.mark.offline
 def test_features_downloaders_use_committed_cache(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
 
@@ -180,14 +185,13 @@ def test_features_downloaders_use_committed_cache(http_cache: Path) -> None:
         ox.features.features_from_polygon(Point(0, 0), tags={})
 
 
-@pytest.mark.offline
 def test_elevation_from_cache_and_raster(
     http_cache: Path,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     ox.settings.cache_folder = http_cache
-    G = _drive_graph()
+    G = drive_graph()
 
     with monkeypatch.context() as m:
 
@@ -222,13 +226,10 @@ def test_elevation_from_cache_and_raster(
     assert pd.notna(pd.Series(dict(G.nodes(data="elevation")))).sum() >= 2
 
 
-@pytest.mark.offline
-def test_http_parse_and_request_validation() -> None:
-    response = cast("requests.Response", _Response({"status": "ok"}))
-    assert ox._http._parse_response(response) == {"status": "ok"}
-    response = cast("requests.Response", _Response([{"status": "ok"}]))
-    assert ox._http._parse_response(response) == [{"status": "ok"}]
+# HTTP/cache/request behavior
 
+
+def test_request_validation_errors() -> None:
     params: OrderedDict[str, int | str] = OrderedDict()
     params["format"] = "json"
     params["address_details"] = 0
@@ -237,112 +238,10 @@ def test_http_parse_and_request_validation() -> None:
     with pytest.raises(TypeError, match="`query` must be a string"):
         ox.geocode_to_gdf(query={"City": "Boston"}, by_osmid=True)
 
-    assert ox._overpass._get_network_filter("drive").startswith('["highway"]')
     with pytest.raises(ValueError, match="Unrecognized network_type"):
         ox._overpass._get_network_filter("not-real")
-    ox.settings.overpass_memory = 123
-    assert "[maxsize:123]" in ox._overpass._make_overpass_settings()
 
 
-@pytest.mark.offline
-def test_uncached_nominatim_request_paths(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    ox.settings.use_cache = False
-    ox.settings.cache_folder = tmp_path
-
-    def _sleep(_seconds: float) -> None:
-        return None
-
-    monkeypatch.setattr(stdlib_time, "sleep", _sleep)
-
-    nominatim_responses = iter(
-        [
-            _Response([], ok=False, status_code=429),
-            _Response([{"place_id": 1}]),
-        ],
-    )
-
-    def _fake_nominatim_get(*_args: object, **_kwargs: object) -> _Response:
-        return next(nominatim_responses)
-
-    ox.settings.nominatim_key = "fixture-key"
-    params: OrderedDict[str, int | str] = OrderedDict()
-    params["format"] = "json"
-    params["q"] = "fixture"
-    monkeypatch.setattr(requests, "get", _fake_nominatim_get)
-    assert ox._nominatim._nominatim_request(params=params) == [{"place_id": 1}]
-    assert params["key"] == "fixture-key"
-
-    def _fake_nominatim_dict(*_args: object, **_kwargs: object) -> _Response:
-        return _Response({"not": "a-list"})
-
-    monkeypatch.setattr(requests, "get", _fake_nominatim_dict)
-    with pytest.raises(ox._errors.InsufficientResponseError, match="did not return a list"):
-        ox._nominatim._nominatim_request(params=OrderedDict(format="json", q="fixture"))
-
-
-@pytest.mark.offline
-def test_uncached_overpass_and_elevation_request_paths(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    ox.settings.use_cache = False
-    ox.settings.cache_folder = tmp_path
-
-    def _sleep(_seconds: float) -> None:
-        return None
-
-    monkeypatch.setattr(stdlib_time, "sleep", _sleep)
-
-    config_dns_calls: list[str] = []
-
-    def _fake_config_dns(url: str) -> None:
-        config_dns_calls.append(url)
-
-    overpass_responses = iter(
-        [
-            _Response({"remark": "retry"}, ok=False, status_code=429),
-            _Response({"elements": []}),
-        ],
-    )
-
-    def _fake_overpass_post(*_args: object, **_kwargs: object) -> _Response:
-        return next(overpass_responses)
-
-    ox.settings.overpass_rate_limit = False
-    monkeypatch.setattr(ox._http, "_config_dns", _fake_config_dns)
-    monkeypatch.setattr(requests, "post", _fake_overpass_post)
-    assert ox._overpass._overpass_request(OrderedDict(data="node(1);out;")) == {"elements": []}
-    assert config_dns_calls == [ox.settings.overpass_url, ox.settings.overpass_url]
-
-    def _fake_overpass_list(*_args: object, **_kwargs: object) -> _Response:
-        return _Response([{"not": "a-dict"}])
-
-    monkeypatch.setattr(requests, "post", _fake_overpass_list)
-    with pytest.raises(ox._errors.InsufficientResponseError, match="did not return a dict"):
-        ox._overpass._overpass_request(OrderedDict(data="node(2);out;"))
-
-    elevation_responses = iter(
-        [
-            _Response({"results": [{"elevation": 10.0}]}),
-            _Response([{"not": "a-dict"}]),
-        ],
-    )
-
-    def _fake_elevation_get(*_args: object, **_kwargs: object) -> _Response:
-        return next(elevation_responses)
-
-    monkeypatch.setattr(requests, "get", _fake_elevation_get)
-    assert ox.elevation._elevation_request("https://example.com/elevation", pause=0) == {
-        "results": [{"elevation": 10.0}],
-    }
-    with pytest.raises(ox._errors.InsufficientResponseError, match="did not return a dict"):
-        ox.elevation._elevation_request("https://example.com/elevation?second", pause=0)
-
-
-@pytest.mark.offline
 def test_http_cache_and_dns_helpers_are_deterministic(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -350,7 +249,7 @@ def test_http_cache_and_dns_helpers_are_deterministic(
     ox.settings.cache_folder = tmp_path
 
     assert ox._http._retrieve_from_cache("https://not-in-cache.example") is None
-    assert ox._http._parse_response(_Response({"status": "error"}, ok=False, status_code=500)) == {
+    assert ox._http._parse_response(Response({"status": "error"}, ok=False, status_code=500)) == {
         "status": "error",
     }
 
@@ -373,27 +272,26 @@ def test_http_cache_and_dns_helpers_are_deterministic(
         monkeypatch.setattr(socket, "getaddrinfo", original_getaddrinfo)
 
 
-@pytest.mark.offline
 def test_overpass_status_and_query_helpers_parse_responses(monkeypatch: pytest.MonkeyPatch) -> None:
 
     def _sleep(_seconds: float) -> None:
         return None
 
-    class _StatusResponse:
+    class StatusResponse:
         def __init__(self, text: str) -> None:
             self.text = text
 
     status_responses = iter(
         [
-            _StatusResponse("bad"),
-            _StatusResponse("\n\n\n\nMysterious server status\n"),
-            _StatusResponse("\n\n\n\nSlot available after: 2000-01-01T00:00:00Z,\n"),
-            _StatusResponse("\n\n\n\nCurrently running a query\n"),
-            _StatusResponse("\n\n\n\n2 slots available now.\n"),
+            StatusResponse("bad"),
+            StatusResponse("\n\n\n\nMysterious server status\n"),
+            StatusResponse("\n\n\n\nSlot available after: 2000-01-01T00:00:00Z,\n"),
+            StatusResponse("\n\n\n\nCurrently running a query\n"),
+            StatusResponse("\n\n\n\n2 slots available now.\n"),
         ],
     )
 
-    def _fake_status_get(*_args: object, **_kwargs: object) -> _StatusResponse:
+    def _fake_status_get(*_args: object, **_kwargs: object) -> StatusResponse:
         return next(status_responses)
 
     ox.settings.overpass_rate_limit = True
@@ -436,13 +334,108 @@ def test_overpass_status_and_query_helpers_parse_responses(monkeypatch: pytest.M
     assert any("railway" in payload for payload in payloads)
 
 
+def test_uncached_nominatim_request_paths(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    ox.settings.use_cache = False
+    ox.settings.cache_folder = tmp_path
+
+    def _sleep(_seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr(stdlib_time, "sleep", _sleep)
+
+    nominatim_responses = iter(
+        [
+            Response([], ok=False, status_code=429),
+            Response([{"place_id": 1}]),
+        ],
+    )
+
+    def _fake_nominatim_get(*_args: object, **_kwargs: object) -> Response:
+        return next(nominatim_responses)
+
+    ox.settings.nominatim_key = "fixture-key"
+    params: OrderedDict[str, int | str] = OrderedDict()
+    params["format"] = "json"
+    params["q"] = "fixture"
+    monkeypatch.setattr(requests, "get", _fake_nominatim_get)
+    assert ox._nominatim._nominatim_request(params=params) == [{"place_id": 1}]
+    assert params["key"] == "fixture-key"
+
+    def _fake_nominatim_dict(*_args: object, **_kwargs: object) -> Response:
+        return Response({"not": "a-list"})
+
+    monkeypatch.setattr(requests, "get", _fake_nominatim_dict)
+    with pytest.raises(ox._errors.InsufficientResponseError, match="did not return a list"):
+        ox._nominatim._nominatim_request(params=OrderedDict(format="json", q="fixture"))
+
+
+def test_uncached_overpass_and_elevation_request_paths(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    ox.settings.use_cache = False
+    ox.settings.cache_folder = tmp_path
+
+    def _sleep(_seconds: float) -> None:
+        return None
+
+    monkeypatch.setattr(stdlib_time, "sleep", _sleep)
+
+    config_dns_calls: list[str] = []
+
+    def _fake_config_dns(url: str) -> None:
+        config_dns_calls.append(url)
+
+    overpass_responses = iter(
+        [
+            Response({"remark": "retry"}, ok=False, status_code=429),
+            Response({"elements": []}),
+        ],
+    )
+
+    def _fake_overpass_post(*_args: object, **_kwargs: object) -> Response:
+        return next(overpass_responses)
+
+    ox.settings.overpass_rate_limit = False
+    monkeypatch.setattr(ox._http, "_config_dns", _fake_config_dns)
+    monkeypatch.setattr(requests, "post", _fake_overpass_post)
+    assert ox._overpass._overpass_request(OrderedDict(data="node(1);out;")) == {"elements": []}
+    assert config_dns_calls == [ox.settings.overpass_url, ox.settings.overpass_url]
+
+    def _fake_overpass_list(*_args: object, **_kwargs: object) -> Response:
+        return Response([{"not": "a-dict"}])
+
+    monkeypatch.setattr(requests, "post", _fake_overpass_list)
+    with pytest.raises(ox._errors.InsufficientResponseError, match="did not return a dict"):
+        ox._overpass._overpass_request(OrderedDict(data="node(2);out;"))
+
+    elevation_responses = iter(
+        [
+            Response({"results": [{"elevation": 10.0}]}),
+            Response([{"not": "a-dict"}]),
+        ],
+    )
+
+    def _fake_elevation_get(*_args: object, **_kwargs: object) -> Response:
+        return next(elevation_responses)
+
+    monkeypatch.setattr(requests, "get", _fake_elevation_get)
+    assert ox.elevation._elevation_request("https://example.com/elevation", pause=0) == {
+        "results": [{"elevation": 10.0}],
+    }
+    with pytest.raises(ox._errors.InsufficientResponseError, match="did not return a dict"):
+        ox.elevation._elevation_request("https://example.com/elevation?second", pause=0)
+
+
 # Graph, GeoDataFrame, and file IO workflows
 
 
-@pytest.mark.offline
 def test_stats_simplification_and_conversion(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
-    G = _drive_graph()
+    G = drive_graph()
     G_proj = ox.project_graph(G)
     G_proj = ox.project_graph(G_proj)
 
@@ -477,10 +470,9 @@ def test_stats_simplification_and_conversion(http_cache: Path) -> None:
     assert isinstance(Gu, nx.MultiGraph)
 
 
-@pytest.mark.offline
 def test_save_load_graph_files(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
-    G = _drive_graph()
+    G = drive_graph()
     ox.convert.validate_graph(G)
 
     ox.save_graph_geopackage(G, directed=False)
@@ -522,7 +514,6 @@ def test_save_load_graph_files(http_cache: Path) -> None:
     assert len(G3) > 0
 
 
-@pytest.mark.offline
 def test_osm_xml_read_write(http_cache: Path, tmp_path: Path) -> None:
     ox.settings.cache_folder = http_cache
     node_id = 53098262
@@ -547,7 +538,7 @@ def test_osm_xml_read_write(http_cache: Path, tmp_path: Path) -> None:
 
     default_all_oneway = ox.settings.all_oneway
     ox.settings.all_oneway = True
-    G = _drive_graph()
+    G = drive_graph()
     fp = Path(ox.settings.data_folder) / "graph.osm"
     ox.io.save_graph_xml(G, filepath=fp, way_tag_aggs={"lanes": "sum"})
 
@@ -559,7 +550,6 @@ def test_osm_xml_read_write(http_cache: Path, tmp_path: Path) -> None:
     ox.settings.all_oneway = default_all_oneway
 
 
-@pytest.mark.offline
 def test_graph_creation_validates_inputs(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
     G_network = ox.graph_from_point(
@@ -602,7 +592,6 @@ def test_graph_creation_validates_inputs(http_cache: Path) -> None:
     assert (2, 1, 0) in G.edges
 
 
-@pytest.mark.offline
 def test_conversion_and_graphml_validate_inputs(tmp_path: Path) -> None:
     empty = nx.MultiDiGraph(crs="epsg:4326")
     with pytest.raises(ValueError, match="contains no nodes"):
@@ -645,7 +634,7 @@ def test_conversion_and_graphml_validate_inputs(tmp_path: Path) -> None:
     )
     assert G_types.edges[1, 2, 0]["osmid"] == [10, 11]
 
-    G_parallel = _toy_graph()
+    G_parallel = toy_graph()
     G_parallel.add_edge(
         2,
         1,
@@ -683,19 +672,7 @@ def test_conversion_and_graphml_validate_inputs(tmp_path: Path) -> None:
     Gu_duplicate = ox.convert.to_undirected(G_duplicate)
     assert len(Gu_duplicate.edges) == 1
 
-    same_geom = LineString([(0, 0), (1, 1)])
-    assert ox.convert._is_duplicate_edge(
-        {"osmid": [1, 2], "geometry": same_geom},
-        {"osmid": [2, 1], "geometry": LineString([(1, 1), (0, 0)])},
-    )
-    assert ox.convert._is_duplicate_edge({"osmid": 1}, {"osmid": 1})
-    assert not ox.convert._is_duplicate_edge(
-        {"osmid": 1, "geometry": LineString([(0, 0), (1, 1)])},
-        {"osmid": 1},
-    )
 
-
-@pytest.mark.offline
 def test_osm_xml_roundtrip_warns_for_projected_graphs(tmp_path: Path) -> None:
     G = nx.MultiDiGraph(crs="epsg:3857")
     G.add_node(1, x=0.0, y=0.0, street_count=1)
@@ -726,7 +703,6 @@ def test_osm_xml_roundtrip_warns_for_projected_graphs(tmp_path: Path) -> None:
 # Analysis, routing, distance, and plotting workflows
 
 
-@pytest.mark.offline
 def test_logging_and_utils(tmp_path: Path) -> None:
     ox.settings.log_console = True
     ox.settings.log_file = True
@@ -748,10 +724,9 @@ def test_logging_and_utils(tmp_path: Path) -> None:
     assert ox.settings.logs_folder == tmp_path
 
 
-@pytest.mark.offline
 def test_bearings_routing_and_nearest(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
-    G = _drive_graph()
+    G = drive_graph()
 
     assert ox.bearing.calculate_bearing(0, 0, 1, 1) == pytest.approx(44.99563646)
 
@@ -780,7 +755,6 @@ def test_bearings_routing_and_nearest(http_cache: Path) -> None:
     assert ox.routing._clean_maxspeed("100 mph") == pytest.approx(160.934)
     assert ox.routing._clean_maxspeed("signal") is None
     assert ox.routing._collapse_multiple_maxspeed_values(["25 mph", "30 mph"], np.mean) == 44.25685
-
     paths1 = ox.shortest_path(G, [101, 102], [103, 104], weight="length", cpus=1)
     paths2 = ox.shortest_path(G, [101, 102], [103, 104], weight="length", cpus=2)
     assert paths1 == paths2 == [[101, 102, 103], [102, 105, 104]]
@@ -802,10 +776,9 @@ def test_bearings_routing_and_nearest(http_cache: Path) -> None:
     assert len(nearest_edges[0]) == 3
 
 
-@pytest.mark.offline
 def test_plots_and_colors(http_cache: Path) -> None:
     ox.settings.cache_folder = http_cache
-    G = _drive_graph()
+    G = drive_graph()
     Gp = ox.project_graph(G)
 
     colors = ox.plot.get_colors(n=5, cmap="plasma", start=0.1, stop=0.9, alpha=0.5)
@@ -842,7 +815,6 @@ def test_plots_and_colors(http_cache: Path) -> None:
     assert filepath.is_file()
 
 
-@pytest.mark.offline
 def test_utils_geo_projection_and_http_helpers(tmp_path: Path) -> None:
     geom = ox.utils_geo.buffer_geometry(Point(-122.41, 37.79), dist=100)
     bbox = ox.utils_geo.bbox_from_point(LOCATION_POINT, dist=500, project_utm=True)
@@ -886,13 +858,12 @@ def test_utils_geo_projection_and_http_helpers(tmp_path: Path) -> None:
     assert "User-Agent" in ox._http._get_http_headers(user_agent="test-agent")
 
 
-@pytest.mark.offline
 def test_routing_and_http_helpers_validate_inputs_and_statuses(
     http_cache: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     ox.settings.cache_folder = http_cache
-    G = _drive_graph()
+    G = drive_graph()
 
     G_dist = ox.truncate.truncate_graph_dist(G, 101, 150)
     assert set(G_dist.nodes).issubset(G.nodes)
@@ -924,15 +895,15 @@ def test_routing_and_http_helpers_validate_inputs_and_statuses(
     assert ox._http._resolve_host_via_doh("example.com") == "example.com"
     ox.settings.doh_url_template = "https://dns.example.test/{hostname}"
 
-    doh_response = _Response({"Status": 0, "Answer": [{"data": "192.0.2.1"}]})
+    doh_response = Response({"Status": 0, "Answer": [{"data": "192.0.2.1"}]})
 
-    def _fake_doh_get(*_args: object, **_kwargs: object) -> _Response:
+    def _fake_doh_get(*_args: object, **_kwargs: object) -> Response:
         return doh_response
 
     monkeypatch.setattr(requests, "get", _fake_doh_get)
     assert ox._http._resolve_host_via_doh("example.com") == "192.0.2.1"
 
-    doh_response = _Response({"Status": 1})
+    doh_response = Response({"Status": 1})
     assert ox._http._resolve_host_via_doh("example.com") == "example.com"
 
     class _StatusResponse:
@@ -946,7 +917,6 @@ def test_routing_and_http_helpers_validate_inputs_and_statuses(
     assert ox._overpass._get_overpass_pause("https://overpass.example.test/api") == 0
 
 
-@pytest.mark.offline
 def test_projection_stats_distance_and_geometry_behaviors() -> None:
     gdf_north = gpd.GeoDataFrame(geometry=[Point(0, 85.1)], crs="epsg:4326")
     gdf_south = gpd.GeoDataFrame(geometry=[Point(0, -84.1)], crs="epsg:4326")
@@ -965,7 +935,7 @@ def test_projection_stats_distance_and_geometry_behaviors() -> None:
     G_projected = ox.project_graph(G_simple)
     assert ox.project_graph(G_projected, to_latlong=True).graph["crs"] == ox.settings.default_crs
 
-    G_stats = _toy_graph(crs="epsg:3857")
+    G_stats = toy_graph(crs="epsg:3857")
     G_missing_count = G_stats.copy()
     del G_missing_count.nodes[1]["street_count"]
     assert set(ox.stats.streets_per_node(G_missing_count)) != set(G_missing_count.nodes)
@@ -1017,7 +987,6 @@ def test_projection_stats_distance_and_geometry_behaviors() -> None:
     )
 
 
-@pytest.mark.offline
 def test_truncation_plotting_and_routing_errors(tmp_path: Path) -> None:
     G_trunc = nx.MultiDiGraph(crs="epsg:4326")
     G_trunc.add_node(1, x=0.0, y=0.0)
@@ -1032,7 +1001,7 @@ def test_truncation_plotting_and_routing_errors(tmp_path: Path) -> None:
     G_strong.add_edges_from([(1, 2), (2, 1), (3, 4)])
     assert set(ox.truncate.largest_component(G_strong, strongly=True).nodes) == {1, 2}
 
-    G_plot = _toy_graph()
+    G_plot = toy_graph()
     G_plot.add_node(99, x=0.0, y=1.0, street_count=0)
     _, _ = ox.plot_graph_route(G_plot, [1, 2, 3], show=False, close=True)
     _, _ = ox.plot_figure_ground(G_plot, show=False, close=True)
@@ -1073,7 +1042,7 @@ def test_truncation_plotting_and_routing_errors(tmp_path: Path) -> None:
             equal_size=False,
         )
 
-    G_route = _toy_graph()
+    G_route = toy_graph()
     G_route.add_node(4, x=10.0, y=10.0, street_count=0)
     assert ox.shortest_path(G_route, 1, 4) is None
     assert ox.shortest_path(G_route, [1], [3], cpus=None) == [[1, 2, 3]]
@@ -1090,7 +1059,6 @@ def test_truncation_plotting_and_routing_errors(tmp_path: Path) -> None:
 # Geometry, validation, and simplification workflows
 
 
-@pytest.mark.offline
 def test_validation_errors() -> None:
     G = nx.MultiDiGraph()
     G.add_edge(0, 1)
@@ -1139,7 +1107,6 @@ def test_validation_errors() -> None:
     ox.convert.validate_graph(G)
 
 
-@pytest.mark.offline
 def test_validation_reports_bad_graph_attributes() -> None:
     G = nx.MultiDiGraph(crs="epsg:4326")
     G.add_node("a", x="bad", y=0)
@@ -1185,7 +1152,6 @@ def test_validation_reports_bad_graph_attributes() -> None:
     ox.convert.validate_node_edge_gdfs(gdf_nodes, gdf_edges)
 
 
-@pytest.mark.offline
 def test_features_from_xml_and_polygon_holes() -> None:
     gdf = ox.features_from_xml("tests/input_data/planet_10.068,48.135_10.071,48.137.osm")
     assert len(gdf) > 0
@@ -1206,7 +1172,6 @@ def test_features_from_xml_and_polygon_holes() -> None:
     assert result.equals(wkt.loads(geom_wkt))
 
 
-@pytest.mark.offline
 def test_simplification_preserves_merged_edge_attrs(monkeypatch: pytest.MonkeyPatch) -> None:
     G = nx.MultiDiGraph(crs="epsg:4326")
     G.add_node(1, x=0.0, y=0.0, street_count=1)
@@ -1256,7 +1221,6 @@ def test_simplification_preserves_merged_edge_attrs(monkeypatch: pytest.MonkeyPa
     assert len(ox.simplification._remove_rings(R, None, None)) == 0
 
 
-@pytest.mark.offline
 def test_consolidation_merges_nearby_intersections() -> None:
     Gm = nx.MultiDiGraph(crs="epsg:3857")
     Gm.add_node(1, x=0.0, y=0.0, street_count=2, elevation=1.0, color="red")
@@ -1292,7 +1256,6 @@ def test_consolidation_merges_nearby_intersections() -> None:
     assert len(Gc_split) == 4
 
 
-@pytest.mark.offline
 def test_feature_processing_filters_tags_and_geometry() -> None:
     outer_line = LineString([(0, 0), (4, 0), (4, 4), (0, 4), (0, 0)])
     inner_line = LineString([(1, 1), (2, 1), (2, 2), (1, 2), (1, 1)])

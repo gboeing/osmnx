@@ -21,7 +21,6 @@ mpl.use("Agg")
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-# Shared test data and builders.
 LOCATION_POINT = (37.791427, -122.410018)
 ADDRESS = "Transamerica Pyramid, 600 Montgomery Street, San Francisco, California, USA"
 PLACE = {"city": "Piedmont", "state": "California", "country": "USA"}
@@ -89,6 +88,10 @@ class _Response(requests.Response):
         return self._payload
 
 
+drive_graph = _drive_graph
+toy_graph = _toy_graph
+Response = _Response
+
 HTTP_CACHE_DIR = Path(__file__).parent / "input_data" / "http_cache"
 
 
@@ -98,9 +101,9 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
     Parameters
     ----------
-    config : pytest.Config
-        Pytest configuration object (unused).
-    items : list of pytest.Item
+    config
+        Pytest configuration object.
+    items
         Collected test items.
     """
     del config
@@ -121,13 +124,13 @@ def _isolate_settings(tmp_path: Path) -> Iterator[None]:
 
     Parameters
     ----------
-    tmp_path : pathlib.Path
-        Temporary directory unique to the test invocation.
+    tmp_path
+        Temporary directory unique to the test.
 
     Yields
     ------
     None
-        Control is yielded to the test, after which original settings are restored.
+        Control returns to pytest after each test.
     """
     import osmnx as ox  # noqa: PLC0415
 
@@ -161,15 +164,10 @@ def _block_network(
 
     Parameters
     ----------
-    monkeypatch : pytest.MonkeyPatch
-        Fixture for safely modifying objects during tests.
-    request : pytest.FixtureRequest
-        Provides access to the requesting test context.
-
-    Returns
-    -------
-    None
-        This fixture modifies global state and does not return a value.
+    monkeypatch
+        Pytest fixture for temporary object replacement.
+    request
+        Pytest request object for the active test.
     """
     if request.node.get_closest_marker("online") and os.environ.get("OSMNX_RUN_ONLINE_TESTS"):
         return
@@ -193,7 +191,7 @@ def http_cache() -> Path:
     Returns
     -------
     pathlib.Path
-        Path to the HTTP cache directory used for tests.
+        Directory containing committed raw HTTP cache files.
     """
     import osmnx as ox  # noqa: PLC0415
 
