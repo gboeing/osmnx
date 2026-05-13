@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Live public web API compatibility tests."""
 
 # ruff: noqa: PLR2004, S101

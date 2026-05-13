@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 jobs:
-  test_public_apis:
+  test_online_apis:
     if: ${{ github.repository == 'gboeing/osmnx' }}
     name: Public web APIs
     runs-on: ubuntu-latest
