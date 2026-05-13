@@ -33,19 +33,7 @@ def _assert_valid_graph(G: nx.MultiDiGraph) -> None:
     assert G.graph["crs"] == ox.settings.default_crs
 
 
-def test_live_nominatim_downloaders() -> None:
-    """Smoke-test public Nominatim geocoding endpoints."""
-    point = ox.geocode(ADDRESS)
-    gdf_place = ox.geocode_to_gdf(PLACE, which_result=1)
-    gdf_osmid = ox.geocode_to_gdf("R2999176", by_osmid=True)
-
-    assert len(point) == 2
-    assert len(gdf_place) == 1
-    assert len(gdf_osmid) == 1
-    assert gdf_place.crs == ox.settings.default_crs
-    assert not gdf_place.geometry.is_empty.any()
-
-
+@pytest.mark.xdist_group(name="group1")
 def test_live_overpass_graph_downloaders() -> None:
     """Smoke-test public Overpass graph downloader entry points."""
     bbox = ox.utils_geo.bbox_from_point(LOCATION_POINT, dist=250)
@@ -63,6 +51,7 @@ def test_live_overpass_graph_downloaders() -> None:
         _assert_valid_graph(G)
 
 
+@pytest.mark.xdist_group(name="group2")
 def test_live_overpass_feature_downloaders() -> None:
     """Smoke-test public Overpass feature downloader entry points."""
     bbox = ox.utils_geo.bbox_from_point(LOCATION_POINT, dist=250)
@@ -82,6 +71,21 @@ def test_live_overpass_feature_downloaders() -> None:
         assert gdf.crs == ox.settings.default_crs
 
 
+@pytest.mark.xdist_group(name="group3")
+def test_live_nominatim_downloaders() -> None:
+    """Smoke-test public Nominatim geocoding endpoints."""
+    point = ox.geocode(ADDRESS)
+    gdf_place = ox.geocode_to_gdf(PLACE, which_result=1)
+    gdf_osmid = ox.geocode_to_gdf("R2999176", by_osmid=True)
+
+    assert len(point) == 2
+    assert len(gdf_place) == 1
+    assert len(gdf_osmid) == 1
+    assert gdf_place.crs == ox.settings.default_crs
+    assert not gdf_place.geometry.is_empty.any()
+
+
+@pytest.mark.xdist_group(name="group3")
 def test_live_elevation_downloader() -> None:
     """Smoke-test a public Google-compatible elevation endpoint."""
     G = nx.MultiDiGraph(crs=ox.settings.default_crs)

@@ -43,4 +43,4 @@ jobs:
       - name: Test public web APIs
         run: uv run pytest -m online --numprocesses=3
         env:
-          OSMNX_RUN_NETWORK_TESTS: '1'
+          OSMNX_RUN_ONLINE_TESTS: '1'

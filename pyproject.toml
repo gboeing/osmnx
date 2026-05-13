@@ -81,8 +81,8 @@ cache_dir = "~/.cache/pytest"
 filterwarnings = ["error", "ignore::UserWarning"]
 log_level = "INFO"
 markers = [
-  "offline: deterministic tests that do not make live public web API calls",
-  "online: tests that make live public web API calls",
+  "offline: deterministic tests that do not make online public web API calls",
+  "online: tests that make live online public web API calls",
 ]
 minversion = 9
 strict = true

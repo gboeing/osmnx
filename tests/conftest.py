@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Shared pytest fixtures for deterministic OSMnx tests."""
 
 from __future__ import annotations
@@ -104,10 +105,10 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     """
     del config
 
-    if os.environ.get("OSMNX_RUN_NETWORK_TESTS"):
+    if os.environ.get("OSMNX_RUN_ONLINE_TESTS"):
         return
 
-    skip_online = pytest.mark.skip(reason="set OSMNX_RUN_NETWORK_TESTS=1 to run online tests")
+    skip_online = pytest.mark.skip(reason="set OSMNX_RUN_ONLINE_TESTS=1 to run online tests")
     for item in items:
         if item.get_closest_marker("online"):
             item.add_marker(skip_online)
@@ -170,13 +171,13 @@ def _block_network(
     None
         This fixture modifies global state and does not return a value.
     """
-    if request.node.get_closest_marker("online") and os.environ.get("OSMNX_RUN_NETWORK_TESTS"):
+    if request.node.get_closest_marker("online") and os.environ.get("OSMNX_RUN_ONLINE_TESTS"):
         return
 
     def _blocked_request(*args: Any, **kwargs: Any) -> None:  # noqa: ANN401, ARG001
         msg = (
             "Network access is blocked in offline tests. Mark the test with "
-            "`@pytest.mark.online` and set OSMNX_RUN_NETWORK_TESTS=1 to allow it."
+            "`@pytest.mark.online` and set OSMNX_RUN_ONLINE_TESTS=1 to allow it."
         )
         raise AssertionError(msg)
 
