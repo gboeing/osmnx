@@ -1,4 +1,4 @@
-# This workflow runs the repo's CI tests.
+# This workflow runs the repo's (local/offline) CI tests.
 name: CI
 
 on:
@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: 5 4 * * 1  # every monday at 04:05 UTC
+    - cron: 30 4 * * 1  # every monday at 04:30 UTC
   workflow_dispatch:
 
 concurrency:
