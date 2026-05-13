@@ -144,7 +144,7 @@ def log(
         message = f"{ts()} {message}"
         message = ud.normalize("NFKD", message).encode("ascii", errors="replace").decode()
 
-        try:
+        try:  # pragma: no cover
             # print explicitly to terminal in case Jupyter has captured stdout
             if getattr(sys.stdout, "_original_stdstream_copy", None) is not None:
                 # redirect the Jupyter-captured pipe back to original
@@ -152,7 +152,7 @@ def log(
                 sys.stdout._original_stdstream_copy = None  # type: ignore[union-attr]
             with redirect_stdout(sys.__stdout__):
                 print(message, file=sys.__stdout__, flush=True)
-        except OSError:
+        except OSError:  # pragma: no cover
             # handle pytest on Windows raising OSError from sys.__stdout__
             print(message, flush=True)  # noqa: T201
 

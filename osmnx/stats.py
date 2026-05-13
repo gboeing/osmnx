@@ -264,7 +264,7 @@ def circuity_avg(Gu: nx.MultiGraph) -> float | None:
     sl_dists_total = sl_dists[~np.isnan(sl_dists)].sum()
     try:
         return float(edge_length_total(Gu) / sl_dists_total)
-    except ZeroDivisionError:
+    except ZeroDivisionError:  # pragma: no cover
         return None
 
 
