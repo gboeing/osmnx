@@ -66,13 +66,6 @@
       "url_host": "overpass-api.de"
     },
     {
-      "cache_file": "8c3de719319e9140fcd798508e71abc3d0387c71.json",
-      "endpoint": "https://overpass-api.de/api/interpreter",
-      "label": "overpass_network_3",
-      "query": "data=<drive network Overpass QL for the committed address polygon fixture>",
-      "url_host": "overpass-api.de"
-    },
-    {
       "cache_file": "d206c7ec7b8dd802e70c1fabbce4cc8dd5a23054.json",
       "endpoint": "https://overpass-api.de/api/interpreter",
       "label": "overpass_network_4",
@@ -84,13 +77,6 @@
       "endpoint": "https://overpass-api.de/api/interpreter",
       "label": "overpass_network_5",
       "query": "data=<walk network Overpass QL for the committed place polygon fixture>",
-      "url_host": "overpass-api.de"
-    },
-    {
-      "cache_file": "4a3d397fee15cdcdce1e0ff643bb15cdd1dff87b.json",
-      "endpoint": "https://overpass-api.de/api/interpreter",
-      "label": "overpass_network_6",
-      "query": "data=<all network Overpass QL for the polygon with interior holes fixture>",
       "url_host": "overpass-api.de"
     },
     {
