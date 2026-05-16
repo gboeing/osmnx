@@ -14,6 +14,7 @@ import requests
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from . import _http
+from . import _osm_filters
 from . import projection
 from . import settings
 from . import utils
@@ -66,80 +67,7 @@ def _get_network_filter(network_type: str) -> str:
     way_filter
         The Overpass query filter.
     """
-    # define built-in queries to send to the API. specifying way["highway"]
-    # means that all ways returned must have a highway tag. the filters then
-    # remove ways by tag/value.
-    filters = {}
-
-    # driving: filter out un-drivable roads, service roads, private ways, and
-    # anything tagged motor=no. also filter out any non-service roads that are
-    # tagged as providing certain services
-    filters["drive"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|'
-        f"cycleway|elevator|escalator|footway|no|path|pedestrian|planned|platform|"
-        f'proposed|raceway|razed|rest_area|service|services|steps|track"]'
-        f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
-        f'["service"!~"alley|driveway|emergency_access|parking|parking_aisle|private"]'
-    )
-
-    # drive+service: allow ways tagged 'service' but filter out certain types
-    filters["drive_service"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|'
-        f"cycleway|elevator|escalator|footway|no|path|pedestrian|planned|platform|"
-        f'proposed|raceway|razed|rest_area|services|steps|track"]'
-        f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
-        f'["service"!~"emergency_access|parking|parking_aisle|private"]'
-    )
-
-    # walking: filter out cycle ways, motor ways, private ways, and anything
-    # tagged foot=no. allow service roads, permitting things like parking lot
-    # aisles, alleys, etc that you *can* walk on even if they're not exactly
-    # pleasant walks. some cycleways may allow pedestrians, but this filter
-    # ignores such cycleways.
-    filters["walk"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bus_guideway|construction|cycleway|motor|no|planned|'
-        f'platform|proposed|raceway|razed|rest_area|services"]'
-        f'["foot"!~"no"]["service"!~"private"]'
-        f'["sidewalk"!~"separate"]["sidewalk:both"!~"separate"]'
-        f'["sidewalk:left"!~"separate"]["sidewalk:right"!~"separate"]'
-    )
-
-    # biking: filter out foot ways, motor ways, private ways, and anything
-    # tagged biking=no
-    filters["bike"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bus_guideway|construction|corridor|elevator|'
-        f"escalator|footway|motor|no|planned|platform|proposed|raceway|razed|"
-        f'rest_area|services|steps"]'
-        f'["bicycle"!~"no"]["service"!~"private"]'
-    )
-
-    # to download all public ways, just filter out everything not currently in
-    # use or that is private-access only
-    filters["all_public"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|construction|no|planned|platform|proposed|raceway|'
-        f'razed|rest_area|services"]'
-        f'["service"!~"private"]'
-    )
-
-    # to download all ways, including private-access ones, just filter out
-    # everything not currently in use
-    filters["all"] = (
-        '["highway"]["area"!~"yes"]["highway"!~"abandoned|construction|no|planned|'
-        'platform|proposed|raceway|razed|rest_area|services"]'
-    )
-
-    if network_type in filters:
-        way_filter = filters[network_type]
-    else:  # pragma: no cover
-        msg = f"Unrecognized network_type {network_type!r}."
-        raise ValueError(msg)
-
-    return way_filter
+    return _osm_filters._get_network_filter(network_type)
 
 
 def _get_overpass_pause(
@@ -378,13 +306,11 @@ def _download_overpass_network(
     """
     # create filter(s) to exclude certain kinds of ways based on the requested
     # network_type, if provided, otherwise use custom_filter
-    way_filters = []
-    if isinstance(custom_filter, list):
-        way_filters = custom_filter
-    elif isinstance(custom_filter, str):
-        way_filters = [custom_filter]
-    else:
-        way_filters = [_get_network_filter(network_type)]
+    way_filters = _osm_filters._get_way_filter(
+        network_type,
+        custom_filter,
+        parse_custom_filter=False,
+    ).to_overpass_filters()
 
     # create overpass settings string
     overpass_settings = _make_overpass_settings()
