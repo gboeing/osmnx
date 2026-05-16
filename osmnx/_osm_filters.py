@@ -46,7 +46,7 @@ class _TagFilter:
     the Overpass string lets local sources, such as PBF files, evaluate the
     same predicates against a way's tags without parsing query text.
 
-    Parameters
+    Attributes
     ----------
     key
         OSM tag key to inspect.
@@ -69,6 +69,16 @@ class _TagFilter:
         where the key is absent as well as elements where the key's value does
         not match the expression. The local evaluator mirrors that behavior so
         PBF filtering follows the same semantics as Overpass queries.
+
+        Parameters
+        ----------
+        tags
+            The way's OSM tags.
+
+        Returns
+        -------
+        matches
+            True if this predicate matches `tags`.
         """
         if self.operator == "exists":
             return self.key in tags
@@ -97,6 +107,11 @@ class _TagFilter:
 
         The returned string is intended to be concatenated after an Overpass
         element selector, for example `way["highway"]["area"!~"yes"]`.
+
+        Returns
+        -------
+        overpass_filter
+            Overpass QL tag filter string.
         """
         if self.operator == "exists":
             return f'["{self.key}"]'
@@ -127,7 +142,7 @@ class _WayFilter:
     their union. This matches OSMnx's existing `custom_filter` semantics: a
     string is one intersection, while a list of strings is a union.
 
-    Parameters
+    Attributes
     ----------
     clauses
         Groups of tag filters to match or render.
@@ -139,17 +154,37 @@ class _WayFilter:
     overpass_filters: tuple[str, ...] | None = None
 
     def matches(self, tags: _Tags) -> bool:
-        """Return True if any filter clause group matches tags."""
+        """
+        Return True if any filter clause group matches tags.
+
+        Parameters
+        ----------
+        tags
+            The way's OSM tags.
+
+        Returns
+        -------
+        matches
+            True if any clause group matches `tags`.
+        """
         if self.overpass_filters is not None:
             msg = "Cannot locally match unparsed custom Overpass filters."
             raise ValueError(msg)
         return any(all(filter_.matches(tags) for filter_ in group) for group in self.clauses)
 
     def to_overpass_filters(self) -> list[str]:
-        """Render each clause group as an Overpass QL tag filter string."""
+        """
+        Render each clause group as an Overpass QL tag filter string.
+
+        Returns
+        -------
+        overpass_filters
+            One Overpass QL tag filter string per clause group.
+        """
         if self.overpass_filters is not None:
             return list(self.overpass_filters)
         return ["".join(filter_.to_overpass() for filter_ in group) for group in self.clauses]
+
 
 _DEFAULT_ACCESS_FILTER = _DefaultAccessFilter()
 _HIGHWAY_EXISTS = _TagFilter("highway")

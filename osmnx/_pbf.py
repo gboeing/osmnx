@@ -13,6 +13,8 @@ if TYPE_CHECKING:
 
     from ._osm_filters import _WayFilter
 
+__all__ = ["osmium"]
+
 # osmium is an optional dependency for PBF querying
 try:
     import osmium
@@ -48,7 +50,21 @@ def _overpass_json_from_pbf(filepath: Path, way_filter: _WayFilter) -> dict[str,
 
 
 def _extract_ways(filepath: Path, way_filter: _WayFilter) -> tuple[list[dict[str, Any]], set[int]]:
-    """Extract matching ways from a PBF file and collect their node references."""
+    """
+    Extract matching ways from a PBF file and collect their node references.
+
+    Parameters
+    ----------
+    filepath
+        Path to PBF file containing OSM data.
+    way_filter
+        Filter specifying which OSM ways to include.
+
+    Returns
+    -------
+    way_elements, node_refs
+        Matching way elements and the set of node IDs they reference.
+    """
     utils.log(f"Extracting ways from {str(filepath)!r}.")
     way_elements: list[dict[str, Any]] = []
     node_refs: set[int] = set()
@@ -73,7 +89,21 @@ def _extract_ways(filepath: Path, way_filter: _WayFilter) -> tuple[list[dict[str
 
 
 def _extract_nodes(filepath: Path, node_refs: set[int]) -> tuple[list[dict[str, Any]], set[int]]:
-    """Extract the requested nodes from a PBF file."""
+    """
+    Extract the requested nodes from a PBF file.
+
+    Parameters
+    ----------
+    filepath
+        Path to PBF file containing OSM data.
+    node_refs
+        Node IDs to extract.
+
+    Returns
+    -------
+    node_elements, found_node_refs
+        Node elements with valid locations and the set of their IDs.
+    """
     utils.log(f"Extracting {len(node_refs):,} way nodes from {str(filepath)!r}.")
     node_elements: list[dict[str, Any]] = []
     found_node_refs: set[int] = set()
@@ -105,7 +135,21 @@ def _discard_ways_missing_nodes(
     way_elements: list[dict[str, Any]],
     found_node_refs: set[int],
 ) -> list[dict[str, Any]]:
-    """Discard ways with missing node references to avoid invalid graph edges."""
+    """
+    Discard ways with missing node references to avoid invalid graph edges.
+
+    Parameters
+    ----------
+    way_elements
+        Candidate way elements to filter.
+    found_node_refs
+        Node IDs that were successfully extracted from the PBF.
+
+    Returns
+    -------
+    valid_way_elements
+        Way elements whose every node reference is present in `found_node_refs`.
+    """
     valid_way_elements = [
         way for way in way_elements if all(node_id in found_node_refs for node_id in way["nodes"])
     ]

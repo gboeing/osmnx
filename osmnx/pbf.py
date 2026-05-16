@@ -1,4 +1,5 @@
-"""Create graphs from local OpenStreetMap PBF files.
+"""
+Create graphs from local OpenStreetMap PBF files.
 
 This module requires the optional ``osmium`` dependency. Install it with
 ``osmnx[pbf]``.

@@ -71,14 +71,28 @@ class _FakeOsm:
 
 
 class _FakeEntityFilter:
-    """Fake osmium entity filter for PBF tests."""
+    """
+    Fake osmium entity filter for PBF tests.
+
+    Parameters
+    ----------
+    entity
+        Entity kind to match.
+    """
 
     def __init__(self, entity: str) -> None:
         self.entity = entity
 
 
 class _FakeIdFilter:
-    """Fake osmium ID filter for PBF tests."""
+    """
+    Fake osmium ID filter for PBF tests.
+
+    Parameters
+    ----------
+    ids
+        OSM IDs to match.
+    """
 
     def __init__(self, ids: set[int]) -> None:
         self.ids = ids
@@ -92,26 +106,60 @@ class _FakeFilter:
 
 
 class _FakeLocation:
-    """Fake osmium node location for PBF tests."""
+    """
+    Fake osmium node location for PBF tests.
+
+    Parameters
+    ----------
+    lon
+        Longitude of the fake location.
+    lat
+        Latitude of the fake location.
+    """
 
     def __init__(self, lon: float, lat: float) -> None:
         self.lon = lon
         self.lat = lat
 
     def valid(self) -> bool:
-        """Return True because all fake node locations are valid."""
+        """
+        Return True because all fake node locations are valid.
+
+        Returns
+        -------
+        valid
+            Always True.
+        """
         return True
 
 
 class _FakeNodeRef:
-    """Fake osmium way node reference for PBF tests."""
+    """
+    Fake osmium way node reference for PBF tests.
+
+    Parameters
+    ----------
+    ref
+        Node ID referenced by this fake way node.
+    """
 
     def __init__(self, ref: int) -> None:
         self.ref = ref
 
 
 class _FakeWay:
-    """Fake osmium way for PBF tests."""
+    """
+    Fake osmium way for PBF tests.
+
+    Parameters
+    ----------
+    way_id
+        Way ID.
+    node_refs
+        Node IDs referenced by the way.
+    tags
+        OSM tags on the way.
+    """
 
     def __init__(self, way_id: int, node_refs: list[int], tags: dict[str, str]) -> None:
         self.id = way_id
@@ -120,7 +168,18 @@ class _FakeWay:
 
 
 class _FakeNode:
-    """Fake osmium node for PBF tests."""
+    """
+    Fake osmium node for PBF tests.
+
+    Parameters
+    ----------
+    node_id
+        Node ID.
+    lon
+        Longitude of the fake node.
+    lat
+        Latitude of the fake node.
+    """
 
     def __init__(self, node_id: int, lon: float, lat: float) -> None:
         self.id = node_id
@@ -129,7 +188,14 @@ class _FakeNode:
 
 
 class _FakeFileProcessor:
-    """Fake osmium FileProcessor for PBF tests."""
+    """
+    Fake osmium FileProcessor for PBF tests.
+
+    Parameters
+    ----------
+    filepath
+        Path supplied to the fake file processor.
+    """
 
     _ways: ClassVar[list[_FakeWay]] = [
         _FakeWay(100, [1, 2], {"highway": "residential"}),
@@ -148,7 +214,19 @@ class _FakeFileProcessor:
         self.ids: set[int] | None = None
 
     def with_filter(self, filter_: _FakeEntityFilter | _FakeIdFilter) -> _FakeFileProcessor:
-        """Apply fake filter state and return self."""
+        """
+        Apply fake filter state and return self.
+
+        Parameters
+        ----------
+        filter_
+            Fake entity or ID filter to record on this processor.
+
+        Returns
+        -------
+        self
+            This processor instance, for chained `with_filter` calls.
+        """
         if isinstance(filter_, _FakeEntityFilter):
             self.entity = filter_.entity
         else:
@@ -333,7 +411,14 @@ def test_pbf_xml_parity() -> None:
 
 @pytest.mark.xdist_group(name="group1")
 def test_pbf_bbox_parity(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test that PBF bbox loading matches graph_from_bbox on the same data."""
+    """
+    Test that PBF bbox loading matches graph_from_bbox on the same data.
+
+    Parameters
+    ----------
+    monkeypatch
+        Pytest fixture used to patch the Overpass network downloader.
+    """
     if pbf.osmium is None:
         pytest.skip("PBF parity test requires the optional dependency `osmium`.")
 
