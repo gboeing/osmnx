@@ -26,6 +26,7 @@ from .geocoder import geocode as geocode
 from .geocoder import geocode_to_gdf as geocode_to_gdf
 from .graph import graph_from_address as graph_from_address
 from .graph import graph_from_bbox as graph_from_bbox
+from .graph import graph_from_pbf as graph_from_pbf
 from .graph import graph_from_place as graph_from_place
 from .graph import graph_from_point as graph_from_point
 from .graph import graph_from_polygon as graph_from_polygon

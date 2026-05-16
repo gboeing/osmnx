@@ -19,8 +19,10 @@ import networkx as nx
 from shapely import MultiPolygon
 from shapely import Polygon
 
+from . import _osm_filters
 from . import _osm_xml
 from . import _overpass
+from . import _pbf
 from . import distance
 from . import geocoder
 from . import projection
@@ -529,6 +531,109 @@ def graph_from_polygon(
     nx.set_node_attributes(G, values=spn, name="street_count")
 
     msg = f"graph_from_polygon returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
+    return G
+
+
+def graph_from_pbf(
+    filepath: str | Path,
+    *,
+    bbox: tuple[float, float, float, float] | None = None,
+    network_type: str = "all",
+    simplify: bool = True,
+    retain_all: bool = False,
+    truncate_by_edge: bool = False,
+    custom_filter: str | list[str] | None = None,
+) -> nx.MultiDiGraph:
+    """
+    Create a graph from data in an OSM PBF file.
+
+    This function requires the optional `osmium` dependency. Install it with
+    `osmnx[pbf]`. It uses the same network filters as the Overpass graph
+    creation functions: you can either specify a pre-defined `network_type` or
+    provide your own `custom_filter` with a parseable Overpass QL tag-filter
+    string. Local PBF loading does not query Overpass and results depend on the
+    file's coverage and timestamp.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes. If you want a fully bidirectional network, ensure your
+    `network_type` is in `settings.bidirectional_network_types` before
+    creating your graph.
+
+    Parameters
+    ----------
+    filepath
+        Path to PBF file containing OSM data.
+    bbox
+        Bounding box as `(left, bottom, right, top)`. If None, load the entire
+        PBF file. Coordinates should be in unprojected latitude-longitude
+        degrees (EPSG:4326).
+    network_type
+        {"all", "all_public", "bike", "drive", "drive_service", "walk"}
+        What type of street network to retrieve if `custom_filter` is None.
+    simplify
+        If True, simplify graph topology with the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+    truncate_by_edge
+        If True, retain nodes outside `bbox` if at least one of the node's
+        neighbors lies within `bbox`.
+    custom_filter
+        A custom ways filter to be used instead of the `network_type` presets,
+        e.g. `'["power"~"line"]' or '["highway"~"motorway|trunk"]'`. If `str`,
+        the intersection of keys/values will be used, e.g., `'[maxspeed=50][lanes=2]'
+        will return all ways having both maxspeed of 50 and two lanes. If
+        `list`, the union of the `list` items will be used, e.g.,
+        `['[maxspeed=50]', '[lanes=2]']` will return all ways having either
+        maximum speed of 50 or two lanes. PBF loading supports this compact
+        OSMnx tag-filter subset, not arbitrary Overpass QL. Also pass in a
+        `network_type` that is in `settings.bidirectional_network_types` if
+        you want the graph to be fully bidirectional.
+
+    Returns
+    -------
+    G
+        The resulting MultiDiGraph.
+    """
+    way_filter = _osm_filters._get_way_filter(network_type, custom_filter)
+    response_jsons = [_pbf._overpass_json_from_pbf(Path(filepath), way_filter)]
+
+    # create graph using this response JSON
+    bidirectional = network_type in settings.bidirectional_network_types
+    G = _create_graph(response_jsons, bidirectional)
+
+    if bbox is not None:
+        # mirror graph_from_polygon's buffered truncation when a bbox is provided
+        polygon = utils_geo.bbox_to_poly(bbox)
+        poly_proj, crs_utm = projection.project_geometry(polygon)
+        poly_proj_buff = poly_proj.buffer(500)
+        poly_buff, _ = projection.project_geometry(poly_proj_buff, crs=crs_utm, to_latlong=True)
+
+        G_buff = truncate.truncate_graph_polygon(G, poly_buff, truncate_by_edge=truncate_by_edge)
+        if not retain_all:
+            G_buff = truncate.largest_component(G_buff, strongly=False)
+        if simplify:
+            G_buff = simplification.simplify_graph(G_buff)
+
+        G = truncate.truncate_graph_polygon(G_buff, polygon, truncate_by_edge=truncate_by_edge)
+        if not retain_all:
+            G = truncate.largest_component(G, strongly=False)
+
+        spn = stats.count_streets_per_node(G_buff, nodes=G.nodes)
+        nx.set_node_attributes(G, values=spn, name="street_count")
+
+    else:
+        # keep only the largest weakly connected component if retain_all is False
+        if not retain_all:
+            G = truncate.largest_component(G, strongly=False)
+
+        # simplify the graph topology as the last step
+        if simplify:
+            G = simplification.simplify_graph(G)
+
+    msg = f"graph_from_pbf returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
     utils.log(msg, level=lg.INFO)
     return G
 
