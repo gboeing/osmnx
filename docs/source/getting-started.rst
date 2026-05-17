@@ -74,7 +74,9 @@ In short, MultiDiGraphs are nonplanar directed graphs with possible self-loops a
 
 The ``graph`` module uses filters to query the Overpass API: you can either specify a built-in network type or provide your own custom filter with `Overpass QL`_. Under the hood, OSMnx does several things to generate the best possible model. It initially creates a 500m-buffered graph before truncating it to your desired query area, to ensure accurate streets-per-node stats and to attenuate graph perimeter effects. By default, it returns the largest weakly connected component. It also simplifies the graph topology as discussed below.
 
-Read more about the :ref:`graph <osmnx-graph-module>` module in the User Reference and refer to the official reference paper at the :doc:`further-reading` page for complete modeling details.
+You can also create a network graph from a local OSM PBF file with ``graph_from_pbf`` if you install OSMnx with its optional PBF dependency (``osmnx[pbf]``). PBF loading does not query Overpass: results depend on the local file's coverage and timestamp. It uses the same built-in network types as the Overpass graph functions, and supports OSMnx's compact custom tag-filter syntax such as ``'[maxspeed=50][lanes=2]'`` for local filtering.
+
+Read more about the :ref:`graph <osmnx-graph-module>` and :ref:`pbf <osmnx-pbf-module>` modules in the User Reference and refer to the official reference paper at the :doc:`further-reading` page for complete modeling details.
 
 Topology Clean-Up
 ^^^^^^^^^^^^^^^^^

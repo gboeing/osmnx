@@ -17,6 +17,7 @@ import os
 import tempfile
 from collections import OrderedDict
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import geopandas as gpd
 import networkx as nx
@@ -31,6 +32,13 @@ from shapely import wkt
 from typeguard import suppress_type_checks
 
 import osmnx as ox
+import osmnx._osm_filters as osm_filters
+import osmnx._overpass as overpass
+import osmnx._pbf as pbf
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from typing import ClassVar
 
 ox.settings.log_console = True
 ox.settings.log_file = True
@@ -52,6 +60,193 @@ polygon_wkt = (
     "-122.262 37.874, -122.262 37.869))"
 )
 polygon = ox.utils_geo.buffer_geometry(geom=wkt.loads(polygon_wkt), dist=1)
+aguascalientes_bbox = (-102.2799068, 21.8625789, -102.2634632, 21.8752057)
+
+
+class _FakeOsm:
+    """Fake osmium.osm namespace for PBF tests."""
+
+    NODE = "node"
+    WAY = "way"
+
+
+class _FakeEntityFilter:
+    """
+    Fake osmium entity filter for PBF tests.
+
+    Parameters
+    ----------
+    entity
+        Entity kind to match.
+    """
+
+    def __init__(self, entity: str) -> None:
+        self.entity = entity
+
+
+class _FakeIdFilter:
+    """
+    Fake osmium ID filter for PBF tests.
+
+    Parameters
+    ----------
+    ids
+        OSM IDs to match.
+    """
+
+    def __init__(self, ids: set[int]) -> None:
+        self.ids = ids
+
+
+class _FakeFilter:
+    """Fake osmium.filter namespace for PBF tests."""
+
+    EntityFilter = _FakeEntityFilter
+    IdFilter = _FakeIdFilter
+
+
+class _FakeLocation:
+    """
+    Fake osmium node location for PBF tests.
+
+    Parameters
+    ----------
+    lon
+        Longitude of the fake location.
+    lat
+        Latitude of the fake location.
+    """
+
+    def __init__(self, lon: float, lat: float) -> None:
+        self.lon = lon
+        self.lat = lat
+
+    def valid(self) -> bool:
+        """
+        Return True because all fake node locations are valid.
+
+        Returns
+        -------
+        valid
+            Always True.
+        """
+        return True
+
+
+class _FakeNodeRef:
+    """
+    Fake osmium way node reference for PBF tests.
+
+    Parameters
+    ----------
+    ref
+        Node ID referenced by this fake way node.
+    """
+
+    def __init__(self, ref: int) -> None:
+        self.ref = ref
+
+
+class _FakeWay:
+    """
+    Fake osmium way for PBF tests.
+
+    Parameters
+    ----------
+    way_id
+        Way ID.
+    node_refs
+        Node IDs referenced by the way.
+    tags
+        OSM tags on the way.
+    """
+
+    def __init__(self, way_id: int, node_refs: list[int], tags: dict[str, str]) -> None:
+        self.id = way_id
+        self.nodes = [_FakeNodeRef(ref) for ref in node_refs]
+        self.tags = tags
+
+
+class _FakeNode:
+    """
+    Fake osmium node for PBF tests.
+
+    Parameters
+    ----------
+    node_id
+        Node ID.
+    lon
+        Longitude of the fake node.
+    lat
+        Latitude of the fake node.
+    """
+
+    def __init__(self, node_id: int, lon: float, lat: float) -> None:
+        self.id = node_id
+        self.location = _FakeLocation(lon, lat)
+        self.tags: dict[str, str] = {}
+
+
+class _FakeFileProcessor:
+    """
+    Fake osmium FileProcessor for PBF tests.
+
+    Parameters
+    ----------
+    filepath
+        Path supplied to the fake file processor.
+    """
+
+    _ways: ClassVar[list[_FakeWay]] = [
+        _FakeWay(100, [1, 2], {"highway": "residential"}),
+        _FakeWay(200, [2, 3], {"highway": "motorway"}),
+        _FakeWay(300, [3, 999], {"highway": "residential"}),
+    ]
+    _nodes: ClassVar[list[_FakeNode]] = [
+        _FakeNode(1, -122.1, 37.1),
+        _FakeNode(2, -122.2, 37.2),
+        _FakeNode(3, -122.3, 37.3),
+    ]
+
+    def __init__(self, filepath: str | Path) -> None:
+        self.filepath = filepath
+        self.entity: str | None = None
+        self.ids: set[int] | None = None
+
+    def with_filter(self, filter_: _FakeEntityFilter | _FakeIdFilter) -> _FakeFileProcessor:
+        """
+        Apply fake filter state and return self.
+
+        Parameters
+        ----------
+        filter_
+            Fake entity or ID filter to record on this processor.
+
+        Returns
+        -------
+        self
+            This processor instance, for chained `with_filter` calls.
+        """
+        if isinstance(filter_, _FakeEntityFilter):
+            self.entity = filter_.entity
+        else:
+            self.ids = filter_.ids
+        return self
+
+    def __iter__(self) -> Iterator[_FakeWay | _FakeNode]:
+        """Iterate over fake ways or nodes."""
+        if self.entity == _FakeOsm.WAY:
+            yield from self._ways
+        elif self.entity == _FakeOsm.NODE:
+            yield from (node for node in self._nodes if self.ids is None or node.id in self.ids)
+
+
+class _FakeOsmium:
+    """Fake osmium module for PBF tests."""
+
+    FileProcessor = _FakeFileProcessor
+    filter = _FakeFilter
+    osm = _FakeOsm
 
 
 @pytest.mark.xdist_group(name="group1")
@@ -90,6 +285,181 @@ def test_exceptions() -> None:
 
     with pytest.raises(ox._errors.ResponseStatusCodeError):
         raise ox._errors.ResponseStatusCodeError(message)
+
+
+@pytest.mark.xdist_group(name="group1")
+def test_osm_filters() -> None:
+    """Test reusable OSM network filters."""
+    default_access = ox.settings.default_access
+
+    try:
+        assert osm_filters._get_network_filter("drive") == (
+            f'["highway"]["area"!~"yes"]{default_access}'
+            '["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|'
+            "cycleway|elevator|escalator|footway|no|path|pedestrian|planned|platform|"
+            'proposed|raceway|razed|rest_area|service|services|steps|track"]'
+            '["motor_vehicle"!~"no"]["motorcar"!~"no"]'
+            '["service"!~"alley|driveway|emergency_access|parking|parking_aisle|private"]'
+        )
+
+        assert osm_filters._network_filter_matches("drive", {"highway": "residential"})
+        assert not osm_filters._network_filter_matches("drive", {"highway": "footway"})
+        assert not osm_filters._network_filter_matches(
+            "drive",
+            {"access": "private", "highway": "residential"},
+        )
+        assert not osm_filters._network_filter_matches(
+            "drive",
+            {"highway": "service", "service": "driveway"},
+        )
+        assert osm_filters._network_filter_matches(
+            "drive_service",
+            {"highway": "service", "service": "driveway"},
+        )
+        assert not osm_filters._network_filter_matches(
+            "walk",
+            {"highway": "residential", "sidewalk": "separate"},
+        )
+        assert not osm_filters._network_filter_matches(
+            "bike",
+            {"bicycle": "no", "highway": "residential"},
+        )
+        assert not osm_filters._network_filter_matches(
+            "all_public",
+            {"access": "private", "highway": "residential"},
+        )
+        assert osm_filters._network_filter_matches(
+            "all",
+            {"access": "private", "highway": "residential"},
+        )
+
+        ox.settings.default_access = '["access"!~"private|no"]'
+        assert '["access"!~"private|no"]' in osm_filters._get_network_filter("drive")
+        assert not osm_filters._network_filter_matches(
+            "drive",
+            {"access": "no", "highway": "residential"},
+        )
+
+        custom_filter = osm_filters._get_way_filter("all", "[maxspeed=50][lanes=2]")
+        expected_filter = "[{q}maxspeed{q}={q}50{q}][{q}lanes{q}={q}2{q}]".format(q=chr(34))
+        assert custom_filter.to_overpass_filters() == [expected_filter]
+        assert custom_filter.matches({"maxspeed": "50", "lanes": "2", "highway": "primary"})
+        assert not custom_filter.matches({"maxspeed": "50", "highway": "primary"})
+
+        union_filter = osm_filters._get_way_filter("all", ["[highway=primary]", "[railway=tram]"])
+        assert union_filter.matches({"railway": "tram"})
+
+        raw_filter = osm_filters._get_way_filter("all", "[foo](if:bar)", parse_custom_filter=False)
+        assert raw_filter.to_overpass_filters() == ["[foo](if:bar)"]
+        with pytest.raises(ValueError, match="Cannot locally match"):
+            raw_filter.matches({"foo": "bar"})
+
+        with pytest.raises(ValueError, match="Unsupported Overpass filter syntax"):
+            osm_filters._parse_overpass_filter('["access"!~"private"];')
+
+    finally:
+        ox.settings.default_access = default_access
+
+
+@pytest.mark.xdist_group(name="group1")
+def test_pbf() -> None:
+    """Test loading a graph from fake PBF data."""
+    original_osmium = pbf.osmium
+    try:
+        pbf.osmium = _FakeOsmium
+        G = ox.graph_from_pbf("fake.osm.pbf", network_type="walk", simplify=False, retain_all=True)
+        response_json = pbf._overpass_json_from_pbf(
+            Path("fake.osm.pbf"),
+            osm_filters._get_way_filter("walk", custom_filter=None),
+        )
+
+    finally:
+        pbf.osmium = original_osmium
+
+    assert set(G.nodes) == {1, 2}
+    assert set(G.edges(keys=True)) == {(1, 2, 0), (2, 1, 0)}
+    assert [element["id"] for element in response_json["elements"] if element["type"] == "way"] == [
+        100,
+    ]
+
+
+@pytest.mark.xdist_group(name="group1")
+def test_pbf_xml_parity() -> None:
+    """Test that equivalent XML and PBF inputs create equivalent graphs."""
+    if pbf.osmium is None:
+        pytest.skip("PBF parity test requires the optional dependency `osmium`.")
+
+    G_xml = ox.graph_from_xml(
+        "tests/input_data/aguascalientes.osm.bz2",
+        simplify=False,
+        retain_all=True,
+    )
+    G_pbf = ox.graph_from_pbf(
+        "tests/input_data/aguascalientes.osm.pbf",
+        custom_filter="",
+        simplify=False,
+        retain_all=True,
+    )
+
+    G_xml.remove_nodes_from(list(nx.isolates(G_xml)))
+
+    xml_edges = {(u, v, k): data for u, v, k, data in G_xml.edges(keys=True, data=True)}
+    pbf_edges = {(u, v, k): data for u, v, k, data in G_pbf.edges(keys=True, data=True)}
+    assert dict(G_xml.nodes(data=True)) == dict(G_pbf.nodes(data=True))
+    assert xml_edges == pbf_edges
+
+
+@pytest.mark.xdist_group(name="group1")
+def test_pbf_bbox_parity(monkeypatch: pytest.MonkeyPatch) -> None:
+    """
+    Test that PBF bbox loading matches graph_from_bbox on the same data.
+
+    Parameters
+    ----------
+    monkeypatch
+        Pytest fixture used to patch the Overpass network downloader.
+    """
+    if pbf.osmium is None:
+        pytest.skip("PBF parity test requires the optional dependency `osmium`.")
+
+    way_filter = osm_filters._get_way_filter("all", custom_filter=None)
+    response_json = pbf._overpass_json_from_pbf(
+        Path("tests/input_data/aguascalientes.osm.pbf"),
+        way_filter,
+    )
+
+    def mock_download_overpass_network(
+        polygon: Polygon,
+        network_type: str,
+        custom_filter: str | list[str] | None,
+    ) -> Iterator[dict[str, object]]:
+        assert polygon.is_valid
+        assert network_type == "all"
+        assert custom_filter is None
+        yield response_json
+
+    monkeypatch.setattr(overpass, "_download_overpass_network", mock_download_overpass_network)
+
+    G_bbox = ox.graph_from_bbox(
+        aguascalientes_bbox,
+        network_type="all",
+        simplify=False,
+        retain_all=True,
+        truncate_by_edge=True,
+    )
+    G_pbf = ox.graph_from_pbf(
+        "tests/input_data/aguascalientes.osm.pbf",
+        bbox=aguascalientes_bbox,
+        network_type="all",
+        simplify=False,
+        retain_all=True,
+        truncate_by_edge=True,
+    )
+
+    bbox_edges = {(u, v, k): data for u, v, k, data in G_bbox.edges(keys=True, data=True)}
+    pbf_edges = {(u, v, k): data for u, v, k, data in G_pbf.edges(keys=True, data=True)}
+    assert dict(G_bbox.nodes(data=True)) == dict(G_pbf.nodes(data=True))
+    assert bbox_edges == pbf_edges
 
 
 @pytest.mark.xdist_group(name="group1")
