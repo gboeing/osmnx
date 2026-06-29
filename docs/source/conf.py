@@ -54,7 +54,7 @@ typehints_fully_qualified = False
 # general configuration and options for HTML output
 # see https://www.sphinx-doc.org/en/master/usage/configuration.html
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx_autodoc_typehints"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx_autodoc_typehints", "sphinx.ext.linkcode"]
 html_static_path: list[str] = []
 html_theme = "furo"
 language = "en"
