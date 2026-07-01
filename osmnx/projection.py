@@ -186,7 +186,7 @@ def project_graph(
     to_crs = gdf_nodes_proj.crs
 
     # STEP 2: PROJECT THE EDGES
-    if G.graph.get("simplified"):
+    if G.graph.get("simplified") or G.graph.get("consolidated"):
         # if graph has previously been simplified, project the edge geometries
         gdf_edges = convert.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
         gdf_edges_proj = project_gdf(gdf_edges, to_crs=to_crs)
