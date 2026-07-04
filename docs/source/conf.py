@@ -92,5 +92,5 @@ def linkcode_resolve(domain: str, info: Mapping[str, str]) -> str | None:
     if not info.get("module"):
         return None
     module = info["module"].replace(".", "/")
-    ref = "main" if os.environ.get("READTHEDOCS_VERSION") == "latest" else f"v{release}"
+    ref = f"v{release}" if os.environ.get("READTHEDOCS_VERSION") == "stable" else "main"
     return f"https://github.com/gboeing/osmnx/blob/{ref}/{module}.py"
