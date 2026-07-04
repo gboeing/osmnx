@@ -6,7 +6,9 @@ For the full list of built-in configuration values, see the documentation:
 https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
+import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from tomllib import load as toml_load
 
@@ -54,7 +56,12 @@ typehints_fully_qualified = False
 # general configuration and options for HTML output
 # see https://www.sphinx-doc.org/en/master/usage/configuration.html
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx_autodoc_typehints", "sphinx.ext.linkcode"]
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.linkcode",
+    "sphinx.ext.napoleon",
+    "sphinx_autodoc_typehints",
+]
 html_static_path: list[str] = []
 html_theme = "furo"
 language = "en"
@@ -62,3 +69,28 @@ needs_sphinx = "9"  # match version from pyproject.toml and requirements-docs.tx
 root_doc = "index"
 source_suffix = ".rst"
 templates_path: list[str] = []
+
+
+def linkcode_resolve(domain: str, info: Mapping[str, str]) -> str | None:
+    """
+    Resolve Python objects to GitHub source URLs.
+
+    Parameters
+    ----------
+    domain
+        The object domain.
+    info
+        Information about the documented object.
+
+    Returns
+    -------
+    str or None
+        URL of the source file on GitHub, or None if unavailable.
+    """
+    if domain != "py":
+        return None
+    if not info.get("module"):
+        return None
+    module = info["module"].replace(".", "/")
+    ref = "main" if os.environ.get("READTHEDOCS_VERSION") == "latest" else f"v{release}"
+    return f"https://github.com/gboeing/osmnx/blob/{ref}/{module}.py"
