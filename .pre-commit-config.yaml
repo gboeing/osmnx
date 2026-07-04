@@ -30,21 +30,22 @@ repos:
         args: [--strict, --config-file=./tests/.yamllint.yml]
 
   - repo: https://github.com/numpy/numpydoc
-    rev: v1.10.0
+    rev: v1.11.0rc0
     hooks:
       - id: numpydoc-validation
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.11
+    rev: v0.15.20
     hooks:
       - id: ruff-check
         args: [--fix, --show-fixes]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.20.1
+    rev: v2.1.0
     hooks:
       - id: mypy
+        language_version: python3.11  # match requires-python in pyproject.toml
         additional_dependencies:
           - matplotlib
           - pandas-stubs
