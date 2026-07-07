@@ -1,8 +1,9 @@
+---
 # This workflow runs the test suite using the minimum supported dependency
 # versions.
 name: Test minimum dependencies
 
-on:
+on:  # yamllint disable-line rule:truthy
   schedule:
     - cron: 25 4 * * 1  # every monday at 04:25 UTC
   workflow_dispatch:
