@@ -1,3 +1,4 @@
+---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -27,7 +28,13 @@ repos:
     rev: v1.38.0
     hooks:
       - id: yamllint
-        args: [--strict, --config-file=./tests/.yamllint.yml]
+        args:
+          - --strict
+          - >
+            -d={extends: default, rules: {
+            line-length: {max: 100},
+            quoted-strings: {quote-type: single,
+                             required: only-when-needed}}}
 
   - repo: https://github.com/numpy/numpydoc
     rev: v1.11.0rc0

@@ -1,8 +1,9 @@
+---
 # This workflow runs the test suite using the latest/pre-release dependency
 # versions.
 name: Test latest/pre-release dependencies
 
-on:
+on:  # yamllint disable-line rule:truthy
   schedule:
     - cron: 15 4 * * 1  # every monday at 04:15 UTC
   workflow_dispatch:

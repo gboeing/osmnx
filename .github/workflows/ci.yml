@@ -1,7 +1,8 @@
+---
 # This workflow runs the repo's CI tests.
 name: CI
 
-on:
+on:  # yamllint disable-line rule:truthy
   push:
     branches: [main]
   pull_request:

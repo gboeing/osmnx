@@ -1,9 +1,10 @@
+---
 # This workflow builds a Docker image from the repo's Dockerfile and pushes it
 # to Docker Hub if the triggering event was a tag push. When it's a scheduled
 # run, it just builds the image as a test, but does not push it.
 name: Build and publish Docker image
 
-on:
+on:  # yamllint disable-line rule:truthy
   push:
     tags:
       - v*
