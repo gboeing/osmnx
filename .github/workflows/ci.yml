@@ -49,7 +49,7 @@ jobs:
           uv python pin ${{ matrix.python-version }}
           uv sync --all-extras --group docs --group lint --group test
 
-      # use a persistent OSMnx cache for all non-schedule runs and for all
+      # use a persistent OSMnx cache for all non-scheduled runs and for all
       # scheduled runs on older python versions. but scheduled runs on the
       # most recent python version will not use the cache so they instead
       # make live web API calls to test against real, current API responses.
