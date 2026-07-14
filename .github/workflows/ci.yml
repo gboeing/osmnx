@@ -49,6 +49,14 @@ jobs:
           uv python pin ${{ matrix.python-version }}
           uv sync --all-extras --group docs --group lint --group test
 
+      - name: Cache OSMnx cache
+        uses: actions/cache@v6
+        with:
+          path: .temp/cache
+          key: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}
+          restore-keys: |
+            osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-
+
       - name: Cache pre-commit
         uses: actions/cache@v6
         with:

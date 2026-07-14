@@ -1,0 +1,28 @@
+---
+name: Keep cache alive
+
+permissions:
+  contents: read
+
+# Github only maintains cache files for free account public repos for 7 days,
+# so this runs every Thu to update the caches' last accessed times
+on:  # yamllint disable-line rule:truthy
+  schedule:
+    - cron: 0 5 * * 4
+
+jobs:
+  keepalive:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.12', '3.13', '3.14']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Restore newest OSMnx caches
+        uses: actions/cache/restore@v6
+        with:
+          path: .temp/cache
+          key: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}
+          restore-keys: |
+            osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-
