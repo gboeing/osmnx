@@ -594,8 +594,8 @@ def test_endpoints() -> None:
     # good call
     response_json = ox._nominatim._nominatim_request(params=params, request_type="lookup")
 
-    # bad call: only make this this deliberately uncacheable live API call
-    # when specifically enabled to do so
+    # bad call: only make this deliberately uncacheable live API call when
+    # specifically enabled to do so
     if os.getenv("LIVE_API_CALLS", "true").lower() == "true":
         with pytest.raises(
             ox._errors.InsufficientResponseError,
