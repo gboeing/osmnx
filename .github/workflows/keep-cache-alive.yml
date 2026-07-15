@@ -24,5 +24,4 @@ jobs:
         with:
           path: .temp/cache
           key: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}
-          restore-keys: |
-            osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-
+          restore-keys: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-

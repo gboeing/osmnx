@@ -24,7 +24,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     env:
-      # make live API calls only for scheduled runs with most-recent python
+      # make live API calls only for scheduled runs on the most recent python
       LIVE_API_CALLS: ${{ github.event_name == 'schedule' && matrix.python-version == '3.14' }}
     strategy:
       fail-fast: false
@@ -61,8 +61,7 @@ jobs:
         with:
           path: .temp/cache
           key: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}
-          restore-keys: |
-            osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-
+          restore-keys: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-
 
       - name: Cache pre-commit
         uses: actions/cache@v6
