@@ -594,12 +594,14 @@ def test_endpoints() -> None:
     # good call
     response_json = ox._nominatim._nominatim_request(params=params, request_type="lookup")
 
-    # bad call
-    with pytest.raises(
-        ox._errors.InsufficientResponseError,
-        match="Nominatim API did not return a list of results",
-    ):
-        response_json = ox._nominatim._nominatim_request(params=params, request_type="search")
+    # bad call: only make this this deliberately uncacheable live API call
+    # when specifically enabled to do so
+    if os.getenv("LIVE_API_CALLS", "true").lower() == "true":
+        with pytest.raises(
+            ox._errors.InsufficientResponseError,
+            match="Nominatim API did not return a list of results",
+        ):
+            response_json = ox._nominatim._nominatim_request(params=params, request_type="search")
 
     # query must be a str if by_osmid=True
     with pytest.raises(TypeError, match="`query` must be a string if `by_osmid` is True"):
