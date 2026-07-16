@@ -245,6 +245,34 @@ def test_stats() -> None:
     G_clean = ox.consolidate_intersections(G_proj, tolerance=tols, rebuild_graph=True)
 
 
+def test_consolidate_intersections() -> None:
+    """Test consolidating intersections with an edge length tolerance."""
+    G = nx.MultiDiGraph(crs="epsg:3857")
+    G.add_node(0, x=0, y=0)
+    G.add_node(1, x=1, y=0)
+    G.add_edge(0, 1, length=100)
+
+    Gc = ox.consolidate_intersections(G, tolerance=1, dead_ends=True)
+    assert len(Gc) == 1
+
+    Gc = ox.consolidate_intersections(
+        G,
+        tolerance=1,
+        edge_length_tolerance=200,
+        dead_ends=True,
+    )
+    assert len(Gc) == 1
+
+    Gc = ox.consolidate_intersections(
+        G,
+        tolerance=1,
+        edge_length_tolerance=50,
+        dead_ends=True,
+    )
+    assert len(Gc) == 2
+    assert len(Gc.edges) == 1
+
+
 @pytest.mark.xdist_group(name="group1")
 def test_bearings() -> None:
     """Test bearings and orientation entropy."""

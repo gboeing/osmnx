@@ -452,6 +452,7 @@ def consolidate_intersections(
     G: nx.MultiDiGraph,
     *,
     tolerance: float | dict[int, float] = 10,
+    edge_length_tolerance: float | None = None,
     rebuild_graph: bool = True,
     dead_ends: bool = False,
     reconnect_edges: bool = True,
@@ -502,6 +503,13 @@ def consolidate_intersections(
         that single value will be used for all nodes. If dict (mapping node
         IDs to individual values), then those values will be used per node and
         any missing node IDs will not be buffered.
+    edge_length_tolerance
+        When rebuilding the graph, ignore edges longer than this when
+        determining whether nearby nodes are topologically connected. This
+        prevents long edges that loop outside an intersection, such as
+        cloverleaf ramps, from merging their nearby endpoint nodes. If None,
+        consider all edges, preserving the existing behavior. Uses the same
+        units as the graph's `length` edge attributes.
     rebuild_graph
         If True, consolidate the nodes topologically, rebuild the graph, and
         return as MultiDiGraph. Otherwise, consolidate the nodes geometrically
@@ -548,6 +556,7 @@ def consolidate_intersections(
         return _consolidate_intersections_rebuild_graph(
             G,
             tolerance,
+            edge_length_tolerance,
             reconnect_edges,
             node_attr_aggs,
         )
@@ -604,6 +613,7 @@ def _merge_nodes_geometric(
 def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     G: nx.MultiDiGraph,
     tolerance: float | dict[int, float],
+    edge_length_tolerance: float | None,
     reconnect_edges: bool,  # noqa: FBT001
     node_attr_aggs: dict[str, Any] | None,
 ) -> nx.MultiDiGraph:
@@ -623,6 +633,9 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         that single value will be used for all nodes. If dict (mapping node
         IDs to individual values), then those values will be used per node and
         any missing node IDs will not be buffered.
+    edge_length_tolerance
+        Ignore edges longer than this when determining whether nearby nodes
+        are topologically connected. If None, consider all edges.
     reconnect_edges
         If True, reconnect edges (and their geometries) to the consolidated
         nodes in rebuilt graph, and update the edge length attributes. If
@@ -673,8 +686,24 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     # surface streets with bridge).
     for cluster_label, nodes_subset in gdf.groupby("cluster"):
         if len(nodes_subset) > 1:
-            # identify all the (weakly connected) component in cluster
-            wccs = list(nx.weakly_connected_components(G.subgraph(nodes_subset.index)))
+            H = G.subgraph(nodes_subset.index)
+            if edge_length_tolerance is not None:
+                # long edges can loop outside a spatial cluster and falsely
+                # connect nearby endpoints, as with cloverleaf ramps. Exclude
+                # them only from this connectivity check, not the rebuilt graph.
+                long_edges = [
+                    (u, v, k)
+                    for u, v, k, data in H.edges(keys=True, data=True)
+                    if data["length"] > edge_length_tolerance
+                ]
+                if long_edges:
+                    # copy only affected clusters so the common case retains
+                    # the subgraph view's lower runtime and memory overhead.
+                    H = H.copy()
+                    H.remove_edges_from(long_edges)
+
+            # identify all the weakly connected components in the cluster
+            wccs = list(nx.weakly_connected_components(H))
             if len(wccs) > 1:
                 # if there are multiple components in this cluster
                 for suffix, wcc in enumerate(wccs):
