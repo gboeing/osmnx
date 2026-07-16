@@ -212,7 +212,7 @@ def add_edge_lengths(
     G
         Graph with `length` attributes on the edges.
     """
-    uvk = G.edges if edges is None else edges
+    uvk = G.edges if edges is None else tuple(edges)
 
     # extract edge IDs and corresponding coordinates from their nodes
     x = G.nodes(data="x")

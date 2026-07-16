@@ -208,7 +208,7 @@ def test_stats() -> None:
         iter(nx.get_edge_attributes(G_proj, "geometry").values()),
     )
     G_proj = ox.project_graph(G_proj)  # test double-projection
-    G_proj = ox.distance.add_edge_lengths(G_proj, edges=tuple(G_proj.edges)[0:3])
+    G_proj = ox.distance.add_edge_lengths(G_proj, edges=(e for e in tuple(G_proj.edges)[0:3]))
 
     # calculate stats
     cspn = ox.stats.count_streets_per_node(G)
