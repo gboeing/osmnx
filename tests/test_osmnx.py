@@ -419,6 +419,8 @@ def test_routing() -> None:
     G = ox.add_edge_travel_times(G)
 
     # test value cleaning
+    assert ox.routing._clean_maxspeed("5") == 5.0
+    assert ox.routing._clean_maxspeed("5 mph") == pytest.approx(8.0467)
     assert ox.routing._clean_maxspeed("100,2") == 100.2
     assert ox.routing._clean_maxspeed("100.2") == 100.2
     assert ox.routing._clean_maxspeed("100 km/h") == 100.0
