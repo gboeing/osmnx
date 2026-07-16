@@ -7,13 +7,13 @@ from typing import TYPE_CHECKING
 from typing import Any
 
 import geopandas as gpd
+import networkx as nx
 
 from . import convert
 from . import settings
 from . import utils
 
 if TYPE_CHECKING:
-    import networkx as nx
     from shapely import Geometry
 
 
@@ -186,8 +186,12 @@ def project_graph(
     to_crs = gdf_nodes_proj.crs
 
     # STEP 2: PROJECT THE EDGES
-    if G.graph.get("simplified") or G.graph.get("consolidated"):
-        # if graph has previously been simplified, project the edge geometries
+    if (
+        G.graph.get("simplified")
+        or G.graph.get("consolidated")
+        or nx.get_edge_attributes(G, "geometry")
+    ):
+        # if graph was simplified/consolidated or otherwise has edge geometries, project them
         gdf_edges = convert.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
         gdf_edges_proj = project_gdf(gdf_edges, to_crs=to_crs)
     else:

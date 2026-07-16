@@ -202,7 +202,11 @@ def test_stats() -> None:
     # create graph, add a new node, add bearings, project it
     G = ox.graph_from_place(place1, network_type="all")
     G.add_node(0, x=location_point[1], y=location_point[0], street_count=0)
+    G.graph.pop("simplified")  # test projecting edge geometries without flag
     G_proj = ox.project_graph(G)
+    assert next(iter(nx.get_edge_attributes(G, "geometry").values())) != next(
+        iter(nx.get_edge_attributes(G_proj, "geometry").values()),
+    )
     G_proj = ox.project_graph(G_proj)  # test double-projection
     G_proj = ox.distance.add_edge_lengths(G_proj, edges=tuple(G_proj.edges)[0:3])
 
