@@ -560,7 +560,7 @@ def plot_figure_ground(
     # define the view extents of the plotting figure
     node_geoms = convert.graph_to_gdfs(Gu, edges=False, node_geometry=True).union_all()
     lonlat_point = node_geoms.centroid.coords[0]
-    latlon_point = tuple(reversed(lonlat_point))
+    latlon_point: tuple[float, float] = (lonlat_point[1], lonlat_point[0])
     bbox = utils_geo.bbox_from_point(latlon_point, dist=dist, project_utm=False)
 
     # plot the figure
@@ -871,7 +871,7 @@ def _get_colors_by_value(
         else:
             bins = pd.cut(vals, num_bins, labels=range(num_bins))
         bin_colors = get_colors(num_bins, cmap=cmap, start=start, stop=stop)
-        color_list = [bin_colors[b] if pd.notna(b) else na_color for b in bins]
+        color_list = [bin_colors[int(b)] if pd.notna(b) else na_color for b in bins]
         color_series = pd.Series(color_list, index=bins.index)
 
     return color_series

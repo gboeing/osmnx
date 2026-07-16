@@ -1,3 +1,4 @@
+---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -24,27 +25,34 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.37.1
+    rev: v1.38.0
     hooks:
       - id: yamllint
-        args: [--strict, --config-file=./tests/.yamllint.yml]
+        args:
+          - --strict
+          - >
+            -d={extends: default, rules: {
+            line-length: {max: 100},
+            quoted-strings: {quote-type: single,
+                             required: only-when-needed}}}
 
   - repo: https://github.com/numpy/numpydoc
-    rev: v1.10.0
+    rev: v1.11.0rc0
     hooks:
       - id: numpydoc-validation
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.9
+    rev: v0.15.20
     hooks:
       - id: ruff-check
         args: [--fix, --show-fixes]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.0
+    rev: v2.1.0
     hooks:
       - id: mypy
+        language_version: python3.11  # match requires-python in pyproject.toml
         additional_dependencies:
           - matplotlib
           - pandas-stubs

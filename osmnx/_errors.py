@@ -10,7 +10,7 @@ class GraphSimplificationError(ValueError):
 
 
 class ValidationError(ValueError):
-    """Exception for failed graph or node/edge GeoDataFrame validation."""
+    """Exception for failed graph or GeoDataFrame validation."""
 
 
 class InsufficientResponseError(ValueError):

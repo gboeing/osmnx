@@ -1,8 +1,9 @@
+---
 # This workflow runs the test suite using the latest/pre-release dependency
 # versions.
 name: Test latest/pre-release dependencies
 
-on:
+on:  # yamllint disable-line rule:truthy
   schedule:
     - cron: 15 4 * * 1  # every monday at 04:15 UTC
   workflow_dispatch:
@@ -20,19 +21,20 @@ jobs:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    env:
+      LIVE_API_CALLS: 'false'
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
         python-version: ['3.14']
-
     defaults:
       run:
         shell: bash -elo pipefail {0}
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -44,6 +46,14 @@ jobs:
         run: |
           uv python pin ${{ matrix.python-version }}
           uv sync --no-cache --all-extras --group test --prerelease=allow
+
+      - name: Cache OSMnx cache
+        uses: actions/cache@v6
+        with:
+          path: .temp/cache
+          key: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}
+          restore-keys: |
+            osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-
 
       - name: Test code
         run: uv run --no-sync pytest

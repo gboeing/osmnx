@@ -1,4 +1,4 @@
 furo
-sphinx>=7
+sphinx>=9
 sphinx-autodoc-typehints
 -e .

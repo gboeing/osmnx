@@ -68,7 +68,7 @@ class _OSMContentHandler(ContentHandler):
 
     Builds an Overpass-like response JSON object in self.object. For format
     notes, see https://wiki.openstreetmap.org/wiki/OSM_XML and
-    https://overpass-api.de
+    https://dev.overpass-api.de/
     """
 
     def __init__(self) -> None:

@@ -1,7 +1,8 @@
+---
 # This workflow runs the repo's CI tests.
 name: CI
 
-on:
+on:  # yamllint disable-line rule:truthy
   push:
     branches: [main]
   pull_request:
@@ -22,6 +23,9 @@ jobs:
     name: Python ${{ matrix.python-version }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    env:
+      # make live API calls only for scheduled runs on the most recent python
+      LIVE_API_CALLS: ${{ github.event_name == 'schedule' && matrix.python-version == '3.14' }}
     strategy:
       fail-fast: false
       matrix:
@@ -34,7 +38,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -48,8 +52,19 @@ jobs:
           uv python pin ${{ matrix.python-version }}
           uv sync --all-extras --group docs --group lint --group test
 
+      # use a persistent OSMnx cache for all runs with LIVE_API_CALLS not set
+      # true. but other runs will not use the cache so they instead make live
+      # web API calls to test against real, current API responses.
+      - name: Cache OSMnx cache
+        if: ${{ env.LIVE_API_CALLS != 'true' }}
+        uses: actions/cache@v6
+        with:
+          path: .temp/cache
+          key: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}
+          restore-keys: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-
+
       - name: Cache pre-commit
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cache/prek/
           key: pre-commit-${{ matrix.python-version }}-${{ hashFiles('.pre-commit-config.yaml') }}
@@ -72,7 +87,7 @@ jobs:
         run: uv run pytest --typeguard-packages=osmnx --cov=osmnx --cov-report=xml
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}

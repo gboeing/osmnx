@@ -202,8 +202,13 @@ def test_stats() -> None:
     # create graph, add a new node, add bearings, project it
     G = ox.graph_from_place(place1, network_type="all")
     G.add_node(0, x=location_point[1], y=location_point[0], street_count=0)
+    G.graph.pop("simplified")  # test projecting edge geometries without flag
     G_proj = ox.project_graph(G)
-    G_proj = ox.distance.add_edge_lengths(G_proj, edges=tuple(G_proj.edges)[0:3])
+    assert next(iter(nx.get_edge_attributes(G, "geometry").values())) != next(
+        iter(nx.get_edge_attributes(G_proj, "geometry").values()),
+    )
+    G_proj = ox.project_graph(G_proj)  # test double-projection
+    G_proj = ox.distance.add_edge_lengths(G_proj, edges=(e for e in tuple(G_proj.edges)[0:3]))
 
     # calculate stats
     cspn = ox.stats.count_streets_per_node(G)
@@ -414,6 +419,8 @@ def test_routing() -> None:
     G = ox.add_edge_travel_times(G)
 
     # test value cleaning
+    assert ox.routing._clean_maxspeed("5") == 5.0
+    assert ox.routing._clean_maxspeed("5 mph") == pytest.approx(8.0467)
     assert ox.routing._clean_maxspeed("100,2") == 100.2
     assert ox.routing._clean_maxspeed("100.2") == 100.2
     assert ox.routing._clean_maxspeed("100 km/h") == 100.0
@@ -593,12 +600,14 @@ def test_endpoints() -> None:
     # good call
     response_json = ox._nominatim._nominatim_request(params=params, request_type="lookup")
 
-    # bad call
-    with pytest.raises(
-        ox._errors.InsufficientResponseError,
-        match="Nominatim API did not return a list of results",
-    ):
-        response_json = ox._nominatim._nominatim_request(params=params, request_type="search")
+    # bad call: only make this deliberately uncacheable live API call when
+    # specifically enabled to do so
+    if os.getenv("LIVE_API_CALLS", "true").lower() == "true":
+        with pytest.raises(
+            ox._errors.InsufficientResponseError,
+            match="Nominatim API did not return a list of results",
+        ):
+            response_json = ox._nominatim._nominatim_request(params=params, request_type="search")
 
     # query must be a str if by_osmid=True
     with pytest.raises(TypeError, match="`query` must be a string if `by_osmid` is True"):

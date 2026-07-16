@@ -429,7 +429,7 @@ def simplify_graph(  # noqa: C901, PLR0912
     # for each edge to add in the list we assembled, create a new edge between
     # the origin and destination
     for edge in all_edges_to_add:
-        G.add_edge(edge["origin"], edge["destination"], **edge["attr_dict"])
+        G.add_edge(edge["origin"], edge["destination"], **edge["attr_dict"])  # type: ignore[arg-type]
 
     # finally remove all the interstitial nodes between the new edges
     G.remove_nodes_from(set(all_nodes_to_remove))

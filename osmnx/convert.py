@@ -328,7 +328,7 @@ def graph_from_gdfs(
 
     # now all nodes are added, so set nodes' attributes
     for col in df_nodes.columns:
-        nx.set_node_attributes(G, name=col, values=df_nodes[col].dropna())
+        nx.set_node_attributes(G, values=df_nodes[col].dropna().to_dict(), name=col)
 
     msg = "Created graph from node/edge GeoDataFrames"
     utils.log(msg, level=lg.INFO)

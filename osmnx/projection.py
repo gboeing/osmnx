@@ -7,13 +7,13 @@ from typing import TYPE_CHECKING
 from typing import Any
 
 import geopandas as gpd
+import networkx as nx
 
 from . import convert
 from . import settings
 from . import utils
 
 if TYPE_CHECKING:
-    import networkx as nx
     from shapely import Geometry
 
 
@@ -115,18 +115,24 @@ def project_gdf(
     if to_latlong:
         to_crs = settings.default_crs
 
-    # else if to_crs is None, project gdf to an appropriate UTM zone
+    # else if to_crs is None, choose an appropriate UTM zone
     elif to_crs is None:
-        # if polygon is outside UTM limits (80 deg south, 84 deg north), then
-        # we must use universal polar stereographic coordinate system instead
-        UTM_SOUTH_LIMIT = -80
         UTM_NORTH_LIMIT = 84
-        if gdf.total_bounds[1] < UTM_SOUTH_LIMIT:
+        UTM_SOUTH_LIMIT = -80
+        centroid = gdf.union_all().centroid
+
+        # if gdf is already projected, temporarily re-project centroid to
+        # lat-long to check against UTM (lat-long) north/south limits
+        if is_projected(gdf.crs):
+            centroid, _ = project_geometry(centroid, crs=gdf.crs, to_latlong=True)
+
+        # if centroid is north or south of UTM limits, use UPS CRS instead
+        if centroid.y < UTM_SOUTH_LIMIT:
             to_crs = "epsg:32761"
-        elif gdf.total_bounds[3] > UTM_NORTH_LIMIT:
+        elif centroid.y > UTM_NORTH_LIMIT:
             to_crs = "epsg:32661"
         else:
-            # otherwise, we're within UTM limits, so determine UTM zone
+            # otherwise, we're within UTM limits, so choose a UTM zone
             to_crs = gdf.estimate_utm_crs()
 
     # project the gdf
@@ -180,8 +186,12 @@ def project_graph(
     to_crs = gdf_nodes_proj.crs
 
     # STEP 2: PROJECT THE EDGES
-    if G.graph.get("simplified"):
-        # if graph has previously been simplified, project the edge geometries
+    if (
+        G.graph.get("simplified")
+        or G.graph.get("consolidated")
+        or nx.get_edge_attributes(G, "geometry")
+    ):
+        # if graph was simplified/consolidated or otherwise has edge geometries, project them
         gdf_edges = convert.graph_to_gdfs(G, nodes=False, fill_edge_geometry=False)
         gdf_edges_proj = project_gdf(gdf_edges, to_crs=to_crs)
     else:

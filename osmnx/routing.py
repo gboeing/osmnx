@@ -564,7 +564,7 @@ def add_edge_speeds(
 
     # add speed kph attribute to graph edges
     edges["speed_kph"] = speed_kph.to_numpy()
-    nx.set_edge_attributes(G, values=edges["speed_kph"], name="speed_kph")
+    nx.set_edge_attributes(G, values=edges["speed_kph"].to_dict(), name="speed_kph")
 
     return G
 
@@ -609,7 +609,7 @@ def add_edge_travel_times(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
     # add travel time attribute to graph edges
     edges["travel_time"] = travel_time.to_numpy()
-    nx.set_edge_attributes(G, values=edges["travel_time"], name="travel_time")
+    nx.set_edge_attributes(G, values=edges["travel_time"].to_dict(), name="travel_time")
 
     return G
 
@@ -651,7 +651,7 @@ def _clean_maxspeed(
         return None
 
     # regex adapted from OSM wiki
-    pattern = "^([0-9][\\.,0-9]+?)(?:[ ]?(?:km/h|kmh|kph|mph|knots))?$"
+    pattern = "^([0-9][\\.,0-9]*?)(?:[ ]?(?:km/h|kmh|kph|mph|knots))?$"
     values = re.split(r"\|", maxspeed)  # creates a list even if it's a single value
     try:
         clean_values = []

@@ -1,10 +1,16 @@
 # Changelog
 
-## 2.1.0 (TBD)
+## 2.1.1 (TBD)
+
+- fix projection bug when re-projecting an already projected graph (#1373 #1374)
+- fix projection bug after consolidating intersections (#1388)
+
+## 2.1.0 (2026-02-16)
 
 - add Python 3.14 support (#1336)
 - drop Python 3.9 and 3.10 support (#1322 #1336)
 - add validation functions to verify that a graph or GeoDataFrame satisfies OSMnx expectations (#1317)
+- improve type hinting (#1366)
 
 ## 2.0.7 (2025-11-25)
 
