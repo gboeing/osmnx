@@ -4,6 +4,7 @@
 
 - fix projection bug when re-projecting an already projected graph (#1373 #1374)
 - fix projection bug after consolidating intersections (#1388)
+- minor bug fixes (#1395)
 
 ## 2.1.0 (2026-02-16)
 
