@@ -216,14 +216,6 @@ def _validate_nodes(G: nx.MultiDiGraph, strict: bool) -> tuple[bool, str, str]: 
             if strict:
                 is_valid = False
 
-        # WARN: nodes' "x" and "y" data attributes should be type Real
-        valid_xs = all(isinstance(x, Real) for x in nx.get_node_attributes(G, name="x").values())
-        valid_ys = all(isinstance(y, Real) for y in nx.get_node_attributes(G, name="y").values())
-        if not (valid_xs and valid_ys):
-            warn_msg += "Node 'x' and 'y' data attributes should be numeric. "
-            if strict:
-                is_valid = False
-
         # WARN: node IDs should be type int
         if not all(isinstance(n, int) for n in G.nodes):
             warn_msg += "Node IDs should be type int. "

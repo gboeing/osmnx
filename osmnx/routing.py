@@ -651,7 +651,7 @@ def _clean_maxspeed(
         return None
 
     # regex adapted from OSM wiki
-    pattern = "^([0-9][\\.,0-9]+?)(?:[ ]?(?:km/h|kmh|kph|mph|knots))?$"
+    pattern = "^([0-9][\\.,0-9]*?)(?:[ ]?(?:km/h|kmh|kph|mph|knots))?$"
     values = re.split(r"\|", maxspeed)  # creates a list even if it's a single value
     try:
         clean_values = []
