@@ -32,16 +32,16 @@ from typeguard import suppress_type_checks
 
 import osmnx as ox
 
-# enable OSMnx cache by default
-use_osmnx_cache = os.getenv("USE_OSMNX_CACHE", "true").lower() == "true"
-ox.settings.use_cache = use_osmnx_cache
+# use the persistent OSMnx cache by default
+use_persistent_cache = os.getenv("USE_PERSISTENT_CACHE", "true").lower() == "true"
+ox.settings.cache_folder = "tests/.cache" if use_persistent_cache else "tests/.temp/cache"
 
-ox.settings.cache_folder = "tests/.cache"
 ox.settings.data_folder = "tests/.temp"
 ox.settings.imgs_folder = "tests/.temp"
 ox.settings.logs_folder = "tests/.temp"
 ox.settings.log_console = True
 ox.settings.log_file = True
+ox.settings.use_cache = True
 
 # define queries to use throughout tests
 location_point = (37.791427, -122.410018)
@@ -604,8 +604,9 @@ def test_endpoints() -> None:
     response_json = ox._nominatim._nominatim_request(params=params, request_type="lookup")
 
     # bad call: only make this deliberately uncacheable live API call when
-    # specifically enabled to do so
-    if not use_osmnx_cache:
+    # specifically configured to do so (i.e., not using the persistent cache).
+    # otherwise it will make a live API call when it's not supposed to.
+    if not use_persistent_cache:
         with pytest.raises(
             ox._errors.InsufficientResponseError,
             match="Nominatim API did not return a list of results",

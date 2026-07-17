@@ -24,8 +24,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     env:
-      # disable OSMnx cache only for scheduled runs on the most recent python
-      USE_OSMNX_CACHE: ${{ github.event_name != 'schedule' || matrix.python-version != '3.14' }}
+      # bypass the persistent OSMnx cache only for scheduled runs on the most recent python
+      USE_PERSISTENT_CACHE: >-
+        ${{ github.event_name != 'schedule' || matrix.python-version != '3.14' }}
     strategy:
       fail-fast: false
       matrix:
@@ -52,9 +53,9 @@ jobs:
           uv python pin ${{ matrix.python-version }}
           uv sync --all-extras --group docs --group lint --group test
 
-      # use a persistent OSMnx cache for cache-enabled API test runs
+      # use a persistent OSMnx cache for persistent cache test runs
       - name: Cache OSMnx cache
-        if: ${{ env.USE_OSMNX_CACHE == 'true' }}
+        if: ${{ env.USE_PERSISTENT_CACHE == 'true' }}
         uses: actions/cache@v6
         with:
           path: tests/.cache

@@ -20,7 +20,7 @@ uv sync --all-extras --all-groups
 bash ./tests/lint_test.sh
 ```
 
-The first test run populates `tests/.cache` with one worker; later runs use four workers and the cache. Delete `tests/.cache/.cache_ready` to force the next run to rebuild the cache. Set `USE_OSMNX_CACHE=false` to test against live APIs with one worker.
+The first test run populates `tests/.cache/` with one worker then marks it ready. Later runs use four workers and the cache. Delete `tests/.cache/` to force the next run to rebuild the cache. Set `USE_PERSISTENT_CACHE=false` to bypass the persistent cache and test live APIs with one worker.
 
 ## Continuous integration
 
