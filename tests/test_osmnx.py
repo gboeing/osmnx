@@ -558,29 +558,9 @@ def test_endpoints() -> None:
     default_requests_timeout = ox.settings.requests_timeout
     default_key = ox.settings.nominatim_key
     default_nominatim_url = ox.settings.nominatim_url
+    default_doh_url_template = ox.settings.doh_url_template
     default_overpass_url = ox.settings.overpass_url
     default_overpass_rate_limit = ox.settings.overpass_rate_limit
-
-    # test good and bad DNS resolution
-    ox.settings.requests_timeout = 1
-    ip = ox._http._resolve_host_via_doh("overpass-api.de")
-    ip = ox._http._resolve_host_via_doh("AAAAAAAAAAA")
-    _doh_url_template_default = ox.settings.doh_url_template
-    ox.settings.doh_url_template = "http://aaaaaa.hostdoesntexist.org/nothinguseful"
-    ip = ox._http._resolve_host_via_doh("overpass-api.de")
-    ox.settings.doh_url_template = None
-    ip = ox._http._resolve_host_via_doh("overpass-api.de")
-    ox.settings.doh_url_template = _doh_url_template_default
-
-    # Test changing the Overpass endpoint.
-    # This should fail because we didn't provide a valid endpoint
-    ox.settings.overpass_rate_limit = False
-    ox.settings.overpass_url = "http://NOT_A_VALID_ENDPOINT/api/"
-    with pytest.raises(RequestsConnectionError, match="Max retries exceeded with url"):
-        G = ox.graph_from_place(place1, network_type="all")
-
-    ox.settings.overpass_rate_limit = default_overpass_rate_limit
-    ox.settings.requests_timeout = default_requests_timeout
 
     params: OrderedDict[str, int | str] = OrderedDict()
     params["format"] = "json"
@@ -603,10 +583,32 @@ def test_endpoints() -> None:
     # good call
     response_json = ox._nominatim._nominatim_request(params=params, request_type="lookup")
 
-    # bad call: only make this deliberately uncacheable live API call when
-    # specifically configured to do so (i.e., not using the persistent cache).
-    # otherwise it will make a live API call when it's not supposed to.
+    # only allow live HTTP calls (for things we can't cache, because we only
+    # write to cache on success) for DOH requests or bad requests only if
+    # we're not relying on the persistent cache
     if not use_persistent_cache:
+        # test good and bad DNS resolution
+        ox.settings.requests_timeout = 1
+        ip = ox._http._resolve_host_via_doh("overpass-api.de")
+        ip = ox._http._resolve_host_via_doh("AAAAAAAAAAA")
+        ox.settings.doh_url_template = "http://aaaaaa.hostdoesntexist.org/nothinguseful"
+        ip = ox._http._resolve_host_via_doh("overpass-api.de")
+        ox.settings.doh_url_template = None
+        ip = ox._http._resolve_host_via_doh("overpass-api.de")
+
+        # Test changing the Overpass endpoint.
+        # This should fail because we didn't provide a valid endpoint
+        ox.settings.overpass_rate_limit = False
+        ox.settings.overpass_url = "http://NOT_A_VALID_ENDPOINT/api/"
+        with pytest.raises(RequestsConnectionError, match="Max retries exceeded with url"):
+            G = ox.graph_from_place(place1, network_type="all")
+
+        ox.settings.doh_url_template = default_doh_url_template
+        ox.settings.overpass_url = default_overpass_url
+        ox.settings.overpass_rate_limit = default_overpass_rate_limit
+        ox.settings.requests_timeout = default_requests_timeout
+
+        # bad call: deliberately uncacheable live API call
         with pytest.raises(
             ox._errors.InsufficientResponseError,
             match="Nominatim API did not return a list of results",
