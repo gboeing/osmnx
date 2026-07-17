@@ -21,6 +21,7 @@ from pathlib import Path
 import geopandas as gpd
 import networkx as nx
 import numpy as np
+import osmium
 import pandas as pd
 import pytest
 from lxml import etree
@@ -372,6 +373,130 @@ def test_osm_xml() -> None:
     # restore settings
     ox.settings.overpass_settings = default_overpass_settings
     ox.settings.all_oneway = default_all_oneway
+
+
+@pytest.mark.xdist_group(name="group1")
+def test_pbf() -> None:  # noqa: PLR0915
+    """Test matching and loading graphs from PBF files."""
+    network_types = ("all", "all_public", "bike", "drive", "drive_service", "walk")
+    matches = ox._overpass._network_filter_matches
+
+    # check the shared presets against representative tags
+    for network_type in network_types:
+        assert matches(network_type, {"highway": "residential"})
+        assert not matches(network_type, {})
+        assert not matches(network_type, {"highway": "residential", "area": "yes"})
+
+    for network_type in ("drive", "drive_service"):
+        assert not matches(network_type, {"highway": "footway"})
+        assert not matches(network_type, {"highway": "residential", "motor_vehicle": "no"})
+    assert not matches("walk", {"highway": "cycleway"})
+    assert not matches("bike", {"highway": "footway"})
+    for network_type in ("all", "all_public"):
+        assert not matches(network_type, {"highway": "construction"})
+
+    public_network_types = ("all_public", "bike", "drive", "drive_service", "walk")
+    for network_type in public_network_types:
+        assert not matches(network_type, {"highway": "residential", "access": "private"})
+    assert matches("all", {"highway": "residential", "access": "private"})
+    assert not matches("walk", {"highway": "residential", "foot": "no"})
+    assert not matches("bike", {"highway": "residential", "bicycle": "no"})
+
+    with pytest.raises(ValueError, match="Unrecognized network_type"):
+        matches("invalid", {})
+
+    # customized access expressions need a callable because PBF does not parse Overpass syntax
+    default_access = ox.settings.default_access
+    try:
+        ox.settings.default_access = '["access"!~"private|no"]'
+        with pytest.raises(ValueError, match="provide way_filter instead"):
+            matches("drive", {"highway": "residential"})
+    finally:
+        ox.settings.default_access = default_access
+
+    pbf_filepath = Path(".temp/West-Oakland.osm.pbf")
+    pbf_filepath.unlink(missing_ok=True)
+    try:
+        # convert the existing XML fixture so the test does not add binary data
+        with osmium.SimpleWriter(pbf_filepath) as writer:
+            for obj in osmium.FileProcessor("tests/input_data/West-Oakland.osm.bz2"):
+                writer.add(obj)
+
+        # compare both readers while retaining every way
+        G_xml = ox.graph_from_xml(
+            "tests/input_data/West-Oakland.osm.bz2",
+            simplify=False,
+            retain_all=True,
+        )
+        G_pbf = ox.pbf.graph_from_pbf(
+            pbf_filepath,
+            way_filter=lambda _tags: True,
+            simplify=False,
+            retain_all=True,
+        )
+        G_xml.remove_nodes_from(list(nx.isolates(G_xml)))
+        assert set(G_xml.nodes) == set(G_pbf.nodes)
+        assert set(G_xml.edges) == set(G_pbf.edges)
+
+        G_residential = ox.pbf.graph_from_pbf(
+            pbf_filepath,
+            way_filter=lambda tags: tags.get("highway") == "residential",
+            simplify=False,
+            retain_all=True,
+        )
+        assert len(G_residential) > 0
+        assert len(G_residential.edges) < len(G_pbf.edges)
+        assert all(
+            data["highway"] == "residential" for _, _, data in G_residential.edges(data=True)
+        )
+
+        # confirm built-in filtering and explicit directionality overrides
+        G_drive = ox.pbf.graph_from_pbf(
+            pbf_filepath,
+            network_type="drive",
+            bidirectional=False,
+            simplify=False,
+            retain_all=True,
+        )
+        assert len(G_drive) > 0
+        G_drive_bidirectional = ox.pbf.graph_from_pbf(
+            pbf_filepath,
+            network_type="drive",
+            bidirectional=True,
+            simplify=False,
+            retain_all=True,
+        )
+        assert len(G_drive_bidirectional.edges) >= len(G_drive.edges)
+
+        # network_type still supplies walk bidirectionality with a custom filter
+        G_walk_custom = ox.pbf.graph_from_pbf(
+            pbf_filepath,
+            network_type="walk",
+            way_filter=lambda _tags: True,
+            simplify=False,
+            retain_all=True,
+        )
+        G_walk_custom_bidirectional = ox.pbf.graph_from_pbf(
+            pbf_filepath,
+            network_type="walk",
+            way_filter=lambda _tags: True,
+            bidirectional=True,
+            simplify=False,
+            retain_all=True,
+        )
+        assert set(G_walk_custom.edges) == set(G_walk_custom_bidirectional.edges)
+
+        # verify the incomplete-way safety check without creating malformed PBF data
+        complete_way = {"type": "way", "id": 1, "nodes": [1, 2], "tags": {}}
+        incomplete_way = {"type": "way", "id": 2, "nodes": [2, 3], "tags": {}}
+        with pytest.warns(UserWarning, match="node references were missing: 1"):
+            ways = ox.pbf._remove_incomplete_ways([complete_way, incomplete_way], {1, 2})
+        assert ways == [complete_way]
+
+        G_default = ox.pbf.graph_from_pbf(pbf_filepath)
+        assert len(G_default) > 0
+    finally:
+        pbf_filepath.unlink(missing_ok=True)
 
 
 @pytest.mark.xdist_group(name="group1")

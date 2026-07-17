@@ -2,6 +2,7 @@
 
 ## 2.1.1 (TBD)
 
+- add local PBF graph loading with network presets or callable way filtering
 - fix projection bug when re-projecting an already projected graph (#1373 #1374)
 - fix projection bug after consolidating intersections (#1388)
 

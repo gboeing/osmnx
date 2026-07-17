@@ -1,98 +1,75 @@
-"""
-Load OSM PBF files as graphs or features GeoDataFrames.
+"""Load OSM PBF files as graphs.
 
 For file format information see https://wiki.openstreetmap.org/wiki/PBF_Format
 """
 
 from __future__ import annotations
 
-from pathlib import Path
+import logging as lg
 from typing import TYPE_CHECKING
 from typing import Any
+from warnings import warn
 
-import osmium
+# keep osmium optional so importing osmnx does not require the PBF extra
+try:
+    import osmium
+except ImportError:  # pragma: no cover
+    osmium = None
 
+from . import _overpass
 from . import graph
+from . import settings
 from . import simplification
 from . import truncate
 from . import utils
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
+
     import networkx as nx
 
 
-def filter_pbf(filepath: str | Path, tags: list[str] | dict[str, list[str]]) -> Path:
+def _remove_incomplete_ways(
+    ways: list[dict[str, Any]],
+    found_node_ids: set[int],
+) -> list[dict[str, Any]]:
     """
-    Filter a PBF file based on way tags.
+    Remove ways with node references that were not found in the PBF.
 
     Parameters
     ----------
-    filepath
-        Path to PBF file containing OSM data.
-    tags
-        Tags to filter the elements in the file. If `list`, then only retain
-        ways that contain a tag key from the list. If `dict`, then only retain
-        ways that contain a tag key from the dict with a matching value from
-        that dict key's list of values.
+    ways
+        Way dictionaries containing node references.
+    found_node_ids
+        Node IDs found in the PBF.
 
     Returns
     -------
-    output_filepath
-        Filepath to new filtered PBF file.
+    complete_ways
+        Way dictionaries whose node references were all found.
     """
-    utils.log(f"Filtering PBF file at {str(filepath)!r}...")
-    type_err_msg = "`tags` must be a list, or a dict with string keys and list values"
-
-    # make output filepath and delete if it already exists
-    filepath = Path(filepath)
-    output_filepath = filepath.parent / f"filtered-{filepath.name}"
-    if output_filepath.is_file():
-        output_filepath.unlink()
-
-    with osmium.SimpleWriter(output_filepath) as f:
-        # filter ways based on tags
-        fp = osmium.FileProcessor(filepath)
-        fp = fp.with_filter(osmium.filter.EntityFilter(osmium.osm.WAY))
-
-        if isinstance(tags, list):
-            # if user passed list, only retain ways with those tag keys
-            utils.log(f"Filtering ways by tag keys {tags!r}.")
-            fp = fp.with_filter(osmium.filter.KeyFilter(*tags))
-
-        elif isinstance(tags, dict):
-            # if user passed dict, only retain ways tagged with those key:value pairs
-            tag_filters: list[tuple[str, str]] = []
-            for tag_key, tag_values in tags.items():
-                if not isinstance(tag_values, list):
-                    raise TypeError(type_err_msg)
-                tag_filters.extend(zip([tag_key] * len(tag_values), tag_values, strict=False))
-            utils.log(f"Filtering ways by tag values {tag_filters}.")
-            fp = fp.with_filter(osmium.filter.TagFilter(*tag_filters))
-
+    complete_ways = []
+    incomplete_way_count = 0
+    for way in ways:
+        if all(node_id in found_node_ids for node_id in way["nodes"]):
+            complete_ways.append(way)
         else:
-            raise TypeError(type_err_msg)
+            incomplete_way_count += 1
 
-        way_nodes: list[int] = []
-        for way in fp:
-            way_nodes.extend(node.ref for node in way.nodes)
-            f.add_way(way)
-
-        # filter nodes to retain only those that make up the ways
-        way_nodes_unique = set(way_nodes)
-        utils.log(f"Filtering way nodes by {len(way_nodes_unique):,} IDs.")
-        fp = osmium.FileProcessor(filepath)
-        fp = fp.with_filter(osmium.filter.EntityFilter(osmium.osm.NODE))
-        fp = fp.with_filter(osmium.filter.IdFilter(way_nodes_unique))
-
-        for node in fp:
-            f.add_node(node)
-
-    utils.log(f"Saved filtered PBF file at {str(output_filepath)!r}")
-    return output_filepath
+    if incomplete_way_count > 0:
+        msg = (
+            "Removed incomplete ways because their node references were missing: "
+            f"{incomplete_way_count:,}. This likely resulted from clipped PBF input."
+        )
+        warn(msg, category=UserWarning, stacklevel=2)
+    return complete_ways
 
 
-def overpass_json_from_pbf(
+def _overpass_json_from_pbf(
     filepath: str | Path,
+    network_type: str,
+    way_filter: Callable[[dict[str, str]], bool] | None,
 ) -> dict[str, Any]:
     """
     Read OSM PBF data from file and return Overpass-like JSON.
@@ -101,56 +78,86 @@ def overpass_json_from_pbf(
     ----------
     filepath
         Path to PBF file containing OSM data.
+    network_type
+        Network type preset used to filter ways when `way_filter` is None.
+    way_filter
+        Callable used to filter ways, or None to use `network_type`.
 
     Returns
     -------
     response_json
         A parsed JSON response like from the Overpass API.
     """
-    elements = []
+    # fail only when the caller actually tries to read a PBF
+    if osmium is None:  # pragma: no cover
+        msg = "PBF support requires the optional dependency 'osmium'. Install it with 'osmnx[pbf]'."
+        raise ImportError(msg)
 
-    # first pass, extract ways and track their node refs
+    ways: list[dict[str, Any]] = []
+    way_nodes: set[int] = set()
+
+    # first pass, filter ways before collecting their node refs
     utils.log(f"Extracting ways from {str(filepath)!r}.")
     fp = osmium.FileProcessor(filepath)
     fp = fp.with_filter(osmium.filter.EntityFilter(osmium.osm.WAY))
     for way in fp:
-        way_dict = {
-            "type": "way",
-            "id": way.id,
-            "nodes": [node.ref for node in way.nodes],
-            "tags": dict(way.tags),
-        }
-        elements.append(way_dict)
+        tags = dict(way.tags)
+        if way_filter is not None:
+            if not way_filter(tags):
+                continue
+        elif not _overpass._network_filter_matches(network_type, tags):
+            continue
 
-    # count the ways and extract their constituent nodes' IDs
-    way_count = len(elements)
-    way_nodes = {n for e in elements for n in e["nodes"]}
+        node_refs = [node.ref for node in way.nodes]
+        if len(node_refs) < 2:  # noqa: PLR2004
+            continue
+
+        ways.append(
+            {
+                "type": "way",
+                "id": way.id,
+                "nodes": node_refs,
+                "tags": tags,
+            },
+        )
+        way_nodes.update(node_refs)
 
     # second pass, filter to nodes that constitute the preceding ways
     utils.log(f"Extracting {len(way_nodes):,} way nodes from {str(filepath)!r}.")
     fp = osmium.FileProcessor(filepath)
     fp = fp.with_filter(osmium.filter.EntityFilter(osmium.osm.NODE))
     fp = fp.with_filter(osmium.filter.IdFilter(way_nodes))
+    nodes: list[dict[str, Any]] = []
+    found_node_ids: set[int] = set()
     for node in fp:
-        node_dict = {
-            "type": "node",
-            "id": node.id,
-            "lon": node.location.lon,
-            "lat": node.location.lat,
-            "tags": dict(node.tags),
-        }
-        elements.append(node_dict)
+        nodes.append(
+            {
+                "type": "node",
+                "id": node.id,
+                "lon": node.location.lon,
+                "lat": node.location.lat,
+                "tags": dict(node.tags),
+            },
+        )
+        found_node_ids.add(node.id)
 
-    node_count = len(elements) - way_count
-    utils.log(f"Extracted {node_count:,} nodes and {way_count:,} ways.")
+    # discard incomplete ways before handing data to graph construction
+    ways = _remove_incomplete_ways(ways, found_node_ids)
+    way_nodes = {node_id for way in ways for node_id in way["nodes"]}
+    # remove nodes that no retained way uses
+    nodes = [node for node in nodes if node["id"] in way_nodes]
+    elements = ways + nodes
+
+    utils.log(f"Extracted {len(nodes):,} nodes and {len(ways):,} ways.")
     return {"elements": elements}
 
 
 def graph_from_pbf(
     filepath: str | Path,
-    tags: list[str] | dict[str, list[str]] | None = None,
     *,
-    bidirectional: bool = False,
+    network_type: str = "all",
+    way_filter: Callable[[dict[str, str]], bool] | None = None,
+    bidirectional: bool | None = None,
     simplify: bool = True,
     retain_all: bool = False,
 ) -> nx.MultiDiGraph:
@@ -159,19 +166,27 @@ def graph_from_pbf(
 
     Use the `settings` module's `useful_tags_node` and `useful_tags_way`
     settings to configure which OSM node/way tags are added as graph node/edge
-    attributes.
+    attributes. When `way_filter` is None, filter ways with the selected
+    `network_type` preset. Otherwise, call `way_filter` once for each way with
+    a new dictionary containing that way's tags and retain the way when the
+    return value is truthy. Arbitrary Overpass `custom_filter` strings are not
+    supported for PBF files.
 
     Parameters
     ----------
     filepath
         Path to PBF file containing OSM data.
-    tags
-        Tags to filter the elements in the file. If `list`, then only retain
-        ways that contain a tag key from the list. If `dict`, then only retain
-        ways that contain a tag key from the dict with a matching value from
-        that dict key's list of values.
+    network_type
+        Network type preset to filter ways. Choose from "all", "all_public",
+        "bike", "drive", "drive_service", or "walk". Ignored when
+        `way_filter` is provided, but still determines default bidirectionality.
+    way_filter
+        Callable that receives a new dictionary of each way's tags and returns
+        whether to retain the way. If provided, it takes precedence over
+        `network_type`.
     bidirectional
-        If True, create bidirectional edges for one-way streets.
+        If explicitly True or False, honor that value. If None, derive it
+        from `network_type`.
     simplify
         If True, simplify graph topology with the `simplify_graph` function.
     retain_all
@@ -183,12 +198,17 @@ def graph_from_pbf(
     G
         The resulting MultiDiGraph.
     """
-    if tags is not None:
-        filepath = filter_pbf(filepath, tags)
-    response_json = [overpass_json_from_pbf(filepath)]
+    if bidirectional is None:
+        bidirectional = network_type in settings.bidirectional_network_types
+
+    # reuse the normal graph builder so PBF and Overpass graphs stay consistent
+    response_json = [_overpass_json_from_pbf(filepath, network_type, way_filter)]
     G = graph._create_graph(response_json, bidirectional)
     if not retain_all:
         G = truncate.largest_component(G, strongly=False)
     if simplify:
         G = simplification.simplify_graph(G)
+
+    msg = f"graph_from_pbf returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
+    utils.log(msg, level=lg.INFO)
     return G
