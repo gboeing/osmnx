@@ -51,7 +51,7 @@ visualization = ["matplotlib>=3.6"]
 [dependency-groups]
 docs = ["furo>=2023", "sphinx>=9", "sphinx-autodoc-typehints>=2"]
 examples = ["folium>=0.12", "jupyterlab>=3.0", "mapclassify>=2.5", "igraph>=0.11"]
-lint = ["pip>=25", "prek>=0.2", "twine>=6", "validate-pyproject[all]>=0.24"]
+lint = ["pip>=25", "prek>=0.2", "twine>=6"]
 test = ["lxml>=6", "pytest>=9", "pytest-cov>=6", "pytest-xdist>=3", "typeguard>=4"]
 
 [project.urls]

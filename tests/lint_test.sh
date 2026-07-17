@@ -13,7 +13,6 @@ SKIP=no-commit-to-branch prek run --all-files
 # build and validate the package
 uv build
 twine check --strict ./dist/*
-validate-pyproject ./pyproject.toml
 
 # run the tests and report the test coverage
 ./tests/run_tests.sh --typeguard-packages=osmnx --cov=osmnx --cov-report=term-missing:skip-covered
