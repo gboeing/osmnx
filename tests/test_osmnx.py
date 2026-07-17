@@ -788,6 +788,7 @@ def test_graph_from() -> None:
     G = ox.graph_from_point(location_point, dist=500, custom_filter=cf_union, retain_all=True)
     ox.convert.validate_graph(G)
 
+    default_overpass_memory = ox.settings.overpass_memory
     ox.settings.overpass_memory = 1073741824
     G = ox.graph_from_point(
         location_point,
@@ -796,6 +797,7 @@ def test_graph_from() -> None:
         network_type="all",
     )
     ox.convert.validate_graph(G)
+    ox.settings.overpass_memory = default_overpass_memory
 
 
 @pytest.mark.xdist_group(name="group3")
