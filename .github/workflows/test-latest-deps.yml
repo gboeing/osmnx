@@ -20,9 +20,7 @@ jobs:
     if: ${{ github.repository == 'gboeing/osmnx' }}
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
-    env:
-      USE_OSMNX_CACHE: 'true'
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:

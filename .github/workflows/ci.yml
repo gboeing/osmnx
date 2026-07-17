@@ -22,7 +22,7 @@ jobs:
   ci:
     name: Python ${{ matrix.python-version }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 20
+    timeout-minutes: 60
     env:
       # disable OSMnx cache only for scheduled runs on the most recent python
       USE_OSMNX_CACHE: ${{ github.event_name != 'schedule' || matrix.python-version != '3.14' }}
