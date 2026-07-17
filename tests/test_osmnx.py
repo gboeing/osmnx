@@ -57,7 +57,7 @@ polygon_wkt = (
 polygon = ox.utils_geo.buffer_geometry(geom=wkt.loads(polygon_wkt), dist=1)
 
 
-@pytest.mark.xdist_group(name="group1")
+@pytest.mark.xdist_group(name="group0")
 def test_logging() -> None:
     """Test the logger."""
     ox.utils.log("test a fake default message")
@@ -74,7 +74,7 @@ def test_logging() -> None:
     ox.utils.ts(style="time")
 
 
-@pytest.mark.xdist_group(name="group1")
+@pytest.mark.xdist_group(name="group0")
 def test_exceptions() -> None:
     """Test the custom errors."""
     message = "testing exception"
@@ -180,7 +180,7 @@ def test_validating() -> None:  # noqa: PLR0915
     ox.convert.validate_graph(G)
 
 
-@pytest.mark.xdist_group(name="group1")
+@pytest.mark.xdist_group(name="group0")
 def test_geocoder() -> None:
     """Test retrieving elements by place name and OSM ID."""
     city = ox.geocode_to_gdf("R2999176", by_osmid=True)
@@ -377,7 +377,7 @@ def test_osm_xml() -> None:
     ox.settings.all_oneway = default_all_oneway
 
 
-@pytest.mark.xdist_group(name="group1")
+@pytest.mark.xdist_group(name="group0")
 def test_elevation() -> None:
     """Test working with elevation data."""
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
@@ -411,7 +411,7 @@ def test_elevation() -> None:
     G = ox.add_edge_grades(G, add_absolute=True)
 
 
-@pytest.mark.xdist_group(name="group1")
+@pytest.mark.xdist_group(name="group0")
 def test_routing() -> None:
     """Test working with speed, travel time, and routing."""
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
