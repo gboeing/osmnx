@@ -46,7 +46,7 @@ repos:
     hooks:
       - id: ruff-check
         args: [--fix, --show-fixes]
-        types_or: [python, pyproject]
+        types_or: [python, pyi, jupyter, pyproject]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
