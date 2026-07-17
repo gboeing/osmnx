@@ -75,7 +75,7 @@ warn_unreachable = true
 checks = ["all", "ES01", "EX01", "GL08", "PR04", "SA01"]
 
 [tool.pytest.ini_options]
-addopts = ["-ra", "--verbose", "--maxfail=1", "--numprocesses=3", "--dist=loadgroup"]
+addopts = ["-ra", "--verbose", "--maxfail=1"]
 cache_dir = "~/.cache/pytest"
 filterwarnings = ["error", "ignore::UserWarning"]
 log_level = "INFO"

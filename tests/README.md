@@ -20,6 +20,8 @@ uv sync --all-extras --all-groups
 bash ./tests/lint_test.sh
 ```
 
+The first test run populates `tests/.cache` with one worker; later runs use four workers and the cache. Delete `tests/.cache/.cache_ready` to force the next run to rebuild the cache. Set `USE_OSMNX_CACHE=false` to test against live APIs with one worker.
+
 ## Continuous integration
 
 Pull requests trigger continuous integration tests via GitHub Actions (see [workflow](../.github/workflows/ci.yml)), including the following steps:

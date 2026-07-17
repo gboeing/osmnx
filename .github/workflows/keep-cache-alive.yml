@@ -8,7 +8,7 @@ permissions:
 # so this runs every Thu to update the caches' last accessed times
 on:  # yamllint disable-line rule:truthy
   schedule:
-    - cron: 23 5 * * 4
+    - cron: 23 4 * * 4
 
 jobs:
   keepalive:
@@ -22,6 +22,6 @@ jobs:
       - name: Restore newest OSMnx caches
         uses: actions/cache/restore@v6
         with:
-          path: .temp/cache
+          path: tests/.cache
           key: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}
           restore-keys: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-

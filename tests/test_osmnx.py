@@ -32,13 +32,16 @@ from typeguard import suppress_type_checks
 
 import osmnx as ox
 
+# enable OSMnx cache by default
+use_osmnx_cache = os.getenv("USE_OSMNX_CACHE", "true").lower() == "true"
+ox.settings.use_cache = use_osmnx_cache
+
+ox.settings.cache_folder = "tests/.cache"
+ox.settings.data_folder = "tests/.temp"
+ox.settings.imgs_folder = "tests/.temp"
+ox.settings.logs_folder = "tests/.temp"
 ox.settings.log_console = True
 ox.settings.log_file = True
-ox.settings.use_cache = True
-ox.settings.data_folder = ".temp/data"
-ox.settings.logs_folder = ".temp/logs"
-ox.settings.imgs_folder = ".temp/imgs"
-ox.settings.cache_folder = ".temp/cache"
 
 # define queries to use throughout tests
 location_point = (37.791427, -122.410018)
@@ -602,7 +605,7 @@ def test_endpoints() -> None:
 
     # bad call: only make this deliberately uncacheable live API call when
     # specifically enabled to do so
-    if os.getenv("LIVE_API_CALLS", "true").lower() == "true":
+    if not use_osmnx_cache:
         with pytest.raises(
             ox._errors.InsufficientResponseError,
             match="Nominatim API did not return a list of results",
@@ -634,7 +637,7 @@ def test_save_load() -> None:  # noqa: PLR0915
 
     # save/load geopackage and convert graph to/from node/edge GeoDataFrames
     ox.save_graph_geopackage(G, directed=False)
-    fp = ".temp/data/graph-dir.gpkg"
+    fp = "tests/.temp/graph-dir.gpkg"
     ox.save_graph_geopackage(G, filepath=fp, directed=True)
     gdf_nodes1 = gpd.read_file(fp, layer="nodes").set_index("osmid")
     gdf_edges1 = gpd.read_file(fp, layer="edges").set_index(["u", "v", "key"])

@@ -22,7 +22,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     env:
-      LIVE_API_CALLS: 'false'
+      USE_OSMNX_CACHE: 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -50,10 +50,10 @@ jobs:
       - name: Cache OSMnx cache
         uses: actions/cache@v6
         with:
-          path: .temp/cache
+          path: tests/.cache
           key: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}
           restore-keys: |
             osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-
 
       - name: Test code
-        run: uv run --no-sync pytest
+        run: uv run --no-sync ./tests/run_tests.sh
