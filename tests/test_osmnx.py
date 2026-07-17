@@ -246,7 +246,7 @@ def test_stats() -> None:
 
 
 def test_consolidate_intersections() -> None:
-    """Test consolidating intersections with an edge length tolerance."""
+    """Test consolidating intersections with a maximum edge length."""
     G = nx.MultiDiGraph(crs="epsg:3857")
     G.add_node(0, x=0, y=0)
     G.add_node(1, x=1, y=0)
