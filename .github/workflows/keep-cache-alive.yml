@@ -8,7 +8,7 @@ permissions:
 # so this runs every Thu to update the caches' last accessed times
 on:  # yamllint disable-line rule:truthy
   schedule:
-    - cron: 0 5 * * 4
+    - cron: 23 5 * * 4
 
 jobs:
   keepalive:
