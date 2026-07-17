@@ -258,7 +258,7 @@ def test_consolidate_intersections() -> None:
     Gc = ox.consolidate_intersections(
         G,
         tolerance=1,
-        edge_length_tolerance=200,
+        max_length=200,
         dead_ends=True,
     )
     assert len(Gc) == 1
@@ -266,7 +266,7 @@ def test_consolidate_intersections() -> None:
     Gc = ox.consolidate_intersections(
         G,
         tolerance=1,
-        edge_length_tolerance=50,
+        max_length=50,
         dead_ends=True,
     )
     assert len(Gc) == 2
