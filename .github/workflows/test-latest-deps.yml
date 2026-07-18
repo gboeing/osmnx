@@ -54,4 +54,4 @@ jobs:
             osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-
 
       - name: Test code
-        run: uv run --no-sync ./tests/run_tests.sh
+        run: uv run --no-sync bash ./tests/run_tests.sh
