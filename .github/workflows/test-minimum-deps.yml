@@ -57,4 +57,4 @@ jobs:
       - name: Test code
         run: |
           uv run --no-sync ./tests/verify_min_deps.py
-          uv run --no-sync ./tests/run_tests.sh -W ignore
+          uv run --no-sync bash ./tests/run_tests.sh -W ignore
