@@ -248,6 +248,7 @@ def test_stats() -> None:
     G_clean = ox.consolidate_intersections(G_proj, tolerance=tols, rebuild_graph=True)
 
 
+@pytest.mark.xdist_group(name="group0")
 def test_consolidate_intersections() -> None:
     """Test consolidating intersections with a maximum edge length."""
     G = nx.MultiDiGraph(crs="epsg:3857")
