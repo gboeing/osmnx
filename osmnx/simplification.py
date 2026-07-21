@@ -452,8 +452,8 @@ def consolidate_intersections(
     G: nx.MultiDiGraph,
     *,
     tolerance: float | dict[int, float] = 10,
-    max_length: float | None = None,
     rebuild_graph: bool = True,
+    max_length: float | None = None,
     dead_ends: bool = False,
     reconnect_edges: bool = True,
     node_attr_aggs: dict[str, Any] | None = None,
@@ -503,18 +503,17 @@ def consolidate_intersections(
         that single value will be used for all nodes. If dict (mapping node
         IDs to individual values), then those values will be used per node and
         any missing node IDs will not be buffered.
-    max_length
-        If not None, when rebuilding the graph, ignore edges whose `length`
-        attributes exceed this value when determining whether nearby nodes are
-        topologically connected. This prevents long edges that loop outside
-        an intersection, such as cloverleaf ramps, from merging their nearby
-        endpoint nodes. The edges remain in the rebuilt graph.
     rebuild_graph
         If True, consolidate the nodes topologically, rebuild the graph, and
         return as MultiDiGraph. Otherwise, consolidate the nodes geometrically
         and return the consolidated node points as GeoSeries.
+    max_length
+        Ignore edges longer than this when determining whether nearby nodes
+        are topologically connected. If None, consider all edges. This
+        prevents long edges that loop outside an intersection, such as
+        cloverleaf ramps, from merging their nearby endpoint nodes.
     dead_ends
-        If False, discard dead-end nodes to return only street-intersection
+        If False, discard dead-end nodes to return only street intersection
         points.
     reconnect_edges
         If True, reconnect edges (and their geometries) to the consolidated
