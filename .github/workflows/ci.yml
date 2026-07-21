@@ -24,7 +24,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     env:
-      # bypass the persistent OSMnx cache only for scheduled runs on the most recent python
+      # bypass persistent OSMnx cache only for scheduled runs on most recent python
       USE_PERSISTENT_CACHE: >-
         ${{ github.event_name != 'schedule' || matrix.python-version != '3.14' }}
     strategy:
