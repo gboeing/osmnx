@@ -2,12 +2,12 @@
 
 ## TBD
 
+- add local PBF file graph loading with network presets or callable way filtering (#1338)
 - de-duplicate features when creating a features gdf (#1400)
 - validate tolerance when consolidating intersections (#1401)
 
 ## 2.1.1 (2026-07-21)
 
-- add local PBF graph loading with network presets or callable way filtering
 - fix projection bug when re-projecting an already projected graph (#1373 #1374)
 - fix projection bug after consolidating intersections (#1388)
 - fix cloverleaf intersection consolidation bug (#1396)
