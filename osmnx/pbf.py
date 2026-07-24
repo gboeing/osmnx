@@ -99,6 +99,8 @@ def _overpass_json_from_pbf(
     # first pass, filter ways before collecting their node refs
     utils.log(f"Extracting ways from {str(filepath)!r}.")
     fp = osmium.FileProcessor(filepath, entities=osmium.osm.WAY)
+    if way_filter is None:
+        fp = fp.with_filter(osmium.filter.KeyFilter("highway"))
     for way in fp:
         tags = dict(way.tags)
         if way_filter is not None:
