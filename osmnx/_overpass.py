@@ -30,6 +30,7 @@ if TYPE_CHECKING:
 
 # keep required tags separate from excluded tag value patterns
 _DEFAULT_PBF_ACCESS = "private"
+_DEFAULT_OVERPASS_ACCESS = f'["access"!~"{_DEFAULT_PBF_ACCESS}"]'
 _NETWORK_REQUIRED_TAGS: dict[str, list[str]] = {
     "drive": ["highway"],
     "drive_service": ["highway"],

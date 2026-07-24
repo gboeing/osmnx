@@ -494,6 +494,9 @@ def test_pbf() -> None:  # noqa: PLR0915
     with pytest.raises(ValueError, match="Unrecognized network_type"):
         matches("invalid", {})
 
+    with pytest.raises(ValueError, match="Unrecognized network_type"):
+        ox.pbf.graph_from_pbf("missing.osm.pbf", network_type="invalid")
+
     pbf_filepath = Path(ox.settings.data_folder) / "West-Oakland.osm.pbf"
     # create the temporary folder because this test can run independently
     pbf_filepath.parent.mkdir(parents=True, exist_ok=True)

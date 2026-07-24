@@ -198,12 +198,16 @@ def graph_from_pbf(
     G
         The resulting MultiDiGraph.
     """
+    if network_type not in _overpass._NETWORK_REQUIRED_TAGS:
+        msg = f"Unrecognized network_type {network_type!r}."
+        raise ValueError(msg)
+
     excluded = _overpass._NETWORK_EXCLUDED_PATTERNS.get(network_type, {})
     access = excluded.get("access")
     if (
         way_filter is None
         and access == _overpass._DEFAULT_PBF_ACCESS
-        and settings.default_access != '["access"!~"private"]'
+        and settings.default_access != _overpass._DEFAULT_OVERPASS_ACCESS
     ):
         # warn once here because the matcher runs once per PBF way
         msg = (
