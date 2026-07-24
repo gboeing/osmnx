@@ -28,17 +28,9 @@ if TYPE_CHECKING:
     from shapely import Polygon
 
 
-# keep required tags separate from excluded tag value patterns
+# define built-in network exclusions once for both Overpass and PBF matching
 _DEFAULT_PBF_ACCESS = "private"
 _DEFAULT_OVERPASS_ACCESS = f'["access"!~"{_DEFAULT_PBF_ACCESS}"]'
-_NETWORK_REQUIRED_TAGS: dict[str, list[str]] = {
-    "drive": ["highway"],
-    "drive_service": ["highway"],
-    "walk": ["highway"],
-    "bike": ["highway"],
-    "all_public": ["highway"],
-    "all": ["highway"],
-}
 _NETWORK_EXCLUDED_PATTERNS: dict[str, dict[str, str]] = {
     "drive": {
         "area": "yes",
@@ -145,16 +137,15 @@ def _get_network_filter(network_type: str) -> str:
     way_filter
         The Overpass query filter.
     """
-    if network_type not in _NETWORK_REQUIRED_TAGS:  # pragma: no cover
+    if network_type not in _NETWORK_EXCLUDED_PATTERNS:  # pragma: no cover
         msg = f"Unrecognized network_type {network_type!r}."
         raise ValueError(msg)
 
-    # render required tags and excluded values as Overpass clauses
-    required = _NETWORK_REQUIRED_TAGS[network_type]
+    # require highway ways, then render excluded values as Overpass clauses
     excluded = _NETWORK_EXCLUDED_PATTERNS[network_type]
-    filters = [f'["{key}"]' for key in required]
+    filters = ['["highway"]']
     for key, pattern in excluded.items():
-        if key == "access" and pattern == _DEFAULT_PBF_ACCESS:
+        if key == "access":
             # preserve the configurable Overpass access clause
             filters.append(settings.default_access)
         else:
@@ -178,18 +169,15 @@ def _network_filter_matches(network_type: str, tags: dict[str, str]) -> bool:
     matches
         Whether the tags satisfy every predicate in the preset.
     """
-    if network_type not in _NETWORK_REQUIRED_TAGS:  # pragma: no cover
+    if network_type not in _NETWORK_EXCLUDED_PATTERNS:
         msg = f"Unrecognized network_type {network_type!r}."
         raise ValueError(msg)
 
-    required = _NETWORK_REQUIRED_TAGS[network_type]
-    excluded = _NETWORK_EXCLUDED_PATTERNS[network_type]
-    for key in required:
-        if key not in tags:
-            return False
+    if "highway" not in tags:
+        return False
 
     # reject values that match an exclusion pattern
-    for key, pattern in excluded.items():  # noqa: SIM110
+    for key, pattern in _NETWORK_EXCLUDED_PATTERNS[network_type].items():
         if key in tags and re.search(pattern, tags[key]):
             return False
     return True

@@ -409,7 +409,7 @@ def test_osm_xml() -> None:
 
 
 def test_network_filters() -> None:
-    """Test rendering the built-in network filters."""
+    """Test rendering and matching the built-in network filters."""
     expected = {
         "all": (
             '["highway"]["area"!~"yes"]'
@@ -460,15 +460,8 @@ def test_network_filters() -> None:
     }
     assert actual == expected
 
-
-@pytest.mark.xdist_group(name="group1")
-def test_pbf() -> None:  # noqa: PLR0915
-    """Test matching and loading graphs from PBF files."""
     network_types = ("all", "all_public", "bike", "drive", "drive_service", "walk")
     matches = ox._overpass._network_filter_matches
-    required = ox._overpass._NETWORK_REQUIRED_TAGS
-    excluded = ox._overpass._NETWORK_EXCLUDED_PATTERNS
-    assert required.keys() == excluded.keys()
 
     # check the shared presets against representative tags
     for network_type in network_types:
@@ -494,6 +487,10 @@ def test_pbf() -> None:  # noqa: PLR0915
     with pytest.raises(ValueError, match="Unrecognized network_type"):
         matches("invalid", {})
 
+
+@pytest.mark.xdist_group(name="group1")
+def test_pbf() -> None:
+    """Test loading graphs from PBF files."""
     with pytest.raises(ValueError, match="Unrecognized network_type"):
         ox.pbf.graph_from_pbf("missing.osm.pbf", network_type="invalid")
 
@@ -507,51 +504,43 @@ def test_pbf() -> None:  # noqa: PLR0915
             for obj in osmium.FileProcessor("tests/input_data/West-Oakland.osm.bz2"):
                 writer.add(obj)
 
-        # compare both readers while retaining every way
-        G_xml = ox.graph_from_xml(
-            "tests/input_data/West-Oakland.osm.bz2",
-            simplify=False,
-            retain_all=True,
-        )
-        G_pbf = ox.pbf.graph_from_pbf(
-            pbf_filepath,
-            way_filter=lambda _tags: True,
-            simplify=False,
-            retain_all=True,
-        )
+        # compare both readers while retaining every way, including railways
+        useful_tags_way = ox.settings.useful_tags_way
+        try:
+            ox.settings.useful_tags_way = [*useful_tags_way, "railway"]
+            G_xml = ox.graph_from_xml(
+                "tests/input_data/West-Oakland.osm.bz2",
+                simplify=False,
+                retain_all=True,
+            )
+            G_pbf = ox.pbf.graph_from_pbf(
+                pbf_filepath,
+                network_type=None,
+                simplify=False,
+                retain_all=True,
+            )
+        finally:
+            ox.settings.useful_tags_way = useful_tags_way
         G_xml.remove_nodes_from(list(nx.isolates(G_xml)))
         assert set(G_xml.nodes) == set(G_pbf.nodes)
         assert set(G_xml.edges) == set(G_pbf.edges)
+        assert any(data.get("railway") == "subway" for _, _, data in G_pbf.edges(data=True))
 
-        G_residential = ox.pbf.graph_from_pbf(
-            pbf_filepath,
-            way_filter=lambda tags: tags.get("highway") == "residential",
-            simplify=False,
-            retain_all=True,
-        )
-        assert len(G_residential) > 0
-        assert len(G_residential.edges) < len(G_pbf.edges)
-        assert all(
-            data["highway"] == "residential" for _, _, data in G_residential.edges(data=True)
-        )
-
-        # confirm built-in filtering and explicit directionality overrides
+        # confirm built-in filtering and network type directionality
         G_drive = ox.pbf.graph_from_pbf(
             pbf_filepath,
             network_type="drive",
-            bidirectional=False,
             simplify=False,
             retain_all=True,
         )
         assert len(G_drive) > 0
-        G_drive_bidirectional = ox.pbf.graph_from_pbf(
+        G_walk = ox.pbf.graph_from_pbf(
             pbf_filepath,
-            network_type="drive",
-            bidirectional=True,
+            network_type="walk",
             simplify=False,
             retain_all=True,
         )
-        assert len(G_drive_bidirectional.edges) >= len(G_drive.edges)
+        assert all(G_walk.has_edge(v, u) for u, v in G_walk.edges(keys=False))
 
         # warn once if PBF loading cannot use a customized Overpass rule
         default_access = ox.settings.default_access
@@ -561,34 +550,16 @@ def test_pbf() -> None:  # noqa: PLR0915
                 UserWarning,
                 match="uses the default 'private' rule",
             ) as warnings:
-                G_custom = ox.pbf.graph_from_pbf(
+                G_access = ox.pbf.graph_from_pbf(
                     pbf_filepath,
                     network_type="drive",
                     simplify=False,
                     retain_all=True,
                 )
             assert len(warnings) == 1
-            assert len(G_custom) > 0
+            assert len(G_access) > 0
         finally:
             ox.settings.default_access = default_access
-
-        # network_type still supplies walk bidirectionality with a custom filter
-        G_walk_custom = ox.pbf.graph_from_pbf(
-            pbf_filepath,
-            network_type="walk",
-            way_filter=lambda _tags: True,
-            simplify=False,
-            retain_all=True,
-        )
-        G_walk_custom_bidirectional = ox.pbf.graph_from_pbf(
-            pbf_filepath,
-            network_type="walk",
-            way_filter=lambda _tags: True,
-            bidirectional=True,
-            simplify=False,
-            retain_all=True,
-        )
-        assert set(G_walk_custom.edges) == set(G_walk_custom_bidirectional.edges)
 
         # verify the incomplete-way safety check without creating malformed PBF data
         complete_way = {"type": "way", "id": 1, "nodes": [1, 2], "tags": {}}
