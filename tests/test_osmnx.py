@@ -243,9 +243,10 @@ def test_stats() -> None:
     # one node missing
     tols.popitem()
     G_clean = ox.consolidate_intersections(G_proj, tolerance=tols, rebuild_graph=True)
-    # one node 0
+    # one node has invalid zero tolerance
     tols[next(iter(tols))] = 0
-    G_clean = ox.consolidate_intersections(G_proj, tolerance=tols, rebuild_graph=True)
+    with pytest.raises(ValueError, match="must be greater than zero"):
+        G_clean = ox.consolidate_intersections(G_proj, tolerance=tols, rebuild_graph=True)
 
 
 @pytest.mark.xdist_group(name="group0")
