@@ -842,6 +842,11 @@ def test_features() -> None:
     with suppress_type_checks(), pytest.raises(TypeError):
         ox.features.features_from_polygon(Point(0, 0), tags={})
 
+    element = {"type": "node", "id": 1, "lat": 0, "lon": 0, "tags": {"amenity": "bench"}}
+    response_jsons = ({"elements": [element]}, {"elements": [element.copy()]})
+    gdf = ox.features._create_gdf(response_jsons, Polygon(), {})
+    assert gdf.index.is_unique
+
     # test cache_only_mode
     ox.settings.cache_only_mode = True
     with pytest.raises(ox._errors.CacheOnlyInterruptError, match="Interrupted because"):

@@ -723,8 +723,9 @@ def _filter_features(
             elif isinstance(value, list):
                 tags_filter |= gdf[col].isin(set(value))
 
-    # filter gdf then drop any columns with only nulls left after filtering
-    gdf = gdf[geom_filter & tags_filter].dropna(axis="columns", how="all")
+    # filter and deduplicate gdf then drop any columns with only nulls left
+    gdf = gdf[~gdf.index.duplicated() & geom_filter & tags_filter]
+    gdf = gdf.dropna(axis="columns", how="all")
     if len(gdf) == 0:  # pragma: no cover
         msg = "No matching features. Check query location, tags, and log."
         raise InsufficientResponseError(msg)
