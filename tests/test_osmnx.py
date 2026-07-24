@@ -408,11 +408,67 @@ def test_osm_xml() -> None:
     ox.settings.all_oneway = default_all_oneway
 
 
+def test_network_filters() -> None:
+    """Test rendering the built-in network filters."""
+    expected = {
+        "all": (
+            '["highway"]["area"!~"yes"]'
+            '["highway"!~"abandoned|construction|no|planned|platform|'
+            'proposed|raceway|razed|rest_area|services"]'
+        ),
+        "all_public": (
+            '["highway"]["area"!~"yes"]["access"!~"private"]'
+            '["highway"!~"abandoned|construction|no|planned|platform|'
+            'proposed|raceway|razed|rest_area|services"]'
+            '["service"!~"private"]'
+        ),
+        "bike": (
+            '["highway"]["area"!~"yes"]["access"!~"private"]'
+            '["highway"!~"abandoned|bus_guideway|construction|corridor|'
+            "elevator|escalator|footway|motor|no|planned|platform|proposed|"
+            'raceway|razed|rest_area|services|steps"]'
+            '["bicycle"!~"no"]["service"!~"private"]'
+        ),
+        "drive": (
+            '["highway"]["area"!~"yes"]["access"!~"private"]'
+            '["highway"!~"abandoned|bridleway|bus_guideway|construction|'
+            "corridor|cycleway|elevator|escalator|footway|no|path|pedestrian|"
+            "planned|platform|proposed|raceway|razed|rest_area|service|"
+            'services|steps|track"]["motor_vehicle"!~"no"]'
+            '["motorcar"!~"no"]["service"!~"alley|driveway|emergency_access|'
+            'parking|parking_aisle|private"]'
+        ),
+        "drive_service": (
+            '["highway"]["area"!~"yes"]["access"!~"private"]'
+            '["highway"!~"abandoned|bridleway|bus_guideway|construction|'
+            "corridor|cycleway|elevator|escalator|footway|no|path|pedestrian|"
+            "planned|platform|proposed|raceway|razed|rest_area|services|steps|"
+            'track"]["motor_vehicle"!~"no"]["motorcar"!~"no"]'
+            '["service"!~"emergency_access|parking|parking_aisle|private"]'
+        ),
+        "walk": (
+            '["highway"]["area"!~"yes"]["access"!~"private"]'
+            '["highway"!~"abandoned|bus_guideway|construction|cycleway|motor|'
+            'no|planned|platform|proposed|raceway|razed|rest_area|services"]'
+            '["foot"!~"no"]["service"!~"private"]'
+            '["sidewalk"!~"separate"]["sidewalk:both"!~"separate"]'
+            '["sidewalk:left"!~"separate"]["sidewalk:right"!~"separate"]'
+        ),
+    }
+    actual = {
+        network_type: ox._overpass._get_network_filter(network_type) for network_type in expected
+    }
+    assert actual == expected
+
+
 @pytest.mark.xdist_group(name="group1")
 def test_pbf() -> None:  # noqa: PLR0915
     """Test matching and loading graphs from PBF files."""
     network_types = ("all", "all_public", "bike", "drive", "drive_service", "walk")
     matches = ox._overpass._network_filter_matches
+    required = ox._overpass._NETWORK_REQUIRED_TAGS
+    excluded = ox._overpass._NETWORK_EXCLUDED_PATTERNS
+    assert required.keys() == excluded.keys()
 
     # check the shared presets against representative tags
     for network_type in network_types:
@@ -437,15 +493,6 @@ def test_pbf() -> None:  # noqa: PLR0915
 
     with pytest.raises(ValueError, match="Unrecognized network_type"):
         matches("invalid", {})
-
-    # customized access expressions need a callable because PBF does not parse Overpass syntax
-    default_access = ox.settings.default_access
-    try:
-        ox.settings.default_access = '["access"!~"private|no"]'
-        with pytest.raises(ValueError, match="provide way_filter instead"):
-            matches("drive", {"highway": "residential"})
-    finally:
-        ox.settings.default_access = default_access
 
     pbf_filepath = Path(ox.settings.data_folder) / "West-Oakland.osm.pbf"
     # create the temporary folder because this test can run independently
@@ -502,6 +549,25 @@ def test_pbf() -> None:  # noqa: PLR0915
             retain_all=True,
         )
         assert len(G_drive_bidirectional.edges) >= len(G_drive.edges)
+
+        # warn once if PBF loading cannot use a customized Overpass rule
+        default_access = ox.settings.default_access
+        try:
+            ox.settings.default_access = '["access"!~"private|no"]'
+            with pytest.warns(
+                UserWarning,
+                match="uses the default 'private' rule",
+            ) as warnings:
+                G_custom = ox.pbf.graph_from_pbf(
+                    pbf_filepath,
+                    network_type="drive",
+                    simplify=False,
+                    retain_all=True,
+                )
+            assert len(warnings) == 1
+            assert len(G_custom) > 0
+        finally:
+            ox.settings.default_access = default_access
 
         # network_type still supplies walk bidirectionality with a custom filter
         G_walk_custom = ox.pbf.graph_from_pbf(

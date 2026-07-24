@@ -168,7 +168,9 @@ def graph_from_pbf(
     `network_type` preset. Otherwise, call `way_filter` once for each way with
     a new dictionary containing that way's tags and retain the way when the
     return value is truthy. Arbitrary Overpass `custom_filter` strings are not
-    supported for PBF files.
+    supported for PBF files. PBF presets use the default "private" access
+    rule. If `settings.default_access` is customized, this function warns and
+    ignores it because PBF filtering cannot evaluate Overpass QL.
 
     Parameters
     ----------
@@ -196,6 +198,21 @@ def graph_from_pbf(
     G
         The resulting MultiDiGraph.
     """
+    excluded = _overpass._NETWORK_EXCLUDED_PATTERNS.get(network_type, {})
+    access = excluded.get("access")
+    if (
+        way_filter is None
+        and access == _overpass._DEFAULT_PBF_ACCESS
+        and settings.default_access != '["access"!~"private"]'
+    ):
+        # warn once here because the matcher runs once per PBF way
+        msg = (
+            "PBF preset filtering ignores a customized "
+            "settings.default_access and uses the default 'private' rule. "
+            "Provide way_filter to customize access filtering."
+        )
+        warn(msg, category=UserWarning, stacklevel=2)
+
     if bidirectional is None:
         bidirectional = network_type in settings.bidirectional_network_types
 

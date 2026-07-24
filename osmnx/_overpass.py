@@ -28,83 +28,80 @@ if TYPE_CHECKING:
     from shapely import Polygon
 
 
-# keep the shared preset rules simple enough for both readers to evaluate
-_DEFAULT_ACCESS_FILTER: tuple[str, str] = ("access", "private")
-_NETWORK_FILTERS: dict[str, tuple[tuple[str, str | None], ...]] = {
-    "drive": (
-        ("highway", None),
-        ("area", "yes"),
-        _DEFAULT_ACCESS_FILTER,
-        (
-            "highway",
-            "abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|"
-            "escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|"
-            "razed|rest_area|service|services|steps|track",
+# keep required tags separate from excluded tag value patterns
+_DEFAULT_PBF_ACCESS = "private"
+_NETWORK_REQUIRED_TAGS: dict[str, list[str]] = {
+    "drive": ["highway"],
+    "drive_service": ["highway"],
+    "walk": ["highway"],
+    "bike": ["highway"],
+    "all_public": ["highway"],
+    "all": ["highway"],
+}
+_NETWORK_EXCLUDED_PATTERNS: dict[str, dict[str, str]] = {
+    "drive": {
+        "area": "yes",
+        "access": _DEFAULT_PBF_ACCESS,
+        "highway": (
+            "abandoned|bridleway|bus_guideway|construction|corridor|cycleway|"
+            "elevator|escalator|footway|no|path|pedestrian|planned|platform|"
+            "proposed|raceway|razed|rest_area|service|services|steps|track"
         ),
-        ("motor_vehicle", "no"),
-        ("motorcar", "no"),
-        ("service", "alley|driveway|emergency_access|parking|parking_aisle|private"),
-    ),
-    "drive_service": (
-        ("highway", None),
-        ("area", "yes"),
-        _DEFAULT_ACCESS_FILTER,
-        (
-            "highway",
-            "abandoned|bridleway|bus_guideway|construction|corridor|cycleway|elevator|"
-            "escalator|footway|no|path|pedestrian|planned|platform|proposed|raceway|"
-            "razed|rest_area|services|steps|track",
+        "motor_vehicle": "no",
+        "motorcar": "no",
+        "service": ("alley|driveway|emergency_access|parking|parking_aisle|private"),
+    },
+    "drive_service": {
+        "area": "yes",
+        "access": _DEFAULT_PBF_ACCESS,
+        "highway": (
+            "abandoned|bridleway|bus_guideway|construction|corridor|cycleway|"
+            "elevator|escalator|footway|no|path|pedestrian|planned|platform|"
+            "proposed|raceway|razed|rest_area|services|steps|track"
         ),
-        ("motor_vehicle", "no"),
-        ("motorcar", "no"),
-        ("service", "emergency_access|parking|parking_aisle|private"),
-    ),
-    "walk": (
-        ("highway", None),
-        ("area", "yes"),
-        _DEFAULT_ACCESS_FILTER,
-        (
-            "highway",
-            "abandoned|bus_guideway|construction|cycleway|motor|no|planned|platform|"
-            "proposed|raceway|razed|rest_area|services",
+        "motor_vehicle": "no",
+        "motorcar": "no",
+        "service": "emergency_access|parking|parking_aisle|private",
+    },
+    "walk": {
+        "area": "yes",
+        "access": _DEFAULT_PBF_ACCESS,
+        "highway": (
+            "abandoned|bus_guideway|construction|cycleway|motor|no|planned|"
+            "platform|proposed|raceway|razed|rest_area|services"
         ),
-        ("foot", "no"),
-        ("service", "private"),
-        ("sidewalk", "separate"),
-        ("sidewalk:both", "separate"),
-        ("sidewalk:left", "separate"),
-        ("sidewalk:right", "separate"),
-    ),
-    "bike": (
-        ("highway", None),
-        ("area", "yes"),
-        _DEFAULT_ACCESS_FILTER,
-        (
-            "highway",
-            "abandoned|bus_guideway|construction|corridor|elevator|escalator|footway|"
-            "motor|no|planned|platform|proposed|raceway|razed|rest_area|services|steps",
+        "foot": "no",
+        "service": "private",
+        "sidewalk": "separate",
+        "sidewalk:both": "separate",
+        "sidewalk:left": "separate",
+        "sidewalk:right": "separate",
+    },
+    "bike": {
+        "area": "yes",
+        "access": _DEFAULT_PBF_ACCESS,
+        "highway": (
+            "abandoned|bus_guideway|construction|corridor|elevator|escalator|"
+            "footway|motor|no|planned|platform|proposed|raceway|razed|"
+            "rest_area|services|steps"
         ),
-        ("bicycle", "no"),
-        ("service", "private"),
-    ),
-    "all_public": (
-        ("highway", None),
-        ("area", "yes"),
-        _DEFAULT_ACCESS_FILTER,
-        (
-            "highway",
-            "abandoned|construction|no|planned|platform|proposed|raceway|razed|rest_area|services",
+        "bicycle": "no",
+        "service": "private",
+    },
+    "all_public": {
+        "area": "yes",
+        "access": _DEFAULT_PBF_ACCESS,
+        "highway": (
+            "abandoned|construction|no|planned|platform|proposed|raceway|razed|rest_area|services"
         ),
-        ("service", "private"),
-    ),
-    "all": (
-        ("highway", None),
-        ("area", "yes"),
-        (
-            "highway",
-            "abandoned|construction|no|planned|platform|proposed|raceway|razed|rest_area|services",
+        "service": "private",
+    },
+    "all": {
+        "area": "yes",
+        "highway": (
+            "abandoned|construction|no|planned|platform|proposed|raceway|razed|rest_area|services"
         ),
-    ),
+    },
 }
 
 
@@ -147,17 +144,18 @@ def _get_network_filter(network_type: str) -> str:
     way_filter
         The Overpass query filter.
     """
-    if network_type not in _NETWORK_FILTERS:  # pragma: no cover
+    if network_type not in _NETWORK_REQUIRED_TAGS:  # pragma: no cover
         msg = f"Unrecognized network_type {network_type!r}."
         raise ValueError(msg)
 
-    # render the shared predicates as Overpass clauses
-    filters = []
-    for key, pattern in _NETWORK_FILTERS[network_type]:
-        if (key, pattern) == _DEFAULT_ACCESS_FILTER:
+    # render required tags and excluded values as Overpass clauses
+    required = _NETWORK_REQUIRED_TAGS[network_type]
+    excluded = _NETWORK_EXCLUDED_PATTERNS[network_type]
+    filters = [f'["{key}"]' for key in required]
+    for key, pattern in excluded.items():
+        if key == "access" and pattern == _DEFAULT_PBF_ACCESS:
+            # preserve the configurable Overpass access clause
             filters.append(settings.default_access)
-        elif pattern is None:
-            filters.append(f'["{key}"]')
         else:
             filters.append(f'["{key}"!~"{pattern}"]')
     return "".join(filters)
@@ -179,26 +177,19 @@ def _network_filter_matches(network_type: str, tags: dict[str, str]) -> bool:
     matches
         Whether the tags satisfy every predicate in the preset.
     """
-    if network_type not in _NETWORK_FILTERS:  # pragma: no cover
+    if network_type not in _NETWORK_REQUIRED_TAGS:  # pragma: no cover
         msg = f"Unrecognized network_type {network_type!r}."
         raise ValueError(msg)
 
-    if (
-        _DEFAULT_ACCESS_FILTER in _NETWORK_FILTERS[network_type]
-        and settings.default_access != '["access"!~"private"]'
-    ):
-        msg = (
-            "PBF preset filtering cannot evaluate a customized settings.default_access; "
-            "provide way_filter instead."
-        )
-        raise ValueError(msg)
-
-    # require keys with no exclusion pattern
-    for key, pattern in _NETWORK_FILTERS[network_type]:
-        if pattern is None and key not in tags:
+    required = _NETWORK_REQUIRED_TAGS[network_type]
+    excluded = _NETWORK_EXCLUDED_PATTERNS[network_type]
+    for key in required:
+        if key not in tags:
             return False
-        # reject values that match an exclusion pattern
-        if pattern is not None and key in tags and re.search(pattern, tags[key]):
+
+    # reject values that match an exclusion pattern
+    for key, pattern in excluded.items():  # noqa: SIM110
+        if key in tags and re.search(pattern, tags[key]):
             return False
     return True
 
