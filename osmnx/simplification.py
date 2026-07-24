@@ -502,7 +502,7 @@ def consolidate_intersections(
         subsequent overlaps are dissolved into a single node. If scalar, then
         that single value will be used for all nodes. If dict (mapping node
         IDs to individual values), then those values will be used per node and
-        any missing node IDs will not be buffered.
+        any missing node IDs will not be buffered. Values must be positive.
     rebuild_graph
         If True, consolidate the nodes topologically, rebuild the graph, and
         return as MultiDiGraph. Otherwise, consolidate the nodes geometrically
@@ -536,6 +536,11 @@ def consolidate_intersections(
         `rebuild_graph=False`, returns GeoSeries of Points representing the
         centroids of street intersections.
     """
+    tolerances = tolerance.values() if isinstance(tolerance, dict) else (tolerance,)
+    if any(value <= 0 for value in tolerances):
+        msg = "`tolerance` values must be greater than zero."
+        raise ValueError(msg)
+
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
 
