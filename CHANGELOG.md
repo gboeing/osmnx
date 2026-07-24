@@ -2,6 +2,7 @@
 
 ## TBD
 
+- add local PBF file graph loading with network presets or pre-filtered input (#1338)
 - de-duplicate features when creating a features gdf (#1400)
 - validate tolerance when consolidating intersections (#1401)
 

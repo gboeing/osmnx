@@ -21,6 +21,7 @@ from pathlib import Path
 import geopandas as gpd
 import networkx as nx
 import numpy as np
+import osmium
 import pandas as pd
 import pytest
 from lxml import etree
@@ -405,6 +406,173 @@ def test_osm_xml() -> None:
     # restore settings
     ox.settings.overpass_settings = default_overpass_settings
     ox.settings.all_oneway = default_all_oneway
+
+
+@pytest.mark.xdist_group(name="group1")
+def test_network_filters() -> None:
+    """Test rendering and matching the built-in network filters."""
+    expected = {
+        "all": (
+            '["highway"]["area"!~"yes"]'
+            '["highway"!~"abandoned|construction|no|planned|platform|'
+            'proposed|raceway|razed|rest_area|services"]'
+        ),
+        "all_public": (
+            '["highway"]["area"!~"yes"]["access"!~"private"]'
+            '["highway"!~"abandoned|construction|no|planned|platform|'
+            'proposed|raceway|razed|rest_area|services"]'
+            '["service"!~"private"]'
+        ),
+        "bike": (
+            '["highway"]["area"!~"yes"]["access"!~"private"]'
+            '["highway"!~"abandoned|bus_guideway|construction|corridor|'
+            "elevator|escalator|footway|motor|no|planned|platform|proposed|"
+            'raceway|razed|rest_area|services|steps"]'
+            '["bicycle"!~"no"]["service"!~"private"]'
+        ),
+        "drive": (
+            '["highway"]["area"!~"yes"]["access"!~"private"]'
+            '["highway"!~"abandoned|bridleway|bus_guideway|construction|'
+            "corridor|cycleway|elevator|escalator|footway|no|path|pedestrian|"
+            "planned|platform|proposed|raceway|razed|rest_area|service|"
+            'services|steps|track"]["motor_vehicle"!~"no"]'
+            '["motorcar"!~"no"]["service"!~"alley|driveway|emergency_access|'
+            'parking|parking_aisle|private"]'
+        ),
+        "drive_service": (
+            '["highway"]["area"!~"yes"]["access"!~"private"]'
+            '["highway"!~"abandoned|bridleway|bus_guideway|construction|'
+            "corridor|cycleway|elevator|escalator|footway|no|path|pedestrian|"
+            "planned|platform|proposed|raceway|razed|rest_area|services|steps|"
+            'track"]["motor_vehicle"!~"no"]["motorcar"!~"no"]'
+            '["service"!~"emergency_access|parking|parking_aisle|private"]'
+        ),
+        "walk": (
+            '["highway"]["area"!~"yes"]["access"!~"private"]'
+            '["highway"!~"abandoned|bus_guideway|construction|cycleway|motor|'
+            'no|planned|platform|proposed|raceway|razed|rest_area|services"]'
+            '["foot"!~"no"]["service"!~"private"]'
+            '["sidewalk"!~"separate"]["sidewalk:both"!~"separate"]'
+            '["sidewalk:left"!~"separate"]["sidewalk:right"!~"separate"]'
+        ),
+    }
+    actual = {
+        network_type: ox._overpass._get_network_filter(network_type) for network_type in expected
+    }
+    assert actual == expected
+
+    network_types = ("all", "all_public", "bike", "drive", "drive_service", "walk")
+    matches = ox._overpass._network_filter_matches
+
+    # check the shared presets against representative tags
+    for network_type in network_types:
+        assert matches(network_type, {"highway": "residential"})
+        assert not matches(network_type, {})
+        assert not matches(network_type, {"highway": "residential", "area": "yes"})
+
+    for network_type in ("drive", "drive_service"):
+        assert not matches(network_type, {"highway": "footway"})
+        assert not matches(network_type, {"highway": "residential", "motor_vehicle": "no"})
+    assert not matches("walk", {"highway": "cycleway"})
+    assert not matches("bike", {"highway": "footway"})
+    for network_type in ("all", "all_public"):
+        assert not matches(network_type, {"highway": "construction"})
+
+    public_network_types = ("all_public", "bike", "drive", "drive_service", "walk")
+    for network_type in public_network_types:
+        assert not matches(network_type, {"highway": "residential", "access": "private"})
+    assert matches("all", {"highway": "residential", "access": "private"})
+    assert not matches("walk", {"highway": "residential", "foot": "no"})
+    assert not matches("bike", {"highway": "residential", "bicycle": "no"})
+
+    with pytest.raises(ValueError, match="Unrecognized network_type"):
+        matches("invalid", {})
+
+
+@pytest.mark.xdist_group(name="group1")
+def test_pbf() -> None:
+    """Test loading graphs from PBF files."""
+    with pytest.raises(ValueError, match="Unrecognized network_type"):
+        ox.pbf.graph_from_pbf("missing.osm.pbf", network_type="invalid")
+
+    pbf_filepath = Path(ox.settings.data_folder) / "West-Oakland.osm.pbf"
+    # create the temporary folder because this test can run independently
+    pbf_filepath.parent.mkdir(parents=True, exist_ok=True)
+    pbf_filepath.unlink(missing_ok=True)
+    try:
+        # convert the existing XML fixture so the test does not add binary data
+        with osmium.SimpleWriter(pbf_filepath) as writer:
+            for obj in osmium.FileProcessor("tests/input_data/West-Oakland.osm.bz2"):
+                writer.add(obj)
+
+        # compare both readers while retaining every way, including railways
+        useful_tags_way = ox.settings.useful_tags_way
+        try:
+            ox.settings.useful_tags_way = [*useful_tags_way, "railway"]
+            G_xml = ox.graph_from_xml(
+                "tests/input_data/West-Oakland.osm.bz2",
+                simplify=False,
+                retain_all=True,
+            )
+            G_pbf = ox.pbf.graph_from_pbf(
+                pbf_filepath,
+                network_type=None,
+                simplify=False,
+                retain_all=True,
+            )
+        finally:
+            ox.settings.useful_tags_way = useful_tags_way
+        G_xml.remove_nodes_from(list(nx.isolates(G_xml)))
+        assert set(G_xml.nodes) == set(G_pbf.nodes)
+        assert set(G_xml.edges) == set(G_pbf.edges)
+        assert any(data.get("railway") == "subway" for _, _, data in G_pbf.edges(data=True))
+
+        # confirm built-in filtering and network type directionality
+        G_drive = ox.pbf.graph_from_pbf(
+            pbf_filepath,
+            network_type="drive",
+            simplify=False,
+            retain_all=True,
+        )
+        assert len(G_drive) > 0
+        G_walk = ox.pbf.graph_from_pbf(
+            pbf_filepath,
+            network_type="walk",
+            simplify=False,
+            retain_all=True,
+        )
+        assert all(G_walk.has_edge(v, u) for u, v in G_walk.edges(keys=False))
+
+        # warn once if PBF loading cannot use a customized Overpass rule
+        default_access = ox.settings.default_access
+        try:
+            ox.settings.default_access = '["access"!~"private|no"]'
+            with pytest.warns(
+                UserWarning,
+                match="uses the default 'private' rule",
+            ) as warnings:
+                G_access = ox.pbf.graph_from_pbf(
+                    pbf_filepath,
+                    network_type="drive",
+                    simplify=False,
+                    retain_all=True,
+                )
+            assert len(warnings) == 1
+            assert len(G_access) > 0
+        finally:
+            ox.settings.default_access = default_access
+
+        # verify the incomplete-way safety check without creating malformed PBF data
+        complete_way = {"type": "way", "id": 1, "nodes": [1, 2], "tags": {}}
+        incomplete_way = {"type": "way", "id": 2, "nodes": [2, 3], "tags": {}}
+        with pytest.warns(UserWarning, match="node references were missing: 1"):
+            ways = ox.pbf._remove_incomplete_ways([complete_way, incomplete_way], {1, 2})
+        assert ways == [complete_way]
+
+        G_default = ox.pbf.graph_from_pbf(pbf_filepath)
+        assert len(G_default) > 0
+    finally:
+        pbf_filepath.unlink(missing_ok=True)
 
 
 @pytest.mark.xdist_group(name="group0")

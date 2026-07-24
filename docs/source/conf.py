@@ -33,6 +33,7 @@ autodoc_mock_imports = [
     "matplotlib",
     "networkx",
     "numpy",
+    "osmium",
     "pandas",
     "rasterio",
     "requests",
