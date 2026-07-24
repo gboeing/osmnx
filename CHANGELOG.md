@@ -1,5 +1,10 @@
 # Changelog
 
+## TBD
+
+- de-duplicate features when creating a features gdf (#1400)
+- validate tolerance when consolidating intersections (#1401)
+
 ## 2.1.1 (2026-07-21)
 
 - fix projection bug when re-projecting an already projected graph (#1373 #1374)
