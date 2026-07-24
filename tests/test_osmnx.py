@@ -408,6 +408,7 @@ def test_osm_xml() -> None:
     ox.settings.all_oneway = default_all_oneway
 
 
+@pytest.mark.xdist_group(name="group1")
 def test_network_filters() -> None:
     """Test rendering and matching the built-in network filters."""
     expected = {
