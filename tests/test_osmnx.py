@@ -33,13 +33,16 @@ from typeguard import suppress_type_checks
 
 import osmnx as ox
 
+# use the persistent OSMnx cache by default
+use_persistent_cache = os.getenv("USE_PERSISTENT_CACHE", "true").lower() == "true"
+ox.settings.cache_folder = "tests/.cache" if use_persistent_cache else "tests/.temp/cache"
+
+ox.settings.data_folder = "tests/.temp"
+ox.settings.imgs_folder = "tests/.temp"
+ox.settings.logs_folder = "tests/.temp"
 ox.settings.log_console = True
 ox.settings.log_file = True
 ox.settings.use_cache = True
-ox.settings.data_folder = ".temp/data"
-ox.settings.logs_folder = ".temp/logs"
-ox.settings.imgs_folder = ".temp/imgs"
-ox.settings.cache_folder = ".temp/cache"
 
 # define queries to use throughout tests
 location_point = (37.791427, -122.410018)
@@ -55,7 +58,7 @@ polygon_wkt = (
 polygon = ox.utils_geo.buffer_geometry(geom=wkt.loads(polygon_wkt), dist=1)
 
 
-@pytest.mark.xdist_group(name="group1")
+@pytest.mark.xdist_group(name="group0")
 def test_logging() -> None:
     """Test the logger."""
     ox.utils.log("test a fake default message")
@@ -72,7 +75,7 @@ def test_logging() -> None:
     ox.utils.ts(style="time")
 
 
-@pytest.mark.xdist_group(name="group1")
+@pytest.mark.xdist_group(name="group0")
 def test_exceptions() -> None:
     """Test the custom errors."""
     message = "testing exception"
@@ -178,7 +181,7 @@ def test_validating() -> None:  # noqa: PLR0915
     ox.convert.validate_graph(G)
 
 
-@pytest.mark.xdist_group(name="group1")
+@pytest.mark.xdist_group(name="group0")
 def test_geocoder() -> None:
     """Test retrieving elements by place name and OSM ID."""
     city = ox.geocode_to_gdf("R2999176", by_osmid=True)
@@ -241,9 +244,39 @@ def test_stats() -> None:
     # one node missing
     tols.popitem()
     G_clean = ox.consolidate_intersections(G_proj, tolerance=tols, rebuild_graph=True)
-    # one node 0
+    # one node has invalid zero tolerance
     tols[next(iter(tols))] = 0
-    G_clean = ox.consolidate_intersections(G_proj, tolerance=tols, rebuild_graph=True)
+    with pytest.raises(ValueError, match="must be greater than zero"):
+        G_clean = ox.consolidate_intersections(G_proj, tolerance=tols, rebuild_graph=True)
+
+
+@pytest.mark.xdist_group(name="group0")
+def test_consolidate_intersections() -> None:
+    """Test consolidating intersections with a maximum edge length."""
+    G = nx.MultiDiGraph(crs="epsg:3857")
+    G.add_node(0, x=0, y=0)
+    G.add_node(1, x=1, y=0)
+    G.add_edge(0, 1, length=100)
+
+    Gc = ox.consolidate_intersections(G, tolerance=1, dead_ends=True)
+    assert len(Gc) == 1
+
+    Gc = ox.consolidate_intersections(
+        G,
+        tolerance=1,
+        max_length=200,
+        dead_ends=True,
+    )
+    assert len(Gc) == 1
+
+    Gc = ox.consolidate_intersections(
+        G,
+        tolerance=1,
+        max_length=50,
+        dead_ends=True,
+    )
+    assert len(Gc) == 2
+    assert len(Gc.edges) == 1
 
 
 @pytest.mark.xdist_group(name="group1")
@@ -414,7 +447,9 @@ def test_pbf() -> None:  # noqa: PLR0915
     finally:
         ox.settings.default_access = default_access
 
-    pbf_filepath = Path(".temp/West-Oakland.osm.pbf")
+    pbf_filepath = Path(ox.settings.data_folder) / "West-Oakland.osm.pbf"
+    # create the temporary folder because this test can run independently
+    pbf_filepath.parent.mkdir(parents=True, exist_ok=True)
     pbf_filepath.unlink(missing_ok=True)
     try:
         # convert the existing XML fixture so the test does not add binary data
@@ -499,7 +534,7 @@ def test_pbf() -> None:  # noqa: PLR0915
         pbf_filepath.unlink(missing_ok=True)
 
 
-@pytest.mark.xdist_group(name="group1")
+@pytest.mark.xdist_group(name="group0")
 def test_elevation() -> None:
     """Test working with elevation data."""
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
@@ -533,7 +568,7 @@ def test_elevation() -> None:
     G = ox.add_edge_grades(G, add_absolute=True)
 
 
-@pytest.mark.xdist_group(name="group1")
+@pytest.mark.xdist_group(name="group0")
 def test_routing() -> None:
     """Test working with speed, travel time, and routing."""
     G = ox.graph_from_address(address=address, dist=500, dist_type="bbox", network_type="bike")
@@ -680,29 +715,9 @@ def test_endpoints() -> None:
     default_requests_timeout = ox.settings.requests_timeout
     default_key = ox.settings.nominatim_key
     default_nominatim_url = ox.settings.nominatim_url
+    default_doh_url_template = ox.settings.doh_url_template
     default_overpass_url = ox.settings.overpass_url
     default_overpass_rate_limit = ox.settings.overpass_rate_limit
-
-    # test good and bad DNS resolution
-    ox.settings.requests_timeout = 1
-    ip = ox._http._resolve_host_via_doh("overpass-api.de")
-    ip = ox._http._resolve_host_via_doh("AAAAAAAAAAA")
-    _doh_url_template_default = ox.settings.doh_url_template
-    ox.settings.doh_url_template = "http://aaaaaa.hostdoesntexist.org/nothinguseful"
-    ip = ox._http._resolve_host_via_doh("overpass-api.de")
-    ox.settings.doh_url_template = None
-    ip = ox._http._resolve_host_via_doh("overpass-api.de")
-    ox.settings.doh_url_template = _doh_url_template_default
-
-    # Test changing the Overpass endpoint.
-    # This should fail because we didn't provide a valid endpoint
-    ox.settings.overpass_rate_limit = False
-    ox.settings.overpass_url = "http://NOT_A_VALID_ENDPOINT/api/"
-    with pytest.raises(RequestsConnectionError, match="Max retries exceeded with url"):
-        G = ox.graph_from_place(place1, network_type="all")
-
-    ox.settings.overpass_rate_limit = default_overpass_rate_limit
-    ox.settings.requests_timeout = default_requests_timeout
 
     params: OrderedDict[str, int | str] = OrderedDict()
     params["format"] = "json"
@@ -725,9 +740,32 @@ def test_endpoints() -> None:
     # good call
     response_json = ox._nominatim._nominatim_request(params=params, request_type="lookup")
 
-    # bad call: only make this deliberately uncacheable live API call when
-    # specifically enabled to do so
-    if os.getenv("LIVE_API_CALLS", "true").lower() == "true":
+    # only allow live HTTP calls (for things we can't cache, because we only
+    # write to cache on success) for DOH requests or bad requests only if
+    # we're not relying on the persistent cache
+    if not use_persistent_cache:
+        # test good and bad DNS resolution
+        ox.settings.requests_timeout = 1
+        ip = ox._http._resolve_host_via_doh("overpass-api.de")
+        ip = ox._http._resolve_host_via_doh("AAAAAAAAAAA")
+        ox.settings.doh_url_template = "http://aaaaaa.hostdoesntexist.org/nothinguseful"
+        ip = ox._http._resolve_host_via_doh("overpass-api.de")
+        ox.settings.doh_url_template = None
+        ip = ox._http._resolve_host_via_doh("overpass-api.de")
+
+        # Test changing the Overpass endpoint.
+        # This should fail because we didn't provide a valid endpoint
+        ox.settings.overpass_rate_limit = False
+        ox.settings.overpass_url = "http://NOT_A_VALID_ENDPOINT/api/"
+        with pytest.raises(RequestsConnectionError, match="Max retries exceeded with url"):
+            G = ox.graph_from_place(place1, network_type="all")
+
+        ox.settings.doh_url_template = default_doh_url_template
+        ox.settings.overpass_url = default_overpass_url
+        ox.settings.overpass_rate_limit = default_overpass_rate_limit
+        ox.settings.requests_timeout = default_requests_timeout
+
+        # bad call: deliberately uncacheable live API call
         with pytest.raises(
             ox._errors.InsufficientResponseError,
             match="Nominatim API did not return a list of results",
@@ -759,7 +797,7 @@ def test_save_load() -> None:  # noqa: PLR0915
 
     # save/load geopackage and convert graph to/from node/edge GeoDataFrames
     ox.save_graph_geopackage(G, directed=False)
-    fp = ".temp/data/graph-dir.gpkg"
+    fp = "tests/.temp/graph-dir.gpkg"
     ox.save_graph_geopackage(G, filepath=fp, directed=True)
     gdf_nodes1 = gpd.read_file(fp, layer="nodes").set_index("osmid")
     gdf_edges1 = gpd.read_file(fp, layer="edges").set_index(["u", "v", "key"])
@@ -909,6 +947,7 @@ def test_graph_from() -> None:
     G = ox.graph_from_point(location_point, dist=500, custom_filter=cf_union, retain_all=True)
     ox.convert.validate_graph(G)
 
+    default_overpass_memory = ox.settings.overpass_memory
     ox.settings.overpass_memory = 1073741824
     G = ox.graph_from_point(
         location_point,
@@ -917,6 +956,7 @@ def test_graph_from() -> None:
         network_type="all",
     )
     ox.convert.validate_graph(G)
+    ox.settings.overpass_memory = default_overpass_memory
 
 
 @pytest.mark.xdist_group(name="group3")
@@ -929,6 +969,11 @@ def test_features() -> None:
         ox.features.features_from_polygon(Polygon(((0, 0), (0, 0), (0, 0), (0, 0))), tags={})
     with suppress_type_checks(), pytest.raises(TypeError):
         ox.features.features_from_polygon(Point(0, 0), tags={})
+
+    element = {"type": "node", "id": 1, "lat": 0, "lon": 0, "tags": {"amenity": "bench"}}
+    response_jsons = ({"elements": [element]}, {"elements": [element.copy()]})
+    gdf = ox.features._create_gdf(response_jsons, Polygon(), {})
+    assert gdf.index.is_unique
 
     # test cache_only_mode
     ox.settings.cache_only_mode = True

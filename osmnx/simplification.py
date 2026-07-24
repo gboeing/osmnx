@@ -453,6 +453,7 @@ def consolidate_intersections(
     *,
     tolerance: float | dict[int, float] = 10,
     rebuild_graph: bool = True,
+    max_length: float | None = None,
     dead_ends: bool = False,
     reconnect_edges: bool = True,
     node_attr_aggs: dict[str, Any] | None = None,
@@ -501,13 +502,18 @@ def consolidate_intersections(
         subsequent overlaps are dissolved into a single node. If scalar, then
         that single value will be used for all nodes. If dict (mapping node
         IDs to individual values), then those values will be used per node and
-        any missing node IDs will not be buffered.
+        any missing node IDs will not be buffered. Values must be positive.
     rebuild_graph
         If True, consolidate the nodes topologically, rebuild the graph, and
         return as MultiDiGraph. Otherwise, consolidate the nodes geometrically
         and return the consolidated node points as GeoSeries.
+    max_length
+        Ignore edges longer than this when determining whether nearby nodes
+        are topologically connected. If None, consider all edges. This
+        prevents long edges that loop outside an intersection, such as
+        cloverleaf ramps, from merging their nearby endpoint nodes.
     dead_ends
-        If False, discard dead-end nodes to return only street-intersection
+        If False, discard dead-end nodes to return only street intersection
         points.
     reconnect_edges
         If True, reconnect edges (and their geometries) to the consolidated
@@ -530,6 +536,11 @@ def consolidate_intersections(
         `rebuild_graph=False`, returns GeoSeries of Points representing the
         centroids of street intersections.
     """
+    tolerances = tolerance.values() if isinstance(tolerance, dict) else (tolerance,)
+    if any(value <= 0 for value in tolerances):
+        msg = "`tolerance` values must be greater than zero."
+        raise ValueError(msg)
+
     # make a copy to not mutate original graph object caller passed in
     G = G.copy()
 
@@ -548,6 +559,7 @@ def consolidate_intersections(
         return _consolidate_intersections_rebuild_graph(
             G,
             tolerance,
+            max_length,
             reconnect_edges,
             node_attr_aggs,
         )
@@ -604,6 +616,7 @@ def _merge_nodes_geometric(
 def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     G: nx.MultiDiGraph,
     tolerance: float | dict[int, float],
+    max_length: float | None,
     reconnect_edges: bool,  # noqa: FBT001
     node_attr_aggs: dict[str, Any] | None,
 ) -> nx.MultiDiGraph:
@@ -623,6 +636,9 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
         that single value will be used for all nodes. If dict (mapping node
         IDs to individual values), then those values will be used per node and
         any missing node IDs will not be buffered.
+    max_length
+        Ignore edges longer than this when determining whether nearby nodes
+        are topologically connected. If None, consider all edges.
     reconnect_edges
         If True, reconnect edges (and their geometries) to the consolidated
         nodes in rebuilt graph, and update the edge length attributes. If
@@ -673,8 +689,22 @@ def _consolidate_intersections_rebuild_graph(  # noqa: C901,PLR0912,PLR0915
     # surface streets with bridge).
     for cluster_label, nodes_subset in gdf.groupby("cluster"):
         if len(nodes_subset) > 1:
-            # identify all the (weakly connected) component in cluster
-            wccs = list(nx.weakly_connected_components(G.subgraph(nodes_subset.index)))
+            H = G.subgraph(nodes_subset.index)
+
+            # long edges can loop outside a cluster and falsely connect nearby
+            # nodes: optionally exclude them from the connectivity check
+            if max_length is not None:
+                long_edges = [
+                    (u, v, k)
+                    for u, v, k, data in H.edges(keys=True, data=True)
+                    if data["length"] > max_length
+                ]
+                if long_edges:
+                    H = H.copy()
+                    H.remove_edges_from(long_edges)
+
+            # identify all the weakly connected components in the cluster
+            wccs = list(nx.weakly_connected_components(H))
             if len(wccs) > 1:
                 # if there are multiple components in this cluster
                 for suffix, wcc in enumerate(wccs):
