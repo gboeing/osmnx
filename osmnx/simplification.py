@@ -23,6 +23,32 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 
+def _canonicalize_missing(value: Any) -> Any:  # noqa: ANN401
+    """
+    Normalize a missing (NaN) edge attribute value to `None`.
+
+    Per IEEE 754, NaN never equals itself, and each missing value is usually
+    its own distinct float object rather than a shared singleton. So a set of
+    otherwise-equally-missing values, such as `{nan, nan}`, does not
+    deduplicate to a single element the way `{None, None}` does. Canonicalizing
+    NaN to `None` before set-based comparisons avoids miscounting such values
+    as differing.
+
+    Parameters
+    ----------
+    value
+        The value to canonicalize.
+
+    Returns
+    -------
+    value
+        `None` if `value` is a NaN float, otherwise `value` unchanged.
+    """
+    if isinstance(value, float) and pd.isna(value):
+        return None
+    return value
+
+
 def _is_endpoint(
     G: nx.MultiDiGraph,
     node: int,
@@ -108,8 +134,12 @@ def _is_endpoint(
     # is an endpoint
     if edge_attrs_differ is not None:
         for attr in edge_attrs_differ:
-            in_values = {v for _, _, v in G.in_edges(node, data=attr, keys=False)}
-            out_values = {v for _, _, v in G.out_edges(node, data=attr, keys=False)}
+            in_values = {
+                _canonicalize_missing(v) for _, _, v in G.in_edges(node, data=attr, keys=False)
+            }
+            out_values = {
+                _canonicalize_missing(v) for _, _, v in G.out_edges(node, data=attr, keys=False)
+            }
             if len(in_values | out_values) > 1:
                 return True
 
