@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import itertools
 import logging as lg
+import math
 from typing import TYPE_CHECKING
 from typing import Any
 
@@ -44,7 +45,7 @@ def _canonicalize_missing(value: Any) -> Any:  # noqa: ANN401
     value
         `None` if `value` is a NaN float, otherwise `value` unchanged.
     """
-    if isinstance(value, float) and pd.isna(value):
+    if isinstance(value, float) and math.isnan(value):
         return None
     return value
 
