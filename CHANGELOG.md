@@ -7,7 +7,7 @@
 
 ## 2.1.1 (2026-07-21)
 
-- fix projection bug when re-projecting an already projected graph (#1373 #1374)
+- fix projection bug when re-projecting an already-projected graph (#1373 #1374)
 - fix projection bug after consolidating intersections (#1388)
 - fix cloverleaf intersection consolidation bug (#1396)
 - fix minor bugs (#1395)
