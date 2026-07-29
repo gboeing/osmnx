@@ -5,10 +5,11 @@ permissions:
   contents: read
 
 # Github only maintains cache files for free account public repos for 7 days,
-# so this runs every Thu to update the caches' last accessed times
+# so this runs every day to update the caches' last accessed times
 on:  # yamllint disable-line rule:truthy
   schedule:
-    - cron: 23 4 * * 4
+    - cron: 23 4 * * *
+  workflow_dispatch:
 
 jobs:
   keepalive:
