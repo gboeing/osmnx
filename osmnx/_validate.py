@@ -32,7 +32,7 @@ def _verify_numeric_edge_attribute(G: nx.MultiDiGraph, attr: str, *, strict: boo
         If `True`, elevate warnings to errors.
     """
     is_valid = True
-    valid_msg = "Verified {attr!r} values are numeric and non-null across graph edges."
+    valid_msg = f"Verified {attr!r} values are numeric and non-null across graph edges."
     warn_msg = ""
     err_msg = ""
 
