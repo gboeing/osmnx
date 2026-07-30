@@ -1,16 +1,17 @@
+---
 name: Actionlint
 
-on:
+"on":
   push:
     paths:
-      - '.github/workflows/**'
-      - '.github/actionlint.yaml'
-      - '.github/actionlint.yml'
+      - .github/workflows/**
+      - .github/actionlint.yaml
+      - .github/actionlint.yml
   pull_request:
     paths:
-      - '.github/workflows/**'
-      - '.github/actionlint.yaml'
-      - '.github/actionlint.yml'
+      - .github/workflows/**
+      - .github/actionlint.yaml
+      - .github/actionlint.yml
 
 permissions:
   contents: read
@@ -26,7 +27,9 @@ jobs:
       - uses: actions/checkout@v5
       - name: Download actionlint
         id: download
-        run: bash <(curl -sSf https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+        run: >
+          bash <(curl -sSf
+          https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
         shell: bash
       - name: Run actionlint
         run: |
