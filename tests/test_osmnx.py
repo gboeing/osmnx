@@ -278,13 +278,8 @@ def test_consolidate_intersections() -> None:
     assert len(Gc.edges) == 1
 
 
-def test_simplify_graph_nan_edge_attrs_differ() -> None:
-    """Test that equally-missing edge_attrs_differ values do not block simplification.
-
-    NaN != NaN and each missing value is typically its own distinct float
-    object, so node 2's incident `lanes` values (all NaN here) must not be
-    miscounted as differing between edges.
-    """
+def test_simplify_graph() -> None:
+    """Test simplifying graphs with missing edge attribute values."""
     G = nx.MultiDiGraph(crs="epsg:4326")
     G.add_node(1, x=0, y=0, street_count=1)
     G.add_node(2, x=1, y=0, street_count=2)
@@ -293,8 +288,8 @@ def test_simplify_graph_nan_edge_attrs_differ() -> None:
         G.add_edge(u, v, osmid=0, highway="residential", lanes=float("nan"), length=1)
 
     Gs = ox.simplify_graph(G, edge_attrs_differ=["lanes"])
-    assert 2 not in Gs.nodes
     assert set(Gs.nodes) == {1, 3}
+    assert all("lanes" not in data for _, _, data in Gs.edges(data=True))
 
 
 @pytest.mark.xdist_group(name="group1")

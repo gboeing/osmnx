@@ -26,24 +26,17 @@ if TYPE_CHECKING:
 
 def _canonicalize_missing(value: Any) -> Any:  # noqa: ANN401
     """
-    Normalize a missing (NaN) edge attribute value to `None`.
-
-    Per IEEE 754, NaN never equals itself, and each missing value is usually
-    its own distinct float object rather than a shared singleton. So a set of
-    otherwise-equally-missing values, such as `{nan, nan}`, does not
-    deduplicate to a single element the way `{None, None}` does. Canonicalizing
-    NaN to `None` before set-based comparisons avoids miscounting such values
-    as differing.
+    Convert a floating-point NaN to `None`.
 
     Parameters
     ----------
     value
-        The value to canonicalize.
+        The value to check.
 
     Returns
     -------
     value
-        `None` if `value` is a NaN float, otherwise `value` unchanged.
+        `None` for NaN; otherwise the original value.
     """
     if isinstance(value, float) and math.isnan(value):
         return None
@@ -420,14 +413,17 @@ def simplify_graph(  # noqa: C901, PLR0912
             # and just take the first one.
             edge_data = next(iter(G.get_edge_data(u, v).values()))
             for attr in edge_data:
+                value = _canonicalize_missing(edge_data[attr])
+                if value is None:
+                    continue
                 if attr in path_attributes:
                     # if this key already exists in the dict, append it to the
                     # value list
-                    path_attributes[attr].append(edge_data[attr])
+                    path_attributes[attr].append(value)
                 else:
                     # if this key doesn't already exist, set the value to a list
                     # containing the one value
-                    path_attributes[attr] = [edge_data[attr]]
+                    path_attributes[attr] = [value]
 
         # consolidate the path's edge segments' attribute values
         for attr_name, attr_values in path_attributes.items():
