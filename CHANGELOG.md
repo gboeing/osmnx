@@ -5,10 +5,12 @@
 - add local PBF file graph loading with network presets or pre-filtered input (#1338)
 - de-duplicate features when creating a features gdf (#1400)
 - validate tolerance when consolidating intersections (#1401)
+- fix simplify_graph treating equally-missing edge_attrs_differ values as differing (#1402)
+- fix minor bug in _validate module's log output (#1403)
 
 ## 2.1.1 (2026-07-21)
 
-- fix projection bug when re-projecting an already projected graph (#1373 #1374)
+- fix projection bug when re-projecting an already-projected graph (#1373 #1374)
 - fix projection bug after consolidating intersections (#1388)
 - fix cloverleaf intersection consolidation bug (#1396)
 - fix minor bugs (#1395)

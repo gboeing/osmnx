@@ -279,6 +279,21 @@ def test_consolidate_intersections() -> None:
     assert len(Gc.edges) == 1
 
 
+def test_simplify_graph() -> None:
+    """Test simplifying graphs with missing edge attribute values."""
+    G = nx.MultiDiGraph(crs="epsg:4326")
+    G.add_node(1, x=0, y=0, street_count=1)
+    G.add_node(2, x=1, y=0, street_count=2)
+    G.add_node(3, x=2, y=0, street_count=1)
+    for u, v in ((1, 2), (2, 1), (2, 3), (3, 2)):
+        lanes = np.float32("nan") if u == 2 else float("nan")
+        G.add_edge(u, v, osmid=0, highway="residential", lanes=lanes, length=1)
+
+    Gs = ox.simplify_graph(G, edge_attrs_differ=["lanes"])
+    assert set(Gs.nodes) == {1, 3}
+    assert all("lanes" not in data for _, _, data in Gs.edges(data=True))
+
+
 @pytest.mark.xdist_group(name="group1")
 def test_bearings() -> None:
     """Test bearings and orientation entropy."""
