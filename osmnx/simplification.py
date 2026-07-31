@@ -9,6 +9,7 @@ from typing import Any
 
 import geopandas as gpd
 import networkx as nx
+import numpy as np
 import pandas as pd
 from shapely import LineString
 from shapely import Point
@@ -21,6 +22,25 @@ from ._errors import GraphSimplificationError
 if TYPE_CHECKING:
     from collections.abc import Iterable
     from collections.abc import Iterator
+
+
+def _canonicalize_missing(value: Any) -> Any:  # noqa: ANN401
+    """
+    Convert a floating-point NaN to `None`.
+
+    Parameters
+    ----------
+    value
+        The value to check.
+
+    Returns
+    -------
+    value
+        `None` for NaN; otherwise the original value.
+    """
+    if isinstance(value, (float, np.floating)) and np.isnan(value):
+        return None
+    return value
 
 
 def _is_endpoint(
@@ -108,8 +128,12 @@ def _is_endpoint(
     # is an endpoint
     if edge_attrs_differ is not None:
         for attr in edge_attrs_differ:
-            in_values = {v for _, _, v in G.in_edges(node, data=attr, keys=False)}
-            out_values = {v for _, _, v in G.out_edges(node, data=attr, keys=False)}
+            in_values = {
+                _canonicalize_missing(v) for _, _, v in G.in_edges(node, data=attr, keys=False)
+            }
+            out_values = {
+                _canonicalize_missing(v) for _, _, v in G.out_edges(node, data=attr, keys=False)
+            }
             if len(in_values | out_values) > 1:
                 return True
 
@@ -389,14 +413,17 @@ def simplify_graph(  # noqa: C901, PLR0912
             # and just take the first one.
             edge_data = next(iter(G.get_edge_data(u, v).values()))
             for attr in edge_data:
+                value = _canonicalize_missing(edge_data[attr])
+                if value is None:
+                    continue
                 if attr in path_attributes:
                     # if this key already exists in the dict, append it to the
                     # value list
-                    path_attributes[attr].append(edge_data[attr])
+                    path_attributes[attr].append(value)
                 else:
                     # if this key doesn't already exist, set the value to a list
                     # containing the one value
-                    path_attributes[attr] = [edge_data[attr]]
+                    path_attributes[attr] = [value]
 
         # consolidate the path's edge segments' attribute values
         for attr_name, attr_values in path_attributes.items():
