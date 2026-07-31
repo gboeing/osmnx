@@ -285,7 +285,8 @@ def test_simplify_graph() -> None:
     G.add_node(2, x=1, y=0, street_count=2)
     G.add_node(3, x=2, y=0, street_count=1)
     for u, v in ((1, 2), (2, 1), (2, 3), (3, 2)):
-        G.add_edge(u, v, osmid=0, highway="residential", lanes=float("nan"), length=1)
+        lanes = np.float32("nan") if u == 2 else float("nan")
+        G.add_edge(u, v, osmid=0, highway="residential", lanes=lanes, length=1)
 
     Gs = ox.simplify_graph(G, edge_attrs_differ=["lanes"])
     assert set(Gs.nodes) == {1, 3}

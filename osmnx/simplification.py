@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import itertools
 import logging as lg
-import math
 from typing import TYPE_CHECKING
 from typing import Any
 
 import geopandas as gpd
 import networkx as nx
+import numpy as np
 import pandas as pd
 from shapely import LineString
 from shapely import Point
@@ -38,7 +38,7 @@ def _canonicalize_missing(value: Any) -> Any:  # noqa: ANN401
     value
         `None` for NaN; otherwise the original value.
     """
-    if isinstance(value, float) and math.isnan(value):
+    if isinstance(value, (float, np.floating)) and np.isnan(value):
         return None
     return value
 
