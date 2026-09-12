@@ -116,6 +116,9 @@ def add_edge_bearings(G: nx.MultiDiGraph) -> nx.MultiDiGraph:
 
     # extract edge IDs and corresponding coordinates from their nodes
     uvk = [(u, v, k) for u, v, k in G.edges if u != v]
+    if len(uvk) == 0:
+        return G
+
     x = G.nodes(data="x")
     y = G.nodes(data="y")
     coords = np.array([(y[u], x[u], y[v], x[v]) for u, v, k in uvk])

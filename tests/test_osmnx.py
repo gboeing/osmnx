@@ -293,6 +293,16 @@ def test_simplify_graph() -> None:
     assert all("lanes" not in data for _, _, data in Gs.edges(data=True))
 
 
+def test_bearings_without_any_non_self_loop_edge() -> None:
+    """Test that a graph with nothing to bear leaves add_edge_bearings alone."""
+    G = nx.MultiDiGraph(crs="epsg:4326")
+    G.add_node(0, x=0.0, y=0.0)
+    assert nx.get_edge_attributes(ox.add_edge_bearings(G), "bearing") == {}
+
+    G.add_edge(0, 0, length=1.0)
+    assert nx.get_edge_attributes(ox.add_edge_bearings(G), "bearing") == {}
+
+
 @pytest.mark.xdist_group(name="group1")
 def test_bearings() -> None:
     """Test bearings and orientation entropy."""
