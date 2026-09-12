@@ -6,6 +6,7 @@
 - validate tolerance when consolidating intersections (#1401)
 - fix simplify_graph treating equally-missing edge_attrs_differ values as differing (#1402)
 - fix minor bug in _validate module's log output (#1403)
+- fix add_edge_bearings raising an IndexError when every edge is a self-loop (#1406)
 
 ## 2.1.1 (2026-07-21)
 
