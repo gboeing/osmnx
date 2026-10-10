@@ -118,7 +118,10 @@ def _is_endpoint(
 
     # RULE 4
     # non-strict mode: does it contain an attr denoting that it is an endpoint
-    if node_attrs_include is not None and len(set(node_attrs_include) & G.nodes[node].keys()) > 0:
+    # (ignoring attrs with null values)
+    if node_attrs_include is not None and any(
+        _canonicalize_missing(G.nodes[node].get(attr)) is not None for attr in node_attrs_include
+    ):
         return True
 
     # RULE 5
