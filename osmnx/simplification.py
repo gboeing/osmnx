@@ -64,8 +64,8 @@ def _is_endpoint(
 
     3) Or, it does not have exactly two neighbors and degree of 2 or 4.
 
-    4) Or, if `node_attrs_include` is not None and it has one or more of the
-    attributes in `node_attrs_include`.
+    4) Or, if `node_attrs_include` is not None and it has a non-null value
+    for one or more of the attributes in `node_attrs_include`.
 
     5) Or, if `edge_attrs_differ` is not None and its incident edges have
     different values than each other for any of the edge attributes in
@@ -79,8 +79,9 @@ def _is_endpoint(
         The ID of the node to check.
     node_attrs_include
         Node attribute names for relaxing the strictness of endpoint
-        determination. A node is always an endpoint if it possesses one or
-        more of the attributes in `node_attrs_include`.
+        determination. A node is always an endpoint if it has a non-null value
+        for one or more of the attributes in `node_attrs_include`. Values of
+        `None` and floating-point NaN are treated as null.
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
         determination. A node is always an endpoint if its incident edges have
@@ -118,7 +119,10 @@ def _is_endpoint(
 
     # RULE 4
     # non-strict mode: does it contain an attr denoting that it is an endpoint
-    if node_attrs_include is not None and len(set(node_attrs_include) & G.nodes[node].keys()) > 0:
+    # (ignoring attrs with null values)
+    if node_attrs_include is not None and any(
+        _canonicalize_missing(G.nodes[node].get(attr)) is not None for attr in node_attrs_include
+    ):
         return True
 
     # RULE 5
@@ -233,8 +237,9 @@ def _get_paths_to_simplify(
         Input graph.
     node_attrs_include
         Node attribute names for relaxing the strictness of endpoint
-        determination. A node is always an endpoint if it possesses one or
-        more of the attributes in `node_attrs_include`.
+        determination. A node is always an endpoint if it has a non-null value
+        for one or more of the attributes in `node_attrs_include`. Values of
+        `None` and floating-point NaN are treated as null.
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
         determination. A node is always an endpoint if its incident edges have
@@ -277,8 +282,9 @@ def _remove_rings(
         Input graph.
     node_attrs_include
         Node attribute names for relaxing the strictness of endpoint
-        determination. A node is always an endpoint if it possesses one or
-        more of the attributes in `node_attrs_include`.
+        determination. A node is always an endpoint if it has a non-null value
+        for one or more of the attributes in `node_attrs_include`. Values of
+        `None` and floating-point NaN are treated as null.
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
         determination. A node is always an endpoint if its incident edges have
@@ -342,8 +348,9 @@ def simplify_graph(  # noqa: C901, PLR0912
         Input graph.
     node_attrs_include
         Node attribute names for relaxing the strictness of endpoint
-        determination. A node is always an endpoint if it possesses one or
-        more of the attributes in `node_attrs_include`.
+        determination. A node is always an endpoint if it has a non-null value
+        for one or more of the attributes in `node_attrs_include`. Values of
+        `None` and floating-point NaN are treated as null.
     edge_attrs_differ
         Edge attribute names for relaxing the strictness of endpoint
         determination. A node is always an endpoint if its incident edges have

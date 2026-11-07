@@ -279,10 +279,10 @@ def test_consolidate_intersections() -> None:
 
 
 def test_simplify_graph() -> None:
-    """Test simplifying graphs with missing edge attribute values."""
+    """Test simplifying graphs with missing node and edge attribute values."""
     G = nx.MultiDiGraph(crs="epsg:4326")
     G.add_node(1, x=0, y=0, street_count=1)
-    G.add_node(2, x=1, y=0, street_count=2)
+    G.add_node(2, x=1, y=0, street_count=2, highway=np.float32("nan"))
     G.add_node(3, x=2, y=0, street_count=1)
     for u, v in ((1, 2), (2, 1), (2, 3), (3, 2)):
         lanes = np.float32("nan") if u == 2 else float("nan")
@@ -291,6 +291,12 @@ def test_simplify_graph() -> None:
     Gs = ox.simplify_graph(G, edge_attrs_differ=["lanes"])
     assert set(Gs.nodes) == {1, 3}
     assert all("lanes" not in data for _, _, data in Gs.edges(data=True))
+
+    Gs = ox.simplify_graph(G, node_attrs_include=["highway"])
+    assert set(Gs.nodes) == {1, 3}
+    G.nodes[2]["highway"] = "crossing"
+    Gs = ox.simplify_graph(G, node_attrs_include=["highway"])
+    assert set(Gs.nodes) == {1, 2, 3}
 
 
 @pytest.mark.xdist_group(name="group1")
