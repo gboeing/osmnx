@@ -69,6 +69,14 @@ osmnx.io module
 .. automodule:: osmnx.io
     :members:
 
+.. _osmnx-pbf-module:
+
+osmnx.pbf module
+----------------
+
+.. automodule:: osmnx.pbf
+    :members:
+
 .. _osmnx-plot-module:
 
 osmnx.plot module
