@@ -7,6 +7,7 @@
 - fix simplify_graph treating equally-missing edge_attrs_differ values as differing (#1402)
 - fix minor bug in _validate module's log output (#1403)
 - fix simplify_graph treating null node_attrs_include values as present (#1408)
+- fix ZeroDivisionError handling in circuity_avg when straight-line distances sum to zero (#1410)
 - add pandas 4 compatibility (#1411)
 
 ## 2.1.1 (2026-07-21)
