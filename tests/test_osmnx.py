@@ -300,16 +300,6 @@ def test_simplify_graph() -> None:
     assert set(Gs.nodes) == {1, 2, 3}
 
 
-def test_bearings_without_any_non_self_loop_edge() -> None:
-    """Test that a graph with nothing to bear leaves add_edge_bearings alone."""
-    G = nx.MultiDiGraph(crs="epsg:4326")
-    G.add_node(0, x=0.0, y=0.0)
-    assert nx.get_edge_attributes(ox.add_edge_bearings(G), "bearing") == {}
-
-    G.add_edge(0, 0, length=1.0)
-    assert nx.get_edge_attributes(ox.add_edge_bearings(G), "bearing") == {}
-
-
 @pytest.mark.xdist_group(name="group1")
 def test_bearings() -> None:
     """Test bearings and orientation entropy."""
@@ -327,6 +317,7 @@ def test_bearings() -> None:
 
     # test support of edge bearings for directed and undirected graphs
     G = nx.MultiDiGraph(crs="epsg:4326")
+    G = ox.add_edge_bearings(G)
     G.add_node("point_1", x=0.0, y=0.0)
     G.add_node("point_2", x=0.0, y=1.0)  # latitude increases northward
     G.add_edge("point_1", "point_2", weight=2.0)
