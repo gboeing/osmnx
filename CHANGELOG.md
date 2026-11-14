@@ -1,6 +1,6 @@
 # Changelog
 
-## TBD
+## 2.1.2 (2026-11-14)
 
 - de-duplicate features when creating a features gdf (#1400)
 - validate tolerance when consolidating intersections (#1401)
