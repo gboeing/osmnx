@@ -261,7 +261,7 @@ def circuity_avg(Gu: nx.MultiGraph) -> float | None:
         sl_dists = distance.great_circle(lat1=y1, lon1=x1, lat2=y2, lon2=x2)
 
     # return the ratio, handling possible division by zero
-    sl_dists_total = sl_dists[~np.isnan(sl_dists)].sum()
+    sl_dists_total = float(sl_dists[~np.isnan(sl_dists)].sum())
     try:
         return float(edge_length_total(Gu) / sl_dists_total)
     except ZeroDivisionError:

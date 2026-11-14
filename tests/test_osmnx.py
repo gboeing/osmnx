@@ -229,6 +229,7 @@ def test_stats() -> None:
     )
     G_clean = ox.consolidate_intersections(G_proj, tolerance=10, rebuild_graph=False)
     G_clean = ox.consolidate_intersections(G_proj, tolerance=50000, rebuild_graph=True)
+    assert ox.stats.circuity_avg(ox.convert.to_undirected(G_clean)) is None
 
     # try consolidating an empty graph
     G = nx.MultiDiGraph(crs="epsg:4326")
