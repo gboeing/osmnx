@@ -259,7 +259,9 @@ def _save_graph_xml(
     # 2) rename osmid column (but keep (u, v, k) index for processing)
     # 3) drop unnecessary geometry column
     if "oneway" in gdf_edges.columns:
-        gdf_edges["oneway"] = gdf_edges["oneway"].fillna(ONEWAY).replace({True: "yes", False: "no"})
+        gdf_edges["oneway"] = (
+            gdf_edges["oneway"].astype(object).fillna(ONEWAY).replace({True: "yes", False: "no"})
+        )
     gdf_edges = gdf_edges.rename(columns={"osmid": "id"}).drop(columns=["geometry"])
 
     # create parent XML element then add bounds, nodes, ways as subelements
