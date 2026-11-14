@@ -13,7 +13,7 @@ Boeing, G. (2026). `Urban Science Beyond Samples: Up-to-Date Street Network Mode
 
 This study uses OSMnx to model and analyze the street networks of every urban area in the world: over 180 million OpenStreetMap street network nodes and over 360 million edges across 10,351 urban areas in 189 countries.
 
-.. _Urban Science Beyond Samples\: Up-to-Date Street Network Models and Indicators for Every Urban Area in the World: https://geoffboeing.com/publications/street-network-models-indicators-world/
+.. _Urban Science Beyond Samples\: Up-to-Date Street Network Models and Indicators for Every Urban Area in the World: https://doi.org/10.1177/23998083261446991
 
 ----
 
