@@ -9,7 +9,7 @@ This is the official reference paper and citation for the OSMnx package.
 
 ----
 
-Boeing, G. (2026). `Urban Science Beyond Samples: Up-to-Date Street Network Models and Indicators for Every Urban Area in the World`_. *Environment and Planning B*, published online ahead of print. doi:10.1177/23998083261446991
+Boeing, G. (2026). `Urban Science Beyond Samples: Up-to-Date Street Network Models and Indicators for Every Urban Area in the World`_. *Environment and Planning B* 53 (8), 1906-1912. doi:10.1177/23998083261446991
 
 This study uses OSMnx to model and analyze the street networks of every urban area in the world: over 180 million OpenStreetMap street network nodes and over 360 million edges across 10,351 urban areas in 189 countries.
 
