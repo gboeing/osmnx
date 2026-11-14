@@ -229,7 +229,7 @@ def circuity_avg(Gu: nx.MultiGraph) -> float | None:
     Circuity is the sum of edge lengths divided by the sum of straight-line
     distances between edge endpoints. Calculates straight-line distance as
     euclidean distance if projected or great-circle distance if unprojected.
-    Returns None if the edge lengths sum to zero.
+    Returns None if the edges' straight-line distances sum to zero.
 
     Parameters
     ----------
