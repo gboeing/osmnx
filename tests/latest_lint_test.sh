@@ -6,7 +6,7 @@ rm -r -f ./.coverage* ./.pytest_cache/ ./tests/.temp/ ./dist/ ./docs/build/ ./*/
 
 # activate the virtual environment with pre-releases
 uv python pin 3.15
-uv sync --no-build --all-extras --all-groups --upgrade --prerelease=allow
+uv sync --all-extras --all-groups --upgrade --prerelease=allow
 source .venv/bin/activate
 
 # run tests
@@ -15,7 +15,7 @@ SKIP=no-commit-to-branch prek run --all-files
 
 # restore the environment without pre-releases
 uv python pin --rm
-uv sync --no-build --all-extras --all-groups --upgrade
+uv sync --all-extras --all-groups --upgrade
 
 # delete temp files and folders
 rm -r -f ./.coverage* ./.pytest_cache/ ./tests/.temp/ ./dist/ ./docs/build/ ./*/__pycache__/
