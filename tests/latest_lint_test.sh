@@ -5,7 +5,7 @@ set -euo pipefail
 rm -r -f ./.coverage* ./.pytest_cache/ ./tests/.temp/ ./dist/ ./docs/build/ ./*/__pycache__/
 
 # activate the virtual environment with pre-releases
-uv python pin 3.14
+uv python pin 3.15
 uv sync --all-extras --all-groups --upgrade --prerelease=allow
 source .venv/bin/activate
 

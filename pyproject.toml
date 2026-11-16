@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "uv_build"
-requires = ["uv_build==0.11.*"]
+requires = ["uv_build==0.13.*"]
 
 [project]
 authors = [{ name = "Geoff Boeing", email = "boeing@usc.edu" }]
@@ -16,6 +16,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Topic :: Scientific/Engineering :: GIS",
   "Topic :: Scientific/Engineering :: Information Analysis",
   "Topic :: Scientific/Engineering :: Mathematics",
@@ -108,7 +109,7 @@ convention = "numpy"
 max-args = 8
 
 [tool.uv]
-required-version = "==0.11.*" # match version above and in Dockerfile
+required-version = "==0.13.*" # match version above and in Dockerfile
 
 [tool.uv.build-backend]
 module-root = ""
