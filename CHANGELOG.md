@@ -2,7 +2,7 @@
 
 ## TBD
 
-- add Python 3.14 support and drop Python 3.11 (#1416)
+- add Python 3.15 support and drop Python 3.11 (#1416)
 - handle Overpass server refusing requests with 502 bad gateway by retrying (#1417)
 
 ## 2.1.2 (2026-11-14)
