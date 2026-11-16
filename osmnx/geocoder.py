@@ -63,7 +63,7 @@ def geocode(query: str) -> tuple[float, float]:
 def geocode_to_gdf(
     query: str | dict[str, str] | list[str | dict[str, str]],
     *,
-    which_result: int | None | list[int | None] = None,
+    which_result: int | list[int | None] | None = None,
     by_osmid: bool = False,
 ) -> gpd.GeoDataFrame:
     """

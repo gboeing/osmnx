@@ -2,11 +2,20 @@
 
 ## TBD
 
+- add Python 3.15 support and drop Python 3.11 (#1416)
 - add local PBF file graph loading with network presets or pre-filtered input (#1338)
+- handle Overpass server refusing requests with 502 bad gateway by retrying (#1417)
+
+## 2.1.2 (2026-11-14)
+
 - de-duplicate features when creating a features gdf (#1400)
 - validate tolerance when consolidating intersections (#1401)
 - fix simplify_graph treating equally-missing edge_attrs_differ values as differing (#1402)
 - fix minor bug in _validate module's log output (#1403)
+- fix add_edge_bearings raising an IndexError when every edge is a self-loop (#1406)
+- fix simplify_graph treating null node_attrs_include values as present (#1408)
+- fix ZeroDivisionError handling in circuity_avg when straight-line distances sum to zero (#1412)
+- add pandas 4 compatibility (#1411)
 
 ## 2.1.1 (2026-07-21)
 

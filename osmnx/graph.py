@@ -316,7 +316,7 @@ def graph_from_place(
     simplify: bool = True,
     retain_all: bool = False,
     truncate_by_edge: bool = False,
-    which_result: int | None | list[int | None] = None,
+    which_result: int | list[int | None] | None = None,
     custom_filter: str | list[str] | None = None,
 ) -> nx.MultiDiGraph:
     """
