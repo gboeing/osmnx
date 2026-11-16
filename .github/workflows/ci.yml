@@ -27,7 +27,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ['3.11', '3.12', '3.13', '3.14']
+        python-version: ['3.12', '3.13', '3.14', '3.15']
 
     defaults:
       run:
@@ -47,14 +47,16 @@ jobs:
       - name: Install OSMnx
         run: |
           uv python pin ${{ matrix.python-version }}
-          uv sync --all-extras --group docs --group lint --group test
+          uv sync --no-build --all-extras --group docs --group lint --group test
 
-      # use a persistent OSMnx cache for HTTP requests
-      - name: Cache OSMnx cache
-        uses: actions/cache@v6
+      # use a persistent OSMnx cache for HTTP requests, with a new key for
+      # each run attempt
+      - name: Restore OSMnx cache
+        id: osmnx-cache
+        uses: actions/cache/restore@v6
         with:
           path: tests/.cache
-          key: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}
+          key: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}-${{ github.run_attempt }}  # yamllint disable-line rule:line-length
           restore-keys: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-
 
       - name: Cache pre-commit
@@ -78,6 +80,14 @@ jobs:
 
       - name: Test code and coverage
         run: uv run ./tests/run_tests.sh --typeguard-packages=osmnx --cov=osmnx --cov-report=xml
+
+      # save cached responses even if test fails, for reuse on next attempt
+      - name: Save OSMnx cache
+        if: always()
+        uses: actions/cache/save@v6
+        with:
+          path: tests/.cache
+          key: ${{ steps.osmnx-cache.outputs.cache-primary-key }}
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v7

@@ -298,7 +298,7 @@ def shortest_path(
     *,
     weight: str = "length",
     cpus: int | None = 1,
-) -> list[int] | None | list[list[int] | None]:
+) -> list[int] | list[list[int] | None] | None:
     """
     Solve shortest path from origin node(s) to destination node(s).
 
