@@ -10,6 +10,8 @@ from typing import TYPE_CHECKING
 from typing import Any
 from warnings import warn
 
+import networkx as nx
+
 # keep osmium optional so importing osmnx does not require the PBF extra
 try:
     import osmium
@@ -20,13 +22,12 @@ from . import _overpass
 from . import graph
 from . import settings
 from . import simplification
+from . import stats
 from . import truncate
 from . import utils
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-    import networkx as nx
 
 
 def _remove_incomplete_ways(
@@ -164,6 +165,10 @@ def graph_from_pbf(
     customized, this function warns and ignores it because PBF filtering
     cannot evaluate Overpass QL.
 
+    Node `street_count` attributes describe connectivity in the input network
+    and can undercount streets at extract boundaries if connecting ways are
+    absent or discarded.
+
     Parameters
     ----------
     filepath
@@ -210,6 +215,10 @@ def graph_from_pbf(
         G = truncate.largest_component(G, strongly=False)
     if simplify:
         G = simplification.simplify_graph(G)
+
+    # count physical street segments incident on each node
+    spn = stats.count_streets_per_node(G)
+    nx.set_node_attributes(G, values=spn, name="street_count")
 
     msg = f"graph_from_pbf returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
     utils.log(msg, level=lg.INFO)

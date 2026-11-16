@@ -549,6 +549,7 @@ def test_pbf() -> None:
         assert set(G_xml.nodes) == set(G_pbf.nodes)
         assert set(G_xml.edges) == set(G_pbf.edges)
         assert any(data.get("railway") == "subway" for _, _, data in G_pbf.edges(data=True))
+        ox.convert.validate_graph(G_pbf)
 
         # confirm built-in filtering and network type directionality
         G_drive = ox.pbf.graph_from_pbf(
@@ -594,6 +595,7 @@ def test_pbf() -> None:
 
         G_default = ox.pbf.graph_from_pbf(pbf_filepath)
         assert len(G_default) > 0
+        ox.convert.validate_graph(G_default)
     finally:
         pbf_filepath.unlink(missing_ok=True)
 
