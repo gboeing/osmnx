@@ -75,7 +75,7 @@ def get_colors(
     _verify_mpl()
     color_gen = (colormaps[cmap](x) for x in np.linspace(start, stop, n))
     keep_alpha = alpha is not None
-    if keep_alpha:
+    if alpha is not None:
         color_gen = ((r, g, b, alpha) for r, g, b, _ in color_gen)
     return [colors.to_hex(c, keep_alpha=keep_alpha) for c in color_gen]
 
