@@ -26,8 +26,8 @@ classifiers = [
 dependencies = [
   "geopandas>=1.0.1",
   "networkx>=2.5",
-  "numpy>=1.24",
-  "pandas>=1.5",
+  "numpy>=1.26",
+  "pandas>=2.1",
   "requests>=2.30",
   "shapely>=2.0",
 ]
@@ -43,10 +43,10 @@ version = "2.1.2"
 
 [project.optional-dependencies]
 all = ["osmnx[entropy,neighbors,raster,visualization]"]
-entropy = ["scipy>=1.10"]
-neighbors = ["scikit-learn>=1.2", "scipy>=1.10"]
+entropy = ["scipy>=1.11"]
+neighbors = ["scikit-learn>=1.3", "scipy>=1.11"]
 raster = ["rasterio>=1.4", "rio-vrt>=0.3"]
-visualization = ["matplotlib>=3.6"]
+visualization = ["matplotlib>=3.7"]
 
 [dependency-groups]
 docs = ["furo>=2023", "sphinx>=9", "sphinx-autodoc-typehints>=2"]
