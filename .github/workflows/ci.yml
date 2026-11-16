@@ -47,7 +47,7 @@ jobs:
       - name: Install OSMnx
         run: |
           uv python pin ${{ matrix.python-version }}
-          uv sync --all-extras --group docs --group lint --group test
+          uv sync --no-build --all-extras --group docs --group lint --group test
 
       # restore previous responses, using a new key for each run attempt
       - name: Restore OSMnx cache
