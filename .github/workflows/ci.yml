@@ -49,12 +49,13 @@ jobs:
           uv python pin ${{ matrix.python-version }}
           uv sync --all-extras --group docs --group lint --group test
 
-      # use a persistent OSMnx cache for HTTP requests
-      - name: Cache OSMnx cache
-        uses: actions/cache@v6
+      # restore previous responses, using a new key for each run attempt
+      - name: Restore OSMnx cache
+        id: osmnx-cache
+        uses: actions/cache/restore@v6
         with:
           path: tests/.cache
-          key: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}
+          key: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-${{ github.run_id }}-${{ github.run_attempt }}  # yamllint disable-line rule:line-length
           restore-keys: osmnx-cache-${{ runner.os }}-${{ matrix.python-version }}-
 
       - name: Cache pre-commit
@@ -78,6 +79,14 @@ jobs:
 
       - name: Test code and coverage
         run: uv run ./tests/run_tests.sh --typeguard-packages=osmnx --cov=osmnx --cov-report=xml
+
+      # save collected responses even if tests fail, for reuse on the next attempt
+      - name: Save OSMnx cache
+        if: always()
+        uses: actions/cache/save@v6
+        with:
+          path: tests/.cache
+          key: ${{ steps.osmnx-cache.outputs.cache-primary-key }}
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v7
