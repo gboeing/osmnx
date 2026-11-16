@@ -474,8 +474,8 @@ def _overpass_request(data: OrderedDict[str, Any]) -> dict[str, Any]:
         **settings.requests_kwargs,
     )
 
-    # handle 429 and 504 errors by pausing then recursively re-trying request
-    if response.status_code in {429, 504}:  # pragma: no cover
+    # handle 429, 502, and 504 errors by pausing then recursively re-trying request
+    if response.status_code in {429, 502, 504}:  # pragma: no cover
         error_pause = 55
         msg = (
             f"{hostname!r} responded {response.status_code} {response.reason}: "
