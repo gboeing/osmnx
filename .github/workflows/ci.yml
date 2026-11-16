@@ -49,7 +49,8 @@ jobs:
           uv python pin ${{ matrix.python-version }}
           uv sync --no-build --all-extras --group docs --group lint --group test
 
-      # restore previous responses, using a new key for each run attempt
+      # use a persistent OSMnx cache for HTTP requests, with a new key for
+      # each run attempt
       - name: Restore OSMnx cache
         id: osmnx-cache
         uses: actions/cache/restore@v6
@@ -80,7 +81,7 @@ jobs:
       - name: Test code and coverage
         run: uv run ./tests/run_tests.sh --typeguard-packages=osmnx --cov=osmnx --cov-report=xml
 
-      # save collected responses even if tests fail, for reuse on the next attempt
+      # save cached responses even if test fails, for reuse on next attempt
       - name: Save OSMnx cache
         if: always()
         uses: actions/cache/save@v6
