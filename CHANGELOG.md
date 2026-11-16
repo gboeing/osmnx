@@ -1,5 +1,9 @@
 # Changelog
 
+## TBD
+
+- handle Overpass server refusing requests with 502 bad gateway by retrying (#1417)
+
 ## 2.1.2 (2026-11-14)
 
 - de-duplicate features when creating a features gdf (#1400)
