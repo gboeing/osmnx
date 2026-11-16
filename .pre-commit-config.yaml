@@ -53,7 +53,7 @@ repos:
     rev: v2.4.1
     hooks:
       - id: mypy
-        language_version: python3.11  # match requires-python in pyproject.toml
+        language_version: python3.12  # match requires-python in pyproject.toml
         additional_dependencies:
           - matplotlib
           - pandas-stubs
