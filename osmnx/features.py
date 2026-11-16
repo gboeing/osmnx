@@ -222,7 +222,7 @@ def features_from_place(
     query: str | dict[str, str] | list[str | dict[str, str]],
     tags: dict[str, bool | str | list[str]],
     *,
-    which_result: int | None | list[int | None] = None,
+    which_result: int | list[int | None] | None = None,
 ) -> gpd.GeoDataFrame:
     """
     Download OSM features within the boundaries of some place(s).

@@ -91,7 +91,7 @@ line-length = 100
 
 [tool.ruff.lint]
 extend-select = ["ALL"]
-ignore = ["N803", "N806", "SLF001"]
+ignore = ["CPY001", "N803", "N806", "SLF001"]
 
 [tool.ruff.lint.isort]
 force-single-line = true
