@@ -2,7 +2,7 @@
 
 ## TBD
 
-- add Python 3.15 support and drop Python 3.11 (#1416)
+- add Python 3.15 support and drop Python 3.11 support (#1416)
 - add local PBF file graph loading with network presets or pre-filtered input (#1338)
 - handle Overpass server refusing requests with 502 bad gateway by retrying (#1417)
 
