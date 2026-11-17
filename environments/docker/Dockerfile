@@ -1,4 +1,4 @@
-FROM jupyter/base-notebook
+FROM quay.io/jupyter/base-notebook
 LABEL maintainer="Geoff Boeing <boeing@usc.edu>"
 LABEL url="https://osmnx.readthedocs.io"
 LABEL description="OSMnx is a Python package to easily download, model, analyze, and visualize street networks and other geospatial features from OpenStreetMap."
