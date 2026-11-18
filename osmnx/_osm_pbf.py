@@ -145,7 +145,7 @@ def _overpass_json_from_pbf(
     return {"elements": ways + nodes}
 
 
-def graph_from_pbf(
+def _graph_from_pbf(
     filepath: str | Path,
     *,
     network_type: str | None = "all",
@@ -154,20 +154,6 @@ def graph_from_pbf(
 ) -> nx.MultiDiGraph:
     """
     Create a graph from data in an OSM PBF file.
-
-    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
-    settings to configure which OSM node/way tags are added as graph node/edge
-    attributes. Filter ways with the selected `network_type` preset, or pass
-    None to retain all ways in a PBF that was pre-filtered with external OSM
-    tooling. Add any desired non-highway tags, such as "railway", to
-    `settings.useful_tags_way` before loading. PBF presets that filter access
-    use the default "private" rule. If `settings.default_access` is
-    customized, this function warns and ignores it because PBF filtering
-    cannot evaluate Overpass QL.
-
-    Node `street_count` attributes describe connectivity in the input network
-    and can undercount streets at extract boundaries if connecting ways are
-    absent or discarded.
 
     Parameters
     ----------

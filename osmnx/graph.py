@@ -19,6 +19,7 @@ import networkx as nx
 from shapely import MultiPolygon
 from shapely import Polygon
 
+from . import _osm_pbf
 from . import _osm_xml
 from . import _overpass
 from . import distance
@@ -531,6 +532,58 @@ def graph_from_polygon(
     msg = f"graph_from_polygon returned graph with {len(G):,} nodes and {len(G.edges):,} edges"
     utils.log(msg, level=lg.INFO)
     return G
+
+
+def graph_from_pbf(
+    filepath: str | Path,
+    *,
+    network_type: str | None = "all",
+    simplify: bool = True,
+    retain_all: bool = False,
+) -> nx.MultiDiGraph:
+    """
+    Create a graph from data in an OSM PBF file.
+
+    Use the `settings` module's `useful_tags_node` and `useful_tags_way`
+    settings to configure which OSM node/way tags are added as graph node/edge
+    attributes. Filter ways with the selected `network_type` preset, or pass
+    None to retain all ways in a PBF that was pre-filtered with external OSM
+    tooling. Add any desired non-highway tags, such as "railway", to
+    `settings.useful_tags_way` before loading. PBF presets that filter access
+    use the default "private" rule. If `settings.default_access` is
+    customized, this function warns and ignores it because PBF filtering
+    cannot evaluate Overpass QL.
+
+    Node `street_count` attributes describe connectivity in the input network
+    and can undercount streets at extract boundaries if connecting ways are
+    absent or discarded.
+
+    Parameters
+    ----------
+    filepath
+        Path to PBF file containing OSM data.
+    network_type
+        Network type preset to filter ways. Choose from "all", "all_public",
+        "bike", "drive", "drive_service", or "walk". If None, retain all
+        ways. This unfiltered path is intended for pre-filtered PBF files and
+        can be slow for general regional extracts.
+    simplify
+        If True, simplify graph topology with the `simplify_graph` function.
+    retain_all
+        If True, return the entire graph even if it is not connected. If
+        False, retain only the largest weakly connected component.
+
+    Returns
+    -------
+    G
+        The resulting MultiDiGraph.
+    """
+    return _osm_pbf._graph_from_pbf(
+        filepath,
+        network_type=network_type,
+        simplify=simplify,
+        retain_all=retain_all,
+    )
 
 
 def graph_from_xml(
