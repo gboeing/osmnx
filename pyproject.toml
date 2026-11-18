@@ -39,7 +39,7 @@ maintainers = [{ name = "OSMnx contributors" }]
 name = "osmnx"
 readme = "README.md"
 requires-python = ">=3.12" # match classifiers above and mypy version below
-version = "2.1.2"
+version = "2.2.0"
 
 [project.optional-dependencies]
 all = ["osmnx[entropy,neighbors,pbf,raster,visualization]"]
