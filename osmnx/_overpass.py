@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import logging as lg
+import re
 import time
 from collections import OrderedDict
 from typing import TYPE_CHECKING
@@ -25,6 +26,76 @@ if TYPE_CHECKING:
 
     from shapely import MultiPolygon
     from shapely import Polygon
+
+
+# define built-in network exclusions once for both Overpass and PBF matching
+_DEFAULT_PBF_ACCESS = "private"
+_DEFAULT_OVERPASS_ACCESS = f'["access"!~"{_DEFAULT_PBF_ACCESS}"]'
+_NETWORK_EXCLUDED_PATTERNS: dict[str, dict[str, str]] = {
+    "drive": {
+        "area": "yes",
+        "access": _DEFAULT_PBF_ACCESS,
+        "highway": (
+            "abandoned|bridleway|bus_guideway|construction|corridor|cycleway|"
+            "elevator|escalator|footway|no|path|pedestrian|planned|platform|"
+            "proposed|raceway|razed|rest_area|service|services|steps|track"
+        ),
+        "motor_vehicle": "no",
+        "motorcar": "no",
+        "service": ("alley|driveway|emergency_access|parking|parking_aisle|private"),
+    },
+    "drive_service": {
+        "area": "yes",
+        "access": _DEFAULT_PBF_ACCESS,
+        "highway": (
+            "abandoned|bridleway|bus_guideway|construction|corridor|cycleway|"
+            "elevator|escalator|footway|no|path|pedestrian|planned|platform|"
+            "proposed|raceway|razed|rest_area|services|steps|track"
+        ),
+        "motor_vehicle": "no",
+        "motorcar": "no",
+        "service": "emergency_access|parking|parking_aisle|private",
+    },
+    "walk": {
+        "area": "yes",
+        "access": _DEFAULT_PBF_ACCESS,
+        "highway": (
+            "abandoned|bus_guideway|construction|cycleway|motor|no|planned|"
+            "platform|proposed|raceway|razed|rest_area|services"
+        ),
+        "foot": "no",
+        "service": "private",
+        "sidewalk": "separate",
+        "sidewalk:both": "separate",
+        "sidewalk:left": "separate",
+        "sidewalk:right": "separate",
+    },
+    "bike": {
+        "area": "yes",
+        "access": _DEFAULT_PBF_ACCESS,
+        "highway": (
+            "abandoned|bus_guideway|construction|corridor|elevator|escalator|"
+            "footway|motor|no|planned|platform|proposed|raceway|razed|"
+            "rest_area|services|steps"
+        ),
+        "bicycle": "no",
+        "service": "private",
+    },
+    "all_public": {
+        "area": "yes",
+        "access": _DEFAULT_PBF_ACCESS,
+        "highway": (
+            "abandoned|construction|no|planned|platform|proposed|raceway|razed|rest_area|services"
+        ),
+        "service": "private",
+    },
+    "all": {
+        "area": "yes",
+        "highway": (
+            "abandoned|construction|no|planned|platform|proposed|raceway|razed|rest_area|services"
+        ),
+    },
+}
 
 
 def _get_network_filter(network_type: str) -> str:
@@ -66,80 +137,50 @@ def _get_network_filter(network_type: str) -> str:
     way_filter
         The Overpass query filter.
     """
-    # define built-in queries to send to the API. specifying way["highway"]
-    # means that all ways returned must have a highway tag. the filters then
-    # remove ways by tag/value.
-    filters = {}
-
-    # driving: filter out un-drivable roads, service roads, private ways, and
-    # anything tagged motor=no. also filter out any non-service roads that are
-    # tagged as providing certain services
-    filters["drive"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|'
-        f"cycleway|elevator|escalator|footway|no|path|pedestrian|planned|platform|"
-        f'proposed|raceway|razed|rest_area|service|services|steps|track"]'
-        f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
-        f'["service"!~"alley|driveway|emergency_access|parking|parking_aisle|private"]'
-    )
-
-    # drive+service: allow ways tagged 'service' but filter out certain types
-    filters["drive_service"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bridleway|bus_guideway|construction|corridor|'
-        f"cycleway|elevator|escalator|footway|no|path|pedestrian|planned|platform|"
-        f'proposed|raceway|razed|rest_area|services|steps|track"]'
-        f'["motor_vehicle"!~"no"]["motorcar"!~"no"]'
-        f'["service"!~"emergency_access|parking|parking_aisle|private"]'
-    )
-
-    # walking: filter out cycle ways, motor ways, private ways, and anything
-    # tagged foot=no. allow service roads, permitting things like parking lot
-    # aisles, alleys, etc that you *can* walk on even if they're not exactly
-    # pleasant walks. some cycleways may allow pedestrians, but this filter
-    # ignores such cycleways.
-    filters["walk"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bus_guideway|construction|cycleway|motor|no|planned|'
-        f'platform|proposed|raceway|razed|rest_area|services"]'
-        f'["foot"!~"no"]["service"!~"private"]'
-        f'["sidewalk"!~"separate"]["sidewalk:both"!~"separate"]'
-        f'["sidewalk:left"!~"separate"]["sidewalk:right"!~"separate"]'
-    )
-
-    # biking: filter out foot ways, motor ways, private ways, and anything
-    # tagged biking=no
-    filters["bike"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|bus_guideway|construction|corridor|elevator|'
-        f"escalator|footway|motor|no|planned|platform|proposed|raceway|razed|"
-        f'rest_area|services|steps"]'
-        f'["bicycle"!~"no"]["service"!~"private"]'
-    )
-
-    # to download all public ways, just filter out everything not currently in
-    # use or that is private-access only
-    filters["all_public"] = (
-        f'["highway"]["area"!~"yes"]{settings.default_access}'
-        f'["highway"!~"abandoned|construction|no|planned|platform|proposed|raceway|'
-        f'razed|rest_area|services"]'
-        f'["service"!~"private"]'
-    )
-
-    # to download all ways, including private-access ones, just filter out
-    # everything not currently in use
-    filters["all"] = (
-        '["highway"]["area"!~"yes"]["highway"!~"abandoned|construction|no|planned|'
-        'platform|proposed|raceway|razed|rest_area|services"]'
-    )
-
-    if network_type in filters:
-        way_filter = filters[network_type]
-    else:  # pragma: no cover
+    if network_type not in _NETWORK_EXCLUDED_PATTERNS:  # pragma: no cover
         msg = f"Unrecognized network_type {network_type!r}."
         raise ValueError(msg)
 
-    return way_filter
+    # require highway ways, then render excluded values as Overpass clauses
+    excluded = _NETWORK_EXCLUDED_PATTERNS[network_type]
+    filters = ['["highway"]']
+    for key, pattern in excluded.items():
+        if key == "access":
+            # preserve the configurable Overpass access clause
+            filters.append(settings.default_access)
+        else:
+            filters.append(f'["{key}"!~"{pattern}"]')
+    return "".join(filters)
+
+
+def _network_filter_matches(network_type: str, tags: dict[str, str]) -> bool:
+    """
+    Return whether a way's tags match a built-in network type preset.
+
+    Parameters
+    ----------
+    network_type
+        Network type preset to match.
+    tags
+        OSM way tags.
+
+    Returns
+    -------
+    matches
+        Whether the tags satisfy every predicate in the preset.
+    """
+    if network_type not in _NETWORK_EXCLUDED_PATTERNS:
+        msg = f"Unrecognized network_type {network_type!r}."
+        raise ValueError(msg)
+
+    if "highway" not in tags:
+        return False
+
+    # reject values that match an exclusion pattern
+    for key, pattern in _NETWORK_EXCLUDED_PATTERNS[network_type].items():
+        if key in tags and re.search(pattern, tags[key]):
+            return False
+    return True
 
 
 def _get_overpass_pause(
