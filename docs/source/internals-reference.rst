@@ -115,6 +115,14 @@ osmnx._overpass module
     :private-members:
     :noindex:
 
+osmnx.pbf module
+----------------
+
+.. automodule:: osmnx.pbf
+    :members:
+    :private-members:
+    :noindex:
+
 osmnx.plot module
 -----------------
 

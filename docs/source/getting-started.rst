@@ -76,6 +76,8 @@ The ``graph`` module uses filters to query the Overpass API: you can either spec
 
 Read more about the :ref:`graph <osmnx-graph-module>` module in the User Reference and refer to the official reference paper at the :doc:`further-reading` page for complete modeling details.
 
+You can also use the :ref:`pbf <osmnx-pbf-module>` module to construct graphs from local OSM PBF files, using built-in network types or externally pre-filtered data.
+
 Topology Clean-Up
 ^^^^^^^^^^^^^^^^^
 
