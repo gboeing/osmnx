@@ -72,7 +72,7 @@ Using OSMnx's ``graph`` module, you can retrieve any spatial network data (such 
 
 In short, MultiDiGraphs are nonplanar directed graphs with possible self-loops and parallel edges. Thus, a one-way street will be represented with a single directed edge from node *u* to node *v*, but a bidirectional street will be represented with two reciprocal directed edges (with identical geometries): one from node *u* to node *v* and another from *v* to *u*, to represent both possible directions of flow. Because these graphs are nonplanar, they correctly model the topology of interchanges, bridges, and tunnels. That is, edge crossings in a two-dimensional plane are not intersections in an OSMnx model unless they represent true junctions in the three-dimensional real world.
 
-The ``graph`` module uses filters to query the Overpass API: you can either specify a built-in network type or provide your own custom filter with `Overpass QL`_. Under the hood, OSMnx does several things to generate the best possible model. It initially creates a 500m-buffered graph before truncating it to your desired query area, to ensure accurate streets-per-node stats and to attenuate graph perimeter effects. By default, it returns the largest weakly connected component. It also simplifies the graph topology as discussed below.
+The ``graph`` module uses filters to query the Overpass API: you can either specify a built-in network type or provide your own custom filter with `Overpass QL`_. Under the hood, OSMnx does several things to generate the best possible model. It initially creates a 500m-buffered graph before truncating it to your desired query area, to ensure accurate streets-per-node stats and to attenuate graph perimeter effects. By default, it returns the largest weakly connected component and simplifies the graph topology as discussed below.
 
 Read more about the :ref:`graph <osmnx-graph-module>` module in the User Reference and refer to the official reference paper at the :doc:`further-reading` page for complete modeling details.
 
@@ -139,6 +139,8 @@ Usage Limits
 ^^^^^^^^^^^^
 
 Be a good neighbor! OSMnx works with Overpass's rate limiting to avoid overwhelming their resources. Don't run multiple/parallel OSMnx instances simultaneously to circumvent their limits. These APIs are free to use, but they're not free to operate. If you will make many queries (e.g., more than 1k/day), you need to host your own local Overpass instance. Refer to the `Nominatim Usage Policy`_ and `Overpass Commons`_ documentation for API usage limits and restrictions to which you must adhere. If you configure OSMnx to use an alternative API instance, ensure you understand and follow their policies. If you feel you need to exceed these limits, just install your own hosted instance and set OSMnx to use it.
+
+OSMnx can also build graphs from OSM XML or PBF files instead of downloading data from Overpass, which is a good alternative if the public Overpass server is overwhelmed with requests or you have many queries to make.
 
 More Info
 ---------

@@ -99,6 +99,14 @@ osmnx._nominatim module
     :private-members:
     :noindex:
 
+osmnx._osm_pbf module
+---------------------
+
+.. automodule:: osmnx._osm_pbf
+    :members:
+    :private-members:
+    :noindex:
+
 osmnx._osm_xml module
 ---------------------
 

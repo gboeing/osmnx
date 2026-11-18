@@ -32,6 +32,7 @@ from shapely import wkt
 from typeguard import suppress_type_checks
 
 import osmnx as ox
+from osmnx import _osm_pbf
 
 # use the persistent OSMnx cache by default
 use_persistent_cache = os.getenv("USE_PERSISTENT_CACHE", "true").lower() == "true"
@@ -516,7 +517,7 @@ def test_network_filters() -> None:
 def test_pbf() -> None:
     """Test loading graphs from PBF files."""
     with pytest.raises(ValueError, match="Unrecognized network_type"):
-        ox.pbf.graph_from_pbf("missing.osm.pbf", network_type="invalid")
+        ox.graph.graph_from_pbf("missing.osm.pbf", network_type="invalid")
 
     pbf_filepath = Path(ox.settings.data_folder) / "West-Oakland.osm.pbf"
     # create the temporary folder because this test can run independently
@@ -537,7 +538,7 @@ def test_pbf() -> None:
                 simplify=False,
                 retain_all=True,
             )
-            G_pbf = ox.pbf.graph_from_pbf(
+            G_pbf = ox.graph.graph_from_pbf(
                 pbf_filepath,
                 network_type=None,
                 simplify=False,
@@ -552,14 +553,14 @@ def test_pbf() -> None:
         ox.convert.validate_graph(G_pbf)
 
         # confirm built-in filtering and network type directionality
-        G_drive = ox.pbf.graph_from_pbf(
+        G_drive = ox.graph.graph_from_pbf(
             pbf_filepath,
             network_type="drive",
             simplify=False,
             retain_all=True,
         )
         assert len(G_drive) > 0
-        G_walk = ox.pbf.graph_from_pbf(
+        G_walk = ox.graph.graph_from_pbf(
             pbf_filepath,
             network_type="walk",
             simplify=False,
@@ -575,7 +576,7 @@ def test_pbf() -> None:
                 UserWarning,
                 match="uses the default 'private' rule",
             ) as warnings:
-                G_access = ox.pbf.graph_from_pbf(
+                G_access = ox.graph.graph_from_pbf(
                     pbf_filepath,
                     network_type="drive",
                     simplify=False,
@@ -590,10 +591,10 @@ def test_pbf() -> None:
         complete_way = {"type": "way", "id": 1, "nodes": [1, 2], "tags": {}}
         incomplete_way = {"type": "way", "id": 2, "nodes": [2, 3], "tags": {}}
         with pytest.warns(UserWarning, match="node references were missing: 1"):
-            ways = ox.pbf._remove_incomplete_ways([complete_way, incomplete_way], {1, 2})
+            ways = _osm_pbf._remove_incomplete_ways([complete_way, incomplete_way], {1, 2})
         assert ways == [complete_way]
 
-        G_default = ox.pbf.graph_from_pbf(pbf_filepath)
+        G_default = ox.graph.graph_from_pbf(pbf_filepath)
         assert len(G_default) > 0
         ox.convert.validate_graph(G_default)
     finally:
