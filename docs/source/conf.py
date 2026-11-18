@@ -14,7 +14,7 @@ from tomllib import load as toml_load
 
 # project info
 author = "Geoff Boeing"
-copyright = "2016-2026, Geoff Boeing"  # noqa: A001
+copyright = "2016-2027, Geoff Boeing"  # noqa: A001
 project = "OSMnx"
 
 # go up two levels from current working dir (/docs/source) to package root
